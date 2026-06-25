@@ -97,6 +97,13 @@ public struct ProgressBar: View {
 
             label
         }
+        // The bar's fill is purely visual; expose the progress to VoiceOver as a
+        // spoken percentage. `.updatesFrequently` tells VoiceOver to re-read it
+        // while an active task advances.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(String(globalUIComponents: "Progress")))
+        .accessibilityValue(Text(format?(value) ?? "%\(Int(value * 100))"))
+        .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }
 
     @ViewBuilder
@@ -141,6 +148,9 @@ public struct StepIndicator: View {
                     .animation(Motion.fast.animation, value: current)
             }
         }
+        // Position is conveyed only by the highlighted dot; speak it instead.
+        .accessibilityElement(children: .ignore)
+        .accessibilityValue(Text(String(globalUIComponents: "\(current + 1) of \(total)")))
     }
 }
 

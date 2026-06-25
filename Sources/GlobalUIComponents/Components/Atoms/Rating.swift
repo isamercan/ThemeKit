@@ -76,29 +76,69 @@ public struct Rating: View {
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            switch layout {
-            case .stars:
-                stars
-            case .numberRate:
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: size * 1.15, weight: .bold))
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-                Image(systemName: "\(systemImage).fill")
-                    .font(.system(size: size))
-                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
-            case .rateNumberText:
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: size * 1.15, weight: .bold))
-                    .foregroundStyle(Theme.shared.foreground(.fgSecondary))
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Theme.shared.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
-                Text(resolvedSentiment)
-                    .font(.system(size: size, weight: .semibold))
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-            }
+            accessibleRating
             review
         }
         .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    /// The visual rating glyphs (the star row / number layouts), before any
+    /// accessibility treatment.
+    @ViewBuilder
+    private var ratingGlyphs: some View {
+        switch layout {
+        case .stars:
+            stars
+        case .numberRate:
+            Text(String(format: "%.1f", value))
+                .font(.system(size: size * 1.15, weight: .bold))
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+            Image(systemName: "\(systemImage).fill")
+                .font(.system(size: size))
+                .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+        case .rateNumberText:
+            Text(String(format: "%.1f", value))
+                .font(.system(size: size * 1.15, weight: .bold))
+                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Theme.shared.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+            Text(resolvedSentiment)
+                .font(.system(size: size, weight: .semibold))
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+        }
+    }
+
+    /// Collapses the glyph row into one VoiceOver element ("Rating: 4.3 out of
+    /// 5"). When interactive, it becomes an adjustable control so VoiceOver users
+    /// can swipe up/down to set the score instead of hunting for invisible tap
+    /// targets. The color-only fill is never the sole signal.
+    @ViewBuilder
+    private var accessibleRating: some View {
+        let labelled = HStack(spacing: Theme.SpacingKey.xs.value) { ratingGlyphs }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(String(globalUIComponents: "Rating")))
+            .accessibilityValue(Text(accessibilityValueText))
+        if interactive {
+            labelled.accessibilityAdjustableAction { direction in
+                let step = allowHalf ? 0.5 : 1
+                switch direction {
+                case .increment: onRate?(min(value + step, Double(maxValue)))
+                case .decrement: onRate?(max(value - step, 0))
+                @unknown default: break
+                }
+            }
+        } else {
+            labelled
+        }
+    }
+
+    /// Spoken value, e.g. "4.3 out of 5, Very good, (128)".
+    private var accessibilityValueText: String {
+        let score = String(format: "%.1f", value)
+        var spoken = String(globalUIComponents: "\(score) out of \(maxValue)")
+        if layout == .rateNumberText { spoken += ", \(resolvedSentiment)" }
+        if let countLabel { spoken += ", \(countLabel)" }
+        return spoken
     }
 
     // MARK: Stars

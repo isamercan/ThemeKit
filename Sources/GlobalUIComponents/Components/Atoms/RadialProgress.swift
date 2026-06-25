@@ -64,6 +64,11 @@ public struct RadialProgress: View {
             }
         }
         .frame(width: size, height: size)
+        // The ring fill is purely visual; speak the percentage to VoiceOver.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(String(globalUIComponents: "Progress")))
+        .accessibilityValue(Text("\(Int(value * 100))%"))
+        .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }
 }
 
