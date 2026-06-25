@@ -5,18 +5,18 @@
 //  Shared configuration for the visual-regression (snapshot) suite.
 //
 //  Snapshots render real pixels, so they only run where SwiftUI rendering is
-//  deterministic: the pinned iOS Simulator used by the `ios` CI job. On macOS
-//  (`swift test`) this whole file compiles to nothing, so the logic suite stays
-//  fast and host-independent.
+//  deterministic: a locally pinned iOS Simulator (iPhone 17 / iOS 26 — the
+//  device the committed references were recorded on). They are opt-in and do
+//  NOT run in CI. On macOS (`swift test`) this whole file compiles to nothing,
+//  so the logic suite stays fast and host-independent.
 //
-//  Recording references:
-//    RECORD_SNAPSHOTS=1 xcodebuild test -scheme GlobalUIComponents \
-//      -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2'
-//  Then commit the generated __Snapshots__ folders. Re-run without the flag to
-//  verify they pass.
+//  Recording / running references is driven by RUN_SNAPSHOTS / RECORD_SNAPSHOTS
+//  set on the GlobalUIComponents-Package scheme's Test action (shell env vars do
+//  not cross into the Simulator). Full instructions: docs/SNAPSHOT-TESTING.md.
 //
 
 #if canImport(UIKit)
+import GlobalUIComponents
 import SnapshotTesting
 import SwiftUI
 import UIKit
@@ -69,6 +69,15 @@ func assertComponentSnapshot(
     testName: String = #function,
     line: UInt = #line
 ) {
+    // Components read their palette from the Theme.shared singleton (imperative
+    // isDark), NOT the SwiftUI colorScheme environment — so setting only
+    // `.environment(\.colorScheme,)` would render the light palette on a dark
+    // backdrop. Drive the singleton explicitly and restore it afterwards so the
+    // suite stays order-independent.
+    let previousDark = Theme.shared.isDark
+    Theme.shared.setColorScheme(dark: colorScheme == .dark)
+    defer { Theme.shared.setColorScheme(dark: previousDark) }
+
     let traits = UITraitCollection { mutable in
         mutable.userInterfaceStyle = colorScheme == .dark ? .dark : .light
         mutable.preferredContentSizeCategory = contentSize

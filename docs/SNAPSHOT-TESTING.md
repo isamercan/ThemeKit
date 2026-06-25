@@ -22,10 +22,11 @@ reference, so that diff shows up in the PR instead of in production.
 ## Why it's opt-in
 
 Image rendering varies subtly across OS versions and GPUs, so the suite does not
-block CI by default — it would flake whenever a runner image changed. Instead it
-runs **on demand**, on a simulator your team pins, gated behind `RUN_SNAPSHOTS=1`.
-This keeps CI deterministic while still giving you a real visual gate locally and
-in a dedicated job.
+run in CI — it would flake whenever a runner image changed. It is a **local**
+gate: run on demand on the team's pinned simulator, gated behind
+`RUN_SNAPSHOTS=1`. CI builds and runs the iOS test target, but every snapshot
+test self-skips there (the gate is unset), so CI stays deterministic. Run the
+suite locally before changing shared tokens, typography, or layout primitives.
 
 ## Recording references
 

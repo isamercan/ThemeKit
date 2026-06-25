@@ -21,7 +21,9 @@
 # Idioms
 --self remove
 --importgrouping testable-bottom
---commas inline
+# Keep trailing commas in multiline literals — matches .swiftlint.yml, which
+# disables the `trailing_comma` rule precisely because we prefer them.
+--commas always
 --trimwhitespace always
 --emptybraces no-space
 --semicolons never

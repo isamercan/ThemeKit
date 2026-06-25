@@ -46,15 +46,19 @@ jobs:
         run: swift test --skip-build --enable-code-coverage
 
   # ---------------------------------------------------------------------------
-  # iOS compile + test on a pinned simulator. Catches iOS-only API use and is
-  # the host the snapshot suite renders against (deterministic device + OS).
+  # iOS compile + test on a simulator. Catches iOS-only API use and runs the
+  # logic/theme suite on-device. The visual-regression (snapshot) suite is NOT
+  # gated here — it's opt-in (RUN_SNAPSHOTS) and recorded locally on a pinned
+  # simulator; see docs/SNAPSHOT-TESTING.md.
   # ---------------------------------------------------------------------------
   ios:
     name: Build & test (iOS Simulator)
     runs-on: macos-15
     env:
-      # Pin device + OS so snapshot rendering is reproducible across runs.
-      DESTINATION: platform=iOS Simulator,name=iPhone 16,OS=18.2
+      # Any iPhone the runner image ships; OS left unpinned so a runner bump
+      # doesn't break the destination. (Snapshots don't run here, so an exact
+      # device/OS match isn't needed.)
+      DESTINATION: platform=iOS Simulator,name=iPhone 16
     steps:
       - uses: actions/checkout@v4
 
@@ -71,21 +75,13 @@ jobs:
       # so this stays deterministic across runner simulator images.
       - name: Build for iOS Simulator
         run: |
-          set -o pipefail
           xcodebuild build-for-testing \
-            -scheme GlobalUIComponents-Package \
-            -destination "$DESTINATION" \
-            | xcbeautify || xcodebuild build-for-testing \
             -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION"
 
       - name: Test on iOS Simulator
         run: |
-          set -o pipefail
           xcodebuild test-without-building \
-            -scheme GlobalUIComponents-Package \
-            -destination "$DESTINATION" \
-            | xcbeautify || xcodebuild test-without-building \
             -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION"
 
