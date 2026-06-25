@@ -29,22 +29,35 @@ in a dedicated job.
 
 ## Recording references
 
-Pick one simulator as the team's source of truth (match it in `.github/workflows/ci.yml`):
+The committed references in `__Snapshots__/` were recorded on **iPhone 17 /
+iOS 26** — that's the team's source of truth. Use the same device when you
+record or verify, or the antialiasing will drift and produce false diffs.
 
-```bash
-# 1. Record reference images (commit the generated __Snapshots__ folders)
-RUN_SNAPSHOTS=1 RECORD_SNAPSHOTS=1 xcodebuild test \
-  -scheme GlobalUIComponents \
-  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2'
+> **Gotcha — environment variables don't cross into the Simulator.** A shell
+> `RUN_SNAPSHOTS=1 xcodebuild test …` does **not** reach the test process running
+> inside the Simulator, so the suite would just skip. Set the variables on the
+> **scheme's Test action** (where they're delivered into the test runtime), then
+> run from Xcode or the CLI:
 
-# 2. Verify everything matches (this is what reviewers re-run)
-RUN_SNAPSHOTS=1 xcodebuild test \
-  -scheme GlobalUIComponents \
-  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2'
-```
+1. **Configure once** — Xcode → Edit Scheme → `GlobalUIComponents-Package` →
+   Test → Arguments → Environment Variables: add `RUN_SNAPSHOTS = 1` (and
+   `RECORD_SNAPSHOTS = 1` only while recording).
+
+2. **Record** (with `RECORD_SNAPSHOTS = 1`), then commit the generated
+   `__Snapshots__/` folders:
+   ```bash
+   xcodebuild test -scheme GlobalUIComponents-Package \
+     -destination 'platform=iOS Simulator,name=iPhone 17'
+   ```
+
+3. **Verify** — turn `RECORD_SNAPSHOTS` off and re-run the same command. This is
+   what reviewers re-run; it must pass against the committed references.
 
 A failing snapshot writes a side-by-side diff image; open it to see exactly what
 moved. If the change is intentional, re-record and commit the new reference.
+
+Note the scheme name: `GlobalUIComponents-Package` is the one wired for the test
+action (the plain `GlobalUIComponents` scheme builds only the library product).
 
 ## Adding coverage
 

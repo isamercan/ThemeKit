@@ -65,24 +65,28 @@ jobs:
           key: spm-ios-${{ hashFiles('Package.resolved') }}
           restore-keys: spm-ios-
 
+      # Use the *-Package scheme: it's the one configured for the test action
+      # (the plain `GlobalUIComponents` scheme builds only the library product).
+      # The opt-in snapshot suite skips here automatically (RUN_SNAPSHOTS unset),
+      # so this stays deterministic across runner simulator images.
       - name: Build for iOS Simulator
         run: |
           set -o pipefail
           xcodebuild build-for-testing \
-            -scheme GlobalUIComponents \
+            -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION" \
             | xcbeautify || xcodebuild build-for-testing \
-            -scheme GlobalUIComponents \
+            -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION"
 
       - name: Test on iOS Simulator
         run: |
           set -o pipefail
           xcodebuild test-without-building \
-            -scheme GlobalUIComponents \
+            -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION" \
             | xcbeautify || xcodebuild test-without-building \
-            -scheme GlobalUIComponents \
+            -scheme GlobalUIComponents-Package \
             -destination "$DESTINATION"
 
   # ---------------------------------------------------------------------------
