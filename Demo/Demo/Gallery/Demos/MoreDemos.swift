@@ -1,0 +1,1575 @@
+//
+//  MoreDemos.swift
+//  Demo
+//  Created by İsa Mercan on 23.06.2026.
+//
+//  Additional interactive demo pages (upgrades of the static registry entries).
+//
+
+import SwiftUI
+import GlobalUIComponents
+
+// MARK: - Atoms
+
+struct DividerDemo: View {
+    @State private var dashed = false
+    @State private var withText = true
+    @State private var align = 1   // 0 leading, 1 center, 2 trailing
+
+    private var alignment: DividerTextAlign { align == 0 ? .leading : align == 2 ? .trailing : .center }
+
+    var body: some View {
+        ComponentStage("Divider", inspector: [("dashed", "\(dashed)"), ("text", withText ? "OR" : "—")]) {
+            VStack(spacing: 24) {
+                DividerView(dashed: dashed, title: withText ? "OR" : nil, titleAlign: alignment)
+                HStack(spacing: 16) {
+                    Text("A"); DividerView(axis: .vertical, dashed: dashed); Text("B"); DividerView(axis: .vertical); Text("C")
+                }
+                .frame(height: 24)
+            }
+        } knobs: {
+            Toggle("Dashed", isOn: $dashed)
+            Toggle("Text label", isOn: $withText)
+            Picker("Align", selection: $align) { Text("Left").tag(0); Text("Center").tag(1); Text("Right").tag(2) }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct IconDemo: View {
+    @State private var symbol = "star.fill"
+    @State private var size: IconSize = .md
+
+    var body: some View {
+        ComponentStage("Icon", inspector: [("size", "\(size.rawValue) · \(Int(size.value))")]) {
+            Icon(systemName: symbol, size: size, color: Theme.shared.foreground(.fgHero))
+        } knobs: {
+            TextField("SF Symbol", text: $symbol).textFieldStyle(.roundedBorder).autocorrectionDisabled()
+            Picker("Size", selection: $size) { ForEach(IconSize.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct InputLabelDemo: View {
+    @State private var text = "Email"
+    @State private var required = false
+    @State private var info = true
+    @State private var error = false
+
+    var body: some View {
+        ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("hasError", "\(error)")]) {
+            InputLabel(text, isRequired: required, hasInfo: info, hasError: error)
+        } knobs: {
+            TextField("Text", text: $text).textFieldStyle(.roundedBorder)
+            Toggle("Required", isOn: $required)
+            Toggle("Info glyph", isOn: $info)
+            Toggle("Error", isOn: $error)
+        }
+    }
+}
+
+struct ScoreBadgeDemo: View {
+    @State private var score = 9.0
+    @State private var large = false
+    var body: some View {
+        ComponentStage("ScoreBadge", inspector: [("score", String(format: "%.1f", score))]) {
+            ScoreBadge(score, large: large)
+        } knobs: {
+            HStack { Text("Score"); SwiftUI.Slider(value: $score, in: 0...10, step: 0.1) }
+            Toggle("Large", isOn: $large)
+        }
+    }
+}
+
+struct SkeletonDemo: View {
+    @State private var loading = true
+    @State private var shapes = false
+    var body: some View {
+        ComponentStage("Skeleton", inspector: [("isLoading", "\(loading)")]) {
+            if shapes {
+                HStack(spacing: 12) {
+                    Skeleton(.circle, width: 56, height: 56)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Skeleton(.capsule, width: 160, height: 12)
+                        Skeleton(.capsule, width: 110, height: 12)
+                        Skeleton(.rounded(6), width: 200, height: 12)
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Loaded title").font(.title3.bold()).skeleton(loading)
+                    Text("A line of body text that loads in.").skeleton(loading)
+                    RoundedRectangle(cornerRadius: 12).fill(Theme.shared.background(.bgElevatorTertiary)).frame(height: 80).skeleton(loading, cornerRadius: 12)
+                }
+            }
+        } knobs: {
+            Toggle("Loading", isOn: $loading)
+            Toggle("Standalone shapes (circle/capsule)", isOn: $shapes)
+            Text("Skeleton tokens adapt to the dark theme automatically.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct TitleDemo: View {
+    @State private var eyebrow = false
+    @State private var subtitle = true
+    @State private var action = true
+    var body: some View {
+        ComponentStage("Title") {
+            Title("Popular destinations",
+                  subtitle: subtitle ? "Where travellers go" : nil,
+                  eyebrow: eyebrow ? "Limited time" : nil,
+                  actionTitle: action ? "See all" : nil,
+                  action: action ? { flash("Title: See all") } : nil)
+        } knobs: {
+            Toggle("Eyebrow", isOn: $eyebrow)
+            Toggle("Subtitle", isOn: $subtitle)
+            Toggle("Action", isOn: $action)
+        }
+    }
+}
+
+// MARK: - Molecules
+
+struct SearchBarDemo: View {
+    @State private var text = ""
+    @State private var back = false
+    @State private var trailing = true
+    var body: some View {
+        ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("showBackButton", "\(back)")]) {
+            SearchBar(text: $text, showBackButton: back, trailingSystemImage: trailing ? "barcode.viewfinder" : nil)
+        } knobs: {
+            Toggle("Back button", isOn: $back)
+            Toggle("Trailing icon", isOn: $trailing)
+        }
+    }
+}
+
+struct SelectDemo: View {
+    @State private var city: String?
+    @State private var clearable = true
+    @State private var searchable = false
+
+    var body: some View {
+        ComponentStage("Select", inspector: [("selection", city ?? "nil"), ("searchable", "\(searchable)")]) {
+            Select("Şehir", sections: [
+                .init("Marmara", ["İstanbul", "Bursa", "Kocaeli"]),
+                .init("Ege", ["İzmir", "Aydın", "Muğla"]),
+                .init("İç Anadolu", ["Ankara", "Konya"]),
+            ], selection: $city, allowClear: clearable, searchable: searchable) { $0 }
+        } knobs: {
+            Toggle("Searchable (inline panel + sections)", isOn: $searchable)
+            Toggle("Allow clear", isOn: $clearable)
+            Text(searchable ? "Tap → açılır panel, ara + bölüm başlıkları." : "Tap → native Menu (gruplu Section'lar).").font(.caption).foregroundStyle(.secondary)
+            Button("Clear") { city = nil }
+        }
+    }
+}
+
+struct MultiSelectDemo: View {
+    @State private var picks: Set<String> = ["İstanbul", "Ankara", "İzmir", "Bursa"]
+    @State private var searchable = true
+    @State private var clearable = true
+    @State private var capTags = true
+    @State private var enabled = true
+    private let cities = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa", "Adana", "Konya"]
+
+    var body: some View {
+        ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("maxTagCount", capTags ? "2" : "—")]) {
+            MultiSelect(label: "Cities", options: cities, selection: $picks,
+                        searchable: searchable, allowClear: clearable,
+                        maxTagCount: capTags ? 2 : nil, isEnabled: enabled) { $0 }
+        } knobs: {
+            Toggle("Searchable", isOn: $searchable)
+            Toggle("Allow clear", isOn: $clearable)
+            Toggle("Max 2 tags (+N)", isOn: $capTags)
+            Toggle("Enabled", isOn: $enabled)
+            Button("Reset") { picks = ["İstanbul", "Ankara", "İzmir", "Bursa"] }
+        }
+    }
+}
+
+struct SelectBoxDemo: View {
+    @State private var country: String? = "Türkiye"
+    @State private var error = false
+    @State private var enabled = true
+    var body: some View {
+        ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
+            SelectBox(label: "Country", options: ["Türkiye", "Germany", "France"], selection: $country,
+                      hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil, isEnabled: enabled) { $0 }
+        } knobs: {
+            Toggle("Error state", isOn: $error)
+            Toggle("Enabled", isOn: $enabled)
+            Button("Clear") { country = nil }
+        }
+    }
+}
+
+struct MultiLineDemo: View {
+    @State private var text = ""
+    @State private var limit = true
+    @State private var error = false
+    var body: some View {
+        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
+            MultiLineTextInput("Notes", text: $text, placeholder: "Write something…",
+                               characterLimit: limit ? 200 : nil, errorText: error ? "Required" : nil)
+        } knobs: {
+            Toggle("Character limit", isOn: $limit)
+            Toggle("Error state", isOn: $error)
+        }
+    }
+}
+
+struct OTPDemo: View {
+    @State private var code = "12"
+    @State private var six = false
+    @State private var error = false
+    var body: some View {
+        ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("digits", six ? "6" : "4")]) {
+            OTPInput(code: $code, digitCount: six ? 6 : 4, errorText: error ? "Invalid code" : nil)
+        } knobs: {
+            Toggle("6 digits", isOn: $six)
+            Toggle("Error state", isOn: $error)
+        }
+    }
+}
+
+struct TooltipDemo: View {
+    @State private var shown = true
+    @State private var edge: TooltipEdge = .top
+    var body: some View {
+        ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)")]) {
+            Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
+                .tooltip("Helpful hint", isPresented: $shown, edge: edge)
+                .padding(.vertical, 40)
+        } knobs: {
+            Toggle("Presented", isOn: $shown)
+            Picker("Edge", selection: $edge) { Text("Top").tag(TooltipEdge.top); Text("Bottom").tag(TooltipEdge.bottom) }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct ButtonGroupDemo: View {
+    @State private var horizontal = false
+    var body: some View {
+        ComponentStage("ButtonGroup", inspector: [("axis", horizontal ? "horizontal" : "vertical")]) {
+            if horizontal {
+                ButtonGroup(.horizontal) { SecondaryButton("Cancel", isContentWidth: true) { flash("Cancel") }; PrimaryButton("Confirm", isContentWidth: true) { flash("Confirm") } }
+            } else {
+                ButtonGroup { PrimaryButton("Continue", isContentWidth: true) { flash("Continue") }; SecondaryButton("Not now", isContentWidth: true) { flash("Not now") } }
+            }
+        } knobs: {
+            Toggle("Horizontal", isOn: $horizontal)
+        }
+    }
+}
+
+struct CheckboxGroupDemo: View {
+    @State private var sel: Set<String> = ["Wifi"]
+    private let options = ["Wifi", "Pool", "Parking", "Breakfast"]
+    var body: some View {
+        ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
+            CheckboxGroup(title: "Amenities", options: options, selection: $sel) { $0 }
+        } knobs: {
+            Button("Select all") { sel = Set(options) }
+            Button("Clear") { sel = [] }
+        }
+    }
+}
+
+struct RadioGroupDemo: View {
+    @State private var sel: String? = "Economy"
+    @State private var styleIdx = 0   // 0 stacked, 1 button-solid, 2 button-outline
+
+    var body: some View {
+        ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline")]) {
+            switch styleIdx {
+            case 1:
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true) { $0 }
+            case 2:
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true) { $0 }
+            default:
+                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+            }
+        } knobs: {
+            Picker("Style", selection: $styleIdx) { Text("Stacked").tag(0); Text("Button solid").tag(1); Text("Button outline").tag(2) }.pickerStyle(.segmented)
+            Button("Clear") { sel = nil }
+        }
+    }
+}
+
+struct ToggleGroupDemo: View {
+    @State private var sel: Set<String> = ["push"]
+    var body: some View {
+        ComponentStage("ToggleGroup", inspector: [("on", sel.sorted().joined(separator: ", "))]) {
+            ToggleGroup(title: "Notifications", options: ["push", "email", "sms"], selection: $sel,
+                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 },
+                        description: { _ in "Supporting text." })
+        } knobs: {
+            Button("Enable all") { sel = ["push", "email", "sms"] }
+        }
+    }
+}
+
+struct AutocompleteDemo: View {
+    @State private var text = ""
+    var body: some View {
+        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\"")]) {
+            Autocomplete(label: "Destination", text: $text, suggestions: ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"])
+        } knobs: {
+            Text("Type to filter suggestions.").font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Organisms
+
+struct CardDemo: View {
+    @State private var elevation: CardElevation = .soft
+    @State private var padding = 16.0
+    @State private var tappable = false
+    @State private var taps = 0
+    var body: some View {
+        ComponentStage("Card", inspector: [("elevation", "\(elevation)"), ("tappable", "\(tappable)"), ("taps", "\(taps)")]) {
+            Card(elevation: elevation, padding: padding, action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(tappable ? "Tappable card" : "Card title").textStyle(.headingSm)
+                    Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
+                        .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
+            }
+        } knobs: {
+            Toggle("Tappable (press feedback)", isOn: $tappable)
+            Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
+            HStack { Text("Padding"); SwiftUI.Slider(value: $padding, in: 0...32, step: 4) }
+        }
+    }
+}
+
+struct EmptyStateDemo: View {
+    @State private var hasButton = true
+    @State private var customImage = false
+    @State private var tintIcon = false
+    @State private var animated = false
+    private let gifURL = URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")
+    var body: some View {
+        ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol")]) {
+            if animated {
+                EmptyState(animatedURL: gifURL, imageMaxHeight: 140,
+                           title: "Yükleniyor", message: "İçerik hazırlanıyor…",
+                           buttonTitle: hasButton ? "Yenile" : nil, action: hasButton ? { flash("EmptyState: Yenile") } : nil)
+            } else if customImage {
+                EmptyState(image: Image(systemName: "sailboat.fill"), imageMaxHeight: 120,
+                           title: "Sepetin boş", message: "Henüz bir şey eklemedin.",
+                           buttonTitle: hasButton ? "Keşfet" : nil, action: hasButton ? { flash("EmptyState: Keşfet") } : nil)
+            } else {
+                EmptyState(systemImage: "magnifyingglass",
+                           iconForeground: tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil,
+                           iconBackground: tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil,
+                           iconCircleSize: tintIcon ? 104 : 88,
+                           title: "No results found",
+                           message: "Try adjusting your search or filters.",
+                           buttonTitle: hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
+            }
+        } knobs: {
+            Toggle("Animated illustration (GIF, native)", isOn: $animated)
+            Toggle("Custom illustration", isOn: $customImage)
+            Toggle("Tinted + larger icon", isOn: $tintIcon)
+            Toggle("Action button", isOn: $hasButton)
+        }
+    }
+}
+
+struct ListRowDemo: View {
+    enum Kind: String, CaseIterable { case chevron, value, toggle, checkmark, checkbox, button, price, status, none }
+    enum Lead: String, CaseIterable { case icon, image, number, radio, none }
+    @State private var kind: Kind = .chevron
+    @State private var lead: Lead = .icon
+    @State private var on = true
+    @State private var agree = false
+    @State private var picked = true
+    @State private var subtitle = true
+    @State private var withMeta = false
+    @State private var selected = false
+    @State private var moreInfo = false
+    @State private var alert = false
+
+    private var trailing: ListRowTrailing {
+        switch kind {
+        case .chevron: return .chevron
+        case .value: return .value("English")
+        case .toggle: return .toggle($on)
+        case .checkmark: return .checkmark(on)
+        case .checkbox: return .checkbox($agree)
+        case .button: return .button("Düzenle", action: { flash("ListRow: Düzenle") })
+        case .price: return .price(.init(total: "₺14.400", each: "₺1.200", unit: "/ ay"))
+        case .status: return .status("Müsait", systemImage: "checkmark.seal.fill")
+        case .none: return .none
+        }
+    }
+
+    private var imageURL: URL? { URL(string: "https://picsum.photos/seed/listrow/120") }
+    private var meta: ListRowMeta? { withMeta ? ListRowMeta(rating: 8.4, sentiment: "Mükemmel", commentLabel: "1.284 yorum") : nil }
+    private var infos: [ListRowInfo] {
+        moreInfo ? [ListRowInfo(systemImage: "checkmark", "Ücretsiz iptal"),
+                    ListRowInfo(systemImage: "wifi", "Ücretsiz wifi"),
+                    ListRowInfo("Kapıda ödeme yok")] : []
+    }
+
+    var body: some View {
+        ComponentStage("ListRow", inspector: [("trailing", kind.rawValue), ("leading", lead.rawValue)]) {
+            VStack(spacing: 0) {
+                ListSectionHeader("Konaklama")
+                ListRow("Grand Hotel İstanbul", subtitle: subtitle ? "Deniz manzaralı · Kahvaltı dahil" : nil,
+                        number: lead == .number ? 1 : nil,
+                        leadingSystemImage: lead == .icon ? "building.2" : nil,
+                        leadingImageURL: lead == .image ? imageURL : nil,
+                        leadingSelection: lead == .radio ? $picked : nil,
+                        alertCount: alert ? 3 : nil,
+                        meta: meta, infos: infos, isSelected: selected,
+                        multilineTitle: moreInfo,
+                        infoAction: kind == .price ? { flash("ListRow: fiyat bilgisi") } : nil,
+                        trailing: trailing, action: { flash("ListRow tıklandı") })
+            }
+        } knobs: {
+            Picker("Trailing", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+            Picker("Leading", selection: $lead) { ForEach(Lead.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+            Toggle("Subtitle", isOn: $subtitle)
+            Toggle("More-info list (paragraph items)", isOn: $moreInfo)
+            Toggle("Alert count badge (on icon)", isOn: $alert)
+            Toggle("Meta line (rating/comment)", isOn: $withMeta)
+            Toggle("Selected (active bg)", isOn: $selected)
+            Toggle("Toggle / checkmark on", isOn: $on)
+        }
+    }
+}
+
+struct NotificationDemo: View {
+    @State private var unread = true
+    @State private var actions = true
+    var body: some View {
+        ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)")]) {
+            if actions {
+                NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
+                                 message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
+                                 date: "5 Aralık 2024", isUnread: unread) {
+                    ButtonGroup(.horizontal) {
+                        SecondaryButton("Sonra", size: .small, isContentWidth: true) { flash("Notification: Sonra") }
+                        PrimaryButton("İncele", size: .small, isContentWidth: true) { flash("Notification: İncele") }
+                    }
+                }
+            } else {
+                NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
+                                 message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
+                                 date: "5 Aralık 2024", isUnread: unread)
+            }
+        } knobs: {
+            Toggle("Unread", isOn: $unread)
+            Toggle("Actions", isOn: $actions)
+        }
+    }
+}
+
+struct PageHeaderDemo: View {
+    @State private var back = true
+    @State private var subtitle = true
+    @State private var actions = true
+    var body: some View {
+        ComponentStage("PageHeader") {
+            PageHeader("Search results", subtitle: subtitle ? "128 hotels" : nil,
+                       onBack: back ? { flash("PageHeader: geri") } : nil,
+                       actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filtre") }), .init(systemImage: "heart", handler: { flash("PageHeader: favori") })] : [])
+        } knobs: {
+            Toggle("Back button", isOn: $back)
+            Toggle("Subtitle", isOn: $subtitle)
+            Toggle("Actions", isOn: $actions)
+        }
+    }
+}
+
+struct RatingSummaryDemo: View {
+    @State private var score = 9.0
+    @State private var reviews = true
+    var body: some View {
+        ComponentStage("RatingSummary", inspector: [("score", String(format: "%.1f", score))]) {
+            RatingSummary(score: score, label: "Mükemmel", reviewCount: reviews ? 1200 : nil, onReviews: reviews ? { flash("Yorumlara dokunuldu") } : nil)
+        } knobs: {
+            HStack { Text("Score"); SwiftUI.Slider(value: $score, in: 0...10, step: 0.1) }
+            Toggle("Review count", isOn: $reviews)
+        }
+    }
+}
+
+struct BlogCardDemo: View {
+    @State private var compact = false
+    var body: some View {
+        ComponentStage("BlogCard", inspector: [("compact", "\(compact)")]) {
+            BlogCard(title: "Kapadokya'yı Tek Başına Keşfetmeye Ne Dersin?",
+                     excerpt: "Kimine göre doğanın bir mucizesi, kimine göre periler diyarı…",
+                     compact: compact, onReadMore: { flash("BlogCard: devamını oku") }) {
+                Theme.shared.background(.bgTertiary)
+            }
+        } knobs: {
+            Toggle("Compact", isOn: $compact)
+        }
+    }
+}
+
+struct GalleryDemo: View {
+    private struct Photo: Identifiable { let id = UUID(); let color: Color }
+    private let photos = [Color.blue, .teal, .orange, .purple, .pink, .mint].map { Photo(color: $0) }
+    @State private var columns = 2.0
+    @State private var aspect: AspectRatioToken = .landscape4x3
+
+    var body: some View {
+        ComponentStage("Gallery", inspector: [("columns", "\(Int(columns))"), ("aspect", aspect.rawValue)]) {
+            Gallery(photos, columns: Int(columns), aspect: aspect) { $0.color.opacity(0.3) }
+        } knobs: {
+            Stepper("Columns: \(Int(columns))", value: $columns, in: 1...4, step: 1)
+            Picker("Aspect", selection: $aspect) {
+                Text("1:1").tag(AspectRatioToken.square); Text("4:3").tag(AspectRatioToken.landscape4x3); Text("16:9").tag(AspectRatioToken.landscape16x9); Text("3:4").tag(AspectRatioToken.portrait3x4)
+            }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct UploadDemo: View {
+    @State private var done = true
+    @State private var failed = false
+
+    private var files: [UploadFile] {
+        var f = [UploadFile(name: "room-1.jpg", status: .uploading(0.6))]
+        if done { f.append(UploadFile(name: "room-2.jpg", status: .done)) }
+        if failed { f.append(UploadFile(name: "huge.jpg", status: .failed("Dosya çok büyük"))) }
+        return f
+    }
+
+    var body: some View {
+        ComponentStage("Upload", inspector: [("files", "\(files.count)")]) {
+            Upload(files: files)
+        } knobs: {
+            Toggle("Uploaded item", isOn: $done)
+            Toggle("Failed item", isOn: $failed)
+        }
+    }
+}
+
+struct MenuCardDemo: View {
+    @State private var count = 3.0
+    private let items: [MenuCard.Item] = [
+        .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
+        .init(title: "Payment methods", subtitle: "Cards & wallets", systemImage: "creditcard"),
+        .init(title: "Help center", subtitle: "FAQ & support", systemImage: "questionmark.circle"),
+        .init(title: "Settings", subtitle: "App preferences", systemImage: "gearshape"),
+    ]
+
+    var body: some View {
+        ComponentStage("MenuCard", inspector: [("items", "\(Int(count))")]) {
+            MenuCard(items: Array(items.prefix(Int(count))))
+        } knobs: {
+            Stepper("Items: \(Int(count))", value: $count, in: 1...4, step: 1)
+        }
+    }
+}
+
+// MARK: - daisyUI gap components
+
+struct RadialProgressDemo: View {
+    @State private var value = 0.6
+    @State private var label = true
+    @State private var dashboard = false
+    @State private var statusIdx = 0
+    private var status: ProgressStatus { statusIdx == 1 ? .success : statusIdx == 2 ? .exception : .normal }
+    var body: some View {
+        ComponentStage("RadialProgress", inspector: [("value", String(format: "%.2f", value)), ("dashboard", "\(dashboard)")]) {
+            RadialProgress(value: value, size: 96, lineWidth: 8, showLabel: label, status: status, dashboard: dashboard)
+        } knobs: {
+            HStack { Text("Value"); SwiftUI.Slider(value: $value) }
+            Picker("Status", selection: $statusIdx) { Text("Normal").tag(0); Text("Success").tag(1); Text("Exception").tag(2) }.pickerStyle(.segmented)
+            Toggle("Dashboard (gap)", isOn: $dashboard)
+            Toggle("Show label", isOn: $label)
+        }
+    }
+}
+
+struct IndicatorDemo: View {
+    enum Kind: String, CaseIterable { case dot, badge }
+    @State private var kind: Kind = .dot
+    @State private var position: IndicatorPosition = .topTrailing
+    var body: some View {
+        ComponentStage("Indicator", inspector: [("kind", kind.rawValue)]) {
+            Group {
+                if kind == .dot {
+                    Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot(position: position)
+                } else {
+                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3", style: .error, size: .small) }
+                }
+            }
+        } knobs: {
+            Picker("Kind", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+            Picker("Position", selection: $position) {
+                Text("TR").tag(IndicatorPosition.topTrailing); Text("TL").tag(IndicatorPosition.topLeading)
+                Text("BR").tag(IndicatorPosition.bottomTrailing); Text("BL").tag(IndicatorPosition.bottomLeading)
+            }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct StatDemo: View {
+    enum Trend: String, CaseIterable { case up, down, none }
+    @State private var trend: Trend = .up
+    @State private var figure = true
+    var body: some View {
+        ComponentStage("Stat", inspector: [("trend", trend.rawValue)]) {
+            Stat(title: "Total bookings", value: "1,284", description: "this month",
+                 systemImage: figure ? "ticket" : nil,
+                 trend: trend == .up ? .up("+12%") : trend == .down ? .down("-3%") : nil)
+        } knobs: {
+            Picker("Trend", selection: $trend) { ForEach(Trend.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+            Toggle("Figure icon", isOn: $figure)
+        }
+    }
+}
+
+struct StepsDemo: View {
+    @State private var active = 2
+    @State private var vertical = false
+    @State private var error = false
+    @State private var descriptions = true
+    @State private var progressDot = false
+    @State private var percent = false
+    private let titles = ["Cart", "Address", "Payment", "Done"]
+    private let subs = ["2 items", "İstanbul", "Card ••42", "Confirm"]
+    private var steps: [Steps.Step] {
+        titles.enumerated().map { i, t in
+            let state: StepState = (error && i == active) ? .error
+                : i < active ? .done : i == active ? .active : .todo
+            return .init(t, description: descriptions ? subs[i] : nil, state: state,
+                         percent: (percent && state == .active) ? 0.6 : nil)
+        }
+    }
+    var body: some View {
+        ComponentStage("Steps", inspector: [("active", "\(active)"), ("progressDot", "\(progressDot)")]) {
+            Steps(steps, axis: vertical ? .vertical : .horizontal, progressDot: progressDot) { active = $0; flash("Adım \($0 + 1) seçildi") }
+        } knobs: {
+            Stepper("Active: \(active)", value: $active, in: 0...3)
+            Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Progress dot", isOn: $progressDot)
+            Toggle("Active percent ring (60%)", isOn: $percent)
+            Toggle("Error at active", isOn: $error)
+            Toggle("Descriptions", isOn: $descriptions)
+            Toggle("Vertical", isOn: $vertical)
+        }
+    }
+}
+
+struct BreadcrumbsDemo: View {
+    @State private var depth = 4.0
+    private let all = ["Home", "Hotels", "İstanbul", "Grand Hotel"]
+    var body: some View {
+        ComponentStage("Breadcrumbs", inspector: [("depth", "\(Int(depth))")]) {
+            Breadcrumbs(all.prefix(Int(depth)).enumerated().map { i, t in .init(t, action: i < Int(depth) - 1 ? { flash("Breadcrumb: \(t)") } : nil) })
+        } knobs: {
+            Stepper("Depth: \(Int(depth))", value: $depth, in: 1...4)
+        }
+    }
+}
+
+struct TimelineDemo: View {
+    @State private var step = 2.0
+    @State private var pending = true
+    @State private var failed = false
+    @State private var horizontal = false
+    var body: some View {
+        ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical")]) {
+            Timeline([
+                .init(title: "Sipariş", time: "09:24", systemImage: "cart", state: .done, color: .success),
+                .init(title: "Hazırlanıyor", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
+                failed
+                    ? .init(title: "Hata", time: "09:45", description: horizontal ? nil : "Kartı tekrar dene.", state: .error)
+                    : .init(title: "Yolda", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
+            ], axis: horizontal ? .horizontal : .vertical, pending: (!horizontal && pending) ? "Kurye bekleniyor…" : nil)
+        } knobs: {
+            Stepper("Active: \(Int(step))", value: $step, in: 0...3)
+            Toggle("Horizontal", isOn: $horizontal)
+            Toggle("Pending node (vertical)", isOn: $pending)
+            Toggle("Error item", isOn: $failed)
+        }
+    }
+}
+
+struct ChatBubbleDemo: View {
+    @State private var outgoing = false
+    @State private var avatar = true
+    @State private var meta = true
+    var body: some View {
+        ComponentStage("ChatBubble", inspector: [("side", outgoing ? "outgoing" : "incoming")]) {
+            ChatBubble("Merhaba! Rezervasyonunuz onaylandı.",
+                       side: outgoing ? .outgoing : .incoming,
+                       author: meta ? "Destek" : nil, time: meta ? "09:24" : nil,
+                       avatarSystemImage: avatar ? "person.fill" : nil)
+        } knobs: {
+            Toggle("Outgoing", isOn: $outgoing)
+            Toggle("Avatar", isOn: $avatar)
+            Toggle("Author / time", isOn: $meta)
+        }
+    }
+}
+
+struct DrawerDemo: View {
+    @State private var open = false
+    @State private var trailing = false
+    var body: some View {
+        ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", trailing ? "trailing" : "leading")]) {
+            PrimaryButton("Open drawer") { open = true; flash("Drawer açıldı") }
+                .frame(maxWidth: .infinity, minHeight: 160)
+                .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Menu").textStyle(.headingSm)
+                        ListRow("Account", leadingSystemImage: "person.circle", action: { open = false; flash("Drawer: Account") })
+                        ListRow("Settings", leadingSystemImage: "gearshape", action: { open = false; flash("Drawer: Settings") })
+                        Spacer()
+                    }
+                    .padding()
+                    .padding(.top, 50)
+                }
+        } knobs: {
+            Toggle("Trailing edge", isOn: $trailing)
+            Button("Open") { open = true }
+        }
+    }
+}
+
+// MARK: - daisyUI gap components (batch 2)
+
+struct StatusDotDemo: View {
+    @State private var kind: StatusKind = .online
+    @State private var pulse = true
+    var body: some View {
+        ComponentStage("Status", inspector: [("kind", "\(kind)")]) {
+            StatusDot(kind, size: 14, label: "Status", pulse: pulse)
+        } knobs: {
+            Picker("Kind", selection: $kind) {
+                Text("Online").tag(StatusKind.online); Text("Busy").tag(StatusKind.busy); Text("Away").tag(StatusKind.away); Text("Offline").tag(StatusKind.offline)
+            }.pickerStyle(.segmented)
+            Toggle("Pulse", isOn: $pulse)
+        }
+    }
+}
+
+struct SwapDemo: View {
+    enum Pair: String, CaseIterable { case menu, theme }
+    @State private var on = false
+    @State private var pair: Pair = .menu
+    var body: some View {
+        ComponentStage("Swap", inspector: [("isOn", "\(on)")]) {
+            Group {
+                if pair == .menu { Swap(isOn: $on, on: "xmark", off: "line.3.horizontal", size: 32) }
+                else { Swap(isOn: $on, on: "moon.fill", off: "sun.max.fill", size: 32) }
+            }
+        } knobs: {
+            Picker("Icons", selection: $pair) { Text("Menu / Close").tag(Pair.menu); Text("Sun / Moon").tag(Pair.theme) }.pickerStyle(.segmented)
+            Toggle("On", isOn: $on)
+            Text("Tap the icon to swap.").font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct TextLinkDemo: View {
+    @State private var underline = true
+    var body: some View {
+        ComponentStage("TextLink", inspector: [("underline", "\(underline)")]) {
+            TextLink("Forgot password?", underline: underline) {}
+        } knobs: {
+            Toggle("Underline", isOn: $underline)
+        }
+    }
+}
+
+struct HeroDemo: View {
+    @State private var dark = false
+    @State private var subtitle = true
+    @State private var cta = true
+    var body: some View {
+        ComponentStage("Hero", inspector: [("dark", "\(dark)")]) {
+            Hero(title: dark ? "Summer Sale" : "Discover İstanbul",
+                 subtitle: subtitle ? "Hand-picked stays at the best prices." : nil,
+                 ctaTitle: cta ? "Explore" : nil, dark: dark, action: cta ? { flash("Hero: Explore") } : nil)
+        } knobs: {
+            Toggle("Dark", isOn: $dark)
+            Toggle("Subtitle", isOn: $subtitle)
+            Toggle("CTA", isOn: $cta)
+        }
+    }
+}
+
+struct FABDemo: View {
+    @State private var speedDial = true
+    @State private var square = false
+    @State private var badge = false
+    @State private var color: SemanticColor = .primary
+
+    var body: some View {
+        ComponentStage("FAB", inspector: [("speedDial", "\(speedDial)"), ("shape", square ? "square" : "circle")]) {
+            FloatingActionButton(systemImage: speedDial ? "plus" : "bell.fill", actions: speedDial ? [
+                .init(systemImage: "camera", label: "Photo", action: { flash("FAB: Photo") }),
+                .init(systemImage: "doc", label: "Document", action: { flash("FAB: Document") }),
+                .init(systemImage: "link", label: "Link", action: { flash("FAB: Link") }),
+            ] : [], shape: square ? .square : .circle, color: color, badge: badge ? 3 : nil, action: { flash("FAB tıklandı") })
+            .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomTrailing)
+        } knobs: {
+            Toggle("Speed dial", isOn: $speedDial)
+            Toggle("Square shape", isOn: $square)
+            Toggle("Badge (3)", isOn: $badge)
+            Picker("Color", selection: $color) { Text("Primary").tag(SemanticColor.primary); Text("Success").tag(SemanticColor.success); Text("Error").tag(SemanticColor.error) }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct CardStackDemo: View {
+    private struct Item: Identifiable { let id = UUID(); let color: Color; let title: String }
+    private let all = [Item(color: .blue, title: "Front"), Item(color: .teal, title: "Middle"), Item(color: .orange, title: "Back")]
+    @State private var count = 3.0
+    var body: some View {
+        ComponentStage("Stack", inspector: [("count", "\(Int(count))")]) {
+            CardStack(Array(all.prefix(Int(count)))) { item in
+                RoundedRectangle(cornerRadius: 16).fill(item.color.opacity(0.3))
+                    .frame(height: 110).overlay(Text(item.title).font(.headline)).frame(maxWidth: .infinity)
+            }
+        } knobs: {
+            Stepper("Count: \(Int(count))", value: $count, in: 1...3, step: 1)
+        }
+    }
+}
+
+// MARK: - Config-completion components
+
+struct CalendarDemo: View {
+    @State private var date: Date? = .now
+    var body: some View {
+        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
+            CalendarView(selection: $date)
+        } knobs: {
+            Button("Clear") { date = nil }
+        }
+    }
+}
+
+struct DataTableDemo: View {
+    private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: String }
+    private let rows = [
+        Booking(hotel: "Grand Hotel", nights: 3, price: "₺4.250"),
+        Booking(hotel: "Sea Resort", nights: 5, price: "₺7.800"),
+        Booking(hotel: "City Inn", nights: 2, price: "₺1.900"),
+    ]
+    @State private var striped = true
+    var body: some View {
+        ComponentStage("DataTable", inspector: [("rows", "\(rows.count)"), ("striped", "\(striped)")]) {
+            DataTable(columns: [
+                .init("Hotel") { $0.hotel },
+                .init("Nights", align: .center) { "\($0.nights)" },
+                .init("Price", align: .trailing) { $0.price },
+            ], rows: rows, striped: striped)
+        } knobs: {
+            Toggle("Striped", isOn: $striped)
+        }
+    }
+}
+
+struct FilterGroupDemo: View {
+    @State private var sel: String? = "Hotels"
+    var body: some View {
+        ComponentStage("FilterGroup", inspector: [("selection", sel ?? "nil")]) {
+            FilterGroup(title: "Category", options: ["Hotels", "Flights", "Cars", "Tours"], selection: $sel) { $0 }
+        } knobs: {
+            Button("Clear") { sel = nil }
+        }
+    }
+}
+
+struct FieldsetDemo: View {
+    @State private var name = ""
+    @State private var helper = true
+    @State private var subscribe = true
+    var body: some View {
+        ComponentStage("Fieldset") {
+            Fieldset("Contact details", helper: helper ? "We'll only use this to confirm your booking." : nil) {
+                TextInput("Full name", text: $name)
+                HStack { Checkbox(isChecked: $subscribe); Text("Subscribe to newsletter").textStyle(.bodyBase400); Spacer() }
+            }
+        } knobs: {
+            Toggle("Helper text", isOn: $helper)
+        }
+    }
+}
+
+struct FileInputDemo: View {
+    @State private var picked = false
+    var body: some View {
+        ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil")]) {
+            FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil) { picked.toggle(); flash("FileInput: dosya seçildi") }
+        } knobs: {
+            Toggle("File chosen", isOn: $picked)
+            Text("Tap 'Choose file' to toggle.").font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct ThemeControllerDemo: View {
+    @State private var name = "defaultTheme"
+    var body: some View {
+        ComponentStage("ThemeController", inspector: [("selected", name)]) {
+            VStack(spacing: 16) {
+                ThemeController(options: [
+                    .init(name: "defaultTheme", label: "Default"),
+                    .init(name: "oceanTheme", label: "Ocean"),
+                    .init(name: "sunsetTheme", label: "Sunset"),
+                ], selectedName: $name)
+                PrimaryButton("Sample button", isContentWidth: true) { flash("Sample button tıklandı") }
+            }
+        } knobs: {
+            Text("Switches Theme.shared live.").font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Configurable (daisyUI-style) components
+
+struct GlobalButtonDemo: View {
+    @State private var color: SemanticColor = .primary
+    @State private var variant: ButtonVariant = .solid
+    @State private var size: ButtonSize = .medium
+    @State private var shape: ButtonShape = .rounded
+    @State private var block = true
+    @State private var icon = false
+    @State private var trailingIcon = false
+    @State private var loading = false
+
+    private var iconOnly: Bool { shape == .circle || shape == .square }
+
+    var body: some View {
+        ComponentStage("GlobalButton", inspector: [
+            ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
+        ]) {
+            GlobalButton(iconOnly ? nil : "Button",
+                         systemImage: (icon || iconOnly) ? "star.fill" : nil,
+                         iconPosition: trailingIcon ? .trailing : .leading,
+                         color: color, variant: variant, size: size, shape: shape,
+                         block: block && !iconOnly, isLoading: $loading) { flash("GlobalButton tıklandı") }
+        } knobs: {
+            Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
+            Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
+            Picker("Size", selection: $size) {
+                Text("XS").tag(ButtonSize.xsmall); Text("S").tag(ButtonSize.small); Text("M").tag(ButtonSize.medium); Text("L").tag(ButtonSize.large)
+            }.pickerStyle(.segmented)
+            Picker("Shape", selection: $shape) { ForEach(ButtonShape.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
+            Toggle("Block (full width)", isOn: $block)
+            Toggle("Leading icon", isOn: $icon)
+            Toggle("Trailing icon position", isOn: $trailingIcon)
+            Toggle("Loading", isOn: $loading)
+        }
+    }
+}
+
+// MARK: - Color Palette (Ant-style 50…900 ladder + roles)
+
+struct ColorLadderDemo: View {
+    @State private var color: SemanticColor = .primary
+
+    private let steps = SemanticColor.Shade.allCases
+
+    var body: some View {
+        ComponentStage("Color Palette", inspector: [
+            ("base", color.rawValue), ("ladder", "50…900"), ("base hex", "step 500"),
+        ]) {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 0) {
+                    ForEach(steps, id: \.self) { step in
+                        Rectangle()
+                            .fill(color.shade(step))
+                            .frame(height: 60)
+                            .overlay(alignment: .bottom) {
+                                Text("\(step.rawValue)")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(step.rawValue >= 400 ? .white : .black.opacity(0.7))
+                                    .padding(.bottom, 3)
+                            }
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(spacing: 8) {
+                    roleRow("bg", "50", color.bg)
+                    roleRow("bgHover", "100", color.bgHover)
+                    roleRow("borderSubtle", "200", color.borderSubtle)
+                    roleRow("hover", "400", color.hover)
+                    roleRow("base", "500", color.base)
+                    roleRow("active", "600", color.active)
+                    roleRow("strong", "700", color.strong)
+                }
+            }
+            .padding(.vertical, 4)
+        } knobs: {
+            Picker("Color", selection: $color) {
+                ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }
+        }
+    }
+
+    private func roleRow(_ name: String, _ step: String, _ swatch: Color) -> some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(swatch)
+                .frame(width: 44, height: 26)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(.black.opacity(0.08)))
+            Text(".\(name)").font(.system(size: 13, weight: .medium, design: .monospaced))
+            Text("(\(step))").font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Feedback (unified presenter: toast + confirm)
+
+struct FeedbackDemo: View {
+    @EnvironmentObject private var feedback: FeedbackPresenter
+    @State private var kind: FeedbackKind = .success
+    @State private var last = "—"
+
+    var body: some View {
+        ComponentStage("Feedback", inspector: [("level", "global"), ("last action", last)]) {
+            VStack(spacing: 12) {
+                GlobalButton("Toast göster", color: kind.semanticColor, block: true) {
+                    feedback.toast("\(kind.rawValue.capitalized) mesajı",
+                                   message: "Bu bir \(kind.rawValue) bildirimi.", kind: kind)
+                    last = "toast: \(kind.rawValue)"
+                }
+                GlobalButton("Bildirim göster (notification)", color: kind.semanticColor, variant: .soft, block: true) {
+                    feedback.notify("\(kind.rawValue.capitalized)", message: "Üstten gelen bir bildirim.", kind: kind)
+                    last = "notify: \(kind.rawValue)"
+                }
+                GlobalButton("Yükleniyor (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
+                    feedback.loading("Kaydediliyor…")
+                    last = "loading"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                        feedback.dismissLoading(); feedback.toast("Kaydedildi", kind: .success)
+                    }
+                }
+                GlobalButton("Onay iste (confirm)", color: .error, variant: .outline, block: true) {
+                    feedback.confirm(
+                        title: "Rezervasyonu iptal et?",
+                        message: "Bu işlem geri alınamaz.",
+                        primaryTitle: "İptal et", primaryKind: .error,
+                        onPrimary: { last = "confirmed"; feedback.toast("İptal edildi", kind: .success); flash("Onaylandı") },
+                        secondaryTitle: "Vazgeç", onSecondary: { last = "dismissed"; flash("Vazgeçildi") }
+                    )
+                }
+            }
+        } knobs: {
+            Picker("Kind", selection: $kind) {
+                ForEach(FeedbackKind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }
+            .pickerStyle(.segmented)
+        }
+        .onAppear {
+            // Screenshot hook: launch with `-feedbackDemo toast|confirm|notify`.
+            switch UserDefaults.standard.string(forKey: "feedbackDemo") {
+            case "toast": feedback.toast("Kaydedildi", message: "Değişiklikler kaydedildi.", kind: .success)
+            case "notify": feedback.notify("Yeni mesaj", message: "Rezervasyonunuz onaylandı.", kind: .info)
+            case "confirm": feedback.confirm(title: "Rezervasyonu iptal et?", message: "Bu işlem geri alınamaz.",
+                                             primaryTitle: "İptal et", primaryKind: .error, secondaryTitle: "Vazgeç")
+            default: break
+            }
+        }
+    }
+}
+
+// MARK: - Result / Exception templates
+
+struct ResultDemo: View {
+    @State private var status: ResultStatus = .success
+
+    private var copy: (String, String) {
+        switch status {
+        case .success: return ("Rezervasyon onaylandı", "Onay e-postası gönderildi.")
+        case .info: return ("Bilgilendirme", "İşleminiz sıraya alındı.")
+        case .warning: return ("Ödeme beklemede", "Banka onayı bekleniyor.")
+        case .error: return ("Ödeme başarısız", "Kart bilgilerinizi kontrol edip tekrar deneyin.")
+        case .notFound: return ("Sayfa bulunamadı", "Aradığınız sayfa taşınmış veya silinmiş olabilir.")
+        case .forbidden: return ("Erişim engellendi", "Bu sayfayı görüntüleme yetkiniz yok.")
+        case .serverError: return ("Bir şeyler ters gitti", "Sunucu hatası oluştu, lütfen tekrar deneyin.")
+        }
+    }
+
+    var body: some View {
+        ComponentStage("Result", inspector: [("status", status.rawValue), ("code", status.codeText)]) {
+            ResultView(status, title: copy.0, message: copy.1,
+                       primaryTitle: "Tekrar dene", onPrimary: { flash("Result: Tekrar dene") },
+                       secondaryTitle: "Ana sayfa", onSecondary: { flash("Result: Ana sayfa") })
+        } knobs: {
+            Picker("Status", selection: $status) {
+                ForEach(ResultStatus.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+        }
+        .onAppear {
+            // Screenshot hook: launch with `-resultStatus notFound|forbidden|serverError|error|…`.
+            if let raw = UserDefaults.standard.string(forKey: "resultStatus"),
+               let s = ResultStatus(rawValue: raw) { status = s }
+        }
+    }
+}
+
+private extension ResultStatus {
+    var codeText: String {
+        switch self {
+        case .notFound: return "404"
+        case .forbidden: return "403"
+        case .serverError: return "500"
+        default: return "—"
+        }
+    }
+}
+
+// MARK: - Batch 6: new components
+
+struct BorderBeamDemo: View {
+    @State private var lineWidth = 3.0
+    @State private var duration = 4.0
+    @State private var pill = false
+    @State private var glow = true
+    @State private var paletteIdx = 0   // 0 accent, 1 purple→pink, 2 sunset
+
+    private var colors: [Color]? {
+        switch paletteIdx {
+        case 1: return [SemanticColor.purple.base, SemanticColor.pink.base]
+        case 2: return [SemanticColor.orange.base, SemanticColor.warning.base]
+        default: return nil   // theme accent + turquoise
+        }
+    }
+
+    var body: some View {
+        ComponentStage("BorderBeam", inspector: [("lineWidth", String(format: "%.0f", lineWidth)), ("glow", "\(glow)")]) {
+            Text(pill ? "Pro" : "Featured")
+                .textStyle(.headingSm)
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .padding(.horizontal, pill ? 28 : 48)
+                .padding(.vertical, pill ? 14 : 44)
+                .background(Theme.shared.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: pill ? 100 : 20, style: .continuous))
+                .borderBeam(cornerRadius: pill ? 100 : 20, lineWidth: lineWidth, duration: duration, glow: glow, colors: colors)
+        } knobs: {
+            HStack { Text("Width"); SwiftUI.Slider(value: $lineWidth, in: 1...6, step: 1) }
+            HStack { Text("Speed"); SwiftUI.Slider(value: $duration, in: 1.5...8) }
+            Picker("Colors", selection: $paletteIdx) { Text("Accent").tag(0); Text("Purple→Pink").tag(1); Text("Sunset").tag(2) }.pickerStyle(.segmented)
+            Toggle("Glow halo", isOn: $glow)
+            Toggle("Pill shape", isOn: $pill)
+        }
+    }
+}
+
+struct PopconfirmDemo: View {
+    @State private var show = false
+    @State private var edgeTop = false
+    @State private var last = "—"
+    var body: some View {
+        ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("last", last)]) {
+            GlobalButton("Sil", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
+                .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Bu işlem geri alınamaz.",
+                            confirmTitle: "Sil", cancelTitle: "Vazgeç", edge: edgeTop ? .top : .bottom,
+                            onConfirm: { last = "confirmed"; flash("Popconfirm onaylandı") }, onCancel: { last = "cancelled"; flash("Popconfirm iptal edildi") })
+                .padding(.vertical, 80)
+        } knobs: {
+            Toggle("Anchor above", isOn: $edgeTop)
+            Button(show ? "Hide" : "Show") { show.toggle() }
+        }
+    }
+}
+
+struct TreeSelectDemo: View {
+    @State private var picks: Set<String> = ["ist"]
+    @State private var cascade = true
+    @State private var searchable = true
+    private let tree = [
+        TreeNode(id: "tr", "Türkiye", systemImage: "flag", children: [
+            TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara"), TreeNode(id: "izm", "İzmir"),
+        ]),
+        TreeNode(id: "de", "Almanya", systemImage: "flag", children: [
+            TreeNode(id: "ber", "Berlin"), TreeNode(id: "mun", "Münih"),
+        ]),
+    ]
+    var body: some View {
+        ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)")]) {
+            TreeSelect(label: "Şehirler", nodes: tree, selection: $picks,
+                       cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"])
+                .id("\(cascade)\(searchable)")
+        } knobs: {
+            Toggle("Cascade (parent ↔ child + indeterminate)", isOn: $cascade)
+            Toggle("Searchable", isOn: $searchable)
+            Button("Reset") { picks = ["ist"] }
+        }
+    }
+}
+
+struct TourDemo: View {
+    @StateObject private var tour = TourController()
+    var body: some View {
+        ComponentStage("Tour", inspector: [("active", "\(tour.isActive)"), ("step", "\(tour.index + 1)")]) {
+            VStack(spacing: 20) {
+                HStack(spacing: 16) {
+                    tourIcon("magnifyingglass", "search")
+                    tourIcon("heart", "fav")
+                    tourIcon("person.crop.circle", "profile")
+                }
+                GlobalButton("Turu başlat", systemImage: "play.fill", block: true) { tour.start(); flash("Tur başlatıldı") }
+            }
+            .tourHost(tour, steps: [
+                TourStep("search", title: "Arama", message: "Buradan otel arayabilirsiniz."),
+                TourStep("fav", title: "Favoriler", message: "Beğendiklerinizi kaydedin."),
+                TourStep("profile", title: "Profil", message: "Hesabınızı buradan yönetin."),
+            ])
+        } knobs: {
+            Button("Turu başlat") { tour.start() }
+        }
+        .onAppear {
+            // Screenshot hook: launch with `-startTour YES`.
+            if UserDefaults.standard.bool(forKey: "startTour") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { tour.start() }
+            }
+        }
+    }
+
+    private func tourIcon(_ symbol: String, _ id: String) -> some View {
+        Image(systemName: symbol)
+            .font(.title2)
+            .foregroundStyle(Theme.shared.text(.textHero))
+            .frame(width: 52, height: 52)
+            .background(Theme.shared.background(.bgElevatorTertiary), in: Circle())
+            .tourTarget(id)
+    }
+}
+
+// MARK: - Form (aggregate validation: validate-on-submit + focus first error)
+
+struct FormDemo: View {
+    private enum Field { case email, password, plan, terms }
+
+    @StateObject private var form = FormValidator<Field>([
+        .email: [.required("E-posta zorunlu"), .email()],
+        .password: [.required("Şifre zorunlu"), .password(minLength: 8)],
+        .plan: [.required("Bir paket seçin")],
+        .terms: [.required("Devam etmek için kabul edin")],
+    ])
+    @State private var email = ""
+    @State private var password = ""
+    @State private var plan: String?
+    @State private var terms = false
+    @State private var submitted = false
+    @State private var done = false
+
+    // Map non-text controls to a value the validator understands.
+    private var values: [Field: String] {
+        [.email: email, .password: password, .plan: plan ?? "", .terms: terms ? "1" : ""]
+    }
+
+    var body: some View {
+        ComponentStage("Form", inspector: [("valid", submitted ? "\(form.isValid)" : "—"), ("focused", "\(form.focusedField.map { "\($0)" } ?? "—")")]) {
+            VStack(spacing: Theme.SpacingKey.md.value) {
+                Fieldset("Hesap oluştur", helper: "Tüm alanlar zorunlu.") {
+                    TextInput(TextInputModel(label: "E-posta", leadingSystemImage: "envelope",
+                                             infoMessages: form.messages(for: .email), accessibilityID: "form.email"),
+                              text: $email, externalFocus: form.focusBinding(.email))
+                    TextInput(TextInputModel(label: "Şifre (8+, büyük harf, rakam)", isSecure: true,
+                                             infoMessages: form.messages(for: .password), accessibilityID: "form.password"),
+                              text: $password, externalFocus: form.focusBinding(.password))
+                    RadioGroup(title: "Paket", options: ["Standart", "Pro"], selection: $plan,
+                               infoMessages: form.messages(for: .plan), accessibilityID: "form.plan") { $0 }
+                    Checkbox("Şartları ve koşulları kabul ediyorum", isChecked: $terms,
+                             infoMessages: form.messages(for: .terms), accessibilityID: "form.terms")
+                }
+                if done {
+                    InfoBanner("Hesabınız oluşturuldu.", type: .success)
+                }
+                GlobalButton("Kayıt ol", block: true, accessibilityID: "form.submit") {
+                    let firstInvalid = form.validateAll(values)
+                    submitted = true
+                    done = firstInvalid == nil
+                }
+            }
+        } knobs: {
+            Text("Boş submit → e-posta/şifre + RadioGroup + Checkbox hepsi hata gösterir; ilk hatalı text alan odaklanır.").font(.caption).foregroundStyle(.secondary)
+            Button("Reset") { email = ""; password = ""; plan = nil; terms = false; submitted = false; done = false; form.reset() }
+        }
+        .onChange(of: values.description) { _, _ in if submitted { _ = form.validateAll(values) } }
+        .onAppear {
+            // Screenshot hook: launch with `-formSubmit YES` to validate empty form.
+            if UserDefaults.standard.bool(forKey: "formSubmit") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    email = "bad"
+                    _ = form.validateAll(values)
+                    submitted = true
+                }
+            }
+        }
+    }
+}
+
+// MARK: - List container (Ant List)
+
+struct ListDemo: View {
+    private struct Row: Identifiable { let id = UUID(); let title: String; let subtitle: String; let icon: String }
+    private let rows = [
+        Row(title: "Hesabım", subtitle: "Profil ve güvenlik", icon: "person.circle"),
+        Row(title: "Bildirimler", subtitle: "E-posta ve push", icon: "bell"),
+        Row(title: "Dil", subtitle: "Türkçe", icon: "globe"),
+    ]
+    @State private var withHeader = true
+    @State private var bordered = true
+    @State private var split = true
+    @State private var loading = false
+
+    var body: some View {
+        ComponentStage("List", inspector: [("count", "\(rows.count)"), ("bordered", "\(bordered)"), ("loading", "\(loading)")]) {
+            ListView(rows, header: withHeader ? "Ayarlar" : nil, footer: withHeader ? "\(rows.count) öğe" : nil,
+                     bordered: bordered, loading: loading, split: split) { row in
+                ListRow(row.title, subtitle: row.subtitle, leadingSystemImage: row.icon, action: { flash("List: \(row.title)") })
+            }
+        } knobs: {
+            Toggle("Header + footer", isOn: $withHeader)
+            Toggle("Bordered", isOn: $bordered)
+            Toggle("Split (dividers)", isOn: $split)
+            Toggle("Loading (skeleton)", isOn: $loading)
+        }
+    }
+}
+
+// MARK: - Ref-logic: RemoteImage + AccordionGroup
+
+struct RemoteImageDemo: View {
+    @State private var ratio = 1   // 0:16:9, 1:1:1, 2:4:5
+    @State private var circle = false
+    @State private var gif = false
+    private var ratioStr: String { ratio == 0 ? "16:9" : ratio == 2 ? "4:5" : "1:1" }
+    private let gifURL = URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")
+    var body: some View {
+        ComponentStage("RemoteImage", inspector: [("mode", gif ? "gif" : circle ? "circle" : ratioStr)]) {
+            VStack(spacing: 16) {
+                if gif {
+                    RemoteImage(gifURL, ratio: "1:1", cornerRadius: 16)
+                        .frame(width: 180, height: 180)
+                } else if circle {
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), aspectRatio: 1, circle: true)
+                        .frame(width: 140, height: 140)
+                } else {
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), ratio: ratioStr, cornerRadius: 16)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 180)
+                }
+                Text("Static via AsyncImage (AVIF/WebP native on iOS 16+); .gif/.apng animate via ImageIO — no dependency.").font(.caption).foregroundStyle(.secondary)
+            }
+        } knobs: {
+            Toggle("Animated GIF (native)", isOn: $gif)
+            Toggle("Circle clip (avatar)", isOn: $circle)
+            Picker("Aspect", selection: $ratio) { Text("16:9").tag(0); Text("1:1").tag(1); Text("4:5").tag(2) }.pickerStyle(.segmented).disabled(circle || gif)
+        }
+    }
+}
+
+struct ImageCollageDemo: View {
+    @State private var count = 6.0
+    private var urls: [URL] {
+        (1...Int(count)).compactMap { URL(string: "https://picsum.photos/seed/collage\($0)/400/300") }
+    }
+    var body: some View {
+        ComponentStage("ImageCollage", inspector: [("images", "\(Int(count))")]) {
+            ImageCollage(urls, height: 220, onTap: { flash("ImageCollage: \($0 + 1). görsel") })
+        } knobs: {
+            HStack { Text("Images"); SwiftUI.Slider(value: $count, in: 1...8, step: 1) }
+            Text("Layouts adapt: 1 · 2 · 3 · 4+ with a +N overlay on the last tile.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct AccordionGroupDemo: View {
+    private struct FAQ: Identifiable { let id = UUID(); let q: String; let a: String }
+    private let faqs = [
+        FAQ(q: "İptal edebilir miyim?", a: "Evet, girişten 24 saat öncesine kadar ücretsiz iptal."),
+        FAQ(q: "Ödeme seçenekleri neler?", a: "Kredi/banka kartı ve havale/EFT kabul edilir."),
+        FAQ(q: "Evcil hayvan kabul ediliyor mu?", a: "Küçük ırk evcil hayvanlar ek ücretle kabul edilir."),
+    ]
+    @State private var multi = false
+
+    var body: some View {
+        ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single")]) {
+            AccordionGroup(faqs, mode: multi ? .multiple : .single, initiallyExpanded: []) { $0.q } content: {
+                Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+        } knobs: {
+            Toggle("Multiple open", isOn: $multi)
+            Text("single = opening one closes the others; multiple = independent.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Ref-logic D: PagingCarousel + RollingNumber + VideoPlayer
+
+struct PagingCarouselDemo: View {
+    private struct Slide: Identifiable { let id = UUID(); let color: Color; let title: String }
+    private let slides = [Slide(color: .blue, title: "Bir"), Slide(color: .teal, title: "İki"),
+                          Slide(color: .orange, title: "Üç"), Slide(color: .purple, title: "Dört")]
+    @State private var autoplay = false
+    @State private var peek = 36.0
+
+    var body: some View {
+        ComponentStage("PagingCarousel", inspector: [("peek", "\(Int(peek))"), ("autoplay", "\(autoplay)")]) {
+            PagingCarousel(slides, peek: peek, autoplay: autoplay ? 2 : nil) { s in
+                s.color.opacity(0.25).overlay(Text(s.title).textStyle(.headingSm))
+            }
+        } knobs: {
+            HStack { Text("Peek"); SwiftUI.Slider(value: $peek, in: 0...64, step: 4) }
+            Toggle("Autoplay (2s)", isOn: $autoplay)
+            Text("Drag to page — previous/next peek at the edges.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct RollingNumberDemo: View {
+    @State private var value = 1284
+    @State private var size = 40.0
+    var body: some View {
+        ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
+            VStack(spacing: 16) {
+                RollingNumber(value, size: size, color: Theme.shared.text(.textHero))
+                GlobalButton("Roll", systemImage: "dice") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }
+            }
+        } knobs: {
+            HStack { Text("Size"); SwiftUI.Slider(value: $size, in: 24...64, step: 4) }
+            Stepper("Value: \(value)", value: $value, in: 0...999999, step: 111)
+        }
+    }
+}
+
+struct VideoPlayerDemo: View {
+    @State private var muted = true
+    @State private var loop = true
+    @State private var tapToToggle = true
+    @State private var muteToggle = true
+    @State private var progress: Double = 0
+    private let url = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+    var body: some View {
+        ComponentStage("VideoPlayer", inspector: [("muted", "\(muted)"), ("progress", String(format: "%.0f%%", progress * 100))]) {
+            VStack(spacing: 8) {
+                VideoPlayerView(url, autoplay: true, loop: loop, muted: muted,
+                                showMuteToggle: muteToggle, tapToToggle: tapToToggle,
+                                progress: $progress, isMuted: $muted)
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                ProgressBar(value: progress)
+            }
+        } knobs: {
+            Toggle("Muted", isOn: $muted)
+            Toggle("Mute toggle button", isOn: $muteToggle)
+            Toggle("Tap to play/pause", isOn: $tapToToggle)
+            Toggle("Loop", isOn: $loop)
+            Text("AVKit · resume from last position · progress binding · active-gated.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct ChipsDemo: View {
+    enum Kind: String, CaseIterable { case compact, chose, image, filter, group }
+    @State private var kind: Kind = .compact
+    @State private var a = true
+    @State private var b = false
+    @State private var multi: Set<String> = ["Wifi", "Havuz"]
+    @State private var square = false
+
+    private var imageURL: URL? { URL(string: "https://picsum.photos/seed/imgchip/200/300") }
+
+    var body: some View {
+        ComponentStage("Chips", inspector: [("variant", kind.rawValue)]) {
+            Group {
+                switch kind {
+                case .compact:
+                    HStack(spacing: 12) {
+                        CompactChip(isSelected: $a, text: "Standart Oda", price: "₺399,90", rating: 4.6)
+                        CompactChip(isSelected: $b, text: "Suit Oda", price: "₺899,90")
+                    }
+                case .chose:
+                    ChoseChip(isSelected: $a, title: "Esnek Tarife", description: "Ücretsiz iptal",
+                              rating: 4.8, showFree: true, systemImage: "wind")
+                case .image:
+                    HStack(spacing: 12) {
+                        ImageChip(isSelected: $a, url: imageURL, size: .medium)
+                        ImageChip(isSelected: $b, url: imageURL, size: .medium)
+                    }
+                case .filter:
+                    HStack(spacing: 8) {
+                        FilterChip("İstanbul", shape: square ? .square : .pill) { flash("FilterChip: İstanbul") }
+                        FilterChip("4+ yıldız", shape: square ? .square : .pill) { flash("FilterChip: 4+ yıldız") }
+                    }
+                case .group:
+                    ChipGroup(title: "Olanaklar", options: ["Wifi", "Havuz", "Spa", "Otopark", "Restoran"], selection: $multi) { $0 }
+                }
+            }
+        } knobs: {
+            Picker("Variant", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
+            if kind == .filter { Toggle("Square shape", isOn: $square) }
+            if kind == .group { Text("Multi-select: \(multi.sorted().joined(separator: ", "))").font(.caption).foregroundStyle(.secondary) }
+        }
+    }
+}
+
+struct DialogDemo: View {
+    @State private var show = false
+    @State private var accepted = false
+    var body: some View {
+        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)")]) {
+            VStack(spacing: 12) {
+                PrimaryButton("Sözleşmeyi aç", isContentWidth: true) { show = true; flash("Dialog açıldı") }
+                Text(accepted ? "Kabul edildi ✓" : "Henüz onaylanmadı")
+                    .textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 220)
+            .dialog(isPresented: $show, title: "Kullanım Koşulları", afterClose: {}) {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(1...8, id: \.self) { i in
+                        Text("\(i). Madde").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Text("Bu uzun metin, dialog içeriğinin kaydırılabilir olduğunu gösterir. Footer sabit kalır.")
+                            .textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                }
+            } footer: {
+                HStack(spacing: 12) {
+                    OutlineButton("Vazgeç", isContentWidth: true) { show = false; flash("Dialog: Vazgeç") }
+                    PrimaryButton("Kabul et", isContentWidth: true) { accepted = true; show = false; flash("Dialog onaylandı") }
+                }
+            }
+        } knobs: {
+            Button("Reset") { accepted = false }
+        }
+    }
+}
+
+struct ProgressIndicatorDemo: View {
+    enum Variant: String, CaseIterable { case carousel, video, progress }
+    @State private var variant: Variant = .carousel
+    @State private var current = 2.0
+    @State private var videoProgress = 0.5
+    @State private var stepText = true
+    @State private var padded = false
+
+    private var v: ProgressIndicatorVariant { variant == .video ? .video : variant == .progress ? .progress : .carousel }
+
+    var body: some View {
+        ComponentStage("ProgressIndicator", inspector: [("variant", variant.rawValue), ("step", "\(Int(current))/8")]) {
+            ProgressIndicator(variant: v, current: Int(current), total: 8,
+                              videoProgress: videoProgress,
+                              stepText: stepText ? (padded ? .padded : .slash) : .none)
+        } knobs: {
+            Picker("Variant", selection: $variant) { ForEach(Variant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
+            HStack { Text("Current"); SwiftUI.Slider(value: $current, in: 0...8, step: 1) }
+            if variant == .video { HStack { Text("Video fill"); SwiftUI.Slider(value: $videoProgress) } }
+            Toggle("Step text", isOn: $stepText)
+            if stepText { Toggle("Padded (01 | 08)", isOn: $padded) }
+        }
+    }
+}

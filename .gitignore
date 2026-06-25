@@ -6,3 +6,9 @@ DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+
+# Xcode / SwiftPM build output (Demo app)
+Demo/build/
+Demo/.build/
+build/
+*.xcuserstate

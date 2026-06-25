@@ -1,0 +1,288 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Average" : {
+      "comment" : "Rating: default sentiment for the mid score band.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Orta" } }
+      }
+    },
+    "Days" : {
+      "comment" : "Counter: day/hour/minute convenience label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Gün" } }
+      }
+    },
+    "Excellent" : {
+      "comment" : "Rating: default sentiment for the top score band.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Mükemmel" } }
+      }
+    },
+    "Free" : {
+      "comment" : "Chip: default free-badge label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Ücretsiz" } }
+      }
+    },
+    "Good" : {
+      "comment" : "Rating: default sentiment for the good score band.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "İyi" } }
+      }
+    },
+    "Hours" : {
+      "comment" : "Counter: day/hour/minute convenience label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Saat" } }
+      }
+    },
+    "Minutes" : {
+      "comment" : "Counter: day/hour/minute convenience label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Dakika" } }
+      }
+    },
+    "Poor" : {
+      "comment" : "Rating: default sentiment for the low score band.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Zayıf" } }
+      }
+    },
+    "Very good" : {
+      "comment" : "Rating: default sentiment for the high score band.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Çok iyi" } }
+      }
+    },
+    ", a digit" : {
+      "comment" : "Password requirement fragment, appended after the length requirement.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : ", rakam" } }
+      }
+    },
+    ", a special character" : {
+      "comment" : "Password requirement fragment, appended after the length requirement.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : ", özel karakter" } }
+      }
+    },
+    ", uppercase" : {
+      "comment" : "Password requirement fragment, appended after the length requirement.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : ", büyük harf" } }
+      }
+    },
+    "%lld selected" : {
+      "comment" : "MultiSelect accessibility value: number of selected options.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%lld seçili" } }
+      }
+    },
+    "Add a photo from your device or take one with the camera." : {
+      "comment" : "Upload component default prompt.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Cihazından fotoğraf ekleyin veya kamerayla çekim yapın." } }
+      }
+    },
+    "At least %lld characters" : {
+      "comment" : "Validation: minimum length.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "En az %lld karakter" } }
+      }
+    },
+    "At most %lld characters" : {
+      "comment" : "Validation: maximum length.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "En fazla %lld karakter" } }
+      }
+    },
+    "Back" : {
+      "comment" : "Tour: previous-step button.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Geri" } }
+      }
+    },
+    "Between %lld and %lld" : {
+      "comment" : "Validation: integer range.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld–%2$lld arası" } }
+      }
+    },
+    "Cancel" : {
+      "comment" : "Default secondary / dismiss action label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "İptal" } }
+      }
+    },
+    "Digits only" : {
+      "comment" : "Validation: numeric only.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Yalnızca rakam" } }
+      }
+    },
+    "Doesn't match" : {
+      "comment" : "Validation: confirm-field mismatch.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Eşleşmiyor" } }
+      }
+    },
+    "Done" : {
+      "comment" : "Tour: finish button on the last step.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Bitir" } }
+      }
+    },
+    "Enter a valid email" : {
+      "comment" : "Validation: email format.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Geçerli bir e-posta girin" } }
+      }
+    },
+    "Enter a valid phone number" : {
+      "comment" : "Validation: phone format.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Geçerli bir telefon girin" } }
+      }
+    },
+    "Hide password" : {
+      "comment" : "TextInput: accessibility label for the reveal toggle (currently showing).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Şifreyi gizle" } }
+      }
+    },
+    "Loading" : {
+      "comment" : "Button accessibility value while loading.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Yükleniyor" } }
+      }
+    },
+    "Loading…" : {
+      "comment" : "Default blocking-loading title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Yükleniyor…" } }
+      }
+    },
+    "Max" : {
+      "comment" : "RangeSlider: default max input title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "En çok" } }
+      }
+    },
+    "Min" : {
+      "comment" : "RangeSlider: default min input title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "En az" } }
+      }
+    },
+    "Next" : {
+      "comment" : "Tour: next-step button.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "İleri" } }
+      }
+    },
+    "No" : {
+      "comment" : "Popconfirm: default cancel title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Hayır" } }
+      }
+    },
+    "No results" : {
+      "comment" : "MultiSelect: empty search result.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Sonuç yok" } }
+      }
+    },
+    "Read more" : {
+      "comment" : "BlogCard: default read-more link title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Devamını Oku" } }
+      }
+    },
+    "Select" : {
+      "comment" : "Default placeholder for select-style fields.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Seçiniz" } }
+      }
+    },
+    "Select a date" : {
+      "comment" : "DateField: default placeholder.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Tarih seçin" } }
+      }
+    },
+    "Show password" : {
+      "comment" : "TextInput: accessibility label for the reveal toggle (currently hidden).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Şifreyi göster" } }
+      }
+    },
+    "This field is required" : {
+      "comment" : "Validation: required field.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Bu alan zorunlu" } }
+      }
+    },
+    "Upload Photo" : {
+      "comment" : "Upload component default button title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Fotoğraf Yükle" } }
+      }
+    },
+    "Uploaded" : {
+      "comment" : "Upload: completed status label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Yüklendi" } }
+      }
+    },
+    "Use MM/YY format" : {
+      "comment" : "Validation: credit-card expiry date format.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "AA/YY formatında girin" } }
+      }
+    },
+    "Verification code" : {
+      "comment" : "OTPInput: accessibility label for the code field.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Doğrulama kodu" } }
+      }
+    },
+    "Yes" : {
+      "comment" : "Popconfirm: default confirm title.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Evet" } }
+      }
+    },
+    "mixed" : {
+      "comment" : "Checkbox accessibility value: indeterminate state.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "kısmi" } }
+      }
+    },
+    "not selected" : {
+      "comment" : "Checkbox / radio accessibility value: unselected.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "seçili değil" } }
+      }
+    },
+    "off" : {
+      "comment" : "Toggle accessibility value: off.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "kapalı" } }
+      }
+    },
+    "on" : {
+      "comment" : "Toggle accessibility value: on.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "açık" } }
+      }
+    },
+    "selected" : {
+      "comment" : "Checkbox / radio accessibility value: selected.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "seçili" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

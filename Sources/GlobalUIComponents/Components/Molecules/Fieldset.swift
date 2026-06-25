@@ -1,0 +1,55 @@
+//
+//  Fieldset.swift
+//  GlobalUIComponents
+//  Created by İsa Mercan on 23.06.2026.
+//
+//  Molecule. A bordered form group with a legend + optional helper text.
+//  (daisyUI "Fieldset".)
+//
+
+import SwiftUI
+
+public struct Fieldset<Content: View>: View {
+    private let title: String
+    private let helper: String?
+    private let content: () -> Content
+
+    public init(_ title: String, helper: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.helper = helper
+        self.content = content
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+            Text(title)
+                .textStyle(.labelBase700)
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+            content()
+            if let helper {
+                Text(helper)
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(Theme.shared.text(.textTertiary))
+            }
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+    }
+}
+
+#Preview {
+    struct Demo: View {
+        @State var name = ""
+        @State var subscribe = true
+        var body: some View {
+            Fieldset("Contact details", helper: "We'll only use this to confirm your booking.") {
+                TextInput("Full name", text: $name)
+                HStack { Checkbox(isChecked: $subscribe); Text("Subscribe to newsletter").textStyle(.bodyBase400); Spacer() }
+            }
+            .padding()
+        }
+    }
+    return Demo()
+}
