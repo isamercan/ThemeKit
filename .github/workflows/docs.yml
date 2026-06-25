@@ -1,30 +1,27 @@
 name: Docs
 
-# Build the DocC documentation and publish it to GitHub Pages on every push to
-# main. Set Settings ▸ Pages ▸ Source = "GitHub Actions" once for this to serve.
+# Build the DocC documentation on every push to main and upload it as a
+# downloadable artifact. The repo is PRIVATE, so GitHub Pages isn't available on
+# the current plan — docs are not published; build them locally with:
+#   swift package --disable-sandbox preview-documentation --target GlobalUIComponents
+# This job's value is catching broken doc comments / DocC links in CI, and
+# producing a browsable archive reviewers can download.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# Required for the Pages deployment.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Only one Pages deploy at a time; let an in-flight one finish.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: Build DocC & deploy to Pages
+  build:
+    name: Build DocC
     runs-on: macos-15
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,25 +31,19 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      # Project site → assets are served under /<repo>/, so the base path MUST be
-      # the repo name or every CSS/JS asset 404s.
+      # Static-hosting transform (no base path) → a self-contained, browsable
+      # site. Download the artifact and serve it, e.g. `python3 -m http.server`.
       - name: Build DocC (static hosting)
         run: |
           swift package --disable-sandbox \
             generate-documentation \
             --target GlobalUIComponents \
             --transform-for-static-hosting \
-            --hosting-base-path GlobalUIComponents \
             --output-path ./docs-out
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload DocC artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: GlobalUIComponents-docc
           path: ./docs-out
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          retention-days: 14

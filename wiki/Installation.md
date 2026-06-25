@@ -31,5 +31,6 @@ Swift Package Manager, in Xcode or `Package.swift`.
 The core is **zero-dependency**; Lottie is pulled in only via the
 `GlobalUIComponentsLottie` product.
 
-📖 Detailed version with screenshots: see the
-[Installation article in the full docs](https://isamercan.github.io/GlobalUIComponents/documentation/globaluicomponents/installation).
+📖 Detailed version: the **Installation** article in the DocC docs
+(`Sources/GlobalUIComponents/Documentation.docc/Installation.md`), viewable with
+`swift package --disable-sandbox preview-documentation --target GlobalUIComponents`.
