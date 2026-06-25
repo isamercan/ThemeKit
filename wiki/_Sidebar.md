@@ -8,4 +8,5 @@
 
 ---
 
-📖 [Full docs](https://isamercan.github.io/GlobalUIComponents/documentation/globaluicomponents/)
+📖 DocC docs: build locally
+(`preview-documentation`)

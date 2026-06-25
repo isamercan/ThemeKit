@@ -45,5 +45,5 @@ back/next arrows) are flipped via the library's RTL helper.
 
 iOS 17+ and macOS 14+.
 
-📖 Full API reference:
-https://isamercan.github.io/GlobalUIComponents/documentation/globaluicomponents/
+📖 Full API reference — build the DocC docs locally (the repo is private):
+`swift package --disable-sandbox preview-documentation --target GlobalUIComponents`
