@@ -1043,6 +1043,24 @@ struct FeedbackDemo: View {
                                    message: "Bu bir \(kind.rawValue) bildirimi.", kind: kind)
                     last = "toast: \(kind.rawValue)"
                 }
+                ThemeButton("Stack (3 toast)", color: kind.semanticColor, variant: .soft, block: true) {
+                    for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: kind) }
+                    last = "stack: 3"
+                }
+                ThemeButton("Undo (action + sticky)", variant: .outline, block: true) {
+                    feedback.toast("Mesaj silindi", kind: .info,
+                                   action: ToastAction("Geri al") { feedback.toast("Geri alındı", kind: .success) },
+                                   duration: nil)
+                    last = "undo toast"
+                }
+                ThemeButton("Async görev (task)", variant: .outline, block: true) {
+                    Task {
+                        await feedback.toastTask(loading: "Kaydediliyor…", success: "Kaydedildi") {
+                            try await Task.sleep(nanoseconds: 1_500_000_000)
+                        }
+                    }
+                    last = "async task"
+                }
                 ThemeButton("Bildirim göster (notification)", color: kind.semanticColor, variant: .soft, block: true) {
                     feedback.notify("\(kind.rawValue.capitalized)", message: "Üstten gelen bir bildirim.", kind: kind)
                     last = "notify: \(kind.rawValue)"

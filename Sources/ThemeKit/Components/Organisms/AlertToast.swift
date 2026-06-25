@@ -39,27 +39,54 @@ public enum AlertToastType {
     }
 }
 
+/// An optional tappable action rendered inline in a toast (e.g. "Undo"). Its
+/// label inherits the toast's foreground color so it reads on the solid fill.
+public struct ToastAction {
+    public let title: String
+    public let handler: () -> Void
+
+    public init(_ title: String, handler: @escaping () -> Void) {
+        self.title = title
+        self.handler = handler
+    }
+}
+
 public struct AlertToast: View {
     private let title: String
     private let message: String?
     private let type: AlertToastType
+    private let systemImage: String?
+    private let isLoading: Bool
+    private let action: ToastAction?
     private let onClose: (() -> Void)?
 
     public init(
         _ title: String,
         message: String? = nil,
         type: AlertToastType = .info,
+        systemImage: String? = nil,
+        isLoading: Bool = false,
+        action: ToastAction? = nil,
         onClose: (() -> Void)? = nil
     ) {
         self.title = title
         self.message = message
         self.type = type
+        self.systemImage = systemImage
+        self.isLoading = isLoading
+        self.action = action
         self.onClose = onClose
     }
 
     public var body: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-            Icon(systemName: type.systemImage, size: .sm, color: type.foreground)
+            // Leading accessory: an activity spinner while loading, otherwise the
+            // status icon (a caller override falls back to the type's default).
+            if isLoading {
+                Spinner(size: IconSize.sm.value, lineWidth: 2, color: type.foreground)
+            } else {
+                Icon(systemName: systemImage ?? type.systemImage, size: .sm, color: type.foreground)
+            }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).textStyle(.labelBase600)
@@ -68,6 +95,13 @@ public struct AlertToast: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let action {
+                Button(action: action.handler) {
+                    Text(action.title).textStyle(.labelBase700).underline()
+                }
+                .buttonStyle(.plain)
+            }
 
             if let onClose {
                 Button(action: onClose) {
@@ -89,6 +123,8 @@ public struct AlertToast: View {
         AlertToast("Check your input", message: "One field needs attention.", type: .warning)
         AlertToast("Something went wrong", type: .danger, onClose: {})
         AlertToast("New update available", type: .info)
+        AlertToast("Message deleted", type: .info, action: ToastAction("Undo") {}, onClose: {})
+        AlertToast("Uploading…", type: .info, isLoading: true)
     }
     .padding()
 }
