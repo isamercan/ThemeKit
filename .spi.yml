@@ -1,0 +1,6 @@
+# Swift Package Index configuration — free DocC hosting as a backup to Pages.
+# https://swiftpackageindex.com/SwiftPackageIndex/SPIManifest
+version: 1
+builder:
+  configs:
+    - documentation_targets: [GlobalUIComponents]
