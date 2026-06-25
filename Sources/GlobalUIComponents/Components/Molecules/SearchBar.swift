@@ -52,6 +52,7 @@ public struct SearchBar: View {
             if showBackButton {
                 Button { onBack?() } label: {
                     Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                        .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
             }

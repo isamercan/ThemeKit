@@ -97,6 +97,7 @@ public struct Pagination: View {
             Icon(systemName: systemName, size: .sm,
                  color: enabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
                 .frame(width: 36, height: 36)
+                .mirrorsInRTL()
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

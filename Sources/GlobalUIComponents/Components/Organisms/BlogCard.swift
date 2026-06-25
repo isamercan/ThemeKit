@@ -76,6 +76,7 @@ public struct BlogCard<Media: View>: View {
             HStack(spacing: 4) {
                 Text(readMoreTitle).textStyle(.linkSm)
                 Image(systemName: "arrow.right").font(.system(size: 11, weight: .semibold))
+                    .mirrorsInRTL()
             }
             .foregroundStyle(Theme.shared.text(.textHero))
         }

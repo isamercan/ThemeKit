@@ -36,6 +36,7 @@ public struct RatingSummary: View {
                     HStack(spacing: 4) {
                         Text("\(reviewCount) Yorum").textStyle(.linkSm)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
+                            .mirrorsInRTL()
                     }
                     .foregroundStyle(Theme.shared.text(.textHero))
                 }

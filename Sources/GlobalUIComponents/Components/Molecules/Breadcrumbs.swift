@@ -38,6 +38,7 @@ public struct Breadcrumbs: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .mirrorsInRTL()
                     }
                 }
             }

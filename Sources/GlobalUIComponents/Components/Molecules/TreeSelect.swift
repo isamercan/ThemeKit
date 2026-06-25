@@ -134,6 +134,7 @@ public struct TreeSelect: View {
                 Button { toggleExpand(node.id) } label: {
                     Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right", size: .xs, color: Theme.shared.text(.textTertiary))
                         .frame(width: 16, height: 16)
+                        .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
             }
