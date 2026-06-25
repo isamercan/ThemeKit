@@ -1,6 +1,6 @@
 # Design principles
 
-Ant Design's ten principles, translated into concrete rules for GlobalUIComponents and
+Ant Design's ten principles, translated into concrete rules for ThemeKit and
 audited against the current library. Use this as the contributor checklist when adding or
 reviewing a component.
 
@@ -26,7 +26,7 @@ reviewing a component.
 | Repetition / tokens | ✅ Strong | 128 semantic tokens + 50–900 ladders; zero hardcoded colors in components. |
 | Contrast (incl. dark) | ✅ Good | Real dark theme derived from the ladders; soft accent surfaces + text verified readable on sim. |
 | Stay on the page | ✅ Good | Skeleton/Spinner/Progress + toast/sheet/drawer cover loading and feedback without leaving context. |
-| React immediately | ⚠️ Buttons done | Press feedback covers `GlobalButton` + preset buttons. **Next:** extend a press style to other tappable surfaces (`ListRow`, `Chip`, `Card`-as-button, `MenuCard`) so taps feel equally responsive. |
+| React immediately | ⚠️ Buttons done | Press feedback covers `ThemeButton` + preset buttons. **Next:** extend a press style to other tappable surfaces (`ListRow`, `Chip`, `Card`-as-button, `MenuCard`) so taps feel equally responsive. |
 | Transition | ⚠️ Partial | `Motion` exists and is used by toggles/toasts/dialogs. **Next:** audit list/detail navigation pushes and accordion expand for consistent `Motion.base`. |
 | Invitation | ✅ Good | EmptyState + new ResultView templates give every dead-end a CTA. |
 | Directness | ✅ Good | Inline steppers/sliders/chips; field-level errors. |

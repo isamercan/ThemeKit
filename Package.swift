@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "GlobalUIComponents",
+    name: "ThemeKit",
     // Source/development language for the bundled String Catalog. Shipped default
     // strings are English; consumers can add their own localizations, and every
     // user-facing string also remains overridable via API parameters.
@@ -16,18 +16,18 @@ let package = Package(
     products: [
         // Core library — ZERO third-party dependencies (native only).
         .library(
-            name: "GlobalUIComponents",
-            targets: ["GlobalUIComponents"]
+            name: "ThemeKit",
+            targets: ["ThemeKit"]
         ),
         // Optional add-on — pulls in Lottie for vector (After Effects / JSON)
         // animations. Import ONLY if you need Lottie; the core stays dependency-free.
         .library(
-            name: "GlobalUIComponentsLottie",
-            targets: ["GlobalUIComponentsLottie"]
+            name: "ThemeKitLottie",
+            targets: ["ThemeKitLottie"]
         ),
     ],
     dependencies: [
-        // Used solely by the GlobalUIComponentsLottie add-on target.
+        // Used solely by the ThemeKitLottie add-on target.
         .package(url: "https://github.com/airbnb/lottie-ios.git", from: "4.4.0"),
         // TEST-ONLY: visual regression (snapshot) testing. Never linked into the
         // shipped library — only the test target depends on it, so consumers
@@ -41,7 +41,7 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         .target(
-            name: "GlobalUIComponents",
+            name: "ThemeKit",
             resources: [
                 .process("Resources"),
             ]
@@ -49,16 +49,16 @@ let package = Package(
         // Lottie add-on: depends on the core + Lottie. Keeps Lottie out of the core
         // dependency graph so consumers who don't need it never download it.
         .target(
-            name: "GlobalUIComponentsLottie",
+            name: "ThemeKitLottie",
             dependencies: [
-                "GlobalUIComponents",
+                "ThemeKit",
                 .product(name: "Lottie", package: "lottie-ios"),
             ]
         ),
         .testTarget(
-            name: "GlobalUIComponentsTests",
+            name: "ThemeKitTests",
             dependencies: [
-                "GlobalUIComponents",
+                "ThemeKit",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ]
         ),

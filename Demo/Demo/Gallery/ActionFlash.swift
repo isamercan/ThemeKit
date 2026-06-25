@@ -9,7 +9,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 /// Singleton bus so any demo callback can post without threading an env object.
 final class DemoActionBus: ObservableObject {

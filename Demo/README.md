@@ -1,6 +1,6 @@
-# GlobalUIComponents Demo
+# ThemeKit Demo
 
-A SwiftUI iOS app that consumes the local `GlobalUIComponents` package and
+A SwiftUI iOS app that consumes the local `ThemeKit` package and
 showcases its theme system and components.
 
 ## Run
@@ -12,7 +12,7 @@ open Demo/Demo.xcodeproj
 Select the **Demo** scheme + an iOS Simulator and hit **Run** (⌘R).
 
 The project references the package via a **local** Swift Package reference
-(`relativePath = ..`), so any change in `Sources/GlobalUIComponents` is picked
+(`relativePath = ..`), so any change in `Sources/ThemeKit` is picked
 up immediately.
 
 ## Tabs

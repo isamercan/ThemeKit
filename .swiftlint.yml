@@ -1,4 +1,4 @@
-# SwiftLint configuration for GlobalUIComponents.
+# SwiftLint configuration for ThemeKit.
 #
 # Philosophy: a design system is read far more than it is written. Rules here
 # protect readability and catch real bugs, while staying out of the way of the
@@ -15,7 +15,7 @@ included:
 excluded:
   - .build
   - Demo/build
-  - Sources/GlobalUIComponents/Theme/ColorTokens.generated.swift # generated
+  - Sources/ThemeKit/Theme/ColorTokens.generated.swift # generated
   - "**/*.generated.swift"
 
 # --- Rules we deliberately turn off -----------------------------------------

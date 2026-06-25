@@ -8,7 +8,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct AvatarDemo: View {
     @State private var size: AvatarSize = .md

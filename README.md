@@ -1,4 +1,4 @@
-# GlobalUIComponents
+# ThemeKit
 
 A theme-driven, **brand-neutral** SwiftUI component library. Every color,
 typography, spacing, radius and shadow is a **design token** resolved at runtime
@@ -13,7 +13,7 @@ without touching component code.
 > active `Theme`. Swap the theme and everything follows.
 
 ```swift
-import GlobalUIComponents
+import ThemeKit
 ```
 
 ## Features
@@ -45,15 +45,15 @@ the repository URL, or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/isamercan/GlobalUIComponents.git", from: "0.1.0"),
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.1.0"),
 ],
 targets: [
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "GlobalUIComponents", package: "GlobalUIComponents"),
+            .product(name: "ThemeKit", package: "ThemeKit"),
             // Optional — only if you need Lottie-backed animations:
-            // .product(name: "GlobalUIComponentsLottie", package: "GlobalUIComponents"),
+            // .product(name: "ThemeKitLottie", package: "ThemeKit"),
         ]
     ),
 ]
@@ -66,8 +66,8 @@ targets: [
 
 | Product | Dependencies | Use |
 |---|---|---|
-| `GlobalUIComponents` | none | the full design system (core) |
-| `GlobalUIComponentsLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
+| `ThemeKit` | none | the full design system (core) |
+| `ThemeKitLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
 
 ## Quick start
 
@@ -79,7 +79,7 @@ struct MyApp: App {
     init() { Theme.shared.applyPersistedConfig() }   // restore last-used theme (optional)
     var body: some Scene {
         WindowGroup {
-            ContentView().globalUITheme()            // inject + repaint on theme change
+            ContentView().themeKit()            // inject + repaint on theme change
         }
     }
 }
@@ -117,7 +117,7 @@ Every component is curated by category in the [DocC catalog](#documentation).
 ## Token system
 
 ```
-Sources/GlobalUIComponents/
+Sources/ThemeKit/
 ├─ Theme/              # Theme.shared, tokens, generator, configurator API
 │  ├─ Theme.swift                 # ObservableObject singleton (Theme.shared)
 │  ├─ ColorTokens.generated.swift # Foreground/Background/Border/Text color keys
@@ -127,7 +127,7 @@ Sources/GlobalUIComponents/
 │  ├─ SemanticColor.swift         # named palette colors
 │  ├─ ThemeGenerator.swift        # runtime palette generator (Swift port)
 │  ├─ ThemeConfig.swift           # Codable theme recipe
-│  ├─ GlobalUITheme.swift         # .globalUITheme() root modifier
+│  ├─ ThemeKit.swift         # .themeKit() root modifier
 │  ├─ ThemeContext.swift          # @ThemeContext property wrapper
 │  └─ ThemedHostingController.swift
 ├─ Components/         # Atoms / Molecules / Organisms (all token-bound)
@@ -190,14 +190,14 @@ Theme.shared.setTheme(jsonData: Data(contentsOf: tokensURL))
 
 Components resolve tokens from the `Theme.shared` singleton (no per-call
 environment lookups), so SwiftUI can't infer that an arbitrary view depends on the
-theme. `.globalUITheme()` closes that gap: it injects `Theme` into the environment
+theme. `.themeKit()` closes that gap: it injects `Theme` into the environment
 **and** (by default) rebuilds the subtree keyed on `Theme.revision` when the theme
 changes, so every view re-reads the regenerated tokens.
 
 - Switching theme from a **settings screen** → keep the default
   (`reactToRuntimeChanges: true`); the whole UI repaints.
 - Editing the theme **in-session** (a live editor/inspector) → use
-  `.globalUITheme(reactToRuntimeChanges: false)` so the editor isn't torn down,
+  `.themeKit(reactToRuntimeChanges: false)` so the editor isn't torn down,
   and scope `.id(Theme.shared.revision)` onto just the live-preview subtree.
 
 ### Fonts
@@ -256,11 +256,11 @@ default.
 ## Documentation
 
 A DocC catalog ships with the package
-(`Sources/GlobalUIComponents/Documentation.docc`). Build it in Xcode via
+(`Sources/ThemeKit/Documentation.docc`). Build it in Xcode via
 **Product ▸ Build Documentation** (⌃⌘D), or from the command line:
 
 ```sh
-xcodebuild docbuild -scheme GlobalUIComponents -destination 'generic/platform=iOS'
+xcodebuild docbuild -scheme ThemeKit -destination 'generic/platform=iOS'
 ```
 
 It curates every component by category and includes guide articles for

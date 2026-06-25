@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 // MARK: - Atoms
 
@@ -934,7 +934,7 @@ struct ThemeControllerDemo: View {
 
 // MARK: - Configurable (daisyUI-style) components
 
-struct GlobalButtonDemo: View {
+struct ThemeButtonDemo: View {
     @State private var color: SemanticColor = .primary
     @State private var variant: ButtonVariant = .solid
     @State private var size: ButtonSize = .medium
@@ -947,14 +947,14 @@ struct GlobalButtonDemo: View {
     private var iconOnly: Bool { shape == .circle || shape == .square }
 
     var body: some View {
-        ComponentStage("GlobalButton", inspector: [
+        ComponentStage("ThemeButton", inspector: [
             ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
         ]) {
-            GlobalButton(iconOnly ? nil : "Button",
+            ThemeButton(iconOnly ? nil : "Button",
                          systemImage: (icon || iconOnly) ? "star.fill" : nil,
                          iconPosition: trailingIcon ? .trailing : .leading,
                          color: color, variant: variant, size: size, shape: shape,
-                         block: block && !iconOnly, isLoading: $loading) { flash("GlobalButton tıklandı") }
+                         block: block && !iconOnly, isLoading: $loading) { flash("ThemeButton tıklandı") }
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
             Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -1038,23 +1038,23 @@ struct FeedbackDemo: View {
     var body: some View {
         ComponentStage("Feedback", inspector: [("level", "global"), ("last action", last)]) {
             VStack(spacing: 12) {
-                GlobalButton("Toast göster", color: kind.semanticColor, block: true) {
+                ThemeButton("Toast göster", color: kind.semanticColor, block: true) {
                     feedback.toast("\(kind.rawValue.capitalized) mesajı",
                                    message: "Bu bir \(kind.rawValue) bildirimi.", kind: kind)
                     last = "toast: \(kind.rawValue)"
                 }
-                GlobalButton("Bildirim göster (notification)", color: kind.semanticColor, variant: .soft, block: true) {
+                ThemeButton("Bildirim göster (notification)", color: kind.semanticColor, variant: .soft, block: true) {
                     feedback.notify("\(kind.rawValue.capitalized)", message: "Üstten gelen bir bildirim.", kind: kind)
                     last = "notify: \(kind.rawValue)"
                 }
-                GlobalButton("Yükleniyor (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
+                ThemeButton("Yükleniyor (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
                     feedback.loading("Kaydediliyor…")
                     last = "loading"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                         feedback.dismissLoading(); feedback.toast("Kaydedildi", kind: .success)
                     }
                 }
-                GlobalButton("Onay iste (confirm)", color: .error, variant: .outline, block: true) {
+                ThemeButton("Onay iste (confirm)", color: .error, variant: .outline, block: true) {
                     feedback.confirm(
                         title: "Rezervasyonu iptal et?",
                         message: "Bu işlem geri alınamaz.",
@@ -1171,7 +1171,7 @@ struct PopconfirmDemo: View {
     @State private var last = "—"
     var body: some View {
         ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("last", last)]) {
-            GlobalButton("Sil", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
+            ThemeButton("Sil", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
                 .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Bu işlem geri alınamaz.",
                             confirmTitle: "Sil", cancelTitle: "Vazgeç", edge: edgeTop ? .top : .bottom,
                             onConfirm: { last = "confirmed"; flash("Popconfirm onaylandı") }, onCancel: { last = "cancelled"; flash("Popconfirm iptal edildi") })
@@ -1218,7 +1218,7 @@ struct TourDemo: View {
                     tourIcon("heart", "fav")
                     tourIcon("person.crop.circle", "profile")
                 }
-                GlobalButton("Turu başlat", systemImage: "play.fill", block: true) { tour.start(); flash("Tur başlatıldı") }
+                ThemeButton("Turu başlat", systemImage: "play.fill", block: true) { tour.start(); flash("Tur başlatıldı") }
             }
             .tourHost(tour, steps: [
                 TourStep("search", title: "Arama", message: "Buradan otel arayabilirsiniz."),
@@ -1287,7 +1287,7 @@ struct FormDemo: View {
                 if done {
                     InfoBanner("Hesabınız oluşturuldu.", type: .success)
                 }
-                GlobalButton("Kayıt ol", block: true, accessibilityID: "form.submit") {
+                ThemeButton("Kayıt ol", block: true, accessibilityID: "form.submit") {
                     let firstInvalid = form.validateAll(values)
                     submitted = true
                     done = firstInvalid == nil
@@ -1437,7 +1437,7 @@ struct RollingNumberDemo: View {
         ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
             VStack(spacing: 16) {
                 RollingNumber(value, size: size, color: Theme.shared.text(.textHero))
-                GlobalButton("Roll", systemImage: "dice") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }
+                ThemeButton("Roll", systemImage: "dice") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }
             }
         } knobs: {
             HStack { Text("Size"); SwiftUI.Slider(value: $size, in: 24...64, step: 4) }

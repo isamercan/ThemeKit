@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A1111111111111111111112 /* GlobalUIComponents in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111111 /* GlobalUIComponents */; };
+		1A1111111111111111111112 /* ThemeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111111 /* ThemeKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,7 +23,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A1111111111111111111112 /* GlobalUIComponents in Frameworks */,
+				1A1111111111111111111112 /* ThemeKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -66,7 +66,7 @@
 			);
 			name = Demo;
 			packageProductDependencies = (
-				1A1111111111111111111111 /* GlobalUIComponents */,
+				1A1111111111111111111111 /* ThemeKit */,
 			);
 			productName = Demo;
 			productReference = 1A1111111111111111111105 /* Demo.app */;
@@ -335,9 +335,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1A1111111111111111111111 /* GlobalUIComponents */ = {
+		1A1111111111111111111111 /* ThemeKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = "GlobalUIComponents";
+			productName = "ThemeKit";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

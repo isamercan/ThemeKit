@@ -11,7 +11,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct ThemeConfiguratorView: View {
     @ThemeContext private var theme
@@ -173,7 +173,7 @@ struct ThemeConfiguratorView: View {
         let data = Data(contentsOf: themeJSONURL)
         try Theme.shared.apply(ThemeConfig(jsonData: data))
         // 2) at the root:
-        ContentView().globalUITheme()
+        ContentView().themeKit()
         """
     }
 

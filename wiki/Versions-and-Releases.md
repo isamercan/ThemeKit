@@ -37,7 +37,7 @@ an upcoming release before it's final. SPM treats these as pre-release versions.
 
 ## Following releases
 
-- **Releases:** https://github.com/isamercan/GlobalUIComponents/releases
-- **Tags:** https://github.com/isamercan/GlobalUIComponents/tags
+- **Releases:** https://github.com/isamercan/ThemeKit/releases
+- **Tags:** https://github.com/isamercan/ThemeKit/tags
 
 Watch the repo (Releases only) to be notified of new versions.

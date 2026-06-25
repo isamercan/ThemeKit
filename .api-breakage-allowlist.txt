@@ -6,4 +6,4 @@
 # note explaining the migration. Keep this file empty between major releases.
 #
 # Example:
-#   API breakage: func GlobalButton.init(title:) has been removed
+#   API breakage: func ThemeButton.init(title:) has been removed

@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct ButtonDemo: View {
     enum Style: String, CaseIterable { case primary, secondary, outline, ghost, link }
@@ -216,10 +216,10 @@ struct SliderDemo: View {
     var body: some View {
         ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal")]) {
             if vertical {
-                GlobalUIComponents.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
+                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
                                           axis: .vertical, verticalHeight: 180, isEnabled: enabled)
             } else {
-                GlobalUIComponents.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
+                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
                                           marks: marks ? [0: "0", 4: "4", 8: "8"] : [:],
                                           isEnabled: enabled, showValueTooltip: tooltip)
             }

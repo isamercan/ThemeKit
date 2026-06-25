@@ -1,6 +1,6 @@
 # API Stability & Versioning Policy
 
-`GlobalUIComponents` is a library: every type, initializer, modifier, and token
+`ThemeKit` is a library: every type, initializer, modifier, and token
 we mark `public` is a promise to the apps that depend on us. This document
 defines what that promise is, how we version it, and how the toolchain enforces
 it.
@@ -39,7 +39,7 @@ Don't delete in one step. Soften, then remove:
 
 1. **Deprecate** in a MINOR release with a migration hint:
    ```swift
-   @available(*, deprecated, renamed: "GlobalButton(label:)")
+   @available(*, deprecated, renamed: "ThemeButton(label:)")
    public init(title: String) { self.init(label: title) }
    ```
 2. Keep the deprecated symbol for **at least one MINOR cycle**.

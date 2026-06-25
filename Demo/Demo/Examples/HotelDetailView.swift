@@ -9,7 +9,7 @@
 
 import SwiftUI
 import MapKit
-import GlobalUIComponents
+import ThemeKit
 
 struct HotelDetailView: View {
     let hotel: Hotel

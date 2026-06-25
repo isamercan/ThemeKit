@@ -1,4 +1,4 @@
-# GlobalUIComponents
+# ThemeKit
 
 > A token-driven, zero-dependency SwiftUI design system.
 
@@ -10,19 +10,19 @@ dependencies in the core.
 published to Pages):
 
 ```bash
-swift package --disable-sandbox preview-documentation --target GlobalUIComponents
+swift package --disable-sandbox preview-documentation --target ThemeKit
 ```
 
 ## Quick install
 
 ```swift
-.package(url: "https://github.com/isamercan/GlobalUIComponents", .upToNextMinor(from: "0.1.0"))
+.package(url: "https://github.com/isamercan/ThemeKit", .upToNextMinor(from: "0.1.0"))
 ```
 
 Apply the theme once at your app root, then compose components:
 
 ```swift
-ContentView().globalUITheme()
+ContentView().themeKit()
 ```
 
 ## Where to go next

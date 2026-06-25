@@ -22,7 +22,7 @@ commitment; dates and scope change.
 ## Done
 
 See **[[Sürümler & Release'ler|Versions-and-Releases]]** and the
-[changelog of releases](https://github.com/isamercan/GlobalUIComponents/releases).
+[changelog of releases](https://github.com/isamercan/ThemeKit/releases).
 
 ---
 

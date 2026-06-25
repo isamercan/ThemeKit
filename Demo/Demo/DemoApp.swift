@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 @main
 struct DemoApp: App {
@@ -18,7 +18,7 @@ struct DemoApp: App {
                 .feedbackHost()       // installs the shared FeedbackPresenter + overlays
                 // env-only (no root rebuild) so the in-session Configurator sheet
                 // isn't torn down mid-edit; screens observe Theme via @ThemeContext.
-                .globalUITheme(reactToRuntimeChanges: false)
+                .themeKit(reactToRuntimeChanges: false)
         }
     }
 }

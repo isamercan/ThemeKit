@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the GlobalUIComponents design-token JSON + Swift color enums from the
+"""Generate the ThemeKit design-token JSON + Swift color enums from the
 Etstur/MAF Figma design system. Token NAMES are semantic (brand-agnostic)."""
 import json, os, sys
 
 ROOT = sys.argv[1]
-RES = os.path.join(ROOT, "Sources/GlobalUIComponents/Resources")
-GEN = os.path.join(ROOT, "Sources/GlobalUIComponents/Theme")
+RES = os.path.join(ROOT, "Sources/ThemeKit/Resources")
+GEN = os.path.join(ROOT, "Sources/ThemeKit/Theme")
 os.makedirs(RES, exist_ok=True)
 
 # ---- Semantic color tokens — Ant-style ALIAS layer DERIVED from the palette.
@@ -341,7 +341,7 @@ def emit_enum(swift_name, cat, table):
 
 swift = ['//',
          '//  ColorTokens.generated.swift',
-         '//  GlobalUIComponents',
+         '//  ThemeKit',
          '//  Created by İsa Mercan on 23.06.2026.',
          '//',
          '//  GENERATED from the Figma design system — do not edit by hand.',

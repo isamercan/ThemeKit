@@ -2,13 +2,13 @@
 
 ### Does it pull in any third-party dependencies?
 
-No. The core `GlobalUIComponents` product is **zero-dependency**. Lottie is only
-downloaded if you depend on the separate `GlobalUIComponentsLottie` product.
+No. The core `ThemeKit` product is **zero-dependency**. Lottie is only
+downloaded if you depend on the separate `ThemeKitLottie` product.
 
 ### Do components work without applying a theme?
 
 They render, but fall back to system defaults. Apply
-`.globalUITheme()` once at your app/scene root so components resolve the
+`.themeKit()` once at your app/scene root so components resolve the
 design-system palette, spacing, and fonts.
 
 ### How do I switch light / dark?
@@ -19,7 +19,7 @@ The active theme is a singleton:
 Theme.shared.setColorScheme(dark: true)
 ```
 
-If you applied `.globalUITheme()` (which reacts to runtime changes by default),
+If you applied `.themeKit()` (which reacts to runtime changes by default),
 the whole UI re-skins.
 
 ### Can I brand it with my own colors?
@@ -46,4 +46,4 @@ back/next arrows) are flipped via the library's RTL helper.
 iOS 17+ and macOS 14+.
 
 📖 Full API reference — build the DocC docs locally (the repo is private):
-`swift package --disable-sandbox preview-documentation --target GlobalUIComponents`
+`swift package --disable-sandbox preview-documentation --target ThemeKit`

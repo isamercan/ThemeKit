@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve GlobalUIComponents!
+Thanks for helping improve ThemeKit!
 
 ## Issues
 
@@ -18,8 +18,8 @@ Thanks for helping improve GlobalUIComponents!
 ## Local setup
 
 ```bash
-git clone https://github.com/isamercan/GlobalUIComponents
-cd GlobalUIComponents
+git clone https://github.com/isamercan/ThemeKit
+cd ThemeKit
 
 swift build              # build the library
 swift test               # run the logic/theme/validation suite (macOS)
@@ -29,7 +29,7 @@ swiftlint                # style check (matches CI)
 The iOS build and the opt-in snapshot suite run under Xcode:
 
 ```bash
-xcodebuild test -scheme GlobalUIComponents-Package \
+xcodebuild test -scheme ThemeKit-Package \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
