@@ -45,7 +45,7 @@ public struct DateField: View {
                     Icon(systemName: "calendar", size: .sm, color: Theme.shared.text(.textTertiary))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
-                .frame(height: 48)
+                .scaledControlHeight(48)
                 .frame(maxWidth: .infinity)
                 .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                 .overlay(
@@ -56,7 +56,11 @@ public struct DateField: View {
             .buttonStyle(.plain)
             .popover(isPresented: $showPicker) { picker }
             .a11y(A11yElement.Select.trigger, in: accessibilityID)
-            .accessibilityLabel(label ?? "")
+            // Fall back to a generic field name — never "" (which would blank
+            // the control's name) and never the placeholder (an instruction that
+            // would contradict a populated value, e.g. "Select a date, Jan 5").
+            // The chosen date is carried by accessibilityValue below.
+            .accessibilityLabel(label ?? String(globalUIComponents: "Date"))
             .accessibilityValue(date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "")
         }
     }

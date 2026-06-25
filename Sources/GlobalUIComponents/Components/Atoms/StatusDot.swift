@@ -21,6 +21,18 @@ public enum StatusKind {
         case .neutral: return Theme.shared.foreground(.fgHero)
         }
     }
+
+    /// Spoken status when no explicit label is supplied — so the state isn't
+    /// conveyed by color alone (a WCAG / VoiceOver requirement).
+    var accessibleName: String {
+        switch self {
+        case .online: return String(globalUIComponents: "Online")
+        case .offline: return String(globalUIComponents: "Offline")
+        case .busy: return String(globalUIComponents: "Busy")
+        case .away: return String(globalUIComponents: "Away")
+        case .neutral: return String(globalUIComponents: "Status")
+        }
+    }
 }
 
 public struct StatusDot: View {
@@ -58,6 +70,10 @@ public struct StatusDot: View {
                 Text(label).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
             }
         }
+        // Collapse dot + label into one element so the status is always spoken,
+        // even when the dot is shown without a visible label.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(label ?? kind.accessibleName))
     }
 }
 

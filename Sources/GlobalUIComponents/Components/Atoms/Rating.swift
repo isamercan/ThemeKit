@@ -76,29 +76,85 @@ public struct Rating: View {
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            switch layout {
-            case .stars:
-                stars
-            case .numberRate:
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: size * 1.15, weight: .bold))
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-                Image(systemName: "\(systemImage).fill")
-                    .font(.system(size: size))
-                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
-            case .rateNumberText:
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: size * 1.15, weight: .bold))
-                    .foregroundStyle(Theme.shared.foreground(.fgSecondary))
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Theme.shared.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
-                Text(resolvedSentiment)
-                    .font(.system(size: size, weight: .semibold))
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-            }
+            accessibleRating
             review
         }
         .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    /// The visual rating glyphs (the star row / number layouts), before any
+    /// accessibility treatment.
+    @ViewBuilder
+    private var ratingGlyphs: some View {
+        switch layout {
+        case .stars:
+            stars
+        case .numberRate:
+            Text(String(format: "%.1f", value))
+                .font(.system(size: size * 1.15, weight: .bold))
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+            Image(systemName: "\(systemImage).fill")
+                .font(.system(size: size))
+                .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+        case .rateNumberText:
+            Text(String(format: "%.1f", value))
+                .font(.system(size: size * 1.15, weight: .bold))
+                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Theme.shared.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+            Text(resolvedSentiment)
+                .font(.system(size: size, weight: .semibold))
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+        }
+    }
+
+    /// Collapses the glyph row into one VoiceOver element ("Rating: 4.3 out of
+    /// 5"). When interactive, it becomes an adjustable control so VoiceOver users
+    /// can swipe up/down to set the score instead of hunting for invisible tap
+    /// targets. The color-only fill is never the sole signal.
+    @ViewBuilder
+    private var accessibleRating: some View {
+        let labelled = HStack(spacing: Theme.SpacingKey.xs.value) { ratingGlyphs }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(String(globalUIComponents: "Rating")))
+            .accessibilityValue(Text(accessibilityValueText))
+        // Only the star layout has a maxValue-bounded grid and tap targets; the
+        // number layouts are display-only (and may carry a 0–10 score that
+        // maxValue=5 would wrongly clamp), so they get no adjustable action.
+        if interactive && layout == .stars {
+            labelled.accessibilityAdjustableAction { direction in
+                // Step along the same whole/half-star grid the tap targets use.
+                // Direction-aware rounding keeps increment and decrement
+                // symmetric for a fractional current value (4.3 → 5 up, → 4 down).
+                let step = allowHalf ? 0.5 : 1
+                switch direction {
+                case .increment:
+                    onRate?(min(((value / step).rounded(.down) + 1) * step, Double(maxValue)))
+                case .decrement:
+                    onRate?(max(((value / step).rounded(.up) - 1) * step, 0))
+                @unknown default: break
+                }
+            }
+        } else {
+            labelled
+        }
+    }
+
+    /// Spoken value. Star layouts read "4.3 out of 5"; the number layouts carry a
+    /// standalone score (often 0–10), so they read just the score (plus the
+    /// sentiment word for `.rateNumberText`) — never a contradictory "/ maxValue".
+    /// The review count is intentionally omitted: the sibling `review` element
+    /// announces it, so including it here would double it.
+    private var accessibilityValueText: String {
+        let score = String(format: "%.1f", value)
+        switch layout {
+        case .stars:
+            return String(globalUIComponents: "\(score) out of \(maxValue)")
+        case .numberRate:
+            return score
+        case .rateNumberText:
+            return "\(score), \(resolvedSentiment)"
+        }
     }
 
     // MARK: Stars

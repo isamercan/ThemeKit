@@ -1,6 +1,90 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ out of %lld" : {
+      "comment" : "Rating: spoken value for the star layout (score, max). VoiceOver.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld üzerinden %1$@" } }
+      }
+    },
+    "%lld of %lld" : {
+      "comment" : "StepIndicator: spoken position (position, total). VoiceOver.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%2$lld içinden %1$lld" } }
+      }
+    },
+    "Away" : {
+      "comment" : "StatusDot: spoken status (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Uzakta" } }
+      }
+    },
+    "Busy" : {
+      "comment" : "StatusDot: spoken status (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Meşgul" } }
+      }
+    },
+    "down %@" : {
+      "comment" : "Stat: spoken downward trend with magnitude (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%@ azalış" } }
+      }
+    },
+    "Offline" : {
+      "comment" : "StatusDot: spoken status (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Çevrimdışı" } }
+      }
+    },
+    "Online" : {
+      "comment" : "StatusDot: spoken status (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Çevrimiçi" } }
+      }
+    },
+    "Progress" : {
+      "comment" : "ProgressBar / RadialProgress: VoiceOver label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "İlerleme" } }
+      }
+    },
+    "Score" : {
+      "comment" : "ScoreBadge: VoiceOver label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Puan" } }
+      }
+    },
+    "Status" : {
+      "comment" : "StatusDot: spoken status fallback (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Durum" } }
+      }
+    },
+    "Step" : {
+      "comment" : "StepIndicator: VoiceOver label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Adım" } }
+      }
+    },
+    "up %@" : {
+      "comment" : "Stat: spoken upward trend with magnitude (VoiceOver).",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%@ artış" } }
+      }
+    },
+    "Date" : {
+      "comment" : "DateField: VoiceOver name used when no explicit label is given.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Tarih" } }
+      }
+    },
+    "Rating" : {
+      "comment" : "Rating: VoiceOver label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Değerlendirme" } }
+      }
+    },
     "Average" : {
       "comment" : "Rating: default sentiment for the mid score band.",
       "localizations" : {

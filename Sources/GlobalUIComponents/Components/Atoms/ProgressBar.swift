@@ -33,6 +33,7 @@ public struct ProgressBar: View {
     private let trailColor: Color?
     private let successSegment: Double?
     private let format: ((Double) -> String)?
+    private let accessibilityLabelText: String?
 
     /// - Parameters:
     ///   - value: progress in 0...1.
@@ -45,6 +46,8 @@ public struct ProgressBar: View {
     ///   - trailColor: overrides the track color.
     ///   - successSegment: 0...1 portion drawn in the success color on top of the fill (Ant `success.percent`).
     ///   - format: custom formatter for the percentage label (receives the 0...1 value).
+    ///   - accessibilityLabel: VoiceOver name for the bar (e.g. "Upload"); lets
+    ///     several bars on one screen be told apart. Defaults to "Progress".
     public init(
         value: Double,
         height: CGFloat = 8,
@@ -55,7 +58,8 @@ public struct ProgressBar: View {
         strokeColor: Color? = nil,
         trailColor: Color? = nil,
         successSegment: Double? = nil,
-        format: ((Double) -> String)? = nil
+        format: ((Double) -> String)? = nil,
+        accessibilityLabel: String? = nil
     ) {
         self.value = min(max(value, 0), 1)
         self.height = height
@@ -67,9 +71,20 @@ public struct ProgressBar: View {
         self.trailColor = trailColor
         self.successSegment = successSegment.map { min(max($0, 0), 1) }
         self.format = format
+        self.accessibilityLabelText = accessibilityLabel
     }
 
     private var trackColor: Color { trailColor ?? Theme.shared.border(.borderPrimary) }
+
+    /// Spoken/displayed percentage. Rounded mid-range (0.756 → "76%", not "75%"),
+    /// but capped at 99% until the value is actually complete, so the label can
+    /// never claim "100%" while the fill is short and the success checkmark
+    /// (which gates on value >= 1) is absent.
+    private var percentText: String {
+        if let format { return format(value) }
+        let pct = value >= 1 ? 100 : min(99, Int((value * 100).rounded()))
+        return "%\(pct)"
+    }
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -97,6 +112,13 @@ public struct ProgressBar: View {
 
             label
         }
+        // The bar's fill is purely visual; expose the progress to VoiceOver as a
+        // spoken percentage. `.updatesFrequently` tells VoiceOver to re-read it
+        // while an active task advances.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilityLabelText ?? String(globalUIComponents: "Progress")))
+        .accessibilityValue(Text(percentText))
+        .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }
 
     @ViewBuilder
@@ -104,7 +126,7 @@ public struct ProgressBar: View {
         if status == .success && value >= 1 {
             Icon(systemName: "checkmark.circle.fill", size: .sm, color: status.semantic.accent)
         } else if showPercentage {
-            Text(format?(value) ?? "%\(Int(value * 100))")
+            Text(percentText)
                 .textStyle(.labelSm600)
                 .foregroundStyle(Theme.shared.text(.textPrimary))
                 .frame(minWidth: 40, alignment: .trailing)
@@ -141,6 +163,20 @@ public struct StepIndicator: View {
                     .animation(Motion.fast.animation, value: current)
             }
         }
+        // Position is conveyed only by the highlighted dot; speak it instead.
+        // Hidden entirely when there are no steps so VoiceOver never reads an
+        // impossible "1 of 0".
+        .accessibilityElement(children: .ignore)
+        .accessibilityHidden(total <= 0)
+        .accessibilityLabel(Text(String(globalUIComponents: "Step")))
+        .accessibilityValue(Text(stepValueText))
+    }
+
+    /// Clamped "position of total"; empty when there are no steps.
+    private var stepValueText: String {
+        guard total > 0 else { return "" }
+        let position = min(max(current + 1, 1), total)
+        return String(globalUIComponents: "\(position) of \(total)")
     }
 }
 

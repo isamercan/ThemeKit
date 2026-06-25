@@ -106,10 +106,16 @@ public struct TreeSelect: View {
                 Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: 56)
+            .scaledControlHeight(56)
             .frame(maxWidth: .infinity)
             .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).strokeBorder(open ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary), lineWidth: open ? 1.5 : 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                    .strokeBorder(
+                        open ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                        lineWidth: open ? 1.5 : 1
+                    )
+            )
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -128,6 +134,7 @@ public struct TreeSelect: View {
                 Button { toggleExpand(node.id) } label: {
                     Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right", size: .xs, color: Theme.shared.text(.textTertiary))
                         .frame(width: 16, height: 16)
+                        .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
             }

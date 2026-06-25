@@ -1,0 +1,9 @@
+# Intentional, accepted public-API breaking changes.
+#
+# Each line is a breakage message (as printed by
+# `swift package diagnose-api-breaking-changes`) that the API check should
+# ignore. Add an entry ONLY together with a MAJOR version bump and a CHANGELOG
+# note explaining the migration. Keep this file empty between major releases.
+#
+# Example:
+#   API breakage: func GlobalButton.init(title:) has been removed

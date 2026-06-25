@@ -1,0 +1,35 @@
+# SwiftFormat configuration for GlobalUIComponents.
+#
+# Conservative and aligned to the existing codebase (4-space indent, SwiftUI
+# modifier chains). SwiftFormat is the autocorrecting companion to SwiftLint:
+# run `swiftformat .` before committing. SwiftLint stays the enforced CI gate.
+
+--swiftversion 6.2
+
+# Layout
+--indent 4
+--maxwidth 140
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+
+# Keep SwiftUI view bodies readable
+--funcattributes prev-line
+--typeattributes prev-line
+
+# Idioms
+--self remove
+--importgrouping testable-bottom
+# Keep trailing commas in multiline literals — matches .swiftlint.yml, which
+# disables the `trailing_comma` rule precisely because we prefer them.
+--commas always
+--trimwhitespace always
+--emptybraces no-space
+--semicolons never
+
+# Don't fight the design-token switch statements or generated code
+--exclude .build,Demo/build,**/*.generated.swift,Sources/GlobalUIComponents/Theme/ColorTokens.generated.swift
+
+# Rules we opt out of (too opinionated for this codebase)
+--disable wrapMultilineStatementBraces,blankLinesAtStartOfScope,redundantType

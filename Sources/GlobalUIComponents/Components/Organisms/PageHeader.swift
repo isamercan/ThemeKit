@@ -42,6 +42,7 @@ public struct PageHeader: View {
             if let onBack {
                 Button(action: onBack) {
                     Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                        .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
             }

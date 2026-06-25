@@ -52,6 +52,7 @@ public struct SearchBar: View {
             if showBackButton {
                 Button { onBack?() } label: {
                     Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                        .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
             }
@@ -81,7 +82,7 @@ public struct SearchBar: View {
                 }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: 44)
+            .scaledControlHeight(44)
             .background(Theme.shared.background(.bgElevatorPrimary),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
             .overlay(

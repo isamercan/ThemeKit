@@ -194,11 +194,17 @@ public final class Theme: ObservableObject, @unchecked Sendable {
 
         for color in decoded.colors ?? [] {
             let value = Color(hex: color.hex)
-            if let key = ForegroundColorKey(rawValue: color.name) { foreground[key] = value }
-            else if let key = BackgroundColorKey(rawValue: color.name) { background[key] = value }
-            else if let key = BorderColorKey(rawValue: color.name) { border[key] = value }
-            else if let key = TextColorKey(rawValue: color.name) { text[key] = value }
-            else if let key = PaletteColorKey(rawValue: color.name) { palette[key] = value }
+            if let key = ForegroundColorKey(rawValue: color.name) {
+                foreground[key] = value
+            } else if let key = BackgroundColorKey(rawValue: color.name) {
+                background[key] = value
+            } else if let key = BorderColorKey(rawValue: color.name) {
+                border[key] = value
+            } else if let key = TextColorKey(rawValue: color.name) {
+                text[key] = value
+            } else if let key = PaletteColorKey(rawValue: color.name) {
+                palette[key] = value
+            }
         }
         for r in decoded.radius ?? [] { radiusList[r.name] = r.radius }
         for s in decoded.spacing ?? [] { spacingList[s.name] = s.spacing }

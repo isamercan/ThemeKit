@@ -192,6 +192,7 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
         Button(action: action) {
             Icon(systemName: systemName, size: .sm, color: Theme.shared.foreground(.fgSecondary))
                 .frame(width: 32, height: 32)
+                .mirrorsInRTL()
                 .background(Theme.shared.background(.bgTertiary).opacity(0.5), in: Circle())
         }
         .buttonStyle(.plain)

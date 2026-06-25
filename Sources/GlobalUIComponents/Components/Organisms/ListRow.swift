@@ -280,6 +280,7 @@ public struct ListRow: View {
             EmptyView()
         case .chevron:
             Icon(systemName: "chevron.right", size: .sm, color: Theme.shared.text(.textTertiary))
+                .mirrorsInRTL()
         case .value(let text):
             Text(text)
                 .textStyle(.bodyBase400)

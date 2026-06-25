@@ -13,6 +13,14 @@ public enum StatTrend {
     case up(String), down(String)
 
     var text: String { switch self { case .up(let t), .down(let t): return t } }
+    /// Spoken trend including direction, since the arrow glyph alone is silent
+    /// to VoiceOver — e.g. "up 12%".
+    var accessibleText: String {
+        switch self {
+        case .up(let t): return String(globalUIComponents: "up \(t)")
+        case .down(let t): return String(globalUIComponents: "down \(t)")
+        }
+    }
     var color: Color {
         switch self {
         case .up: return Theme.shared.foreground(.systemcolorsFgSuccess)
@@ -62,6 +70,16 @@ public struct Stat: View {
             }
             Spacer(minLength: 0)
         }
+        // Read the whole stat as one phrase instead of four disconnected swipes,
+        // and turn the trend arrow glyph into spoken direction.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilityLabel))
+    }
+
+    private var accessibilityLabel: String {
+        [title, value, trend?.accessibleText, description]
+            .compactMap { $0 }
+            .joined(separator: ", ")
     }
 }
 
