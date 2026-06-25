@@ -10,7 +10,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct LayoutTokensView: View {
     // Re-render when the theme (hence the resolved token values) changes.

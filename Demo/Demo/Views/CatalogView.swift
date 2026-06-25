@@ -9,7 +9,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct CatalogView: View {
     @State private var query = ""

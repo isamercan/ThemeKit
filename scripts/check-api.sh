@@ -8,7 +8,7 @@
 #   baseline   git treeish to compare against (default: the latest release tag,
 #              or origin/main if no tags exist).
 #
-# A non-zero exit means the public API of `GlobalUIComponents` changed in a
+# A non-zero exit means the public API of `ThemeKit` changed in a
 # source-breaking way versus the baseline. That's allowed — but it MUST come
 # with a MAJOR version bump (see docs/API-STABILITY.md). Intentional breaks can
 # be recorded in .api-breakage-allowlist.txt to keep CI green.
@@ -31,5 +31,5 @@ if [[ -f .api-breakage-allowlist.txt ]]; then
 fi
 
 swift package diagnose-api-breaking-changes "${BASELINE}" \
-  --products GlobalUIComponents \
+  --products ThemeKit \
   "${ALLOWLIST_ARG[@]}"

@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 // MARK: - Atoms
 

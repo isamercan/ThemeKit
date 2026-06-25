@@ -3,4 +3,4 @@
 version: 1
 builder:
   configs:
-    - documentation_targets: [GlobalUIComponents]
+    - documentation_targets: [ThemeKit]

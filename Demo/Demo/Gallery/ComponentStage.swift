@@ -9,7 +9,7 @@
 
 import SwiftUI
 import UIKit
-import GlobalUIComponents
+import ThemeKit
 
 struct ComponentStage<Preview: View, Knobs: View>: View {
     private let title: String

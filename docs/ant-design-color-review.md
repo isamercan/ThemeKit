@@ -1,6 +1,6 @@
-# Ant Design color system — review & mapping to GlobalUIComponents
+# Ant Design color system — review & mapping to ThemeKit
 
-Review of [Ant Design colors](https://ant.design/docs/spec/colors) vs the GlobalUIComponents
+Review of [Ant Design colors](https://ant.design/docs/spec/colors) vs the ThemeKit
 (Etstur) token system. Date: 23.06.2026.
 
 ## How Ant Design v5 colors work

@@ -5,7 +5,7 @@
 //
 
 import Foundation
-import GlobalUIComponents
+import ThemeKit
 
 /// The generic themes shipped with the package, surfaced for the demo's switcher.
 /// Names are intentionally brand-agnostic.

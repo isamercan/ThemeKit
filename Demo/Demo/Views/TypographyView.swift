@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct TypographyView: View {
     private let groups: [(String, [TextStyle])] = [

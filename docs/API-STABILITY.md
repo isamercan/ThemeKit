@@ -1,6 +1,6 @@
 # API Stability & Versioning Policy
 
-`GlobalUIComponents` is a library: every type, initializer, modifier, and token
+`ThemeKit` is a library: every type, initializer, modifier, and token
 we mark `public` is a promise to the apps that depend on us. This document
 defines what that promise is, how we version it, and how the toolchain enforces
 it.

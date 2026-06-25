@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct ThemeGalleryView: View {
     @ThemeContext private var theme

@@ -9,7 +9,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct HotelCheckoutView: View {
     let hotel: Hotel

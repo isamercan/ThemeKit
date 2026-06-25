@@ -1,4 +1,4 @@
-# GlobalUIComponents
+# ThemeKit
 
 A theme-driven, **brand-neutral** SwiftUI component library. Every color,
 typography, spacing, radius and shadow is a **design token** resolved at runtime
@@ -13,7 +13,7 @@ without touching component code.
 > active `Theme`. Swap the theme and everything follows.
 
 ```swift
-import GlobalUIComponents
+import ThemeKit
 ```
 
 ## Features
@@ -45,15 +45,15 @@ the repository URL, or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/isamercan/GlobalUIComponents.git", from: "0.1.0"),
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.1.0"),
 ],
 targets: [
     .target(
         name: "MyApp",
         dependencies: [
-            .product(name: "GlobalUIComponents", package: "GlobalUIComponents"),
+            .product(name: "ThemeKit", package: "ThemeKit"),
             // Optional — only if you need Lottie-backed animations:
-            // .product(name: "GlobalUIComponentsLottie", package: "GlobalUIComponents"),
+            // .product(name: "ThemeKitLottie", package: "ThemeKit"),
         ]
     ),
 ]
@@ -66,8 +66,8 @@ targets: [
 
 | Product | Dependencies | Use |
 |---|---|---|
-| `GlobalUIComponents` | none | the full design system (core) |
-| `GlobalUIComponentsLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
+| `ThemeKit` | none | the full design system (core) |
+| `ThemeKitLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
 
 ## Quick start
 
@@ -117,7 +117,7 @@ Every component is curated by category in the [DocC catalog](#documentation).
 ## Token system
 
 ```
-Sources/GlobalUIComponents/
+Sources/ThemeKit/
 ├─ Theme/              # Theme.shared, tokens, generator, configurator API
 │  ├─ Theme.swift                 # ObservableObject singleton (Theme.shared)
 │  ├─ ColorTokens.generated.swift # Foreground/Background/Border/Text color keys
@@ -256,11 +256,11 @@ default.
 ## Documentation
 
 A DocC catalog ships with the package
-(`Sources/GlobalUIComponents/Documentation.docc`). Build it in Xcode via
+(`Sources/ThemeKit/Documentation.docc`). Build it in Xcode via
 **Product ▸ Build Documentation** (⌃⌘D), or from the command line:
 
 ```sh
-xcodebuild docbuild -scheme GlobalUIComponents -destination 'generic/platform=iOS'
+xcodebuild docbuild -scheme ThemeKit -destination 'generic/platform=iOS'
 ```
 
 It curates every component by category and includes guide articles for

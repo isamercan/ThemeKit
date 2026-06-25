@@ -1,4 +1,4 @@
-# GlobalUIComponents — Proje Tanıtımı
+# ThemeKit — Proje Tanıtımı
 
 > **Tek cümlede:** Figma tasarım token'larından beslenen, koddan tek satır değişmeden
 > herhangi bir markaya/temaya bürünebilen, sıfır 3. parti bağımlılığı olan kurumsal bir
@@ -11,7 +11,7 @@
 Her ekip kendi butonunu, input'unu, kartını yeniden yazıyor. Sonuç: tutarsız UI, kopyala-yapıştır
 borç, marka değişiminde haftalarca elle düzeltme, her projede tekrar eden erişilebilirlik/lokalizasyon işi.
 
-**GlobalUIComponents bunu tek bir token-tabanlı kaynağa indirger:**
+**ThemeKit bunu tek bir token-tabanlı kaynağa indirger:**
 - Tasarımcı Figma'da rengi değiştirir → JSON token güncellenir → tüm uygulama otomatik döner.
 - Yeni proje açılır → kütüphaneyi `import` eder → ilk günden 65+ hazır, tutarlı bileşene sahip olur.
 - Marka/tema değişimi kod değişikliği değil, **konfigürasyon** meselesi olur.
@@ -138,4 +138,4 @@ Kütüphaneyi yerel SPM referansı olarak bağlayan tam bir SwiftUI demo app mev
 
 ---
 
-*Kaynak: `GlobalUIComponents` SPM paketi · `Demo/` SwiftUI uygulaması · `docs/` tasarım & analiz dökümanları.*
+*Kaynak: `ThemeKit` SPM paketi · `Demo/` SwiftUI uygulaması · `docs/` tasarım & analiz dökümanları.*

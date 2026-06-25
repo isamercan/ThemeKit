@@ -8,7 +8,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct HotelSearchView: View {
     @StateObject private var favorites = FavoritesStore()

@@ -1,6 +1,6 @@
 # Design principles
 
-Ant Design's ten principles, translated into concrete rules for GlobalUIComponents and
+Ant Design's ten principles, translated into concrete rules for ThemeKit and
 audited against the current library. Use this as the contributor checklist when adding or
 reviewing a component.
 

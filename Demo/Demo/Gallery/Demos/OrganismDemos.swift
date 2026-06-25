@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct AccordionDemo: View {
     @State private var expanded = true

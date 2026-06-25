@@ -77,19 +77,19 @@ jobs:
           restore-keys: spm-ios-
 
       # Use the *-Package scheme: it's the one configured for the test action
-      # (the plain `GlobalUIComponents` scheme builds only the library product).
+      # (the plain `ThemeKit` scheme builds only the library product).
       # The opt-in snapshot suite skips here automatically (RUN_SNAPSHOTS unset),
       # so this stays deterministic across runner simulator images.
       - name: Build for iOS Simulator
         run: |
           xcodebuild build-for-testing \
-            -scheme GlobalUIComponents-Package \
+            -scheme ThemeKit-Package \
             -destination "$DESTINATION"
 
       - name: Test on iOS Simulator
         run: |
           xcodebuild test-without-building \
-            -scheme GlobalUIComponents-Package \
+            -scheme ThemeKit-Package \
             -destination "$DESTINATION"
 
   # ---------------------------------------------------------------------------

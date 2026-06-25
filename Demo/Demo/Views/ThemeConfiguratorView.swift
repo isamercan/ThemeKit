@@ -11,7 +11,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct ThemeConfiguratorView: View {
     @ThemeContext private var theme

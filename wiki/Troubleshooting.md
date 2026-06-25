@@ -33,7 +33,7 @@ The `--hosting-base-path` is wrong. For a **project site**
 (`user.github.io/<repo>/`) it must equal the repo name:
 
 ```
---hosting-base-path GlobalUIComponents
+--hosting-base-path ThemeKit
 ```
 
 For a user/custom-domain site, drop the flag entirely.

@@ -10,7 +10,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 enum ComponentCategory: String, CaseIterable, Identifiable {
     case atoms = "Atoms"
@@ -120,7 +120,7 @@ enum ComponentRegistry {
         .knob("Hero", .organisms, demo: HeroDemo(), usage: #"Hero(title: "…", subtitle: "…", ctaTitle: "Explore", action: { })"#),
         .knob("Stack", .organisms, demo: CardStackDemo(), usage: #"CardStack(items) { item in cardView }"#),
         .static("Footer", .organisms, usage: #"Footer(columns: [.init("Company", items: [.init("About")])], note: "© 2026")"#) {
-            Footer(columns: [.init("Company", items: [.init("About"), .init("Careers")]), .init("Support", items: [.init("Help"), .init("Contact")]), .init("Legal", items: [.init("Terms"), .init("Privacy")])], note: "© 2026 GlobalUIComponents.")
+            Footer(columns: [.init("Company", items: [.init("About"), .init("Careers")]), .init("Support", items: [.init("Help"), .init("Contact")]), .init("Legal", items: [.init("Terms"), .init("Privacy")])], note: "© 2026 ThemeKit.")
         },
         .static("Diff", .organisms, usage: #"Diff { beforeView } after: { afterView }"#) {
             Diff {

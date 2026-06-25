@@ -8,7 +8,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct HotelFavoritesView: View {
     @Binding var path: [HotelRoute]

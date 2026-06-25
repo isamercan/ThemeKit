@@ -9,7 +9,7 @@ reference, so that diff shows up in the PR instead of in production.
 ## How it's wired
 
 - **Library:** [`swift-snapshot-testing`](https://github.com/pointfreeco/swift-snapshot-testing),
-  a **test-only** dependency. The shipped `GlobalUIComponents` library stays
+  a **test-only** dependency. The shipped `ThemeKit` library stays
   zero-dependency.
 - **Where it runs:** iOS only. `SnapshotSupport.swift` and the tests are wrapped
   in `#if canImport(UIKit)`, so `swift test` on macOS skips them entirely and the
@@ -40,14 +40,14 @@ record or verify, or the antialiasing will drift and produce false diffs.
 > **scheme's Test action** (where they're delivered into the test runtime), then
 > run from Xcode or the CLI:
 
-1. **Configure once** — Xcode → Edit Scheme → `GlobalUIComponents-Package` →
+1. **Configure once** — Xcode → Edit Scheme → `ThemeKit-Package` →
    Test → Arguments → Environment Variables: add `RUN_SNAPSHOTS = 1` (and
    `RECORD_SNAPSHOTS = 1` only while recording).
 
 2. **Record** (with `RECORD_SNAPSHOTS = 1`), then commit the generated
    `__Snapshots__/` folders:
    ```bash
-   xcodebuild test -scheme GlobalUIComponents-Package \
+   xcodebuild test -scheme ThemeKit-Package \
      -destination 'platform=iOS Simulator,name=iPhone 17'
    ```
 
@@ -57,8 +57,8 @@ record or verify, or the antialiasing will drift and produce false diffs.
 A failing snapshot writes a side-by-side diff image; open it to see exactly what
 moved. If the change is intentional, re-record and commit the new reference.
 
-Note the scheme name: `GlobalUIComponents-Package` is the one wired for the test
-action (the plain `GlobalUIComponents` scheme builds only the library product).
+Note the scheme name: `ThemeKit-Package` is the one wired for the test
+action (the plain `ThemeKit` scheme builds only the library product).
 
 ## Adding coverage
 

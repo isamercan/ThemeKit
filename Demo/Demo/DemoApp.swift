@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 @main
 struct DemoApp: App {

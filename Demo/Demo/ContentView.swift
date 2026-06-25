@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import GlobalUIComponents
+import ThemeKit
 
 struct ContentView: View {
     // Overridable at launch via `-startTab <index>` (used for screenshots).
