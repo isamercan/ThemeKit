@@ -1,5 +1,10 @@
 # ``GlobalUIComponents``
 
+@Metadata {
+    @DisplayName("GlobalUIComponents")
+    @PageColor(blue)
+}
+
 A token-driven, brand-neutral SwiftUI design system: a themable palette, a full
 component library, validation, and accessibility — with zero third-party
 dependencies.
@@ -28,7 +33,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Welcome").textStyle(.headingLg)
-            PrimaryButton(title: "Get started") { await signIn() }
+            PrimaryButton("Get started") { await signIn() }
         }
         .padding()
     }
@@ -49,6 +54,8 @@ views; the core library stays dependency-free.
 
 ### Getting Started
 
+- <doc:GettingStarted>
+- <doc:Installation>
 - <doc:Theming>
 - <doc:Accessibility>
 - <doc:FormValidation>

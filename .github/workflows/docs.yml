@@ -1,0 +1,58 @@
+name: Docs
+
+# Build the DocC documentation and publish it to GitHub Pages on every push to
+# main. Set Settings ▸ Pages ▸ Source = "GitHub Actions" once for this to serve.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required for the Pages deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; let an in-flight one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Build DocC & deploy to Pages
+    runs-on: macos-15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The package needs Swift 6.2; pick the newest Xcode the runner ships.
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # Project site → assets are served under /<repo>/, so the base path MUST be
+      # the repo name or every CSS/JS asset 404s.
+      - name: Build DocC (static hosting)
+        run: |
+          swift package --disable-sandbox \
+            generate-documentation \
+            --target GlobalUIComponents \
+            --transform-for-static-hosting \
+            --hosting-base-path GlobalUIComponents \
+            --output-path ./docs-out
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs-out
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

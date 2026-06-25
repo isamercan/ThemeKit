@@ -33,6 +33,10 @@ let package = Package(
         // shipped library — only the test target depends on it, so consumers
         // still get a zero-dependency core.
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.0"),
+        // DOC-ONLY: DocC build-tool plugin (generate-documentation /
+        // preview-documentation). A command plugin — adds no target dependency,
+        // so the shipped library stays dependency-free.
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
