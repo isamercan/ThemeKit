@@ -29,6 +29,10 @@ let package = Package(
     dependencies: [
         // Used solely by the GlobalUIComponentsLottie add-on target.
         .package(url: "https://github.com/airbnb/lottie-ios.git", from: "4.4.0"),
+        // TEST-ONLY: visual regression (snapshot) testing. Never linked into the
+        // shipped library — only the test target depends on it, so consumers
+        // still get a zero-dependency core.
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -49,7 +53,10 @@ let package = Package(
         ),
         .testTarget(
             name: "GlobalUIComponentsTests",
-            dependencies: ["GlobalUIComponents"]
+            dependencies: [
+                "GlobalUIComponents",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ]
         ),
     ],
     swiftLanguageModes: [.v5]
