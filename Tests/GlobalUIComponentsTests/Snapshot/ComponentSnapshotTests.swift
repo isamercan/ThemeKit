@@ -17,20 +17,7 @@ import XCTest
 @testable import GlobalUIComponents
 
 @MainActor
-final class ComponentSnapshotTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        // Image comparisons are environment-sensitive (font + antialiasing
-        // rendering differs by OS/GPU), so this suite is opt-in rather than a
-        // blocking CI gate. Record + verify on the team's pinned simulator:
-        //   RUN_SNAPSHOTS=1 RECORD_SNAPSHOTS=1  xcodebuild test ...   # record
-        //   RUN_SNAPSHOTS=1                     xcodebuild test ...   # verify
-        try XCTSkipUnless(
-            ProcessInfo.processInfo.environment["RUN_SNAPSHOTS"] == "1",
-            "Set RUN_SNAPSHOTS=1 to run the visual-regression suite."
-        )
-    }
+final class ComponentSnapshotTests: SnapshotTestCase {
 
     // MARK: Badge
 

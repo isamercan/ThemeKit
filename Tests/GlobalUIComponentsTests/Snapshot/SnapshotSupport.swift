@@ -22,6 +22,20 @@ import SwiftUI
 import UIKit
 import XCTest
 
+/// Base class for the visual-regression suites. Centralises the opt-in gate so
+/// every snapshot test skips unless `RUN_SNAPSHOTS=1` is set on the scheme's
+/// Test action (see docs/SNAPSHOT-TESTING.md).
+@MainActor
+class SnapshotTestCase: XCTestCase {
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        try XCTSkipUnless(
+            ProcessInfo.processInfo.environment["RUN_SNAPSHOTS"] == "1",
+            "Set RUN_SNAPSHOTS=1 (on the scheme's Test action) to run the visual-regression suite."
+        )
+    }
+}
+
 enum SnapshotConfig {
     /// Set `RECORD_SNAPSHOTS=1` in the environment to (re)generate references.
     static let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] == "1"

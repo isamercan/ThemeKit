@@ -61,8 +61,16 @@ action (the plain `GlobalUIComponents` scheme builds only the library product).
 
 ## Adding coverage
 
-The seed set in `ComponentSnapshotTests.swift` covers a slice of atoms. Extend it
-the same way — one method per state that matters:
+Coverage is organised by altitude, each suite subclassing `SnapshotTestCase`:
+
+- `ComponentSnapshotTests` — small atoms (Badge, Tag, ScoreBadge, StatusDot, Chip).
+- `ButtonSnapshotTests` — `GlobalButton` across the full variant × color × size ×
+  shape × state matrix, plus the presets.
+- `FormControlSnapshotTests` — TextInput (incl. error state), Checkbox, RadioButton,
+  SegmentedControl.
+- `DisplaySnapshotTests` — Avatar, Card, Callout, EmptyState, Rating, Progress, Stat.
+
+Extend any of them the same way — one method per state that matters:
 
 ```swift
 func testMyComponent() {
