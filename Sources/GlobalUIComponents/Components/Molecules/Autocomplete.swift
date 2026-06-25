@@ -74,7 +74,7 @@ public struct Autocomplete: View {
                 }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: 48)
+            .scaledControlHeight(48)
             .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)

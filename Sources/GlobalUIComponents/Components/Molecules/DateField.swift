@@ -45,7 +45,7 @@ public struct DateField: View {
                     Icon(systemName: "calendar", size: .sm, color: Theme.shared.text(.textTertiary))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
-                .frame(height: 48)
+                .scaledControlHeight(48)
                 .frame(maxWidth: .infinity)
                 .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                 .overlay(

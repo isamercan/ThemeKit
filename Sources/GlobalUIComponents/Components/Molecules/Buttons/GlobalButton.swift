@@ -34,6 +34,11 @@ public struct GlobalButton: View {
     @Binding private var isLoading: Bool
     private let action: () -> Void
 
+    /// Scales the button's footprint with Dynamic Type, in lock-step with its
+    /// label (which scales via `textStyle`), so the height/text ratio is
+    /// preserved and large-text labels never clip. 1.0 at the default text size.
+    @ScaledMetric(relativeTo: .body) private var typeScale: CGFloat = 1
+
     public init(
         _ title: String? = nil,
         systemImage: String? = nil,
@@ -71,7 +76,7 @@ public struct GlobalButton: View {
             action()
         } label: {
             content
-                .frame(width: isIconOnly ? size.height : nil, height: size.height)
+                .frame(width: isIconOnly ? size.height * typeScale : nil, height: size.height * typeScale)
                 .frame(maxWidth: block && !isIconOnly ? .infinity : nil)
                 .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
                 .foregroundStyle(foreground)

@@ -111,7 +111,7 @@ private struct OTPDigitBox: View {
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: isActive || hasError ? 1.5 : 1)
                 )
-                .frame(height: 56)
+                .scaledControlHeight(56)
 
             if digit.isEmpty, isActive {
                 Rectangle()

@@ -75,7 +75,7 @@ public struct SelectBox<Option: Hashable>: View {
                     Icon(systemName: "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
-                .frame(height: 48)
+                .scaledControlHeight(48)
                 .frame(maxWidth: .infinity)
                 .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))

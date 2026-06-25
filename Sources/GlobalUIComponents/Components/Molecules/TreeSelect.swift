@@ -106,7 +106,7 @@ public struct TreeSelect: View {
                 Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: 56)
+            .scaledControlHeight(56)
             .frame(maxWidth: .infinity)
             .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(

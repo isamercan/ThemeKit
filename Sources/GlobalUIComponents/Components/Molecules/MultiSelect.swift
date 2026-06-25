@@ -143,7 +143,7 @@ public struct MultiSelect<Option: Hashable>: View {
                         .tint(Theme.shared.foreground(.fgHero))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
-                .frame(height: 44)
+                .scaledControlHeight(44)
                 DividerView(size: .small)
             }
             if filtered.isEmpty {

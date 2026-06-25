@@ -132,7 +132,7 @@ public struct Select<Option: Hashable>: View {
                  color: showsClear ? .clear : Theme.shared.text(.textTertiary))
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .frame(height: size.height)
+        .scaledControlHeight(size.height)
         .frame(maxWidth: .infinity)
         .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
@@ -192,7 +192,7 @@ public struct Select<Option: Hashable>: View {
                 TextField("Ara", text: $query).textStyle(.bodyBase400).tint(Theme.shared.foreground(.fgHero))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: 44)
+            .scaledControlHeight(44)
             DividerView(size: .small)
 
             ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
