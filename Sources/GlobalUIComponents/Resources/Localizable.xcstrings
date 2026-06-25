@@ -73,6 +73,18 @@
         "tr" : { "stringUnit" : { "state" : "translated", "value" : "%@ artış" } }
       }
     },
+    "Date" : {
+      "comment" : "DateField: VoiceOver name used when no explicit label is given.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Tarih" } }
+      }
+    },
+    "Rating" : {
+      "comment" : "Rating: VoiceOver label.",
+      "localizations" : {
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Değerlendirme" } }
+      }
+    },
     "Average" : {
       "comment" : "Rating: default sentiment for the mid score band.",
       "localizations" : {

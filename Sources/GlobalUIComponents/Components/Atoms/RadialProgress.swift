@@ -39,8 +39,10 @@ public struct RadialProgress: View {
         self.accessibilityLabelText = accessibilityLabel
     }
 
-    /// Percentage rounded (not truncated) so a near-complete ring reads "100%".
-    private var percent: Int { Int((value * 100).rounded()) }
+    /// Percentage rounded mid-range, but capped at 99% until the value is
+    /// actually complete — so the ring never reads "100%" while it's not full and
+    /// the success checkmark (value >= 1) hasn't appeared.
+    private var percent: Int { value >= 1 ? 100 : min(99, Int((value * 100).rounded())) }
 
     private var gap: CGFloat { dashboard ? 0.25 : 0 }            // fraction left open
     private var rotation: Double { dashboard ? 90 + Double(gap) * 180 : -90 }

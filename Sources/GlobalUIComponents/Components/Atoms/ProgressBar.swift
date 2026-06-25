@@ -76,9 +76,15 @@ public struct ProgressBar: View {
 
     private var trackColor: Color { trailColor ?? Theme.shared.border(.borderPrimary) }
 
-    /// Spoken/displayed percentage, rounded (not truncated) so 0.997 reads
-    /// "100%", never a misleading "99%".
-    private var percentText: String { format?(value) ?? "%\(Int((value * 100).rounded()))" }
+    /// Spoken/displayed percentage. Rounded mid-range (0.756 → "76%", not "75%"),
+    /// but capped at 99% until the value is actually complete, so the label can
+    /// never claim "100%" while the fill is short and the success checkmark
+    /// (which gates on value >= 1) is absent.
+    private var percentText: String {
+        if let format { return format(value) }
+        let pct = value >= 1 ? 100 : min(99, Int((value * 100).rounded()))
+        return "%\(pct)"
+    }
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {

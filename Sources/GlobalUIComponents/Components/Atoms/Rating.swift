@@ -118,16 +118,20 @@ public struct Rating: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(String(globalUIComponents: "Rating")))
             .accessibilityValue(Text(accessibilityValueText))
-        if interactive {
+        // Only the star layout has a maxValue-bounded grid and tap targets; the
+        // number layouts are display-only (and may carry a 0–10 score that
+        // maxValue=5 would wrongly clamp), so they get no adjustable action.
+        if interactive && layout == .stars {
             labelled.accessibilityAdjustableAction { direction in
-                // Snap to the same grid the tap targets use (whole or half
-                // stars), so swiping never emits a fractional value the tap UI
-                // couldn't produce.
+                // Step along the same whole/half-star grid the tap targets use.
+                // Direction-aware rounding keeps increment and decrement
+                // symmetric for a fractional current value (4.3 → 5 up, → 4 down).
                 let step = allowHalf ? 0.5 : 1
-                let snapped = (value / step).rounded() * step
                 switch direction {
-                case .increment: onRate?(min(snapped + step, Double(maxValue)))
-                case .decrement: onRate?(max(snapped - step, 0))
+                case .increment:
+                    onRate?(min(((value / step).rounded(.down) + 1) * step, Double(maxValue)))
+                case .decrement:
+                    onRate?(max(((value / step).rounded(.up) - 1) * step, 0))
                 @unknown default: break
                 }
             }

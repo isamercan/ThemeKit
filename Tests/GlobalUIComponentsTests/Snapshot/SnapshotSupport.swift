@@ -72,11 +72,12 @@ func assertComponentSnapshot(
     // Components read their palette from the Theme.shared singleton (imperative
     // isDark), NOT the SwiftUI colorScheme environment — so setting only
     // `.environment(\.colorScheme,)` would render the light palette on a dark
-    // backdrop. Drive the singleton explicitly and restore it afterwards so the
-    // suite stays order-independent.
-    let previousDark = Theme.shared.isDark
-    Theme.shared.setColorScheme(dark: colorScheme == .dark)
-    defer { Theme.shared.setColorScheme(dark: previousDark) }
+    // backdrop. Load the DEFAULT theme at the requested scheme to establish a
+    // known baseline first (a sibling suite may have left a custom ThemeConfig in
+    // the singleton), and reset to the clean default afterwards — together this
+    // makes the suite fully order-independent.
+    Theme.shared.loadTheme(named: Theme.defaultThemeName, dark: colorScheme == .dark)
+    defer { Theme.shared.loadTheme(named: Theme.defaultThemeName, dark: false) }
 
     let traits = UITraitCollection { mutable in
         mutable.userInterfaceStyle = colorScheme == .dark ? .dark : .light
