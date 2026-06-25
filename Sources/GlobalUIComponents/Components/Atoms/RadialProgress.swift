@@ -17,6 +17,7 @@ public struct RadialProgress: View {
     private let status: ProgressStatus
     private let dashboard: Bool
     private let tint: Color?
+    private let accessibilityLabelText: String?
 
     public init(
         value: Double,
@@ -25,7 +26,8 @@ public struct RadialProgress: View {
         showLabel: Bool = true,
         status: ProgressStatus = .normal,
         dashboard: Bool = false,
-        tint: Color? = nil
+        tint: Color? = nil,
+        accessibilityLabel: String? = nil
     ) {
         self.value = min(max(value, 0), 1)
         self.size = size
@@ -34,7 +36,11 @@ public struct RadialProgress: View {
         self.status = status
         self.dashboard = dashboard
         self.tint = tint
+        self.accessibilityLabelText = accessibilityLabel
     }
+
+    /// Percentage rounded (not truncated) so a near-complete ring reads "100%".
+    private var percent: Int { Int((value * 100).rounded()) }
 
     private var gap: CGFloat { dashboard ? 0.25 : 0 }            // fraction left open
     private var rotation: Double { dashboard ? 90 + Double(gap) * 180 : -90 }
@@ -57,7 +63,7 @@ public struct RadialProgress: View {
                 } else if status == .exception {
                     Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(status.semantic.accent)
                 } else {
-                    Text("\(Int(value * 100))%")
+                    Text("\(percent)%")
                         .font(.system(size: size * 0.26, weight: .semibold))
                         .foregroundStyle(Theme.shared.text(.textPrimary))
                 }
@@ -66,8 +72,8 @@ public struct RadialProgress: View {
         .frame(width: size, height: size)
         // The ring fill is purely visual; speak the percentage to VoiceOver.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(String(globalUIComponents: "Progress")))
-        .accessibilityValue(Text("\(Int(value * 100))%"))
+        .accessibilityLabel(Text(accessibilityLabelText ?? String(globalUIComponents: "Progress")))
+        .accessibilityValue(Text("\(percent)%"))
         .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }
 }

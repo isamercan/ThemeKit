@@ -120,10 +120,14 @@ public struct Rating: View {
             .accessibilityValue(Text(accessibilityValueText))
         if interactive {
             labelled.accessibilityAdjustableAction { direction in
+                // Snap to the same grid the tap targets use (whole or half
+                // stars), so swiping never emits a fractional value the tap UI
+                // couldn't produce.
                 let step = allowHalf ? 0.5 : 1
+                let snapped = (value / step).rounded() * step
                 switch direction {
-                case .increment: onRate?(min(value + step, Double(maxValue)))
-                case .decrement: onRate?(max(value - step, 0))
+                case .increment: onRate?(min(snapped + step, Double(maxValue)))
+                case .decrement: onRate?(max(snapped - step, 0))
                 @unknown default: break
                 }
             }
@@ -132,13 +136,21 @@ public struct Rating: View {
         }
     }
 
-    /// Spoken value, e.g. "4.3 out of 5, Very good, (128)".
+    /// Spoken value. Star layouts read "4.3 out of 5"; the number layouts carry a
+    /// standalone score (often 0–10), so they read just the score (plus the
+    /// sentiment word for `.rateNumberText`) — never a contradictory "/ maxValue".
+    /// The review count is intentionally omitted: the sibling `review` element
+    /// announces it, so including it here would double it.
     private var accessibilityValueText: String {
         let score = String(format: "%.1f", value)
-        var spoken = String(globalUIComponents: "\(score) out of \(maxValue)")
-        if layout == .rateNumberText { spoken += ", \(resolvedSentiment)" }
-        if let countLabel { spoken += ", \(countLabel)" }
-        return spoken
+        switch layout {
+        case .stars:
+            return String(globalUIComponents: "\(score) out of \(maxValue)")
+        case .numberRate:
+            return score
+        case .rateNumberText:
+            return "\(score), \(resolvedSentiment)"
+        }
     }
 
     // MARK: Stars

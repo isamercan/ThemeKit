@@ -56,7 +56,9 @@ public struct DateField: View {
             .buttonStyle(.plain)
             .popover(isPresented: $showPicker) { picker }
             .a11y(A11yElement.Select.trigger, in: accessibilityID)
-            .accessibilityLabel(label ?? "")
+            // Fall back to the placeholder (never an empty string, which would
+            // blank the control's name) so the trigger always has a spoken name.
+            .accessibilityLabel(label ?? placeholder)
             .accessibilityValue(date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "")
         }
     }

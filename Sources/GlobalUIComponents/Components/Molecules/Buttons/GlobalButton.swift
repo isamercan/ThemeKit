@@ -76,7 +76,15 @@ public struct GlobalButton: View {
             action()
         } label: {
             content
-                .frame(width: isIconOnly ? size.height * typeScale : nil, height: size.height * typeScale)
+                // minHeight (not a fixed height) so a label that wraps to two
+                // lines at large Dynamic Type sizes grows the button instead of
+                // being clipped. Icon-only buttons pin width == height (min==max)
+                // to keep a square footprint.
+                .frame(
+                    minWidth: isIconOnly ? size.height * typeScale : nil,
+                    maxWidth: isIconOnly ? size.height * typeScale : nil,
+                    minHeight: size.height * typeScale
+                )
                 .frame(maxWidth: block && !isIconOnly ? .infinity : nil)
                 .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
                 .foregroundStyle(foreground)

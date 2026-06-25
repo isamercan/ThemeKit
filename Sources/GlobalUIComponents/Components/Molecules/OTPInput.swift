@@ -53,6 +53,13 @@ public struct OTPInput: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { if isEnabled { isFocused = true } }
+                // The boxes are a decorative mirror of the field's value; the
+                // hidden TextField below carries the real VoiceOver element, so
+                // hide the per-digit glyphs to avoid duplicate announcements.
+                .accessibilityHidden(true)
+                // A fixed-width digit grid can't grow horizontally, so cap text
+                // scaling instead of stretching the boxes out of proportion.
+                .dynamicTypeClamp()
 
                 TextField("", text: $code)
                     .focused($isFocused)
@@ -111,7 +118,9 @@ private struct OTPDigitBox: View {
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: isActive || hasError ? 1.5 : 1)
                 )
-                .scaledControlHeight(56)
+                // Fixed height: the box is a square cell in a fixed-width grid;
+                // Dynamic Type is capped at the container via dynamicTypeClamp().
+                .frame(height: 56)
 
             if digit.isEmpty, isActive {
                 Rectangle()
