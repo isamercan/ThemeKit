@@ -100,7 +100,7 @@ public final class FeedbackPresenter: ObservableObject {
         primaryTitle: String,
         primaryKind: FeedbackKind = .info,
         onPrimary: @escaping () -> Void = {},
-        secondaryTitle: String? = String(globalUIComponents: "Cancel"),
+        secondaryTitle: String? = String(themeKit: "Cancel"),
         onSecondary: (() -> Void)? = nil
     ) {
         activeConfirm = ConfirmRequest(
@@ -116,7 +116,7 @@ public final class FeedbackPresenter: ObservableObject {
 
     /// Show a blocking loading indicator (spinner + text). Does not auto-dismiss —
     /// call `dismissLoading()` when the work completes (Ant `message.loading`).
-    public func loading(_ title: String = String(globalUIComponents: "Loading…")) { activeLoading = title }
+    public func loading(_ title: String = String(themeKit: "Loading…")) { activeLoading = title }
 
     public func dismissToast() { activeToast = nil }
     public func dismissConfirm() { activeConfirm = nil }

@@ -1,9 +1,9 @@
 //
-//  GlobalUITheme.swift
+//  ThemeKit.swift
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  The single entry point a host app needs for theming. Apply `.globalUITheme()`
+//  The single entry point a host app needs for theming. Apply `.themeKit()`
 //  ONCE at the root (the `WindowGroup` content) and every component reads the
 //  active `Theme`, reacting to runtime theme swaps.
 //
@@ -32,16 +32,16 @@ public extension View {
     /// @main struct MyApp: App {
     ///     init() { Theme.shared.applyPersistedConfig() }      // restore last theme
     ///     var body: some Scene {
-    ///         WindowGroup { ContentView().globalUITheme() }
+    ///         WindowGroup { ContentView().themeKit() }
     ///     }
     /// }
     /// ```
-    func globalUITheme(reactToRuntimeChanges: Bool = true) -> some View {
-        modifier(GlobalUIThemeModifier(reactToRuntimeChanges: reactToRuntimeChanges))
+    func themeKit(reactToRuntimeChanges: Bool = true) -> some View {
+        modifier(ThemeKitModifier(reactToRuntimeChanges: reactToRuntimeChanges))
     }
 }
 
-private struct GlobalUIThemeModifier: ViewModifier {
+private struct ThemeKitModifier: ViewModifier {
     @ObservedObject private var theme = Theme.shared
     let reactToRuntimeChanges: Bool
 

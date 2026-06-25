@@ -39,7 +39,7 @@ public struct Swap: View {
         }
         .buttonStyle(.plain)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
-        .accessibilityValue(isOn ? String(globalUIComponents: "on") : String(globalUIComponents: "off"))
+        .accessibilityValue(isOn ? String(themeKit: "on") : String(themeKit: "off"))
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 

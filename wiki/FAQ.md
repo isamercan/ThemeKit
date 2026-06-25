@@ -8,7 +8,7 @@ downloaded if you depend on the separate `ThemeKitLottie` product.
 ### Do components work without applying a theme?
 
 They render, but fall back to system defaults. Apply
-`.globalUITheme()` once at your app/scene root so components resolve the
+`.themeKit()` once at your app/scene root so components resolve the
 design-system palette, spacing, and fonts.
 
 ### How do I switch light / dark?
@@ -19,7 +19,7 @@ The active theme is a singleton:
 Theme.shared.setColorScheme(dark: true)
 ```
 
-If you applied `.globalUITheme()` (which reacts to runtime changes by default),
+If you applied `.themeKit()` (which reacts to runtime changes by default),
 the whole UI re-skins.
 
 ### Can I brand it with my own colors?

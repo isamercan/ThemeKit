@@ -21,7 +21,7 @@ final class LocalizationTests: XCTestCase {
         // verbatim, so it's present; Xcode (`xcodebuild`) compiles it into a
         // .loctable and drops the source, so under that toolchain there is
         // nothing to parse — skip rather than fail.
-        guard let url = Bundle.globalUIComponents.url(forResource: "Localizable", withExtension: "xcstrings") else {
+        guard let url = Bundle.themeKit.url(forResource: "Localizable", withExtension: "xcstrings") else {
             throw XCTSkip("Raw .xcstrings is only present under SwiftPM; Xcode compiles it away.")
         }
         let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
@@ -53,7 +53,7 @@ final class LocalizationTests: XCTestCase {
 
     // The public bridge initializer resolves from the bundle.
     func testPublicBridgeInitializer() {
-        XCTAssertEqual(String(globalUIComponents: "Digits only"), "Digits only")
+        XCTAssertEqual(String(themeKit: "Digits only"), "Digits only")
     }
 
     // Callers can still override every default (non-breaking).

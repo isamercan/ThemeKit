@@ -103,7 +103,7 @@ public struct RadioButton: View {
             .disabled(!isEnabled)
             .a11y(A11yElement.Control.radio, in: accessibilityID)
             .accessibilityLabel(label ?? "")
-            .accessibilityValue(isSelected ? String(globalUIComponents: "selected") : String(globalUIComponents: "not selected"))
+            .accessibilityValue(isSelected ? String(themeKit: "selected") : String(themeKit: "not selected"))
             .accessibilityAddTraits(isSelected ? .isSelected : [])
 
             if !infoMessages.isEmpty {

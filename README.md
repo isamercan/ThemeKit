@@ -79,7 +79,7 @@ struct MyApp: App {
     init() { Theme.shared.applyPersistedConfig() }   // restore last-used theme (optional)
     var body: some Scene {
         WindowGroup {
-            ContentView().globalUITheme()            // inject + repaint on theme change
+            ContentView().themeKit()            // inject + repaint on theme change
         }
     }
 }
@@ -127,7 +127,7 @@ Sources/ThemeKit/
 │  ├─ SemanticColor.swift         # named palette colors
 │  ├─ ThemeGenerator.swift        # runtime palette generator (Swift port)
 │  ├─ ThemeConfig.swift           # Codable theme recipe
-│  ├─ GlobalUITheme.swift         # .globalUITheme() root modifier
+│  ├─ ThemeKit.swift         # .themeKit() root modifier
 │  ├─ ThemeContext.swift          # @ThemeContext property wrapper
 │  └─ ThemedHostingController.swift
 ├─ Components/         # Atoms / Molecules / Organisms (all token-bound)
@@ -190,14 +190,14 @@ Theme.shared.setTheme(jsonData: Data(contentsOf: tokensURL))
 
 Components resolve tokens from the `Theme.shared` singleton (no per-call
 environment lookups), so SwiftUI can't infer that an arbitrary view depends on the
-theme. `.globalUITheme()` closes that gap: it injects `Theme` into the environment
+theme. `.themeKit()` closes that gap: it injects `Theme` into the environment
 **and** (by default) rebuilds the subtree keyed on `Theme.revision` when the theme
 changes, so every view re-reads the regenerated tokens.
 
 - Switching theme from a **settings screen** → keep the default
   (`reactToRuntimeChanges: true`); the whole UI repaints.
 - Editing the theme **in-session** (a live editor/inspector) → use
-  `.globalUITheme(reactToRuntimeChanges: false)` so the editor isn't torn down,
+  `.themeKit(reactToRuntimeChanges: false)` so the editor isn't torn down,
   and scope `.id(Theme.shared.revision)` onto just the live-preview subtree.
 
 ### Fonts

@@ -35,7 +35,7 @@ public struct RangeSlider: View {
         in bounds: ClosedRange<Double>,
         step: Double = 1,
         showInputs: Bool = false,
-        inputTitles: (min: String, max: String) = (String(globalUIComponents: "Min"), String(globalUIComponents: "Max")),
+        inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max")),
         accessibilityID: String? = nil,
         valueLabel: ((Double) -> String)? = nil
     ) {

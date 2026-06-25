@@ -71,7 +71,7 @@ public struct OTPInput: View {
                         code = String(newValue.filter(\.isNumber).prefix(digitCount))
                     }
                     .a11y(A11yElement.Field.field, in: accessibilityID)
-                    .accessibilityLabel(String(globalUIComponents: "Verification code"))
+                    .accessibilityLabel(String(themeKit: "Verification code"))
                     .accessibilityValue(code)
             }
 

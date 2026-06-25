@@ -111,9 +111,9 @@ private struct TourHostModifier: ViewModifier {
                     .textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
                 Spacer()
                 if controller.index > 0 {
-                    GlobalButton(String(globalUIComponents: "Back"), variant: .outline, size: .small) { controller.prev() }
+                    ThemeButton(String(themeKit: "Back"), variant: .outline, size: .small) { controller.prev() }
                 }
-                GlobalButton(controller.index == steps.count - 1 ? String(globalUIComponents: "Done") : String(globalUIComponents: "Next"), size: .small) {
+                ThemeButton(controller.index == steps.count - 1 ? String(themeKit: "Done") : String(themeKit: "Next"), size: .small) {
                     controller.next(count: steps.count)
                 }
             }

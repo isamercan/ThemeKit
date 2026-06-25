@@ -52,14 +52,14 @@ project and loaded with `Theme.shared.setTheme(jsonData:)`.
 
 ### Reacting to live changes
 
-Apply `.globalUITheme()` once at the root. It injects the theme into the
+Apply `.themeKit()` once at the root. It injects the theme into the
 environment and (by default) rebuilds the tree on theme changes so even leaf
 views that read tokens statically re-render. Pass
 `reactToRuntimeChanges: false` if you manage refresh yourself (e.g. to keep an
 open sheet alive while previewing a theme).
 
 ```swift
-WindowGroup { RootView().globalUITheme() }
+WindowGroup { RootView().themeKit() }
 ```
 
 ## Topics

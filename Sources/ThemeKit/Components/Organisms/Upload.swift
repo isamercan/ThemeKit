@@ -34,8 +34,8 @@ public struct Upload: View {
     private let onRemove: (UploadFile) -> Void
 
     public init(
-        prompt: String = String(globalUIComponents: "Add a photo from your device or take one with the camera."),
-        buttonTitle: String = String(globalUIComponents: "Upload Photo"),
+        prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
+        buttonTitle: String = String(themeKit: "Upload Photo"),
         files: [UploadFile] = [],
         onPick: @escaping () -> Void = {},
         onRemove: @escaping (UploadFile) -> Void = { _ in }
@@ -95,7 +95,7 @@ public struct Upload: View {
         case .uploading(let progress):
             ProgressBar(value: progress, height: 4)
         case .done:
-            Callout(String(globalUIComponents: "Uploaded"), type: .success)
+            Callout(String(themeKit: "Uploaded"), type: .success)
         case .failed(let reason):
             Callout(reason, type: .error)
         }

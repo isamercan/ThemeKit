@@ -65,7 +65,7 @@ action (the plain `ThemeKit` scheme builds only the library product).
 Coverage is organised by altitude, each suite subclassing `SnapshotTestCase`:
 
 - `ComponentSnapshotTests` — small atoms (Badge, Tag, ScoreBadge, StatusDot, Chip).
-- `ButtonSnapshotTests` — `GlobalButton` across the full variant × color × size ×
+- `ButtonSnapshotTests` — `ThemeButton` across the full variant × color × size ×
   shape × state matrix, plus the presets.
 - `FormControlSnapshotTests` — TextInput (incl. error state), Checkbox, RadioButton,
   SegmentedControl.

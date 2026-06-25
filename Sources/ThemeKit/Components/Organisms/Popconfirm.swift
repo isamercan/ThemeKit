@@ -49,10 +49,10 @@ private struct PopconfirmModifier: ViewModifier {
             }
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Spacer(minLength: 0)
-                GlobalButton(cancelTitle, variant: .outline, size: .small) {
+                ThemeButton(cancelTitle, variant: .outline, size: .small) {
                     isPresented = false; onCancel?()
                 }
-                GlobalButton(confirmTitle, color: confirmKind.semanticColor, size: .small) {
+                ThemeButton(confirmTitle, color: confirmKind.semanticColor, size: .small) {
                     isPresented = false; onConfirm()
                 }
             }
@@ -71,8 +71,8 @@ public extension View {
         isPresented: Binding<Bool>,
         title: String,
         message: String? = nil,
-        confirmTitle: String = String(globalUIComponents: "Yes"),
-        cancelTitle: String = String(globalUIComponents: "No"),
+        confirmTitle: String = String(themeKit: "Yes"),
+        cancelTitle: String = String(themeKit: "No"),
         confirmKind: FeedbackKind = .error,
         edge: TooltipEdge = .top,
         onConfirm: @escaping () -> Void,
@@ -90,7 +90,7 @@ public extension View {
     struct Demo: View {
         @State var show = true
         var body: some View {
-            GlobalButton("Delete", color: .error, variant: .soft) { show.toggle() }
+            ThemeButton("Delete", color: .error, variant: .soft) { show.toggle() }
                 .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Geri alınamaz.",
                             confirmTitle: "Sil", cancelTitle: "Vazgeç") {}
                 .padding(80)

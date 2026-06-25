@@ -264,7 +264,7 @@ public struct TextInput: View {
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.reveal, in: model.accessibilityID)
-            .accessibilityLabel(reveal ? String(globalUIComponents: "Hide password") : String(globalUIComponents: "Show password"))
+            .accessibilityLabel(reveal ? String(themeKit: "Hide password") : String(themeKit: "Show password"))
         } else if showsClear || (!text.isEmpty && isFocused && model.suffixSystemImage == nil) {
             Button { text = "" } label: {
                 Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))

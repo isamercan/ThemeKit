@@ -17,7 +17,7 @@ dependencies.
   a semantic token resolved from the active ``Theme``. Components never hard-code
   a value; they ask the theme. Swap the theme and the whole UI re-skins.
 - **Components** — ~130 SwiftUI views grouped as Atoms (``Badge``, ``Chip``,
-  ``Avatar``…), Molecules (``TextInput``, ``GlobalButton``, ``OTPInput``…), and
+  ``Avatar``…), Molecules (``TextInput``, ``ThemeButton``, ``OTPInput``…), and
   Organisms (``Carousel``, ``DataTable``, ``ResultView``…). All token-bound.
 - **Theming** — recipes (``ThemeConfig``) generate a complete palette from a
   single accent color at runtime, and persist/export it. See <doc:Theming>.
@@ -42,7 +42,7 @@ struct ContentView: View {
 @main
 struct MyApp: App {
     var body: some Scene {
-        WindowGroup { ContentView().globalUITheme() }
+        WindowGroup { ContentView().themeKit() }
     }
 }
 ```
@@ -74,7 +74,7 @@ views; the core library stays dependency-free.
 
 ### Buttons
 
-- ``GlobalButton``
+- ``ThemeButton``
 - ``PrimaryButton``
 - ``SecondaryButton``
 - ``OutlineButton``

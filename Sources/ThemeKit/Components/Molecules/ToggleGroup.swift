@@ -57,7 +57,7 @@ public struct ToggleGroup<Option: Hashable>: View {
                     ))
                     .a11y("option.\(index)", in: accessibilityID)
                     .accessibilityLabel(label(option))
-                    .accessibilityValue(selection.contains(option) ? String(globalUIComponents: "on") : String(globalUIComponents: "off"))
+                    .accessibilityValue(selection.contains(option) ? String(themeKit: "on") : String(themeKit: "off"))
                     .accessibilityAddTraits(selection.contains(option) ? .isSelected : [])
                 }
             }

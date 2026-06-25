@@ -91,7 +91,7 @@ public struct Checkbox: View {
             .disabled(!isEnabled)
             .a11y(A11yElement.Control.checkbox, in: accessibilityID)
             .accessibilityLabel(label ?? "")
-            .accessibilityValue(isIndeterminate ? String(globalUIComponents: "mixed") : (isChecked ? String(globalUIComponents: "selected") : String(globalUIComponents: "not selected")))
+            .accessibilityValue(isIndeterminate ? String(themeKit: "mixed") : (isChecked ? String(themeKit: "selected") : String(themeKit: "not selected")))
             .accessibilityAddTraits(isChecked ? .isSelected : [])
 
             if !infoMessages.isEmpty {

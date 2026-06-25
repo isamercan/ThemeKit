@@ -74,7 +74,7 @@ public struct RadialProgress: View {
         .frame(width: size, height: size)
         // The ring fill is purely visual; speak the percentage to VoiceOver.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(accessibilityLabelText ?? String(globalUIComponents: "Progress")))
+        .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
         .accessibilityValue(Text("\(percent)%"))
         .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }

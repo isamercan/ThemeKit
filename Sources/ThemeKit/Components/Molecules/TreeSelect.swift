@@ -36,7 +36,7 @@ public struct TreeSelect: View {
         label: String? = nil,
         nodes: [TreeNode],
         selection: Binding<Set<String>>,
-        placeholder: String = String(globalUIComponents: "Select"),
+        placeholder: String = String(themeKit: "Select"),
         cascade: Bool = false,
         searchable: Bool = false,
         initiallyExpanded: Set<String> = [],

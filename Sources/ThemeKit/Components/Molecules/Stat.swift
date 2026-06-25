@@ -17,8 +17,8 @@ public enum StatTrend {
     /// to VoiceOver — e.g. "up 12%".
     var accessibleText: String {
         switch self {
-        case .up(let t): return String(globalUIComponents: "up \(t)")
-        case .down(let t): return String(globalUIComponents: "down \(t)")
+        case .up(let t): return String(themeKit: "up \(t)")
+        case .down(let t): return String(themeKit: "down \(t)")
         }
     }
     var color: Color {

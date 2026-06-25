@@ -9,7 +9,7 @@
 
 import SwiftUI
 
-public enum GlobalButtonStyle {
+public enum ThemeButtonStyle {
     case primary
     case secondary
     case outline
@@ -26,7 +26,7 @@ private struct ThemedButton: View {
     let title: String
     let helperText: String?
     let textStyle: TextStyle?
-    let style: GlobalButtonStyle
+    let style: ThemeButtonStyle
     let size: ButtonSize
     let isContentWidth: Bool
     let confirmsSuccess: Bool
@@ -343,7 +343,7 @@ private struct ButtonConfiguration {
     let title: String
     var helperText: String? = nil
     var textStyle: TextStyle? = nil
-    let style: GlobalButtonStyle
+    let style: ThemeButtonStyle
     let size: ButtonSize
     let isContentWidth: Bool
     var confirmsSuccess: Bool = false

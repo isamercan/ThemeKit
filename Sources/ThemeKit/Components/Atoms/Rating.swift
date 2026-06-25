@@ -66,11 +66,11 @@ public struct Rating: View {
         if let sentiment { return sentiment }
         let pct = value / Double(maxValue)
         switch pct {
-        case 0.9...: return String(globalUIComponents: "Excellent")
-        case 0.75..<0.9: return String(globalUIComponents: "Very good")
-        case 0.6..<0.75: return String(globalUIComponents: "Good")
-        case 0.4..<0.6: return String(globalUIComponents: "Average")
-        default: return String(globalUIComponents: "Poor")
+        case 0.9...: return String(themeKit: "Excellent")
+        case 0.75..<0.9: return String(themeKit: "Very good")
+        case 0.6..<0.75: return String(themeKit: "Good")
+        case 0.4..<0.6: return String(themeKit: "Average")
+        default: return String(themeKit: "Poor")
         }
     }
 
@@ -116,7 +116,7 @@ public struct Rating: View {
     private var accessibleRating: some View {
         let labelled = HStack(spacing: Theme.SpacingKey.xs.value) { ratingGlyphs }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(String(globalUIComponents: "Rating")))
+            .accessibilityLabel(Text(String(themeKit: "Rating")))
             .accessibilityValue(Text(accessibilityValueText))
         // Only the star layout has a maxValue-bounded grid and tap targets; the
         // number layouts are display-only (and may carry a 0–10 score that
@@ -149,7 +149,7 @@ public struct Rating: View {
         let score = String(format: "%.1f", value)
         switch layout {
         case .stars:
-            return String(globalUIComponents: "\(score) out of \(maxValue)")
+            return String(themeKit: "\(score) out of \(maxValue)")
         case .numberRate:
             return score
         case .rateNumberText:

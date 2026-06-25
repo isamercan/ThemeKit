@@ -16,7 +16,7 @@ struct DialogCard: View {
     let onPrimary: () -> Void
     let secondaryTitle: String?
     let onSecondary: (() -> Void)?
-    /// When set, the primary action uses a `GlobalButton` in this color
+    /// When set, the primary action uses a `ThemeButton` in this color
     /// (e.g. `.error` for destructive confirms). `nil` keeps the default primary.
     var primaryColor: SemanticColor? = nil
     /// When set, an icon header is shown (info / success / warning / error variant).
@@ -46,7 +46,7 @@ struct DialogCard: View {
 
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 if let primaryColor {
-                    GlobalButton(primaryTitle, color: primaryColor, block: true, action: onPrimary)
+                    ThemeButton(primaryTitle, color: primaryColor, block: true, action: onPrimary)
                 } else {
                     PrimaryButton(primaryTitle, isContentWidth: true, action: onPrimary)
                 }

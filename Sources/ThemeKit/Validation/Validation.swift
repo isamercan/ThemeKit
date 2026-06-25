@@ -32,51 +32,51 @@ public struct ValidationRule {
 
     // MARK: Built-in rules (delegate to `Validators` predicates)
 
-    public static func required(_ message: String = String(globalUIComponents: "This field is required")) -> ValidationRule {
+    public static func required(_ message: String = String(themeKit: "This field is required")) -> ValidationRule {
         ValidationRule(message, runsOnEmpty: true) { Validators.required($0) }
     }
 
     public static func minLength(_ n: Int, _ message: String? = nil) -> ValidationRule {
-        ValidationRule(message ?? String(globalUIComponents: "At least \(n) characters")) { Validators.minLength($0, n) }
+        ValidationRule(message ?? String(themeKit: "At least \(n) characters")) { Validators.minLength($0, n) }
     }
 
     public static func maxLength(_ n: Int, _ message: String? = nil) -> ValidationRule {
-        ValidationRule(message ?? String(globalUIComponents: "At most \(n) characters")) { Validators.maxLength($0, n) }
+        ValidationRule(message ?? String(themeKit: "At most \(n) characters")) { Validators.maxLength($0, n) }
     }
 
-    public static func email(_ message: String = String(globalUIComponents: "Enter a valid email")) -> ValidationRule {
+    public static func email(_ message: String = String(themeKit: "Enter a valid email")) -> ValidationRule {
         ValidationRule(message) { Validators.email($0) }
     }
 
-    public static func phone(_ message: String = String(globalUIComponents: "Enter a valid phone number")) -> ValidationRule {
+    public static func phone(_ message: String = String(themeKit: "Enter a valid phone number")) -> ValidationRule {
         ValidationRule(message) { Validators.phone($0) }
     }
 
     public static func password(minLength: Int = 8, requireUppercase: Bool = true, requireDigit: Bool = true,
                                 requireSpecial: Bool = false, _ message: String? = nil) -> ValidationRule {
-        let msg = message ?? String(globalUIComponents: "At least \(minLength) characters")
-            + (requireUppercase ? String(globalUIComponents: ", uppercase") : "")
-            + (requireDigit ? String(globalUIComponents: ", a digit") : "")
-            + (requireSpecial ? String(globalUIComponents: ", a special character") : "")
+        let msg = message ?? String(themeKit: "At least \(minLength) characters")
+            + (requireUppercase ? String(themeKit: ", uppercase") : "")
+            + (requireDigit ? String(themeKit: ", a digit") : "")
+            + (requireSpecial ? String(themeKit: ", a special character") : "")
         return ValidationRule(msg) {
             Validators.password($0, minLength: minLength, requireUppercase: requireUppercase, requireDigit: requireDigit, requireSpecial: requireSpecial)
         }
     }
 
-    public static func creditCardDate(_ message: String = String(globalUIComponents: "Use MM/YY format")) -> ValidationRule {
+    public static func creditCardDate(_ message: String = String(themeKit: "Use MM/YY format")) -> ValidationRule {
         ValidationRule(message) { Validators.creditCardDate($0) }
     }
 
-    public static func numeric(_ message: String = String(globalUIComponents: "Digits only")) -> ValidationRule {
+    public static func numeric(_ message: String = String(themeKit: "Digits only")) -> ValidationRule {
         ValidationRule(message) { Validators.numeric($0) }
     }
 
     public static func range(_ bounds: ClosedRange<Int>, _ message: String? = nil) -> ValidationRule {
-        ValidationRule(message ?? String(globalUIComponents: "Between \(bounds.lowerBound) and \(bounds.upperBound)")) { Validators.intInRange($0, bounds) }
+        ValidationRule(message ?? String(themeKit: "Between \(bounds.lowerBound) and \(bounds.upperBound)")) { Validators.intInRange($0, bounds) }
     }
 
     /// Must equal another field's current value (e.g. confirm-password).
-    public static func match(_ other: @escaping @autoclosure () -> String, _ message: String = String(globalUIComponents: "Doesn't match")) -> ValidationRule {
+    public static func match(_ other: @escaping @autoclosure () -> String, _ message: String = String(themeKit: "Doesn't match")) -> ValidationRule {
         ValidationRule(message) { $0 == other() }
     }
 

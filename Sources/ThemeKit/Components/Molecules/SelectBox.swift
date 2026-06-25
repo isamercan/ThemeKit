@@ -25,7 +25,7 @@ public struct SelectBox<Option: Hashable>: View {
         label: String? = nil,
         options: [Option],
         selection: Binding<Option?>,
-        placeholder: String = String(globalUIComponents: "Select"),
+        placeholder: String = String(themeKit: "Select"),
         hint: String? = nil,
         errorText: String? = nil,
         accessibilityID: String? = nil,

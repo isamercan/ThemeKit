@@ -116,7 +116,7 @@ public struct ProgressBar: View {
         // spoken percentage. `.updatesFrequently` tells VoiceOver to re-read it
         // while an active task advances.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(accessibilityLabelText ?? String(globalUIComponents: "Progress")))
+        .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
         .accessibilityValue(Text(percentText))
         .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
     }
@@ -168,7 +168,7 @@ public struct StepIndicator: View {
         // impossible "1 of 0".
         .accessibilityElement(children: .ignore)
         .accessibilityHidden(total <= 0)
-        .accessibilityLabel(Text(String(globalUIComponents: "Step")))
+        .accessibilityLabel(Text(String(themeKit: "Step")))
         .accessibilityValue(Text(stepValueText))
     }
 
@@ -176,7 +176,7 @@ public struct StepIndicator: View {
     private var stepValueText: String {
         guard total > 0 else { return "" }
         let position = min(max(current + 1, 1), total)
-        return String(globalUIComponents: "\(position) of \(total)")
+        return String(themeKit: "\(position) of \(total)")
     }
 }
 

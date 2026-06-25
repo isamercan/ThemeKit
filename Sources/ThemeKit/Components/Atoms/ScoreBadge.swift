@@ -27,7 +27,7 @@ public struct ScoreBadge: View {
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             // Give the bare number context: VoiceOver reads "Score: 9.0".
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(String(globalUIComponents: "Score")))
+            .accessibilityLabel(Text(String(themeKit: "Score")))
             .accessibilityValue(Text(String(format: "%.1f", score)))
     }
 }

@@ -11,7 +11,7 @@ re-skins.
 
 ### 1. Install the theme
 
-Apply `globalUITheme(reactToRuntimeChanges:)` once, at the top of your scene. It
+Apply `themeKit(reactToRuntimeChanges:)` once, at the top of your scene. It
 loads the default theme, bundles the type ramp, and makes the active ``Theme``
 available to every component below it.
 
@@ -24,13 +24,13 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .globalUITheme()
+                .themeKit()
         }
     }
 }
 ```
 
-> Note: Without `.globalUITheme()` at the root, components still render but fall
+> Note: Without `.themeKit()` at the root, components still render but fall
 > back to system defaults instead of the design-system palette and fonts.
 
 ### 2. Compose a screen
@@ -70,7 +70,7 @@ Theme.shared.setColorScheme(dark: true)                 // light ⇄ dark
 Theme.shared.apply(ThemeConfig(primaryHex: "#7C3AED"))  // re-skin from an accent
 ```
 
-> Tip: Build your component-level previews inside `Group { ... }.globalUITheme()`
+> Tip: Build your component-level previews inside `Group { ... }.themeKit()`
 > so they render with the real design-system palette and fonts in the Xcode
 > canvas.
 
@@ -86,5 +86,5 @@ Theme.shared.apply(ThemeConfig(primaryHex: "#7C3AED"))  // re-skin from an accen
 
 - ``Theme``
 - ``TextStyle``
-- ``GlobalButton``
+- ``ThemeButton``
 - ``TextInput``

@@ -2,7 +2,7 @@
 //  ButtonSnapshotTests.swift
 //  ThemeKitTests
 //
-//  GlobalButton is the highest-traffic interactive component and the widest
+//  ThemeButton is the highest-traffic interactive component and the widest
 //  visual matrix (variant × color × size × shape × state). A regression here
 //  ripples across every screen, so it gets the deepest snapshot coverage.
 //
@@ -18,72 +18,72 @@ final class ButtonSnapshotTests: SnapshotTestCase {
 
     // MARK: Variants (the daisyUI-style fill spectrum)
 
-    func testGlobalButton_variants() {
+    func testThemeButton_variants() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                GlobalButton("Solid", variant: .solid) {}
-                GlobalButton("Soft", variant: .soft) {}
-                GlobalButton("Outline", variant: .outline) {}
-                GlobalButton("Ghost", variant: .ghost) {}
-                GlobalButton("Link", variant: .link) {}
+                ThemeButton("Solid", variant: .solid) {}
+                ThemeButton("Soft", variant: .soft) {}
+                ThemeButton("Outline", variant: .outline) {}
+                ThemeButton("Ghost", variant: .ghost) {}
+                ThemeButton("Link", variant: .link) {}
             }
         )
     }
 
     // MARK: Semantic colors
 
-    func testGlobalButton_semanticColors() {
+    func testThemeButton_semanticColors() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                GlobalButton("Primary", color: .primary) {}
-                GlobalButton("Success", color: .success) {}
-                GlobalButton("Warning", color: .warning) {}
-                GlobalButton("Error", color: .error) {}
+                ThemeButton("Primary", color: .primary) {}
+                ThemeButton("Success", color: .success) {}
+                ThemeButton("Warning", color: .warning) {}
+                ThemeButton("Error", color: .error) {}
             }
         )
     }
 
     // MARK: Sizes
 
-    func testGlobalButton_sizes() {
+    func testThemeButton_sizes() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                GlobalButton("XSmall", size: .xsmall) {}
-                GlobalButton("Small", size: .small) {}
-                GlobalButton("Medium", size: .medium) {}
-                GlobalButton("Large", size: .large) {}
+                ThemeButton("XSmall", size: .xsmall) {}
+                ThemeButton("Small", size: .small) {}
+                ThemeButton("Medium", size: .medium) {}
+                ThemeButton("Large", size: .large) {}
             }
         )
     }
 
     // MARK: Shapes & icon-only
 
-    func testGlobalButton_shapesAndIcon() {
+    func testThemeButton_shapesAndIcon() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                GlobalButton("Pill", shape: .pill) {}
-                GlobalButton(systemImage: "heart.fill", shape: .circle) {}
-                GlobalButton(systemImage: "square.and.arrow.up", shape: .square) {}
+                ThemeButton("Pill", shape: .pill) {}
+                ThemeButton(systemImage: "heart.fill", shape: .circle) {}
+                ThemeButton(systemImage: "square.and.arrow.up", shape: .square) {}
             }
         )
     }
 
     // MARK: States — loading / disabled
 
-    func testGlobalButton_states() {
+    func testThemeButton_states() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                GlobalButton("Loading", isLoading: .constant(true)) {}
-                GlobalButton("Disabled", isEnabled: .constant(false)) {}
-                GlobalButton("With icon", systemImage: "checkmark") {}
+                ThemeButton("Loading", isLoading: .constant(true)) {}
+                ThemeButton("Disabled", isEnabled: .constant(false)) {}
+                ThemeButton("With icon", systemImage: "checkmark") {}
             }
         )
     }
 
     // MARK: Block (full-width)
 
-    func testGlobalButton_block() {
-        assertComponentSnapshot(GlobalButton("Continue", block: true) {})
+    func testThemeButton_block() {
+        assertComponentSnapshot(ThemeButton("Continue", block: true) {})
     }
 
     // MARK: Presets
@@ -102,12 +102,12 @@ final class ButtonSnapshotTests: SnapshotTestCase {
 
     // MARK: Dark mode
 
-    func testGlobalButton_variants_darkMode() {
+    func testThemeButton_variants_darkMode() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                GlobalButton("Solid", variant: .solid) {}
-                GlobalButton("Soft", variant: .soft) {}
-                GlobalButton("Outline", variant: .outline) {}
+                ThemeButton("Solid", variant: .solid) {}
+                ThemeButton("Soft", variant: .soft) {}
+                ThemeButton("Outline", variant: .outline) {}
             },
             colorScheme: .dark
         )
@@ -115,9 +115,9 @@ final class ButtonSnapshotTests: SnapshotTestCase {
 
     // MARK: Dynamic Type — footprint must grow with the label
 
-    func testGlobalButton_largeText() {
+    func testThemeButton_largeText() {
         assertComponentSnapshot(
-            GlobalButton("Book now", systemImage: "calendar") {},
+            ThemeButton("Book now", systemImage: "calendar") {},
             contentSize: .accessibilityExtraExtraExtraLarge
         )
     }

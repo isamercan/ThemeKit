@@ -22,7 +22,7 @@ swift package --disable-sandbox preview-documentation --target ThemeKit
 Apply the theme once at your app root, then compose components:
 
 ```swift
-ContentView().globalUITheme()
+ContentView().themeKit()
 ```
 
 ## Where to go next

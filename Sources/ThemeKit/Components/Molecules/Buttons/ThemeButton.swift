@@ -1,5 +1,5 @@
 //
-//  GlobalButton.swift
+//  ThemeButton.swift
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
@@ -20,7 +20,7 @@ public enum ButtonShape: String, CaseIterable {
 
 public enum ButtonIconPosition { case leading, trailing }
 
-public struct GlobalButton: View {
+public struct ThemeButton: View {
     private let title: String?
     private let systemImage: String?
     private let iconPosition: ButtonIconPosition
@@ -99,7 +99,7 @@ public struct GlobalButton: View {
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
         .accessibilityLabel(title ?? "")
-        .accessibilityValue(isLoading ? String(globalUIComponents: "Loading") : "")
+        .accessibilityValue(isLoading ? String(themeKit: "Loading") : "")
     }
 
     @ViewBuilder
@@ -189,7 +189,7 @@ public struct RowPressStyle: ButtonStyle {
 
 /// Fill-aware press style: swaps the background to a darker/stronger ladder shade
 /// while pressed (Ant active), paints the optional outline stroke, and adds a
-/// subtle scale. This is what gives `GlobalButton` real interaction states.
+/// subtle scale. This is what gives `ThemeButton` real interaction states.
 struct FillButtonStyle: ButtonStyle {
     let shape: AnyShape
     let resting: Color
@@ -220,19 +220,19 @@ extension ButtonSize {
         VStack(spacing: 12) {
             ForEach(SemanticColor.allCases, id: \.self) { c in
                 HStack {
-                    GlobalButton("Solid", color: c, variant: .solid, size: .small) {}
-                    GlobalButton("Soft", color: c, variant: .soft, size: .small) {}
-                    GlobalButton("Outline", color: c, variant: .outline, size: .small) {}
+                    ThemeButton("Solid", color: c, variant: .solid, size: .small) {}
+                    ThemeButton("Soft", color: c, variant: .soft, size: .small) {}
+                    ThemeButton("Outline", color: c, variant: .outline, size: .small) {}
                 }
             }
             HStack {
-                GlobalButton(systemImage: "heart", color: .error, shape: .circle) {}
-                GlobalButton(systemImage: "plus", color: .primary, shape: .square) {}
-                GlobalButton("Pill", color: .success, shape: .pill) {}
-                GlobalButton("Link", variant: .link) {}
+                ThemeButton(systemImage: "heart", color: .error, shape: .circle) {}
+                ThemeButton(systemImage: "plus", color: .primary, shape: .square) {}
+                ThemeButton("Pill", color: .success, shape: .pill) {}
+                ThemeButton("Link", variant: .link) {}
             }
-            GlobalButton("Block button", color: .primary, block: true) {}
-            GlobalButton("Loading", color: .primary, block: true, isLoading: .constant(true)) {}
+            ThemeButton("Block button", color: .primary, block: true) {}
+            ThemeButton("Loading", color: .primary, block: true, isLoading: .constant(true)) {}
         }
         .padding()
     }

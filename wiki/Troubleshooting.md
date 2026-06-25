@@ -2,10 +2,10 @@
 
 ### Components show system colors / fonts instead of the design system
 
-You haven't applied the theme. Add `.globalUITheme()` at the root of your scene:
+You haven't applied the theme. Add `.themeKit()` at the root of your scene:
 
 ```swift
-WindowGroup { ContentView().globalUITheme() }
+WindowGroup { ContentView().themeKit() }
 ```
 
 ### Dark mode looks wrong in tests or previews
@@ -17,7 +17,7 @@ SwiftUI `\.colorScheme` environment. Drive it explicitly:
 Theme.shared.setColorScheme(dark: true)
 ```
 
-In previews, wrap content in `.globalUITheme()` so the palette is installed.
+In previews, wrap content in `.themeKit()` so the palette is installed.
 
 ### `swift build` fails with "package requires tools version 6.2"
 
@@ -40,7 +40,7 @@ For a user/custom-domain site, drop the flag entirely.
 
 ### Montserrat font isn't rendering
 
-The bundled font is loaded via `.globalUITheme()`. If you render components
+The bundled font is loaded via `.themeKit()`. If you render components
 without it, type falls back to the system font (by design). Make sure the theme
 is applied above the views that use `.textStyle(_:)`.
 

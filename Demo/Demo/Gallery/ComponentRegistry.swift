@@ -71,7 +71,7 @@ enum ComponentRegistry {
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete(label: "Destination", text: $text, suggestions: items)"#),
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue", isContentWidth: true) { }"#),
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK", isContentWidth: true) { } }"#),
-        .knob("GlobalButton", .molecules, demo: GlobalButtonDemo(), usage: #"GlobalButton("Save", color: .success, variant: .soft, size: .medium, shape: .pill) { }"#),
+        .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save", color: .success, variant: .soft, size: .medium, shape: .pill) { }"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on, infoMessages: error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Guests", value: $count, range: 1...9)"#),

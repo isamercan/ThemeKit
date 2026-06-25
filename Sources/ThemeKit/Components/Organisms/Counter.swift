@@ -29,9 +29,9 @@ public struct Counter: View {
     /// Convenience for a day/hour/minute countdown.
     public init(days: Int, hours: Int, minutes: Int) {
         self.segments = [
-            .init(value: days, label: String(globalUIComponents: "Days")),
-            .init(value: hours, label: String(globalUIComponents: "Hours")),
-            .init(value: minutes, label: String(globalUIComponents: "Minutes")),
+            .init(value: days, label: String(themeKit: "Days")),
+            .init(value: hours, label: String(themeKit: "Hours")),
+            .init(value: minutes, label: String(themeKit: "Minutes")),
         ]
     }
 

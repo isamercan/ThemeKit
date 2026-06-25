@@ -26,11 +26,11 @@ public enum StatusKind {
     /// conveyed by color alone (a WCAG / VoiceOver requirement).
     var accessibleName: String {
         switch self {
-        case .online: return String(globalUIComponents: "Online")
-        case .offline: return String(globalUIComponents: "Offline")
-        case .busy: return String(globalUIComponents: "Busy")
-        case .away: return String(globalUIComponents: "Away")
-        case .neutral: return String(globalUIComponents: "Status")
+        case .online: return String(themeKit: "Online")
+        case .offline: return String(themeKit: "Offline")
+        case .busy: return String(themeKit: "Busy")
+        case .away: return String(themeKit: "Away")
+        case .neutral: return String(themeKit: "Status")
         }
     }
 }

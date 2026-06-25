@@ -39,7 +39,7 @@ Don't delete in one step. Soften, then remove:
 
 1. **Deprecate** in a MINOR release with a migration hint:
    ```swift
-   @available(*, deprecated, renamed: "GlobalButton(label:)")
+   @available(*, deprecated, renamed: "ThemeButton(label:)")
    public init(title: String) { self.init(label: title) }
    ```
 2. Keep the deprecated symbol for **at least one MINOR cycle**.

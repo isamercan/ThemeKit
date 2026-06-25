@@ -52,7 +52,7 @@ Our Etstur system is **the same 3-layer model**:
 |---|---|
 | Full **10-shade ladder** per color, exposed in code | **Done** — every semantic color now ships a `50…900` ladder, generated with Ant's exact `generate()` HSV algorithm (`tools/gen_tokens.py → ant_generate`). 100 `palette.*` tokens in each theme JSON, surfaced via `Theme.palette(_:)` and the generated `PaletteColorKey`. Step `500` == the base color. |
 | Per-color **hover/active** states (not just primary) | **Done** — `SemanticColor` exposes Ant role accessors for **all 10 colors**: `bg(50) · bgHover(100) · borderSubtle(200) · borderHover(300) · hover(400) · base(500) · active(600) · strong(700)`. |
-| Interaction states wired into components | **Done** — `GlobalButton` now uses a fill-aware `FillButtonStyle`: solid darkens to `active` on press, soft strengthens to `bgHover`, bordered/ghost wash in `bg`. The iOS analog of Ant's hover/active. (Preset buttons keep `PressFeedbackStyle`.) |
+| Interaction states wired into components | **Done** — `ThemeButton` now uses a fill-aware `FillButtonStyle`: solid darkens to `active` on press, soft strengthens to `bgHover`, bordered/ghost wash in `bg`. The iOS analog of Ant's hover/active. (Preset buttons keep `PressFeedbackStyle`.) |
 | Theme-aware accent ladder | **Done** — the `primary` ladder is regenerated from each theme's accent (Ocean→teal, Sunset→orange), so the new roles stay theme-reactive. |
 | `colorFill` 4-level neutral fills | Not adopted (we use elevator/secondary surfaces instead). |
 | Alpha-based neutrals | We use solid hexes (fine for our single-surface app; Ant's alpha adapts across surfaces). |

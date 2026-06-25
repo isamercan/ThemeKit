@@ -20,7 +20,7 @@ public struct BlogCard<Media: View>: View {
     public init(
         title: String,
         excerpt: String? = nil,
-        readMoreTitle: String = String(globalUIComponents: "Read more"),
+        readMoreTitle: String = String(themeKit: "Read more"),
         compact: Bool = false,
         onReadMore: @escaping () -> Void = {},
         @ViewBuilder media: @escaping () -> Media

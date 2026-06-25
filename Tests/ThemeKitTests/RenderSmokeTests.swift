@@ -34,7 +34,7 @@ final class RenderSmokeTests: XCTestCase {
         renders(Badge("New"), "Badge")
         renders(Skeleton(width: 120, height: 16), "Skeleton")
         renders(Rating(value: 4.3, layout: .rateNumberText), "Rating")
-        renders(GlobalButton("Tap") {}, "GlobalButton")
+        renders(ThemeButton("Tap") {}, "ThemeButton")
         renders(Callout("Heads up", type: .warning), "Callout")
     }
 

@@ -21,7 +21,7 @@ public struct DateField: View {
     public init(
         label: String? = nil,
         date: Binding<Date?>,
-        placeholder: String = String(globalUIComponents: "Select a date"),
+        placeholder: String = String(themeKit: "Select a date"),
         range: ClosedRange<Date>? = nil,
         accessibilityID: String? = nil
     ) {
@@ -60,7 +60,7 @@ public struct DateField: View {
             // the control's name) and never the placeholder (an instruction that
             // would contradict a populated value, e.g. "Select a date, Jan 5").
             // The chosen date is carried by accessibilityValue below.
-            .accessibilityLabel(label ?? String(globalUIComponents: "Date"))
+            .accessibilityLabel(label ?? String(themeKit: "Date"))
             .accessibilityValue(date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "")
         }
     }

@@ -31,7 +31,7 @@ public struct MultiSelect<Option: Hashable>: View {
         label: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        placeholder: String = String(globalUIComponents: "Select"),
+        placeholder: String = String(themeKit: "Select"),
         searchable: Bool = true,
         allowClear: Bool = true,
         maxTagCount: Int? = nil,
@@ -130,7 +130,7 @@ public struct MultiSelect<Option: Hashable>: View {
         .disabled(!isEnabled)
         .a11y(A11yElement.Select.trigger, in: accessibilityID)
         .accessibilityLabel(label ?? "")
-        .accessibilityValue(String(globalUIComponents: "\(selection.count) selected"))
+        .accessibilityValue(String(themeKit: "\(selection.count) selected"))
     }
 
     private var panel: some View {
@@ -147,7 +147,7 @@ public struct MultiSelect<Option: Hashable>: View {
                 DividerView(size: .small)
             }
             if filtered.isEmpty {
-                Text(String(globalUIComponents: "No results"))
+                Text(String(themeKit: "No results"))
                     .textStyle(.bodySm400)
                     .foregroundStyle(Theme.shared.text(.textTertiary))
                     .padding(Theme.SpacingKey.md.value)

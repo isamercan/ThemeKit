@@ -125,7 +125,7 @@ public struct ChoseChip: View {
         description: String? = nil,
         rating: Double? = nil,
         showFree: Bool = false,
-        freeLabel: String = String(globalUIComponents: "Free"),
+        freeLabel: String = String(themeKit: "Free"),
         systemImage: String? = nil
     ) {
         self._isSelected = isSelected
