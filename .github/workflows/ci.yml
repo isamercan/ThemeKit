@@ -45,7 +45,7 @@ jobs:
         run: swift build --build-tests
 
       - name: Test
-        run: swift test --skip-build --enable-code-coverage
+        run: swift test --skip-build
 
   # ---------------------------------------------------------------------------
   # iOS compile + test on a simulator. Catches iOS-only API use and runs the
