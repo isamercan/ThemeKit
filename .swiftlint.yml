@@ -1,0 +1,106 @@
+# SwiftLint configuration for GlobalUIComponents.
+#
+# Philosophy: a design system is read far more than it is written. Rules here
+# protect readability and catch real bugs, while staying out of the way of the
+# expressive SwiftUI / token code the library is made of. Opt-in rules are
+# curated rather than "everything on".
+
+# Lint scope is the SHIPPED, versioned product only. The Demo app is an internal
+# example target — useful, but not something consumers depend on — so we don't
+# hold its illustrative one-liners to the library's bar.
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - Demo/build
+  - Sources/GlobalUIComponents/Theme/ColorTokens.generated.swift # generated
+  - "**/*.generated.swift"
+
+# --- Rules we deliberately turn off -----------------------------------------
+disabled_rules:
+  - todo                       # tracked elsewhere; not a CI failure
+  - trailing_comma             # we prefer trailing commas in multiline literals
+  - opening_brace              # too noisy with SwiftUI modifier chains
+  - statement_position         # codebase style puts `else` on its own line
+
+# --- Opt-in rules worth their weight ----------------------------------------
+opt_in_rules:
+  - empty_count                # `isEmpty` over `count == 0`
+  - empty_string
+  - first_where                # `.first(where:)` over `.filter{}.first`
+  - contains_over_first_not_nil
+  - last_where
+  - sorted_first_last
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - closure_spacing
+  - collection_alignment
+  - operator_usage_whitespace
+  - prefer_self_type_over_type_of_self
+  - explicit_init
+  - fatal_error_message        # fatalError must explain itself
+  - overridden_super_call
+  - yoda_condition
+
+analyzer_rules:
+  - unused_import
+
+# --- Thresholds tuned for a component library -------------------------------
+# SwiftUI view bodies and token switch-statements are legitimately long; raise
+# the ceilings rather than litter the code with disable comments.
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 500
+  error: 800
+
+file_length:
+  warning: 700
+  error: 1200
+  ignore_comment_only_lines: true
+
+function_body_length:
+  warning: 120          # a SwiftUI `body` can be long
+  error: 250
+
+function_parameter_count:
+  warning: 8            # design-system initializers take many style params
+  error: 12
+
+cyclomatic_complexity:
+  warning: 18
+  error: 30
+
+type_name:
+  min_length: 2
+  max_length:
+    warning: 50
+    error: 60
+
+identifier_name:
+  # Geometry, color and token math here lean on short, conventional names
+  # (s, t, i, r, g, b, dx, dy…). Allow single characters; still catch the real
+  # bugs this rule exists for (names starting uppercase, absurdly long names).
+  min_length:
+    warning: 1
+    error: 1
+  allowed_symbols: ["_"]
+
+# Design-token specs are naturally 3-tuples — (size, weight, lineHeight),
+# (h, s, b), (r, g, b). That's intentional, readable data, not a smell; keep
+# the signal as a warning rather than a hard failure.
+large_tuple:
+  warning: 3
+  error: 4
+
+nesting:
+  type_level: 3          # nested Style/Config enums are idiomatic here
+
+reporter: xcode
