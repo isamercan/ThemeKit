@@ -3,16 +3,26 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A typeahead text field with a filtered suggestion list. State owned
-//  by the caller (the bound text); suggestions are filtered as the user types.
+//  Molecule. A typeahead text field with a suggestion list. Two sources:
+//    • a static `[String]` filtered locally as the user types, or
+//    • an async `suggest` provider (remote search) with debounce, a loading
+//      spinner, an empty "no results" state, and in-flight cancellation.
+//  State (the bound text) is owned by the caller.
 //
 
 import SwiftUI
 
 public struct Autocomplete: View {
+
+    /// Where suggestions come from.
+    private enum Source {
+        case staticList([String])
+        case asyncProvider((String) async -> [String])
+    }
+
     private let label: String?
     @Binding private var text: String
-    private let suggestions: [String]
+    private let source: Source
     private let placeholder: String
     private let maxResults: Int
     private let debounce: TimeInterval
@@ -22,7 +32,11 @@ public struct Autocomplete: View {
     private let onSearch: ((String) -> Void)?
 
     @FocusState private var isFocused: Bool
+    @State private var results: [String] = []
+    @State private var isLoading = false
+    @State private var searchTask: Task<Void, Never>?
 
+    /// Local filtering over a static list.
     public init(
         label: String? = nil,
         text: Binding<String>,
@@ -37,7 +51,7 @@ public struct Autocomplete: View {
     ) {
         self.label = label
         self._text = text
-        self.suggestions = suggestions
+        self.source = .staticList(suggestions)
         self.placeholder = placeholder
         self.maxResults = maxResults
         self.debounce = debounce
@@ -47,10 +61,43 @@ public struct Autocomplete: View {
         self.onSearch = onSearch
     }
 
-    private var filtered: [String] {
-        guard !text.isEmpty else { return [] }
-        return suggestions.filter { $0.localizedCaseInsensitiveContains(text) }.prefix(maxResults).map { $0 }
+    /// Async suggestions from a provider (e.g. a remote search). Debounced, with a
+    /// loading spinner and an empty state; the previous request is cancelled when
+    /// the query changes.
+    public init(
+        label: String? = nil,
+        text: Binding<String>,
+        suggest: @escaping (String) async -> [String],
+        placeholder: String = "Ara",
+        maxResults: Int = 5,
+        debounce: TimeInterval = 0.3,
+        accessibilityID: String? = nil,
+        isEnabled: Bool = true,
+        onSelect: @escaping (String) -> Void = { _ in }
+    ) {
+        self.label = label
+        self._text = text
+        self.source = .asyncProvider(suggest)
+        self.placeholder = placeholder
+        self.maxResults = maxResults
+        self.debounce = debounce
+        self.accessibilityID = accessibilityID
+        self.isEnabled = isEnabled
+        self.onSelect = onSelect
+        self.onSearch = nil
     }
+
+    /// Pure matcher for the static source (extracted for testing).
+    static func staticMatches(_ query: String, in all: [String], max: Int) -> [String] {
+        guard !query.isEmpty else { return [] }
+        return all.filter { $0.localizedCaseInsensitiveContains(query) }.prefix(max).map { $0 }
+    }
+
+    private var showsDropdown: Bool {
+        isFocused && !text.isEmpty && (isLoading || !results.isEmpty || isEmptyResult)
+    }
+
+    private var isEmptyResult: Bool { !isLoading && results.isEmpty }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -66,7 +113,9 @@ public struct Autocomplete: View {
                     .disabled(!isEnabled)
                     .a11y(A11yElement.Field.field, in: accessibilityID)
                     .accessibilityLabel(label ?? placeholder)
-                if !text.isEmpty {
+                if isLoading {
+                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                } else if !text.isEmpty {
                     Button { text = "" } label: {
                         Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
                     }
@@ -81,47 +130,105 @@ public struct Autocomplete: View {
                     .strokeBorder(isFocused ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary), lineWidth: isFocused ? 1.5 : 1)
             )
 
-            if isFocused && !filtered.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(filtered, id: \.self) { suggestion in
-                        Button {
-                            text = suggestion
-                            onSelect(suggestion)
-                            isFocused = false
-                        } label: {
-                            HStack {
-                                Text(suggestion).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
-                                Spacer()
-                            }
-                            .padding(.horizontal, Theme.SpacingKey.md.value)
-                            .padding(.vertical, Theme.SpacingKey.sm.value)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        if suggestion != filtered.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
+            if showsDropdown { dropdown }
+        }
+        .onAppear { update(for: text) }
+        .onDebouncedChange(of: text, for: debounce) { value in
+            update(for: value)
+            onSearch?(value)
+        }
+    }
+
+    @ViewBuilder
+    private var dropdown: some View {
+        VStack(spacing: 0) {
+            if isLoading {
+                row { HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                    Spacer()
+                } }
+            } else if results.isEmpty {
+                row { Text(String(themeKit: "No results")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary)) }
+            } else {
+                ForEach(results, id: \.self) { suggestion in
+                    Button {
+                        text = suggestion
+                        results = []
+                        onSelect(suggestion)
+                        isFocused = false
+                    } label: {
+                        row { HStack {
+                            Text(suggestion).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
+                            Spacer()
+                        } }
                     }
+                    .buttonStyle(.plain)
+                    if suggestion != results.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
-                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
-                )
-                .themeShadow(.soft)
             }
         }
-        .onDebouncedChange(of: text, for: onSearch == nil ? 0 : debounce) { value in
-            onSearch?(value)
+        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+        )
+        .themeShadow(.soft)
+    }
+
+    private func row<V: View>(@ViewBuilder _ content: () -> V) -> some View {
+        content()
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+    }
+
+    private func update(for query: String) {
+        searchTask?.cancel()
+        guard !query.isEmpty else {
+            results = []
+            isLoading = false
+            return
+        }
+        switch source {
+        case .staticList(let all):
+            results = Self.staticMatches(query, in: all, max: maxResults)
+            isLoading = false
+        case .asyncProvider(let provider):
+            isLoading = true
+            searchTask = Task { @MainActor in
+                let found = await provider(query)
+                if Task.isCancelled { return }
+                results = Array(found.prefix(maxResults))
+                isLoading = false
+            }
         }
     }
 }
 
-#Preview {
+#Preview("Static") {
     struct Demo: View {
         @State var text = ""
         var body: some View {
             Autocomplete(label: "Destination", text: $text,
                          suggestions: ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"])
                 .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("Async") {
+    struct Demo: View {
+        @State var text = ""
+        let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+        var body: some View {
+            Autocomplete(label: "Destination", text: $text, suggest: { query in
+                try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
+                return cities.filter { $0.localizedCaseInsensitiveContains(query) }
+            })
+            .padding()
         }
     }
     return Demo()
