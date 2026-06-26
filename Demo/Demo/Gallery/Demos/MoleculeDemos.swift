@@ -286,17 +286,29 @@ struct InputNumberDemo: View {
     @State private var value = 2
     @State private var large = true
     @State private var showError = false
+    @State private var editable = true
+    @State private var priceMode = false   // toggles a step:50 + "₺" unit config
 
     var body: some View {
-        ComponentStage("InputNumber", inspector: [("value", "\(value)")]) {
-            InputNumber(label: "Guests", value: $value, range: 1...9,
-                        hint: showError ? nil : "Max 9 guests",
-                        errorText: showError ? "Too many" : nil, large: large)
+        ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
+            if priceMode {
+                InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "₺",
+                            editable: editable, hint: "Type or step by 50", large: large)
+            } else {
+                InputNumber(label: "Guests", value: $value, range: 1...9, unit: "kişi",
+                            editable: editable,
+                            hint: showError ? nil : "Type a number or use ± ",
+                            errorText: showError ? "Too many" : nil, large: large)
+            }
         } knobs: {
-            Stepper("Value: \(value)", value: $value, in: 1...9)
+            Text("editable = type the value directly (Ant InputNumber); ± steps by `step`.").font(.caption).foregroundStyle(.secondary)
+            Stepper("Value: \(value)", value: $value, in: 0...10000)
+            Toggle("Editable (type to enter)", isOn: $editable)
+            Toggle("Price mode (step 50, ₺)", isOn: $priceMode)
             Toggle("Large", isOn: $large)
             Toggle("Error state", isOn: $showError)
         }
+        .onChange(of: priceMode) { _, price in value = price ? 500 : 2 }
     }
 }
 
