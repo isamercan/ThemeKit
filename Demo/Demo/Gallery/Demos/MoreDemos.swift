@@ -351,19 +351,24 @@ struct ToggleGroupDemo: View {
 struct AutocompleteDemo: View {
     @State private var text = ""
     @State private var asyncMode = false
+    @State private var disableSoldOut = false
     private let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+    private var enabledPredicate: ((String) -> Bool)? {
+        disableSoldOut ? { $0 != "İzmit" } : nil
+    }
     var body: some View {
-        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static")]) {
+        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "İzmit" : "—")]) {
             if asyncMode {
                 Autocomplete(label: "Destination", text: $text, suggest: { query in
                     try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
                     return cities.filter { $0.localizedCaseInsensitiveContains(query) }
-                })
+                }, isSuggestionEnabled: enabledPredicate)
             } else {
-                Autocomplete(label: "Destination", text: $text, suggestions: cities)
+                Autocomplete(label: "Destination", text: $text, suggestions: cities, isSuggestionEnabled: enabledPredicate)
             }
         } knobs: {
             Toggle("Async (remote-style)", isOn: $asyncMode)
+            Toggle("Disable “İzmit”", isOn: $disableSoldOut)
             Text("Type to filter suggestions.").font(.footnote).foregroundStyle(.secondary)
         }
     }
