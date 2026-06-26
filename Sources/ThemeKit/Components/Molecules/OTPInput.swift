@@ -15,27 +15,47 @@ public struct OTPInput: View {
     private let messages: [InfoMessage]
     private let accessibilityID: String?
     private let isEnabled: Bool
+    private let isSecure: Bool
+    private let onComplete: ((String) -> Void)?
+    private let resendInterval: TimeInterval?
+    private let onResend: (() -> Void)?
 
     @FocusState private var isFocused: Bool
+    @State private var lastFired = ""
+    @State private var secondsLeft = 0
+    @State private var resendID = 0
 
     public init(
         code: Binding<String>,
         digitCount: Int = 6,
+        isSecure: Bool = false,
         errorText: String? = nil,
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        onComplete: ((String) -> Void)? = nil,
+        resendInterval: TimeInterval? = nil,
+        onResend: (() -> Void)? = nil
     ) {
         self._code = code
         self.digitCount = digitCount
+        self.isSecure = isSecure
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         self.messages = messages
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.onComplete = onComplete
+        self.resendInterval = resendInterval
+        self.onResend = onResend
     }
 
     private var hasError: Bool { messages.dominantKind == .error }
+
+    /// Keeps only digits and caps the length (extracted for testing).
+    static func sanitize(_ raw: String, digitCount: Int) -> String {
+        String(raw.filter(\.isNumber).prefix(digitCount))
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
@@ -47,7 +67,8 @@ public struct OTPInput: View {
                             isActive: isFocused && code.count == index,
                             isFilled: index < code.count,
                             hasError: hasError,
-                            isEnabled: isEnabled
+                            isEnabled: isEnabled,
+                            isSecure: isSecure
                         )
                     }
                 }
@@ -68,7 +89,20 @@ public struct OTPInput: View {
                     .frame(width: 1, height: 1)
                     .disabled(!isEnabled)
                     .onChange(of: code) { _, newValue in
-                        code = String(newValue.filter(\.isNumber).prefix(digitCount))
+                        let sanitized = Self.sanitize(newValue, digitCount: digitCount)
+                        if sanitized != code { code = sanitized }
+                        if sanitized.count == digitCount {
+                            // Fire once per completion; re-arms after an edit.
+                            if sanitized != lastFired {
+                                lastFired = sanitized
+                                if onComplete != nil {
+                                    isFocused = false
+                                    onComplete?(sanitized)
+                                }
+                            }
+                        } else {
+                            lastFired = ""
+                        }
                     }
                     .a11y(A11yElement.Field.field, in: accessibilityID)
                     .accessibilityLabel(String(themeKit: "Verification code"))
@@ -78,6 +112,40 @@ public struct OTPInput: View {
             if !messages.isEmpty {
                 InfoMessageList(messages)
                     .a11y(A11yElement.Field.message, in: accessibilityID)
+            }
+
+            if let resendInterval, let onResend {
+                resendRow(interval: resendInterval, onResend: onResend)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func resendRow(interval: TimeInterval, onResend: @escaping () -> Void) -> some View {
+        Group {
+            if secondsLeft > 0 {
+                Text(String(themeKit: "Resend code in \(secondsLeft)s"))
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(Theme.shared.text(.textTertiary))
+            } else {
+                Button {
+                    onResend()
+                    resendID += 1   // restarts the countdown task
+                } label: {
+                    Text(String(themeKit: "Resend code"))
+                        .textStyle(.labelSm700)
+                        .foregroundStyle(Theme.shared.text(.textHero))
+                }
+                .buttonStyle(.plain)
+                .disabled(!isEnabled)
+            }
+        }
+        .task(id: resendID) {
+            secondsLeft = Int(interval)
+            while secondsLeft > 0 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if Task.isCancelled { return }
+                secondsLeft -= 1
             }
         }
     }
@@ -106,6 +174,7 @@ private struct OTPDigitBox: View {
     let isFilled: Bool
     let hasError: Bool
     let isEnabled: Bool
+    let isSecure: Bool
 
     @State private var caretOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -122,18 +191,20 @@ private struct OTPDigitBox: View {
                 // Dynamic Type is capped at the container via dynamicTypeClamp().
                 .frame(height: 56)
 
-            if digit.isEmpty, isActive {
-                Rectangle()
-                    .fill(Theme.shared.foreground(.fgHero))
-                    .frame(width: 2, height: 24)
-                    .opacity(reduceMotion ? 1 : (caretOn ? 1 : 0))
-                    .onAppear {
-                        // Honor Reduce Motion: a solid caret, no blink.
-                        guard !reduceMotion else { return }
-                        withAnimation(Motion.slower.animation.repeatForever()) { caretOn = true }
-                    }
+            if digit.isEmpty {
+                if isActive {
+                    Rectangle()
+                        .fill(Theme.shared.foreground(.fgHero))
+                        .frame(width: 2, height: 24)
+                        .opacity(reduceMotion ? 1 : (caretOn ? 1 : 0))
+                        .onAppear {
+                            // Honor Reduce Motion: a solid caret, no blink.
+                            guard !reduceMotion else { return }
+                            withAnimation(Motion.slower.animation.repeatForever()) { caretOn = true }
+                        }
+                }
             } else {
-                Text(digit)
+                Text(isSecure ? "●" : digit)
                     .textStyle(.headingBase)
                     .foregroundStyle(textColor)
             }
@@ -157,9 +228,12 @@ private struct OTPDigitBox: View {
 #Preview {
     struct Demo: View {
         @State var code = "123"
+        @State var lastComplete = "—"
         var body: some View {
             VStack(spacing: 24) {
-                OTPInput(code: $code)
+                OTPInput(code: $code, onComplete: { lastComplete = $0 }, resendInterval: 30, onResend: {})
+                Text("Completed: \(lastComplete)").textStyle(.bodySm400)
+                OTPInput(code: .constant("4321"), digitCount: 4, isSecure: true)
                 OTPInput(code: .constant("12"), digitCount: 4, errorText: "Invalid code")
             }
             .padding()

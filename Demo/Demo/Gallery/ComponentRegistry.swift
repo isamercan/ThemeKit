@@ -76,7 +76,7 @@ enum ComponentRegistry {
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Guests", value: $count, range: 1...9)"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text, characterLimit: 200)"#),
-        .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6)"#),
+        .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")])"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact", helper: "…") { inputs }"#),
