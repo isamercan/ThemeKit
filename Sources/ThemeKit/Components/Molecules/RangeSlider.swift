@@ -7,6 +7,10 @@
 //  self-contained dual-thumb slider over a numeric range (decoupled from the
 //  reference's text-field wiring).
 //
+//  Reference: Ant Design `Slider` (range) / MUI `Slider` — optional `marks`
+//  (labeled ticks), a disabled state, an `onChangeEnd` commit callback (fire the
+//  search on release, not on every drag tick), and VoiceOver-adjustable thumbs.
+//
 
 import SwiftUI
 
@@ -15,7 +19,10 @@ public struct RangeSlider: View {
     @Binding private var upperValue: Double
     private let bounds: ClosedRange<Double>
     private let step: Double
+    private let marks: [Double]
     private let valueLabel: ((Double) -> String)?
+    private let isEnabled: Bool
+    private let onChangeEnd: ((Double, Double) -> Void)?
     private let accessibilityID: String?
 
     // Linked numeric inputs (validate-on-blur). Reference RangeSliderView parity.
@@ -34,18 +41,24 @@ public struct RangeSlider: View {
         upperValue: Binding<Double>,
         in bounds: ClosedRange<Double>,
         step: Double = 1,
+        marks: [Double] = [],
         showInputs: Bool = false,
         inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max")),
+        isEnabled: Bool = true,
         accessibilityID: String? = nil,
+        onChangeEnd: ((Double, Double) -> Void)? = nil,
         valueLabel: ((Double) -> String)? = nil
     ) {
         self._lowerValue = lowerValue
         self._upperValue = upperValue
         self.bounds = bounds
         self.step = step
+        self.marks = marks
         self.showInputs = showInputs
         self.inputTitles = inputTitles
+        self.isEnabled = isEnabled
         self.accessibilityID = accessibilityID
+        self.onChangeEnd = onChangeEnd
         self.valueLabel = valueLabel
     }
 
@@ -74,23 +87,32 @@ public struct RangeSlider: View {
                         .fill(Theme.shared.border(.borderPrimary))
                         .frame(height: trackHeight)
                     Capsule()
-                        .fill(Theme.shared.background(.bgHero))
+                        .fill(Theme.shared.background(isEnabled ? .bgHero : .bgSecondaryLight))
                         .frame(width: max(upperX - lowerX, 0), height: trackHeight)
                         .offset(x: lowerX + thumbSize / 2)
 
-                    thumb
+                    thumb(value: lowerValue, title: inputTitles.min, isLower: true)
                         .offset(x: lowerX)
                         .gesture(drag(usable: usable, span: span, isLower: true))
-                    thumb
+                    thumb(value: upperValue, title: inputTitles.max, isLower: false)
                         .offset(x: upperX)
                         .gesture(drag(usable: usable, span: span, isLower: false))
                 }
                 .frame(height: thumbSize)
             }
             .frame(height: thumbSize)
+            .opacity(isEnabled ? 1 : 0.6)
+
+            if !marks.isEmpty {
+                GeometryReader { geo in
+                    marksRow(usable: max(geo.size.width - thumbSize, 1),
+                             span: bounds.upperBound - bounds.lowerBound)
+                }
+                .frame(height: 22)
+            }
         }
         .a11y(A11yElement.Control.slider, in: accessibilityID)
-        .accessibilityValue(valueLabel.map { "\($0(lowerValue)) - \($0(upperValue))" } ?? "")
+        .accessibilityElement(children: .contain)
         .onAppear { syncText() }
         .onChange(of: lowerValue) { if focusedField != .lower { lowerText = intString(lowerValue) } }
         .onChange(of: upperValue) { if focusedField != .upper { upperText = intString(upperValue) } }
@@ -98,6 +120,28 @@ public struct RangeSlider: View {
             // Validate-on-blur: commit whichever field just lost focus.
             if new != .lower { commitLower() }
             if new != .upper { commitUpper() }
+        }
+    }
+
+    // MARK: Marks
+
+    private func markLabel(_ value: Double) -> String { valueLabel?(value) ?? intString(value) }
+
+    @ViewBuilder
+    private func marksRow(usable: CGFloat, span: Double) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(marks, id: \.self) { mark in
+                let ratio = span > 0 ? (mark - bounds.lowerBound) / span : 0
+                let centerX = thumbSize / 2 + CGFloat(ratio) * usable
+                VStack(spacing: 2) {
+                    Capsule().fill(Theme.shared.border(.borderPrimary)).frame(width: 1, height: 5)
+                    Text(markLabel(mark))
+                        .textStyle(.labelSm600)
+                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .fixedSize()
+                }
+                .position(x: centerX, y: 11)
+            }
         }
     }
 
@@ -129,12 +173,15 @@ public struct RangeSlider: View {
                 .textStyle(.bodyBase400)
                 .foregroundStyle(Theme.shared.text(.textPrimary))
                 .focused($focusedField, equals: field)
+                .disabled(!isEnabled)
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .frame(height: 44)
-                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+                .background(Theme.shared.background(.bgWhite),
+                           in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                        .strokeBorder(focusedField == field ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary), lineWidth: 1)
+                        .strokeBorder(focusedField == field ? Theme.shared.border(.borderHero)
+                                                             : Theme.shared.border(.borderPrimary), lineWidth: 1)
                 )
         }
         .frame(maxWidth: .infinity)
@@ -142,41 +189,79 @@ public struct RangeSlider: View {
 
     private func commitLower() {
         guard let parsed = parse(lowerText) else { lowerText = intString(lowerValue); return }
-        lowerValue = min(max(bounds.lowerBound, snap(parsed)), upperValue)
+        lowerValue = min(max(bounds.lowerBound, Self.snap(parsed, step: step)), upperValue)
         lowerText = intString(lowerValue)
+        onChangeEnd?(lowerValue, upperValue)
     }
 
     private func commitUpper() {
         guard let parsed = parse(upperText) else { upperText = intString(upperValue); return }
-        upperValue = max(min(bounds.upperBound, snap(parsed)), lowerValue)
+        upperValue = max(min(bounds.upperBound, Self.snap(parsed, step: step)), lowerValue)
         upperText = intString(upperValue)
+        onChangeEnd?(lowerValue, upperValue)
     }
 
     private func parse(_ s: String) -> Double? { Double(s.filter(\.isNumber)) }
-    private func snap(_ v: Double) -> Double { (v / step).rounded() * step }
     private func intString(_ v: Double) -> String { String(Int(v.rounded())) }
     private func syncText() { lowerText = intString(lowerValue); upperText = intString(upperValue) }
 
-    private var thumb: some View {
+    private func thumb(value: Double, title: String, isLower: Bool) -> some View {
         Circle()
             .fill(Theme.shared.background(.bgWhite))
-            .overlay(Circle().strokeBorder(Theme.shared.border(.borderHero), lineWidth: 2))
+            .overlay(
+                Circle().strokeBorder(isEnabled ? Theme.shared.border(.borderHero)
+                                                : Theme.shared.border(.borderPrimary), lineWidth: 2)
+            )
             .frame(width: thumbSize, height: thumbSize)
             .themeShadow(.soft)
+            .accessibilityElement()
+            .accessibilityLabel(title)
+            .accessibilityValue(markLabel(value))
+            .accessibilityAdjustableAction { direction in
+                guard isEnabled else { return }
+                adjust(isLower: isLower, increment: direction == .increment)
+            }
+    }
+
+    private func adjust(isLower: Bool, increment: Bool) {
+        let delta = increment ? step : -step
+        if isLower {
+            lowerValue = min(max(bounds.lowerBound, Self.snap(lowerValue + delta, step: step)), upperValue)
+        } else {
+            upperValue = max(min(bounds.upperBound, Self.snap(upperValue + delta, step: step)), lowerValue)
+        }
+        onChangeEnd?(lowerValue, upperValue)
     }
 
     private func drag(usable: CGFloat, span: Double, isLower: Bool) -> some Gesture {
         DragGesture()
             .onChanged { gesture in
+                guard isEnabled else { return }
                 let ratio = Double(min(max(gesture.location.x - thumbSize / 2, 0), usable) / usable)
-                let raw = bounds.lowerBound + ratio * span
-                let stepped = (raw / step).rounded() * step
+                let stepped = Self.snap(bounds.lowerBound + ratio * span, step: step)
                 if isLower {
                     lowerValue = min(max(bounds.lowerBound, stepped), upperValue)
                 } else {
                     upperValue = max(min(bounds.upperBound, stepped), lowerValue)
                 }
             }
+            .onEnded { _ in
+                guard isEnabled else { return }
+                onChangeEnd?(lowerValue, upperValue)
+            }
+    }
+
+    // MARK: - Pure helpers (extracted for testing)
+
+    /// Rounds `value` to the nearest `step` (no-op when `step <= 0`).
+    static func snap(_ value: Double, step: Double) -> Double {
+        guard step > 0 else { return value }
+        return (value / step).rounded() * step
+    }
+
+    /// Constrains `value` to `bounds`.
+    static func clamped(_ value: Double, in bounds: ClosedRange<Double>) -> Double {
+        min(max(value, bounds.lowerBound), bounds.upperBound)
     }
 }
 
@@ -185,7 +270,8 @@ public struct RangeSlider: View {
         @State var lo: Double = 200
         @State var hi: Double = 800
         var body: some View {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50) { "\(Int($0)) ₺" }
+            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50,
+                        marks: [0, 250, 500, 750, 1000], valueLabel: { "\(Int($0)) ₺" })
                 .padding()
         }
     }

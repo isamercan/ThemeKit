@@ -246,16 +246,27 @@ struct RangeSliderDemo: View {
     @State private var lo = 200.0
     @State private var hi = 800.0
     @State private var inputs = false
+    @State private var marks = true
+    @State private var enabled = true
+    @State private var lastCommit = "—"
 
     var body: some View {
-        ComponentStage("RangeSlider", inspector: [("lower", "\(Int(lo))"), ("upper", "\(Int(hi))"), ("inputs", "\(inputs)")]) {
+        ComponentStage("RangeSlider", inspector: [("range", "\(Int(lo))–\(Int(hi))"), ("onChangeEnd", lastCommit)]) {
             if inputs {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, showInputs: true, inputTitles: ("En az ₺", "En çok ₺"))
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, showInputs: true,
+                            inputTitles: ("En az ₺", "En çok ₺"), isEnabled: enabled,
+                            onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" })
             } else {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50) { "\(Int($0)) ₺" }
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50,
+                            marks: marks ? [0, 250, 500, 750, 1000] : [], isEnabled: enabled,
+                            onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" },
+                            valueLabel: { "\(Int($0)) ₺" })
             }
         } knobs: {
+            Text("onChangeEnd fires on release / blur — drive the search there, not on every tick.").font(.caption).foregroundStyle(.secondary)
             Toggle("Linked inputs (validate-on-blur)", isOn: $inputs)
+            Toggle("Marks (labeled ticks)", isOn: $marks)
+            Toggle("Enabled", isOn: $enabled)
             HStack { Text("Lower"); SwiftUI.Slider(value: $lo, in: 0...hi, step: 50) }
             HStack { Text("Upper"); SwiftUI.Slider(value: $hi, in: lo...1000, step: 50) }
         }
