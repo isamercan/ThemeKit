@@ -387,17 +387,27 @@ struct CardDemo: View {
     @State private var elevation: CardElevation = .soft
     @State private var padding = 16.0
     @State private var tappable = false
+    @State private var header = true
+    @State private var loading = false
     @State private var taps = 0
     var body: some View {
-        ComponentStage("Card", inspector: [("elevation", "\(elevation)"), ("tappable", "\(tappable)"), ("taps", "\(taps)")]) {
-            Card(elevation: elevation, padding: padding, action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
+        ComponentStage("Card", inspector: [("elevation", "\(elevation)"), ("header", "\(header)"), ("loading", "\(loading)")]) {
+            Card(elevation: elevation, padding: padding,
+                 title: header ? "Rezervasyon" : nil,
+                 subtitle: header ? "2 gece · 2 misafir" : nil,
+                 extraTitle: header ? "Detay" : nil,
+                 onExtra: header ? { flash("Detay") } : nil,
+                 isLoading: loading,
+                 action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(tappable ? "Tappable card" : "Card title").textStyle(.headingSm)
+                    Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
                     Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
                         .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
             }
         } knobs: {
+            Toggle("Header (title + extra)", isOn: $header)
+            Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
             Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
             HStack { Text("Padding"); SwiftUI.Slider(value: $padding, in: 0...32, step: 4) }

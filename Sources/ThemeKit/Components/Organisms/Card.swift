@@ -3,7 +3,9 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A surface container with token padding / radius / elevation.
+//  Organism. A surface container with token padding / radius / elevation. An
+//  optional header (title / subtitle + a trailing `extra` action, divided from
+//  the body) and an `isLoading` skeleton bring it toward Ant Card.
 //
 
 import SwiftUI
@@ -15,32 +17,90 @@ public enum CardElevation {
 public struct Card<Content: View>: View {
     private let elevation: CardElevation
     private let padding: CGFloat
+    private let title: String?
+    private let subtitle: String?
+    private let extraTitle: String?
+    private let onExtra: (() -> Void)?
+    private let isLoading: Bool
     private let action: (() -> Void)?
     private let content: () -> Content
 
     public init(
         elevation: CardElevation = .soft,
         padding: CGFloat = 16,
+        title: String? = nil,
+        subtitle: String? = nil,
+        extraTitle: String? = nil,
+        onExtra: (() -> Void)? = nil,
+        isLoading: Bool = false,
         action: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.elevation = elevation
         self.padding = padding
+        self.title = title
+        self.subtitle = subtitle
+        self.extraTitle = extraTitle
+        self.onExtra = onExtra
+        self.isLoading = isLoading
         self.action = action
         self.content = content
     }
 
+    private var hasHeader: Bool { title != nil || subtitle != nil || (extraTitle != nil && onExtra != nil) }
+
+    @ViewBuilder
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
+            VStack(alignment: .leading, spacing: 2) {
+                if let title {
+                    Text(title).textStyle(.labelLg600).foregroundStyle(Theme.shared.text(.textPrimary))
+                }
+                if let subtitle {
+                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
+            }
+            Spacer(minLength: 0)
+            if let extraTitle, let onExtra {
+                Button(action: onExtra) {
+                    Text(extraTitle).textStyle(.labelSm600).foregroundStyle(Theme.shared.foreground(.fgHero))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, padding)
+        .padding(.top, padding)
+        .padding(.bottom, Theme.SpacingKey.sm.value)
+    }
+
+    @ViewBuilder
+    private var loadingPlaceholder: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+            Skeleton(.capsule, height: 12).frame(maxWidth: 180)
+            Skeleton(.capsule, height: 12)
+            Skeleton(.capsule, height: 12).frame(maxWidth: 240)
+        }
+    }
+
     private var surface: some View {
-        content()
+        VStack(alignment: .leading, spacing: 0) {
+            if hasHeader {
+                header
+                DividerView(size: .small)
+            }
+            Group {
+                if isLoading { loadingPlaceholder } else { content() }
+            }
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.shared.background(.bgWhite),
-                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: elevation == .none ? 1 : 0)
-            )
-            .modifier(CardShadow(elevation: elevation))
+        }
+        .background(Theme.shared.background(.bgWhite),
+                   in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+                .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: elevation == .none ? 1 : 0)
+        )
+        .modifier(CardShadow(elevation: elevation))
     }
 
     public var body: some View {
