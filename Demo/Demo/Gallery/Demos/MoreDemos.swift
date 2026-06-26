@@ -566,14 +566,17 @@ struct PageHeaderDemo: View {
     @State private var back = true
     @State private var subtitle = true
     @State private var actions = true
+    @State private var tags = false
     var body: some View {
         ComponentStage("PageHeader") {
             PageHeader("Search results", subtitle: subtitle ? "128 hotels" : nil,
+                       tags: tags ? [.init("Aktif", style: .success), .init("Beta", style: .info)] : [],
                        onBack: back ? { flash("PageHeader: geri") } : nil,
                        actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filtre") }), .init(systemImage: "heart", handler: { flash("PageHeader: favori") })] : [])
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Subtitle", isOn: $subtitle)
+            Toggle("Status tags", isOn: $tags)
             Toggle("Actions", isOn: $actions)
         }
     }

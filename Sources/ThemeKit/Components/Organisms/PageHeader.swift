@@ -24,15 +24,29 @@ public struct PageHeader: View {
     private let subtitle: String?
     private let onBack: (() -> Void)?
     private let actions: [Action]
+    private let tags: [Tag]
+
+    /// A status tag shown next to the title. (Ant PageHeader `tags`.)
+    public struct Tag: Identifiable {
+        public let id = UUID()
+        let text: String
+        let style: BadgeStyle?
+        public init(_ text: String, style: BadgeStyle? = nil) {
+            self.text = text
+            self.style = style
+        }
+    }
 
     public init(
         _ title: String,
         subtitle: String? = nil,
+        tags: [Tag] = [],
         onBack: (() -> Void)? = nil,
         actions: [Action] = []
     ) {
         self.title = title
         self.subtitle = subtitle
+        self.tags = tags
         self.onBack = onBack
         self.actions = actions
     }
@@ -48,9 +62,14 @@ public struct PageHeader: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .textStyle(.headingSm)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Text(title)
+                        .textStyle(.headingSm)
+                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                    ForEach(tags) { tag in
+                        ThemeKit.Tag(tag.text, style: tag.style)
+                    }
+                }
                 if let subtitle {
                     Text(subtitle)
                         .textStyle(.bodySm400)
