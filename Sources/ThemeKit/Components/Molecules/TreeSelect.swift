@@ -27,6 +27,8 @@ public struct TreeSelect: View {
     private let cascade: Bool
     private let searchable: Bool
     private let isEnabled: Bool
+    private let isLoading: Bool
+    private let isNodeEnabled: ((TreeNode) -> Bool)?
 
     @State private var open = false
     @State private var expanded: Set<String>
@@ -40,7 +42,9 @@ public struct TreeSelect: View {
         cascade: Bool = false,
         searchable: Bool = false,
         initiallyExpanded: Set<String> = [],
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        isLoading: Bool = false,
+        isNodeEnabled: ((TreeNode) -> Bool)? = nil
     ) {
         self.label = label
         self.nodes = nodes
@@ -49,6 +53,8 @@ public struct TreeSelect: View {
         self.cascade = cascade
         self.searchable = searchable
         self.isEnabled = isEnabled
+        self.isLoading = isLoading
+        self.isNodeEnabled = isNodeEnabled
         self._expanded = State(initialValue: initiallyExpanded)
     }
 
@@ -64,8 +70,17 @@ public struct TreeSelect: View {
                         searchField
                         DividerView(size: .small)
                     }
-                    ForEach(visibleRows(nodes, depth: 0), id: \.node.id) { entry in
-                        row(entry.node, depth: entry.depth)
+                    if isLoading {
+                        loadingRow
+                    } else {
+                        let rows = visibleRows(nodes, depth: 0)
+                        if rows.isEmpty {
+                            emptyRow
+                        } else {
+                            ForEach(rows, id: \.node.id) { entry in
+                                row(entry.node, depth: entry.depth)
+                            }
+                        }
                     }
                 }
                 .padding(.vertical, Theme.SpacingKey.xs.value)
@@ -93,6 +108,25 @@ public struct TreeSelect: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+
+    private var loadingRow: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Spinner(size: IconSize.sm.value, lineWidth: 2)
+            Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Spacer()
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+
+    private var emptyRow: some View {
+        Text(String(themeKit: "No results"))
+            .textStyle(.bodySm400)
+            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
     }
 
     private var field: some View {
@@ -127,7 +161,8 @@ public struct TreeSelect: View {
     }
 
     private func row(_ node: TreeNode, depth: Int) -> some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
+        let enabled = nodeEnabled(node)
+        return HStack(spacing: Theme.SpacingKey.sm.value) {
             if node.children.isEmpty {
                 Color.clear.frame(width: 16, height: 16)
             } else {
@@ -152,6 +187,8 @@ public struct TreeSelect: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(RowPressStyle())
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.4)
         }
         .padding(.leading, CGFloat(depth) * 18 + Theme.SpacingKey.md.value)
         .padding(.trailing, Theme.SpacingKey.md.value)
@@ -181,18 +218,25 @@ public struct TreeSelect: View {
         nodes.flatMap { [$0] + allNodes($0.children) }
     }
 
-    /// Leaf-descendant ids (a leaf is its own only leaf).
-    private func leafIDs(_ node: TreeNode) -> [String] {
-        node.children.isEmpty ? [node.id] : node.children.flatMap { leafIDs($0) }
+    private func nodeEnabled(_ node: TreeNode) -> Bool { isNodeEnabled?(node) ?? true }
+
+    /// Leaf-descendant nodes (a leaf is its own only leaf).
+    private func leafNodes(_ node: TreeNode) -> [TreeNode] {
+        node.children.isEmpty ? [node] : node.children.flatMap { leafNodes($0) }
+    }
+
+    /// Enabled leaf ids — the only ones a cascade toggle is allowed to flip.
+    private func selectableLeafIDs(_ node: TreeNode) -> [String] {
+        leafNodes(node).filter { nodeEnabled($0) }.map(\.id)
     }
 
     /// Tri-state checkbox: in cascade mode a parent is on/partial/off from its
-    /// leaves; otherwise a node is simply on/off by its own id.
+    /// selectable leaves; otherwise a node is simply on/off by its own id.
     private func checkState(_ node: TreeNode) -> NodeCheck {
         guard cascade, !node.children.isEmpty else {
             return selection.contains(node.id) ? .on : .off
         }
-        let leaves = leafIDs(node)
+        let leaves = selectableLeafIDs(node)
         let selected = leaves.filter { selection.contains($0) }.count
         if selected == 0 { return .off }
         return selected == leaves.count ? .on : .partial
@@ -203,8 +247,9 @@ public struct TreeSelect: View {
     }
 
     private func toggleSelect(_ node: TreeNode) {
+        guard nodeEnabled(node) else { return }
         if cascade {
-            let leaves = leafIDs(node)
+            let leaves = selectableLeafIDs(node)
             if checkState(node) == .on { leaves.forEach { selection.remove($0) } }
             else { leaves.forEach { selection.insert($0) } }
         } else {
