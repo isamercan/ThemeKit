@@ -134,12 +134,27 @@ struct SearchBarDemo: View {
     @State private var text = ""
     @State private var back = false
     @State private var trailing = true
+    @State private var typeahead = true
+    @State private var recent = ["İstanbul", "Bursa"]
+
+    private let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa", "Adana"]
+
     var body: some View {
-        ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("showBackButton", "\(back)")]) {
-            SearchBar(text: $text, showBackButton: back, trailingSystemImage: trailing ? "barcode.viewfinder" : nil)
+        ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("recent", "\(recent.count)")]) {
+            SearchBar(
+                text: $text,
+                showBackButton: back,
+                trailingSystemImage: trailing ? "barcode.viewfinder" : nil,
+                suggestions: typeahead ? cities : [],
+                recent: typeahead ? recent : [],
+                onSelect: { flash("Selected: \($0)") },
+                onSubmit: { flash("Submit: \($0)") },
+                onClearRecent: typeahead ? { recent = []; flash("Recent cleared") } : nil
+            )
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Trailing icon", isOn: $trailing)
+            Toggle("Suggestions + recent", isOn: $typeahead)
         }
     }
 }

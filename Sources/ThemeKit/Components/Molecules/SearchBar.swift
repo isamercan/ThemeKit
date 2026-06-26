@@ -6,10 +6,26 @@
 //  Improved, token-bound rewrite of the reference SearchView. Magnifying-glass
 //  leading icon, clear button, optional back / trailing actions.
 //
+//  Optional typeahead: pass a static `suggestions` list or an async `suggest`
+//  provider to get a results dropdown (debounced, with a loading spinner and a
+//  "no results" state — the same shape as `Autocomplete`). Pass `recent` to show
+//  a recent-searches list while the field is focused and empty. `onSubmit` fires
+//  on the return/search key; `onSelect` fires when a suggestion or recent item is
+//  tapped. With none of these set, the bar behaves exactly as before.
+//
 
 import SwiftUI
 
 public struct SearchBar: View {
+
+    /// Where typeahead suggestions come from. `.none` keeps the classic bar
+    /// (no dropdown) for callers that don't opt in.
+    private enum Source {
+        case none
+        case staticList([String])
+        case asyncProvider((String) async -> [String])
+    }
+
     @Binding private var text: String
     private let placeholder: String
     private let showBackButton: Bool
@@ -21,82 +37,347 @@ public struct SearchBar: View {
     private let accessibilityID: String?
     private let isEnabled: Bool
 
-    @FocusState private var isFocused: Bool
+    // Typeahead / recent-search additions (all opt-in).
+    private let source: Source
+    private let recent: [String]
+    private let maxResults: Int
+    private let onSelect: ((String) -> Void)?
+    private let onSubmit: ((String) -> Void)?
+    private let onClearRecent: (() -> Void)?
 
+    @FocusState private var isFocused: Bool
+    @State private var results: [String] = []
+    @State private var isLoading = false
+    @State private var searchTask: Task<Void, Never>?
+
+    /// Classic bar, optionally with a static suggestion list and recent searches.
+    /// Every new parameter is defaulted, so existing call sites are unaffected.
     public init(
         text: Binding<String>,
         placeholder: String = "Search",
         showBackButton: Bool = false,
         trailingSystemImage: String? = nil,
         debounce: TimeInterval = 0,
+        suggestions: [String] = [],
+        recent: [String] = [],
+        maxResults: Int = 6,
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
         onBack: (() -> Void)? = nil,
         onTrailing: (() -> Void)? = nil,
-        onSearch: ((String) -> Void)? = nil
+        onSearch: ((String) -> Void)? = nil,
+        onSelect: ((String) -> Void)? = nil,
+        onSubmit: ((String) -> Void)? = nil,
+        onClearRecent: (() -> Void)? = nil
     ) {
         self._text = text
         self.placeholder = placeholder
         self.showBackButton = showBackButton
         self.trailingSystemImage = trailingSystemImage
         self.debounce = debounce
-        self.onSearch = onSearch
+        self.source = suggestions.isEmpty ? .none : .staticList(suggestions)
+        self.recent = recent
+        self.maxResults = maxResults
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.onBack = onBack
         self.onTrailing = onTrailing
+        self.onSearch = onSearch
+        self.onSelect = onSelect
+        self.onSubmit = onSubmit
+        self.onClearRecent = onClearRecent
+    }
+
+    /// Async suggestions from a provider (e.g. a remote search). Debounced, with a
+    /// loading spinner and an empty state; the previous request is cancelled when
+    /// the query changes (same lifecycle as `Autocomplete`).
+    public init(
+        text: Binding<String>,
+        suggest: @escaping (String) async -> [String],
+        placeholder: String = "Search",
+        showBackButton: Bool = false,
+        trailingSystemImage: String? = nil,
+        debounce: TimeInterval = 0.3,
+        recent: [String] = [],
+        maxResults: Int = 6,
+        accessibilityID: String? = nil,
+        isEnabled: Bool = true,
+        onBack: (() -> Void)? = nil,
+        onTrailing: (() -> Void)? = nil,
+        onSearch: ((String) -> Void)? = nil,
+        onSelect: ((String) -> Void)? = nil,
+        onSubmit: ((String) -> Void)? = nil,
+        onClearRecent: (() -> Void)? = nil
+    ) {
+        self._text = text
+        self.placeholder = placeholder
+        self.showBackButton = showBackButton
+        self.trailingSystemImage = trailingSystemImage
+        self.debounce = debounce
+        self.source = .asyncProvider(suggest)
+        self.recent = recent
+        self.maxResults = maxResults
+        self.accessibilityID = accessibilityID
+        self.isEnabled = isEnabled
+        self.onBack = onBack
+        self.onTrailing = onTrailing
+        self.onSearch = onSearch
+        self.onSelect = onSelect
+        self.onSubmit = onSubmit
+        self.onClearRecent = onClearRecent
     }
 
     public var body: some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            if showBackButton {
-                Button { onBack?() } label: {
-                    Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
-                        .mirrorsInRTL()
-                }
-                .buttonStyle(.plain)
-            }
-
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
-
-                TextField(placeholder, text: $text)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-                    .tint(Theme.shared.foreground(.fgHero))
-                    .focused($isFocused)
-                    .disabled(!isEnabled)
-                    .a11y(A11yElement.Field.field, in: accessibilityID)
-                    .accessibilityLabel(placeholder)
-
-                if !text.isEmpty {
-                    Button { text = "" } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                } else if let trailingSystemImage {
-                    Button { onTrailing?() } label: {
-                        Icon(systemName: trailingSystemImage, size: .sm, color: Theme.shared.text(.textPrimary))
+                if showBackButton {
+                    Button { onBack?() } label: {
+                        Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                            .mirrorsInRTL()
                     }
                     .buttonStyle(.plain)
                 }
+
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
+
+                    TextField(placeholder, text: $text)
+                        .textStyle(.bodyBase400)
+                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .tint(Theme.shared.foreground(.fgHero))
+                        .focused($isFocused)
+                        .disabled(!isEnabled)
+                        .submitLabel(.search)
+                        .onSubmit { commitSubmit() }
+                        .a11y(A11yElement.Field.field, in: accessibilityID)
+                        .accessibilityLabel(placeholder)
+
+                    trailingControl
+                }
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .scaledControlHeight(44)
+                .background(Theme.shared.background(.bgElevatorPrimary),
+                           in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
+                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                )
             }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .scaledControlHeight(44)
-            .background(Theme.shared.background(.bgElevatorPrimary),
-                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
-                    .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
-            )
+
+            dropdown
         }
-        .onDebouncedChange(of: text, for: onSearch == nil ? 0 : debounce) { value in
+        .onAppear { update(for: text) }
+        .onDebouncedChange(of: text, for: effectiveDebounce) { value in
+            update(for: value)
             onSearch?(value)
         }
     }
+
+    // MARK: - Trailing control (spinner ▸ clear ▸ custom action)
+
+    @ViewBuilder
+    private var trailingControl: some View {
+        if isLoading {
+            Spinner(size: IconSize.sm.value, lineWidth: 2)
+        } else if !text.isEmpty {
+            Button { text = "" } label: {
+                Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+            }
+            .buttonStyle(.plain)
+        } else if let trailingSystemImage {
+            Button { onTrailing?() } label: {
+                Icon(systemName: trailingSystemImage, size: .sm, color: Theme.shared.text(.textPrimary))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Dropdown
+
+    /// Pure presentation state for the dropdown — what (if anything) to show given
+    /// the current field state. Extracted so the branching is unit-testable.
+    enum DropdownContent: Equatable {
+        case hidden
+        case recent([String])
+        case loading
+        case results([String])
+        case noResults
+    }
+
+    static func dropdownContent(
+        text: String,
+        isFocused: Bool,
+        recent: [String],
+        results: [String],
+        isLoading: Bool,
+        hasSuggestions: Bool,
+        maxRecent: Int
+    ) -> DropdownContent {
+        guard isFocused else { return .hidden }
+        guard !text.isEmpty else {
+            return recent.isEmpty ? .hidden : .recent(Array(recent.prefix(maxRecent)))
+        }
+        guard hasSuggestions else { return .hidden }
+        if isLoading { return .loading }
+        return results.isEmpty ? .noResults : .results(results)
+    }
+
+    private var hasSuggestions: Bool {
+        if case .none = source { return false }
+        return true
+    }
+
+    private var dropdownState: DropdownContent {
+        Self.dropdownContent(
+            text: text, isFocused: isFocused, recent: recent, results: results,
+            isLoading: isLoading, hasSuggestions: hasSuggestions, maxRecent: maxResults
+        )
+    }
+
+    @ViewBuilder
+    private var dropdown: some View {
+        switch dropdownState {
+        case .hidden:
+            EmptyView()
+        case .recent(let items):
+            card {
+                header(String(themeKit: "Recent"), showsClear: onClearRecent != nil)
+                rows(items, leadingSystemImage: "clock.arrow.circlepath")
+            }
+        case .loading:
+            card {
+                row {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Spinner(size: IconSize.sm.value, lineWidth: 2)
+                        Text(String(themeKit: "Searching…"))
+                            .textStyle(.bodySm400)
+                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                        Spacer()
+                    }
+                }
+            }
+        case .noResults:
+            card {
+                row {
+                    Text(String(themeKit: "No results"))
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                }
+            }
+        case .results(let items):
+            card { rows(items, leadingSystemImage: nil) }
+        }
+    }
+
+    @ViewBuilder
+    private func header(_ title: String, showsClear: Bool) -> some View {
+        HStack {
+            Text(title)
+                .textStyle(.labelSm700)
+                .foregroundStyle(Theme.shared.text(.textTertiary))
+            Spacer()
+            if showsClear {
+                Button { onClearRecent?() } label: {
+                    Text(String(themeKit: "Clear"))
+                        .textStyle(.labelSm700)
+                        .foregroundStyle(Theme.shared.foreground(.fgHero))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+
+    @ViewBuilder
+    private func rows(_ items: [String], leadingSystemImage: String?) -> some View {
+        ForEach(items, id: \.self) { item in
+            Button { select(item) } label: {
+                row {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        if let leadingSystemImage {
+                            Icon(systemName: leadingSystemImage, size: .sm, color: Theme.shared.text(.textTertiary))
+                        }
+                        Text(item)
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                        Spacer()
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            if item != items.last {
+                DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+            }
+        }
+    }
+
+    private func card<V: View>(@ViewBuilder _ content: () -> V) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(Theme.shared.background(.bgWhite),
+                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                    .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+            )
+            .themeShadow(.soft)
+    }
+
+    private func row<V: View>(@ViewBuilder _ content: () -> V) -> some View {
+        content()
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+    }
+
+    // MARK: - Behaviour
+
+    /// Effective debounce: only throttle when there's async work to throttle
+    /// (a search callback or an async provider); otherwise apply changes at once.
+    private var effectiveDebounce: TimeInterval {
+        (onSearch == nil && !hasSuggestions) ? 0 : debounce
+    }
+
+    private func update(for query: String) {
+        searchTask?.cancel()
+        guard !query.isEmpty else {
+            results = []
+            isLoading = false
+            return
+        }
+        switch source {
+        case .none:
+            results = []
+            isLoading = false
+        case .staticList(let all):
+            results = Autocomplete.staticMatches(query, in: all, max: maxResults)
+            isLoading = false
+        case .asyncProvider(let provider):
+            isLoading = true
+            searchTask = Task { @MainActor in
+                let found = await provider(query)
+                if Task.isCancelled { return }
+                results = Array(found.prefix(maxResults))
+                isLoading = false
+            }
+        }
+    }
+
+    private func select(_ value: String) {
+        text = value
+        results = []
+        isFocused = false
+        onSelect?(value)
+    }
+
+    private func commitSubmit() {
+        isFocused = false
+        onSubmit?(text)
+    }
 }
 
-#Preview {
+#Preview("Classic") {
     struct Demo: View {
         @State var a = ""
         @State var b = "query"
@@ -105,6 +386,26 @@ public struct SearchBar: View {
                 SearchBar(text: $a, trailingSystemImage: "barcode.viewfinder")
                 SearchBar(text: $b, showBackButton: true)
             }
+            .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("Suggestions + recent") {
+    struct Demo: View {
+        @State var text = ""
+        let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+        var body: some View {
+            SearchBar(
+                text: $text,
+                placeholder: "Where to?",
+                suggestions: cities,
+                recent: ["Ankara", "Bursa"],
+                onSelect: { _ in },
+                onSubmit: { _ in },
+                onClearRecent: { }
+            )
             .padding()
         }
     }
