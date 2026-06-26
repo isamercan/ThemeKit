@@ -1133,12 +1133,21 @@ struct FieldsetDemo: View {
 
 struct FileInputDemo: View {
     @State private var picked = false
+    @State private var error = false
+    @State private var clearable = true
+    private var messages: [InfoMessage] {
+        error ? [InfoMessage("Dosya 5 MB'tan küçük olmalı", kind: .error)] : []
+    }
     var body: some View {
-        ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil")]) {
-            FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil) { picked.toggle(); flash("FileInput: dosya seçildi") }
+        ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil"), ("error", "\(error)")]) {
+            FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil,
+                      infoMessages: messages,
+                      onPick: { picked = true; flash("FileInput: dosya seçildi") },
+                      onClear: clearable ? { picked = false; flash("FileInput: temizlendi") } : nil)
         } knobs: {
             Toggle("File chosen", isOn: $picked)
-            Text("Tap 'Choose file' to toggle.").font(.footnote).foregroundStyle(.secondary)
+            Toggle("Validation error", isOn: $error)
+            Toggle("Clearable", isOn: $clearable)
         }
     }
 }

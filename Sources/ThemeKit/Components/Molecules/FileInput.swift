@@ -15,7 +15,9 @@ public struct FileInput: View {
     private let buttonTitle: String
     private let placeholder: String
     private let isEnabled: Bool
+    private let infoMessages: [InfoMessage]
     private let onPick: () -> Void
+    private let onClear: (() -> Void)?
 
     public init(
         label: String? = nil,
@@ -23,14 +25,26 @@ public struct FileInput: View {
         buttonTitle: String = "Choose file",
         placeholder: String = "No file chosen",
         isEnabled: Bool = true,
-        onPick: @escaping () -> Void
+        infoMessages: [InfoMessage] = [],
+        onPick: @escaping () -> Void,
+        onClear: (() -> Void)? = nil
     ) {
         self.label = label
         self.fileName = fileName
         self.buttonTitle = buttonTitle
         self.placeholder = placeholder
         self.isEnabled = isEnabled
+        self.infoMessages = infoMessages
         self.onPick = onPick
+        self.onClear = onClear
+    }
+
+    private var fieldBorder: Color {
+        switch infoMessages.dominantKind {
+        case .error: return Theme.shared.border(.systemcolorsBorderError)
+        case .warning: return Theme.shared.border(.systemcolorsBorderWarning)
+        default: return Theme.shared.border(.borderPrimary)
+        }
     }
 
     public var body: some View {
@@ -58,11 +72,24 @@ public struct FileInput: View {
                     .padding(.horizontal, Theme.SpacingKey.md.value)
 
                 Spacer(minLength: 0)
+
+                if fileName != nil, let onClear {
+                    Button(action: onClear) {
+                        Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, Theme.SpacingKey.md.value)
+                    .accessibilityLabel(String(themeKit: "Remove"))
+                }
             }
             .frame(height: 48)
             .background(Theme.shared.background(.bgWhite))
             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(fieldBorder, lineWidth: infoMessages.dominantKind != nil ? 1.5 : 1))
+
+            if !infoMessages.isEmpty {
+                InfoMessageList(infoMessages)
+            }
         }
     }
 }
