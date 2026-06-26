@@ -154,7 +154,7 @@ struct ToggleDemo: View {
 }
 
 struct TextInputDemo: View {
-    private enum Mode: String, CaseIterable { case email, card, phone, currency, addons }
+    private enum Mode: String, CaseIterable { case email, password, bio, card, phone, currency, addons }
     @State private var text = ""
     @State private var mode: Mode = .email
     @State private var loggedIn = false
@@ -168,7 +168,16 @@ struct TextInputDemo: View {
                                     links: [("Giriş yap", { loggedIn = true })])]
             }
             return TextInputModel(label: "E-posta", placeholder: "ad@sirket.com", leadingSystemImage: "envelope",
-                                  allowClear: true, infoMessages: msgs, accessibilityID: "demoEmail")
+                                  allowClear: true, infoMessages: msgs, accessibilityID: "demoEmail",
+                                  keyboardType: .emailAddress, textContentType: .emailAddress,
+                                  submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
+        case .password:
+            return TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true,
+                                  accessibilityID: "demoPassword", textContentType: .password, submitLabel: .go)
+        case .bio:
+            // Soft limit: typing past 80 is allowed; the counter turns red instead of truncating.
+            return TextInputModel(label: "Hakkımda", placeholder: "Kısaca kendinden bahset", maxLength: 80,
+                                  showCount: true, accessibilityID: "demoBio", hardLimit: false, countStyle: .remaining)
         case .card:
             return TextInputModel(label: "Kart No", placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard",
                                   formatter: .creditCard(), accessibilityID: "demoCard")
@@ -188,7 +197,7 @@ struct TextInputDemo: View {
         ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("value", "\"\(text)\""), ("login", "\(loggedIn)")]) {
             TextInput(model, text: $text)
         } knobs: {
-            Text("email = .required + .email validation (with clickable link). card/phone/currency = format-as-you-type masks.").font(.caption).foregroundStyle(.secondary)
+            Text("email = keyboard/autofill + validation. password = password-manager autofill. bio = soft limit (exceed 80 → red counter). card/phone/currency = format-as-you-type masks.").font(.caption).foregroundStyle(.secondary)
             Picker("Mode", selection: $mode) { ForEach(Mode.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
             Button("Reset") { text = ""; loggedIn = false }
         }
