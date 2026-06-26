@@ -30,6 +30,7 @@ public struct Upload: View {
     private let prompt: String
     private let buttonTitle: String
     private let files: [UploadFile]
+    private let maxCount: Int?
     private let onPick: () -> Void
     private let onRemove: (UploadFile) -> Void
     private let onRetry: ((UploadFile) -> Void)?
@@ -38,6 +39,7 @@ public struct Upload: View {
         prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
         buttonTitle: String = String(themeKit: "Upload Photo"),
         files: [UploadFile] = [],
+        maxCount: Int? = nil,
         onPick: @escaping () -> Void = {},
         onRemove: @escaping (UploadFile) -> Void = { _ in },
         onRetry: ((UploadFile) -> Void)? = nil
@@ -45,17 +47,26 @@ public struct Upload: View {
         self.prompt = prompt
         self.buttonTitle = buttonTitle
         self.files = files
+        self.maxCount = maxCount
         self.onPick = onPick
         self.onRemove = onRemove
         self.onRetry = onRetry
     }
+
+    /// True once the file count reaches `maxCount` (if set) — the picker is then disabled.
+    private var atLimit: Bool { maxCount.map { files.count >= $0 } ?? false }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Text(prompt)
                 .textStyle(.bodySm400)
                 .foregroundStyle(Theme.shared.text(.textSecondary))
-            PrimaryButton(buttonTitle, isContentWidth: true) { onPick() }
+            PrimaryButton(buttonTitle, isContentWidth: true, isEnabled: .constant(!atLimit)) { onPick() }
+            if let maxCount {
+                Text("\(files.count)/\(maxCount)")
+                    .textStyle(.overline400)
+                    .foregroundStyle(Theme.shared.text(.textTertiary))
+            }
 
             if !files.isEmpty {
                 VStack(spacing: 0) {
