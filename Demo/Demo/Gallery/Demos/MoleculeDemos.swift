@@ -221,16 +221,19 @@ struct SliderDemo: View {
     @State private var tooltip = true
     @State private var enabled = true
     @State private var vertical = false
+    @State private var committed = "—"
 
     var body: some View {
-        ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal")]) {
+        ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal"), ("onChangeEnd", committed)]) {
             if vertical {
                 ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
-                                          axis: .vertical, verticalHeight: 180, isEnabled: enabled)
+                                          axis: .vertical, verticalHeight: 180, isEnabled: enabled,
+                                          onChangeEnd: { committed = "\(Int($0))" })
             } else {
                 ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
                                           marks: marks ? [0: "0", 4: "4", 8: "8"] : [:],
-                                          isEnabled: enabled, showValueTooltip: tooltip)
+                                          isEnabled: enabled, showValueTooltip: tooltip,
+                                          onChangeEnd: { committed = "\(Int($0))" })
             }
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value, in: 0...8, step: 1) }
@@ -238,6 +241,7 @@ struct SliderDemo: View {
             Toggle("Marks", isOn: $marks)
             Toggle("Value tooltip", isOn: $tooltip)
             Toggle("Enabled", isOn: $enabled)
+            Text("Drag & release → onChangeEnd fires.").font(.footnote).foregroundStyle(.secondary)
         }
     }
 }
