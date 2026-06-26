@@ -53,22 +53,42 @@ public struct Avatar: View {
     private let customDimension: CGFloat?
     private let background: AvatarBackground
     private let shape: AvatarShape
+    private let presence: StatusKind?
+    private let presencePulse: Bool
 
-    public init(_ content: AvatarContent, size: AvatarSize = .md, background: AvatarBackground = .blue, shape: AvatarShape = .circle) {
+    public init(
+        _ content: AvatarContent,
+        size: AvatarSize = .md,
+        background: AvatarBackground = .blue,
+        shape: AvatarShape = .circle,
+        presence: StatusKind? = nil,
+        presencePulse: Bool = false
+    ) {
         self.content = content
         self.size = size
         self.customDimension = nil
         self.background = background
         self.shape = shape
+        self.presence = presence
+        self.presencePulse = presencePulse
     }
 
     /// Arbitrary point-size avatar (Ant numeric `size`), overriding the enum tiers.
-    public init(_ content: AvatarContent, dimension: CGFloat, background: AvatarBackground = .blue, shape: AvatarShape = .circle) {
+    public init(
+        _ content: AvatarContent,
+        dimension: CGFloat,
+        background: AvatarBackground = .blue,
+        shape: AvatarShape = .circle,
+        presence: StatusKind? = nil,
+        presencePulse: Bool = false
+    ) {
         self.content = content
         self.size = .md
         self.customDimension = dimension
         self.background = background
         self.shape = shape
+        self.presence = presence
+        self.presencePulse = presencePulse
     }
 
     private var dim: CGFloat { customDimension ?? size.dimension }
@@ -90,6 +110,24 @@ public struct Avatar: View {
         }
         .frame(width: dim, height: dim)
         .clipShape(clip)
+        .overlay(alignment: .bottomTrailing) { presenceDot }
+    }
+
+    /// Corner presence dot (online / away / busy …), ringed in the surface color so
+    /// it reads against the avatar. Drawn outside the clip so it isn't masked.
+    @ViewBuilder
+    private var presenceDot: some View {
+        if let presence {
+            let dot = max(8, dim * 0.28)
+            let ring = max(1.5, dim * 0.05)
+            ZStack {
+                Circle().fill(Theme.shared.background(.bgWhite))
+                    .frame(width: dot + ring * 2, height: dot + ring * 2)
+                StatusDot(presence, size: dot, pulse: presencePulse)
+            }
+            .offset(x: shape == .circle ? -dim * 0.15 : -dim * 0.02,
+                    y: shape == .circle ? -dim * 0.15 : -dim * 0.02)
+        }
     }
 
     @ViewBuilder

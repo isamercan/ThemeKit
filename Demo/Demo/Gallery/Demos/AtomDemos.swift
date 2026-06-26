@@ -17,19 +17,28 @@ struct AvatarDemo: View {
     @State private var square = false
     @State private var group = false
     @State private var numeric = 0.0   // 0 = use enum tier; >0 = custom point size
+    @State private var presenceIdx = 1   // 0 = none
+
+    private let presences: [(String, StatusKind?)] = [
+        ("None", nil), ("Online", .online), ("Away", .away), ("Busy", .busy), ("Offline", .offline),
+    ]
+    private var presence: StatusKind? { presences[presenceIdx].1 }
 
     var body: some View {
         ComponentStage("Avatar", inspector: [
-            ("size", numeric > 0 ? "\(Int(numeric))pt" : "\(Int(size.rawValue))"), ("shape", square ? "square" : "circle"),
+            ("size", numeric > 0 ? "\(Int(numeric))pt" : "\(Int(size.rawValue))"), ("presence", presences[presenceIdx].0),
         ]) {
             if group {
                 AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], size: size, max: 4)
             } else if numeric > 0 {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), dimension: numeric, background: background, shape: square ? .square : .circle)
+                Avatar(initials ? .initials("AB") : .icon("person.fill"), dimension: numeric, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
             } else {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), size: size, background: background, shape: square ? .square : .circle)
+                Avatar(initials ? .initials("AB") : .icon("person.fill"), size: size, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
             }
         } knobs: {
+            Picker("Presence", selection: $presenceIdx) {
+                ForEach(Array(presences.enumerated()), id: \.offset) { i, p in Text(p.0).tag(i) }
+            }.pickerStyle(.segmented).disabled(group)
             Picker("Size", selection: $size) {
                 ForEach(AvatarSize.allCases, id: \.self) { Text("\(Int($0.rawValue))").tag($0) }
             }.pickerStyle(.segmented).disabled(numeric > 0)

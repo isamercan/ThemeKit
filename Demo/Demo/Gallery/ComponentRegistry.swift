@@ -38,7 +38,7 @@ struct ComponentEntry: Identifiable {
 enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
-        .knob("Avatar", .atoms, demo: AvatarDemo(), usage: #"Avatar(.initials("AB"), size: .md, background: .blue)"#),
+        .knob("Avatar", .atoms, demo: AvatarDemo(), usage: #"Avatar(.initials("AB"), size: .md, presence: .online)"#),
         .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label", style: .info, leadingSystemImage: "star.fill")"#),
         .knob("Chip", .atoms, demo: ChipDemo(), usage: #"Chip("Recommended", isSelected: $selected, selectionStyle: .tonal)"#),
         .knob("Color Palette", .atoms, demo: ColorLadderDemo(), usage: #"SemanticColor.primary.shade(.s500)   // base · .bg .hover .active .strong"#),
