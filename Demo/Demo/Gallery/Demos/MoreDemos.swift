@@ -966,25 +966,33 @@ struct DateFieldDemo: View {
 
 struct DataTableDemo: View {
     private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: Double }
-    private let rows = [
-        Booking(hotel: "Grand Hotel", nights: 3, price: 4250),
-        Booking(hotel: "Sea Resort", nights: 5, price: 7800),
-        Booking(hotel: "City Inn", nights: 2, price: 1900),
-    ]
+    private let rows: [Booking] = [
+        ("Grand Hotel", 3, 4250), ("Sea Resort", 5, 7800), ("City Inn", 2, 1900),
+        ("Pine Lodge", 4, 5200), ("Bay Suites", 6, 9100), ("Old Town B&B", 1, 1200),
+        ("Sky Tower", 3, 6400), ("Garden Palace", 7, 11800), ("Harbor View", 2, 3300),
+        ("Mountain Cabin", 5, 4700),
+    ].map { Booking(hotel: $0.0, nights: $0.1, price: $0.2) }
+
     @State private var striped = true
     @State private var selectable = false
+    @State private var paged = true
+    @State private var loading = false
     @State private var selected: Set<UUID> = []
+
     var body: some View {
-        ComponentStage("DataTable", inspector: [("rows", "\(rows.count)"), ("selected", "\(selected.count)")]) {
+        ComponentStage("DataTable", inspector: [("rows", "\(rows.count)"), ("paged", paged ? "4/page" : "off")]) {
             DataTable(columns: [
                 .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
                 .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
                 .init("Price", align: .trailing, sortKey: { .number($0.price) }) { "₺\(Int($0.price))" },
-            ], rows: rows, striped: striped, selection: selectable ? $selected : nil)
+            ], rows: rows, striped: striped, selection: selectable ? $selected : nil,
+               pageSize: paged ? 4 : nil, isLoading: loading)
         } knobs: {
             Toggle("Striped", isOn: $striped)
             Toggle("Selectable rows", isOn: $selectable)
-            Text("Tap a column header to sort.").font(.footnote).foregroundStyle(.secondary)
+            Toggle("Paginated (4 / page)", isOn: $paged)
+            Toggle("Loading", isOn: $loading)
+            Text("Tap a column header to sort; the page resets to 1.").font(.footnote).foregroundStyle(.secondary)
         }
     }
 }
