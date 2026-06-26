@@ -23,6 +23,8 @@ public struct MultiSelect<Option: Hashable>: View {
     private let infoMessages: [InfoMessage]
     private let accessibilityID: String?
     private let isEnabled: Bool
+    private let isLoading: Bool
+    private let isOptionEnabled: ((Option) -> Bool)?
 
     @State private var open = false
     @State private var query = ""
@@ -38,6 +40,8 @@ public struct MultiSelect<Option: Hashable>: View {
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
+        isLoading: Bool = false,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
@@ -50,6 +54,8 @@ public struct MultiSelect<Option: Hashable>: View {
         self.infoMessages = infoMessages
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.isLoading = isLoading
+        self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
     }
 
@@ -63,11 +69,15 @@ public struct MultiSelect<Option: Hashable>: View {
     }
 
     private var selectedOptions: [Option] { options.filter { selection.contains($0) } }
-    private var visibleTags: [Option] {
-        guard let maxTagCount, selectedOptions.count > maxTagCount else { return selectedOptions }
-        return Array(selectedOptions.prefix(maxTagCount))
+    private var visibleTags: [Option] { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).visible }
+    private var overflowCount: Int { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).overflow }
+    private func optionEnabled(_ option: Option) -> Bool { isOptionEnabled?(option) ?? true }
+
+    /// Splits selected options into the chips to render and the "+N" overflow count.
+    static func tagLayout(selected: [Option], maxTagCount: Int?) -> (visible: [Option], overflow: Int) {
+        guard let maxTagCount, maxTagCount >= 0, selected.count > maxTagCount else { return (selected, 0) }
+        return (Array(selected.prefix(maxTagCount)), selected.count - maxTagCount)
     }
-    private var overflowCount: Int { selectedOptions.count - visibleTags.count }
 
     private var filtered: [Option] {
         guard searchable, !query.isEmpty else { return options }
@@ -108,13 +118,17 @@ public struct MultiSelect<Option: Hashable>: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if allowClear && !selection.isEmpty && isEnabled {
+                if allowClear && !selection.isEmpty && isEnabled && !isLoading {
                     Button { selection.removeAll() } label: {
                         Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
-                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                if isLoading {
+                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                } else {
+                    Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .frame(minHeight: 56)
@@ -146,13 +160,21 @@ public struct MultiSelect<Option: Hashable>: View {
                 .scaledControlHeight(44)
                 DividerView(size: .small)
             }
-            if filtered.isEmpty {
+            if isLoading {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                    Spacer()
+                }
+                .padding(Theme.SpacingKey.md.value)
+            } else if filtered.isEmpty {
                 Text(String(themeKit: "No results"))
                     .textStyle(.bodySm400)
                     .foregroundStyle(Theme.shared.text(.textTertiary))
                     .padding(Theme.SpacingKey.md.value)
             } else {
                 ForEach(filtered, id: \.self) { opt in
+                    let enabled = optionEnabled(opt)
                     Button { toggle(opt) } label: {
                         HStack(spacing: Theme.SpacingKey.sm.value) {
                             Checkbox(isChecked: .constant(selection.contains(opt)), size: .small)
@@ -167,6 +189,8 @@ public struct MultiSelect<Option: Hashable>: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(RowPressStyle())
+                    .disabled(!enabled)
+                    .opacity(enabled ? 1 : 0.4)
                     if opt != filtered.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             }

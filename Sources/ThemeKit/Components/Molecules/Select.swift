@@ -28,6 +28,8 @@ public struct Select<Option: Hashable>: View {
     private let infoMessages: [InfoMessage]
     private let accessibilityID: String?
     private let isEnabled: Bool
+    private let isLoading: Bool
+    private let isOptionEnabled: ((Option) -> Bool)?
 
     @State private var open = false
     @State private var query = ""
@@ -43,11 +45,14 @@ public struct Select<Option: Hashable>: View {
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
+        isLoading: Bool = false,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.init(label, sections: [Section(nil, options)], selection: selection, placeholder: placeholder,
                   allowClear: allowClear, searchable: searchable, size: size, infoMessages: infoMessages,
-                  accessibilityID: accessibilityID, isEnabled: isEnabled, optionTitle: optionTitle)
+                  accessibilityID: accessibilityID, isEnabled: isEnabled, isLoading: isLoading,
+                  isOptionEnabled: isOptionEnabled, optionTitle: optionTitle)
     }
 
     public init(
@@ -61,6 +66,8 @@ public struct Select<Option: Hashable>: View {
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
+        isLoading: Bool = false,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
@@ -73,11 +80,15 @@ public struct Select<Option: Hashable>: View {
         self.infoMessages = infoMessages
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.isLoading = isLoading
+        self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
     }
 
     private var hasValue: Bool { selection != nil }
-    private var showsClear: Bool { allowClear && hasValue && isEnabled }
+    private var showsClear: Bool { allowClear && hasValue && isEnabled && !isLoading }
+    private func optionEnabled(_ option: Option) -> Bool { isOptionEnabled?(option) ?? true }
+    private var hasAnyResults: Bool { sections.contains { !filtered($0.options).isEmpty } }
     private var borderColor: Color {
         switch infoMessages.dominantKind {
         case .error: return Theme.shared.border(.systemcolorsBorderError)
@@ -128,8 +139,12 @@ public struct Select<Option: Hashable>: View {
                 }
             }
             Spacer(minLength: 0)
-            Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm,
-                 color: showsClear ? .clear : Theme.shared.text(.textTertiary))
+            if isLoading {
+                Spinner(size: IconSize.sm.value, lineWidth: 2)
+            } else {
+                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm,
+                     color: showsClear ? .clear : Theme.shared.text(.textTertiary))
+            }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .scaledControlHeight(size.height)
@@ -175,6 +190,7 @@ public struct Select<Option: Hashable>: View {
                 if selection == option { Label(optionTitle(option), systemImage: "checkmark") }
                 else { Text(optionTitle(option)) }
             }
+            .disabled(!optionEnabled(option))
         }
     }
 
@@ -183,6 +199,17 @@ public struct Select<Option: Hashable>: View {
     private func filtered(_ options: [Option]) -> [Option] {
         guard !query.isEmpty else { return options }
         return options.filter { optionTitle($0).localizedCaseInsensitiveContains(query) }
+    }
+
+    @ViewBuilder
+    private func panelMessage(spinner: Bool, _ text: String) -> some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            if spinner { Spinner(size: IconSize.sm.value, lineWidth: 2) }
+            Text(text).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Spacer()
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
     }
 
     private var panel: some View {
@@ -195,31 +222,45 @@ public struct Select<Option: Hashable>: View {
             .scaledControlHeight(44)
             DividerView(size: .small)
 
-            ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
-                let opts = filtered(section.options)
-                if !opts.isEmpty {
-                    if let title = section.title {
-                        Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textTertiary))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.xs.value)
-                    }
-                    ForEach(opts, id: \.self) { option in
-                        Button { selection = option; open = false; query = "" } label: {
-                            HStack {
-                                Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
-                                Spacer()
-                                if selection == option { Icon(systemName: "checkmark", size: .sm, color: Theme.shared.foreground(.fgHero)) }
-                            }
-                            .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)
-                            .contentShape(Rectangle())
+            if isLoading {
+                panelMessage(spinner: true, String(themeKit: "Searching…"))
+            } else if !hasAnyResults {
+                panelMessage(spinner: false, String(themeKit: "No results"))
+            } else {
+                ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                    let opts = filtered(section.options)
+                    if !opts.isEmpty {
+                        if let title = section.title {
+                            Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textTertiary))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.xs.value)
                         }
-                        .buttonStyle(RowPressStyle())
+                        ForEach(opts, id: \.self) { option in
+                            let enabled = optionEnabled(option)
+                            Button { selection = option; open = false; query = "" } label: {
+                                HStack {
+                                    Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
+                                    Spacer()
+                                    if selection == option {
+                                        Icon(systemName: "checkmark", size: .sm, color: Theme.shared.foreground(.fgHero))
+                                    }
+                                }
+                                .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(RowPressStyle())
+                            .disabled(!enabled)
+                            .opacity(enabled ? 1 : 0.4)
+                        }
                     }
                 }
             }
         }
         .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
+        )
         .themeShadow(.soft)
     }
 }
