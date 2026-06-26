@@ -1,14 +1,12 @@
 name: Docs
 
-# Build the DocC documentation on every push to main and upload it as a
-# downloadable artifact. The repo is PRIVATE, so GitHub Pages isn't available on
-# the current plan — docs are not published; build them locally with:
+# Build the DocC documentation on demand and upload it as a downloadable
+# artifact. The repo is PRIVATE, so GitHub Pages isn't available on the current
+# plan — docs are not published. DocC builds on an expensive macOS runner (10×),
+# so this is MANUAL-only (workflow_dispatch) rather than on every push to main —
+# trigger it from the Actions tab when you want a fresh archive, or build locally:
 #   swift package --disable-sandbox preview-documentation --target ThemeKit
-# This job's value is catching broken doc comments / DocC links in CI, and
-# producing a browsable archive reviewers can download.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

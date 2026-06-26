@@ -1,8 +1,9 @@
 name: CI
 
-# Every push to main and every PR runs the full matrix. A component library is
-# someone else's dependency: nothing merges unless it builds and tests green on
-# both platforms we ship (iOS 17+, macOS 14+) and passes lint.
+# PRs run the full matrix; main pushes run build + test + lint (api-breakage is
+# PR-only). Lint runs on Linux (1× minutes); the build/test gates run on macOS for
+# the two platforms we ship (iOS 17+, macOS 14+). A component library is someone
+# else's dependency: nothing merges unless it's green.
 on:
   push:
     branches: [main]
@@ -97,16 +98,19 @@ jobs:
   # ---------------------------------------------------------------------------
   lint:
     name: SwiftLint
-    runs-on: macos-15
+    # Lint needs no Xcode/SDK, so run it on Linux (1× minutes) via the official
+    # SwiftLint Docker image instead of an expensive macOS runner (10×).
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install SwiftLint
-        run: brew install swiftlint
       # Non-strict: error-level violations block the PR; warnings surface as
       # annotations and are burned down over time (see .swiftlint.yml). New code
       # that introduces an error-level violation fails here.
       - name: Lint
-        run: swiftlint lint --reporter github-actions-logging
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            ghcr.io/realm/swiftlint:latest \
+            swiftlint lint --reporter github-actions-logging
 
   # ---------------------------------------------------------------------------
   # Public-API breakage detection. Informational on PRs (a breaking change is
@@ -115,6 +119,9 @@ jobs:
   # ---------------------------------------------------------------------------
   api-breakage:
     name: API breakage check
+    # PR-only: it diffs the public API against the PR base. On a main push there's
+    # no base to diff against, so skip it there and save an expensive macOS runner.
+    if: github.event_name == 'pull_request'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
