@@ -24,6 +24,9 @@ private struct PopconfirmModifier: ViewModifier {
     let onCancel: (() -> Void)?
 
     @State private var loading = false
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content.overlay(alignment: edge.alignment) {
@@ -35,7 +38,7 @@ private struct PopconfirmModifier: ViewModifier {
                     .zIndex(1)
             }
         }
-        .animation(Motion.fast.animation, value: isPresented)
+        .animation(motion, value: isPresented)
     }
 
     private var card: some View {

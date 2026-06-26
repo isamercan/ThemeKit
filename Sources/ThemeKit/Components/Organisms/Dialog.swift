@@ -88,6 +88,9 @@ private struct DialogModifier: ViewModifier {
     let width: CGFloat?
 
     @State private var primaryLoading = false
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content.overlay {
@@ -123,7 +126,7 @@ private struct DialogModifier: ViewModifier {
                 .zIndex(1)
             }
         }
-        .animation(Motion.fast.animation, value: isPresented)
+        .animation(motion, value: isPresented)
     }
 }
 
@@ -162,6 +165,10 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
     let afterClose: (() -> Void)?
     let dialogContent: () -> DialogContent
     let footer: () -> Footer
+
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     private func close() {
         isPresented = false
@@ -216,7 +223,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                 .zIndex(1)
             }
         }
-        .animation(Motion.fast.animation, value: isPresented)
+        .animation(motion, value: isPresented)
     }
 }
 
