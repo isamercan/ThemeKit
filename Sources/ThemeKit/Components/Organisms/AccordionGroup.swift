@@ -19,6 +19,9 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     private let content: (Item) -> Content
 
     @State private var expanded: Set<Item.ID> = []
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(
         _ items: [Item],
@@ -63,7 +66,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         }
         .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
-        .animation(Motion.fast.animation, value: expanded)
+        .animation(motion, value: expanded)
     }
 
     private func toggle(_ id: Item.ID) {

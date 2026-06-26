@@ -36,6 +36,9 @@ public struct SegmentedTabBar: View {
     private let accessibilityID: String?
 
     @Namespace private var underline
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false,
                 style: SegmentedTabBarStyle = .underline,
@@ -103,7 +106,7 @@ public struct SegmentedTabBar: View {
         let isActive = index == selection
         return HStack(spacing: Theme.SpacingKey.xs.value) {
             Button {
-                withAnimation(Motion.fast.animation) { selection = index }
+                withAnimation(motion) { selection = index }
             } label: {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     if let icon = item.systemImage {
@@ -144,7 +147,7 @@ public struct SegmentedTabBar: View {
     private func tab(index: Int, item: TabItem) -> some View {
         let isActive = index == selection
         return Button {
-            withAnimation(Motion.fast.animation) { selection = index }
+            withAnimation(motion) { selection = index }
         } label: {
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 VStack(spacing: 1) {
