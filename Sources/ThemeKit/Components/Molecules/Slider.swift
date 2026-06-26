@@ -21,6 +21,7 @@ public struct Slider: View {
     private let accessibilityID: String?
     private let isEnabled: Bool
     private let showValueTooltip: Bool
+    private let onChangeEnd: ((Double) -> Void)?
 
     @State private var dragging = false
     @State private var dragStartValue: Double?
@@ -38,7 +39,8 @@ public struct Slider: View {
         verticalHeight: CGFloat = 160,
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
-        showValueTooltip: Bool = false
+        showValueTooltip: Bool = false,
+        onChangeEnd: ((Double) -> Void)? = nil
     ) {
         self._value = value
         self.bounds = bounds
@@ -50,6 +52,15 @@ public struct Slider: View {
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.showValueTooltip = showValueTooltip
+        self.onChangeEnd = onChangeEnd
+    }
+
+    /// Clamp + snap to step, commit, and fire the change-end callback (used by the
+    /// VoiceOver adjustable action).
+    private func commit(_ raw: Double) {
+        let snapped = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
+        value = snapped
+        onChangeEnd?(snapped)
     }
 
     private var span: Double { bounds.upperBound - bounds.lowerBound }
@@ -85,6 +96,14 @@ public struct Slider: View {
         .a11y(A11yElement.Control.slider, in: accessibilityID)
         .accessibilityLabel(label ?? "")
         .accessibilityValue(valueText(value))
+        .accessibilityAdjustableAction { direction in
+            guard isEnabled else { return }
+            switch direction {
+            case .increment: commit(value + step)
+            case .decrement: commit(value - step)
+            @unknown default: break
+            }
+        }
     }
 
     private var horizontalBody: some View {
@@ -137,6 +156,14 @@ public struct Slider: View {
         .a11y(A11yElement.Control.slider, in: accessibilityID)
         .accessibilityLabel(label ?? "")
         .accessibilityValue(valueText(value))
+        .accessibilityAdjustableAction { direction in
+            guard isEnabled else { return }
+            switch direction {
+            case .increment: commit(value + step)
+            case .decrement: commit(value - step)
+            @unknown default: break
+            }
+        }
     }
 
     private var thumb: some View {
@@ -173,7 +200,7 @@ public struct Slider: View {
                 let raw = bounds.lowerBound + ratio * span
                 value = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
             }
-            .onEnded { _ in dragging = false }
+            .onEnded { _ in dragging = false; onChangeEnd?(value) }
     }
 
     /// Vertical drag uses translation (up = increase) so the math stays correct
@@ -189,7 +216,7 @@ public struct Slider: View {
                 let raw = start + deltaRatio * span
                 value = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
             }
-            .onEnded { _ in dragging = false; dragStartValue = nil }
+            .onEnded { _ in dragging = false; dragStartValue = nil; onChangeEnd?(value) }
     }
 }
 
