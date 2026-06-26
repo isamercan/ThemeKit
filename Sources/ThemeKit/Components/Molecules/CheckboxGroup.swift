@@ -14,6 +14,9 @@ public struct CheckboxGroup<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Set<Option>
     private let infoMessages: [InfoMessage]
+    private let selectAllTitle: String?
+    private let isEnabled: Bool
+    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private let accessibilityID: String?
 
@@ -22,6 +25,9 @@ public struct CheckboxGroup<Option: Hashable>: View {
         options: [Option],
         selection: Binding<Set<Option>>,
         infoMessages: [InfoMessage] = [],
+        selectAllTitle: String? = nil,
+        isEnabled: Bool = true,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         accessibilityID: String? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -29,6 +35,9 @@ public struct CheckboxGroup<Option: Hashable>: View {
         self.options = options
         self._selection = selection
         self.infoMessages = infoMessages
+        self.selectAllTitle = selectAllTitle
+        self.isEnabled = isEnabled
+        self.isOptionEnabled = isOptionEnabled
         self.accessibilityID = accessibilityID
         self.label = label
     }
@@ -41,13 +50,45 @@ public struct CheckboxGroup<Option: Hashable>: View {
         }
     }
 
+    private func optionEnabled(_ option: Option) -> Bool { isEnabled && (isOptionEnabled?(option) ?? true) }
+
+    /// Options that the "select all" master is allowed to toggle.
+    private var selectableOptions: [Option] { options.filter { optionEnabled($0) } }
+    private var selectedSelectable: Int { selectableOptions.filter { selection.contains($0) }.count }
+    private var allSelected: Bool { !selectableOptions.isEmpty && selectedSelectable == selectableOptions.count }
+    private var someSelected: Bool { selectedSelectable > 0 && !allSelected }
+
+    private func toggleAll() {
+        if allSelected { selectableOptions.forEach { selection.remove($0) } }
+        else { selectableOptions.forEach { selection.insert($0) } }
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
             if let title {
                 Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
+            if let selectAllTitle {
+                Button(action: toggleAll) {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Checkbox(isChecked: .constant(allSelected), isIndeterminate: someSelected)
+                        Text(selectAllTitle)
+                            .textStyle(.labelBase600)
+                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(selectableOptions.isEmpty)
+                .opacity(isEnabled ? 1 : 0.4)
+                .accessibilityLabel(selectAllTitle)
+                .accessibilityAddTraits(allSelected ? .isSelected : [])
+                DividerView(size: .small)
+            }
             ForEach(Array(options.enumerated()), id: \.element) { index, option in
                 let isOn = selection.contains(option)
+                let enabled = optionEnabled(option)
                 Button {
                     if isOn { selection.remove(option) } else { selection.insert(option) }
                 } label: {
@@ -61,6 +102,8 @@ public struct CheckboxGroup<Option: Hashable>: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!enabled)
+                .opacity(enabled ? 1 : 0.4)
                 .a11y("option.\(index)", in: accessibilityID)
                 .accessibilityLabel(label(option))
                 .accessibilityAddTraits(isOn ? .isSelected : [])

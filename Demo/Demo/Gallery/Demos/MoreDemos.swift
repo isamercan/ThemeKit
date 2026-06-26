@@ -310,12 +310,20 @@ struct ButtonGroupDemo: View {
 
 struct CheckboxGroupDemo: View {
     @State private var sel: Set<String> = ["Wifi"]
+    @State private var selectAll = true
+    @State private var enabled = true
+    @State private var disableParking = false
     private let options = ["Wifi", "Pool", "Parking", "Breakfast"]
     var body: some View {
         ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
-            CheckboxGroup(title: "Amenities", options: options, selection: $sel) { $0 }
+            CheckboxGroup(title: "Amenities", options: options, selection: $sel,
+                          selectAllTitle: selectAll ? "Tümünü seç" : nil,
+                          isEnabled: enabled,
+                          isOptionEnabled: disableParking ? { $0 != "Parking" } : nil) { $0 }
         } knobs: {
-            Button("Select all") { sel = Set(options) }
+            Toggle("Select-all (indeterminate)", isOn: $selectAll)
+            Toggle("Enabled (whole group)", isOn: $enabled)
+            Toggle("Disable “Parking”", isOn: $disableParking)
             Button("Clear") { sel = [] }
         }
     }
