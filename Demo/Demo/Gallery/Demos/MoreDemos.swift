@@ -749,6 +749,7 @@ struct ChatBubbleDemo: View {
 }
 
 struct DrawerDemo: View {
+    @EnvironmentObject private var drawer: DrawerPresenter
     @State private var open = false
     @State private var trailing = false
     var body: some View {
@@ -767,7 +768,20 @@ struct DrawerDemo: View {
                 }
         } knobs: {
             Toggle("Trailing edge", isOn: $trailing)
-            Button("Open") { open = true }
+            Button("Open (declarative)") { open = true }
+            Button("Open (imperative host)") {
+                drawer.present(edge: trailing ? .trailing : .leading) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Menu").textStyle(.headingSm)
+                        ListRow("Account", leadingSystemImage: "person.circle", action: { drawer.dismiss(); flash("Drawer: Account") })
+                        ListRow("Settings", leadingSystemImage: "gearshape", action: { drawer.dismiss(); flash("Drawer: Settings") })
+                        Spacer()
+                    }
+                    .padding()
+                    .padding(.top, 50)
+                }
+            }
+            Text("Drag the panel toward its edge to dismiss.").font(.footnote).foregroundStyle(.secondary)
         }
     }
 }
