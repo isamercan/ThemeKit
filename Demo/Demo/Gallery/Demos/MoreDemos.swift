@@ -752,20 +752,32 @@ struct TimelineDemo: View {
     @State private var pending = true
     @State private var failed = false
     @State private var horizontal = false
+    @State private var mode: TimelineMode = .left
+    @State private var reverse = false
+    private var modeLabel: String {
+        switch mode { case .left: return "left"; case .right: return "right"; case .alternate: return "alternate" }
+    }
     var body: some View {
-        ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical")]) {
+        ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical"), ("mode", modeLabel), ("reverse", "\(reverse)")]) {
             Timeline([
                 .init(title: "Sipariş", time: "09:24", systemImage: "cart", state: .done, color: .success),
                 .init(title: "Hazırlanıyor", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
                 failed
                     ? .init(title: "Hata", time: "09:45", description: horizontal ? nil : "Kartı tekrar dene.", state: .error)
                     : .init(title: "Yolda", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
-            ], axis: horizontal ? .horizontal : .vertical, pending: (!horizontal && pending) ? "Kurye bekleniyor…" : nil)
+            ], axis: horizontal ? .horizontal : .vertical, mode: mode, reverse: reverse,
+               pending: (!horizontal && pending) ? "Kurye bekleniyor…" : nil)
         } knobs: {
             Stepper("Active: \(Int(step))", value: $step, in: 0...3)
             Toggle("Horizontal", isOn: $horizontal)
             Toggle("Pending node (vertical)", isOn: $pending)
             Toggle("Error item", isOn: $failed)
+            Toggle("Reverse order", isOn: $reverse)
+            Picker("Mode (vertical)", selection: $mode) {
+                Text("Left").tag(TimelineMode.left)
+                Text("Right").tag(TimelineMode.right)
+                Text("Alternate").tag(TimelineMode.alternate)
+            }.pickerStyle(.segmented)
         }
     }
 }
