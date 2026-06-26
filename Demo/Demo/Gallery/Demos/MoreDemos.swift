@@ -163,18 +163,23 @@ struct SelectDemo: View {
     @State private var city: String?
     @State private var clearable = true
     @State private var searchable = false
+    @State private var loading = false
+    @State private var disableSoldOut = false   // marks "Konya" disabled
 
     var body: some View {
-        ComponentStage("Select", inspector: [("selection", city ?? "nil"), ("searchable", "\(searchable)")]) {
+        ComponentStage("Select", inspector: [("selection", city ?? "nil"), ("loading", "\(loading)")]) {
             Select("Şehir", sections: [
                 .init("Marmara", ["İstanbul", "Bursa", "Kocaeli"]),
                 .init("Ege", ["İzmir", "Aydın", "Muğla"]),
                 .init("İç Anadolu", ["Ankara", "Konya"]),
-            ], selection: $city, allowClear: clearable, searchable: searchable) { $0 }
+            ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
+               isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
         } knobs: {
             Toggle("Searchable (inline panel + sections)", isOn: $searchable)
             Toggle("Allow clear", isOn: $clearable)
-            Text(searchable ? "Tap → açılır panel, ara + bölüm başlıkları." : "Tap → native Menu (gruplu Section'lar).").font(.caption).foregroundStyle(.secondary)
+            Toggle("Loading (async)", isOn: $loading)
+            Toggle("Disable \"Konya\"", isOn: $disableSoldOut)
+            Text(searchable ? "Tap → açılır panel: ara, loading & \"No results\" durumları." : "Tap → native Menu (gruplu Section'lar).").font(.caption).foregroundStyle(.secondary)
             Button("Clear") { city = nil }
         }
     }
@@ -186,17 +191,22 @@ struct MultiSelectDemo: View {
     @State private var clearable = true
     @State private var capTags = true
     @State private var enabled = true
+    @State private var loading = false
+    @State private var disableSoldOut = false   // marks "Adana" disabled
     private let cities = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa", "Adana", "Konya"]
 
     var body: some View {
-        ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("maxTagCount", capTags ? "2" : "—")]) {
+        ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
             MultiSelect(label: "Cities", options: cities, selection: $picks,
                         searchable: searchable, allowClear: clearable,
-                        maxTagCount: capTags ? 2 : nil, isEnabled: enabled) { $0 }
+                        maxTagCount: capTags ? 2 : nil, isEnabled: enabled, isLoading: loading,
+                        isOptionEnabled: disableSoldOut ? { $0 != "Adana" } : nil) { $0 }
         } knobs: {
             Toggle("Searchable", isOn: $searchable)
             Toggle("Allow clear", isOn: $clearable)
             Toggle("Max 2 tags (+N)", isOn: $capTags)
+            Toggle("Loading (async)", isOn: $loading)
+            Toggle("Disable \"Adana\"", isOn: $disableSoldOut)
             Toggle("Enabled", isOn: $enabled)
             Button("Reset") { picks = ["İstanbul", "Ankara", "İzmir", "Bursa"] }
         }
