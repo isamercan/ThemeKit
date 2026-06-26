@@ -14,6 +14,8 @@ public struct RadioGroup<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Option?
     private let infoMessages: [InfoMessage]
+    private let isEnabled: Bool
+    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private let accessibilityID: String?
 
@@ -22,6 +24,8 @@ public struct RadioGroup<Option: Hashable>: View {
         options: [Option],
         selection: Binding<Option?>,
         infoMessages: [InfoMessage] = [],
+        isEnabled: Bool = true,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         accessibilityID: String? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -29,9 +33,13 @@ public struct RadioGroup<Option: Hashable>: View {
         self.options = options
         self._selection = selection
         self.infoMessages = infoMessages
+        self.isEnabled = isEnabled
+        self.isOptionEnabled = isOptionEnabled
         self.accessibilityID = accessibilityID
         self.label = label
     }
+
+    private func optionEnabled(_ option: Option) -> Bool { isEnabled && (isOptionEnabled?(option) ?? true) }
 
     private var titleColor: Color {
         switch infoMessages.dominantKind {
@@ -47,6 +55,7 @@ public struct RadioGroup<Option: Hashable>: View {
                 Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
             ForEach(Array(options.enumerated()), id: \.element) { index, option in
+                let enabled = optionEnabled(option)
                 Button {
                     selection = option
                 } label: {
@@ -60,6 +69,8 @@ public struct RadioGroup<Option: Hashable>: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!enabled)
+                .opacity(enabled ? 1 : 0.4)
                 .a11y("option.\(index)", in: accessibilityID)
                 .accessibilityLabel(label(option))
                 .accessibilityAddTraits(selection == option ? .isSelected : [])
@@ -81,6 +92,8 @@ public struct RadioButtonGroup<Option: Hashable>: View {
     @Binding private var selection: Option?
     private let style: RadioGroupButtonStyle
     private let expandsHorizontally: Bool
+    private let isEnabled: Bool
+    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private let accessibilityID: String?
 
@@ -89,6 +102,8 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         selection: Binding<Option?>,
         style: RadioGroupButtonStyle = .solid,
         expandsHorizontally: Bool = false,
+        isEnabled: Bool = true,
+        isOptionEnabled: ((Option) -> Bool)? = nil,
         accessibilityID: String? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -96,16 +111,20 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         self._selection = selection
         self.style = style
         self.expandsHorizontally = expandsHorizontally
+        self.isEnabled = isEnabled
+        self.isOptionEnabled = isOptionEnabled
         self.accessibilityID = accessibilityID
         self.label = label
     }
 
     private var radius: CGFloat { Theme.RadiusKey.sm.value }
+    private func optionEnabled(_ option: Option) -> Bool { isEnabled && (isOptionEnabled?(option) ?? true) }
 
     public var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(options.enumerated()), id: \.element) { index, option in
                 let isSelected = selection == option
+                let enabled = optionEnabled(option)
                 Button { selection = option } label: {
                     Text(label(option))
                         .textStyle(isSelected ? .labelBase700 : .labelBase600)
@@ -122,6 +141,8 @@ public struct RadioButtonGroup<Option: Hashable>: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(!enabled)
+                .opacity(enabled ? 1 : 0.4)
                 .a11y("option.\(index)", in: accessibilityID)
                 .accessibilityLabel(label(option))
                 .accessibilityAddTraits(isSelected ? .isSelected : [])

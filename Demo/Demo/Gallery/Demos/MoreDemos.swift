@@ -324,19 +324,24 @@ struct CheckboxGroupDemo: View {
 struct RadioGroupDemo: View {
     @State private var sel: String? = "Economy"
     @State private var styleIdx = 0   // 0 stacked, 1 button-solid, 2 button-outline
+    @State private var enabled = true
+    @State private var disableFirst = false
+    private var optionEnabled: ((String) -> Bool)? { disableFirst ? { $0 != "First" } : nil }
 
     var body: some View {
-        ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline")]) {
+        ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline"), ("enabled", "\(enabled)")]) {
             switch styleIdx {
             case 1:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
             case 2:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
             default:
-                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
             }
         } knobs: {
             Picker("Style", selection: $styleIdx) { Text("Stacked").tag(0); Text("Button solid").tag(1); Text("Button outline").tag(2) }.pickerStyle(.segmented)
+            Toggle("Enabled (whole group)", isOn: $enabled)
+            Toggle("Disable “First” option", isOn: $disableFirst)
             Button("Clear") { sel = nil }
         }
     }
