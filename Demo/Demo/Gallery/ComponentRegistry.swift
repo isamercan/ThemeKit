@@ -156,8 +156,8 @@ enum ComponentRegistry {
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items, autoplay: 2, showsArrows: true) { item in mediaView }"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items, peek: 36, autoplay: 2) { item in mediaView }"#),
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url, autoplay: true, loop: true, muted: true)"#),
-        .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success)])"#) {
-            KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success), .init("Old price", value: "5.000 TL", style: .strikethrough), .init("Total", value: "4.250 TL")])
+        .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Özet", bordered: true)"#) {
+            KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success), .init("Old price", value: "5.000 TL", style: .strikethrough), .init("Total", value: "4.250 TL")], title: "Rezervasyon özeti", bordered: true)
         },
     ]
 

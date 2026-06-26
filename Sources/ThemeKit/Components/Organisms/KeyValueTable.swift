@@ -36,12 +36,37 @@ public struct KeyValueTable: View {
     }
 
     private let rows: [Row]
+    private let title: String?
+    private let bordered: Bool
 
-    public init(rows: [Row]) {
+    public init(rows: [Row], title: String? = nil, bordered: Bool = false) {
         self.rows = rows
+        self.title = title
+        self.bordered = bordered
     }
 
     public var body: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+            if let title {
+                Text(title)
+                    .textStyle(.labelLg600)
+                    .foregroundStyle(Theme.shared.text(.textPrimary))
+            }
+            if bordered {
+                table
+                    .background(Theme.shared.background(.bgWhite),
+                                in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                            .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                    )
+            } else {
+                table
+            }
+        }
+    }
+
+    private var table: some View {
         VStack(spacing: 0) {
             ForEach(rows) { row in
                 HStack {
@@ -56,6 +81,7 @@ public struct KeyValueTable: View {
                         .multilineTextAlignment(.trailing)
                 }
                 .padding(.vertical, Theme.SpacingKey.sm.value)
+                .padding(.horizontal, bordered ? Theme.SpacingKey.md.value : 0)
                 if row.id != rows.last?.id { DividerView(size: .small) }
             }
         }
