@@ -1378,6 +1378,8 @@ struct TreeSelectDemo: View {
     @State private var picks: Set<String> = ["ist"]
     @State private var cascade = true
     @State private var searchable = true
+    @State private var loading = false
+    @State private var disableIzmir = false
     private let tree = [
         TreeNode(id: "tr", "Türkiye", systemImage: "flag", children: [
             TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara"), TreeNode(id: "izm", "İzmir"),
@@ -1387,13 +1389,16 @@ struct TreeSelectDemo: View {
         ]),
     ]
     var body: some View {
-        ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)")]) {
+        ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)"), ("loading", "\(loading)")]) {
             TreeSelect(label: "Şehirler", nodes: tree, selection: $picks,
-                       cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"])
-                .id("\(cascade)\(searchable)")
+                       cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"],
+                       isLoading: loading, isNodeEnabled: disableIzmir ? { $0.id != "izm" } : nil)
+                .id("\(cascade)\(searchable)\(loading)\(disableIzmir)")
         } knobs: {
             Toggle("Cascade (parent ↔ child + indeterminate)", isOn: $cascade)
             Toggle("Searchable", isOn: $searchable)
+            Toggle("Loading", isOn: $loading)
+            Toggle("Disable “İzmir”", isOn: $disableIzmir)
             Button("Reset") { picks = ["ist"] }
         }
     }
