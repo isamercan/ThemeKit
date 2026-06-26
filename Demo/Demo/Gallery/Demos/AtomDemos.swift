@@ -213,12 +213,26 @@ struct TagDemo: View {
     @State private var text = "İstanbul"
     @State private var removable = true
     @State private var icon = false
+    @State private var styleIdx = 0   // 0 = neutral (no style)
+    @State private var variant: FillVariant = .soft
+
+    private let styles: [(String, BadgeStyle?)] = [
+        ("Neutral", nil), ("Success", .success), ("Warning", .warning), ("Error", .error), ("Info", .info),
+    ]
 
     var body: some View {
-        ComponentStage("Tag", inspector: [("removable", "\(removable)")]) {
-            Tag(text, leadingSystemImage: icon ? "mappin" : nil, onRemove: removable ? { flash("Tag silindi") } : nil)
+        ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
+            Tag(text, leadingSystemImage: icon ? "mappin" : nil,
+                style: styles[styleIdx].1, variant: variant,
+                onRemove: removable ? { flash("Tag silindi") } : nil)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
+            Picker("Style", selection: $styleIdx) {
+                ForEach(Array(styles.enumerated()), id: \.offset) { i, s in Text(s.0).tag(i) }
+            }.pickerStyle(.segmented)
+            Picker("Variant", selection: $variant) {
+                Text("Soft").tag(FillVariant.soft); Text("Solid").tag(FillVariant.solid); Text("Outline").tag(FillVariant.outline)
+            }.pickerStyle(.segmented)
             Toggle("Removable", isOn: $removable)
             Toggle("Leading icon", isOn: $icon)
         }

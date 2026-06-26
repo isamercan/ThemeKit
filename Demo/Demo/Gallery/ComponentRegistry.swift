@@ -61,7 +61,7 @@ enum ComponentRegistry {
         .knob("ScoreBadge", .atoms, demo: ScoreBadgeDemo(), usage: #"ScoreBadge(9.0, large: false)"#),
         .knob("Skeleton", .atoms, demo: SkeletonDemo(), usage: #"Text("Loading…").skeleton(isLoading)"#),
         .knob("Spinner", .atoms, demo: SpinnerDemo(), usage: #"Spinner(size: 24, lineWidth: 3)"#),
-        .knob("Tag", .atoms, demo: TagDemo(), usage: #"Tag("İstanbul", onRemove: { })"#),
+        .knob("Tag", .atoms, demo: TagDemo(), usage: #"Tag("Sold out", style: .error, variant: .solid, onRemove: { })"#),
         .knob("Title", .atoms, demo: TitleDemo(), usage: #"Title("Section", subtitle: "Sub", actionTitle: "See all", action: { })"#),
         .static("InlineText", .atoms, usage: #"InlineText("Accept the Terms.", links: [("Terms", { })])"#) {
             InlineText("By continuing you accept the Terms and the Privacy Policy.", links: [("Terms", {}), ("Privacy Policy", {})])
