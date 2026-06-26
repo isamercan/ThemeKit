@@ -31,15 +31,45 @@ public enum StatTrend {
 }
 
 public struct Stat: View {
+    private enum Value { case text(String), number(Int) }
+
     private let title: String
-    private let value: String
+    private let value: Value
+    private let prefix: String?
+    private let suffix: String?
+    private let isLoading: Bool
     private let description: String?
     private let systemImage: String?
     private let trend: StatTrend?
 
-    public init(title: String, value: String, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil) {
+    public init(
+        title: String, value: String,
+        prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false,
+        description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil
+    ) {
+        self.init(title: title, value: .text(value), prefix: prefix, suffix: suffix,
+                  isLoading: isLoading, description: description, systemImage: systemImage, trend: trend)
+    }
+
+    /// Numeric value that animates (count-up / roll) on change, via `RollingNumber`.
+    public init(
+        title: String, value: Int,
+        prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false,
+        description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil
+    ) {
+        self.init(title: title, value: .number(value), prefix: prefix, suffix: suffix,
+                  isLoading: isLoading, description: description, systemImage: systemImage, trend: trend)
+    }
+
+    private init(
+        title: String, value: Value, prefix: String?, suffix: String?,
+        isLoading: Bool, description: String?, systemImage: String?, trend: StatTrend?
+    ) {
         self.title = title
         self.value = value
+        self.prefix = prefix
+        self.suffix = suffix
+        self.isLoading = isLoading
         self.description = description
         self.systemImage = systemImage
         self.trend = trend
@@ -52,9 +82,7 @@ public struct Stat: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textTertiary))
-                Text(value).textStyle(.headingMd).foregroundStyle(Theme.shared.text(.textPrimary))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                valueRow
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     if let trend {
                         HStack(spacing: 2) {
@@ -76,8 +104,46 @@ public struct Stat: View {
         .accessibilityLabel(Text(accessibilityLabel))
     }
 
+    private var valueRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 2) {
+            if let prefix {
+                Text(prefix).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+            valueView
+            if let suffix {
+                Text(suffix).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var valueView: some View {
+        if isLoading {
+            Skeleton(.capsule, width: 96, height: 26)
+        } else {
+            switch value {
+            case .text(let string):
+                Text(string).textStyle(.headingMd).foregroundStyle(Theme.shared.text(.textPrimary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            case .number(let number):
+                RollingNumber(number, size: 28, weight: .semibold, color: Theme.shared.text(.textPrimary))
+            }
+        }
+    }
+
+    private var valueString: String {
+        if isLoading { return String(themeKit: "Loading") }
+        let core: String
+        switch value {
+        case .text(let string): core = string
+        case .number(let number): core = "\(number)"
+        }
+        return [prefix, core, suffix].compactMap { $0 }.joined(separator: " ")
+    }
+
     private var accessibilityLabel: String {
-        [title, value, trend?.accessibleText, description]
+        [title, valueString, trend?.accessibleText, description]
             .compactMap { $0 }
             .joined(separator: ", ")
     }
