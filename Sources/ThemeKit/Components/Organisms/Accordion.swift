@@ -52,6 +52,9 @@ public struct Accordion<Content: View>: View {
     private let content: () -> Content
 
     @State private var expanded: Bool
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(
         _ title: String,
@@ -82,7 +85,7 @@ public struct Accordion<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Button {
-                withAnimation(Motion.base.animation) { expanded.toggle() }
+                withAnimation(motion) { expanded.toggle() }
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     if let number {
