@@ -35,6 +35,10 @@ public struct ProgressBar: View {
     private let format: ((Double) -> String)?
     private let accessibilityLabelText: String?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
     /// - Parameters:
     ///   - value: progress in 0...1.
     ///   - height: bar thickness in points.
@@ -119,6 +123,7 @@ public struct ProgressBar: View {
         .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
         .accessibilityValue(Text(percentText))
         .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
+        .animation(motion, value: value)
     }
 
     @ViewBuilder
@@ -149,6 +154,10 @@ public struct StepIndicator: View {
     private let current: Int
     private let total: Int
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
     public init(current: Int, total: Int) {
         self.current = current
         self.total = total
@@ -160,7 +169,7 @@ public struct StepIndicator: View {
                 Capsule()
                     .fill(index == current ? Theme.shared.background(.bgHero) : Theme.shared.border(.borderPrimary))
                     .frame(width: index == current ? 20 : 6, height: 6)
-                    .animation(Motion.fast.animation, value: current)
+                    .animation(motion, value: current)
             }
         }
         // Position is conveyed only by the highlighted dot; speak it instead.

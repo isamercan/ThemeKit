@@ -42,6 +42,7 @@ private struct DigitColumn: View {
     let color: Color?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.microAnimations) private var micro
 
     private var rowHeight: CGFloat { size * 1.25 }
 
@@ -54,8 +55,8 @@ private struct DigitColumn: View {
         .offset(y: -CGFloat(digit) * rowHeight)
         .frame(height: rowHeight, alignment: .top)
         .clipped()
-        // Honor Reduce Motion: snap to the new digit instead of rolling.
-        .animation(reduceMotion ? nil : Motion.base.spring, value: digit)
+        // Honor the micro-animations switch + Reduce Motion: snap instead of rolling.
+        .animation((micro && !reduceMotion) ? Motion.base.spring : nil, value: digit)
     }
 }
 
