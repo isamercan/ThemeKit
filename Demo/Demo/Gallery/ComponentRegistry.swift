@@ -93,7 +93,7 @@ enum ComponentRegistry {
         .knob("RadioButton", .molecules, demo: RadioButtonDemo(), usage: #"RadioButton(isSelected: $on)"#),
         .knob("RadioGroup", .molecules, demo: RadioGroupDemo(), usage: #"RadioGroup(options: items, selection: $sel) { $0 }"#),
         .knob("RangeSlider", .molecules, demo: RangeSliderDemo(), usage: #"RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)"#),
-        .knob("SearchBar", .molecules, demo: SearchBarDemo(), usage: #"SearchBar(text: $text, trailingSystemImage: "barcode.viewfinder")"#),
+        .knob("SearchBar", .molecules, demo: SearchBarDemo(), usage: #"SearchBar(text: $text, suggestions: cities, recent: recent, onSubmit: search)"#),
         .knob("SegmentedControl", .molecules, demo: SegmentedControlDemo(), usage: #"SegmentedControl([SegmentItem("List", systemImage: "list.bullet")], selection: $i)"#),
         .knob("Select", .molecules, demo: SelectDemo(), usage: #"Select("City", options: items, selection: $city, allowClear: true) { $0 }"#),
         .knob("MultiSelect", .molecules, demo: MultiSelectDemo(), usage: #"MultiSelect(label: "Cities", options: items, selection: $set, searchable: true) { $0 }"#),
