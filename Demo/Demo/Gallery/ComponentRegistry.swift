@@ -91,6 +91,7 @@ enum ComponentRegistry {
         .knob("Stat", .molecules, demo: StatDemo(), usage: #"Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))"#),
         .knob("Steps", .molecules, demo: StepsDemo(), usage: #"Steps([.init("Cart", description: "2 items", state: .done), .init("Pay", state: .error)]) { active = $0 }"#),
         .knob("QuantityStepper", .molecules, demo: QuantityStepperDemo(), usage: #"QuantityStepper(value: $qty, range: 0...10)"#),
+        .knob("Micro-motion", .molecules, demo: MicroMotionDemo(), usage: #"View().microAnimations(false)   // theme-wide at root, or per-component"#),
         .knob("RadioButton", .molecules, demo: RadioButtonDemo(), usage: #"RadioButton(isSelected: $on)"#),
         .knob("RadioGroup", .molecules, demo: RadioGroupDemo(), usage: #"RadioGroup(options: items, selection: $sel) { $0 }"#),
         .knob("RangeSlider", .molecules, demo: RangeSliderDemo(), usage: #"RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, marks: [0, 500, 1000], onChangeEnd: search)"#),

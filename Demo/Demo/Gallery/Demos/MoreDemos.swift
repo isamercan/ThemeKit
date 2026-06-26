@@ -1854,3 +1854,33 @@ struct ProgressIndicatorDemo: View {
         }
     }
 }
+
+// MARK: - Micro-motion (system)
+
+struct MicroMotionDemo: View {
+    @State private var enabled = true
+    @State private var on = false
+    @State private var sel = 0
+    var body: some View {
+        ComponentStage("Micro-motion", inspector: [("microAnimations", "\(enabled)")]) {
+            VStack(spacing: 18) {
+                Text("Bu alt-ağaç: .microAnimations(\(enabled ? "true" : "false")) — basınca scale, seçimde kayma.")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                PrimaryButton("Bana bas (micro press)", isContentWidth: true) { flash("Tap") }
+                SegmentedControl(["Gün", "Hafta", "Ay"], selection: $sel)
+                ThemeToggle(isOn: $on)
+
+                DividerView(size: .small)
+                Text("Per-component override — bu buton her zaman kapalı:")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                SecondaryButton("Hareketsiz (.microAnimations(false))", isContentWidth: true) { flash("Tap") }
+                    .microAnimations(false)
+            }
+            .microAnimations(enabled)
+        } knobs: {
+            Toggle("Micro-animations (bu alt-ağaç)", isOn: $enabled)
+            Text("Tema geneli için: Configurator → “Micro-animations”. Reduce Motion her zaman kazanır.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}

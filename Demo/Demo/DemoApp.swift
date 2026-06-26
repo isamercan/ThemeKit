@@ -10,10 +10,14 @@ import ThemeKit
 @main
 struct DemoApp: App {
     @StateObject private var themeStore = DemoThemeStore()
+    // Theme-wide micro-animation switch (toggled from the Configurator). Reduce
+    // Motion always wins on top of this. Per-component override: `.microAnimations(false)`.
+    @AppStorage("themekit.microAnimations") private var microAnimations = true
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .microAnimations(microAnimations)
                 .environmentObject(themeStore)
                 .feedbackHost()       // installs the shared FeedbackPresenter + overlays
                 .sheetHost()          // installs the shared SheetPresenter

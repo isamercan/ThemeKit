@@ -161,13 +161,26 @@ public struct ThemeButton: View {
 
 /// Tactile press/active feedback (the iOS equivalent of Ant Design's hover/active
 /// interaction states). Used by the preset button family in `Buttons.swift`.
+/// The press *scale* + its tween are gated by `microAnimations` + Reduce Motion;
+/// the opacity dim (a state, not motion) stays as a press affordance.
 public struct PressFeedbackStyle: ButtonStyle {
     public init() {}
     public func makeBody(configuration: Configuration) -> some View {
+        PressFeedbackBody(configuration: configuration)
+    }
+}
+
+private struct PressFeedbackBody: View {
+    let configuration: ButtonStyleConfiguration
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var on: Bool { micro && !reduceMotion }
+
+    var body: some View {
         configuration.label
             .opacity(configuration.isPressed ? 0.88 : 1)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(Motion.instant.animation, value: configuration.isPressed)
+            .scaleEffect(on && configuration.isPressed ? 0.97 : 1)
+            .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
     }
 }
 
@@ -178,12 +191,24 @@ public struct RowPressStyle: ButtonStyle {
     private let cornerRadius: CGFloat
     public init(cornerRadius: CGFloat = 0) { self.cornerRadius = cornerRadius }
     public func makeBody(configuration: Configuration) -> some View {
+        RowPressBody(configuration: configuration, cornerRadius: cornerRadius)
+    }
+}
+
+private struct RowPressBody: View {
+    let configuration: ButtonStyleConfiguration
+    let cornerRadius: CGFloat
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var on: Bool { micro && !reduceMotion }
+
+    var body: some View {
         configuration.label
             .background(
                 configuration.isPressed ? Theme.shared.background(.bgElevatorTertiary) : .clear,
                 in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             )
-            .animation(Motion.instant.animation, value: configuration.isPressed)
+            .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
     }
 }
 
@@ -197,11 +222,26 @@ struct FillButtonStyle: ButtonStyle {
     let stroke: Color?
 
     func makeBody(configuration: Configuration) -> some View {
+        FillButtonBody(configuration: configuration, shape: shape, resting: resting, pressed: pressed, stroke: stroke)
+    }
+}
+
+private struct FillButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let shape: AnyShape
+    let resting: Color
+    let pressed: Color
+    let stroke: Color?
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var on: Bool { micro && !reduceMotion }
+
+    var body: some View {
         configuration.label
             .background(configuration.isPressed ? pressed : resting, in: shape)
             .overlay { if let stroke { shape.stroke(stroke, lineWidth: 1.5) } }
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(Motion.instant.animation, value: configuration.isPressed)
+            .scaleEffect(on && configuration.isPressed ? 0.97 : 1)
+            .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
     }
 }
 

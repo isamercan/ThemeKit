@@ -19,6 +19,8 @@ struct ThemeConfiguratorView: View {
 
     @State private var config = ConfigState()
     @State private var chipOn = true
+    // Theme-wide micro-animation switch — shared with the app root via the same key.
+    @AppStorage("themekit.microAnimations") private var microAnimations = true
 
     private let fonts = ["Montserrat", "System", "SystemRounded", "SystemSerif", "SystemMono"]
 
@@ -97,6 +99,7 @@ struct ThemeConfiguratorView: View {
                 ColorPicker("Primary color", selection: $config.primary, supportsOpacity: false)
                 sliderRow("Tint (re-skin strength)", $config.tint, 0...0.25, "%.2f")
                 Toggle("Dark mode", isOn: $config.dark)
+                Toggle("Micro-animations (theme-wide)", isOn: $microAnimations)
             }
         }
     }
