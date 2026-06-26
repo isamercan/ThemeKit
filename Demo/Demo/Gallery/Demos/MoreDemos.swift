@@ -1343,18 +1343,28 @@ struct BorderBeamDemo: View {
 
 struct PopconfirmDemo: View {
     @State private var show = false
-    @State private var edgeTop = false
+    @State private var edge: TooltipEdge = .bottom
+    @State private var asyncConfirm = false
     @State private var last = "—"
     var body: some View {
-        ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("last", last)]) {
+        ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("edge", "\(edge)"), ("last", last)]) {
             ThemeButton("Sil", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
                 .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Bu işlem geri alınamaz.",
-                            confirmTitle: "Sil", cancelTitle: "Vazgeç", edge: edgeTop ? .top : .bottom,
-                            onConfirm: { last = "confirmed"; flash("Popconfirm onaylandı") }, onCancel: { last = "cancelled"; flash("Popconfirm iptal edildi") })
-                .padding(.vertical, 80)
+                            confirmTitle: "Sil", cancelTitle: "Vazgeç", edge: edge,
+                            onConfirm: {
+                                if asyncConfirm { try? await Task.sleep(nanoseconds: 1_200_000_000) }
+                                last = "confirmed"; flash("Popconfirm onaylandı")
+                            },
+                            onCancel: { last = "cancelled"; flash("Popconfirm iptal edildi") })
+                .padding(80)
         } knobs: {
-            Toggle("Anchor above", isOn: $edgeTop)
-            Button(show ? "Hide" : "Show") { show.toggle() }
+            Toggle("Async confirm (1.2s)", isOn: $asyncConfirm)
+            Picker("Edge", selection: $edge) {
+                Text("Top").tag(TooltipEdge.top)
+                Text("Bottom").tag(TooltipEdge.bottom)
+                Text("Leading").tag(TooltipEdge.leading)
+                Text("Trailing").tag(TooltipEdge.trailing)
+            }.pickerStyle(.segmented)
         }
     }
 }
