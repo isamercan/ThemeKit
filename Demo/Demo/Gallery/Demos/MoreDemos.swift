@@ -223,12 +223,25 @@ struct OTPDemo: View {
     @State private var code = "12"
     @State private var six = false
     @State private var error = false
+    @State private var secure = false
+    @State private var resend = false
+    @State private var lastComplete = "—"
     var body: some View {
-        ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("digits", six ? "6" : "4")]) {
-            OTPInput(code: $code, digitCount: six ? 6 : 4, errorText: error ? "Invalid code" : nil)
+        ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("completed", lastComplete)]) {
+            OTPInput(
+                code: $code,
+                digitCount: six ? 6 : 4,
+                isSecure: secure,
+                errorText: error ? "Invalid code" : nil,
+                onComplete: { lastComplete = $0 },
+                resendInterval: resend ? 30 : nil,
+                onResend: resend ? { lastComplete = "resent" } : nil
+            )
         } knobs: {
             Toggle("6 digits", isOn: $six)
+            Toggle("Secure entry", isOn: $secure)
             Toggle("Error state", isOn: $error)
+            Toggle("Resend timer", isOn: $resend)
         }
     }
 }
