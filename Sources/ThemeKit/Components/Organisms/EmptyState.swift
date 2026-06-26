@@ -22,6 +22,8 @@ public struct EmptyState: View {
     private let message: String?
     private let buttonTitle: String?
     private let action: (() -> Void)?
+    private let secondaryTitle: String?
+    private let onSecondary: (() -> Void)?
 
     public init(
         systemImage: String = "tray",
@@ -31,7 +33,9 @@ public struct EmptyState: View {
         title: String? = nil,
         message: String? = nil,
         buttonTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryTitle: String? = nil,
+        onSecondary: (() -> Void)? = nil
     ) {
         self.systemImage = systemImage
         self.image = nil
@@ -44,6 +48,8 @@ public struct EmptyState: View {
         self.message = message
         self.buttonTitle = buttonTitle
         self.action = action
+        self.secondaryTitle = secondaryTitle
+        self.onSecondary = onSecondary
     }
 
     /// Custom illustration instead of the SF Symbol badge. Pass any `Image`
@@ -54,7 +60,9 @@ public struct EmptyState: View {
         title: String? = nil,
         message: String? = nil,
         buttonTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryTitle: String? = nil,
+        onSecondary: (() -> Void)? = nil
     ) {
         self.systemImage = "tray"
         self.image = image
@@ -67,6 +75,8 @@ public struct EmptyState: View {
         self.message = message
         self.buttonTitle = buttonTitle
         self.action = action
+        self.secondaryTitle = secondaryTitle
+        self.onSecondary = onSecondary
     }
 
     /// Animated illustration (GIF / APNG) via the native `AnimatedImage` — the
@@ -77,7 +87,9 @@ public struct EmptyState: View {
         title: String? = nil,
         message: String? = nil,
         buttonTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryTitle: String? = nil,
+        onSecondary: (() -> Void)? = nil
     ) {
         self.systemImage = "tray"
         self.image = nil
@@ -90,6 +102,8 @@ public struct EmptyState: View {
         self.message = message
         self.buttonTitle = buttonTitle
         self.action = action
+        self.secondaryTitle = secondaryTitle
+        self.onSecondary = onSecondary
     }
 
     public var body: some View {
@@ -128,8 +142,15 @@ public struct EmptyState: View {
                 }
             }
 
-            if let buttonTitle, let action {
-                PrimaryButton(buttonTitle, action: action)
+            if buttonTitle != nil || secondaryTitle != nil {
+                VStack(spacing: Theme.SpacingKey.sm.value) {
+                    if let buttonTitle, let action {
+                        PrimaryButton(buttonTitle, action: action)
+                    }
+                    if let secondaryTitle, let onSecondary {
+                        SecondaryButton(secondaryTitle, action: onSecondary)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity)

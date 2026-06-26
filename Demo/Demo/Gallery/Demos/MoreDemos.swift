@@ -407,6 +407,7 @@ struct CardDemo: View {
 
 struct EmptyStateDemo: View {
     @State private var hasButton = true
+    @State private var secondary = false
     @State private var customImage = false
     @State private var tintIcon = false
     @State private var animated = false
@@ -428,13 +429,15 @@ struct EmptyStateDemo: View {
                            iconCircleSize: tintIcon ? 104 : 88,
                            title: "No results found",
                            message: "Try adjusting your search or filters.",
-                           buttonTitle: hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
+                           buttonTitle: hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil,
+                           secondaryTitle: secondary ? "Learn more" : nil, onSecondary: secondary ? { flash("EmptyState: Learn more") } : nil)
             }
         } knobs: {
             Toggle("Animated illustration (GIF, native)", isOn: $animated)
             Toggle("Custom illustration", isOn: $customImage)
             Toggle("Tinted + larger icon", isOn: $tintIcon)
             Toggle("Action button", isOn: $hasButton)
+            Toggle("Secondary action (symbol)", isOn: $secondary)
         }
     }
 }
