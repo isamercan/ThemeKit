@@ -28,6 +28,7 @@ public struct Autocomplete: View {
     private let debounce: TimeInterval
     private let accessibilityID: String?
     private let isEnabled: Bool
+    private let isSuggestionEnabled: ((String) -> Bool)?
     private let onSelect: (String) -> Void
     private let onSearch: ((String) -> Void)?
 
@@ -46,6 +47,7 @@ public struct Autocomplete: View {
         debounce: TimeInterval = 0,
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
+        isSuggestionEnabled: ((String) -> Bool)? = nil,
         onSelect: @escaping (String) -> Void = { _ in },
         onSearch: ((String) -> Void)? = nil
     ) {
@@ -57,6 +59,7 @@ public struct Autocomplete: View {
         self.debounce = debounce
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
         self.onSearch = onSearch
     }
@@ -73,6 +76,7 @@ public struct Autocomplete: View {
         debounce: TimeInterval = 0.3,
         accessibilityID: String? = nil,
         isEnabled: Bool = true,
+        isSuggestionEnabled: ((String) -> Bool)? = nil,
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
@@ -83,6 +87,7 @@ public struct Autocomplete: View {
         self.debounce = debounce
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
         self.onSearch = nil
     }
@@ -92,6 +97,8 @@ public struct Autocomplete: View {
         guard !query.isEmpty else { return [] }
         return all.filter { $0.localizedCaseInsensitiveContains(query) }.prefix(max).map { $0 }
     }
+
+    private func suggestionEnabled(_ suggestion: String) -> Bool { isSuggestionEnabled?(suggestion) ?? true }
 
     private var showsDropdown: Bool {
         isFocused && !text.isEmpty && (isLoading || !results.isEmpty || isEmptyResult)
@@ -152,6 +159,7 @@ public struct Autocomplete: View {
                 row { Text(String(themeKit: "No results")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary)) }
             } else {
                 ForEach(results, id: \.self) { suggestion in
+                    let enabled = suggestionEnabled(suggestion)
                     Button {
                         text = suggestion
                         results = []
@@ -164,6 +172,8 @@ public struct Autocomplete: View {
                         } }
                     }
                     .buttonStyle(.plain)
+                    .disabled(!enabled)
+                    .opacity(enabled ? 1 : 0.4)
                     if suggestion != results.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             }
