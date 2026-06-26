@@ -337,18 +337,23 @@ struct QuantityStepperDemo: View {
 
 struct PaginationDemo: View {
     @State private var page = 4
-    @State private var total = 10.0
+    @State private var total = 20.0
     @State private var simple = false
     @State private var showTotal = true
+    @State private var wideWindow = false
+    @State private var jumper = true
 
     var body: some View {
-        ComponentStage("Pagination", inspector: [("current", "\(page)"), ("total", "\(Int(total))"), ("simple", "\(simple)")]) {
+        ComponentStage("Pagination", inspector: [("current", "\(page)"), ("total", "\(Int(total))"), ("siblings", wideWindow ? "2" : "1")]) {
             Pagination(current: $page, total: Int(total), simple: simple,
+                       siblingCount: wideWindow ? 2 : 1, showJumper: jumper && !simple, jumperTitle: "Git",
                        showTotal: showTotal ? { _, t in "\(t) sayfa" } : nil)
         } knobs: {
             Stepper("Current: \(page)", value: $page, in: 1...Int(total))
-            HStack { Text("Total"); SwiftUI.Slider(value: $total, in: 3...20, step: 1) }
+            HStack { Text("Total"); SwiftUI.Slider(value: $total, in: 3...50, step: 1) }
             Toggle("Simple mode", isOn: $simple)
+            Toggle("Wide window (siblingCount 2)", isOn: $wideWindow)
+            Toggle("Quick jumper", isOn: $jumper)
             Toggle("Show total", isOn: $showTotal)
         }
     }
