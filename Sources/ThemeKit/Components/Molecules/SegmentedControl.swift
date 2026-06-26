@@ -40,6 +40,9 @@ public struct SegmentedControl: View {
     private let accessibilityID: String?
 
     @Namespace private var pill
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(
         _ items: [SegmentItem],
@@ -74,7 +77,7 @@ public struct SegmentedControl: View {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 let isActive = index == selection
                 Button {
-                    withAnimation(Motion.fast.animation) { selection = index }
+                    withAnimation(motion) { selection = index }
                 } label: {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
                         if let icon = item.systemImage {

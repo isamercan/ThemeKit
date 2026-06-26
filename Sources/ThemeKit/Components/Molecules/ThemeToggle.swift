@@ -19,6 +19,10 @@ public struct ThemeToggle: View {
     private let offSystemImage: String?
     private let accessibilityID: String?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
     public init(
         isOn: Binding<Bool>,
         size: ControlSize = .medium,
@@ -44,7 +48,7 @@ public struct ThemeToggle: View {
 
     public var body: some View {
         Button {
-            withAnimation(Motion.fast.animation) { isOn.toggle() }
+            withAnimation(motion) { isOn.toggle() }
         } label: {
             Capsule()
                 .fill(track)

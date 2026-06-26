@@ -44,6 +44,10 @@ public struct Checkbox: View {
     private let isEnabled: Bool
     private let accessibilityID: String?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
     public init(
         _ label: String? = nil,
         isChecked: Binding<Bool>,
@@ -110,7 +114,8 @@ public struct Checkbox: View {
                     .strokeBorder(stroke, lineWidth: 1.5)
             )
             .frame(width: side, height: side)
-            .overlay(glyph)
+            .overlay(glyph.transition(.scale(scale: 0.7).combined(with: .opacity)))
+            .animation(motion, value: selected)
     }
 
     private var fill: Color {

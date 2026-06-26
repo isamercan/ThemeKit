@@ -50,6 +50,10 @@ public struct RadioButton: View {
     private let isEnabled: Bool
     private let accessibilityID: String?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
     public init(
         _ label: String? = nil,
         isSelected: Binding<Bool>,
@@ -90,7 +94,8 @@ public struct RadioButton: View {
                         .fill(filled ? fillColor : .clear)
                         .overlay(Circle().strokeBorder(stroke, lineWidth: 1.5))
                         .frame(width: size.side, height: size.side)
-                        .overlay(indicator)
+                        .overlay(indicator.transition(.scale(scale: 0.6).combined(with: .opacity)))
+                        .animation(motion, value: isSelected)
                     if let label {
                         Text(label)
                             .textStyle(.bodyBase400)
