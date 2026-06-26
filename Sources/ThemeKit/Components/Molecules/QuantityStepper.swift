@@ -15,7 +15,13 @@ public struct QuantityStepper: View {
     private let accessibilityID: String?
     private let isEnabled: Bool
 
-    public init(value: Binding<Int>, range: ClosedRange<Int> = 0...99, step: Int = 1, accessibilityID: String? = nil, isEnabled: Bool = true) {
+    public init(
+        value: Binding<Int>,
+        range: ClosedRange<Int> = 0...99,
+        step: Int = 1,
+        accessibilityID: String? = nil,
+        isEnabled: Bool = true
+    ) {
         self._value = value
         self.range = range
         self.step = max(1, step)
