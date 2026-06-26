@@ -17,6 +17,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     private let bordered: Bool
     private let loading: Bool
     private let split: Bool
+    private let emptyText: String?
     private let rowContent: (Item) -> Row
 
     public init(
@@ -26,6 +27,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
         bordered: Bool = true,
         loading: Bool = false,
         split: Bool = true,
+        emptyText: String? = nil,
         @ViewBuilder row: @escaping (Item) -> Row
     ) {
         self.items = items
@@ -34,6 +36,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
         self.bordered = bordered
         self.loading = loading
         self.split = split
+        self.emptyText = emptyText
         self.rowContent = row
     }
 
@@ -54,6 +57,8 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                     skeletonRow
                     if split && index < 2 { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
+            } else if items.isEmpty {
+                emptyRow
             } else {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     rowContent(item)
@@ -83,6 +88,15 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                     .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
             }
         }
+    }
+
+    private var emptyRow: some View {
+        Text(emptyText ?? String(themeKit: "No data"))
+            .textStyle(.bodySm400)
+            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.lg.value)
     }
 
     private var skeletonRow: some View {
