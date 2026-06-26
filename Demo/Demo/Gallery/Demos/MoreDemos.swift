@@ -633,14 +633,21 @@ struct UploadDemo: View {
 
     @StateObject private var uploads = UploadController()
     @State private var counter = 0
+    @State private var picked: [UploadFile] = []
 
     var body: some View {
-        ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)")]) {
-            UploadList(controller: uploads) { start(fail: false) }
+        ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)"), ("picked", "\(picked.count)/3")]) {
+            VStack(spacing: 20) {
+                UploadList(controller: uploads) { start(fail: false) }
+                Upload(prompt: "En fazla 3 fotoğraf yükleyebilirsin.", buttonTitle: "Fotoğraf ekle",
+                       files: picked, maxCount: 3,
+                       onPick: { picked.append(.init(name: "img-\(picked.count + 1).jpg", status: .done)) },
+                       onRemove: { file in picked.removeAll { $0.id == file.id } })
+            }
         } knobs: {
             Button("Simulate upload") { start(fail: false) }
             Button("Simulate failure") { start(fail: true) }
-            Button("Clear") { uploads.files.map(\.id).forEach { uploads.remove($0) } }
+            Button("Clear") { uploads.files.map(\.id).forEach { uploads.remove($0) }; picked = [] }
         }
     }
 
