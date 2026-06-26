@@ -114,6 +114,134 @@ Theme.shared.loadTheme(named: "oceanTheme")          // runtime switch
 
 Every component is curated by category in the [DocC catalog](#documentation).
 
+## Component gallery
+
+Rendered straight from the library via `ImageRenderer` (default theme, light) —
+regenerate with `make screenshots`. Interactive overlays (Dialog, Drawer, Tour,
+BottomSheet…) and media components are best seen live in the [Demo app](#demo).
+
+<!-- GALLERY:START -->
+
+### Atoms
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Avatar.png" width="240" alt="Avatar"><br><sub><b>Avatar</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Badge.png" width="240" alt="Badge"><br><sub><b>Badge</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Chip.png" width="240" alt="Chip"><br><sub><b>Chip</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/CountBadge.png" width="240" alt="CountBadge"><br><sub><b>CountBadge</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Divider.png" width="240" alt="Divider"><br><sub><b>Divider</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Icon.png" width="240" alt="Icon"><br><sub><b>Icon</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Indicator.png" width="240" alt="Indicator"><br><sub><b>Indicator</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/InputLabel.png" width="240" alt="InputLabel"><br><sub><b>InputLabel</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Kbd.png" width="240" alt="Kbd"><br><sub><b>Kbd</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/ProgressBar.png" width="240" alt="ProgressBar"><br><sub><b>ProgressBar</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/RadialProgress.png" width="240" alt="RadialProgress"><br><sub><b>RadialProgress</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Rating.png" width="240" alt="Rating"><br><sub><b>Rating</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/RollingNumber.png" width="240" alt="RollingNumber"><br><sub><b>RollingNumber</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ScoreBadge.png" width="240" alt="ScoreBadge"><br><sub><b>ScoreBadge</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Skeleton.png" width="240" alt="Skeleton"><br><sub><b>Skeleton</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Spinner.png" width="240" alt="Spinner"><br><sub><b>Spinner</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/StatusDot.png" width="240" alt="StatusDot"><br><sub><b>StatusDot</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Swap.png" width="240" alt="Swap"><br><sub><b>Swap</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Tag.png" width="240" alt="Tag"><br><sub><b>Tag</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/TextLink.png" width="240" alt="TextLink"><br><sub><b>TextLink</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Title.png" width="240" alt="Title"><br><sub><b>Title</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/InlineText.png" width="240" alt="InlineText"><br><sub><b>InlineText</b></sub></td>
+</tr>
+</table>
+
+### Molecules
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Button.png" width="240" alt="Button"><br><sub><b>Button</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ThemeButton.png" width="240" alt="ThemeButton"><br><sub><b>ThemeButton</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Checkbox.png" width="240" alt="Checkbox"><br><sub><b>Checkbox</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/CheckboxGroup.png" width="240" alt="CheckboxGroup"><br><sub><b>CheckboxGroup</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/RadioButton.png" width="240" alt="RadioButton"><br><sub><b>RadioButton</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/RadioGroup.png" width="240" alt="RadioGroup"><br><sub><b>RadioGroup</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/ToggleGroup.png" width="240" alt="ToggleGroup"><br><sub><b>ToggleGroup</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ThemeToggle.png" width="240" alt="ThemeToggle"><br><sub><b>ThemeToggle</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/SegmentedControl.png" width="240" alt="SegmentedControl"><br><sub><b>SegmentedControl</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/QuantityStepper.png" width="240" alt="QuantityStepper"><br><sub><b>QuantityStepper</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Stat.png" width="240" alt="Stat"><br><sub><b>Stat</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Steps.png" width="240" alt="Steps"><br><sub><b>Steps</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Slider.png" width="240" alt="Slider"><br><sub><b>Slider</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Breadcrumbs.png" width="240" alt="Breadcrumbs"><br><sub><b>Breadcrumbs</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/TextInput.png" width="240" alt="TextInput"><br><sub><b>TextInput</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/FileInput.png" width="240" alt="FileInput"><br><sub><b>FileInput</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Pagination.png" width="240" alt="Pagination"><br><sub><b>Pagination</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Fieldset.png" width="240" alt="Fieldset"><br><sub><b>Fieldset</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/DateField.png" width="240" alt="DateField"><br><sub><b>DateField</b></sub></td>
+</tr>
+</table>
+
+### Organisms
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Accordion.png" width="240" alt="Accordion"><br><sub><b>Accordion</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/AlertToast.png" width="240" alt="AlertToast"><br><sub><b>AlertToast</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Callout.png" width="240" alt="Callout"><br><sub><b>Callout</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Card.png" width="240" alt="Card"><br><sub><b>Card</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ChatBubble.png" width="240" alt="ChatBubble"><br><sub><b>ChatBubble</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Counter.png" width="240" alt="Counter"><br><sub><b>Counter</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Coupon.png" width="240" alt="Coupon"><br><sub><b>Coupon</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/EmptyState.png" width="240" alt="EmptyState"><br><sub><b>EmptyState</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/InfoBanner.png" width="240" alt="InfoBanner"><br><sub><b>InfoBanner</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/KeyValueTable.png" width="240" alt="KeyValueTable"><br><sub><b>KeyValueTable</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ListRow.png" width="240" alt="ListRow"><br><sub><b>ListRow</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/NotificationCard.png" width="240" alt="NotificationCard"><br><sub><b>NotificationCard</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/PageHeader.png" width="240" alt="PageHeader"><br><sub><b>PageHeader</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/RatingSummary.png" width="240" alt="RatingSummary"><br><sub><b>RatingSummary</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ResultView.png" width="240" alt="ResultView"><br><sub><b>ResultView</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/SegmentedTabBar.png" width="240" alt="SegmentedTabBar"><br><sub><b>SegmentedTabBar</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Timeline.png" width="240" alt="Timeline"><br><sub><b>Timeline</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Upload.png" width="240" alt="Upload"><br><sub><b>Upload</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/PromoBanner.png" width="240" alt="PromoBanner"><br><sub><b>PromoBanner</b></sub></td>
+</tr>
+</table>
+<!-- GALLERY:END -->
+
 ## Token system
 
 ```

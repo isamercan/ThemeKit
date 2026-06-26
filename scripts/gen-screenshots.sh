@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# Render every captured component to Screenshots/<Name>.png and rebuild the gallery
+# in README.md (between the GALLERY markers), grouped by category from the
+# generator's manifest. Runs on macOS via ImageRenderer — no simulator.
+#
+#   scripts/gen-screenshots.sh        # generate PNGs + rebuild README gallery
+#   make screenshots                  # same
+#
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+echo "▸ Rendering component screenshots…"
+GENERATE_SCREENSHOTS=1 swift test --filter ScreenshotGenerator >/dev/null
+
+MANIFEST="Screenshots/manifest.tsv"
+[ -f "$MANIFEST" ] || { echo "✗ $MANIFEST missing (did the generator run?)"; exit 1; }
+
+GALLERY="$(mktemp)"
+COLS=3
+emit_category() {
+    local cat="$1"
+    local names; names=$(awk -F '\t' -v c="$cat" '$1==c {print $2}' "$MANIFEST")
+    [ -z "$names" ] && return
+    {
+        echo
+        echo "### $cat"
+        echo
+        echo "<table>"
+        local i=0
+        while IFS= read -r name; do
+            [ "$((i % COLS))" -eq 0 ] && echo "<tr>"
+            printf '<td align="center" width="33%%"><img src="Screenshots/%s.png" width="240" alt="%s"><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$name"
+            i=$((i + 1))
+            [ "$((i % COLS))" -eq 0 ] && echo "</tr>"
+        done <<< "$names"
+        [ "$((i % COLS))" -ne 0 ] && echo "</tr>"
+        echo "</table>"
+    } >> "$GALLERY"
+}
+
+emit_category "Atoms"
+emit_category "Molecules"
+emit_category "Organisms"
+
+COUNT=$(grep -c '<img ' "$GALLERY")
+echo "▸ $COUNT components → rebuilding README gallery…"
+
+# Splice the gallery between the markers in README.md.
+awk -v galleryfile="$GALLERY" '
+    /<!-- GALLERY:START -->/ { print; while ((getline line < galleryfile) > 0) print line; skip=1; next }
+    /<!-- GALLERY:END -->/   { skip=0 }
+    !skip { print }
+' README.md > README.md.tmp && mv README.md.tmp README.md
+rm -f "$GALLERY"
+echo "✓ README gallery updated ($COUNT screenshots)."
