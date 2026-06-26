@@ -50,19 +50,56 @@ public struct Callout: View {
     private let text: String
     private let type: CalloutType
     private let style: CalloutStyle
+    private let showIcon: Bool
+    private let actionTitle: String?
+    private let onAction: (() -> Void)?
+    private let onClose: (() -> Void)?
 
-    public init(_ text: String, type: CalloutType = .info, style: CalloutStyle = .plain) {
+    public init(
+        _ text: String,
+        type: CalloutType = .info,
+        style: CalloutStyle = .plain,
+        showIcon: Bool = true,
+        actionTitle: String? = nil,
+        onAction: (() -> Void)? = nil,
+        onClose: (() -> Void)? = nil
+    ) {
         self.text = text
         self.type = type
         self.style = style
+        self.showIcon = showIcon
+        self.actionTitle = actionTitle
+        self.onAction = onAction
+        self.onClose = onClose
     }
+
+    private var hasAction: Bool { actionTitle != nil && onAction != nil }
+    private var hasTrailing: Bool { hasAction || onClose != nil }
 
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
-            Image(systemName: type.systemImage)
-                .font(.system(size: 14))
+            if showIcon {
+                Image(systemName: type.systemImage)
+                    .font(.system(size: 14))
+            }
             Text(text)
                 .textStyle(.bodySm400)
+            if hasTrailing {
+                Spacer(minLength: Theme.SpacingKey.sm.value)
+                if let actionTitle, let onAction {
+                    Button(action: onAction) {
+                        Text(actionTitle).textStyle(.labelSm600)
+                    }
+                    .buttonStyle(.plain)
+                }
+                if let onClose {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(themeKit: "Dismiss"))
+                }
+            }
         }
         .foregroundStyle(type.accent)
         .padding(.horizontal, style == .soft ? Theme.SpacingKey.sm.value : 0)

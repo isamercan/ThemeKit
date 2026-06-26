@@ -41,15 +41,30 @@ struct AccordionDemo: View {
 struct CalloutDemo: View {
     @State private var type: CalloutType = .success
     @State private var soft = false
+    @State private var showIcon = true
+    @State private var action = false
+    @State private var closable = false
+    @State private var dismissed = false
 
     var body: some View {
-        ComponentStage("Callout", inspector: [("type", "\(type)"), ("style", soft ? "soft" : "plain")]) {
-            Callout("Lorem ipsum placeholder text.", type: type, style: soft ? .soft : .plain)
+        ComponentStage("Callout", inspector: [("type", "\(type)"), ("style", soft ? "soft" : "plain"), ("dismissed", "\(dismissed)")]) {
+            if dismissed {
+                Button("Reset") { dismissed = false }.buttonStyle(.plain).foregroundStyle(Theme.shared.foreground(.fgHero))
+            } else {
+                Callout("Lorem ipsum placeholder text.", type: type, style: soft ? .soft : .plain,
+                        showIcon: showIcon,
+                        actionTitle: action ? "Undo" : nil,
+                        onAction: action ? { flash("Callout action") } : nil,
+                        onClose: closable ? { dismissed = true } : nil)
+            }
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Neutral").tag(CalloutType.neutral); Text("Info").tag(CalloutType.info); Text("Success").tag(CalloutType.success); Text("Warning").tag(CalloutType.warning); Text("Error").tag(CalloutType.error)
             }
             Toggle("Soft surface", isOn: $soft)
+            Toggle("Show icon", isOn: $showIcon)
+            Toggle("Action (Undo)", isOn: $action)
+            Toggle("Closable", isOn: $closable)
         }
     }
 }
