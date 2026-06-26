@@ -2,7 +2,7 @@
 # `make ci` is the same set of checks GitHub runs; see docs/CI.md.
 
 .DEFAULT_GOAL := help
-.PHONY: help ci ci-fast build test lint format hooks clean
+.PHONY: help ci ci-fast build test lint format hooks screenshots clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -28,6 +28,9 @@ format: ## Apply SwiftFormat
 
 hooks: ## Install the pre-push CI hook
 	@bash scripts/install-hooks.sh
+
+screenshots: ## Render component screenshots + rebuild the README gallery
+	@bash scripts/gen-screenshots.sh
 
 clean: ## Remove build artifacts
 	rm -rf .build .ci-test.log
