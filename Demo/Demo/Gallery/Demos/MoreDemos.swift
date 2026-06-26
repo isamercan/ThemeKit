@@ -916,6 +916,44 @@ struct CalendarDemo: View {
     }
 }
 
+struct DateFieldDemo: View {
+    private enum Style: String, CaseIterable { case abbreviated, numeric, long, full, relative, custom }
+    @State private var date: Date? = .now
+    @State private var styleSel: Style = .custom
+    @State private var withTime = false
+    @State private var clearable = true
+    @State private var enabled = true
+    @State private var error = false
+
+    private var style: DateFieldStyle {
+        switch styleSel {
+        case .abbreviated: return .abbreviated
+        case .numeric: return .numeric
+        case .long: return .long
+        case .full: return .full
+        case .relative: return .relative
+        case .custom: return .custom("EEE, d MMM")
+        }
+    }
+    private var messages: [InfoMessage] { error ? [InfoMessage("Tarih zorunlu", kind: .error)] : [] }
+
+    var body: some View {
+        ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
+            DateField(label: "Tarih", date: $date, style: style,
+                      components: withTime ? .dateAndTime : .date,
+                      infoMessages: messages, allowClear: clearable, isEnabled: enabled,
+                      leadingSystemImage: "calendar", accessibilityID: "demoDate")
+        } knobs: {
+            Text("style = display format (custom = \"EEE, d MMM\"). Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
+            Picker("Style", selection: $styleSel) { ForEach(Style.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
+            Toggle("With time", isOn: $withTime)
+            Toggle("Clearable", isOn: $clearable)
+            Toggle("Error message", isOn: $error)
+            Toggle("Enabled", isOn: $enabled)
+        }
+    }
+}
+
 struct DataTableDemo: View {
     private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: Double }
     private let rows = [
