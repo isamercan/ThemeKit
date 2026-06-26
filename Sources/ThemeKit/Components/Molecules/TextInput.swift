@@ -9,6 +9,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 public enum TextInputSize {
     case xsmall, small, medium, large
@@ -20,6 +23,30 @@ public enum TextInputSize {
         case .large: return 64
         }
     }
+}
+
+/// Platform-neutral keyboard hint. Maps to `UIKeyboardType` on iOS; ignored on macOS.
+public enum TextInputKeyboard {
+    case `default`, asciiCapable, numberPad, decimalPad, phonePad
+    case emailAddress, url, numbersAndPunctuation, webSearch
+}
+
+/// Platform-neutral semantic content type for autofill / password managers.
+/// Maps to `UITextContentType` on iOS; ignored on macOS.
+public enum TextInputContentType {
+    case name, givenName, familyName, username, password, newPassword, oneTimeCode
+    case emailAddress, telephoneNumber, fullStreetAddress, postalCode, creditCardNumber, url
+}
+
+/// Platform-neutral autocapitalization behavior. Maps to `TextInputAutocapitalization`
+/// on iOS; ignored on macOS.
+public enum TextInputCapitalization {
+    case never, characters, words, sentences
+}
+
+/// How the character counter reads: `12/50` (or `12`) vs. `38 left`.
+public enum TextInputCountStyle {
+    case count, remaining
 }
 
 /// Bundled configuration for a `TextInput` (reference "UI model" pattern).
@@ -39,6 +66,14 @@ public struct TextInputModel {
     public var infoMessages: [InfoMessage]
     public var accessibilityID: String?
     public var isEnabled: Bool
+    public var keyboardType: TextInputKeyboard
+    public var textContentType: TextInputContentType?
+    public var submitLabel: SubmitLabel
+    public var autocapitalization: TextInputCapitalization?
+    public var autocorrectionDisabled: Bool
+    public var hardLimit: Bool
+    public var countStyle: TextInputCountStyle
+    public var onSubmit: (() -> Void)?
 
     public init(
         label: String,
@@ -55,7 +90,15 @@ public struct TextInputModel {
         formatter: TextInputFormatter? = nil,
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        keyboardType: TextInputKeyboard = .default,
+        textContentType: TextInputContentType? = nil,
+        submitLabel: SubmitLabel = .return,
+        autocapitalization: TextInputCapitalization? = nil,
+        autocorrectionDisabled: Bool = false,
+        hardLimit: Bool = true,
+        countStyle: TextInputCountStyle = .count,
+        onSubmit: (() -> Void)? = nil
     ) {
         self.label = label
         self.placeholder = placeholder
@@ -72,6 +115,14 @@ public struct TextInputModel {
         self.infoMessages = infoMessages
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
+        self.keyboardType = keyboardType
+        self.textContentType = textContentType
+        self.submitLabel = submitLabel
+        self.autocapitalization = autocapitalization
+        self.autocorrectionDisabled = autocorrectionDisabled
+        self.hardLimit = hardLimit
+        self.countStyle = countStyle
+        self.onSubmit = onSubmit
     }
 }
 
@@ -112,7 +163,15 @@ public struct TextInput: View {
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
         externalFocus: Binding<Bool>? = nil,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        keyboardType: TextInputKeyboard = .default,
+        textContentType: TextInputContentType? = nil,
+        submitLabel: SubmitLabel = .return,
+        autocapitalization: TextInputCapitalization? = nil,
+        autocorrectionDisabled: Bool = false,
+        hardLimit: Bool = true,
+        countStyle: TextInputCountStyle = .count,
+        onSubmit: (() -> Void)? = nil
     ) {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
@@ -125,7 +184,10 @@ public struct TextInput: View {
             suffixSystemImage: suffixSystemImage, addonBefore: addonBefore, addonAfter: addonAfter,
             isSecure: isSecure, allowClear: allowClear,
             maxLength: maxLength, showCount: showCount, size: size, formatter: formatter,
-            infoMessages: messages, accessibilityID: accessibilityID, isEnabled: isEnabled
+            infoMessages: messages, accessibilityID: accessibilityID, isEnabled: isEnabled,
+            keyboardType: keyboardType, textContentType: textContentType, submitLabel: submitLabel,
+            autocapitalization: autocapitalization, autocorrectionDisabled: autocorrectionDisabled,
+            hardLimit: hardLimit, countStyle: countStyle, onSubmit: onSubmit
         )
     }
 
@@ -136,6 +198,26 @@ public struct TextInput: View {
     private var showsClear: Bool { model.allowClear && !text.isEmpty && model.isEnabled && !model.isSecure }
 
     private var hasAddons: Bool { model.addonBefore != nil || model.addonAfter != nil }
+    private var isOverLimit: Bool { Self.isOverLimit(count: text.count, maxLength: model.maxLength) }
+
+    /// Counter string for the given state (extracted for testing).
+    static func counterText(count: Int, maxLength: Int?, style: TextInputCountStyle) -> String {
+        switch style {
+        case .count:
+            if let maxLength { return "\(count)/\(maxLength)" }
+            return "\(count)"
+        case .remaining:
+            guard let maxLength else { return "\(count)" }
+            return String(themeKit: "\(maxLength - count) left")
+        }
+    }
+
+    /// Whether `count` exceeds `maxLength` — only reachable with a soft limit
+    /// (`hardLimit == false`), since a hard limit truncates before this is checked.
+    static func isOverLimit(count: Int, maxLength: Int?) -> Bool {
+        guard let maxLength else { return false }
+        return count > maxLength
+    }
 
     private var fieldContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -208,15 +290,15 @@ public struct TextInput: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             fieldBox
 
-            if !model.infoMessages.isEmpty || (model.showCount && model.maxLength != nil) {
+            if !model.infoMessages.isEmpty || model.showCount {
                 HStack(alignment: .firstTextBaseline) {
                     InfoMessageList(model.infoMessages)
                         .a11y(A11yElement.Field.message, in: model.accessibilityID)
                     Spacer(minLength: Theme.SpacingKey.sm.value)
-                    if model.showCount, let maxLength = model.maxLength {
-                        Text("\(text.count)/\(maxLength)")
+                    if model.showCount {
+                        Text(Self.counterText(count: text.count, maxLength: model.maxLength, style: model.countStyle))
                             .textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .foregroundStyle(isOverLimit ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textTertiary))
                             .monospacedDigit()
                     }
                 }
@@ -225,7 +307,7 @@ public struct TextInput: View {
         .onChange(of: text) { _, newValue in
             var v = newValue
             if let formatter = model.formatter { v = formatter(v) }
-            if let maxLength = model.maxLength, v.count > maxLength { v = String(v.prefix(maxLength)) }
+            if model.hardLimit, let maxLength = model.maxLength, v.count > maxLength { v = String(v.prefix(maxLength)) }
             if v != text { text = v }
         }
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
@@ -252,6 +334,12 @@ public struct TextInput: View {
         .foregroundStyle(model.isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
         .tint(Theme.shared.foreground(.fgHero))
         .disabled(!model.isEnabled)
+        .submitLabel(model.submitLabel)
+        .autocorrectionDisabled(model.autocorrectionDisabled)
+        .textInputTraits(keyboard: model.keyboardType,
+                         contentType: model.textContentType,
+                         capitalization: model.autocapitalization)
+        .onSubmit { model.onSubmit?() }
         .accessibilityLabel(model.label)
         .accessibilityValue(model.isSecure ? "" : text)
     }
@@ -300,19 +388,97 @@ public struct TextInput: View {
     }
 }
 
+// MARK: - Platform keyboard traits
+
+private extension View {
+    /// Applies keyboard / autofill / capitalization traits (iOS only; no-op on macOS).
+    @ViewBuilder
+    func textInputTraits(
+        keyboard: TextInputKeyboard,
+        contentType: TextInputContentType?,
+        capitalization: TextInputCapitalization?
+    ) -> some View {
+        #if os(iOS)
+        self.keyboardType(keyboard.uiKeyboardType)
+            .textContentType(contentType?.uiTextContentType)
+            .textInputAutocapitalization(capitalization?.swiftUIValue)
+        #else
+        self
+        #endif
+    }
+}
+
+#if os(iOS)
+private extension TextInputKeyboard {
+    var uiKeyboardType: UIKeyboardType {
+        switch self {
+        case .default: return .default
+        case .asciiCapable: return .asciiCapable
+        case .numberPad: return .numberPad
+        case .decimalPad: return .decimalPad
+        case .phonePad: return .phonePad
+        case .emailAddress: return .emailAddress
+        case .url: return .URL
+        case .numbersAndPunctuation: return .numbersAndPunctuation
+        case .webSearch: return .webSearch
+        }
+    }
+}
+
+private extension TextInputContentType {
+    var uiTextContentType: UITextContentType {
+        switch self {
+        case .name: return .name
+        case .givenName: return .givenName
+        case .familyName: return .familyName
+        case .username: return .username
+        case .password: return .password
+        case .newPassword: return .newPassword
+        case .oneTimeCode: return .oneTimeCode
+        case .emailAddress: return .emailAddress
+        case .telephoneNumber: return .telephoneNumber
+        case .fullStreetAddress: return .fullStreetAddress
+        case .postalCode: return .postalCode
+        case .creditCardNumber: return .creditCardNumber
+        case .url: return .URL
+        }
+    }
+}
+
+private extension TextInputCapitalization {
+    var swiftUIValue: TextInputAutocapitalization {
+        switch self {
+        case .never: return .never
+        case .characters: return .characters
+        case .words: return .words
+        case .sentences: return .sentences
+        }
+    }
+}
+#endif
+
 #Preview {
     struct Demo: View {
         @State var email = ""
         @State var pass = ""
+        @State var bio = ""
         private var emailMessages: [InfoMessage] {
             Validator.validate(email, [.required(), .email()])
         }
         var body: some View {
             VStack(spacing: 16) {
+                // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
                 TextInput("Email", text: $email, leadingSystemImage: "envelope",
-                          allowClear: true, infoMessages: emailMessages, accessibilityID: "loginEmail")
+                          allowClear: true, infoMessages: emailMessages, accessibilityID: "loginEmail",
+                          keyboardType: .emailAddress, textContentType: .emailAddress,
+                          submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
+                // Password manager autofill on a secure field.
                 TextInput(TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true,
-                                         accessibilityID: "loginPass"), text: $pass)
+                                         accessibilityID: "loginPass", textContentType: .password,
+                                         submitLabel: .go), text: $pass)
+                // Soft limit: can exceed 80, counter turns red instead of truncating.
+                TextInput("Bio", text: $bio, maxLength: 80, showCount: true,
+                          hardLimit: false, countStyle: .remaining)
             }
             .padding()
         }

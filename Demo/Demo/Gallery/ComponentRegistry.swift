@@ -100,7 +100,7 @@ enum ComponentRegistry {
         .knob("TreeSelect", .molecules, demo: TreeSelectDemo(), usage: #"TreeSelect(label: "Cities", nodes: tree, selection: $set, initiallyExpanded: ["tr"])"#),
         .knob("SelectBox", .molecules, demo: SelectBoxDemo(), usage: #"SelectBox(label: "Country", options: items, selection: $sel) { $0 }"#),
         .knob("Slider", .molecules, demo: SliderDemo(), usage: #"Slider(value: $v, in: 0...8, marks: [0: "0", 8: "Max"], showValueTooltip: true)"#),
-        .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput(TextInputModel(label: "Email", infoMessages: Validator.validate(t, [.required(), .email()]), accessibilityID: "email"), text: $t)"##),
+        .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput("Email", text: $t, keyboardType: .emailAddress, textContentType: .emailAddress, submitLabel: .next)"##),
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on, isLoading: false, onSystemImage: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
