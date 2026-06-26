@@ -11,12 +11,14 @@ import SwiftUI
 public struct QuantityStepper: View {
     @Binding private var value: Int
     private let range: ClosedRange<Int>
+    private let step: Int
     private let accessibilityID: String?
     private let isEnabled: Bool
 
-    public init(value: Binding<Int>, range: ClosedRange<Int> = 0...99, accessibilityID: String? = nil, isEnabled: Bool = true) {
+    public init(value: Binding<Int>, range: ClosedRange<Int> = 0...99, step: Int = 1, accessibilityID: String? = nil, isEnabled: Bool = true) {
         self._value = value
         self.range = range
+        self.step = max(1, step)
         self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
     }
@@ -24,7 +26,7 @@ public struct QuantityStepper: View {
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             stepButton(systemName: "minus", enabled: value > range.lowerBound) {
-                value = max(range.lowerBound, value - 1)
+                value = max(range.lowerBound, value - step)
             }
 
             Text("\(value)")
@@ -34,7 +36,7 @@ public struct QuantityStepper: View {
                 .monospacedDigit()
 
             stepButton(systemName: "plus", enabled: value < range.upperBound) {
-                value = min(range.upperBound, value + 1)
+                value = min(range.upperBound, value + step)
             }
         }
         .padding(.horizontal, Theme.SpacingKey.sm.value)
