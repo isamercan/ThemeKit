@@ -106,6 +106,32 @@ private struct TooltipPlacement: ViewModifier {
     }
 }
 
+/// Binding-driven tooltip presentation — gates its fade on `microAnimations`.
+private struct BindingTooltip: ViewModifier {
+    let text: String
+    @Binding var isPresented: Bool
+    let edge: TooltipEdge
+    let style: BadgeStyle?
+    let maxWidth: CGFloat?
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: edge.alignment) {
+                if isPresented {
+                    TooltipBubble(text: text, edge: edge, style: style, maxWidth: maxWidth)
+                        .fixedSize(horizontal: maxWidth == nil, vertical: true)
+                        .modifier(TooltipPlacement(edge: edge))
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+            }
+            .animation(motion, value: isPresented)
+    }
+}
+
 /// Wraps an anchor so a tap toggles its own tooltip — no external binding needed.
 private struct SelfTooltip: ViewModifier {
     let text: String
@@ -134,16 +160,7 @@ public extension View {
         style: BadgeStyle? = nil,
         maxWidth: CGFloat? = nil
     ) -> some View {
-        overlay(alignment: edge.alignment) {
-            if isPresented.wrappedValue {
-                TooltipBubble(text: text, edge: edge, style: style, maxWidth: maxWidth)
-                    .fixedSize(horizontal: maxWidth == nil, vertical: true)
-                    .modifier(TooltipPlacement(edge: edge))
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-        }
-        .animation(Motion.fast.animation, value: isPresented.wrappedValue)
+        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, style: style, maxWidth: maxWidth))
     }
 
     /// Self-managed tooltip: tap the anchor to toggle it (tap again to dismiss).

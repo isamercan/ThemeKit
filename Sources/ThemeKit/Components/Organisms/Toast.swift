@@ -16,6 +16,10 @@ private struct ToastModifier: ViewModifier {
     let type: AlertToastType
     let autoDismiss: Double?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
+
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
             if isPresented {
@@ -29,7 +33,7 @@ private struct ToastModifier: ViewModifier {
                     }
             }
         }
-        .animation(Motion.base.animation, value: isPresented)
+        .animation(motion, value: isPresented)
     }
 }
 

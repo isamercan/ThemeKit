@@ -23,6 +23,9 @@ private struct DrawerContainer<DrawerContent: View>: View {
     @ViewBuilder let content: () -> DrawerContent
 
     @State private var dragX: CGFloat = 0
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     var body: some View {
         ZStack(alignment: edge == .leading ? .leading : .trailing) {
@@ -58,7 +61,7 @@ private struct DrawerContainer<DrawerContent: View>: View {
                 if abs(dragX) > width * 0.33 {
                     onDismiss()
                 } else {
-                    withAnimation(Motion.fast.animation) { dragX = 0 }
+                    withAnimation(motion) { dragX = 0 }
                 }
             }
     }
@@ -71,6 +74,10 @@ private struct DrawerModifier<DrawerContent: View>: ViewModifier {
     let dismissOnScrimTap: Bool
     @ViewBuilder let content: () -> DrawerContent
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
+
     func body(content base: Content) -> some View {
         base.overlay {
             if isPresented {
@@ -78,7 +85,7 @@ private struct DrawerModifier<DrawerContent: View>: ViewModifier {
                                 onDismiss: { isPresented = false }, content: content)
             }
         }
-        .animation(Motion.base.animation, value: isPresented)
+        .animation(motion, value: isPresented)
     }
 }
 
@@ -136,6 +143,9 @@ public final class DrawerPresenter: ObservableObject {
 
 private struct DrawerHostModifier: ViewModifier {
     @StateObject private var presenter = DrawerPresenter()
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content
@@ -147,7 +157,7 @@ private struct DrawerHostModifier: ViewModifier {
                                     onDismiss: { presenter.dismiss() }) { request.content }
                 }
             }
-            .animation(Motion.base.animation, value: presenter.current?.id)
+            .animation(motion, value: presenter.current?.id)
     }
 }
 
