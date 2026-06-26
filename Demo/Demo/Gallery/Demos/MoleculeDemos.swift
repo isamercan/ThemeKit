@@ -336,13 +336,15 @@ struct InputNumberDemo: View {
 }
 
 struct QuantityStepperDemo: View {
-    @State private var value = 1
+    @State private var value = 0
+    @State private var bigStep = false
 
     var body: some View {
-        ComponentStage("QuantityStepper", inspector: [("value", "\(value)")]) {
-            QuantityStepper(value: $value, range: 0...10)
+        ComponentStage("QuantityStepper", inspector: [("value", "\(value)"), ("step", bigStep ? "5" : "1")]) {
+            QuantityStepper(value: $value, range: 0...100, step: bigStep ? 5 : 1)
         } knobs: {
-            Stepper("Value: \(value)", value: $value, in: 0...10)
+            Toggle("Step 5", isOn: $bigStep)
+            Stepper("Value: \(value)", value: $value, in: 0...100)
         }
     }
 }
