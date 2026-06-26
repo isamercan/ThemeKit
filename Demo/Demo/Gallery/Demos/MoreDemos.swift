@@ -274,14 +274,21 @@ struct OTPDemo: View {
 struct TooltipDemo: View {
     @State private var shown = true
     @State private var edge: TooltipEdge = .top
+    @State private var colored = false
     var body: some View {
-        ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)")]) {
+        ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)"), ("style", colored ? "info" : "default")]) {
             Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
-                .tooltip("Helpful hint", isPresented: $shown, edge: edge)
-                .padding(.vertical, 40)
+                .tooltip("Helpful hint", isPresented: $shown, edge: edge, style: colored ? .info : nil)
+                .padding(60)
         } knobs: {
             Toggle("Presented", isOn: $shown)
-            Picker("Edge", selection: $edge) { Text("Top").tag(TooltipEdge.top); Text("Bottom").tag(TooltipEdge.bottom) }.pickerStyle(.segmented)
+            Toggle("Colored (info)", isOn: $colored)
+            Picker("Edge", selection: $edge) {
+                Text("Top").tag(TooltipEdge.top)
+                Text("Bottom").tag(TooltipEdge.bottom)
+                Text("Leading").tag(TooltipEdge.leading)
+                Text("Trailing").tag(TooltipEdge.trailing)
+            }.pickerStyle(.segmented)
         }
     }
 }
