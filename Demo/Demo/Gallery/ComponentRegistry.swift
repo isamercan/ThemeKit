@@ -87,7 +87,7 @@ enum ComponentRegistry {
         .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip(isSelected: $on, text: "Suit", price: "₺899", rating: 4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
         .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8, stepText: .slash)"#),
         .knob("ThemeController", .molecules, demo: ThemeControllerDemo(), usage: #"ThemeController(options: [.init(name: "oceanTheme", label: "Ocean")], selectedName: $name)"#),
-        .knob("Pagination", .molecules, demo: PaginationDemo(), usage: #"Pagination(current: $page, total: 10, simple: false) { _, t in "\(t) pages" }"#),
+        .knob("Pagination", .molecules, demo: PaginationDemo(), usage: #"Pagination(current: $page, total: 50, siblingCount: 2, showJumper: true)"#),
         .knob("Stat", .molecules, demo: StatDemo(), usage: #"Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))"#),
         .knob("Steps", .molecules, demo: StepsDemo(), usage: #"Steps([.init("Cart", description: "2 items", state: .done), .init("Pay", state: .error)]) { active = $0 }"#),
         .knob("QuantityStepper", .molecules, demo: QuantityStepperDemo(), usage: #"QuantityStepper(value: $qty, range: 0...10)"#),
