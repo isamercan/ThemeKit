@@ -532,12 +532,16 @@ struct ListRowDemo: View {
 struct NotificationDemo: View {
     @State private var unread = true
     @State private var actions = true
+    @State private var closable = false
+    @State private var typed = false
+    private var type: FeedbackKind? { typed ? .success : nil }
     var body: some View {
-        ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)")]) {
+        ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("type", typed ? "success" : "default")]) {
             if actions {
                 NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
                                  message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
-                                 date: "5 Aralık 2024", isUnread: unread) {
+                                 date: "5 Aralık 2024", isUnread: unread, type: type,
+                                 onClose: closable ? { flash("Notification kapatıldı") } : nil) {
                     ButtonGroup(.horizontal) {
                         SecondaryButton("Sonra", size: .small, isContentWidth: true) { flash("Notification: Sonra") }
                         PrimaryButton("İncele", size: .small, isContentWidth: true) { flash("Notification: İncele") }
@@ -546,11 +550,14 @@ struct NotificationDemo: View {
             } else {
                 NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
                                  message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
-                                 date: "5 Aralık 2024", isUnread: unread)
+                                 date: "5 Aralık 2024", isUnread: unread, type: type,
+                                 onClose: closable ? { flash("Notification kapatıldı") } : nil)
             }
         } knobs: {
             Toggle("Unread", isOn: $unread)
             Toggle("Actions", isOn: $actions)
+            Toggle("Type (success icon)", isOn: $typed)
+            Toggle("Closable", isOn: $closable)
         }
     }
 }
