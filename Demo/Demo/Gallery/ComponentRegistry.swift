@@ -74,7 +74,7 @@ enum ComponentRegistry {
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save", color: .success, variant: .soft, size: .medium, shape: .pill) { }"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on, infoMessages: error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
-        .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Guests", value: $count, range: 1...9)"#),
+        .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "₺")"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text, characterLimit: 200)"#),
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")])"#),
