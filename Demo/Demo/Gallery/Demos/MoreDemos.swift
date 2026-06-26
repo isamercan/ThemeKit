@@ -312,10 +312,20 @@ struct ToggleGroupDemo: View {
 
 struct AutocompleteDemo: View {
     @State private var text = ""
+    @State private var asyncMode = false
+    private let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
     var body: some View {
-        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\"")]) {
-            Autocomplete(label: "Destination", text: $text, suggestions: ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"])
+        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static")]) {
+            if asyncMode {
+                Autocomplete(label: "Destination", text: $text, suggest: { query in
+                    try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
+                    return cities.filter { $0.localizedCaseInsensitiveContains(query) }
+                })
+            } else {
+                Autocomplete(label: "Destination", text: $text, suggestions: cities)
+            }
         } knobs: {
+            Toggle("Async (remote-style)", isOn: $asyncMode)
             Text("Type to filter suggestions.").font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -533,22 +543,32 @@ struct GalleryDemo: View {
 }
 
 struct UploadDemo: View {
-    @State private var done = true
-    @State private var failed = false
+    private struct DemoUploadError: LocalizedError { var errorDescription: String? { "Dosya çok büyük" } }
 
-    private var files: [UploadFile] {
-        var f = [UploadFile(name: "room-1.jpg", status: .uploading(0.6))]
-        if done { f.append(UploadFile(name: "room-2.jpg", status: .done)) }
-        if failed { f.append(UploadFile(name: "huge.jpg", status: .failed("Dosya çok büyük"))) }
-        return f
-    }
+    @StateObject private var uploads = UploadController()
+    @State private var counter = 0
 
     var body: some View {
-        ComponentStage("Upload", inspector: [("files", "\(files.count)")]) {
-            Upload(files: files)
+        ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)")]) {
+            UploadList(controller: uploads) { start(fail: false) }
         } knobs: {
-            Toggle("Uploaded item", isOn: $done)
-            Toggle("Failed item", isOn: $failed)
+            Button("Simulate upload") { start(fail: false) }
+            Button("Simulate failure") { start(fail: true) }
+            Button("Clear") { uploads.files.map(\.id).forEach { uploads.remove($0) } }
+        }
+    }
+
+    private func start(fail: Bool) {
+        counter += 1
+        let name = "photo-\(counter).jpg"
+        Task {
+            await uploads.upload(name: name) { progress in
+                for step in 1 ... 5 {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    progress(Double(step) / 5)
+                }
+                if fail { throw DemoUploadError() }
+            }
         }
     }
 }
@@ -855,22 +875,52 @@ struct CalendarDemo: View {
 }
 
 struct DataTableDemo: View {
-    private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: String }
+    private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: Double }
     private let rows = [
-        Booking(hotel: "Grand Hotel", nights: 3, price: "₺4.250"),
-        Booking(hotel: "Sea Resort", nights: 5, price: "₺7.800"),
-        Booking(hotel: "City Inn", nights: 2, price: "₺1.900"),
+        Booking(hotel: "Grand Hotel", nights: 3, price: 4250),
+        Booking(hotel: "Sea Resort", nights: 5, price: 7800),
+        Booking(hotel: "City Inn", nights: 2, price: 1900),
     ]
     @State private var striped = true
+    @State private var selectable = false
+    @State private var selected: Set<UUID> = []
     var body: some View {
-        ComponentStage("DataTable", inspector: [("rows", "\(rows.count)"), ("striped", "\(striped)")]) {
+        ComponentStage("DataTable", inspector: [("rows", "\(rows.count)"), ("selected", "\(selected.count)")]) {
             DataTable(columns: [
-                .init("Hotel") { $0.hotel },
-                .init("Nights", align: .center) { "\($0.nights)" },
-                .init("Price", align: .trailing) { $0.price },
-            ], rows: rows, striped: striped)
+                .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
+                .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
+                .init("Price", align: .trailing, sortKey: { .number($0.price) }) { "₺\(Int($0.price))" },
+            ], rows: rows, striped: striped, selection: selectable ? $selected : nil)
         } knobs: {
             Toggle("Striped", isOn: $striped)
+            Toggle("Selectable rows", isOn: $selectable)
+            Text("Tap a column header to sort.").font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct BottomSheetDemo: View {
+    @EnvironmentObject private var sheet: SheetPresenter
+    @State private var showDeclarative = false
+    var body: some View {
+        ComponentStage("BottomSheet") {
+            VStack(spacing: 12) {
+                PrimaryButton("Imperative present") {
+                    sheet.present(detents: [.height(260), .large]) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Filters").textStyle(.headingSm)
+                            Text("Presented via SheetPresenter — no local binding.")
+                                .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                        }
+                    }
+                }
+                ThemeButton("Declarative sheet", variant: .outline) { showDeclarative = true }
+            }
+            .bottomSheet(isPresented: $showDeclarative, detents: [.medium]) {
+                Text("Declarative .bottomSheet with a [.medium] detent.").textStyle(.bodyBase400)
+            }
+        } knobs: {
+            Text("sheetHost() is installed at the app root.").font(.footnote).foregroundStyle(.secondary)
         }
     }
 }

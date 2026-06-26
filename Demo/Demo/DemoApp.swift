@@ -16,6 +16,7 @@ struct DemoApp: App {
             ContentView()
                 .environmentObject(themeStore)
                 .feedbackHost()       // installs the shared FeedbackPresenter + overlays
+                .sheetHost()          // installs the shared SheetPresenter
                 // env-only (no root rebuild) so the in-session Configurator sheet
                 // isn't torn down mid-edit; screens observe Theme via @ThemeContext.
                 .themeKit(reactToRuntimeChanges: false)
