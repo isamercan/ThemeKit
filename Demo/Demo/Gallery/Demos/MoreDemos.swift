@@ -1595,11 +1595,12 @@ struct ListDemo: View {
     @State private var bordered = true
     @State private var split = true
     @State private var loading = false
+    @State private var empty = false
 
     var body: some View {
-        ComponentStage("List", inspector: [("count", "\(rows.count)"), ("bordered", "\(bordered)"), ("loading", "\(loading)")]) {
-            ListView(rows, header: withHeader ? "Ayarlar" : nil, footer: withHeader ? "\(rows.count) öğe" : nil,
-                     bordered: bordered, loading: loading, split: split) { row in
+        ComponentStage("List", inspector: [("count", "\(empty ? 0 : rows.count)"), ("bordered", "\(bordered)"), ("empty", "\(empty)")]) {
+            ListView(empty ? [] : rows, header: withHeader ? "Ayarlar" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) öğe" : nil,
+                     bordered: bordered, loading: loading, split: split, emptyText: "Henüz ayar yok") { row in
                 ListRow(row.title, subtitle: row.subtitle, leadingSystemImage: row.icon, action: { flash("List: \(row.title)") })
             }
         } knobs: {
@@ -1607,6 +1608,7 @@ struct ListDemo: View {
             Toggle("Bordered", isOn: $bordered)
             Toggle("Split (dividers)", isOn: $split)
             Toggle("Loading (skeleton)", isOn: $loading)
+            Toggle("Empty (no items)", isOn: $empty)
         }
     }
 }
