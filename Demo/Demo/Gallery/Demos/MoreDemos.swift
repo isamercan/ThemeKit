@@ -721,13 +721,16 @@ struct StepsDemo: View {
 }
 
 struct BreadcrumbsDemo: View {
-    @State private var depth = 4.0
-    private let all = ["Home", "Hotels", "İstanbul", "Grand Hotel"]
+    @State private var depth = 6.0
+    @State private var collapse = true
+    private let all = ["Home", "Hotels", "Turkey", "Marmara", "İstanbul", "Grand Hotel"]
     var body: some View {
-        ComponentStage("Breadcrumbs", inspector: [("depth", "\(Int(depth))")]) {
-            Breadcrumbs(all.prefix(Int(depth)).enumerated().map { i, t in .init(t, action: i < Int(depth) - 1 ? { flash("Breadcrumb: \(t)") } : nil) })
+        ComponentStage("Breadcrumbs", inspector: [("depth", "\(Int(depth))"), ("maxItems", collapse ? "4" : "—")]) {
+            Breadcrumbs(all.prefix(Int(depth)).enumerated().map { i, t in .init(t, action: i < Int(depth) - 1 ? { flash("Breadcrumb: \(t)") } : nil) },
+                        maxItems: collapse ? 4 : nil)
         } knobs: {
-            Stepper("Depth: \(Int(depth))", value: $depth, in: 1...4)
+            Stepper("Depth: \(Int(depth))", value: $depth, in: 1...6)
+            Toggle("Collapse middle (maxItems 4 → …)", isOn: $collapse)
         }
     }
 }

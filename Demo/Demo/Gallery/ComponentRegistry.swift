@@ -77,7 +77,7 @@ enum ComponentRegistry {
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "₺")"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text, characterLimit: 200)"#),
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
-        .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")])"#),
+        .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")], maxItems: 4)"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
         .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField(label: "Check-in", date: $date, style: .custom("EEE, d MMM"), allowClear: true)"##),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact", helper: "…") { inputs }"#),
