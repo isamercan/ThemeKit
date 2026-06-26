@@ -18,23 +18,55 @@ public struct SegmentItem {
     }
 }
 
+/// Vertical sizing of the segments. (Ant Segmented `size`.)
+public enum SegmentedSize {
+    case small, medium, large
+
+    var verticalPadding: CGFloat {
+        switch self {
+        case .small: return Theme.SpacingKey.xs.value
+        case .medium: return Theme.SpacingKey.sm.value
+        case .large: return Theme.SpacingKey.md.value
+        }
+    }
+}
+
 public struct SegmentedControl: View {
     private let items: [SegmentItem]
     @Binding private var selection: Int
+    private let block: Bool
+    private let size: SegmentedSize
+    private let isEnabled: Bool
     private let accessibilityID: String?
 
     @Namespace private var pill
 
-    public init(_ items: [SegmentItem], selection: Binding<Int>, accessibilityID: String? = nil) {
+    public init(
+        _ items: [SegmentItem],
+        selection: Binding<Int>,
+        block: Bool = true,
+        size: SegmentedSize = .medium,
+        isEnabled: Bool = true,
+        accessibilityID: String? = nil
+    ) {
         self.items = items
         self._selection = selection
+        self.block = block
+        self.size = size
+        self.isEnabled = isEnabled
         self.accessibilityID = accessibilityID
     }
 
-    public init(_ items: [String], selection: Binding<Int>, accessibilityID: String? = nil) {
-        self.items = items.map { SegmentItem($0) }
-        self._selection = selection
-        self.accessibilityID = accessibilityID
+    public init(
+        _ items: [String],
+        selection: Binding<Int>,
+        block: Bool = true,
+        size: SegmentedSize = .medium,
+        isEnabled: Bool = true,
+        accessibilityID: String? = nil
+    ) {
+        self.init(items.map { SegmentItem($0) }, selection: selection,
+                  block: block, size: size, isEnabled: isEnabled, accessibilityID: accessibilityID)
     }
 
     public var body: some View {
@@ -51,8 +83,9 @@ public struct SegmentedControl: View {
                         Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
                     }
                     .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Theme.SpacingKey.sm.value)
+                    .frame(maxWidth: block ? .infinity : nil)
+                    .padding(.vertical, size.verticalPadding)
+                    .padding(.horizontal, Theme.SpacingKey.md.value)
                     .background {
                         if isActive {
                             RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
@@ -64,12 +97,13 @@ public struct SegmentedControl: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(!item.isEnabled)
+                .disabled(!isEnabled || !item.isEnabled)
             }
         }
         .padding(4)
         .background(Theme.shared.background(.bgElevatorPrimary),
                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .opacity(isEnabled ? 1 : 0.5)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(items.indices.contains(selection) ? items[selection].title : "")
     }
