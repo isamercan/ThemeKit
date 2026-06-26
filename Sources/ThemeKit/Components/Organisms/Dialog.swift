@@ -25,6 +25,8 @@ struct DialogCard: View {
     var onClose: (() -> Void)? = nil
     /// Maximum card width (default 320).
     var width: CGFloat? = nil
+    /// While true the primary button spins and the secondary is disabled.
+    var isPrimaryLoading: Bool = false
 
     var body: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
@@ -46,12 +48,12 @@ struct DialogCard: View {
 
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 if let primaryColor {
-                    ThemeButton(primaryTitle, color: primaryColor, block: true, action: onPrimary)
+                    ThemeButton(primaryTitle, color: primaryColor, block: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 } else {
-                    PrimaryButton(primaryTitle, isContentWidth: true, action: onPrimary)
+                    PrimaryButton(primaryTitle, isContentWidth: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 }
                 if let secondaryTitle, let onSecondary {
-                    OutlineButton(secondaryTitle, isContentWidth: true, action: onSecondary)
+                    OutlineButton(secondaryTitle, isContentWidth: true, isEnabled: .constant(!isPrimaryLoading), action: onSecondary)
                 }
             }
         }
@@ -77,7 +79,7 @@ private struct DialogModifier: ViewModifier {
     let title: String
     let message: String?
     let primaryTitle: String
-    let onPrimary: () -> Void
+    let onPrimary: () async -> Void
     let secondaryTitle: String?
     let onSecondary: (() -> Void)?
     let kind: FeedbackKind?
@@ -85,23 +87,35 @@ private struct DialogModifier: ViewModifier {
     let maskClosable: Bool
     let width: CGFloat?
 
+    @State private var primaryLoading = false
+
     func body(content: Content) -> some View {
         content.overlay {
             if isPresented {
                 ZStack {
                     Theme.shared.background(.bgTertiary).opacity(0.4)
                         .ignoresSafeArea()
-                        .onTapGesture { if maskClosable { isPresented = false } }
+                        .onTapGesture { if maskClosable, !primaryLoading { isPresented = false } }
                     DialogCard(
                         title: title, message: message,
                         primaryTitle: primaryTitle,
-                        onPrimary: { isPresented = false; onPrimary() },
+                        onPrimary: {
+                            // Keep the dialog open with a spinner until the (possibly
+                            // async) work resolves, then dismiss. (Ant Modal confirmLoading.)
+                            Task {
+                                primaryLoading = true
+                                await onPrimary()
+                                primaryLoading = false
+                                isPresented = false
+                            }
+                        },
                         secondaryTitle: secondaryTitle,
                         onSecondary: onSecondary.map { handler in { isPresented = false; handler() } },
                         primaryColor: kind?.semanticColor,
                         kind: kind,
-                        onClose: closable ? { isPresented = false } : nil,
-                        width: width
+                        onClose: (closable && !primaryLoading) ? { isPresented = false } : nil,
+                        width: width,
+                        isPrimaryLoading: primaryLoading
                     )
                     .padding(Theme.SpacingKey.lg.value)
                 }
@@ -119,7 +133,7 @@ public extension View {
         title: String,
         message: String? = nil,
         primaryTitle: String,
-        onPrimary: @escaping () -> Void = {},
+        onPrimary: @escaping () async -> Void = {},
         secondaryTitle: String? = nil,
         onSecondary: (() -> Void)? = nil,
         kind: FeedbackKind? = nil,

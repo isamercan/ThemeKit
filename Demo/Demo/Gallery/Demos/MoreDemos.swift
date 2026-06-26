@@ -1765,15 +1765,23 @@ struct ChipsDemo: View {
 struct DialogDemo: View {
     @State private var show = false
     @State private var accepted = false
+    @State private var showConfirm = false
+    @State private var deleted = false
     var body: some View {
-        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)")]) {
+        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
                 PrimaryButton("Sözleşmeyi aç", isContentWidth: true) { show = true; flash("Dialog açıldı") }
+                OutlineButton("Hesabı sil (async)", isContentWidth: true) { deleted = false; showConfirm = true }
                 Text(accepted ? "Kabul edildi ✓" : "Henüz onaylanmadı")
                     .textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textSecondary))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 220)
+            .dialog(isPresented: $showConfirm, title: "Hesabı sil?", message: "Bu işlem geri alınamaz.",
+                    primaryTitle: "Sil", onPrimary: {
+                        try? await Task.sleep(nanoseconds: 1_200_000_000)   // async work; OK spins
+                        deleted = true; flash("Hesap silindi")
+                    }, secondaryTitle: "Vazgeç", onSecondary: { flash("Vazgeçildi") }, kind: .error)
             .dialog(isPresented: $show, title: "Kullanım Koşulları", afterClose: {}) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(1...8, id: \.self) { i in
