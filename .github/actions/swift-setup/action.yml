@@ -1,0 +1,36 @@
+name: Swift setup
+description: >-
+  Select the newest stable Xcode and restore the SwiftPM + DerivedData caches.
+  Shared by every macOS Swift job so the setup lives in one place.
+
+inputs:
+  cache-key:
+    description: Cache namespace (e.g. "spm", "ios", "api") so jobs don't clobber each other's caches.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # The package needs a recent Swift toolchain; pick the newest stable Xcode the
+    # runner image ships rather than pinning (a runner bump shouldn't break us).
+    - name: Select Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    # Cache both the SwiftPM build products AND xcodebuild's DerivedData. Without
+    # the DerivedData cache the iOS / API jobs recompile the whole package from
+    # scratch every run — the single biggest avoidable chunk of macOS minutes.
+    - name: Restore caches (SwiftPM + DerivedData)
+      uses: actions/cache@v4
+      with:
+        path: |
+          .build
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ inputs.cache-key }}-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+        restore-keys: |
+          ${{ inputs.cache-key }}-${{ runner.os }}-
+
+    - name: Swift version
+      shell: bash
+      run: swift --version
