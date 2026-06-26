@@ -73,22 +73,29 @@ public struct DataTable<Row: Identifiable>: View {
     private let rows: [Row]
     private let striped: Bool
     private let selection: Binding<Set<Row.ID>>?
+    private let pageSize: Int?
+    private let isLoading: Bool
     private let onRowTap: ((Row) -> Void)?
 
     @State private var sortColumn: Int?
     @State private var sortAscending = true
+    @State private var currentPage = 1
 
     public init(
         columns: [Column],
         rows: [Row],
         striped: Bool = true,
         selection: Binding<Set<Row.ID>>? = nil,
+        pageSize: Int? = nil,
+        isLoading: Bool = false,
         onRowTap: ((Row) -> Void)? = nil
     ) {
         self.columns = columns
         self.rows = rows
         self.striped = striped
         self.selection = selection
+        self.pageSize = pageSize
+        self.isLoading = isLoading
         self.onRowTap = onRowTap
     }
 
@@ -100,19 +107,44 @@ public struct DataTable<Row: Identifiable>: View {
 
     private var isInteractive: Bool { selection != nil || onRowTap != nil }
 
+    private var pageCount: Int { Self.pageCount(rowCount: displayRows.count, pageSize: pageSize) }
+    private var pagedRows: [Row] {
+        Array(displayRows[Self.pageRange(rowCount: displayRows.count, pageSize: pageSize, page: currentPage)])
+    }
+    private func clampPage() { if currentPage > pageCount { currentPage = pageCount } }
+
     public var body: some View {
+        VStack(spacing: Theme.SpacingKey.sm.value) {
+            tableCard
+            if pageSize != nil, pageCount > 1 {
+                HStack {
+                    Spacer()
+                    Pagination(current: $currentPage, total: pageCount)
+                }
+            }
+        }
+        .onChange(of: rows.count) { _, _ in clampPage() }
+        .onChange(of: sortColumn) { _, _ in currentPage = 1 }
+    }
+
+    private var tableCard: some View {
         VStack(spacing: 0) {
             headerRow
-            if displayRows.isEmpty {
+            if isLoading {
+                loadingRow
+            } else if displayRows.isEmpty {
                 emptyRow
             } else {
-                ForEach(Array(displayRows.enumerated()), id: \.element.id) { index, row in
+                ForEach(Array(pagedRows.enumerated()), id: \.element.id) { index, row in
                     dataRow(row, index: index)
                 }
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
+        )
     }
 
     // MARK: - Header
@@ -198,6 +230,34 @@ public struct DataTable<Row: Identifiable>: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.SpacingKey.lg.value)
             .background(Theme.shared.background(.bgWhite))
+    }
+
+    private var loadingRow: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Spinner(size: IconSize.sm.value, lineWidth: 2)
+            Text(String(themeKit: "Loading…"))
+                .textStyle(.bodyBase400)
+                .foregroundStyle(Theme.shared.text(.textTertiary))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.SpacingKey.lg.value)
+        .background(Theme.shared.background(.bgWhite))
+    }
+
+    // MARK: - Pure paging (extracted for testing)
+
+    /// Number of pages for `rowCount` items at `pageSize` (1 when paging is off).
+    static func pageCount(rowCount: Int, pageSize: Int?) -> Int {
+        guard let size = pageSize, size > 0, rowCount > 0 else { return 1 }
+        return (rowCount + size - 1) / size
+    }
+
+    /// Index range of the rows shown on `page` (clamped); the full range when off.
+    static func pageRange(rowCount: Int, pageSize: Int?, page: Int) -> Range<Int> {
+        guard let size = pageSize, size > 0, rowCount > 0 else { return 0..<rowCount }
+        let clamped = min(max(page, 1), pageCount(rowCount: rowCount, pageSize: size))
+        let start = (clamped - 1) * size
+        return start..<min(start + size, rowCount)
     }
 }
 
