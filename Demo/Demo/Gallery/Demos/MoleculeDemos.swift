@@ -276,19 +276,27 @@ struct RangeSliderDemo: View {
 struct SegmentedControlDemo: View {
     @State private var selection = 0
     @State private var icons = false
+    @State private var block = true
+    @State private var enabled = true
+    @State private var sizeIdx = 1   // 0 small, 1 medium, 2 large
+    private var size: SegmentedSize { sizeIdx == 0 ? .small : sizeIdx == 2 ? .large : .medium }
 
     var body: some View {
-        ComponentStage("SegmentedControl", inspector: [("selection", "\(selection)"), ("icons", "\(icons)")]) {
+        ComponentStage("SegmentedControl", inspector: [("selection", "\(selection)"), ("block", "\(block)"), ("size", sizeIdx == 0 ? "small" : sizeIdx == 2 ? "large" : "medium")]) {
             if icons {
                 SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
                                   SegmentItem("Grid", systemImage: "square.grid.2x2"),
-                                  SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $selection)
+                                  SegmentItem("Map", systemImage: "map", isEnabled: false)],
+                                 selection: $selection, block: block, size: size, isEnabled: enabled)
             } else {
-                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection)
+                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection, block: block, size: size, isEnabled: enabled)
             }
         } knobs: {
             Stepper("Selection: \(selection)", value: $selection, in: 0...2)
             Toggle("Icons + disabled option", isOn: $icons)
+            Toggle("Block (full width)", isOn: $block)
+            Toggle("Enabled", isOn: $enabled)
+            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
         }
     }
 }
