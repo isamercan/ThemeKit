@@ -19,6 +19,10 @@ public struct RadialProgress: View {
     private let tint: Color?
     private let accessibilityLabelText: String?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
+
     public init(
         value: Double,
         size: CGFloat = 64,
@@ -58,7 +62,7 @@ public struct RadialProgress: View {
                 .trim(from: 0, to: value * (1 - gap))
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(rotation))
-                .animation(Motion.base.animation, value: value)
+                .animation(motion, value: value)
             if showLabel {
                 if status == .success && value >= 1 {
                     Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(status.semantic.accent)

@@ -33,6 +33,9 @@ public struct Rating: View {
     private let onRate: ((Double) -> Void)?
     private let onReviewTap: (() -> Void)?
 
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     public init(
         value: Double,
         maxValue: Int = 5,
@@ -80,6 +83,7 @@ public struct Rating: View {
             review
         }
         .opacity(isEnabled ? 1 : 0.5)
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: value)
     }
 
     /// The visual rating glyphs (the star row / number layouts), before any
