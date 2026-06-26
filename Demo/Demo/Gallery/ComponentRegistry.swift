@@ -79,6 +79,7 @@ enum ComponentRegistry {
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")])"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
+        .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField(label: "Check-in", date: $date, style: .custom("EEE, d MMM"), allowClear: true)"##),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact", helper: "…") { inputs }"#),
         .knob("Form", .molecules, demo: FormDemo(), usage: ##"@StateObject var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
         .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput(label: "Passport", fileName: name) { pick() }"#),

@@ -32,8 +32,10 @@ struct HotelSearchView: View {
                         VStack(spacing: 14) {
                             SearchBar(text: $destination, placeholder: "Nereye gidiyorsun?")
                             HStack(spacing: 12) {
-                                DateField(label: "Giriş", date: $checkIn)
-                                DateField(label: "Çıkış", date: $checkOut)
+                                DateField(label: "Giriş", date: $checkIn, style: .custom("EEE, d MMM"),
+                                          allowClear: true, leadingSystemImage: "calendar")
+                                DateField(label: "Çıkış", date: $checkOut, style: .custom("EEE, d MMM"),
+                                          allowClear: true, leadingSystemImage: "calendar")
                             }
                             InputNumber(label: "Misafir sayısı", value: $guests, range: 1...9, large: true)
                         }
