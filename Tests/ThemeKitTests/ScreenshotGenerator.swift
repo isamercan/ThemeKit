@@ -36,6 +36,19 @@ final class ScreenshotGenerator: XCTestCase {
     private var manifest: [(String, String)] = []
     private var category = ""
 
+    /// Identifiable stand-in + colored tiles for the media containers (Carousel /
+    /// Gallery / CardStack) so they render without network images.
+    private struct Tile: Identifiable { let id: Int; let color: Color }
+    private var tiles: [Tile] {
+        [SemanticColor.primary, .success, .warning, .info].enumerated().map { Tile(id: $0.offset, color: $0.element.solid) }
+    }
+    private func tileView(_ tile: Tile) -> some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(tile.color)
+            .frame(height: 120)
+            .overlay(Image(systemName: "photo").font(.system(size: 28)).foregroundStyle(.white.opacity(0.9)))
+    }
+
     func testGenerateAll() throws {
         try XCTSkipUnless(
             ProcessInfo.processInfo.environment["GENERATE_SCREENSHOTS"] == "1",
@@ -106,6 +119,11 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Title", Title("Section title", subtitle: "Supporting subtitle", actionTitle: "See all") {}.frame(width: 320))
         shot("InlineText", InlineText("By continuing you accept the Terms and the Privacy Policy.",
                                       links: [("Terms", {}), ("Privacy Policy", {})]).frame(width: 320))
+        shot("BorderBeam", RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Theme.shared.background(.bgWhite))
+            .frame(width: 200, height: 80)
+            .overlay(Text("Featured").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary)))
+            .borderBeam(cornerRadius: 16, lineWidth: 2))
     }
 
     // MARK: Molecules
@@ -152,6 +170,36 @@ final class ScreenshotGenerator: XCTestCase {
             TextInput("Email", text: .constant("user@example.com"))
         }.frame(width: 320))
         shot("DateField", DateField(label: "Check-in", date: .constant(nil)).frame(width: 280))
+        shot("Select", Select("City", options: ["İstanbul", "Ankara", "İzmir"],
+                              selection: .constant(Optional("İstanbul"))) { $0 }.frame(width: 280))
+        shot("SelectBox", SelectBox(label: "Country", options: ["Türkiye", "Almanya"],
+                                    selection: .constant(Optional("Türkiye"))) { $0 }.frame(width: 280))
+        shot("MultiSelect", MultiSelect(label: "Cities", options: ["İstanbul", "Ankara", "İzmir"],
+                                        selection: .constant(Set(["İstanbul", "Ankara"]))) { $0 }.frame(width: 300))
+        shot("TreeSelect", TreeSelect(label: "Şehirler",
+                                      nodes: [TreeNode(id: "tr", "Türkiye", systemImage: "flag",
+                                                       children: [TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara")])],
+                                      selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))
+        shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("İstanbul"),
+                                          suggestions: ["İstanbul", "İzmir"]).frame(width: 300))
+        shot("SearchBar", SearchBar(text: .constant("İstanbul")).frame(width: 320))
+        shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
+        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "₺").frame(width: 280))
+        shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
+                                        in: 0...1000, step: 50, marks: [0, 500, 1000]).frame(width: 320))
+        shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("Harika bir konaklama oldu, kesinlikle tavsiye ederim.")).frame(width: 300))
+        shot("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
+            .tooltip("Yardımcı ipucu", isPresented: .constant(true), edge: .top)
+            .padding(.top, 36))
+        shot("Chips", CompactChip(isSelected: .constant(true), text: "Suit", price: "₺899", rating: 4.6))
+        shot("FilterGroup", FilterGroup(options: ["Tümü", "Otel", "Villa", "Apart"],
+                                        selection: .constant(Optional("Otel"))) { $0 }.frame(width: 320))
+        shot("ProgressIndicator", ProgressIndicator(variant: .carousel, current: 2, total: 8).frame(width: 240))
+        shot("ThemeController", ThemeController(options: [.init(name: "defaultTheme", label: "Default"),
+                                                          .init(name: "oceanTheme", label: "Ocean"),
+                                                          .init(name: "sunsetTheme", label: "Sunset")],
+                                                selectedName: .constant("oceanTheme")).frame(width: 320))
+        shot("Calendar", CalendarView(selection: .constant(nil)).frame(width: 320))
     }
 
     // MARK: Organisms
@@ -212,6 +260,38 @@ final class ScreenshotGenerator: XCTestCase {
                               onPick: {}, onRemove: { _ in }).frame(width: 320))
         shot("PromoBanner", PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
                                         systemImage: "sun.max.fill", ctaTitle: "Explore", action: {}).frame(width: 340))
+        let rowTitles = ["Hesabım", "Bildirimler", "Dil", "Ödeme"]
+        shot("ListView", ListView(tiles, header: "Ayarlar", footer: "\(tiles.count) öğe", bordered: true) { tile in
+            ListRow(rowTitles[tile.id], subtitle: "Detaylar", leadingSystemImage: "gearshape", action: {})
+        }.frame(width: 320))
+        shot("MenuCard", MenuCard(items: [
+            .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
+            .init(title: "Payment methods", subtitle: "Cards & wallets", systemImage: "creditcard"),
+            .init(title: "Settings", subtitle: "App preferences", systemImage: "gearshape"),
+        ]).frame(width: 320))
+        shot("NavigationBar", NavigationBar(items: [
+            .init(systemImage: "house"), .init(systemImage: "heart"), .init(systemImage: "bag"), .init(systemImage: "person"),
+        ], selection: .constant(0)).frame(width: 320))
+        shot("FAB", FloatingActionButton(systemImage: "plus") {})
+        shot("Hero", Hero(title: "Erken rezervasyon", subtitle: "Yaz tatilinde %30'a varan indirim",
+                          ctaTitle: "Keşfet", action: {}) { Theme.shared.background(.bgHero) }.frame(width: 340, height: 180))
+        shot("SelectionCards", VStack(spacing: 10) {
+            RadioCard("Standart", description: "Ücretsiz iptal", isSelected: true) {}
+            RadioCard("Esnek", description: "İstediğin zaman değiştir", isSelected: false) {}
+        }.frame(width: 320))
+        shot("CardStack", CardStack(tiles) { self.tileView($0) }.frame(width: 300))
+        // Carousel / PagingCarousel use a paged TabView, which ImageRenderer can't
+        // capture on macOS — see them live in the Demo app.
+        shot("Gallery", Gallery(tiles, columns: 2) { self.tileView($0) }.frame(width: 320))
+        shot("Footer", Footer(columns: [
+            .init("Company", items: [.init("About"), .init("Careers")]),
+            .init("Support", items: [.init("Help"), .init("Contact")]),
+        ], note: "© 2026 ThemeKit.").frame(width: 340))
+        shot("Diff", Diff {
+            Theme.shared.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+        } after: {
+            Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+        }.frame(width: 320, height: 140))
     }
 
     // MARK: Render
