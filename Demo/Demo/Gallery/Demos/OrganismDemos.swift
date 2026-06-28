@@ -21,13 +21,13 @@ struct AccordionDemo: View {
 
     var body: some View {
         ComponentStage("Accordion", inspector: [("titleSize", sizeIdx == 0 ? "large" : sizeIdx == 2 ? "small" : "medium"), ("indicator", indicatorIdx == 1 ? "plusMinus" : "chevron")]) {
-            Accordion("İade politikanız nedir?",
-                      number: number ? 1 : nil,
-                      indicator: indicator,
-                      titleSize: titleSize, paddingSize: paddingSize,
-                      initiallyExpanded: expanded) {
+            Accordion("İade politikanız nedir?", initiallyExpanded: expanded) {
                 Text("Satın alımdan sonraki 14 gün içinde iade talep edebilirsiniz.")
             }
+            .number(number ? 1 : nil)
+            .indicator(indicator)
+            .titleSize(titleSize)
+            .density(paddingSize)
             .id("\(expanded)\(number)\(indicatorIdx)\(sizeIdx)")
         } knobs: {
             Toggle("Initially expanded", isOn: $expanded)
