@@ -1,7 +1,7 @@
 # SwiftUI Component Audit — ThemeKit
 
 **Tip:** (A) Dağıtılabilir SPM kütüphanesi — `ThemeKit` (zero-dependency core) + `ThemeKitLottie` (opt-in add-on).
-**Swift / araç:** `swift-tools-version: 6.2`, **ama** `swiftLanguageModes: [.v5]` (Package.swift:son satır).
+**Swift / araç:** `swift-tools-version: 6.2`, `swiftLanguageModes: [.v6]` + 2 upcoming flag (P0'da `.v5`→`.v6` taşındı).
 **Min target:** iOS 17 / macOS 14 (Package.swift:12-15).
 **Bağımlılıklar:** core = **0** (native); lottie-ios (yalnız `ThemeKitLottie` target'ı), swift-snapshot-testing (yalnız test target'ı), swift-docc-plugin (yalnız doküman). → Tüketici core'u sıfır bağımlılıkla alır.
 **Boyut:** 143 kaynak dosya / 19.022 LOC, **108 component** (26 atom / 37 molekül / 45 organizma), 38 test dosyası.
@@ -21,7 +21,7 @@
 
 **En güçlü yan:** Temeller cidden sağlam — zero-dependency core, JSON token pipeline (component'lerde **0 hardcoded renk**), `EnvironmentKey` tabanlı per-subtree theming (6 dosya), `ButtonStyle`-şekilli style protokolleri (3 + 6 ButtonStyle), ve leaf component'ler **%100 binding-driven** (Atoms+Molecules'da 0 ObservableObject/0 @StateObject). Force-unwrap neredeyse yok (4 adet, 0 `try!`/`as!`).
 
-**En büyük risk:** **Concurrency modu sahte-modern.** `swift-tools-version: 6.2` ilan edilmiş ama `swiftLanguageModes: [.v5]` ile derleniyor ve `swiftSettings`'te **0 upcoming feature flag** var — yani Swift 6 strict concurrency hiç zorlanmıyor. Dağıtılabilir bir kütüphane için bu, tüketici Swift 6 modunda derlerken sürpriz data-race uyarıları riski demek.
+**En büyük risk (denetim anı — ✅ ÇÖZÜLDÜ):** Concurrency modu sahte-modern'di — tools 6.2 ama `[.v5]`, 0 upcoming flag. **P0'da (#82) Swift 6 dil moduna geçildi** (0 hata/0 warning); bu risk kapatıldı. Geriye kalan en büyük açık artık ortam-bağımlı a11y-audit (P1 #4).
 
 **En kritik tek iş:** Swift 6 dil moduna geçişi (P0) yapıp çıkan izolasyon hatalarını gidermek — bu, geri kalan frontier işlerinin (Observation, Liquid Glass) üzerine kurulacağı zemin.
 
