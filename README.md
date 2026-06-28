@@ -30,7 +30,8 @@ import ThemeKit
 - **Token system** — colors / radius / spacing from JSON, typography / shadows in
   code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
-  accent color into a full Ant-style palette on device (no Python, no baked files).
+  accent (or `base-100`) color into a full Ant-style palette on device (no Python,
+  no baked files); the **32 [daisyUI](https://daisyui.com/docs/themes/) themes** ship built-in.
 - **130+ components** — Atoms / Molecules / Organisms, all token-bound.
 - **Validation** — pure, testable predicates + a SwiftUI presentation layer.
 - **Accessibility** — Dynamic Type and Reduce Motion honored throughout.
@@ -135,6 +136,29 @@ injected theme while semantic colors (info, success…) stay consistent:
 Every component reads `@Environment(\.theme)` (default `Theme.shared`), so this is
 additive and backward-compatible. Try it live in the gallery's **Theme Injection** page.
 
+## daisyUI themes
+
+ThemeKit ships the full [daisyUI](https://daisyui.com/docs/themes/) theme set —
+**32 themes** (cupcake, dracula, cyberpunk, synthwave, nord, coffee…). Each is a
+`DaisyTheme` recipe: its accent recolors the whole Ant-style palette and its
+`base-100` becomes the surface tone, so every theme keeps its signature look —
+**cupcake stays cream, cyberpunk yellow, dracula slate**. The *same components*,
+four injected themes:
+
+<p align="center"><img src="Screenshots/DaisyShowcase.png" width="820" alt="The same ThemeKit components rendered under four daisyUI themes — Cupcake, Synthwave, Cyberpunk and Nord"></p>
+
+Apply one live, or drop the bundled **`ThemePicker`** into any screen for a
+daisyUI-style switcher (it's the demo app's **Themes** tab):
+
+```swift
+DaisyTheme.named("dracula")?.apply()        // recolors Theme.shared on the fly
+
+@State private var active: String? = "cupcake"
+ThemePicker(selection: $active)             // a tappable grid of all 32 themes
+```
+
+<p align="center"><img src="Screenshots/DaisyThemes.png" width="680" alt="ThemePicker — a grid of all 32 daisyUI themes, each card painted in its own colors"></p>
+
 ## Components
 
 ~130 token-bound components, grouped by complexity:
@@ -143,8 +167,8 @@ additive and backward-compatible. Try it live in the gallery's **Theme Injection
   `StatusDot`, `Skeleton`, `ProgressBar`, `BorderBeam`, `RollingNumber`…
 - **Molecules** (35) — `TextInput`, `OTPInput`, `Select`, `Checkbox`,
   `RadioGroup`, `Slider`, `RangeSlider`, `SearchBar`, `Tooltip`, buttons…
-- **Organisms** (44) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
-  `Timeline`, `ResultView`, `Upload`, `Tour`, `NavigationBar`…
+- **Organisms** (45) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
+  `Timeline`, `ResultView`, `Upload`, `Tour`, `NavigationBar`, `ThemePicker`…
 
 Every component is curated by category in the [DocC catalog](#documentation).
 
