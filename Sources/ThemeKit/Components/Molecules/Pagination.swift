@@ -17,34 +17,24 @@ public struct Pagination: View {
 
     @Binding private var current: Int   // 1-based
     private let total: Int
-    private let simple: Bool
-    private let siblingCount: Int
-    private let boundaryCount: Int
-    private let showJumper: Bool
-    private let jumperTitle: String
     @Environment(\.isEnabled) private var isEnabled
-    private let showTotal: ((Int, Int) -> String)?
+    // Layout config — set via chainable modifiers, keeping the common call site
+    // to `Pagination(current: $page, total: n)`.
+    private var simple: Bool = false
+    private var siblingCount: Int = 1
+    private var boundaryCount: Int = 1
+    private var showJumper: Bool = false
+    private var jumperTitle: String = String(themeKit: "Go to")
+    private var showTotal: ((Int, Int) -> String)? = nil
 
     @State private var jumpText = ""
 
     public init(
         current: Binding<Int>,
-        total: Int,
-        simple: Bool = false,
-        siblingCount: Int = 1,
-        boundaryCount: Int = 1,
-        showJumper: Bool = false,
-        jumperTitle: String = String(themeKit: "Go to"),
-        showTotal: ((Int, Int) -> String)? = nil
+        total: Int
     ) {
         self._current = current
         self.total = max(total, 1)
-        self.simple = simple
-        self.siblingCount = siblingCount
-        self.boundaryCount = boundaryCount
-        self.showJumper = showJumper
-        self.jumperTitle = jumperTitle
-        self.showTotal = showTotal
     }
 
     public var body: some View {
@@ -187,15 +177,31 @@ private extension View {
     }
 }
 
+public extension Pagination {
+    /// Compact "current / total" mode instead of the numbered page buttons.
+    func simple(_ on: Bool = true) -> Self { var copy = self; copy.simple = on; return copy }
+    /// Window size: `sibling` pages each side of the current page, `boundary`
+    /// pages pinned at each end (gaps collapse to an ellipsis).
+    func window(sibling: Int = 1, boundary: Int = 1) -> Self {
+        var copy = self; copy.siblingCount = sibling; copy.boundaryCount = boundary; return copy
+    }
+    /// Shows a quick-jumper field that jumps straight to a typed page number.
+    func jumper(_ on: Bool = true, title: String = String(themeKit: "Go to")) -> Self {
+        var copy = self; copy.showJumper = on; copy.jumperTitle = title; return copy
+    }
+    /// A leading summary label built from `(current, total)` — e.g. "50 pages".
+    func showTotal(_ format: ((Int, Int) -> String)?) -> Self { var copy = self; copy.showTotal = format; return copy }
+}
+
 #Preview {
     struct Demo: View {
         @State var page = 4
         var body: some View {
             VStack(spacing: 20) {
                 Pagination(current: $page, total: 10)
-                Pagination(current: $page, total: 20, siblingCount: 2)
-                Pagination(current: $page, total: 10, simple: true)
-                Pagination(current: $page, total: 50, showJumper: true, showTotal: { _, t in "\(t) pages" })
+                Pagination(current: $page, total: 20).window(sibling: 2)
+                Pagination(current: $page, total: 10).simple()
+                Pagination(current: $page, total: 50).jumper().showTotal { _, t in "\(t) pages" }
             }
             .padding()
         }
