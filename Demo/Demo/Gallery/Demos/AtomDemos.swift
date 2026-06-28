@@ -95,12 +95,13 @@ struct BadgeDemo: View {
         ComponentStage("Badge", inspector: [
             ("style", style.rawValue), ("size", "\(size)"), ("highlighted", "\(highlighted)"), ("taps", "\(tapped)"),
         ]) {
-            Badge(text, style: style, variant: variant, size: size, shape: pill ? .pill : .rounded,
+            Badge(text, style: style, variant: variant, size: size,
                   leadingSystemImage: icon ? "star.fill" : nil,
-                  textColor: gradient ? Theme.shared.foreground(.fgSecondary) : nil,
-                  gradient: gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil,
-                  highlighted: highlighted,
                   action: tappable ? { tapped += 1; flash("Badge tıklandı") } : nil)
+                .badgeShape(pill ? .pill : .rounded)
+                .badgeColor(gradient ? Theme.shared.foreground(.fgSecondary) : nil)
+                .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)
+                .highlighted(highlighted)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $style) {
