@@ -36,11 +36,6 @@ public struct SearchBar: View {
 
     @Binding private var text: String
     private let placeholder: String
-    private let showBackButton: Bool
-    private let trailingSystemImage: String?
-    private let onBack: (() -> Void)?
-    private let onTrailing: (() -> Void)?
-    private let debounce: TimeInterval
     private let onSearch: ((String) -> Void)?
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
@@ -48,10 +43,18 @@ public struct SearchBar: View {
     // Typeahead / recent-search additions (all opt-in).
     private let source: Source
     private let recent: [String]
-    private let maxResults: Int
     private let onSelect: ((String) -> Void)?
     private let onSubmit: ((String) -> Void)?
     private let onClearRecent: (() -> Void)?
+
+    // Chrome + tuning — set via chainable modifiers (the async init seeds a 0.3s
+    // debounce as its baseline, which `.debounce(_:)` can still override).
+    private var showBackButton: Bool = false
+    private var trailingSystemImage: String? = nil
+    private var onBack: (() -> Void)? = nil
+    private var onTrailing: (() -> Void)? = nil
+    private var debounce: TimeInterval = 0
+    private var maxResults: Int = 6
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -63,14 +66,8 @@ public struct SearchBar: View {
     public init(
         text: Binding<String>,
         placeholder: String = "Search",
-        showBackButton: Bool = false,
-        trailingSystemImage: String? = nil,
-        debounce: TimeInterval = 0,
         suggestions: [String] = [],
         recent: [String] = [],
-        maxResults: Int = 6,
-        onBack: (() -> Void)? = nil,
-        onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
         onSelect: ((String) -> Void)? = nil,
         onSubmit: ((String) -> Void)? = nil,
@@ -78,14 +75,8 @@ public struct SearchBar: View {
     ) {
         self._text = text
         self.placeholder = placeholder
-        self.showBackButton = showBackButton
-        self.trailingSystemImage = trailingSystemImage
-        self.debounce = debounce
         self.source = suggestions.isEmpty ? .none : .staticList(suggestions)
         self.recent = recent
-        self.maxResults = maxResults
-        self.onBack = onBack
-        self.onTrailing = onTrailing
         self.onSearch = onSearch
         self.onSelect = onSelect
         self.onSubmit = onSubmit
@@ -99,13 +90,7 @@ public struct SearchBar: View {
         text: Binding<String>,
         suggest: @escaping (String) async -> [String],
         placeholder: String = "Search",
-        showBackButton: Bool = false,
-        trailingSystemImage: String? = nil,
-        debounce: TimeInterval = 0.3,
         recent: [String] = [],
-        maxResults: Int = 6,
-        onBack: (() -> Void)? = nil,
-        onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
         onSelect: ((String) -> Void)? = nil,
         onSubmit: ((String) -> Void)? = nil,
@@ -113,14 +98,9 @@ public struct SearchBar: View {
     ) {
         self._text = text
         self.placeholder = placeholder
-        self.showBackButton = showBackButton
-        self.trailingSystemImage = trailingSystemImage
-        self.debounce = debounce
         self.source = .asyncProvider(suggest)
         self.recent = recent
-        self.maxResults = maxResults
-        self.onBack = onBack
-        self.onTrailing = onTrailing
+        self.debounce = 0.3   // async baseline; `.debounce(_:)` overrides
         self.onSearch = onSearch
         self.onSelect = onSelect
         self.onSubmit = onSubmit
@@ -383,8 +363,8 @@ public struct SearchBar: View {
         @State var b = "query"
         var body: some View {
             VStack(spacing: 16) {
-                SearchBar(text: $a, trailingSystemImage: "barcode.viewfinder")
-                SearchBar(text: $b, showBackButton: true)
+                SearchBar(text: $a).trailingIcon("barcode.viewfinder")
+                SearchBar(text: $b).backButton()
             }
             .padding()
         }
@@ -416,4 +396,18 @@ public extension SearchBar {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Shows a leading back chevron; the optional action fires on tap.
+    func backButton(_ on: Bool = true, action: (() -> Void)? = nil) -> Self {
+        var copy = self; copy.showBackButton = on; copy.onBack = action; return copy
+    }
+    /// A trailing SF Symbol button (shown when the field is empty); the optional
+    /// action fires on tap (e.g. a barcode scanner).
+    func trailingIcon(_ systemName: String?, action: (() -> Void)? = nil) -> Self {
+        var copy = self; copy.trailingSystemImage = systemName; copy.onTrailing = action; return copy
+    }
+    /// Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s).
+    func debounce(_ interval: TimeInterval) -> Self { var copy = self; copy.debounce = interval; return copy }
+    /// Caps the number of suggestion rows (default 6).
+    func maxResults(_ count: Int) -> Self { var copy = self; copy.maxResults = count; return copy }
 }
