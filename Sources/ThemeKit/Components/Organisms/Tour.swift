@@ -63,6 +63,8 @@ public extension View {
 }
 
 private struct TourHostModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
     @ObservedObject var controller: TourController
     let steps: [TourStep]
 
@@ -73,7 +75,7 @@ private struct TourHostModifier: ViewModifier {
                     let step = steps[controller.index]
                     let rect = anchors[step.id].map { proxy[$0] }
                     ZStack {
-                        Theme.shared.background(.bgTertiary).opacity(0.6)
+                        theme.background(.bgTertiary).opacity(0.6)
                             .reverseMask {
                                 if let rect {
                                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -86,7 +88,7 @@ private struct TourHostModifier: ViewModifier {
 
                         if let rect {
                             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                                .stroke(Theme.shared.background(.bgHero), lineWidth: 2)
+                                .stroke(theme.background(.bgHero), lineWidth: 2)
                                 .frame(width: rect.width + 12, height: rect.height + 12)
                                 .position(x: rect.midX, y: rect.midY)
                         }
@@ -104,11 +106,11 @@ private struct TourHostModifier: ViewModifier {
         let y = rect == nil ? proxy.size.height / 2 : (fitsBelow ? (rect!.maxY + 90) : (rect!.minY - 90))
 
         return VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            Text(step.title).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-            Text(step.message).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+            Text(step.title).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+            Text(step.message).textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
             HStack {
                 Text("\(controller.index + 1) / \(steps.count)")
-                    .textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                    .textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                 Spacer()
                 if controller.index > 0 {
                     ThemeButton(String(themeKit: "Back"), variant: .outline, size: .small) { controller.prev() }
@@ -120,11 +122,11 @@ private struct TourHostModifier: ViewModifier {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(width: 280)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         .themeShadow(.elevated)
         .overlay(alignment: .topTrailing) {
             Button { controller.stop() } label: {
-                Icon(systemName: "xmark", size: .xs, color: Theme.shared.text(.textTertiary)).padding(Theme.SpacingKey.sm.value)
+                Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary)).padding(Theme.SpacingKey.sm.value)
             }
             .buttonStyle(.plain)
         }

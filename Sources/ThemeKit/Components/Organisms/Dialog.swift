@@ -77,6 +77,8 @@ struct DialogCard: View {
 }
 
 private struct DialogModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
     @Binding var isPresented: Bool
     let title: String
     let message: String?
@@ -98,7 +100,7 @@ private struct DialogModifier: ViewModifier {
         content.overlay {
             if isPresented {
                 ZStack {
-                    Theme.shared.background(.bgTertiary).opacity(0.4)
+                    theme.background(.bgTertiary).opacity(0.4)
                         .ignoresSafeArea()
                         .onTapGesture { if maskClosable, !primaryLoading { isPresented = false } }
                     DialogCard(

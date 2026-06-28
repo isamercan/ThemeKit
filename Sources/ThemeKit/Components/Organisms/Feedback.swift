@@ -184,6 +184,8 @@ public final class FeedbackPresenter: ObservableObject {
 // MARK: - Host
 
 private struct FeedbackHostModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
     @StateObject private var presenter: FeedbackPresenter
     private let toastEdge: Edge
 
@@ -209,13 +211,13 @@ private struct FeedbackHostModifier: ViewModifier {
     private var loadingLayer: some View {
         if let title = presenter.activeLoading {
             ZStack {
-                Theme.shared.background(.bgTertiary).opacity(0.3).ignoresSafeArea()
+                theme.background(.bgTertiary).opacity(0.3).ignoresSafeArea()
                 VStack(spacing: Theme.SpacingKey.sm.value) {
                     Spinner(size: 28, lineWidth: 3)
-                    Text(title).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+                    Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                 }
                 .padding(Theme.SpacingKey.lg.value)
-                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                 .themeShadow(.elevated)
             }
             .transition(.opacity)
@@ -228,19 +230,19 @@ private struct FeedbackHostModifier: ViewModifier {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                 Icon(systemName: note.kind.systemImage, size: .md, color: note.kind.semanticColor.accent)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(note.title).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+                    Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     if let message = note.message {
-                        Text(message).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                        Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                     }
                 }
                 Spacer(minLength: 0)
                 Button { presenter.dismissNotification() } label: {
-                    Icon(systemName: "xmark", size: .xs, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }
             .padding(Theme.SpacingKey.md.value)
-            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
             .themeShadow(.elevated)
             .padding(Theme.SpacingKey.md.value)
             .transition(.move(edge: .top).combined(with: .opacity))
@@ -267,7 +269,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var confirmLayer: some View {
         if let confirm = presenter.activeConfirm {
             ZStack {
-                Theme.shared.background(.bgTertiary).opacity(0.4)
+                theme.background(.bgTertiary).opacity(0.4)
                     .ignoresSafeArea()
                     .onTapGesture { presenter.dismissConfirm() }
                 DialogCard(
