@@ -12,6 +12,8 @@ public enum AccordionExpandMode { case single, multiple }
 /// reference `AccordionView` tracks a `Set` of open ids). Single mode collapses
 /// the others when one opens.
 public struct AccordionGroup<Item: Identifiable, Content: View>: View {
+    @Environment(\.theme) private var theme
+
     private let items: [Item]
     private let mode: AccordionExpandMode
     private let title: (Item) -> String
@@ -42,9 +44,9 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                 let isOpen = expanded.contains(item.id)
                 Button { toggle(item.id) } label: {
                     HStack {
-                        Text(title(item)).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Text(title(item)).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                         Spacer()
-                        Icon(systemName: "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "chevron.down", size: .sm, color: theme.text(.textTertiary))
                             .rotationEffect(.degrees(isOpen ? 180 : 0))
                     }
                     .padding(Theme.SpacingKey.md.value)
@@ -63,8 +65,8 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                 if index < items.count - 1 { DividerView(size: .small) }
             }
         }
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
         .animation(motion, value: expanded)
     }
 

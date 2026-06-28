@@ -26,6 +26,8 @@ public struct UploadFile: Identifiable, Equatable {
 /// Organism. A file-upload prompt plus a list of files with per-item status
 /// (uploading / done / failed). State owned by the caller.
 public struct Upload: View {
+    @Environment(\.theme) private var theme
+
     private let prompt: String
     private let buttonTitle: String
     private let files: [UploadFile]
@@ -59,12 +61,12 @@ public struct Upload: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Text(prompt)
                 .textStyle(.bodySm400)
-                .foregroundStyle(Theme.shared.text(.textSecondary))
+                .foregroundStyle(theme.text(.textSecondary))
             PrimaryButton(buttonTitle, isContentWidth: true, isEnabled: .constant(!atLimit)) { onPick() }
             if let maxCount {
                 Text("\(files.count)/\(maxCount)")
                     .textStyle(.overline400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             }
 
             if !files.isEmpty {
@@ -81,9 +83,9 @@ public struct Upload: View {
     private func row(for file: UploadFile) -> some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
-                .fill(Theme.shared.background(.bgElevatorTertiary))
+                .fill(theme.background(.bgElevatorTertiary))
                 .frame(width: 36, height: 36)
-                .overlay(Icon(systemName: "photo", size: .sm, color: Theme.shared.foreground(.fgHero)))
+                .overlay(Icon(systemName: "photo", size: .sm, color: theme.foreground(.fgHero)))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(file.name)
@@ -96,14 +98,14 @@ public struct Upload: View {
 
             if let onRetry, case .failed = file.status {
                 Button { onRetry(file) } label: {
-                    Icon(systemName: "arrow.clockwise", size: .sm, color: Theme.shared.foreground(.fgHero))
+                    Icon(systemName: "arrow.clockwise", size: .sm, color: theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Retry"))
             }
 
             Button { onRemove(file) } label: {
-                Icon(systemName: "trash", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "trash", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
         }
@@ -123,8 +125,8 @@ public struct Upload: View {
     }
 
     private func nameColor(for status: UploadStatus) -> Color {
-        if case .failed = status { return Theme.shared.foreground(.systemcolorsFgError) }
-        return Theme.shared.text(.textPrimary)
+        if case .failed = status { return theme.foreground(.systemcolorsFgError) }
+        return theme.text(.textPrimary)
     }
 }
 

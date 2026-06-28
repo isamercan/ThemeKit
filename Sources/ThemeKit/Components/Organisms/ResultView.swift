@@ -51,6 +51,8 @@ public enum ResultStatus: String, CaseIterable {
 /// (404 / 403 / 500), with up to two actions. Generalizes `EmptyState`.
 /// See docs/result-templates.md.
 public struct ResultView: View {
+    @Environment(\.theme) private var theme
+
     private let status: ResultStatus
     private let title: String
     private let message: String?
@@ -84,12 +86,12 @@ public struct ResultView: View {
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 Text(title)
                     .textStyle(.headingBase)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
                     .multilineTextAlignment(.center)
                 if let message {
                     Text(message)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                         .multilineTextAlignment(.center)
                 }
             }
@@ -119,7 +121,7 @@ public struct ResultView: View {
                 .overlay(alignment: .bottomTrailing) {
                     Icon(systemName: status.systemImage, size: .md, color: status.color.base)
                         .padding(6)
-                        .background(Theme.shared.background(.bgWhite), in: Circle())
+                        .background(theme.background(.bgWhite), in: Circle())
                         .offset(x: 10, y: 4)
                 }
         } else {

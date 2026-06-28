@@ -13,6 +13,8 @@ import AVKit
 /// that toggles play/pause, and a mute toggle button. Controls hidden by default.
 /// iOS uses AVPlayerViewController; macOS falls back to the SwiftUI `VideoPlayer`.
 public struct VideoPlayerView: View {
+    @Environment(\.theme) private var theme
+
     private let url: URL?
     private let autoplay: Bool
     private let loop: Bool
@@ -54,8 +56,8 @@ public struct VideoPlayerView: View {
                 player(url)
             } else {
                 ZStack {
-                    Theme.shared.background(.bgTertiary)
-                    Icon(systemName: "play.rectangle", size: .xl, color: Theme.shared.foreground(.fgSecondary))
+                    theme.background(.bgTertiary)
+                    Icon(systemName: "play.rectangle", size: .xl, color: theme.foreground(.fgSecondary))
                 }
             }
         }

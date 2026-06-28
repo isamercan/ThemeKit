@@ -26,6 +26,8 @@ public enum SegmentedTabBarStyle { case underline, card }
 /// Tab bar with a selection binding and an animated underline. Tabs can carry an
 /// icon, a count badge and a disabled state. (Ant Tabs parity.)
 public struct SegmentedTabBar: View {
+    @Environment(\.theme) private var theme
+
     private let items: [TabItem]
     @Binding private var selection: Int
     private let scrollable: Bool
@@ -89,10 +91,10 @@ public struct SegmentedTabBar: View {
                 Button(action: onAdd) {
                     Image(systemName: "plus")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                         .frame(width: 36, height: 36)
-                        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1))
+                        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -113,9 +115,9 @@ public struct SegmentedTabBar: View {
                     }
                     Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
                     if let badge = item.badge {
-                        Text(badge).textStyle(.overline400).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                        Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
                             .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(Theme.shared.background(.systemcolorsBgError), in: Capsule())
+                            .background(theme.background(.systemcolorsBgError), in: Capsule())
                     }
                 }
                 .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
@@ -125,7 +127,7 @@ public struct SegmentedTabBar: View {
             if let onClose {
                 Button { onClose(index) } label: {
                     Image(systemName: "xmark").font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }
@@ -133,12 +135,12 @@ public struct SegmentedTabBar: View {
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
         .background(
-            (isActive ? Theme.shared.background(.bgWhite) : Theme.shared.background(.bgElevatorTertiary)),
+            (isActive ? theme.background(.bgWhite) : theme.background(.bgElevatorTertiary)),
             in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(isActive ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary), lineWidth: isActive ? 1.5 : 1)
+                .strokeBorder(isActive ? theme.border(.borderHero) : theme.border(.borderPrimary), lineWidth: isActive ? 1.5 : 1)
         )
         .disabled(!item.isEnabled)
     }
@@ -161,13 +163,13 @@ public struct SegmentedTabBar: View {
                         if let badge = item.badge {
                             Text(badge)
                                 .textStyle(.overline400)
-                                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                                .foregroundStyle(theme.foreground(.fgSecondary))
                                 .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(Theme.shared.background(.systemcolorsBgError), in: Capsule())
+                                .background(theme.background(.systemcolorsBgError), in: Capsule())
                         }
                     }
                     if let caption = item.caption {
-                        Text(caption).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary))
+                        Text(caption).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                     }
                 }
                 .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
@@ -176,7 +178,7 @@ public struct SegmentedTabBar: View {
                     Capsule().fill(Color.clear).frame(height: 2)
                     if isActive {
                         Capsule()
-                            .fill(Theme.shared.border(.borderHero))
+                            .fill(theme.border(.borderHero))
                             .frame(height: 2)
                             .matchedGeometryEffect(id: "underline", in: underline)
                     }
@@ -189,8 +191,8 @@ public struct SegmentedTabBar: View {
     }
 
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
-        guard enabled else { return Theme.shared.text(.textDisabled) }
-        return isActive ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textSecondary)
+        guard enabled else { return theme.text(.textDisabled) }
+        return isActive ? theme.text(.textPrimary) : theme.text(.textSecondary)
     }
 }
 

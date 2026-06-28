@@ -21,6 +21,8 @@ public enum TimelineMode: Sendable {
 /// trailing "pending" (loading) node. `mode` places the content left, right or
 /// alternating around the rail; `reverse` flips the order. (Ant Timeline parity.)
 public struct Timeline: View {
+    @Environment(\.theme) private var theme
+
     public struct Item: Identifiable {
         public let id = UUID()
         let title: String
@@ -76,13 +78,13 @@ public struct Timeline: View {
                         marker(item)
                     }
                     if let time = item.time {
-                        Text(time).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary))
+                        Text(time).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                     }
                     Text(item.title).textStyle(.labelSm600)
-                        .foregroundStyle(item.state == .todo ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textPrimary))
+                        .foregroundStyle(item.state == .todo ? theme.text(.textTertiary) : theme.text(.textPrimary))
                         .multilineTextAlignment(.center)
                     if let description = item.description {
-                        Text(description).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                        Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -159,53 +161,53 @@ public struct Timeline: View {
     @ViewBuilder
     private func itemMain(_ item: Item, showTime: Bool) -> some View {
         if showTime, let time = item.time {
-            Text(time).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text(time).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
         }
-        Text(item.title).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+        Text(item.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
         if let description = item.description {
-            Text(description).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+            Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
         }
     }
 
     @ViewBuilder
     private func oppositeContent(_ item: Item) -> some View {
         if let time = item.time {
-            Text(time).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text(time).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
         }
     }
 
     private func pendingMain(_ text: String) -> some View {
-        Text(text).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textTertiary))
+        Text(text).textStyle(.labelBase600).foregroundStyle(theme.text(.textTertiary))
     }
 
     private func railColor(_ item: Item) -> Color {
-        item.state == .done ? (item.color?.solid ?? Theme.shared.background(.bgHero)) : Theme.shared.border(.borderPrimary)
+        item.state == .done ? (item.color?.solid ?? theme.background(.bgHero)) : theme.border(.borderPrimary)
     }
 
     @ViewBuilder
     private func marker(_ item: Item) -> some View {
         let dotColor = item.state == .error
-            ? Theme.shared.background(.systemcolorsBgError)
-            : (item.color?.solid ?? Theme.shared.background(.bgHero))
+            ? theme.background(.systemcolorsBgError)
+            : (item.color?.solid ?? theme.background(.bgHero))
         ZStack {
-            Circle().fill(item.state == .todo ? Theme.shared.background(.bgWhite) : dotColor).frame(width: 28, height: 28)
-            Circle().strokeBorder(item.state == .todo ? Theme.shared.border(.borderPrimary) : dotColor, lineWidth: 1.5).frame(width: 28, height: 28)
+            Circle().fill(item.state == .todo ? theme.background(.bgWhite) : dotColor).frame(width: 28, height: 28)
+            Circle().strokeBorder(item.state == .todo ? theme.border(.borderPrimary) : dotColor, lineWidth: 1.5).frame(width: 28, height: 28)
             if item.state == .error {
-                Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundStyle(theme.foreground(.fgSecondary))
             } else if let systemImage = item.systemImage {
                 Image(systemName: systemImage).font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(item.state == .todo ? Theme.shared.text(.textTertiary) : Theme.shared.foreground(.fgSecondary))
+                    .foregroundStyle(item.state == .todo ? theme.text(.textTertiary) : theme.foreground(.fgSecondary))
             } else if item.state == .done {
-                Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(theme.foreground(.fgSecondary))
             }
         }
     }
 
     private var pendingMarker: some View {
         ZStack {
-            Circle().fill(Theme.shared.background(.bgWhite)).frame(width: 28, height: 28)
-            Circle().strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1.5).frame(width: 28, height: 28)
-            ProgressView().controlSize(.mini).tint(Theme.shared.foreground(.fgHero))
+            Circle().fill(theme.background(.bgWhite)).frame(width: 28, height: 28)
+            Circle().strokeBorder(theme.border(.borderPrimary), lineWidth: 1.5).frame(width: 28, height: 28)
+            ProgressView().controlSize(.mini).tint(theme.foreground(.fgHero))
         }
     }
 }

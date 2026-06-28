@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. Screen header: optional back button, title + subtitle, trailing
 /// icon actions.
 public struct PageHeader: View {
+    @Environment(\.theme) private var theme
+
     public struct Action: Identifiable {
         public let id = UUID()
         let systemImage: String
@@ -54,7 +56,7 @@ public struct PageHeader: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             if let onBack {
                 Button(action: onBack) {
-                    Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                    Icon(systemName: "chevron.left", size: .md, color: theme.text(.textPrimary))
                         .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
@@ -64,7 +66,7 @@ public struct PageHeader: View {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     Text(title)
                         .textStyle(.headingSm)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     ForEach(tags) { tag in
                         ThemeKit.Tag(tag.text, style: tag.style)
                     }
@@ -72,7 +74,7 @@ public struct PageHeader: View {
                 if let subtitle {
                     Text(subtitle)
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                 }
             }
 
@@ -80,7 +82,7 @@ public struct PageHeader: View {
 
             ForEach(actions) { action in
                 Button(action: action.handler) {
-                    Icon(systemName: action.systemImage, size: .md, color: Theme.shared.text(.textPrimary))
+                    Icon(systemName: action.systemImage, size: .md, color: theme.text(.textPrimary))
                 }
                 .buttonStyle(.plain)
             }

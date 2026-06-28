@@ -10,6 +10,8 @@ import SwiftUI
 /// and a "+N" overlay on the last visible tile. Brand-neutral, token-bound; uses
 /// `RemoteImage` (native AsyncImage), no asset/Kingfisher dependency.
 public struct ImageCollage: View {
+    @Environment(\.theme) private var theme
+
     private let urls: [URL]
     private let height: CGFloat
     private let spacing: CGFloat
@@ -72,8 +74,8 @@ public struct ImageCollage: View {
 
     private var placeholder: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(Theme.shared.background(.bgSecondaryLight))
-            .overlay(Icon(systemName: "photo.on.rectangle", size: .lg, color: Theme.shared.text(.textTertiary)))
+            .fill(theme.background(.bgSecondaryLight))
+            .overlay(Icon(systemName: "photo.on.rectangle", size: .lg, color: theme.text(.textTertiary)))
             .frame(maxWidth: .infinity)
     }
 }

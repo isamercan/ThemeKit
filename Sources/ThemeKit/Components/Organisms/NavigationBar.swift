@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. Floating bottom tab bar. Active item uses a filled glyph + hero
 /// underline. Selection owned by the caller.
 public struct NavigationBar: View {
+    @Environment(\.theme) private var theme
+
     public struct Item: Identifiable {
         public let id = UUID()
         let systemImage: String
@@ -37,9 +39,9 @@ public struct NavigationBar: View {
                     VStack(spacing: 6) {
                         Image(systemName: isActive ? (item.activeSystemImage ?? item.systemImage + ".fill") : item.systemImage)
                             .font(.system(size: 20))
-                            .foregroundStyle(isActive ? Theme.shared.foreground(.fgHero) : Theme.shared.text(.textTertiary))
+                            .foregroundStyle(isActive ? theme.foreground(.fgHero) : theme.text(.textTertiary))
                         Capsule()
-                            .fill(isActive ? Theme.shared.background(.bgHero) : .clear)
+                            .fill(isActive ? theme.background(.bgHero) : .clear)
                             .frame(width: 20, height: 3)
                     }
                     .frame(maxWidth: .infinity)
@@ -50,7 +52,7 @@ public struct NavigationBar: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(Theme.shared.background(.bgWhite), in: Capsule())
+        .background(theme.background(.bgWhite), in: Capsule())
         .themeShadow(.tabBar)
     }
 }

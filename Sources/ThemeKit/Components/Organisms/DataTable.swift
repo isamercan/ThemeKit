@@ -34,6 +34,8 @@ public enum TableSortKey: Comparable {
 /// Supports tap-to-sort columns, row selection, and fully custom cell views.
 /// (daisyUI "Table"; complements the label/value KeyValueTable.)
 public struct DataTable<Row: Identifiable>: View {
+    @Environment(\.theme) private var theme
+
     public struct Column {
         let title: String
         let align: ColumnAlign
@@ -63,7 +65,7 @@ public struct DataTable<Row: Identifiable>: View {
             self.init(title, align: align, sortKey: sortKey) { row in
                 Text(value(row))
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(Theme.shared.text(.textPrimary))   // nested Column has no environment
             }
         }
     }
@@ -146,7 +148,7 @@ public struct DataTable<Row: Identifiable>: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                .stroke(theme.border(.borderPrimary), lineWidth: 1)
         )
     }
 
@@ -160,7 +162,7 @@ public struct DataTable<Row: Identifiable>: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(Theme.shared.background(.bgElevatorPrimary))
+        .background(theme.background(.bgElevatorPrimary))
     }
 
     @ViewBuilder
@@ -168,11 +170,11 @@ public struct DataTable<Row: Identifiable>: View {
         let title = HStack(spacing: 4) {
             Text(column.title)
                 .textStyle(.labelSm700)
-                .foregroundStyle(Theme.shared.text(.textSecondary))
+                .foregroundStyle(theme.text(.textSecondary))
             if column.sortKey != nil {
                 Icon(systemName: sortColumn == index ? (sortAscending ? "chevron.up" : "chevron.down") : "chevron.up.chevron.down",
                      size: .xs,
-                     color: sortColumn == index ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textTertiary))
+                     color: sortColumn == index ? theme.text(.textPrimary) : theme.text(.textTertiary))
             }
         }
         .frame(maxWidth: .infinity, alignment: column.align.alignment)
@@ -213,9 +215,9 @@ public struct DataTable<Row: Identifiable>: View {
     }
 
     private func rowBackground(index: Int, isSelected: Bool) -> Color {
-        if isSelected { return Theme.shared.background(.systemcolorsBgInfoLight) }
-        if striped && index % 2 == 1 { return Theme.shared.background(.bgElevatorPrimary).opacity(0.5) }
-        return Theme.shared.background(.bgWhite)
+        if isSelected { return theme.background(.systemcolorsBgInfoLight) }
+        if striped && index % 2 == 1 { return theme.background(.bgElevatorPrimary).opacity(0.5) }
+        return theme.background(.bgWhite)
     }
 
     private func handleTap(_ row: Row) {
@@ -229,10 +231,10 @@ public struct DataTable<Row: Identifiable>: View {
     private var emptyRow: some View {
         Text(String(themeKit: "No data"))
             .textStyle(.bodyBase400)
-            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .foregroundStyle(theme.text(.textTertiary))
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.SpacingKey.lg.value)
-            .background(Theme.shared.background(.bgWhite))
+            .background(theme.background(.bgWhite))
     }
 
     private var loadingRow: some View {
@@ -240,11 +242,11 @@ public struct DataTable<Row: Identifiable>: View {
             Spinner(size: IconSize.sm.value, lineWidth: 2)
             Text(String(themeKit: "Loading…"))
                 .textStyle(.bodyBase400)
-                .foregroundStyle(Theme.shared.text(.textTertiary))
+                .foregroundStyle(theme.text(.textTertiary))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Theme.SpacingKey.lg.value)
-        .background(Theme.shared.background(.bgWhite))
+        .background(theme.background(.bgWhite))
     }
 
     // MARK: - Pure paging (extracted for testing)

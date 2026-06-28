@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. A review summary row: score badge + qualitative label + review
 /// count link. (Star display lives in the Rating atom.)
 public struct RatingSummary: View {
+    @Environment(\.theme) private var theme
+
     private let score: Double
     private let label: String?
     private let reviewCount: Int?
@@ -27,7 +29,7 @@ public struct RatingSummary: View {
             if let label {
                 Text(label)
                     .textStyle(.labelBase600)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
             }
             Spacer(minLength: Theme.SpacingKey.sm.value)
             if let reviewCount {
@@ -37,7 +39,7 @@ public struct RatingSummary: View {
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
                             .mirrorsInRTL()
                     }
-                    .foregroundStyle(Theme.shared.text(.textHero))
+                    .foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
                 .disabled(onReviews == nil)

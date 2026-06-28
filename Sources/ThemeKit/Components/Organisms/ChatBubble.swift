@@ -13,6 +13,8 @@ public enum ChatSide {
 /// Organism. A chat message bubble (incoming / outgoing) with optional avatar,
 /// author and timestamp. (daisyUI "Chat bubble".)
 public struct ChatBubble: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let side: ChatSide
     private let author: String?
@@ -35,16 +37,16 @@ public struct ChatBubble: View {
             VStack(alignment: side == .incoming ? .leading : .trailing, spacing: 2) {
                 if author != nil || time != nil {
                     HStack(spacing: 4) {
-                        if let author { Text(author).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary)) }
-                        if let time { Text(time).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary)) }
+                        if let author { Text(author).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary)) }
+                        if let time { Text(time).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)) }
                     }
                 }
                 Text(text)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(side == .incoming ? Theme.shared.text(.textPrimary) : Theme.shared.foreground(.fgSecondary))
+                    .foregroundStyle(side == .incoming ? theme.text(.textPrimary) : theme.foreground(.fgSecondary))
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .padding(.vertical, Theme.SpacingKey.sm.value)
-                    .background(side == .incoming ? Theme.shared.background(.bgElevatorTertiary) : Theme.shared.background(.bgHero),
+                    .background(side == .incoming ? theme.background(.bgElevatorTertiary) : theme.background(.bgHero),
                                in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
             }
 

@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. A page footer: columns of titled links + an optional bottom note.
 /// (daisyUI "Footer".)
 public struct Footer: View {
+    @Environment(\.theme) private var theme
+
     public struct Item: Identifiable {
         public let id = UUID()
         let title: String
@@ -37,7 +39,7 @@ public struct Footer: View {
                     VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
                         Text(column.title.uppercased())
                             .textStyle(.overline500)
-                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .foregroundStyle(theme.text(.textTertiary))
                         ForEach(column.items) { item in
                             TextLink(item.title, underline: false, action: item.action)
                         }
@@ -49,12 +51,12 @@ public struct Footer: View {
                 DividerView(size: .small)
                 Text(note)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             }
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.shared.background(.bgElevatorPrimary))
+        .background(theme.background(.bgElevatorPrimary))
     }
 }
 

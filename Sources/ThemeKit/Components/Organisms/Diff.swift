@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. Before / after comparison with a draggable divider that reveals the
 /// two layers. (daisyUI "Diff".)
 public struct Diff<Before: View, After: View>: View {
+    @Environment(\.theme) private var theme
+
     private let aspectRatio: CGFloat
     private let before: () -> Before
     private let after: () -> After
@@ -34,14 +36,14 @@ public struct Diff<Before: View, After: View>: View {
                     .mask(alignment: .leading) { Rectangle().frame(width: max(0, w * fraction)) }
 
                 Rectangle()
-                    .fill(Theme.shared.background(.bgWhite))
+                    .fill(theme.background(.bgWhite))
                     .frame(width: 2)
                     .offset(x: w * fraction - 1)
 
                 Circle()
-                    .fill(Theme.shared.background(.bgWhite))
+                    .fill(theme.background(.bgWhite))
                     .frame(width: 36, height: 36)
-                    .overlay(Image(systemName: "arrow.left.and.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.shared.text(.textPrimary)))
+                    .overlay(Image(systemName: "arrow.left.and.right").font(.system(size: 14, weight: .bold)).foregroundStyle(theme.text(.textPrimary)))
                     .themeShadow(.soft)
                     .offset(x: w * fraction - 18)
             }

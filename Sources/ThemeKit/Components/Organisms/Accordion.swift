@@ -39,6 +39,8 @@ public enum AccordionPaddingSize {
 /// Improved, token-bound rewrite of the reference AccordionView — a single
 /// expandable row with a @ViewBuilder body instead of type-erased AnyView models.
 public struct Accordion<Content: View>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let subtitle: String?
     private let number: Int?
@@ -103,7 +105,7 @@ public struct Accordion<Content: View>: View {
                         if let subtitle {
                             Text(subtitle)
                                 .textStyle(.bodySm400)
-                                .foregroundStyle(Theme.shared.text(.textSecondary))
+                                .foregroundStyle(theme.text(.textSecondary))
                                 .lineLimit(truncateSubtitle && !expanded ? 1 : nil)
                         }
                     }
@@ -118,7 +120,7 @@ public struct Accordion<Content: View>: View {
             if expanded {
                 content()
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textSecondary))
+                    .foregroundStyle(theme.text(.textSecondary))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -130,19 +132,19 @@ public struct Accordion<Content: View>: View {
     }
 
     private var titleColor: Color {
-        expanded ? Theme.shared.text(.textHero) : Theme.shared.text(.textPrimary)
+        expanded ? theme.text(.textHero) : theme.text(.textPrimary)
     }
 
     @ViewBuilder
     private var indicatorIcon: some View {
         switch indicator {
         case .chevron:
-            Icon(systemName: "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+            Icon(systemName: "chevron.down", size: .sm, color: theme.text(.textTertiary))
                 .rotationEffect(.degrees(expanded ? 180 : 0))
         case .plusMinus:
-            Icon(systemName: expanded ? "minus" : "plus", size: .sm, color: Theme.shared.text(.textTertiary))
+            Icon(systemName: expanded ? "minus" : "plus", size: .sm, color: theme.text(.textTertiary))
         case .custom(let expand, let collapse):
-            Icon(systemName: expanded ? collapse : expand, size: .sm, color: Theme.shared.text(.textTertiary))
+            Icon(systemName: expanded ? collapse : expand, size: .sm, color: theme.text(.textTertiary))
         }
     }
 }

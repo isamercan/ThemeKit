@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. Displays numeric values in labelled boxes — e.g. a countdown
 /// (Gün / Saat / Dakika).
 public struct Counter: View {
+    @Environment(\.theme) private var theme
+
     public struct Segment: Identifiable {
         public let id = UUID()
         let value: Int
@@ -41,14 +43,14 @@ public struct Counter: View {
                     Text(String(format: "%02d", segment.value))
                         .textStyle(.labelMd700)
                         .monospacedDigit()
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     Text(segment.label)
                         .textStyle(.overline400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
                 .frame(minWidth: 44)
                 .padding(.vertical, Theme.SpacingKey.xs.value)
-                .background(Theme.shared.background(.bgElevatorTertiary),
+                .background(theme.background(.bgElevatorTertiary),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             }
         }
