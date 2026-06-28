@@ -41,7 +41,7 @@ public struct RadioButton: View {
 
     @Binding private var isSelected: Bool
     private let label: String?
-    private let size: ControlSize
+    @Environment(\.controlSize) private var controlSize
     private let type: RadioButtonType
     private let style: RadioButtonStyle
     private let padding: RadioButtonPadding
@@ -58,7 +58,6 @@ public struct RadioButton: View {
     public init(
         _ label: String? = nil,
         isSelected: Binding<Bool>,
-        size: ControlSize = .medium,
         type: RadioButtonType = .select,
         style: RadioButtonStyle = .plain,
         padding: RadioButtonPadding = .small,
@@ -68,7 +67,6 @@ public struct RadioButton: View {
     ) {
         self.label = label
         self._isSelected = isSelected
-        self.size = size
         self.type = type
         self.style = style
         self.padding = padding
@@ -90,7 +88,7 @@ public struct RadioButton: View {
                     Circle()
                         .fill(filled ? fillColor : .clear)
                         .overlay(Circle().strokeBorder(stroke, lineWidth: 1.5))
-                        .frame(width: size.side, height: size.side)
+                        .frame(width: controlSize.checkboxSide, height: controlSize.checkboxSide)
                         .overlay(indicator.transition(.scale(scale: 0.6).combined(with: .opacity)))
                         .animation(motion, value: isSelected)
                     if let label {
@@ -126,17 +124,17 @@ public struct RadioButton: View {
         if isSelected {
             switch (type, style) {
             case (.select, _):
-                Circle().fill(fillColor).frame(width: size.side * 0.5, height: size.side * 0.5)
+                Circle().fill(fillColor).frame(width: controlSize.checkboxSide * 0.5, height: controlSize.checkboxSide * 0.5)
             case (.check, .plain):
                 Image(systemName: "checkmark")
-                    .font(.system(size: size.side * 0.55, weight: .bold))
+                    .font(.system(size: controlSize.checkboxSide * 0.55, weight: .bold))
                     .foregroundStyle(theme.foreground(.fgSecondary))
             case (.check, .inner):
                 ZStack {
                     Circle().fill(theme.background(.bgWhite))
-                    Circle().fill(fillColor).padding(size.side * 0.18)
+                    Circle().fill(fillColor).padding(controlSize.checkboxSide * 0.18)
                 }
-                .frame(width: size.side * 0.74, height: size.side * 0.74)
+                .frame(width: controlSize.checkboxSide * 0.74, height: controlSize.checkboxSide * 0.74)
             }
         }
     }
@@ -148,7 +146,6 @@ public extension RadioButton {
     init<V: Hashable>(
         tag: V,
         selection: Binding<V?>,
-        size: ControlSize = .medium,
         type: RadioButtonType = .select,
         style: RadioButtonStyle = .plain,
         padding: RadioButtonPadding = .small,
@@ -160,7 +157,6 @@ public extension RadioButton {
                 get: { selection.wrappedValue == tag },
                 set: { newValue in selection.wrappedValue = newValue ? tag : (type == .check ? nil : tag) }
             ),
-            size: size,
             type: type,
             style: style,
             padding: padding,
@@ -174,7 +170,7 @@ public extension RadioButton {
     VStack(alignment: .leading, spacing: 12) {
         RadioButton(isSelected: .constant(false))
         RadioButton(isSelected: .constant(true))
-        RadioButton(isSelected: .constant(true), size: .small)
+        RadioButton(isSelected: .constant(true)).controlSize(.small)
         RadioButton(isSelected: .constant(true)).disabled(true)
     }
     .padding()

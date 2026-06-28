@@ -6,15 +6,14 @@
 
 import SwiftUI
 
-public enum ControlSize {
-    case small
-    case medium
-
-    /// Square side for checkbox / radio.
-    var side: CGFloat {
+extension ControlSize {
+    /// Square side for checkbox / radio glyphs — maps the native control size to
+    /// ThemeKit's Figma "Control Items" metrics (Small 20 / Medium 24). Driven by
+    /// the native `.controlSize(_:)` cascade (default `.regular` → 24).
+    var checkboxSide: CGFloat {
         switch self {
-        case .small: return 20
-        case .medium: return 24
+        case .mini, .small: return 20
+        default: return 24   // .regular (default) / .large / .extraLarge
         }
     }
 }
@@ -36,7 +35,7 @@ public struct Checkbox: View {
 
     @Binding private var isChecked: Bool
     private let label: String?
-    private let size: ControlSize
+    @Environment(\.controlSize) private var controlSize
     private let customSize: CGFloat?
     private let type: CheckboxType
     private let isIndeterminate: Bool
@@ -52,7 +51,6 @@ public struct Checkbox: View {
     public init(
         _ label: String? = nil,
         isChecked: Binding<Bool>,
-        size: ControlSize = .medium,
         customSize: CGFloat? = nil,
         type: CheckboxType = .plain,
         isIndeterminate: Bool = false,
@@ -61,7 +59,6 @@ public struct Checkbox: View {
     ) {
         self.label = label
         self._isChecked = isChecked
-        self.size = size
         self.customSize = customSize
         self.type = type
         self.isIndeterminate = isIndeterminate
@@ -69,7 +66,7 @@ public struct Checkbox: View {
         self.infoMessages = infoMessages
     }
 
-    private var side: CGFloat { customSize ?? size.side }
+    private var side: CGFloat { customSize ?? controlSize.checkboxSide }
     private var selected: Bool { isChecked || isIndeterminate }
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
 
@@ -163,7 +160,7 @@ public struct Checkbox: View {
         Checkbox(isChecked: .constant(false))
         Checkbox(isChecked: .constant(true))
         Checkbox(isChecked: .constant(true), isIndeterminate: true)
-        Checkbox(isChecked: .constant(true), size: .small)
+        Checkbox(isChecked: .constant(true)).controlSize(.small)
         Checkbox(isChecked: .constant(true)).disabled(true)
     }
     .padding()

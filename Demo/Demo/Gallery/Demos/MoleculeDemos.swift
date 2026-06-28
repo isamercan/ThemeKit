@@ -92,9 +92,10 @@ struct CheckboxDemo: View {
     var body: some View {
         ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
             Checkbox(withLabel ? "Şartları ve koşulları kabul ediyorum" : nil, isChecked: $checked,
-                     size: small ? .small : .medium, customSize: big ? 32 : nil, type: type,
+                     customSize: big ? 32 : nil, type: type,
                      isIndeterminate: indeterminate, alignment: .top,
                      infoMessages: messages)
+                    .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {
             Toggle("Checked", isOn: $checked)
@@ -120,8 +121,9 @@ struct RadioButtonDemo: View {
     var body: some View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
             RadioButton(inlineLabel ? "Hatırla beni" : nil, isSelected: $selected,
-                        size: small ? .small : .medium, type: check ? .check : .select,
+                        type: check ? .check : .select,
                         style: inner ? .inner : .plain, padding: .medium)
+                    .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {
             Toggle("Selected", isOn: $selected)
@@ -143,8 +145,9 @@ struct ToggleDemo: View {
 
     var body: some View {
         ComponentStage("ThemeToggle", inspector: [("isOn", "\(on)"), ("isLoading", "\(loading)"), ("isEnabled", "\(enabled)")]) {
-            ThemeToggle(isOn: $on, size: small ? .small : .medium, isEnabled: enabled, isLoading: loading,
+            ThemeToggle(isOn: $on, isEnabled: enabled, isLoading: loading,
                         onSystemImage: icons ? "checkmark" : nil, offSystemImage: icons ? "xmark" : nil)
+                .controlSize(small ? .small : .regular)
         } knobs: {
             Toggle("On", isOn: $on)
             Toggle("Loading", isOn: $loading)
