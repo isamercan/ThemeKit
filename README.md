@@ -188,6 +188,15 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InlineText-dark.png"><img src="Screenshots/InlineText.png" width="240" alt="InlineText"></picture><br><sub><b>InlineText</b></sub></td>
 <td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/BorderBeam-dark.png"><img src="Screenshots/BorderBeam.png" width="240" alt="BorderBeam"></picture><br><sub><b>BorderBeam</b></sub></td>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Join-dark.png"><img src="Screenshots/Join.png" width="240" alt="Join"></picture><br><sub><b>Join</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Mask-dark.png"><img src="Screenshots/Mask.png" width="240" alt="Mask"></picture><br><sub><b>Mask</b></sub></td>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextRotate-dark.png"><img src="Screenshots/TextRotate.png" width="240" alt="TextRotate"></picture><br><sub><b>TextRotate</b></sub></td>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Gauge-dark.png"><img src="Screenshots/Gauge.png" width="240" alt="Gauge"></picture><br><sub><b>Gauge</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ShareButton-dark.png"><img src="Screenshots/ShareButton.png" width="240" alt="ShareButton"></picture><br><sub><b>ShareButton</b></sub></td>
 </tr>
 </table>
 
@@ -251,6 +260,7 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 </tr>
 <tr>
 <td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Calendar-dark.png"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"></picture><br><sub><b>Calendar</b></sub></td>
+<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ColorField-dark.png"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"></picture><br><sub><b>ColorField</b></sub></td>
 </tr>
 </table>
 
