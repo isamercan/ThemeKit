@@ -1,5 +1,14 @@
 # ThemeKit
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Screenshots/Banner-dark.png">
+    <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 108 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  </picture>
+</p>
+
+> The banner above is rendered **by ThemeKit itself** (its own tokens + components) — so it re-skins light/dark for free, just like everything in the gallery.
+
 A theme-driven, **brand-neutral** SwiftUI component library. Every color,
 typography, spacing, radius and shadow is a **design token** resolved at runtime
 from the active `Theme`, so the whole UI re-skins from a single accent color —
