@@ -274,16 +274,16 @@ struct RangeSliderDemo: View {
     var body: some View {
         ComponentStage("RangeSlider", inspector: [("range", "\(Int(lo))–\(Int(hi))"), ("onChangeEnd", lastCommit)]) {
             if inputs {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, showInputs: true,
-                            inputTitles: ("En az ₺", "En çok ₺"),
-                            onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" })
-                .disabled(!enabled)
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
+                    .inputs(titles: ("En az ₺", "En çok ₺"))
+                    .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
+                    .disabled(!enabled)
             } else {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50,
-                            marks: marks ? [0, 250, 500, 750, 1000] : [],
-                            onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" },
-                            valueLabel: { "\(Int($0)) ₺" })
-                .disabled(!enabled)
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
+                    .marks(marks ? [0, 250, 500, 750, 1000] : [])
+                    .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
+                    .valueLabel { "\(Int($0)) ₺" }
+                    .disabled(!enabled)
             }
         } knobs: {
             Text("onChangeEnd fires on release / blur — drive the search there, not on every tick.").font(.caption).foregroundStyle(.secondary)

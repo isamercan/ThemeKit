@@ -19,15 +19,15 @@ public struct RangeSlider: View {
     @Binding private var upperValue: Double
     private let bounds: ClosedRange<Double>
     private let step: Double
-    private let marks: [Double]
-    private let valueLabel: ((Double) -> String)?
     @Environment(\.isEnabled) private var isEnabled
-    private let onChangeEnd: ((Double, Double) -> Void)?
     private var accessibilityID: String? = nil
+    // Opt-in presentation — set via chainable modifiers.
+    private var marks: [Double] = []
+    private var valueLabel: ((Double) -> String)? = nil
+    private var onChangeEnd: ((Double, Double) -> Void)? = nil
+    private var showInputs: Bool = false
+    private var inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max"))
 
-    // Linked numeric inputs (validate-on-blur). Reference RangeSliderView parity.
-    private let showInputs: Bool
-    private let inputTitles: (min: String, max: String)
     @State private var lowerText = ""
     @State private var upperText = ""
     @FocusState private var focusedField: Field?
@@ -40,22 +40,12 @@ public struct RangeSlider: View {
         lowerValue: Binding<Double>,
         upperValue: Binding<Double>,
         in bounds: ClosedRange<Double>,
-        step: Double = 1,
-        marks: [Double] = [],
-        showInputs: Bool = false,
-        inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max")),
-        onChangeEnd: ((Double, Double) -> Void)? = nil,
-        valueLabel: ((Double) -> String)? = nil
+        step: Double = 1
     ) {
         self._lowerValue = lowerValue
         self._upperValue = upperValue
         self.bounds = bounds
         self.step = step
-        self.marks = marks
-        self.showInputs = showInputs
-        self.inputTitles = inputTitles
-        self.onChangeEnd = onChangeEnd
-        self.valueLabel = valueLabel
     }
 
     public var body: some View {
@@ -266,8 +256,9 @@ public struct RangeSlider: View {
         @State var lo: Double = 200
         @State var hi: Double = 800
         var body: some View {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50,
-                        marks: [0, 250, 500, 750, 1000], valueLabel: { "\(Int($0)) ₺" })
+            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
+                .marks([0, 250, 500, 750, 1000])
+                .valueLabel { "\(Int($0)) ₺" }
                 .padding()
         }
     }
@@ -278,4 +269,15 @@ public extension RangeSlider {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Labeled tick marks at the given values.
+    func marks(_ marks: [Double]) -> Self { var copy = self; copy.marks = marks; return copy }
+    /// Shows linked numeric min/max input fields above the track.
+    func inputs(_ on: Bool = true, titles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max"))) -> Self {
+        var copy = self; copy.showInputs = on; copy.inputTitles = titles; return copy
+    }
+    /// Fires with the snapped (lower, upper) pair when a drag ends.
+    func onChangeEnd(_ action: ((Double, Double) -> Void)?) -> Self { var copy = self; copy.onChangeEnd = action; return copy }
+    /// Formats the value readout shown above each thumb (e.g. "₺500").
+    func valueLabel(_ format: ((Double) -> String)?) -> Self { var copy = self; copy.valueLabel = format; return copy }
 }
