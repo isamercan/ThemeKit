@@ -63,9 +63,7 @@ public struct DataTable<Row: Identifiable>: View {
             value: @escaping (Row) -> String
         ) {
             self.init(title, align: align, sortKey: sortKey) { row in
-                Text(value(row))
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))   // nested Column has no environment
+                DefaultTextCell(text: value(row))
             }
         }
     }
@@ -263,6 +261,19 @@ public struct DataTable<Row: Identifiable>: View {
         let clamped = min(max(page, 1), pageCount(rowCount: rowCount, pageSize: size))
         let start = (clamped - 1) * size
         return start..<min(start + size, rowCount)
+    }
+}
+
+// The plain-text column's default cell, as a View so it resolves the injected
+// `\.theme` (the `Column` value type that builds it has no environment).
+private struct DefaultTextCell: View {
+    let text: String
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Text(text)
+            .textStyle(.bodyBase400)
+            .foregroundStyle(theme.text(.textPrimary))
     }
 }
 

@@ -66,10 +66,22 @@ public struct Hero<Background: View>: View {
     private var subtitleColor: Color { dark ? theme.text(.textSecondaryInverse) : theme.text(.textSecondary) }
 }
 
-public extension Hero where Background == Color {
+/// The default `Hero` surface. A `View` (not a bare `Color`) so it can resolve the
+/// injected `\.theme` — that's why the convenience `Hero(title:)` below defaults
+/// `Background` to this type instead of `Color`.
+public struct HeroSurface: View {
+    let dark: Bool
+    @Environment(\.theme) private var theme
+
+    public var body: some View {
+        dark ? theme.background(.bgTertiary) : theme.background(.bgElevatorTertiary)
+    }
+}
+
+public extension Hero where Background == HeroSurface {
     init(title: String, subtitle: String? = nil, ctaTitle: String? = nil, dark: Bool = false, action: (() -> Void)? = nil) {
         self.init(title: title, subtitle: subtitle, ctaTitle: ctaTitle, dark: dark, action: action) {
-            dark ? Theme.shared.background(.bgTertiary) : Theme.shared.background(.bgElevatorTertiary)
+            HeroSurface(dark: dark)
         }
     }
 }

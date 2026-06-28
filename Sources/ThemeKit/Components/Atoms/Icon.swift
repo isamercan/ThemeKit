@@ -51,9 +51,10 @@ public struct Icon: View {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     HStack(spacing: 12) {
         ForEach(IconSize.allCases, id: \.self) { s in
-            Icon(systemName: "star.fill", size: s, color: Theme.shared.foreground(.fgHero))
+            Icon(systemName: "star.fill", size: s, color: theme.foreground(.fgHero))
         }
     }
     .padding()

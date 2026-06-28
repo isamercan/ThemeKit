@@ -59,10 +59,11 @@ private struct IndicatorDot: View {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     HStack(spacing: 32) {
-        Icon(systemName: "bell", size: .lg, color: Theme.shared.text(.textPrimary))
+        Icon(systemName: "bell", size: .lg, color: theme.text(.textPrimary))
             .indicatorDot()
-        Icon(systemName: "envelope", size: .lg, color: Theme.shared.text(.textPrimary))
+        Icon(systemName: "envelope", size: .lg, color: theme.text(.textPrimary))
             .indicator { Badge("3", style: .error, size: .small) }
     }
     .padding()

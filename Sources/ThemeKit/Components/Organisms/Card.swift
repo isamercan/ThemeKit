@@ -126,12 +126,13 @@ struct CardShadow: ViewModifier {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     VStack(spacing: 16) {
         Card {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Card title").textStyle(.headingSm)
                 Text("Supporting body text inside a card surface.").textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textSecondary))
+                    .foregroundStyle(theme.text(.textSecondary))
             }
         }
         Card(elevation: .elevated) {
@@ -139,5 +140,5 @@ struct CardShadow: ViewModifier {
         }
     }
     .padding()
-    .background(Theme.shared.background(.bgElevatorPrimary))
+    .background(theme.background(.bgElevatorPrimary))
 }

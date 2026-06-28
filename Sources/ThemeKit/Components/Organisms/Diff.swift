@@ -58,10 +58,11 @@ public struct Diff<Before: View, After: View>: View {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     Diff {
-        Theme.shared.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
     } after: {
-        Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
     }
     .padding()
 }
