@@ -7,7 +7,7 @@
 import SwiftUI
 
 /// Molecule. A packaged theme switcher: selecting an option loads that theme via
-/// ``Theme/loadTheme(named:)``. (daisyUI "Theme Controller".)
+/// ``Theme/loadTheme(named:dark:)``. (daisyUI "Theme Controller".)
 public struct ThemeController: View {
     @Environment(\.theme) private var theme
 
