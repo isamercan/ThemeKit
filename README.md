@@ -160,52 +160,52 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Avatar-dark.png"><img src="Screenshots/Avatar.png" width="240" alt="Avatar"></picture><br><sub><b>Avatar</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Badge-dark.png"><img src="Screenshots/Badge.png" width="240" alt="Badge"></picture><br><sub><b>Badge</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Chip-dark.png"><img src="Screenshots/Chip.png" width="240" alt="Chip"></picture><br><sub><b>Chip</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Avatar-dark.png"><img src="Screenshots/Avatar.png" width="184" alt="Avatar"></picture><br><sub><b>Avatar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Badge-dark.png"><img src="Screenshots/Badge.png" width="223" alt="Badge"></picture><br><sub><b>Badge</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Chip-dark.png"><img src="Screenshots/Chip.png" width="233" alt="Chip"></picture><br><sub><b>Chip</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CountBadge-dark.png"><img src="Screenshots/CountBadge.png" width="240" alt="CountBadge"></picture><br><sub><b>CountBadge</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Divider-dark.png"><img src="Screenshots/Divider.png" width="240" alt="Divider"></picture><br><sub><b>Divider</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Icon-dark.png"><img src="Screenshots/Icon.png" width="240" alt="Icon"></picture><br><sub><b>Icon</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CountBadge-dark.png"><img src="Screenshots/CountBadge.png" width="68" alt="CountBadge"></picture><br><sub><b>CountBadge</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Divider-dark.png"><img src="Screenshots/Divider.png" width="240" alt="Divider"></picture><br><sub><b>Divider</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Icon-dark.png"><img src="Screenshots/Icon.png" width="182" alt="Icon"></picture><br><sub><b>Icon</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Indicator-dark.png"><img src="Screenshots/Indicator.png" width="240" alt="Indicator"></picture><br><sub><b>Indicator</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InputLabel-dark.png"><img src="Screenshots/InputLabel.png" width="240" alt="InputLabel"></picture><br><sub><b>InputLabel</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Kbd-dark.png"><img src="Screenshots/Kbd.png" width="240" alt="Kbd"></picture><br><sub><b>Kbd</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Indicator-dark.png"><img src="Screenshots/Indicator.png" width="68" alt="Indicator"></picture><br><sub><b>Indicator</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InputLabel-dark.png"><img src="Screenshots/InputLabel.png" width="93" alt="InputLabel"></picture><br><sub><b>InputLabel</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Kbd-dark.png"><img src="Screenshots/Kbd.png" width="94" alt="Kbd"></picture><br><sub><b>Kbd</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ProgressBar-dark.png"><img src="Screenshots/ProgressBar.png" width="240" alt="ProgressBar"></picture><br><sub><b>ProgressBar</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadialProgress-dark.png"><img src="Screenshots/RadialProgress.png" width="240" alt="RadialProgress"></picture><br><sub><b>RadialProgress</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Rating-dark.png"><img src="Screenshots/Rating.png" width="240" alt="Rating"></picture><br><sub><b>Rating</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ProgressBar-dark.png"><img src="Screenshots/ProgressBar.png" width="240" alt="ProgressBar"></picture><br><sub><b>ProgressBar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadialProgress-dark.png"><img src="Screenshots/RadialProgress.png" width="128" alt="RadialProgress"></picture><br><sub><b>RadialProgress</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Rating-dark.png"><img src="Screenshots/Rating.png" width="184" alt="Rating"></picture><br><sub><b>Rating</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RollingNumber-dark.png"><img src="Screenshots/RollingNumber.png" width="240" alt="RollingNumber"></picture><br><sub><b>RollingNumber</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ScoreBadge-dark.png"><img src="Screenshots/ScoreBadge.png" width="240" alt="ScoreBadge"></picture><br><sub><b>ScoreBadge</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Skeleton-dark.png"><img src="Screenshots/Skeleton.png" width="240" alt="Skeleton"></picture><br><sub><b>Skeleton</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RollingNumber-dark.png"><img src="Screenshots/RollingNumber.png" width="138" alt="RollingNumber"></picture><br><sub><b>RollingNumber</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ScoreBadge-dark.png"><img src="Screenshots/ScoreBadge.png" width="64" alt="ScoreBadge"></picture><br><sub><b>ScoreBadge</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Skeleton-dark.png"><img src="Screenshots/Skeleton.png" width="240" alt="Skeleton"></picture><br><sub><b>Skeleton</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Spinner-dark.png"><img src="Screenshots/Spinner.png" width="240" alt="Spinner"></picture><br><sub><b>Spinner</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/StatusDot-dark.png"><img src="Screenshots/StatusDot.png" width="240" alt="StatusDot"></picture><br><sub><b>StatusDot</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Swap-dark.png"><img src="Screenshots/Swap.png" width="240" alt="Swap"></picture><br><sub><b>Swap</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Spinner-dark.png"><img src="Screenshots/Spinner.png" width="64" alt="Spinner"></picture><br><sub><b>Spinner</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/StatusDot-dark.png"><img src="Screenshots/StatusDot.png" width="211" alt="StatusDot"></picture><br><sub><b>StatusDot</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Swap-dark.png"><img src="Screenshots/Swap.png" width="72" alt="Swap"></picture><br><sub><b>Swap</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Tag-dark.png"><img src="Screenshots/Tag.png" width="240" alt="Tag"></picture><br><sub><b>Tag</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextLink-dark.png"><img src="Screenshots/TextLink.png" width="240" alt="TextLink"></picture><br><sub><b>TextLink</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Title-dark.png"><img src="Screenshots/Title.png" width="240" alt="Title"></picture><br><sub><b>Title</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Tag-dark.png"><img src="Screenshots/Tag.png" width="201" alt="Tag"></picture><br><sub><b>Tag</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextLink-dark.png"><img src="Screenshots/TextLink.png" width="161" alt="TextLink"></picture><br><sub><b>TextLink</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Title-dark.png"><img src="Screenshots/Title.png" width="240" alt="Title"></picture><br><sub><b>Title</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InlineText-dark.png"><img src="Screenshots/InlineText.png" width="240" alt="InlineText"></picture><br><sub><b>InlineText</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/BorderBeam-dark.png"><img src="Screenshots/BorderBeam.png" width="240" alt="BorderBeam"></picture><br><sub><b>BorderBeam</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Join-dark.png"><img src="Screenshots/Join.png" width="240" alt="Join"></picture><br><sub><b>Join</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InlineText-dark.png"><img src="Screenshots/InlineText.png" width="240" alt="InlineText"></picture><br><sub><b>InlineText</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/BorderBeam-dark.png"><img src="Screenshots/BorderBeam.png" width="232" alt="BorderBeam"></picture><br><sub><b>BorderBeam</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Join-dark.png"><img src="Screenshots/Join.png" width="234" alt="Join"></picture><br><sub><b>Join</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Mask-dark.png"><img src="Screenshots/Mask.png" width="240" alt="Mask"></picture><br><sub><b>Mask</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextRotate-dark.png"><img src="Screenshots/TextRotate.png" width="240" alt="TextRotate"></picture><br><sub><b>TextRotate</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Gauge-dark.png"><img src="Screenshots/Gauge.png" width="240" alt="Gauge"></picture><br><sub><b>Gauge</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Mask-dark.png"><img src="Screenshots/Mask.png" width="240" alt="Mask"></picture><br><sub><b>Mask</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextRotate-dark.png"><img src="Screenshots/TextRotate.png" width="177" alt="TextRotate"></picture><br><sub><b>TextRotate</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Gauge-dark.png"><img src="Screenshots/Gauge.png" width="240" alt="Gauge"></picture><br><sub><b>Gauge</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ShareButton-dark.png"><img src="Screenshots/ShareButton.png" width="240" alt="ShareButton"></picture><br><sub><b>ShareButton</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ShareButton-dark.png"><img src="Screenshots/ShareButton.png" width="146" alt="ShareButton"></picture><br><sub><b>ShareButton</b></sub></td>
 </tr>
 </table>
 
@@ -213,63 +213,63 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Button-dark.png"><img src="Screenshots/Button.png" width="240" alt="Button"></picture><br><sub><b>Button</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeButton-dark.png"><img src="Screenshots/ThemeButton.png" width="240" alt="ThemeButton"></picture><br><sub><b>ThemeButton</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Checkbox-dark.png"><img src="Screenshots/Checkbox.png" width="240" alt="Checkbox"></picture><br><sub><b>Checkbox</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Button-dark.png"><img src="Screenshots/Button.png" width="240" alt="Button"></picture><br><sub><b>Button</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeButton-dark.png"><img src="Screenshots/ThemeButton.png" width="240" alt="ThemeButton"></picture><br><sub><b>ThemeButton</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Checkbox-dark.png"><img src="Screenshots/Checkbox.png" width="212" alt="Checkbox"></picture><br><sub><b>Checkbox</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CheckboxGroup-dark.png"><img src="Screenshots/CheckboxGroup.png" width="240" alt="CheckboxGroup"></picture><br><sub><b>CheckboxGroup</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadioButton-dark.png"><img src="Screenshots/RadioButton.png" width="240" alt="RadioButton"></picture><br><sub><b>RadioButton</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadioGroup-dark.png"><img src="Screenshots/RadioGroup.png" width="240" alt="RadioGroup"></picture><br><sub><b>RadioGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CheckboxGroup-dark.png"><img src="Screenshots/CheckboxGroup.png" width="240" alt="CheckboxGroup"></picture><br><sub><b>CheckboxGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadioButton-dark.png"><img src="Screenshots/RadioButton.png" width="171" alt="RadioButton"></picture><br><sub><b>RadioButton</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RadioGroup-dark.png"><img src="Screenshots/RadioGroup.png" width="240" alt="RadioGroup"></picture><br><sub><b>RadioGroup</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ToggleGroup-dark.png"><img src="Screenshots/ToggleGroup.png" width="240" alt="ToggleGroup"></picture><br><sub><b>ToggleGroup</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeToggle-dark.png"><img src="Screenshots/ThemeToggle.png" width="240" alt="ThemeToggle"></picture><br><sub><b>ThemeToggle</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SegmentedControl-dark.png"><img src="Screenshots/SegmentedControl.png" width="240" alt="SegmentedControl"></picture><br><sub><b>SegmentedControl</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ToggleGroup-dark.png"><img src="Screenshots/ToggleGroup.png" width="72" alt="ToggleGroup"></picture><br><sub><b>ToggleGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeToggle-dark.png"><img src="Screenshots/ThemeToggle.png" width="128" alt="ThemeToggle"></picture><br><sub><b>ThemeToggle</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SegmentedControl-dark.png"><img src="Screenshots/SegmentedControl.png" width="240" alt="SegmentedControl"></picture><br><sub><b>SegmentedControl</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/QuantityStepper-dark.png"><img src="Screenshots/QuantityStepper.png" width="240" alt="QuantityStepper"></picture><br><sub><b>QuantityStepper</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Stat-dark.png"><img src="Screenshots/Stat.png" width="240" alt="Stat"></picture><br><sub><b>Stat</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Steps-dark.png"><img src="Screenshots/Steps.png" width="240" alt="Steps"></picture><br><sub><b>Steps</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/QuantityStepper-dark.png"><img src="Screenshots/QuantityStepper.png" width="168" alt="QuantityStepper"></picture><br><sub><b>QuantityStepper</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Stat-dark.png"><img src="Screenshots/Stat.png" width="240" alt="Stat"></picture><br><sub><b>Stat</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Steps-dark.png"><img src="Screenshots/Steps.png" width="240" alt="Steps"></picture><br><sub><b>Steps</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Slider-dark.png"><img src="Screenshots/Slider.png" width="240" alt="Slider"></picture><br><sub><b>Slider</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Breadcrumbs-dark.png"><img src="Screenshots/Breadcrumbs.png" width="240" alt="Breadcrumbs"></picture><br><sub><b>Breadcrumbs</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextInput-dark.png"><img src="Screenshots/TextInput.png" width="240" alt="TextInput"></picture><br><sub><b>TextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Slider-dark.png"><img src="Screenshots/Slider.png" width="240" alt="Slider"></picture><br><sub><b>Slider</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Breadcrumbs-dark.png"><img src="Screenshots/Breadcrumbs.png" width="240" alt="Breadcrumbs"></picture><br><sub><b>Breadcrumbs</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TextInput-dark.png"><img src="Screenshots/TextInput.png" width="240" alt="TextInput"></picture><br><sub><b>TextInput</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FileInput-dark.png"><img src="Screenshots/FileInput.png" width="240" alt="FileInput"></picture><br><sub><b>FileInput</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Pagination-dark.png"><img src="Screenshots/Pagination.png" width="240" alt="Pagination"></picture><br><sub><b>Pagination</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Fieldset-dark.png"><img src="Screenshots/Fieldset.png" width="240" alt="Fieldset"></picture><br><sub><b>Fieldset</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FileInput-dark.png"><img src="Screenshots/FileInput.png" width="240" alt="FileInput"></picture><br><sub><b>FileInput</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Pagination-dark.png"><img src="Screenshots/Pagination.png" width="240" alt="Pagination"></picture><br><sub><b>Pagination</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Fieldset-dark.png"><img src="Screenshots/Fieldset.png" width="240" alt="Fieldset"></picture><br><sub><b>Fieldset</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/DateField-dark.png"><img src="Screenshots/DateField.png" width="240" alt="DateField"></picture><br><sub><b>DateField</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Select-dark.png"><img src="Screenshots/Select.png" width="240" alt="Select"></picture><br><sub><b>Select</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MultiSelect-dark.png"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"></picture><br><sub><b>MultiSelect</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/DateField-dark.png"><img src="Screenshots/DateField.png" width="240" alt="DateField"></picture><br><sub><b>DateField</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Select-dark.png"><img src="Screenshots/Select.png" width="240" alt="Select"></picture><br><sub><b>Select</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MultiSelect-dark.png"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"></picture><br><sub><b>MultiSelect</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TreeSelect-dark.png"><img src="Screenshots/TreeSelect.png" width="240" alt="TreeSelect"></picture><br><sub><b>TreeSelect</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Autocomplete-dark.png"><img src="Screenshots/Autocomplete.png" width="240" alt="Autocomplete"></picture><br><sub><b>Autocomplete</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SearchBar-dark.png"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"></picture><br><sub><b>SearchBar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/TreeSelect-dark.png"><img src="Screenshots/TreeSelect.png" width="240" alt="TreeSelect"></picture><br><sub><b>TreeSelect</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Autocomplete-dark.png"><img src="Screenshots/Autocomplete.png" width="240" alt="Autocomplete"></picture><br><sub><b>Autocomplete</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SearchBar-dark.png"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"></picture><br><sub><b>SearchBar</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/OTPInput-dark.png"><img src="Screenshots/OTPInput.png" width="240" alt="OTPInput"></picture><br><sub><b>OTPInput</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InputNumber-dark.png"><img src="Screenshots/InputNumber.png" width="240" alt="InputNumber"></picture><br><sub><b>InputNumber</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RangeSlider-dark.png"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"></picture><br><sub><b>RangeSlider</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/OTPInput-dark.png"><img src="Screenshots/OTPInput.png" width="240" alt="OTPInput"></picture><br><sub><b>OTPInput</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InputNumber-dark.png"><img src="Screenshots/InputNumber.png" width="240" alt="InputNumber"></picture><br><sub><b>InputNumber</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RangeSlider-dark.png"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"></picture><br><sub><b>RangeSlider</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MultiLineTextInput-dark.png"><img src="Screenshots/MultiLineTextInput.png" width="240" alt="MultiLineTextInput"></picture><br><sub><b>MultiLineTextInput</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Tooltip-dark.png"><img src="Screenshots/Tooltip.png" width="240" alt="Tooltip"></picture><br><sub><b>Tooltip</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Chips-dark.png"><img src="Screenshots/Chips.png" width="240" alt="Chips"></picture><br><sub><b>Chips</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MultiLineTextInput-dark.png"><img src="Screenshots/MultiLineTextInput.png" width="240" alt="MultiLineTextInput"></picture><br><sub><b>MultiLineTextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Tooltip-dark.png"><img src="Screenshots/Tooltip.png" width="60" alt="Tooltip"></picture><br><sub><b>Tooltip</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Chips-dark.png"><img src="Screenshots/Chips.png" width="132" alt="Chips"></picture><br><sub><b>Chips</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FilterGroup-dark.png"><img src="Screenshots/FilterGroup.png" width="240" alt="FilterGroup"></picture><br><sub><b>FilterGroup</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ProgressIndicator-dark.png"><img src="Screenshots/ProgressIndicator.png" width="240" alt="ProgressIndicator"></picture><br><sub><b>ProgressIndicator</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeController-dark.png"><img src="Screenshots/ThemeController.png" width="240" alt="ThemeController"></picture><br><sub><b>ThemeController</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FilterGroup-dark.png"><img src="Screenshots/FilterGroup.png" width="240" alt="FilterGroup"></picture><br><sub><b>FilterGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ProgressIndicator-dark.png"><img src="Screenshots/ProgressIndicator.png" width="240" alt="ProgressIndicator"></picture><br><sub><b>ProgressIndicator</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ThemeController-dark.png"><img src="Screenshots/ThemeController.png" width="240" alt="ThemeController"></picture><br><sub><b>ThemeController</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Calendar-dark.png"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"></picture><br><sub><b>Calendar</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ColorField-dark.png"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"></picture><br><sub><b>ColorField</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Calendar-dark.png"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"></picture><br><sub><b>Calendar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ColorField-dark.png"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"></picture><br><sub><b>ColorField</b></sub></td>
 </tr>
 </table>
 
@@ -277,53 +277,53 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Accordion-dark.png"><img src="Screenshots/Accordion.png" width="240" alt="Accordion"></picture><br><sub><b>Accordion</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/AlertToast-dark.png"><img src="Screenshots/AlertToast.png" width="240" alt="AlertToast"></picture><br><sub><b>AlertToast</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Callout-dark.png"><img src="Screenshots/Callout.png" width="240" alt="Callout"></picture><br><sub><b>Callout</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Accordion-dark.png"><img src="Screenshots/Accordion.png" width="240" alt="Accordion"></picture><br><sub><b>Accordion</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/AlertToast-dark.png"><img src="Screenshots/AlertToast.png" width="240" alt="AlertToast"></picture><br><sub><b>AlertToast</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Callout-dark.png"><img src="Screenshots/Callout.png" width="240" alt="Callout"></picture><br><sub><b>Callout</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Card-dark.png"><img src="Screenshots/Card.png" width="240" alt="Card"></picture><br><sub><b>Card</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ChatBubble-dark.png"><img src="Screenshots/ChatBubble.png" width="240" alt="ChatBubble"></picture><br><sub><b>ChatBubble</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Counter-dark.png"><img src="Screenshots/Counter.png" width="240" alt="Counter"></picture><br><sub><b>Counter</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Card-dark.png"><img src="Screenshots/Card.png" width="240" alt="Card"></picture><br><sub><b>Card</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ChatBubble-dark.png"><img src="Screenshots/ChatBubble.png" width="240" alt="ChatBubble"></picture><br><sub><b>ChatBubble</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Counter-dark.png"><img src="Screenshots/Counter.png" width="172" alt="Counter"></picture><br><sub><b>Counter</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Coupon-dark.png"><img src="Screenshots/Coupon.png" width="240" alt="Coupon"></picture><br><sub><b>Coupon</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/EmptyState-dark.png"><img src="Screenshots/EmptyState.png" width="240" alt="EmptyState"></picture><br><sub><b>EmptyState</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InfoBanner-dark.png"><img src="Screenshots/InfoBanner.png" width="240" alt="InfoBanner"></picture><br><sub><b>InfoBanner</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Coupon-dark.png"><img src="Screenshots/Coupon.png" width="240" alt="Coupon"></picture><br><sub><b>Coupon</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/EmptyState-dark.png"><img src="Screenshots/EmptyState.png" width="240" alt="EmptyState"></picture><br><sub><b>EmptyState</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/InfoBanner-dark.png"><img src="Screenshots/InfoBanner.png" width="240" alt="InfoBanner"></picture><br><sub><b>InfoBanner</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/KeyValueTable-dark.png"><img src="Screenshots/KeyValueTable.png" width="240" alt="KeyValueTable"></picture><br><sub><b>KeyValueTable</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ListRow-dark.png"><img src="Screenshots/ListRow.png" width="240" alt="ListRow"></picture><br><sub><b>ListRow</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/NotificationCard-dark.png"><img src="Screenshots/NotificationCard.png" width="240" alt="NotificationCard"></picture><br><sub><b>NotificationCard</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/KeyValueTable-dark.png"><img src="Screenshots/KeyValueTable.png" width="240" alt="KeyValueTable"></picture><br><sub><b>KeyValueTable</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ListRow-dark.png"><img src="Screenshots/ListRow.png" width="240" alt="ListRow"></picture><br><sub><b>ListRow</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/NotificationCard-dark.png"><img src="Screenshots/NotificationCard.png" width="240" alt="NotificationCard"></picture><br><sub><b>NotificationCard</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/PageHeader-dark.png"><img src="Screenshots/PageHeader.png" width="240" alt="PageHeader"></picture><br><sub><b>PageHeader</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RatingSummary-dark.png"><img src="Screenshots/RatingSummary.png" width="240" alt="RatingSummary"></picture><br><sub><b>RatingSummary</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ResultView-dark.png"><img src="Screenshots/ResultView.png" width="240" alt="ResultView"></picture><br><sub><b>ResultView</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/PageHeader-dark.png"><img src="Screenshots/PageHeader.png" width="240" alt="PageHeader"></picture><br><sub><b>PageHeader</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/RatingSummary-dark.png"><img src="Screenshots/RatingSummary.png" width="240" alt="RatingSummary"></picture><br><sub><b>RatingSummary</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ResultView-dark.png"><img src="Screenshots/ResultView.png" width="240" alt="ResultView"></picture><br><sub><b>ResultView</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SegmentedTabBar-dark.png"><img src="Screenshots/SegmentedTabBar.png" width="240" alt="SegmentedTabBar"></picture><br><sub><b>SegmentedTabBar</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Timeline-dark.png"><img src="Screenshots/Timeline.png" width="240" alt="Timeline"></picture><br><sub><b>Timeline</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Upload-dark.png"><img src="Screenshots/Upload.png" width="240" alt="Upload"></picture><br><sub><b>Upload</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SegmentedTabBar-dark.png"><img src="Screenshots/SegmentedTabBar.png" width="240" alt="SegmentedTabBar"></picture><br><sub><b>SegmentedTabBar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Timeline-dark.png"><img src="Screenshots/Timeline.png" width="240" alt="Timeline"></picture><br><sub><b>Timeline</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Upload-dark.png"><img src="Screenshots/Upload.png" width="240" alt="Upload"></picture><br><sub><b>Upload</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/PromoBanner-dark.png"><img src="Screenshots/PromoBanner.png" width="240" alt="PromoBanner"></picture><br><sub><b>PromoBanner</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ListView-dark.png"><img src="Screenshots/ListView.png" width="240" alt="ListView"></picture><br><sub><b>ListView</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MenuCard-dark.png"><img src="Screenshots/MenuCard.png" width="240" alt="MenuCard"></picture><br><sub><b>MenuCard</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/PromoBanner-dark.png"><img src="Screenshots/PromoBanner.png" width="240" alt="PromoBanner"></picture><br><sub><b>PromoBanner</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/ListView-dark.png"><img src="Screenshots/ListView.png" width="240" alt="ListView"></picture><br><sub><b>ListView</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/MenuCard-dark.png"><img src="Screenshots/MenuCard.png" width="240" alt="MenuCard"></picture><br><sub><b>MenuCard</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/NavigationBar-dark.png"><img src="Screenshots/NavigationBar.png" width="240" alt="NavigationBar"></picture><br><sub><b>NavigationBar</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FAB-dark.png"><img src="Screenshots/FAB.png" width="240" alt="FAB"></picture><br><sub><b>FAB</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Hero-dark.png"><img src="Screenshots/Hero.png" width="240" alt="Hero"></picture><br><sub><b>Hero</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/NavigationBar-dark.png"><img src="Screenshots/NavigationBar.png" width="240" alt="NavigationBar"></picture><br><sub><b>NavigationBar</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/FAB-dark.png"><img src="Screenshots/FAB.png" width="88" alt="FAB"></picture><br><sub><b>FAB</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Hero-dark.png"><img src="Screenshots/Hero.png" width="240" alt="Hero"></picture><br><sub><b>Hero</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SelectionCards-dark.png"><img src="Screenshots/SelectionCards.png" width="240" alt="SelectionCards"></picture><br><sub><b>SelectionCards</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CardStack-dark.png"><img src="Screenshots/CardStack.png" width="240" alt="CardStack"></picture><br><sub><b>CardStack</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Gallery-dark.png"><img src="Screenshots/Gallery.png" width="240" alt="Gallery"></picture><br><sub><b>Gallery</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/SelectionCards-dark.png"><img src="Screenshots/SelectionCards.png" width="240" alt="SelectionCards"></picture><br><sub><b>SelectionCards</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/CardStack-dark.png"><img src="Screenshots/CardStack.png" width="240" alt="CardStack"></picture><br><sub><b>CardStack</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Gallery-dark.png"><img src="Screenshots/Gallery.png" width="240" alt="Gallery"></picture><br><sub><b>Gallery</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Footer-dark.png"><img src="Screenshots/Footer.png" width="240" alt="Footer"></picture><br><sub><b>Footer</b></sub></td>
-<td align="center" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Diff-dark.png"><img src="Screenshots/Diff.png" width="240" alt="Diff"></picture><br><sub><b>Diff</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Footer-dark.png"><img src="Screenshots/Footer.png" width="240" alt="Footer"></picture><br><sub><b>Footer</b></sub></td>
+<td align="center" valign="top" width="33%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/Diff-dark.png"><img src="Screenshots/Diff.png" width="240" alt="Diff"></picture><br><sub><b>Diff</b></sub></td>
 </tr>
 </table>
 
