@@ -129,13 +129,15 @@ public final class Theme: @unchecked Sendable {
         apply(ThemeGenerator.generate(
             primaryHex: config.primaryHex, tint: config.tint, dark: config.dark, font: config.font,
             fontScale: config.fontScale, radiusScale: config.radiusScale,
-            spacingScale: config.spacingScale, shadowScale: config.shadowScale
+            spacingScale: config.spacingScale, shadowScale: config.shadowScale,
+            baseHex: config.baseHex
         ))
     }
 
     /// Convenience for applying a generated theme without building a `ThemeConfig`.
     public func applyGenerated(
         primaryHex: String,
+        baseHex: String? = nil,
         tint: Double = 0.06,
         dark: Bool = false,
         font: String = "Montserrat",
@@ -145,7 +147,7 @@ public final class Theme: @unchecked Sendable {
         shadowScale: Double = 1
     ) {
         apply(ThemeConfig(
-            primaryHex: primaryHex, tint: tint, dark: dark, font: font,
+            primaryHex: primaryHex, baseHex: baseHex, tint: tint, dark: dark, font: font,
             fontScale: fontScale, radiusScale: radiusScale, spacingScale: spacingScale, shadowScale: shadowScale
         ))
     }
@@ -158,7 +160,8 @@ public final class Theme: @unchecked Sendable {
         let data = ThemeGenerator.generate(
             primaryHex: config.primaryHex, tint: config.tint, dark: config.dark, font: config.font,
             fontScale: config.fontScale, radiusScale: config.radiusScale,
-            spacingScale: config.spacingScale, shadowScale: config.shadowScale
+            spacingScale: config.spacingScale, shadowScale: config.shadowScale,
+            baseHex: config.baseHex
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted]

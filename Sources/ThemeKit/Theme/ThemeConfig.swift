@@ -16,6 +16,10 @@ public struct ThemeConfig: Codable, Equatable, Sendable {
     /// Accent / primary color as a 6-digit RRGGBB hex (no `#`). Drives the whole
     /// palette: primary + info + the neutral ramp tint toward it.
     public var primaryHex: String
+    /// Optional surface "paper" tone as a 6-digit RRGGBB hex (daisyUI `base-100`).
+    /// When set, the card/page backgrounds derive from it instead of a
+    /// primary-tinted grey — so a theme keeps its signature base (cream, slate…).
+    public var baseHex: String?
     /// 0…0.25 — how strongly the accent bleeds into neutrals / surfaces.
     public var tint: Double
     /// Dark variant.
@@ -31,6 +35,7 @@ public struct ThemeConfig: Codable, Equatable, Sendable {
 
     public init(
         primaryHex: String = "056bfd",
+        baseHex: String? = nil,
         tint: Double = 0.06,
         dark: Bool = false,
         font: String = "Montserrat",
@@ -40,6 +45,7 @@ public struct ThemeConfig: Codable, Equatable, Sendable {
         shadowScale: Double = 1
     ) {
         self.primaryHex = ThemeConfig.normalizeHex(primaryHex)
+        self.baseHex = baseHex.map(ThemeConfig.normalizeHex)
         self.tint = tint
         self.dark = dark
         self.font = font
