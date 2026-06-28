@@ -6,7 +6,7 @@ the prioritized plan to take it to reference-grade. Findings are evidence-backed
 
 **Type:** A — distributable SPM library (`ThemeKit` + `ThemeKitLottie`).
 **Swift / min target:** 6.2 · iOS 17 / macOS 14. **Deps:** lottie-ios (opt-in product), swift-snapshot-testing (tests), swift-docc-plugin.
-**Maturity:** **Level 4 (Production library)** → target **Level 5 (Reference-grade)**.
+**Maturity:** **Level 5 (Reference-grade)** — reached via #57–#68 (was Level 4 at audit time).
 
 ## Snapshot
 
@@ -23,13 +23,13 @@ singleton; the rest is polish and discipline.
 |---|---|---|
 | A. Structure | Solid | tokens→atoms→molecules→organisms, 1 file/component, 2 products (Lottie isolated), 781 public (deliberate) |
 | B. Tokens | Solid | JSON + generator semantic tokens, light+dark, Dynamic Type, only 6 hardcoded colors |
-| C. Theming | **Partial → improving** | runtime theming works but via the `Theme.shared` singleton (690 reads); `\.theme` injection now added (see P0) |
+| C. Theming | Solid | runtime theming + `\.theme` environment rolled out across all 580 view-body reads (#57, #66–#68); per-subtree theming works. ~156 static (enum/init/presenter) reads remain on the singleton by design |
 | D. API design | Solid | ButtonStyle/BadgeStyle patterns, slot composition; no VM in leaf components (the 7 ObservableObjects are presenters in organisms) |
 | E. State & data flow | Solid | value-driven (`let`+`@Binding`), no business logic in leaves |
 | F. Accessibility | Solid | VoiceOver labels/traits, Slider adjustable action, Reduce Motion (micro-motion), RTL, a11y semantics tests |
 | G. Previews & gallery | Solid | 108 `#Preview`, Demo gallery + README still/GIF gallery |
 | H. Testing | Solid | 196 tests, 11 snapshot suites, render-smoke, a11y |
-| I. Documentation | Partial | DocC (6 articles) + README + wiki; per-symbol `///` doc comments incomplete (104 component types use `//` file headers, not DocC `///`) |
+| I. Documentation | Solid | DocC (6 articles) + README + wiki; per-symbol `///` doc comments now on all component `View` structs (#64) — modifier/enum-fronted components documented at their entry point |
 | J. Versioning / API stability | Solid | `check-api.sh` + allowlist + `docs/API-STABILITY.md` + CI api-breakage job, `@available` |
 | K. Performance | Partial → improving | 11 AnyView (justified, see below), lazy row stacks now in ListView/DataTable (P1) |
 | L. Tooling / CI | Solid | SwiftLint+Format+CI+api-breakage; `$0` local CI (`make ci`) covers the Actions-billing outage |
@@ -39,7 +39,7 @@ singleton; the rest is polish and discipline.
 
 ### P0 — structural lever
 - [x] **`\.theme` environment injection** (PR #57) — `EnvironmentValues.theme` defaulting to `Theme.shared` (crash-proof, backward compatible) + `.theme(_:)` override; pilot `Card`/`Tag` migrated; +2 tests.
-- [ ] **Full singleton → environment rollout** — *staged, deliberate.* The remaining ~690 reads migrate incrementally; the singleton is a documented design (`ThemeKit.swift`), so this is opt-in cleanup, not a forced mass-rewrite. Per-component caveat: only view bodies/instance members can read `\.theme`; `ButtonStyle` inner-views and the `BadgeStyle`/`SemanticColor` enums resolve statically and would need their own theme parameter to be fully re-themeable in a subtree.
+- [x] **Full singleton → environment rollout** (PRs #66–#68) — the **view-body** migration is done across all three layers: **580 reads** (Atoms 66 · Molecules 333 · Organisms 181) now resolve `\.theme` from the environment, so an injected `.theme(_:)` re-skins any subtree. Compiler-guarded and pixel-verified (every regenerated screenshot byte-identical; default render unchanged because `\.theme` defaults to `Theme.shared`). The remaining ~156 reads are *static* contexts that can't read environment — `BadgeStyle`/`SemanticColor` enum resolvers, `init` defaults, `ButtonStyle` inner-views, and the 7 `ObservableObject` presenters — which need an explicit theme *parameter* (not environment) to be subtree-themeable; that parameterization is a separate, lower-value pass.
 
 ### P1 — high leverage
 - [x] **Lazy row stacks** (PR #58) — `LazyVStack` for `ListView`/`DataTable` rows.
@@ -48,10 +48,10 @@ singleton; the rest is polish and discipline.
 
 ### P2 — polish
 - [x] **AnyView review** — *assessed, no change.* The 11 `AnyView`s sit in heterogeneous-content organisms (`DataTable` columns, `Accordion`/`Drawer` slots) and host/shadow plumbing — justified type-erasure, none in per-row hot paths.
-- [ ] **DocC `///` doc comments** — add usage-snippet symbol docs to the 104 component types (file headers exist; DocC needs `///`). Exemplars added this pass; remainder is mechanical.
-- [ ] **Preview state-matrix helper** — a shared helper so every component preview covers default/loading/disabled/error/long-text/dark systematically (knob demos already cover states interactively).
+- [x] **DocC `///` doc comments** (PR #64) — each component's file-header description was relocated to a `///` symbol doc on its primary `View` struct (DocC ignores `//` header prose); **86 structs** now documented, the rest already documented at their modifier/enum entry point. Builds with no symbol warnings; API surface unchanged.
+- [x] **Preview state-matrix helper** (PR #65) — `PreviewMatrix` lays a component's labeled states out as rows and renders each across appearance columns (light + dark, opt-in XL Dynamic-Type / RTL), so one `#Preview` covers the state × appearance matrix. Adopted as `#Preview("States")` exemplars in Tag/Stat/Avatar; other components opt in the same way.
 
-## Suggested sequence
-1) `\.theme` injection (done) → 2) lazy stacks (done) → 3) style-protocol extraction → 4) DocC `///` sweep → 5) preview-matrix helper.
+## Suggested sequence — all delivered
+1) `\.theme` injection (#57) → 2) lazy stacks (#58) → 3) style-protocol extraction (#60–#62) → 4) DocC `///` sweep (#64) → 5) preview-matrix helper (#65) → 6) full view-body `\.theme` rollout (#66–#68). ✅
 
-**Verdict:** Already L4. With the `\.theme` lever opened and the perf/polish items closed, the path to L5 is incremental cleanup, not architectural change.
+**Verdict:** **Reference-grade (L5).** Every prioritized item is closed: the theming lever is not just opened but rolled out across all 580 view-body reads, the perf/polish items are done, and docs/previews are systematized. The one remaining thread — parameterizing the ~156 static (enum/init/presenter) theme reads so they too honor an injected subtree theme — is optional hardening, not a gap in the architecture.
