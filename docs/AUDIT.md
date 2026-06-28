@@ -44,7 +44,7 @@ singleton; the rest is polish and discipline.
 ### P1 — high leverage
 - [x] **Lazy row stacks** (PR #58) — `LazyVStack` for `ListView`/`DataTable` rows.
 - [x] **Public surface review** — *assessed, no change.* The utility publics (`Haptics`, impression tracking, `Debounce`, `String(themeKit:)`, color helpers) are deliberate API, not accidental leaks; blind pre-1.0 demotions would be breaking churn and are already guarded by `check-api.sh`. Revisit symbol-by-symbol with intent before 1.0.
-- [ ] **Style-protocol extraction** — push appearance config off param-heavy inits (e.g. `Stat`, `Card`, `Select`) into `XStyle` + `.xStyle()` modifiers, additively (non-breaking).
+- [x] **Style-protocol extraction** (PR #60) — `CardStyle` protocol + `.cardStyle(_:)` environment modifier (the `ButtonStyle` shape): `Card`'s surface is now supplied by a style, so it can be reskinned (`.outlined`, or a custom `CardStyle`) without editing the component. The default style reproduces the original look exactly (no regression). Pattern established; `Stat`/`Select` are the mechanical follow-up.
 
 ### P2 — polish
 - [x] **AnyView review** — *assessed, no change.* The 11 `AnyView`s sit in heterogeneous-content organisms (`DataTable` columns, `Accordion`/`Drawer` slots) and host/shadow plumbing — justified type-erasure, none in per-row hot paths.

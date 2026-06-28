@@ -402,23 +402,34 @@ struct CardDemo: View {
     @State private var tappable = false
     @State private var header = true
     @State private var loading = false
+    @State private var outlined = false
     @State private var taps = 0
+
+    private var cardBody: some View {
+        Card(elevation: elevation, padding: padding,
+             title: header ? "Rezervasyon" : nil,
+             subtitle: header ? "2 gece · 2 misafir" : nil,
+             extraTitle: header ? "Detay" : nil,
+             onExtra: header ? { flash("Detay") } : nil,
+             isLoading: loading,
+             action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
+                Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
+                    .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+        }
+    }
+
     var body: some View {
-        ComponentStage("Card", inspector: [("elevation", "\(elevation)"), ("header", "\(header)"), ("loading", "\(loading)")]) {
-            Card(elevation: elevation, padding: padding,
-                 title: header ? "Rezervasyon" : nil,
-                 subtitle: header ? "2 gece · 2 misafir" : nil,
-                 extraTitle: header ? "Detay" : nil,
-                 onExtra: header ? { flash("Detay") } : nil,
-                 isLoading: loading,
-                 action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
-                    Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
-                        .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
-                }
+        ComponentStage("Card", inspector: [("style", outlined ? "outlined" : "default"), ("elevation", "\(elevation)"), ("header", "\(header)")]) {
+            if outlined {
+                cardBody.cardStyle(.outlined)   // custom CardStyle via the .cardStyle(_:) modifier
+            } else {
+                cardBody                        // default env CardStyle
             }
         } knobs: {
+            Toggle("Outlined style (.cardStyle)", isOn: $outlined)
             Toggle("Header (title + extra)", isOn: $header)
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)

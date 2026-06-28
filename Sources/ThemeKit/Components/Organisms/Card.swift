@@ -26,6 +26,7 @@ public struct Card<Content: View>: View {
     private let content: () -> Content
 
     @Environment(\.theme) private var theme
+    @Environment(\.cardStyle) private var cardStyle
 
     public init(
         elevation: CardElevation = .soft,
@@ -84,7 +85,9 @@ public struct Card<Content: View>: View {
         }
     }
 
-    private var surface: some View {
+    /// The composed content (header + body, padded) — the surface chrome around it
+    /// is supplied by the active ``CardStyle``.
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             if hasHeader {
                 header
@@ -96,13 +99,10 @@ public struct Card<Content: View>: View {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(theme.background(.bgWhite),
-                   in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                .strokeBorder(theme.border(.borderPrimary), lineWidth: elevation == .none ? 1 : 0)
-        )
-        .modifier(CardShadow(elevation: elevation))
+    }
+
+    private var surface: some View {
+        cardStyle.makeBody(configuration: CardStyleConfiguration(content: AnyView(cardContent), elevation: elevation))
     }
 
     public var body: some View {
@@ -115,7 +115,7 @@ public struct Card<Content: View>: View {
     }
 }
 
-private struct CardShadow: ViewModifier {
+struct CardShadow: ViewModifier {
     let elevation: CardElevation
     func body(content: Content) -> some View {
         switch elevation {
