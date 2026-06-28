@@ -135,8 +135,12 @@ public struct DataTable<Row: Identifiable>: View {
             } else if displayRows.isEmpty {
                 emptyRow
             } else {
-                ForEach(Array(pagedRows.enumerated()), id: \.element.id) { index, row in
-                    dataRow(row, index: index)
+                // Lazy so an unpaginated table (pageSize == nil) over many rows only
+                // builds visible rows when scrolled; a no-op when paged/standalone.
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(pagedRows.enumerated()), id: \.element.id) { index, row in
+                        dataRow(row, index: index)
+                    }
                 }
             }
         }
