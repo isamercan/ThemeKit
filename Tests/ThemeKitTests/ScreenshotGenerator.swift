@@ -164,9 +164,9 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func molecules() {
         shot("Button", HStack(spacing: 10) {
-            PrimaryButton("Continue") {}
-            SecondaryButton("Cancel") {}
-            OutlineButton("More") {}
+            PrimaryButton("Continue", isContentWidth: true) {}
+            SecondaryButton("Cancel", isContentWidth: true) {}
+            OutlineButton("More", isContentWidth: true) {}
         })
         shot("ThemeButton", HStack(spacing: 10) {
             ThemeButton("Solid", color: .primary) {}

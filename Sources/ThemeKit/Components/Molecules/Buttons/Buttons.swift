@@ -81,6 +81,7 @@ private struct ThemedButton: View {
                     Text(title)
                         .textStyle(textStyle ?? size.textStyle)
                         .underline(style == .link)
+                        .lineLimit(1)              // a button label stays on one line (truncates, never wraps)
                         .transition(.opacity)
                 }
             }
