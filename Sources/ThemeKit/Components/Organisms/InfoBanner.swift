@@ -9,33 +9,33 @@ import SwiftUI
 public enum InfoBannerType {
     case neutral, info, success, warning, error
 
-    var background: Color {
+    func background(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.background(.bgElevatorPrimary)
-        case .info: return Theme.shared.background(.systemcolorsBgInfoLight)
-        case .success: return Theme.shared.background(.systemcolorsBgSuccessLight)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarningLight)
-        case .error: return Theme.shared.background(.systemcolorsBgErrorLight)
+        case .neutral: return theme.background(.bgElevatorPrimary)
+        case .info: return theme.background(.systemcolorsBgInfoLight)
+        case .success: return theme.background(.systemcolorsBgSuccessLight)
+        case .warning: return theme.background(.systemcolorsBgWarningLight)
+        case .error: return theme.background(.systemcolorsBgErrorLight)
         }
     }
 
-    var accent: Color {
+    func accent(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.text(.textSecondary)
-        case .info: return Theme.shared.foreground(.systemcolorsFgInfo)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
+        case .neutral: return theme.text(.textSecondary)
+        case .info: return theme.foreground(.systemcolorsFgInfo)
+        case .success: return theme.foreground(.systemcolorsFgSuccess)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        case .error: return theme.foreground(.systemcolorsFgError)
         }
     }
 
-    var border: Color {
+    func border(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.border(.borderPrimary)
-        case .info: return Theme.shared.border(.systemcolorsBorderInfoLight)
-        case .success: return Theme.shared.border(.systemcolorsBorderSuccessLight)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarningLight)
-        case .error: return Theme.shared.border(.systemcolorsBorderErrorLight)
+        case .neutral: return theme.border(.borderPrimary)
+        case .info: return theme.border(.systemcolorsBorderInfoLight)
+        case .success: return theme.border(.systemcolorsBorderSuccessLight)
+        case .warning: return theme.border(.systemcolorsBorderWarningLight)
+        case .error: return theme.border(.systemcolorsBorderErrorLight)
         }
     }
 
@@ -92,7 +92,7 @@ public struct InfoBanner: View {
     public var body: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             if showIcon {
-                Icon(systemName: type.systemImage, size: .sm, color: type.accent)
+                Icon(systemName: type.systemImage, size: .sm, color: type.accent(theme))
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -113,7 +113,7 @@ public struct InfoBanner: View {
 
             if let actionTitle, let onAction {
                 Button(action: onAction) {
-                    Text(actionTitle).textStyle(.labelSm600).foregroundStyle(type.accent)
+                    Text(actionTitle).textStyle(.labelSm600).foregroundStyle(type.accent(theme))
                 }
                 .buttonStyle(.plain)
             }
@@ -127,10 +127,10 @@ public struct InfoBanner: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: banner ? .infinity : nil, alignment: .leading)
-        .background(type.background, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .background(type.background(theme), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(type.border, lineWidth: banner ? 0 : 1)
+                .stroke(type.border(theme), lineWidth: banner ? 0 : 1)
         )
     }
 }

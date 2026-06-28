@@ -9,12 +9,12 @@ import SwiftUI
 public enum TableValueStyle {
     case plain, success, error, muted, strikethrough
 
-    var color: Color {
+    func color(_ theme: Theme) -> Color {
         switch self {
-        case .plain: return Theme.shared.text(.textPrimary)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .muted, .strikethrough: return Theme.shared.text(.textTertiary)
+        case .plain: return theme.text(.textPrimary)
+        case .success: return theme.foreground(.systemcolorsFgSuccess)
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .muted, .strikethrough: return theme.text(.textTertiary)
         }
     }
 }
@@ -77,7 +77,7 @@ public struct KeyValueTable: View {
                     Spacer(minLength: Theme.SpacingKey.md.value)
                     Text(row.value)
                         .textStyle(.labelBase600)
-                        .foregroundStyle(row.style.color)
+                        .foregroundStyle(row.style.color(theme))
                         .strikethrough(row.style == .strikethrough)
                         .multilineTextAlignment(.trailing)
                 }

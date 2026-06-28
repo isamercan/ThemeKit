@@ -9,22 +9,22 @@ import SwiftUI
 public enum CalloutType {
     case neutral, info, success, warning, error
 
-    var accent: Color {
+    func accent(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.text(.textSecondary)
-        case .info: return Theme.shared.foreground(.systemcolorsFgInfo)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
+        case .neutral: return theme.text(.textSecondary)
+        case .info: return theme.foreground(.systemcolorsFgInfo)
+        case .success: return theme.foreground(.systemcolorsFgSuccess)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        case .error: return theme.foreground(.systemcolorsFgError)
         }
     }
-    var soft: Color {
+    func soft(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.background(.bgElevatorPrimary)
-        case .info: return Theme.shared.background(.systemcolorsBgInfoLight)
-        case .success: return Theme.shared.background(.systemcolorsBgSuccessLight)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarningLight)
-        case .error: return Theme.shared.background(.systemcolorsBgErrorLight)
+        case .neutral: return theme.background(.bgElevatorPrimary)
+        case .info: return theme.background(.systemcolorsBgInfoLight)
+        case .success: return theme.background(.systemcolorsBgSuccessLight)
+        case .warning: return theme.background(.systemcolorsBgWarningLight)
+        case .error: return theme.background(.systemcolorsBgErrorLight)
         }
     }
     var systemImage: String {
@@ -46,6 +46,8 @@ public enum CalloutStyle {
 /// InfoBanner — used to highlight a single line of information.
 /// Figma: success / error / info / warning / neutral; plain or soft style.
 public struct Callout: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let type: CalloutType
     private let style: CalloutStyle
@@ -100,12 +102,12 @@ public struct Callout: View {
                 }
             }
         }
-        .foregroundStyle(type.accent)
+        .foregroundStyle(type.accent(theme))
         .padding(.horizontal, style == .soft ? Theme.SpacingKey.sm.value : 0)
         .padding(.vertical, style == .soft ? Theme.SpacingKey.xs.value : 0)
         .background {
             if style == .soft {
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous).fill(type.soft)
+                RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous).fill(type.soft(theme))
             }
         }
     }

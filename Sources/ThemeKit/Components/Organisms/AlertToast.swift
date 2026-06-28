@@ -9,20 +9,20 @@ import SwiftUI
 public enum AlertToastType {
     case success, warning, danger, info
 
-    var background: Color {
+    func background(_ theme: Theme) -> Color {
         switch self {
-        case .success: return Theme.shared.background(.systemcolorsBgSuccess)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarning)
-        case .danger: return Theme.shared.background(.systemcolorsBgError)
-        case .info: return Theme.shared.background(.systemcolorsBgInfo)
+        case .success: return theme.background(.systemcolorsBgSuccess)
+        case .warning: return theme.background(.systemcolorsBgWarning)
+        case .danger: return theme.background(.systemcolorsBgError)
+        case .info: return theme.background(.systemcolorsBgInfo)
         }
     }
 
     /// Warning uses dark text for contrast on the bright amber fill.
-    var foreground: Color {
+    func foreground(_ theme: Theme) -> Color {
         switch self {
-        case .warning: return Theme.shared.text(.textPrimary)
-        case .success, .danger, .info: return Theme.shared.foreground(.fgSecondary)
+        case .warning: return theme.text(.textPrimary)
+        case .success, .danger, .info: return theme.foreground(.fgSecondary)
         }
     }
 
@@ -51,6 +51,8 @@ public struct ToastAction {
 /// Improved, token-bound rewrite of the reference AlertView — a solid-fill
 /// status banner (complements the light-surface InfoBanner).
 public struct AlertToast: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let message: String?
     private let type: AlertToastType
@@ -82,9 +84,9 @@ public struct AlertToast: View {
             // Leading accessory: an activity spinner while loading, otherwise the
             // status icon (a caller override falls back to the type's default).
             if isLoading {
-                Spinner(size: IconSize.sm.value, lineWidth: 2, color: type.foreground)
+                Spinner(size: IconSize.sm.value, lineWidth: 2, color: type.foreground(theme))
             } else {
-                Icon(systemName: systemImage ?? type.systemImage, size: .sm, color: type.foreground)
+                Icon(systemName: systemImage ?? type.systemImage, size: .sm, color: type.foreground(theme))
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -104,15 +106,15 @@ public struct AlertToast: View {
 
             if let onClose {
                 Button(action: onClose) {
-                    Icon(systemName: "xmark", size: .xs, color: type.foreground)
+                    Icon(systemName: "xmark", size: .xs, color: type.foreground(theme))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .foregroundStyle(type.foreground)
+        .foregroundStyle(type.foreground(theme))
         .padding(.vertical, 12)
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .background(type.background, in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(type.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }
 

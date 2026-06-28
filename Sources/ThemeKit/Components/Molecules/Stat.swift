@@ -18,10 +18,10 @@ public enum StatTrend {
         case .down(let t): return String(themeKit: "down \(t)")
         }
     }
-    var color: Color {
+    func color(_ theme: Theme) -> Color {
         switch self {
-        case .up: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .down: return Theme.shared.foreground(.systemcolorsFgError)
+        case .up: return theme.foreground(.systemcolorsFgSuccess)
+        case .down: return theme.foreground(.systemcolorsFgError)
         }
     }
     var systemImage: String { switch self { case .up: return "arrow.up.right"; case .down: return "arrow.down.right" } }
@@ -97,7 +97,7 @@ public struct Stat: View {
             Image(systemName: trend.systemImage).font(.system(size: 11, weight: .bold))
             Text(trend.text).textStyle(.labelSm600)
         }
-        .foregroundStyle(trend.color)
+        .foregroundStyle(trend.color(theme))
     }
 
     private var valueRow: some View {

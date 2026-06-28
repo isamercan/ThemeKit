@@ -9,13 +9,13 @@ import SwiftUI
 public enum StatusKind {
     case online, offline, busy, away, neutral
 
-    var color: Color {
+    func color(_ theme: Theme) -> Color {
         switch self {
-        case .online: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .offline: return Theme.shared.text(.textTertiary)
-        case .busy: return Theme.shared.foreground(.systemcolorsFgError)
-        case .away: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .neutral: return Theme.shared.foreground(.fgHero)
+        case .online: return theme.foreground(.systemcolorsFgSuccess)
+        case .offline: return theme.text(.textTertiary)
+        case .busy: return theme.foreground(.systemcolorsFgError)
+        case .away: return theme.foreground(.systemcolorsFgWarning)
+        case .neutral: return theme.foreground(.fgHero)
         }
     }
 
@@ -59,11 +59,11 @@ public struct StatusDot: View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             ZStack {
                 if pulses {
-                    Circle().fill(kind.color).opacity(animating ? 0 : 0.5)
+                    Circle().fill(kind.color(theme)).opacity(animating ? 0 : 0.5)
                         .scaleEffect(animating ? 2.2 : 1)
                         .frame(width: size, height: size)
                 }
-                Circle().fill(kind.color).frame(width: size, height: size)
+                Circle().fill(kind.color(theme)).frame(width: size, height: size)
             }
             .onAppear { if pulses { withAnimation(.easeOut(duration: 1.2).repeatForever(autoreverses: false)) { animating = true } } }
 
