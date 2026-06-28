@@ -113,37 +113,29 @@ public struct Badge: View {
     private let style: BadgeStyle
     private let variant: FillVariant
     private let size: BadgeSize
-    private let shape: BadgeShape
     private let leadingSystemImage: String?
-    private let trailingSystemImage: String?
-    private let textColor: Color?
-    private let gradient: [Color]?
-    private let highlighted: Bool
     private let action: (() -> Void)?
+    // Long-tail styling — rarely set, so configured via chainable modifiers
+    // rather than the init (keeps the common call site to `Badge("x", style:)`).
+    private var shape: BadgeShape = .pill
+    private var trailingSystemImage: String? = nil
+    private var textColor: Color? = nil
+    private var gradient: [Color]? = nil
+    private var highlighted: Bool = false
 
     public init(
         _ text: String,
         style: BadgeStyle = .neutral,
         variant: FillVariant = .soft,
         size: BadgeSize = .medium,
-        shape: BadgeShape = .pill,
         leadingSystemImage: String? = nil,
-        trailingSystemImage: String? = nil,
-        textColor: Color? = nil,
-        gradient: [Color]? = nil,
-        highlighted: Bool = false,
         action: (() -> Void)? = nil
     ) {
         self.text = text
         self.style = style
         self.variant = variant
         self.size = size
-        self.shape = shape
         self.leadingSystemImage = leadingSystemImage
-        self.trailingSystemImage = trailingSystemImage
-        self.textColor = textColor
-        self.gradient = gradient
-        self.highlighted = highlighted
         self.action = action
     }
 
@@ -206,6 +198,19 @@ public struct Badge: View {
     }
 }
 
+public extension Badge {
+    /// Pill (default) or rounded-rectangle outline.
+    func badgeShape(_ shape: BadgeShape) -> Self { var copy = self; copy.shape = shape; return copy }
+    /// A trailing SF Symbol after the text (e.g. a dismiss chevron).
+    func trailingIcon(_ systemName: String?) -> Self { var copy = self; copy.trailingSystemImage = systemName; return copy }
+    /// Overrides the text/foreground color (otherwise derived from style + variant).
+    func badgeColor(_ color: Color?) -> Self { var copy = self; copy.textColor = color; return copy }
+    /// Fills the badge with a horizontal gradient instead of the style background.
+    func gradient(_ colors: [Color]?) -> Self { var copy = self; copy.gradient = colors; return copy }
+    /// Lifts the badge off the surface with a subtle drop shadow.
+    func highlighted(_ on: Bool = true) -> Self { var copy = self; copy.highlighted = on; return copy }
+}
+
 private struct BadgeHighlight: ViewModifier {
     let on: Bool
     func body(content: Content) -> some View {
@@ -226,7 +231,7 @@ private struct BadgeHighlight: ViewModifier {
             Badge("Small", style: .info, size: .small)
             Badge("Medium", style: .info, size: .medium)
             Badge("Large", style: .info, size: .large)
-            Badge("Rounded", style: .success, shape: .rounded)
+            Badge("Rounded", style: .success).badgeShape(.rounded)
         }
     }
     .padding()
