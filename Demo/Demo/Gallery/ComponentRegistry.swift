@@ -160,6 +160,7 @@ enum ComponentRegistry {
         .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Özet", bordered: true)"#) {
             KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success), .init("Old price", value: "5.000 TL", style: .strikethrough), .init("Total", value: "4.250 TL")], title: "Rezervasyon özeti", bordered: true)
         },
+        .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]
 
     static func entries(in category: ComponentCategory) -> [ComponentEntry] {
