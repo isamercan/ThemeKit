@@ -38,7 +38,7 @@ public struct SegmentedControl: View {
     private let block: Bool
     private let size: SegmentedSize
     private let isEnabled: Bool
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     @Namespace private var pill
     @Environment(\.microAnimations) private var micro
@@ -50,15 +50,13 @@ public struct SegmentedControl: View {
         selection: Binding<Int>,
         block: Bool = true,
         size: SegmentedSize = .medium,
-        isEnabled: Bool = true,
-        accessibilityID: String? = nil
+        isEnabled: Bool = true
     ) {
         self.items = items
         self._selection = selection
         self.block = block
         self.size = size
         self.isEnabled = isEnabled
-        self.accessibilityID = accessibilityID
     }
 
     public init(
@@ -66,11 +64,10 @@ public struct SegmentedControl: View {
         selection: Binding<Int>,
         block: Bool = true,
         size: SegmentedSize = .medium,
-        isEnabled: Bool = true,
-        accessibilityID: String? = nil
+        isEnabled: Bool = true
     ) {
         self.init(items.map { SegmentItem($0) }, selection: selection,
-                  block: block, size: size, isEnabled: isEnabled, accessibilityID: accessibilityID)
+                  block: block, size: size, isEnabled: isEnabled)
     }
 
     public var body: some View {
@@ -132,4 +129,10 @@ public struct SegmentedControl: View {
         }
     }
     return Demo()
+}
+
+public extension SegmentedControl {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

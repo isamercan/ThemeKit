@@ -18,7 +18,7 @@ public struct ThemeToggle: View {
     private let isLoading: Bool
     private let onSystemImage: String?
     private let offSystemImage: String?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,8 +30,7 @@ public struct ThemeToggle: View {
         isEnabled: Bool = true,
         isLoading: Bool = false,
         onSystemImage: String? = nil,
-        offSystemImage: String? = nil,
-        accessibilityID: String? = nil
+        offSystemImage: String? = nil
     ) {
         self._isOn = isOn
         self.size = size
@@ -39,7 +38,6 @@ public struct ThemeToggle: View {
         self.isLoading = isLoading
         self.onSystemImage = onSystemImage
         self.offSystemImage = offSystemImage
-        self.accessibilityID = accessibilityID
     }
 
     private var trackWidth: CGFloat { size == .medium ? 40 : 32 }
@@ -101,4 +99,10 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true), isEnabled: false)
     }
     .padding()
+}
+
+public extension ThemeToggle {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

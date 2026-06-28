@@ -16,15 +16,14 @@ public struct Swap: View {
     private let offSystemImage: String
     private let size: CGFloat
     private let rotate: Bool
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
-    public init(isOn: Binding<Bool>, on onSystemImage: String, off offSystemImage: String, size: CGFloat = 24, rotate: Bool = true, accessibilityID: String? = nil) {
+    public init(isOn: Binding<Bool>, on onSystemImage: String, off offSystemImage: String, size: CGFloat = 24, rotate: Bool = true) {
         self._isOn = isOn
         self.onSystemImage = onSystemImage
         self.offSystemImage = offSystemImage
         self.size = size
         self.rotate = rotate
-        self.accessibilityID = accessibilityID
     }
 
     public var body: some View {
@@ -67,4 +66,10 @@ public struct Swap: View {
         }
     }
     return Demo()
+}
+
+public extension Swap {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

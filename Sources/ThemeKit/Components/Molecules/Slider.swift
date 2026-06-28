@@ -19,7 +19,7 @@ public struct Slider: View {
     private let marks: [Double: String]
     private let axis: Axis
     private let verticalHeight: CGFloat
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     private let showValueTooltip: Bool
     private let onChangeEnd: ((Double) -> Void)?
@@ -38,7 +38,6 @@ public struct Slider: View {
         marks: [Double: String] = [:],
         axis: Axis = .horizontal,
         verticalHeight: CGFloat = 160,
-        accessibilityID: String? = nil,
         showValueTooltip: Bool = false,
         onChangeEnd: ((Double) -> Void)? = nil
     ) {
@@ -49,7 +48,6 @@ public struct Slider: View {
         self.marks = marks
         self.axis = axis
         self.verticalHeight = verticalHeight
-        self.accessibilityID = accessibilityID
         self.showValueTooltip = showValueTooltip
         self.onChangeEnd = onChangeEnd
     }
@@ -232,4 +230,10 @@ public struct Slider: View {
         }
     }
     return Demo()
+}
+
+public extension Slider {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

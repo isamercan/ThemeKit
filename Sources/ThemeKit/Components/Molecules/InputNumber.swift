@@ -25,7 +25,7 @@ public struct InputNumber: View {
     private let errorText: String?
     private let hasInfo: Bool
     private let onChange: ((Int) -> Void)?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     private let height: CGFloat
 
@@ -43,7 +43,6 @@ public struct InputNumber: View {
         errorText: String? = nil,
         hasInfo: Bool = false,
         onChange: ((Int) -> Void)? = nil,
-        accessibilityID: String? = nil,
         large: Bool = false
     ) {
         self.label = label
@@ -56,7 +55,6 @@ public struct InputNumber: View {
         self.errorText = errorText
         self.hasInfo = hasInfo
         self.onChange = onChange
-        self.accessibilityID = accessibilityID
         self.height = large ? 48 : 40
         self._textValue = State(initialValue: String(value.wrappedValue))
     }
@@ -223,4 +221,10 @@ private extension View {
         }
     }
     return Demo()
+}
+
+public extension InputNumber {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

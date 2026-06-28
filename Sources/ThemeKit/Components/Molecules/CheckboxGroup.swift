@@ -19,7 +19,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
     private let isEnabled: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
@@ -29,7 +29,6 @@ public struct CheckboxGroup<Option: Hashable>: View {
         selectAllTitle: String? = nil,
         isEnabled: Bool = true,
         isOptionEnabled: ((Option) -> Bool)? = nil,
-        accessibilityID: String? = nil,
         label: @escaping (Option) -> String
     ) {
         self.title = title
@@ -39,7 +38,6 @@ public struct CheckboxGroup<Option: Hashable>: View {
         self.selectAllTitle = selectAllTitle
         self.isEnabled = isEnabled
         self.isOptionEnabled = isOptionEnabled
-        self.accessibilityID = accessibilityID
         self.label = label
     }
 
@@ -125,4 +123,10 @@ public struct CheckboxGroup<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+public extension CheckboxGroup {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

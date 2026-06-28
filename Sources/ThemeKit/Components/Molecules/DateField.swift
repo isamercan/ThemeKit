@@ -41,7 +41,7 @@ public struct DateField: View {
     private let allowClear: Bool
     @Environment(\.isEnabled) private var isEnabled
     private let leadingSystemImage: String?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     @Environment(\.locale) private var environmentLocale
     @State private var showPicker = false
@@ -56,8 +56,7 @@ public struct DateField: View {
         components: DateFieldComponents = .date,
         infoMessages: [InfoMessage] = [],
         allowClear: Bool = false,
-        leadingSystemImage: String? = nil,
-        accessibilityID: String? = nil
+        leadingSystemImage: String? = nil
     ) {
         self.label = label
         self._date = date
@@ -69,7 +68,6 @@ public struct DateField: View {
         self.infoMessages = infoMessages
         self.allowClear = allowClear
         self.leadingSystemImage = leadingSystemImage
-        self.accessibilityID = accessibilityID
     }
 
     // MARK: - Derived state
@@ -251,4 +249,10 @@ public struct DateField: View {
         }
     }
     return Demo()
+}
+
+public extension DateField {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

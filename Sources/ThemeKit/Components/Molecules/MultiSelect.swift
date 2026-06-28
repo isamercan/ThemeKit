@@ -22,7 +22,7 @@ public struct MultiSelect<Option: Hashable>: View {
     private let allowClear: Bool
     private let maxTagCount: Int?
     private let infoMessages: [InfoMessage]
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
@@ -39,7 +39,6 @@ public struct MultiSelect<Option: Hashable>: View {
         allowClear: Bool = true,
         maxTagCount: Int? = nil,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
@@ -52,7 +51,6 @@ public struct MultiSelect<Option: Hashable>: View {
         self.allowClear = allowClear
         self.maxTagCount = maxTagCount
         self.infoMessages = infoMessages
-        self.accessibilityID = accessibilityID
         self.isLoading = isLoading
         self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
@@ -217,4 +215,10 @@ public struct MultiSelect<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+public extension MultiSelect {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

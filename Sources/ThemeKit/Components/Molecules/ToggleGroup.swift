@@ -16,20 +16,18 @@ public struct ToggleGroup<Option: Hashable>: View {
     @Binding private var selection: Set<Option>
     private let label: (Option) -> String
     private let description: (Option) -> String?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        accessibilityID: String? = nil,
         label: @escaping (Option) -> String,
         description: @escaping (Option) -> String? = { _ in nil }
     ) {
         self.title = title
         self.options = options
         self._selection = selection
-        self.accessibilityID = accessibilityID
         self.label = label
         self.description = description
     }
@@ -81,4 +79,10 @@ public struct ToggleGroup<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+public extension ToggleGroup {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }
