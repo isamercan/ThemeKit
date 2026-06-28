@@ -10,9 +10,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "▸ Rendering component screenshots + overlay GIFs…"
-# Both generators share "Generator" in their name.
-GENERATE_SCREENSHOTS=1 swift test --filter Generator >/dev/null
+# Set SKIP_RENDER=1 to rebuild only the README gallery from the PNGs already on disk
+# (e.g. after a layout tweak) without re-rendering every component.
+if [ "${SKIP_RENDER:-0}" != "1" ]; then
+    echo "▸ Rendering component screenshots + overlay GIFs…"
+    # Both generators share "Generator" in their name.
+    GENERATE_SCREENSHOTS=1 swift test --filter Generator >/dev/null
+fi
 
 MANIFEST="Screenshots/manifest.tsv"
 [ -f "$MANIFEST" ] || { echo "✗ $MANIFEST missing (did the generator run?)"; exit 1; }
@@ -31,7 +35,12 @@ emit_category() {
         local i=0
         while IFS= read -r name; do
             [ "$((i % COLS))" -eq 0 ] && echo "<tr>"
-            printf '<td align="center" width="33%%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/%s-dark.png"><img src="Screenshots/%s.png" width="240" alt="%s"></picture><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$name" "$name"
+            # Display each preview at its OWN size: the PNG is rendered @2x, so the
+            # natural width is pixelWidth/2. Cap at 240 so wide ones fit the cell;
+            # small ones (Badge, Spinner) stay small instead of being upscaled.
+            local pw; pw=$(sips -g pixelWidth "Screenshots/$name.png" 2>/dev/null | awk '/pixelWidth/{print $2}')
+            local w=$(( ${pw:-480} / 2 )); [ "$w" -gt 240 ] && w=240
+            printf '<td align="center" valign="top" width="33%%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/%s-dark.png"><img src="Screenshots/%s.png" width="%s" alt="%s"></picture><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$w" "$name" "$name"
             i=$((i + 1))
             [ "$((i % COLS))" -eq 0 ] && echo "</tr>"
         done <<< "$names"
