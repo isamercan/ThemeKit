@@ -1767,9 +1767,11 @@ struct VideoPlayerDemo: View {
     var body: some View {
         ComponentStage("VideoPlayer", inspector: [("muted", "\(muted)"), ("progress", String(format: "%.0f%%", progress * 100))]) {
             VStack(spacing: 8) {
-                VideoPlayerView(url, autoplay: true, loop: loop, muted: muted,
-                                showMuteToggle: muteToggle, tapToToggle: tapToToggle,
-                                progress: $progress, isMuted: $muted)
+                VideoPlayerView(url, progress: $progress, isMuted: $muted)
+                    .loop(loop)
+                    .muted(muted)
+                    .muteToggle(muteToggle)
+                    .tapToToggle(tapToToggle)
                     .frame(height: 180)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 ProgressBar(value: progress)

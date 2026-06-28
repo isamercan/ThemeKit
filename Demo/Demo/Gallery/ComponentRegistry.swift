@@ -174,7 +174,7 @@ enum ComponentRegistry {
         .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@State var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items, peek: 36, autoplay: 2) { item in mediaView }"#),
-        .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url, autoplay: true, loop: true, muted: true)"#),
+        .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url).loop().muted().muteToggle()"#),
         .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Özet", bordered: true)"#) {
             KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success), .init("Old price", value: "5.000 TL", style: .strikethrough), .init("Total", value: "4.250 TL")], title: "Rezervasyon özeti", bordered: true)
         },
