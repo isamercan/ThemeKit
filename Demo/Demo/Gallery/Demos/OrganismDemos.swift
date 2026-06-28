@@ -267,10 +267,13 @@ struct CarouselDemo: View {
     var body: some View {
         ComponentStage("Carousel", inspector: [("currentIndex", "\(page)"), ("effect", fade ? "fade" : "slide")]) {
             VStack(spacing: 12) {
-                Carousel(slides, autoplay: autoplay ? 2 : nil, showsArrows: arrows, loop: loop,
-                         fade: fade, dotPosition: dotsTop ? .top : .bottom, currentIndex: $page) { s in
+                Carousel(slides, loop: loop, currentIndex: $page) { s in
                     RoundedRectangle(cornerRadius: 16).fill(s.color.opacity(0.25)).overlay(Text(s.title).textStyle(.headingSm))
                 }
+                .autoplay(autoplay ? 2 : nil)
+                .arrows(arrows)
+                .fade(fade)
+                .dots(position: dotsTop ? .top : .bottom)
                 .frame(height: 160)
                 Text("Page \(page + 1) / \(slides.count)").textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textSecondary))
             }

@@ -14,37 +14,28 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
     @Environment(\.theme) private var theme
 
     private let items: [Item]
-    private let autoplay: TimeInterval?
-    private let showsArrows: Bool
-    private let showsDots: Bool
     private let loop: Bool
-    private let fade: Bool
-    private let dotPosition: Edge
     private let externalIndex: Binding<Int>?
     /// (item, isActive) — `isActive` is true only for the currently visible page.
     private let content: (Item, Bool) -> Content
+    // Presentation config — set via chainable modifiers.
+    private var autoplay: TimeInterval? = nil
+    private var showsArrows: Bool = false
+    private var showsDots: Bool = true
+    private var fade: Bool = false
+    private var dotPosition: Edge = .bottom
 
     @State private var selection: Int
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         _ items: [Item],
-        autoplay: TimeInterval? = nil,
-        showsArrows: Bool = false,
-        showsDots: Bool = true,
         loop: Bool = false,
-        fade: Bool = false,
-        dotPosition: Edge = .bottom,
         currentIndex: Binding<Int>? = nil,
         @ViewBuilder content: @escaping (Item) -> Content
     ) {
         self.items = items
-        self.autoplay = autoplay
-        self.showsArrows = showsArrows
-        self.showsDots = showsDots
         self.loop = loop
-        self.fade = fade
-        self.dotPosition = dotPosition
         self.externalIndex = currentIndex
         self.content = { item, _ in content(item) }
         _selection = State(initialValue: (loop && items.count > 1) ? 1 : (currentIndex?.wrappedValue ?? 0))
@@ -54,22 +45,12 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
     /// is currently visible — use it to play only the on-screen video.
     public init(
         _ items: [Item],
-        autoplay: TimeInterval? = nil,
-        showsArrows: Bool = false,
-        showsDots: Bool = true,
         loop: Bool = false,
-        fade: Bool = false,
-        dotPosition: Edge = .bottom,
         currentIndex: Binding<Int>? = nil,
         @ViewBuilder activeContent: @escaping (Item, Bool) -> Content
     ) {
         self.items = items
-        self.autoplay = autoplay
-        self.showsArrows = showsArrows
-        self.showsDots = showsDots
         self.loop = loop
-        self.fade = fade
-        self.dotPosition = dotPosition
         self.externalIndex = currentIndex
         self.content = activeContent
         _selection = State(initialValue: (loop && items.count > 1) ? 1 : (currentIndex?.wrappedValue ?? 0))
@@ -200,6 +181,19 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
     }
 }
 
+public extension Carousel {
+    /// Advances pages automatically every `interval` seconds.
+    func autoplay(_ interval: TimeInterval?) -> Self { var copy = self; copy.autoplay = interval; return copy }
+    /// Shows prev / next arrow buttons.
+    func arrows(_ on: Bool = true) -> Self { var copy = self; copy.showsArrows = on; return copy }
+    /// Shows the page-dot indicators (default true) and where they sit.
+    func dots(_ on: Bool = true, position: Edge = .bottom) -> Self {
+        var copy = self; copy.showsDots = on; copy.dotPosition = position; return copy
+    }
+    /// Cross-fades between pages instead of sliding.
+    func fade(_ on: Bool = true) -> Self { var copy = self; copy.fade = on; return copy }
+}
+
 private extension View {
     /// Page-style paging (iOS); falls back to the default style elsewhere.
     @ViewBuilder
@@ -219,11 +213,13 @@ private extension View {
         Slide(color: .teal, title: "Two"),
         Slide(color: .orange, title: "Three"),
     ]
-    return Carousel(slides, autoplay: 2, showsArrows: true, loop: true) { slide in
+    return Carousel(slides, loop: true) { slide in
         RoundedRectangle(cornerRadius: 16)
             .fill(slide.color.opacity(0.3))
             .overlay(Text(slide.title).font(.title))
             .padding(.horizontal)
     }
+    .autoplay(2)
+    .arrows()
     .frame(height: 200)
 }
