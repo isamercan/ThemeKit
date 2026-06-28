@@ -20,6 +20,8 @@ public struct Tag: View {
     private let variant: FillVariant
     private let onRemove: (() -> Void)?
 
+    @Environment(\.theme) private var theme
+
     public init(
         _ text: String,
         leadingSystemImage: String? = nil,
@@ -56,7 +58,7 @@ public struct Tag: View {
     }
 
     private var foreground: Color {
-        guard let style else { return Theme.shared.text(.textHero) }
+        guard let style else { return theme.text(.textHero) }
         switch variant {
         case .soft: return style.foreground
         case .solid: return style.semantic.onSolid
@@ -65,7 +67,7 @@ public struct Tag: View {
     }
 
     private var background: Color {
-        guard let style else { return Theme.shared.background(.bgElevatorTertiary) }
+        guard let style else { return theme.background(.bgElevatorTertiary) }
         switch variant {
         case .soft: return style.background
         case .solid: return style.semantic.solid
