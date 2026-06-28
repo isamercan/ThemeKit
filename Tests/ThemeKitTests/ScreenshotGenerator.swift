@@ -60,6 +60,7 @@ final class ScreenshotGenerator: XCTestCase {
         category = "Atoms"; atoms()
         category = "Molecules"; molecules()
         category = "Organisms"; organisms()
+        category = "Guides"; shot("ThemeInjection", themeInjectionProof())
 
         let tsv = manifest.map { "\($0.0)\t\($0.1)" }.joined(separator: "\n") + "\n"
         try tsv.write(to: outDir.appendingPathComponent("manifest.tsv"), atomically: true, encoding: .utf8)
@@ -301,6 +302,52 @@ final class ScreenshotGenerator: XCTestCase {
     /// through ImageRenderer. ImageRenderer can't draw `TextField`/`TextEditor`
     /// (they need a window + responder) and falls back to a yellow placeholder, so
     /// text-input components are captured by caching a live AppKit hierarchy.
+    /// Proof that `.theme(_:)` re-skins a subtree: the SAME components rendered four
+    /// times, each subtree given a different `Theme` instance via `.theme(_:)`. If the
+    /// rollout works, each column shows that theme's brand/semantic colors — no
+    /// `Theme.shared` mutation, no global state, just the injected environment.
+    @MainActor
+    private func themeInjectionProof() -> some View {
+        func named(_ name: String) -> Theme { let t = Theme(); t.loadTheme(named: name); return t }
+        let ocean = named("oceanTheme")
+        let sunset = named("sunsetTheme")
+        let grape = Theme(); grape.applyGenerated(primaryHex: "#7C3AED")   // generated on-device
+
+        @ViewBuilder func sample() -> some View {
+            Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
+                .frame(height: 128)
+            HStack(spacing: 6) {
+                Badge("Info", style: .info, leadingSystemImage: "bell.fill")
+                Tag("Filter", onRemove: {})
+            }
+            InfoBanner("Subtree-themed", type: .success)
+            Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
+            PrimaryButton("Continue") {}
+        }
+
+        func column(_ title: String, _ theme: Theme) -> some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title).font(.headline)
+                sample()
+            }
+            .frame(width: 250, alignment: .leading)
+            .padding(14)
+            .background(theme.background(.bgWhite))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.gray.opacity(0.25)))
+            .theme(theme)   // <-- the whole point: inject a theme into just this subtree
+        }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Same components · four injected themes · one screen").font(.title3.bold())
+            HStack(alignment: .top, spacing: 14) {
+                column("Default", Theme.shared)
+                column("Ocean", ocean)
+                column("Sunset", sunset)
+                column("Grape (generated)", grape)
+            }
+        }
+    }
+
     private func shot(_ name: String, _ view: some View, hosted: Bool = false) {
         let decorated = view.padding(16).background(Theme.shared.background(.bgWhite))
         let cg = hosted ? hostedCGImage(decorated) : imageRendererCGImage(decorated)

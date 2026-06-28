@@ -101,6 +101,31 @@ struct ContentView: View {
 Theme.shared.loadTheme(named: "oceanTheme")          // runtime switch
 ```
 
+## Per-subtree theming
+
+Theming isn't just a global switch — any `Theme` can be injected into a single
+subtree with `.theme(_:)`, and every component inside re-skins to it. No
+`Theme.shared` mutation, no global state; the rest of the app keeps its theme.
+
+```swift
+let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")
+let grape = Theme(); grape.applyGenerated(primaryHex: "#7C3AED")   // generated on-device
+
+HStack {
+    BookingCard(...)                 // app theme
+    BookingCard(...).theme(ocean)    // ocean — this subtree only
+    BookingCard(...).theme(grape)    // grape — this subtree only
+}
+```
+
+The same components, four injected themes, one screen — brand colors follow the
+injected theme while semantic colors (info, success…) stay consistent:
+
+<p align="center"><img src="Screenshots/ThemeInjection.png" width="760" alt="The same components rendered under four injected themes side by side"></p>
+
+Every component reads `@Environment(\.theme)` (default `Theme.shared`), so this is
+additive and backward-compatible. Try it live in the gallery's **Theme Injection** page.
+
 ## Components
 
 ~130 token-bound components, grouped by complexity:
