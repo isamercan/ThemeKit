@@ -17,3 +17,4 @@ build/
 /docs-out/
 Screenshots/manifest.tsv
 Screenshots/gifs.tsv
+Screenshots/_rec_*.mov
