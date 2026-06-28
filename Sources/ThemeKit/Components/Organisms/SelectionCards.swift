@@ -7,6 +7,8 @@
 import SwiftUI
 
 private struct SelectionCard<Control: View>: View {
+    @Environment(\.theme) private var theme
+
     let title: String
     let description: String?
     let isSelected: Bool
@@ -21,22 +23,22 @@ private struct SelectionCard<Control: View>: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .textStyle(.labelBase600)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     if let description {
                         Text(description)
                             .textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                            .foregroundStyle(theme.text(.textSecondary))
                     }
                 }
                 Spacer(minLength: 0)
             }
             .padding(Theme.SpacingKey.md.value)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? Theme.shared.background(.bgElevatorTertiary) : Theme.shared.background(.bgWhite),
+            .background(isSelected ? theme.background(.bgElevatorTertiary) : theme.background(.bgWhite),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .strokeBorder(isSelected ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                    .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
                                   lineWidth: isSelected ? 1.5 : 1)
             )
             .contentShape(Rectangle())

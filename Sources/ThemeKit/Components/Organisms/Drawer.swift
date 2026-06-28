@@ -16,6 +16,8 @@ import SwiftUI
 /// Shared scrim + sliding panel with drag-to-dismiss; the scrim fades as the
 /// panel is dragged away. Used by both the declarative modifier and the host.
 private struct DrawerContainer<DrawerContent: View>: View {
+    @Environment(\.theme) private var theme
+
     let edge: HorizontalEdge
     let width: CGFloat
     let dismissOnScrimTap: Bool
@@ -29,14 +31,14 @@ private struct DrawerContainer<DrawerContent: View>: View {
 
     var body: some View {
         ZStack(alignment: edge == .leading ? .leading : .trailing) {
-            Theme.shared.background(.bgTertiary).opacity(0.4 * scrimFactor)
+            theme.background(.bgTertiary).opacity(0.4 * scrimFactor)
                 .ignoresSafeArea()
                 .onTapGesture { if dismissOnScrimTap { onDismiss() } }
 
             content()
                 .frame(maxWidth: width, maxHeight: .infinity, alignment: .topLeading)
                 .frame(maxHeight: .infinity)
-                .background(Theme.shared.background(.bgWhite))
+                .background(theme.background(.bgWhite))
                 .ignoresSafeArea()
                 .offset(x: dragX)
                 .gesture(dragGesture)

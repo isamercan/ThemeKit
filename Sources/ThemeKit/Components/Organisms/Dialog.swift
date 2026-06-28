@@ -158,6 +158,8 @@ public extension View {
 // MARK: - Custom content + footer slot (Ant Modal footer / scroll / afterClose)
 
 private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModifier {
+    @Environment(\.theme) private var theme
+
     @Binding var isPresented: Bool
     let title: String?
     let closable: Bool
@@ -181,7 +183,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
         content.overlay {
             if isPresented {
                 ZStack {
-                    Theme.shared.background(.bgTertiary).opacity(0.4)
+                    theme.background(.bgTertiary).opacity(0.4)
                         .ignoresSafeArea()
                         .onTapGesture { if maskClosable { close() } }
 
@@ -189,12 +191,12 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                         if title != nil || closable {
                             HStack {
                                 if let title {
-                                    Text(title).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+                                    Text(title).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                                 }
                                 Spacer(minLength: Theme.SpacingKey.sm.value)
                                 if closable {
                                     Button(action: close) {
-                                        Icon(systemName: "xmark", size: .sm, color: Theme.shared.text(.textTertiary))
+                                        Icon(systemName: "xmark", size: .sm, color: theme.text(.textTertiary))
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -216,7 +218,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                             .padding(Theme.SpacingKey.lg.value)
                     }
                     .frame(maxWidth: width ?? 360)
-                    .background(Theme.shared.background(.bgWhite),
+                    .background(theme.background(.bgWhite),
                                 in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
                     .themeShadow(.elevated)
                     .padding(Theme.SpacingKey.lg.value)
