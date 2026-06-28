@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. A notification surface: bell icon, optional unread dot + timestamp,
 /// title, message and optional actions.
 public struct NotificationCard<Actions: View>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let message: String?
     private let date: String?
@@ -36,7 +38,7 @@ public struct NotificationCard<Actions: View>: View {
     }
 
     private var iconName: String { type?.systemImage ?? "bell" }
-    private var iconColor: Color { type?.semanticColor.accent ?? Theme.shared.foreground(.fgHero) }
+    private var iconColor: Color { type?.semanticColor.accent ?? theme.foreground(.fgHero) }
 
     public var body: some View {
         Card {
@@ -47,18 +49,18 @@ public struct NotificationCard<Actions: View>: View {
                     if let date {
                         HStack(spacing: Theme.SpacingKey.xs.value) {
                             if isUnread {
-                                Circle().fill(Theme.shared.foreground(.systemcolorsFgError)).frame(width: 6, height: 6)
+                                Circle().fill(theme.foreground(.systemcolorsFgError)).frame(width: 6, height: 6)
                             }
-                            Text(date).textStyle(.overline400).foregroundStyle(Theme.shared.text(.textTertiary))
+                            Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                         }
                     }
                     Text(title)
                         .textStyle(.labelBase600)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     if let message {
                         Text(message)
                             .textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                            .foregroundStyle(theme.text(.textSecondary))
                     }
                     if let actions {
                         actions.padding(.top, Theme.SpacingKey.xs.value)
@@ -67,7 +69,7 @@ public struct NotificationCard<Actions: View>: View {
                 Spacer(minLength: 0)
                 if let onClose {
                     Button(action: onClose) {
-                        Icon(systemName: "xmark", size: .xs, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(String(themeKit: "Dismiss"))

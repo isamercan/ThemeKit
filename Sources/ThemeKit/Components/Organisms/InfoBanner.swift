@@ -53,6 +53,8 @@ public enum InfoBannerType {
 /// drive a light-surface banner with a colored icon, optional title and an
 /// optional dismiss action.
 public struct InfoBanner: View {
+    @Environment(\.theme) private var theme
+
     private let type: InfoBannerType
     private let title: String?
     private let message: String
@@ -97,14 +99,14 @@ public struct InfoBanner: View {
                 if let title {
                     Text(title)
                         .textStyle(.labelBase600)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                 }
                 if links.isEmpty {
                     Text(message)
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                 } else {
-                    InlineText(message, links: links, baseColor: Theme.shared.text(.textSecondary))
+                    InlineText(message, links: links, baseColor: theme.text(.textSecondary))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,7 +120,7 @@ public struct InfoBanner: View {
 
             if let onDismiss {
                 Button(action: onDismiss) {
-                    Icon(systemName: "xmark", size: .xs, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }

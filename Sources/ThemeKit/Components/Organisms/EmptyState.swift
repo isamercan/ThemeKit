@@ -10,6 +10,8 @@ import SwiftUI
 /// a faded circle, title, message and an optional primary action. (Lottie /
 /// AppIcon dependencies dropped.)
 public struct EmptyState: View {
+    @Environment(\.theme) private var theme
+
     private let systemImage: String
     private let image: Image?
     private let animatedURL: URL?
@@ -118,11 +120,11 @@ public struct EmptyState: View {
             } else {
                 ZStack {
                     Circle()
-                        .fill(iconBackground ?? Theme.shared.background(.bgElevatorTertiary))
+                        .fill(iconBackground ?? theme.background(.bgElevatorTertiary))
                         .frame(width: iconCircleSize, height: iconCircleSize)
                     Image(systemName: systemImage)
                         .font(.system(size: iconCircleSize * 0.36))
-                        .foregroundStyle(iconForeground ?? Theme.shared.foreground(.fgHero))
+                        .foregroundStyle(iconForeground ?? theme.foreground(.fgHero))
                 }
             }
 
@@ -130,13 +132,13 @@ public struct EmptyState: View {
                 if let title {
                     Text(title)
                         .textStyle(.headingBase)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                         .multilineTextAlignment(.center)
                 }
                 if let message {
                     Text(message)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                         .multilineTextAlignment(.center)
                 }
             }

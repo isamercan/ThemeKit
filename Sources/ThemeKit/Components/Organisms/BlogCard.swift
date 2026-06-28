@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. An article card: media + title + excerpt + read-more link, with a
 /// compact (media-left) variant. Media supplied via a ViewBuilder.
 public struct BlogCard<Media: View>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let excerpt: String?
     private let readMoreTitle: String
@@ -55,7 +57,7 @@ public struct BlogCard<Media: View>: View {
                 if let excerpt {
                     Text(excerpt)
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                         .lineLimit(3)
                 }
                 readMore
@@ -66,7 +68,7 @@ public struct BlogCard<Media: View>: View {
     private var titleText: some View {
         Text(title)
             .textStyle(.labelMd700)
-            .foregroundStyle(Theme.shared.text(.textPrimary))
+            .foregroundStyle(theme.text(.textPrimary))
             .lineLimit(2)
     }
 
@@ -77,7 +79,7 @@ public struct BlogCard<Media: View>: View {
                 Image(systemName: "arrow.right").font(.system(size: 11, weight: .semibold))
                     .mirrorsInRTL()
             }
-            .foregroundStyle(Theme.shared.text(.textHero))
+            .foregroundStyle(theme.text(.textHero))
         }
         .buttonStyle(.plain)
     }

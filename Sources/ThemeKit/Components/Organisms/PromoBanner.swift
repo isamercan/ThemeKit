@@ -33,6 +33,8 @@ public enum PromoBannerTint {
 /// Organism. A promotional banner (campaign / offer). Distinct from InfoBanner
 /// (status). Leading visual + title + subtitle + optional CTA, on a tinted card.
 public struct PromoBanner: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let subtitle: String?
     private let systemImage: String?
@@ -78,10 +80,10 @@ public struct PromoBanner: View {
                 Button(action: action) {
                     Text(ctaTitle)
                         .textStyle(.labelSm700)
-                        .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                        .foregroundStyle(theme.foreground(.fgSecondary))
                         .padding(.horizontal, Theme.SpacingKey.md.value)
                         .frame(height: 36)
-                        .background(Theme.shared.background(.bgHero), in: Capsule())
+                        .background(theme.background(.bgHero), in: Capsule())
                 }
                 .buttonStyle(.plain)
             }

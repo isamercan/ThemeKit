@@ -22,6 +22,8 @@ public enum TableValueStyle {
 /// Organism. A label/value table (Figma "Table"). Values can carry a status
 /// style (plain / success / error / muted / strikethrough).
 public struct KeyValueTable: View {
+    @Environment(\.theme) private var theme
+
     public struct Row: Identifiable {
         public let id = UUID()
         let label: String
@@ -49,15 +51,15 @@ public struct KeyValueTable: View {
             if let title {
                 Text(title)
                     .textStyle(.labelLg600)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
             }
             if bordered {
                 table
-                    .background(Theme.shared.background(.bgWhite),
+                    .background(theme.background(.bgWhite),
                                 in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                            .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                            .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
                     )
             } else {
                 table
@@ -71,7 +73,7 @@ public struct KeyValueTable: View {
                 HStack {
                     Text(row.label)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                     Spacer(minLength: Theme.SpacingKey.md.value)
                     Text(row.value)
                         .textStyle(.labelBase600)

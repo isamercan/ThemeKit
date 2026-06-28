@@ -79,6 +79,8 @@ public struct ListRowInfo: Identifiable {
 /// inline button / price block / status text. Plus a per-row meta line (rating,
 /// sentiment, comment count), an active-selected background and an info button.
 public struct ListRow: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let subtitle: String?
     private let number: Int?
@@ -142,7 +144,7 @@ public struct ListRow: View {
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 if let infoAction {
                     Button(action: infoAction) {
-                        Icon(systemName: "info.circle", size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "info.circle", size: .sm, color: theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
@@ -152,7 +154,7 @@ public struct ListRow: View {
             .padding(.horizontal, isSelected ? Theme.SpacingKey.md.value : 0)
             .background(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .fill(isSelected ? Theme.shared.background(.bgHero).opacity(0.08) : .clear)
+                    .fill(isSelected ? theme.background(.bgHero).opacity(0.08) : .clear)
             )
             .contentShape(Rectangle())
         }
@@ -179,21 +181,21 @@ public struct ListRow: View {
         } else if let number {
             Text(String(format: "%02d", number))
                 .textStyle(.labelMd700)
-                .foregroundStyle(isSelected ? Theme.shared.text(.textHero) : Theme.shared.text(.textPrimary))
+                .foregroundStyle(isSelected ? theme.text(.textHero) : theme.text(.textPrimary))
                 .monospacedDigit()
                 .frame(width: 32, alignment: .leading)
         } else if let leadingSystemImage {
             ZStack {
-                Circle().fill(Theme.shared.background(.bgElevatorTertiary)).frame(width: 40, height: 40)
-                Icon(systemName: leadingSystemImage, size: .sm, color: Theme.shared.foreground(.fgHero))
+                Circle().fill(theme.background(.bgElevatorTertiary)).frame(width: 40, height: 40)
+                Icon(systemName: leadingSystemImage, size: .sm, color: theme.foreground(.fgHero))
             }
             .overlay(alignment: .topTrailing) {
                 if let alertCount, alertCount > 0 {
                     Text(alertCount > 99 ? "99+" : "\(alertCount)")
                         .textStyle(.overline400)
-                        .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                        .foregroundStyle(theme.foreground(.fgSecondary))
                         .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(Theme.shared.background(.systemcolorsBgError), in: Capsule())
+                        .background(theme.background(.systemcolorsBgError), in: Capsule())
                         .offset(x: 6, y: -4)
                 }
             }
@@ -207,7 +209,7 @@ public struct ListRow: View {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 Text(title)
                     .textStyle(size.titleStyle)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
                     .lineLimit(multilineTitle ? nil : 1)
                 if let badge {
                     Badge(badge, style: .info, variant: .soft, size: .small)
@@ -216,7 +218,7 @@ public struct ListRow: View {
             if let subtitle {
                 Text(subtitle)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textSecondary))
+                    .foregroundStyle(theme.text(.textSecondary))
                     .lineLimit(multilineTitle ? nil : 2)
             }
             if let meta { metaLine(meta) }
@@ -226,11 +228,11 @@ public struct ListRow: View {
                         HStack(alignment: .top, spacing: Theme.SpacingKey.xs.value) {
                             Image(systemName: info.systemImage ?? "circle.fill")
                                 .font(.system(size: info.systemImage == nil ? 5 : 11))
-                                .foregroundStyle(Theme.shared.text(.textTertiary))
+                                .foregroundStyle(theme.text(.textTertiary))
                                 .padding(.top, info.systemImage == nil ? 6 : 2)
                             Text(info.text)
                                 .textStyle(.bodySm400)
-                                .foregroundStyle(Theme.shared.text(.textSecondary))
+                                .foregroundStyle(theme.text(.textSecondary))
                         }
                     }
                 }
@@ -246,23 +248,23 @@ public struct ListRow: View {
                 HStack(spacing: 2) {
                     Text(meta.ratingLabel ?? String(format: "%.1f", rating))
                         .textStyle(.labelSm700)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     Image(systemName: "star.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+                        .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                 }
                 .fixedSize()
             }
             if let sentiment = meta.sentiment {
                 Text(sentiment)
                     .textStyle(.labelSm600)
-                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgSuccess))
+                    .foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
                     .fixedSize()
             }
             if let commentLabel = meta.commentLabel {
                 Text(commentLabel)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
@@ -278,17 +280,17 @@ public struct ListRow: View {
         case .none:
             EmptyView()
         case .chevron:
-            Icon(systemName: "chevron.right", size: .sm, color: Theme.shared.text(.textTertiary))
+            Icon(systemName: "chevron.right", size: .sm, color: theme.text(.textTertiary))
                 .mirrorsInRTL()
         case .value(let text):
             Text(text)
                 .textStyle(.bodyBase400)
-                .foregroundStyle(Theme.shared.text(.textSecondary))
+                .foregroundStyle(theme.text(.textSecondary))
         case .toggle(let binding):
             ThemeToggle(isOn: binding)
         case .checkmark(let on):
             if on {
-                Icon(systemName: "checkmark", size: .sm, color: Theme.shared.foreground(.fgHero))
+                Icon(systemName: "checkmark", size: .sm, color: theme.foreground(.fgHero))
             }
         case .checkbox(let binding):
             Checkbox(isChecked: binding)
@@ -301,11 +303,11 @@ public struct ListRow: View {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Theme.shared.foreground(.systemcolorsFgSuccess))
+                        .foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
                 }
                 Text(text)
                     .textStyle(.labelSm600)
-                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgSuccess))
+                    .foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
             }
         }
     }
@@ -316,18 +318,18 @@ public struct ListRow: View {
                 HStack(spacing: 0) {
                     Text(each)
                         .textStyle(.labelBase700)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     Text(" \(price.unit)")
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
                 Text("Toplam: \(price.total)")
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             } else {
                 Text(price.total)
                     .textStyle(.labelBase700)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
             }
         }
     }
@@ -335,13 +337,15 @@ public struct ListRow: View {
 
 /// A non-interactive section-header row inside a list (Reference menu `.secondary`).
 public struct ListSectionHeader: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     public init(_ title: String) { self.title = title }
 
     public var body: some View {
         Text(title.uppercased())
             .textStyle(.labelSm700)
-            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .foregroundStyle(theme.text(.textTertiary))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, Theme.SpacingKey.sm.value)
     }

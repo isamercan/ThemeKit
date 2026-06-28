@@ -11,6 +11,8 @@ import SwiftUI
 /// two-way `currentIndex` binding, and an active-gating content variant so video
 /// pages can play only while visible. (Ant Carousel parity.)
 public struct Carousel<Item: Identifiable, Content: View>: View {
+    @Environment(\.theme) private var theme
+
     private let items: [Item]
     private let autoplay: TimeInterval?
     private let showsArrows: Bool
@@ -189,10 +191,10 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
 
     private func arrow(_ systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(systemName: systemName, size: .sm, color: Theme.shared.foreground(.fgSecondary))
+            Icon(systemName: systemName, size: .sm, color: theme.foreground(.fgSecondary))
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
-                .background(Theme.shared.background(.bgTertiary).opacity(0.5), in: Circle())
+                .background(theme.background(.bgTertiary).opacity(0.5), in: Circle())
         }
         .buttonStyle(.plain)
     }

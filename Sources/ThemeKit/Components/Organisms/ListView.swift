@@ -10,6 +10,8 @@ import SwiftUI
 /// dividers (split), and a loading (skeleton) state. Generic over the item +
 /// row content; pairs naturally with `ListRow`.
 public struct ListView<Item: Identifiable, Row: View>: View {
+    @Environment(\.theme) private var theme
+
     private let items: [Item]
     private let header: String?
     private let footer: String?
@@ -44,7 +46,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
             if let header {
                 Text(header)
                     .textStyle(.labelBase600)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .padding(.vertical, Theme.SpacingKey.sm.value)
@@ -77,18 +79,18 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                 if split { DividerView(size: .small) }
                 Text(footer)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .padding(.vertical, Theme.SpacingKey.sm.value)
             }
         }
-        .background(bordered ? Theme.shared.background(.bgWhite) : .clear,
+        .background(bordered ? theme.background(.bgWhite) : .clear,
                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         .overlay {
             if bordered {
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                    .stroke(theme.border(.borderPrimary), lineWidth: 1)
             }
         }
     }
@@ -96,7 +98,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     private var emptyRow: some View {
         Text(emptyText ?? String(themeKit: "No data"))
             .textStyle(.bodySm400)
-            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .foregroundStyle(theme.text(.textTertiary))
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .padding(.vertical, Theme.SpacingKey.lg.value)
@@ -104,10 +106,10 @@ public struct ListView<Item: Identifiable, Row: View>: View {
 
     private var skeletonRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Circle().fill(Theme.shared.background(.bgSecondaryLight)).frame(width: 36, height: 36)
+            Circle().fill(theme.background(.bgSecondaryLight)).frame(width: 36, height: 36)
             VStack(alignment: .leading, spacing: 6) {
-                RoundedRectangle(cornerRadius: 4).fill(Theme.shared.background(.bgSecondaryLight)).frame(width: 140, height: 12)
-                RoundedRectangle(cornerRadius: 4).fill(Theme.shared.background(.bgSecondaryLight)).frame(width: 90, height: 10)
+                RoundedRectangle(cornerRadius: 4).fill(theme.background(.bgSecondaryLight)).frame(width: 140, height: 12)
+                RoundedRectangle(cornerRadius: 4).fill(theme.background(.bgSecondaryLight)).frame(width: 90, height: 10)
             }
             Spacer()
         }

@@ -13,6 +13,8 @@ public enum CouponStyle {
 /// Organism. Displays a promo code with a copy action. Styles: filled / outlined
 /// (dashed) / plain.
 public struct Coupon: View {
+    @Environment(\.theme) private var theme
+
     private let code: String
     private let label: String
     private let style: CouponStyle
@@ -44,14 +46,14 @@ public struct Coupon: View {
     }
 
     private var foreground: Color {
-        style == .filled ? Theme.shared.foreground(.fgSecondary) : Theme.shared.text(.textHero)
+        style == .filled ? theme.foreground(.fgSecondary) : theme.text(.textHero)
     }
 
     private var background: Color {
         switch style {
-        case .filled: return Theme.shared.background(.bgHero)
-        case .plain: return Theme.shared.background(.bgElevatorTertiary)
-        case .outlined: return Theme.shared.background(.bgWhite)
+        case .filled: return theme.background(.bgHero)
+        case .plain: return theme.background(.bgElevatorTertiary)
+        case .outlined: return theme.background(.bgWhite)
         }
     }
 
@@ -61,7 +63,7 @@ public struct Coupon: View {
 
     private var dashedBorder: some View {
         shape.strokeBorder(
-            Theme.shared.border(.borderHero),
+            theme.border(.borderHero),
             style: StrokeStyle(lineWidth: 1, dash: [4, 3])
         )
     }

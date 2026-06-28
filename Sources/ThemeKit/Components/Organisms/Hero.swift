@@ -9,6 +9,8 @@ import SwiftUI
 /// Organism. A prominent hero section: centered title + subtitle + optional CTA
 /// over a color or custom background. (daisyUI "Hero".)
 public struct Hero<Background: View>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let subtitle: String?
     private let ctaTitle: String?
@@ -36,7 +38,7 @@ public struct Hero<Background: View>: View {
         ZStack {
             background()
             if dark {
-                Theme.shared.background(.bgTertiary).opacity(0.45)
+                theme.background(.bgTertiary).opacity(0.45)
             }
             VStack(spacing: Theme.SpacingKey.md.value) {
                 Text(title)
@@ -60,8 +62,8 @@ public struct Hero<Background: View>: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
     }
 
-    private var titleColor: Color { dark ? Theme.shared.foreground(.fgSecondary) : Theme.shared.text(.textPrimary) }
-    private var subtitleColor: Color { dark ? Theme.shared.text(.textSecondaryInverse) : Theme.shared.text(.textSecondary) }
+    private var titleColor: Color { dark ? theme.foreground(.fgSecondary) : theme.text(.textPrimary) }
+    private var subtitleColor: Color { dark ? theme.text(.textSecondaryInverse) : theme.text(.textSecondary) }
 }
 
 public extension Hero where Background == Color {

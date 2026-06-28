@@ -23,6 +23,8 @@ public enum FABShape { case circle, square }
 /// Organism. A floating action button with an optional speed-dial of sub-actions.
 /// (daisyUI "FAB / Speed Dial".)
 public struct FloatingActionButton: View {
+    @Environment(\.theme) private var theme
+
     private let systemImage: String
     private let actions: [FABAction]
     private let shape: FABShape
@@ -63,10 +65,10 @@ public struct FloatingActionButton: View {
                         if let label = item.label {
                             Text(label)
                                 .textStyle(.labelSm600)
-                                .foregroundStyle(Theme.shared.text(.textPrimary))
+                                .foregroundStyle(theme.text(.textPrimary))
                                 .padding(.horizontal, Theme.SpacingKey.sm.value)
                                 .frame(height: 28)
-                                .background(Theme.shared.background(.bgWhite), in: Capsule())
+                                .background(theme.background(.bgWhite), in: Capsule())
                                 .themeShadow(.soft)
                         }
                         miniButton(item.systemImage) { item.action(); expanded = false }
@@ -95,9 +97,9 @@ public struct FloatingActionButton: View {
         Button(action: action) {
             Image(systemName: name)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.shared.text(.textHero))
+                .foregroundStyle(theme.text(.textHero))
                 .frame(width: 44, height: 44)
-                .background(Theme.shared.background(.bgWhite), in: Circle())
+                .background(theme.background(.bgWhite), in: Circle())
                 .themeShadow(.soft)
         }
         .buttonStyle(.plain)
