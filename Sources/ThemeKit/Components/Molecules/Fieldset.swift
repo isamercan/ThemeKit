@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. A bordered form group with a legend + optional helper text.
 /// (daisyUI "Fieldset".)
 public struct Fieldset<Content: View>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let helper: String?
     private let content: () -> Content
@@ -23,18 +25,18 @@ public struct Fieldset<Content: View>: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Text(title)
                 .textStyle(.labelBase700)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
             content()
             if let helper {
                 Text(helper)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             }
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 }
 

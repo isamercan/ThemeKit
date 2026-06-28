@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. A labelled, multi-select group composed from the Checkbox atom.
 /// Selection state is owned by the caller (single Set binding — no per-row state).
 public struct CheckboxGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
@@ -43,9 +45,9 @@ public struct CheckboxGroup<Option: Hashable>: View {
 
     private var titleColor: Color {
         switch infoMessages.dominantKind {
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        default: return Theme.shared.text(.textPrimary)
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        default: return theme.text(.textPrimary)
         }
     }
 
@@ -73,7 +75,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
                         Checkbox(isChecked: .constant(allSelected), isIndeterminate: someSelected)
                         Text(selectAllTitle)
                             .textStyle(.labelBase600)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                         Spacer()
                     }
                     .contentShape(Rectangle())
@@ -95,7 +97,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
                         Checkbox(isChecked: .constant(isOn))
                         Text(label(option))
                             .textStyle(.bodyBase400)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                         Spacer()
                     }
                     .contentShape(Rectangle())

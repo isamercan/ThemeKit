@@ -12,6 +12,8 @@ import SwiftUI
 ///     spinner, an empty "no results" state, and in-flight cancellation.
 /// State (the bound text) is owned by the caller.
 public struct Autocomplete: View {
+    @Environment(\.theme) private var theme
+
 
     /// Where suggestions come from.
     private enum Source {
@@ -110,11 +112,11 @@ public struct Autocomplete: View {
             if let label { InputLabel(label) }
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
                 TextField(placeholder, text: $text)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
-                    .tint(Theme.shared.foreground(.fgHero))
+                    .foregroundStyle(theme.text(.textPrimary))
+                    .tint(theme.foreground(.fgHero))
                     .focused($isFocused)
                     .disabled(!isEnabled)
                     .a11y(A11yElement.Field.field, in: accessibilityID)
@@ -123,17 +125,17 @@ public struct Autocomplete: View {
                     Spinner(size: IconSize.sm.value, lineWidth: 2)
                 } else if !text.isEmpty {
                     Button { text = "" } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(48)
-            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(isFocused ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary), lineWidth: isFocused ? 1.5 : 1)
+                    .strokeBorder(isFocused ? theme.border(.borderHero) : theme.border(.borderPrimary), lineWidth: isFocused ? 1.5 : 1)
             )
 
             if showsDropdown { dropdown }
@@ -151,11 +153,11 @@ public struct Autocomplete: View {
             if isLoading {
                 row { HStack(spacing: Theme.SpacingKey.sm.value) {
                     Spinner(size: IconSize.sm.value, lineWidth: 2)
-                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                     Spacer()
                 } }
             } else if results.isEmpty {
-                row { Text(String(themeKit: "No results")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary)) }
+                row { Text(String(themeKit: "No results")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
             } else {
                 ForEach(results, id: \.self) { suggestion in
                     let enabled = suggestionEnabled(suggestion)
@@ -166,7 +168,7 @@ public struct Autocomplete: View {
                         isFocused = false
                     } label: {
                         row { HStack {
-                            Text(suggestion).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
+                            Text(suggestion).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
                             Spacer()
                         } }
                     }
@@ -177,10 +179,10 @@ public struct Autocomplete: View {
                 }
             }
         }
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
         )
         .themeShadow(.soft)
     }

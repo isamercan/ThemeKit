@@ -9,6 +9,8 @@ import SwiftUI
 /// Improved, token-bound rewrite of the reference OTPInputView. A row of digit
 /// boxes backed by a single hidden field, with focus caret + error state.
 public struct OTPInput: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var code: String
     private let digitCount: Int
     private let messages: [InfoMessage]
@@ -125,7 +127,7 @@ public struct OTPInput: View {
             if secondsLeft > 0 {
                 Text(String(themeKit: "Resend code in \(secondsLeft)s"))
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             } else {
                 Button {
                     onResend()
@@ -133,7 +135,7 @@ public struct OTPInput: View {
                 } label: {
                     Text(String(themeKit: "Resend code"))
                         .textStyle(.labelSm700)
-                        .foregroundStyle(Theme.shared.text(.textHero))
+                        .foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
                 .disabled(!isEnabled)

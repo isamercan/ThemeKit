@@ -28,6 +28,8 @@ public enum DateFieldComponents {
 /// icon. The displayed value is formatter-driven: pick a `DateFieldStyle` (or a
 /// custom pattern), a `locale`, and which `components` (date / time) to show.
 public struct DateField: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     @Binding private var date: Date?
     private let placeholder: String
@@ -130,7 +132,7 @@ public struct DateField: View {
     private var trailing: some View {
         if showsClear {
             Button { date = nil } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: accessibilityID)
@@ -167,7 +169,7 @@ public struct DateField: View {
             content
                 .datePickerStyle(.graphical)
                 .environment(\.locale, locale)
-                .tint(Theme.shared.foreground(.fgHero))
+                .tint(theme.foreground(.fgHero))
                 .labelsHidden()
             PrimaryButton("Tamam", isContentWidth: true) { showPicker = false }
         }
@@ -179,23 +181,23 @@ public struct DateField: View {
     // MARK: - Colors
 
     private var iconColor: Color {
-        isEnabled ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textDisabled)
+        isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled)
     }
 
     private var textColor: Color {
-        if !isEnabled { return Theme.shared.text(.textDisabled) }
-        return date == nil ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textPrimary)
+        if !isEnabled { return theme.text(.textDisabled) }
+        return date == nil ? theme.text(.textTertiary) : theme.text(.textPrimary)
     }
 
     private var backgroundColor: Color {
-        Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight)
+        theme.background(isEnabled ? .bgWhite : .bgSecondaryLight)
     }
 
     private var borderColor: Color {
-        if hasError { return Theme.shared.border(.systemcolorsBorderError) }
-        if hasWarning { return Theme.shared.border(.systemcolorsBorderWarning) }
-        if showPicker { return Theme.shared.border(.borderHero) }
-        return Theme.shared.border(.borderPrimary)
+        if hasError { return theme.border(.systemcolorsBorderError) }
+        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
+        if showPicker { return theme.border(.borderHero) }
+        return theme.border(.borderPrimary)
     }
 
     // MARK: - Formatting

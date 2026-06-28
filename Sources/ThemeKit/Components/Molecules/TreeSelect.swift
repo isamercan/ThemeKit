@@ -19,6 +19,8 @@ public struct TreeNode: Identifiable {
 /// Hierarchical (nested) select with expand/collapse and multi-selection.
 /// (Ant TreeSelect.) Nodes are a simple value tree; selection is a set of node ids.
 public struct TreeSelect: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     private let nodes: [TreeNode]
     @Binding private var selection: Set<String>
@@ -83,8 +85,8 @@ public struct TreeSelect: View {
                     }
                 }
                 .padding(.vertical, Theme.SpacingKey.xs.value)
-                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
                 .themeShadow(.soft)
             }
         }
@@ -94,13 +96,13 @@ public struct TreeSelect: View {
 
     private var searchField: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
+            Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
             TextField("Ara", text: $searchText)
                 .textStyle(.bodyBase400)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
             if !searchText.isEmpty {
                 Button { searchText = "" } label: {
-                    Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }
@@ -112,7 +114,7 @@ public struct TreeSelect: View {
     private var loadingRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             Spinner(size: IconSize.sm.value, lineWidth: 2)
-            Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             Spacer()
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -122,7 +124,7 @@ public struct TreeSelect: View {
     private var emptyRow: some View {
         Text(String(themeKit: "No results"))
             .textStyle(.bodySm400)
-            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .foregroundStyle(theme.text(.textTertiary))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .padding(.vertical, Theme.SpacingKey.sm.value)
@@ -133,19 +135,19 @@ public struct TreeSelect: View {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Text(summary)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(selection.isEmpty ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textPrimary))
+                    .foregroundStyle(selection.isEmpty ? theme.text(.textTertiary) : theme.text(.textPrimary))
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: theme.text(.textTertiary))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(56)
             .frame(maxWidth: .infinity)
-            .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                     .strokeBorder(
-                        open ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                        open ? theme.border(.borderHero) : theme.border(.borderPrimary),
                         lineWidth: open ? 1.5 : 1
                     )
             )
@@ -166,7 +168,7 @@ public struct TreeSelect: View {
                 Color.clear.frame(width: 16, height: 16)
             } else {
                 Button { toggleExpand(node.id) } label: {
-                    Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right", size: .xs, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right", size: .xs, color: theme.text(.textTertiary))
                         .frame(width: 16, height: 16)
                         .mirrorsInRTL()
                 }
@@ -178,9 +180,9 @@ public struct TreeSelect: View {
                     Checkbox(isChecked: .constant(state == .on), size: .small, isIndeterminate: state == .partial)
                         .allowsHitTesting(false)
                     if let icon = node.systemImage {
-                        Icon(systemName: icon, size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: icon, size: .sm, color: theme.text(.textTertiary))
                     }
-                    Text(node.title).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
+                    Text(node.title).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())

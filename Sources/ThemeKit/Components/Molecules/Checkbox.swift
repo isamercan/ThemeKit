@@ -32,6 +32,8 @@ public enum CheckboxType: Equatable {
 /// Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
 /// states checked / disabled / indeterminate. Colors from theme tokens.
 public struct Checkbox: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isChecked: Bool
     private let label: String?
     private let size: ControlSize
@@ -85,7 +87,7 @@ public struct Checkbox: View {
                     if let label {
                         Text(label)
                             .textStyle(.bodyBase400)
-                            .foregroundStyle(isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
+                            .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                     }
                 }
                 .contentShape(Rectangle())
@@ -125,16 +127,16 @@ public struct Checkbox: View {
             guard selected else { return .clear }
             // `.inner` keeps the outer box transparent; the inset square is the fill.
             if case .inner = type { return .clear }
-            return Theme.shared.background(isEnabled ? .bgHero : .bgSecondary)
+            return theme.background(isEnabled ? .bgHero : .bgSecondary)
         }
     }
 
     private var stroke: Color {
         if case .customInner = type { return .clear }
-        if !isEnabled { return Theme.shared.border(.borderPrimary) }
-        if dominant == .error { return Theme.shared.border(.systemcolorsBorderError) }
-        if dominant == .warning { return Theme.shared.border(.systemcolorsBorderWarning) }
-        return selected ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary)
+        if !isEnabled { return theme.border(.borderPrimary) }
+        if dominant == .error { return theme.border(.systemcolorsBorderError) }
+        if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
+        return selected ? theme.border(.borderHero) : theme.border(.borderPrimary)
     }
 
     @ViewBuilder
@@ -142,20 +144,20 @@ public struct Checkbox: View {
         if case .inner = type {
             if selected {
                 RoundedRectangle(cornerRadius: max(radius - 2, 1), style: .continuous)
-                    .fill(Theme.shared.background(isEnabled ? .bgHero : .bgSecondary))
+                    .fill(theme.background(isEnabled ? .bgHero : .bgSecondary))
                     .padding(side * 0.2)
                     .overlay {
                         if isIndeterminate {
                             Image(systemName: "minus")
                                 .font(.system(size: side * 0.34, weight: .bold))
-                                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                                .foregroundStyle(theme.foreground(.fgSecondary))
                         }
                     }
             }
         } else if selected {
             Image(systemName: isIndeterminate ? "minus" : "checkmark")
                 .font(.system(size: side * 0.6, weight: .bold))
-                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                .foregroundStyle(theme.foreground(.fgSecondary))
         }
     }
 }

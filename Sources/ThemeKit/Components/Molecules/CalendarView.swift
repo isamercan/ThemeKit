@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. An inline month calendar with day selection + month navigation.
 /// (daisyUI "Calendar"; complements DateField which presents a popover.)
 public struct CalendarView: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var selection: Date?
     @State private var displayed: Date
 
@@ -26,8 +28,8 @@ public struct CalendarView: View {
             grid
         }
         .padding(Theme.SpacingKey.md.value)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var header: some View {
@@ -36,7 +38,7 @@ public struct CalendarView: View {
             Spacer()
             Text(displayed.formatted(.dateTime.month(.wide).year()))
                 .textStyle(.labelMd700)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
             Spacer()
             navButton("chevron.right", months: 1)
         }
@@ -48,7 +50,7 @@ public struct CalendarView: View {
                 withAnimation(Motion.fast.animation) { displayed = d }
             }
         } label: {
-            Icon(systemName: name, size: .sm, color: Theme.shared.text(.textPrimary))
+            Icon(systemName: name, size: .sm, color: theme.text(.textPrimary))
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
         }
@@ -60,7 +62,7 @@ public struct CalendarView: View {
             ForEach(orderedWeekdaySymbols, id: \.self) { symbol in
                 Text(symbol)
                     .textStyle(.labelSm600)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .frame(maxWidth: .infinity)
             }
         }
@@ -86,10 +88,10 @@ public struct CalendarView: View {
         } label: {
             Text("\(calendar.component(.day, from: date))")
                 .textStyle(.bodyBase400)
-                .foregroundStyle(isSelected ? Theme.shared.foreground(.fgSecondary) : (isToday ? Theme.shared.text(.textHero) : Theme.shared.text(.textPrimary)))
+                .foregroundStyle(isSelected ? theme.foreground(.fgSecondary) : (isToday ? theme.text(.textHero) : theme.text(.textPrimary)))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? Theme.shared.background(.bgHero) : .clear, in: Circle())
-                .overlay { if isToday && !isSelected { Circle().stroke(Theme.shared.border(.borderHero), lineWidth: 1) } }
+                .background(isSelected ? theme.background(.bgHero) : .clear, in: Circle())
+                .overlay { if isToday && !isSelected { Circle().stroke(theme.border(.borderHero), lineWidth: 1) } }
         }
         .buttonStyle(.plain)
     }

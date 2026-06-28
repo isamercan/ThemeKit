@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. A packaged theme switcher: selecting an option loads that theme via
 /// `Theme.shared.loadTheme(named:)`. (daisyUI "Theme Controller".)
 public struct ThemeController: View {
+    @Environment(\.theme) private var theme
+
     public struct Option: Identifiable {
         public let id = UUID()
         let name: String
@@ -29,18 +31,18 @@ public struct ThemeController: View {
             ForEach(options) { option in
                 let isActive = option.name == selectedName
                 Button {
-                    Theme.shared.loadTheme(named: option.name)
+                    theme.loadTheme(named: option.name)
                     withAnimation(Motion.fast.animation) { selectedName = option.name }
                 } label: {
                     Text(option.label)
                         .textStyle(isActive ? .labelBase700 : .labelBase600)
-                        .foregroundStyle(isActive ? Theme.shared.text(.textHero) : Theme.shared.text(.textSecondary))
+                        .foregroundStyle(isActive ? theme.text(.textHero) : theme.text(.textSecondary))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Theme.SpacingKey.sm.value)
                         .background {
                             if isActive {
                                 RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
-                                    .fill(Theme.shared.background(.bgWhite))
+                                    .fill(theme.background(.bgWhite))
                                     .themeShadow(.soft)
                             }
                         }
@@ -50,7 +52,7 @@ public struct ThemeController: View {
             }
         }
         .padding(4)
-        .background(Theme.shared.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }
 

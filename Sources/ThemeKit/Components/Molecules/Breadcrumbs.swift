@@ -11,6 +11,8 @@ import SwiftUI
 /// When `maxItems` is set and exceeded, the middle crumbs collapse into a "…"
 /// menu that still navigates to any hidden crumb.
 public struct Breadcrumbs: View {
+    @Environment(\.theme) private var theme
+
     public struct Crumb: Identifiable {
         public let id = UUID()
         let title: String
@@ -53,7 +55,7 @@ public struct Breadcrumbs: View {
             Button { crumbs[index].action?() } label: {
                 Text(crumbs[index].title)
                     .textStyle(isLast ? .labelSm700 : .labelSm600)
-                    .foregroundStyle(isLast ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textHero))
+                    .foregroundStyle(isLast ? theme.text(.textPrimary) : theme.text(.textHero))
             }
             .buttonStyle(.plain)
             .disabled(isLast || crumbs[index].action == nil)
@@ -66,7 +68,7 @@ public struct Breadcrumbs: View {
             } label: {
                 Text("…")
                     .textStyle(.labelSm700)
-                    .foregroundStyle(Theme.shared.text(.textHero))
+                    .foregroundStyle(theme.text(.textHero))
                     .frame(minWidth: 20)
             }
             .accessibilityLabel(String(themeKit: "Show hidden breadcrumbs"))
@@ -76,7 +78,7 @@ public struct Breadcrumbs: View {
     private var separator: some View {
         Image(systemName: "chevron.right")
             .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(Theme.shared.text(.textTertiary))
+            .foregroundStyle(theme.text(.textTertiary))
             .mirrorsInRTL()
     }
 

@@ -9,6 +9,8 @@ import SwiftUI
 /// Improved, token-bound rewrite of the reference MultiLineInput — a bordered
 /// TextEditor with header label, placeholder, character counter and error state.
 public struct MultiLineTextInput: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var text: String
     private let label: String
     private let placeholder: String
@@ -58,8 +60,8 @@ public struct MultiLineTextInput: View {
                 TextEditor(text: editorBinding)
                     .focused($isFocused)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
-                    .tint(Theme.shared.foreground(.fgHero))
+                    .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+                    .tint(theme.foreground(.fgHero))
                     .scrollContentBackground(.hidden)
                     .padding(8)
                     .disabled(!isEnabled)
@@ -70,14 +72,14 @@ public struct MultiLineTextInput: View {
                 if text.isEmpty {
                     Text(placeholder)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                         .padding(.horizontal, 13)
                         .padding(.vertical, 16)
                         .allowsHitTesting(false)
                 }
             }
             .frame(minHeight: minHeight)
-            .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
+            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -91,7 +93,7 @@ public struct MultiLineTextInput: View {
                 if let characterLimit {
                     Text("\(text.count)/\(characterLimit)")
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
             }
         }
@@ -111,17 +113,17 @@ public struct MultiLineTextInput: View {
     }
 
     private var labelColor: Color {
-        if hasError { return Theme.shared.foreground(.systemcolorsFgError) }
-        if hasWarning { return Theme.shared.foreground(.systemcolorsFgWarning) }
-        if isFocused { return Theme.shared.text(.textHero) }
-        return Theme.shared.text(.textTertiary)
+        if hasError { return theme.foreground(.systemcolorsFgError) }
+        if hasWarning { return theme.foreground(.systemcolorsFgWarning) }
+        if isFocused { return theme.text(.textHero) }
+        return theme.text(.textTertiary)
     }
 
     private var borderColor: Color {
-        if hasError { return Theme.shared.border(.systemcolorsBorderError) }
-        if hasWarning { return Theme.shared.border(.systemcolorsBorderWarning) }
-        if isFocused { return Theme.shared.border(.borderHero) }
-        return Theme.shared.border(.borderPrimary)
+        if hasError { return theme.border(.systemcolorsBorderError) }
+        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
+        if isFocused { return theme.border(.borderHero) }
+        return theme.border(.borderPrimary)
     }
 }
 

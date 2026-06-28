@@ -10,6 +10,8 @@ import SwiftUI
 /// default / focused / error / disabled states). Covers Figma SelectBox /
 /// Combobox / DropDown field. Single-select via native Menu.
 public struct SelectBox<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     private let options: [Option]
     @Binding private var selection: Option?
@@ -49,7 +51,7 @@ public struct SelectBox<Option: Hashable>: View {
             if let label {
                 HStack(spacing: 4) {
                     Text(label).textStyle(.labelSm600).foregroundStyle(labelColor)
-                    Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(Theme.shared.text(.textTertiary))
+                    Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(theme.text(.textTertiary))
                 }
             }
 
@@ -69,14 +71,14 @@ public struct SelectBox<Option: Hashable>: View {
                 HStack {
                     Text(selection.map(optionTitle) ?? placeholder)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(selection == nil ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textPrimary))
+                        .foregroundStyle(selection == nil ? theme.text(.textTertiary) : theme.text(.textPrimary))
                     Spacer(minLength: 0)
-                    Icon(systemName: "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "chevron.down", size: .sm, color: theme.text(.textTertiary))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(48)
                 .frame(maxWidth: .infinity)
-                .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
+                .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -91,16 +93,16 @@ public struct SelectBox<Option: Hashable>: View {
             if let message = errorText ?? hint {
                 Text(message)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(hasError ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textTertiary))
+                    .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
             }
         }
     }
 
     private var labelColor: Color {
-        hasError ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textPrimary)
+        hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textPrimary)
     }
     private var borderColor: Color {
-        hasError ? Theme.shared.border(.systemcolorsBorderError) : Theme.shared.border(.borderPrimary)
+        hasError ? theme.border(.systemcolorsBorderError) : theme.border(.borderPrimary)
     }
 }
 

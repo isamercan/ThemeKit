@@ -13,6 +13,8 @@ import SwiftUI
 /// directly editable (type a number, clamped to `range` on commit), steppers move
 /// by `step`, and an optional `unit` suffix labels the value (e.g. "kişi", "₺").
 public struct InputNumber: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     @Binding private var value: Int
     private let range: ClosedRange<Int>
@@ -69,7 +71,7 @@ public struct InputNumber: View {
                 HStack(spacing: 4) {
                     Text(label).textStyle(.labelSm600).foregroundStyle(labelColor)
                     if hasInfo {
-                        Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(Theme.shared.text(.textTertiary))
+                        Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(theme.text(.textTertiary))
                     }
                 }
             }
@@ -96,7 +98,7 @@ public struct InputNumber: View {
             if let message = errorText ?? hint {
                 Text(message)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(hasError ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textTertiary))
+                    .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
             }
         }
         .onChange(of: value) { _, newValue in
@@ -134,12 +136,12 @@ public struct InputNumber: View {
             if let unit {
                 Text(unit)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
             }
         }
         .textStyle(.labelMd600)
         .monospacedDigit()
-        .foregroundStyle(isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
+        .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
     }
 
     private func stepper(_ systemName: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
@@ -147,9 +149,9 @@ public struct InputNumber: View {
         return Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(active ? Theme.shared.foreground(.fgSecondary) : Theme.shared.text(.textDisabled))
+                .foregroundStyle(active ? theme.foreground(.fgSecondary) : theme.text(.textDisabled))
                 .frame(width: height - 12, height: height - 12)
-                .background(active ? Theme.shared.background(.bgHero) : Theme.shared.background(.bgSecondaryLight),
+                .background(active ? theme.background(.bgHero) : theme.background(.bgSecondaryLight),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -170,12 +172,12 @@ public struct InputNumber: View {
     }
 
     private var labelColor: Color {
-        hasError ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textPrimary)
+        hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textPrimary)
     }
     private var borderColor: Color {
-        if hasError { return Theme.shared.border(.systemcolorsBorderError) }
-        if isFocused { return Theme.shared.border(.borderHero) }
-        return Theme.shared.border(.borderPrimary)
+        if hasError { return theme.border(.systemcolorsBorderError) }
+        if isFocused { return theme.border(.borderHero) }
+        return theme.border(.borderPrimary)
     }
 
     // MARK: - Pure helpers (extracted for testing)

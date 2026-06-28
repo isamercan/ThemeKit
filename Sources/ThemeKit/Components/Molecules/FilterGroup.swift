@@ -8,6 +8,8 @@ import SwiftUI
 
 /// Molecule. A single-select chip filter with a reset control. (daisyUI "Filter".)
 public struct FilterGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Option?
@@ -23,7 +25,7 @@ public struct FilterGroup<Option: Hashable>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(title).textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -31,10 +33,10 @@ public struct FilterGroup<Option: Hashable>: View {
                         Button { selection = nil } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(Theme.shared.text(.textTertiary))
+                                .foregroundStyle(theme.text(.textTertiary))
                                 .frame(width: 32, height: 32)
-                                .background(Theme.shared.background(.bgElevatorPrimary), in: Circle())
-                                .overlay(Circle().strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1))
+                                .background(theme.background(.bgElevatorPrimary), in: Circle())
+                                .overlay(Circle().strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
                         }
                         .buttonStyle(.plain)
                     }

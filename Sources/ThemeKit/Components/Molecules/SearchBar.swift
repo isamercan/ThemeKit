@@ -23,6 +23,8 @@ import SwiftUI
 /// SearchBar(text: $query, suggestions: cities, recent: recents, onSubmit: search)
 /// ```
 public struct SearchBar: View {
+    @Environment(\.theme) private var theme
+
 
     /// Where typeahead suggestions come from. `.none` keeps the classic bar
     /// (no dropdown) for callers that don't opt in.
@@ -138,19 +140,19 @@ public struct SearchBar: View {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if showBackButton {
                     Button { onBack?() } label: {
-                        Icon(systemName: "chevron.left", size: .md, color: Theme.shared.text(.textPrimary))
+                        Icon(systemName: "chevron.left", size: .md, color: theme.text(.textPrimary))
                             .mirrorsInRTL()
                     }
                     .buttonStyle(.plain)
                 }
 
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
 
                     TextField(placeholder, text: $text)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
-                        .tint(Theme.shared.foreground(.fgHero))
+                        .foregroundStyle(theme.text(.textPrimary))
+                        .tint(theme.foreground(.fgHero))
                         .focused($isFocused)
                         .disabled(!isEnabled)
                         .submitLabel(.search)
@@ -162,11 +164,11 @@ public struct SearchBar: View {
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(44)
-                .background(Theme.shared.background(.bgElevatorPrimary),
+                .background(theme.background(.bgElevatorPrimary),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
-                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                        .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
                 )
             }
 
@@ -187,12 +189,12 @@ public struct SearchBar: View {
             Spinner(size: IconSize.sm.value, lineWidth: 2)
         } else if !text.isEmpty {
             Button { text = "" } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
         } else if let trailingSystemImage {
             Button { onTrailing?() } label: {
-                Icon(systemName: trailingSystemImage, size: .sm, color: Theme.shared.text(.textPrimary))
+                Icon(systemName: trailingSystemImage, size: .sm, color: theme.text(.textPrimary))
             }
             .buttonStyle(.plain)
         }
@@ -257,7 +259,7 @@ public struct SearchBar: View {
                         Spinner(size: IconSize.sm.value, lineWidth: 2)
                         Text(String(themeKit: "Searching…"))
                             .textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .foregroundStyle(theme.text(.textTertiary))
                         Spacer()
                     }
                 }
@@ -267,7 +269,7 @@ public struct SearchBar: View {
                 row {
                     Text(String(themeKit: "No results"))
                         .textStyle(.bodySm400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
             }
         case .results(let items):
@@ -280,13 +282,13 @@ public struct SearchBar: View {
         HStack {
             Text(title)
                 .textStyle(.labelSm700)
-                .foregroundStyle(Theme.shared.text(.textTertiary))
+                .foregroundStyle(theme.text(.textTertiary))
             Spacer()
             if showsClear {
                 Button { onClearRecent?() } label: {
                     Text(String(themeKit: "Clear"))
                         .textStyle(.labelSm700)
-                        .foregroundStyle(Theme.shared.foreground(.fgHero))
+                        .foregroundStyle(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
             }
@@ -302,11 +304,11 @@ public struct SearchBar: View {
                 row {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
                         if let leadingSystemImage {
-                            Icon(systemName: leadingSystemImage, size: .sm, color: Theme.shared.text(.textTertiary))
+                            Icon(systemName: leadingSystemImage, size: .sm, color: theme.text(.textTertiary))
                         }
                         Text(item)
                             .textStyle(.bodyBase400)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                         Spacer()
                     }
                 }
@@ -320,11 +322,11 @@ public struct SearchBar: View {
 
     private func card<V: View>(@ViewBuilder _ content: () -> V) -> some View {
         VStack(spacing: 0) { content() }
-            .background(Theme.shared.background(.bgWhite),
+            .background(theme.background(.bgWhite),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                    .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
             )
             .themeShadow(.soft)
     }
