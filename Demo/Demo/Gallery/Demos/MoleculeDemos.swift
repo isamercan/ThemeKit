@@ -335,12 +335,13 @@ struct InputNumberDemo: View {
         ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
             if priceMode {
                 InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "₺",
-                            editable: editable, hint: "Type or step by 50", large: large)
+                            hint: "Type or step by 50", large: large)
+                    .editable(editable)
             } else {
                 InputNumber(label: "Guests", value: $value, range: 1...9, unit: "kişi",
-                            editable: editable,
                             hint: showError ? nil : "Type a number or use ± ",
                             errorText: showError ? "Too many" : nil, large: large)
+                    .editable(editable)
             }
         } knobs: {
             Text("editable = type the value directly (Ant InputNumber); ± steps by `step`.").font(.caption).foregroundStyle(.secondary)

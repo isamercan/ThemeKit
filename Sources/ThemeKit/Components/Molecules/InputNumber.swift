@@ -20,14 +20,15 @@ public struct InputNumber: View {
     private let range: ClosedRange<Int>
     private let step: Int
     private let unit: String?
-    private let editable: Bool
     private let hint: String?
     private let errorText: String?
-    private let hasInfo: Bool
-    private let onChange: ((Int) -> Void)?
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     private let height: CGFloat
+    // Opt-in behaviour — set via chainable modifiers.
+    private var editable: Bool = true
+    private var hasInfo: Bool = false
+    private var onChange: ((Int) -> Void)? = nil
 
     @FocusState private var isFocused: Bool
     @State private var textValue: String
@@ -38,11 +39,8 @@ public struct InputNumber: View {
         range: ClosedRange<Int> = 0...99,
         step: Int = 1,
         unit: String? = nil,
-        editable: Bool = true,
         hint: String? = nil,
         errorText: String? = nil,
-        hasInfo: Bool = false,
-        onChange: ((Int) -> Void)? = nil,
         large: Bool = false
     ) {
         self.label = label
@@ -50,11 +48,8 @@ public struct InputNumber: View {
         self.range = range
         self.step = step
         self.unit = unit
-        self.editable = editable
         self.hint = hint
         self.errorText = errorText
-        self.hasInfo = hasInfo
-        self.onChange = onChange
         self.height = large ? 48 : 40
         self._textValue = State(initialValue: String(value.wrappedValue))
     }
@@ -227,4 +222,12 @@ public extension InputNumber {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Whether the value can be typed (default true); `false` shows it read-only
+    /// with steppers still active.
+    func editable(_ on: Bool = true) -> Self { var copy = self; copy.editable = on; return copy }
+    /// Shows an info-circle glyph next to the label.
+    func hasInfo(_ on: Bool = true) -> Self { var copy = self; copy.hasInfo = on; return copy }
+    /// Fires with the clamped value whenever it changes (stepper / type / commit).
+    func onValueChange(_ action: ((Int) -> Void)?) -> Self { var copy = self; copy.onChange = action; return copy }
 }
