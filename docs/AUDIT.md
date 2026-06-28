@@ -23,7 +23,7 @@ singleton; the rest is polish and discipline.
 |---|---|---|
 | A. Structure | Solid | tokens→atoms→molecules→organisms, 1 file/component, 2 products (Lottie isolated), 781 public (deliberate) |
 | B. Tokens | Solid | JSON + generator semantic tokens, light+dark, Dynamic Type, only 6 hardcoded colors |
-| C. Theming | Solid | runtime theming + `\.theme` environment fully rolled out (#57, #66–#73): 719/736 reads honor an injected subtree theme; the 17 left are `#Preview` demo code / a doc comment / structurally-static defaults, by design |
+| C. Theming | Solid | runtime theming + `\.theme` environment fully rolled out (#57, #66–#75): **zero `Theme.shared.` reads in components** — every render honors an injected subtree theme; only the core singleton wiring in `Theme/` remains, by design |
 | D. API design | Solid | ButtonStyle/BadgeStyle patterns, slot composition; no VM in leaf components (the 7 ObservableObjects are presenters in organisms) |
 | E. State & data flow | Solid | value-driven (`let`+`@Binding`), no business logic in leaves |
 | F. Accessibility | Solid | VoiceOver labels/traits, Slider adjustable action, Reduce Motion (micro-motion), RTL, a11y semantics tests |
@@ -39,14 +39,15 @@ singleton; the rest is polish and discipline.
 
 ### P0 — structural lever
 - [x] **`\.theme` environment injection** (PR #57) — `EnvironmentValues.theme` defaulting to `Theme.shared` (crash-proof, backward compatible) + `.theme(_:)` override; pilot `Card`/`Tag` migrated; +2 tests.
-- [x] **Full singleton → environment rollout** (PRs #66–#73) — done. **719 of 736 reads** now resolve `\.theme` from the environment, so an injected `.theme(_:)` re-skins any subtree.
+- [x] **Full singleton → environment rollout** (PRs #66–#75) — **complete: `Theme.shared.` colour reads in `Components/` are now zero.** Every component resolves the injected `\.theme`, so `.theme(_:)` re-skins any subtree.
   - **View bodies** (#66–#68): 580 reads across Atoms (66) · Molecules (333) · Organisms (181).
   - **Private / sub-directory Views the first matcher skipped** (#70): 33 reads (`private struct`s + `Buttons/`).
-  - **Enum color resolvers** (#71): 78 reads — `BadgeStyle`/`InfoBannerType`/`StatTrend`/… converted from `var x: Color` to `func x(_ theme:)`, with each owning View passing its `@Environment(\.theme)` (internal members, no public API change).
+  - **Enum color resolvers** (#71): 78 reads — `BadgeStyle`/`InfoBannerType`/`StatTrend`/… converted from `var x: Color` to `func x(_ theme:)`, each owning View passing its `@Environment(\.theme)` (internal members, no public API change).
   - **Overlay host `ViewModifier`s** (#72): 21 reads — Feedback/Tour/Popconfirm/Dialog.
   - **Extension-method statics** (#73): 7 reads — inline content extracted into small `@Environment`-reading wrapper Views (CountBadge/Indicator/ButtonDock/RollingNumber/BorderBeam).
+  - **The last structural cases** (#75): Hero's `Background == Color` default became a `HeroSurface` View (so the convenience defaults `Background` to it, source-compatibly); DataTable's plain-text cell became a `DefaultTextCell` View; the 13 `#Preview` demo reads use `@Previewable @Environment(\.theme)`; the ThemeController doc-comment became a DocC symbol link.
   - Every step is compiler-guarded and pixel-verified (regenerated screenshots byte-identical; default render unchanged because `\.theme` defaults to `Theme.shared`).
-  - **Irreducible floor — 17 reads, by design:** `#Preview` demo code (no injected theme; the singleton is correct there), one doc-comment mention, DataTable's nested `Column` (a non-View value type), and Hero's `Background == Color` convenience default (the generic constrains the default to a `Color` *value*, which can't read the environment).
+  - **What's left on the singleton, by design:** a preview's `.environmentObject(Theme.shared)` (legacy `@EnvironmentObject` injection), and the core wiring in `Theme/` — the `\.theme` environment default, the typography resolver, and the root `ObservedObject`. These *are* the singleton mechanism; they're not component reads.
 
 ### P1 — high leverage
 - [x] **Lazy row stacks** (PR #58) — `LazyVStack` for `ListView`/`DataTable` rows.
