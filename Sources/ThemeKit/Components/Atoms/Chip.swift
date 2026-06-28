@@ -39,34 +39,25 @@ public struct Chip: View {
     private let title: String
     private let size: ChipSize
     private let selectionStyle: ChipSelectionStyle
-    private let leadingSystemImage: String?
-    private let rating: Double?
-    private let isExist: Bool
-    private let isInteractive: Bool
-    private let expandsHorizontally: Bool
     @Environment(\.isEnabled) private var isEnabled
+    // Long-tail config — set via chainable modifiers, keeping the common call
+    // site to `Chip("x", isSelected: $on, selectionStyle:)`.
+    private var leadingSystemImage: String? = nil
+    private var rating: Double? = nil
+    private var isExist: Bool = true
+    private var isInteractive: Bool = true
+    private var expandsHorizontally: Bool = false
 
     public init(
         _ title: String,
         isSelected: Binding<Bool>,
         size: ChipSize = .small,
-        selectionStyle: ChipSelectionStyle = .tonal,
-        leadingSystemImage: String? = nil,
-        rating: Double? = nil,
-        isExist: Bool = true,
-        isInteractive: Bool = true,
-        expandsHorizontally: Bool = false,
-        isEnabled: Bool = true
+        selectionStyle: ChipSelectionStyle = .tonal
     ) {
         self.title = title
         self._isSelected = isSelected
         self.size = size
         self.selectionStyle = selectionStyle
-        self.leadingSystemImage = leadingSystemImage
-        self.rating = rating
-        self.isExist = isExist
-        self.isInteractive = isInteractive
-        self.expandsHorizontally = expandsHorizontally
     }
 
     public var body: some View {
@@ -128,6 +119,20 @@ public struct Chip: View {
     }
 }
 
+public extension Chip {
+    /// A leading SF Symbol before the title.
+    func icon(_ systemName: String?) -> Self { var copy = self; copy.leadingSystemImage = systemName; return copy }
+    /// A leading star + numeric rating before the title.
+    func rating(_ value: Double?) -> Self { var copy = self; copy.rating = value; return copy }
+    /// Whether the represented item still exists; `false` strikes through and dims
+    /// the chip (e.g. a sold-out filter).
+    func exists(_ on: Bool = true) -> Self { var copy = self; copy.isExist = on; return copy }
+    /// Whether the chip responds to taps (a read-only display chip passes `false`).
+    func interactive(_ on: Bool = true) -> Self { var copy = self; copy.isInteractive = on; return copy }
+    /// Stretches the chip to fill the available width (e.g. a full-width filter row).
+    func expands(_ on: Bool = true) -> Self { var copy = self; copy.expandsHorizontally = on; return copy }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 16) {
         HStack {
@@ -136,7 +141,7 @@ public struct Chip: View {
             Chip("Solid", isSelected: .constant(true), selectionStyle: .solid)
         }
         HStack {
-            Chip("Icon", isSelected: .constant(true), leadingSystemImage: "checkmark")
+            Chip("Icon", isSelected: .constant(true)).icon("checkmark")
             Chip("Large", isSelected: .constant(false), size: .large)
             Chip("Disabled", isSelected: .constant(false)).disabled(true)
         }

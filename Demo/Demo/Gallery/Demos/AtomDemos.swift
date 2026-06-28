@@ -133,8 +133,10 @@ struct ChipDemo: View {
             ("isSelected", "\(selected)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
         ]) {
             Chip(exists ? "Recommended" : "Sold out", isSelected: $selected, size: large ? .large : .small,
-                 selectionStyle: solid ? .solid : .tonal,
-                 rating: rating ? 4.6 : nil, isExist: exists, expandsHorizontally: expands)
+                 selectionStyle: solid ? .solid : .tonal)
+                    .rating(rating ? 4.6 : nil)
+                    .exists(exists)
+                    .expands(expands)
                     .disabled(!enabled)
         } knobs: {
             Toggle("Selected", isOn: $selected)
