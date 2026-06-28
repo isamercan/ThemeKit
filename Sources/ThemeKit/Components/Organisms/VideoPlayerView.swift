@@ -16,34 +16,26 @@ public struct VideoPlayerView: View {
     @Environment(\.theme) private var theme
 
     private let url: URL?
-    private let autoplay: Bool
-    private let loop: Bool
-    private let muted: Bool
-    private let showMuteToggle: Bool
-    private let tapToToggle: Bool
     private let progress: Binding<Double>?
     private let externalMuted: Binding<Bool>?
     private let onTap: (() -> Void)?
     @Binding private var isActive: Bool
+    // Playback flags — set via chainable modifiers (autoplay / loop / mute are on
+    // by default, matching an inline auto-playing video).
+    private var autoplay: Bool = true
+    private var loop: Bool = true
+    private var muted: Bool = true
+    private var showMuteToggle: Bool = false
+    private var tapToToggle: Bool = false
 
     public init(
         _ url: URL?,
-        autoplay: Bool = true,
-        loop: Bool = true,
-        muted: Bool = true,
-        showMuteToggle: Bool = false,
-        tapToToggle: Bool = false,
         progress: Binding<Double>? = nil,
         isMuted: Binding<Bool>? = nil,
         onTap: (() -> Void)? = nil,
         isActive: Binding<Bool> = .constant(true)
     ) {
         self.url = url
-        self.autoplay = autoplay
-        self.loop = loop
-        self.muted = muted
-        self.showMuteToggle = showMuteToggle
-        self.tapToToggle = tapToToggle
         self.progress = progress
         self.externalMuted = isMuted
         self.onTap = onTap
@@ -76,6 +68,19 @@ public struct VideoPlayerView: View {
         VideoPlayer(player: AVPlayer(url: url))
     }
     #endif
+}
+
+public extension VideoPlayerView {
+    /// Whether the video starts playing on appear (default true).
+    func autoplay(_ on: Bool = true) -> Self { var copy = self; copy.autoplay = on; return copy }
+    /// Whether playback loops back to the start (default true).
+    func loop(_ on: Bool = true) -> Self { var copy = self; copy.loop = on; return copy }
+    /// Whether the audio starts muted (default true — required for iOS inline autoplay).
+    func muted(_ on: Bool = true) -> Self { var copy = self; copy.muted = on; return copy }
+    /// Shows a mute/unmute toggle button overlay.
+    func muteToggle(_ on: Bool = true) -> Self { var copy = self; copy.showMuteToggle = on; return copy }
+    /// Whether tapping the video toggles play/pause.
+    func tapToToggle(_ on: Bool = true) -> Self { var copy = self; copy.tapToToggle = on; return copy }
 }
 
 #if os(iOS)
