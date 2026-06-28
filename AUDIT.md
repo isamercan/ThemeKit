@@ -34,7 +34,7 @@
 | Test çerçevesi | **Partial** | 34 `XCTestCase`, Swift Testing (`@Test`/`#expect`) = **0**; snapshot 4 suite (~108 component'e karşı, opt-in/iOS-only) |
 | **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
 | **Observation (frontier)** | **Solid** ✅ | 6/8 `@Observable`'a taşındı (5 presenter + FormValidator); `@Published` 0, `@StateObject`→`@State`, presenter env'i `@Environment(_.self)`. Yalnız `Theme` (`@unchecked Sendable` singleton + revision-repaint) bilinçli ertelendi |
-| **Liquid Glass (frontier)** | **Missing** | `.glassEffect` = 0, `GlassEffectContainer` = 0, `reduceTransparency` = 0 |
+| **Liquid Glass (frontier)** | **Solid** ✅ | `.glassChrome()` modifier (Extensions/GlassChrome.swift): `.glassEffect` on OS 26+, `Material` fallback 17–25, opaque fill under Reduce Transparency; adopted in Dialog + Drawer chrome. Gated & additive (iOS 17 min korunur) |
 | Magic-number spacing | **Partial** | 34 literal `.padding(n)` (token yerine); örn. Molecules/Tooltip.swift:196 `.padding(80)` |
 | Preview state-matrix | **Partial** | `PreviewMatrix` helper var (Utils/PreviewMatrix.swift) ama yalnız 3/108 component adopte (Tag/Stat/Avatar); 114 preview'ın çoğu tek-durum |
 
@@ -71,10 +71,9 @@
 - **Neden:** ~108 component'e karşı 4 suite; theming/regression görsel koruması ince.
 - **Efor:** M. **Dosyalar:** Tests/ThemeKitTests/Snapshot/.
 
-**6. Liquid Glass benimseme stratejisi (chrome'da, gated)**
-- **Ne:** Overlay/chrome yüzeylerinde `.glassEffect` + `GlassEffectContainer`/`glassEffectID`, `if #available(iOS 26)` ile gated; iOS 17-25 için `Material` fallback; Reduce Transparency için `.identity` fallback.
-- **Neden:** 2026 tasarım dili; min target iOS 17 olduğu için additive/gated olmalı — **içerik katmanında değil yalnız chrome'da** (smell'den kaçın).
-- **Efor:** L. **Dosyalar:** Organisms/NavigationBar.swift, Toast.swift, Drawer.swift, BottomSheet.swift, Dialog.swift.
+**6. Liquid Glass benimseme stratejisi (chrome'da, gated)** — ✅ TAMAMLANDI
+- **Yapıldı:** `.glassChrome(in:)` modifier (Extensions/GlassChrome.swift) — `if #available(iOS 26, macOS 26)` ile `.glassEffect(.regular, in:)`, OS 17-25 için `Material`, Reduce Transparency için opak token fill. Dialog card + Drawer paneli chrome'una uygulandı (her ikisi de screenshot baseline'ında değil → churn yok). 163 test + Demo (iOS 26 glass branch'i gerçekten derler) yeşil.
+- **Bilinçli kapsam:** Yalnız chrome (floating panel/modal); içerik katmanına dokunulmadı. FAB/Toast/NavigationBar screenshot baseline'ında olduğu için varsayılanları değiştirilmedi — consumer `.glassChrome()`'u istediği chrome'a uygulayabilir.
 
 ### P2 — cila
 
