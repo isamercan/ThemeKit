@@ -17,6 +17,7 @@
 #if os(macOS)
 import XCTest
 import SwiftUI
+import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 @testable import ThemeKit
@@ -163,17 +164,17 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Slider", ThemeKit.Slider(value: .constant(4), in: 0...8, label: "Guests",
                                        marks: [0: "0", 4: "4", 8: "8"], showValueTooltip: false).frame(width: 300))
         shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("İstanbul")]).frame(width: 320))
-        shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300))
+        shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
         shot("FileInput", FileInput(label: "Passport", fileName: "passport-scan.jpg", onPick: {}, onClear: {}).frame(width: 320))
         shot("Pagination", Pagination(current: .constant(4), total: 50).frame(width: 360))
         shot("Fieldset", Fieldset("Contact details", helper: "We never share your info.") {
             TextInput("Email", text: .constant("user@example.com"))
-        }.frame(width: 320))
+        }.frame(width: 320), hosted: true)
         shot("DateField", DateField(label: "Check-in", date: .constant(nil)).frame(width: 280))
         shot("Select", Select("City", options: ["İstanbul", "Ankara", "İzmir"],
-                              selection: .constant(Optional("İstanbul"))) { $0 }.frame(width: 280))
-        shot("SelectBox", SelectBox(label: "Country", options: ["Türkiye", "Almanya"],
-                                    selection: .constant(Optional("Türkiye"))) { $0 }.frame(width: 280))
+                              selection: .constant(Optional("İstanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
+        // SelectBox is a native SwiftUI Menu — its label doesn't draw into an
+        // offscreen snapshot, so it's shown live in the Demo app instead.
         shot("MultiSelect", MultiSelect(label: "Cities", options: ["İstanbul", "Ankara", "İzmir"],
                                         selection: .constant(Set(["İstanbul", "Ankara"]))) { $0 }.frame(width: 300))
         shot("TreeSelect", TreeSelect(label: "Şehirler",
@@ -181,13 +182,13 @@ final class ScreenshotGenerator: XCTestCase {
                                                        children: [TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara")])],
                                       selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))
         shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("İstanbul"),
-                                          suggestions: ["İstanbul", "İzmir"]).frame(width: 300))
-        shot("SearchBar", SearchBar(text: .constant("İstanbul")).frame(width: 320))
+                                          suggestions: ["İstanbul", "İzmir"]).frame(width: 300), hosted: true)
+        shot("SearchBar", SearchBar(text: .constant("İstanbul")).frame(width: 320), hosted: true)
         shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
-        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "₺").frame(width: 280))
+        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "₺").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
                                         in: 0...1000, step: 50, marks: [0, 500, 1000]).frame(width: 320))
-        shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("Harika bir konaklama oldu, kesinlikle tavsiye ederim.")).frame(width: 300))
+        shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("Harika bir konaklama oldu, kesinlikle tavsiye ederim.")).frame(width: 300), hosted: true)
         shot("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
             .tooltip("Yardımcı ipucu", isPresented: .constant(true), edge: .top)
             .padding(.top, 36))
@@ -296,14 +297,14 @@ final class ScreenshotGenerator: XCTestCase {
 
     // MARK: Render
 
-    private func shot(_ name: String, _ view: some View) {
-        let renderer = ImageRenderer(content:
-            view
-                .padding(16)
-                .background(Theme.shared.background(.bgWhite))
-        )
-        renderer.scale = 2
-        guard let cg = renderer.cgImage else { XCTFail("\(name): no image"); return }
+    /// `hosted: true` renders the view inside a real offscreen NSWindow rather than
+    /// through ImageRenderer. ImageRenderer can't draw `TextField`/`TextEditor`
+    /// (they need a window + responder) and falls back to a yellow placeholder, so
+    /// text-input components are captured by caching a live AppKit hierarchy.
+    private func shot(_ name: String, _ view: some View, hosted: Bool = false) {
+        let decorated = view.padding(16).background(Theme.shared.background(.bgWhite))
+        let cg = hosted ? hostedCGImage(decorated) : imageRendererCGImage(decorated)
+        guard let cg else { XCTFail("\(name): no image"); return }
         let url = outDir.appendingPathComponent("\(name).png")
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
             XCTFail("\(name): no PNG destination"); return
@@ -311,6 +312,37 @@ final class ScreenshotGenerator: XCTestCase {
         CGImageDestinationAddImage(dest, cg, nil)
         CGImageDestinationFinalize(dest)
         manifest.append((category, name))
+    }
+
+    private func imageRendererCGImage(_ view: some View) -> CGImage? {
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        return renderer.cgImage
+    }
+
+    /// Host the view in a borderless offscreen window and cache its rendered AppKit
+    /// layer — so `TextField`-backed controls draw real text instead of a placeholder.
+    private func hostedCGImage(_ view: some View) -> CGImage? {
+        let host = NSHostingView(rootView: view)
+        host.layoutSubtreeIfNeeded()
+        let size = host.fittingSize
+        guard size.width > 1, size.height > 1 else { return nil }
+        host.frame = NSRect(origin: .zero, size: size)
+        let window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = host
+        window.orderFrontRegardless()
+        // Give SwiftUI/AppKit a couple of run-loop turns to lay out and draw the
+        // text controls before we snapshot.
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.15))
+        // Drop first responder so text fields snapshot in their resting state (no
+        // focus ring, no auto-selected text) rather than focused-and-selected.
+        window.makeFirstResponder(nil)
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        host.layoutSubtreeIfNeeded()
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return nil }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        window.orderOut(nil)
+        return rep.cgImage
     }
 }
 #endif
