@@ -9,23 +9,23 @@ import SwiftUI
 public enum PromoBannerTint {
     case blue, dark, turquoise
 
-    var background: Color {
+    func background(_ theme: Theme) -> Color {
         switch self {
-        case .blue: return Theme.shared.background(.bgElevatorTertiary)
-        case .dark: return Theme.shared.background(.bgTertiary)
-        case .turquoise: return Theme.shared.background(.bgTurquoiseLight)
+        case .blue: return theme.background(.bgElevatorTertiary)
+        case .dark: return theme.background(.bgTertiary)
+        case .turquoise: return theme.background(.bgTurquoiseLight)
         }
     }
-    var foreground: Color {
+    func foreground(_ theme: Theme) -> Color {
         switch self {
-        case .blue, .turquoise: return Theme.shared.text(.textPrimary)
-        case .dark: return Theme.shared.foreground(.fgSecondary)
+        case .blue, .turquoise: return theme.text(.textPrimary)
+        case .dark: return theme.foreground(.fgSecondary)
         }
     }
-    var secondaryForeground: Color {
+    func secondaryForeground(_ theme: Theme) -> Color {
         switch self {
-        case .blue, .turquoise: return Theme.shared.text(.textSecondary)
-        case .dark: return Theme.shared.text(.textSecondaryInverse)
+        case .blue, .turquoise: return theme.text(.textSecondary)
+        case .dark: return theme.text(.textSecondaryInverse)
         }
     }
 }
@@ -63,16 +63,16 @@ public struct PromoBanner: View {
             if let systemImage {
                 Image(systemName: systemImage)
                     .font(.system(size: 28))
-                    .foregroundStyle(tint.foreground)
+                    .foregroundStyle(tint.foreground(theme))
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .textStyle(.labelMd700)
-                    .foregroundStyle(tint.foreground)
+                    .foregroundStyle(tint.foreground(theme))
                 if let subtitle {
                     Text(subtitle)
                         .textStyle(.bodySm400)
-                        .foregroundStyle(tint.secondaryForeground)
+                        .foregroundStyle(tint.secondaryForeground(theme))
                 }
             }
             Spacer(minLength: Theme.SpacingKey.sm.value)
@@ -90,7 +90,7 @@ public struct PromoBanner: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(tint.background, in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .background(tint.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
     }
 }
 

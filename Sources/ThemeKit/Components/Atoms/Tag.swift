@@ -58,7 +58,7 @@ public struct Tag: View {
     private var foreground: Color {
         guard let style else { return theme.text(.textHero) }
         switch variant {
-        case .soft: return style.foreground
+        case .soft: return style.foreground(theme)
         case .solid: return style.semantic.onSolid
         case .outline, .ghost: return style.semantic.accent
         }
@@ -67,7 +67,7 @@ public struct Tag: View {
     private var background: Color {
         guard let style else { return theme.background(.bgElevatorTertiary) }
         switch variant {
-        case .soft: return style.background
+        case .soft: return style.background(theme)
         case .solid: return style.semantic.solid
         case .outline, .ghost: return .clear
         }

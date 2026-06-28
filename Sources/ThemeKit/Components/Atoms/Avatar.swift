@@ -20,18 +20,18 @@ public enum AvatarShape { case circle, square }
 public enum AvatarBackground {
     case blue, white, dark
 
-    var fill: Color {
+    func fill(_ theme: Theme) -> Color {
         switch self {
-        case .blue: return Theme.shared.background(.bgElevatorTertiary)
-        case .white: return Theme.shared.background(.bgWhite)
-        case .dark: return Theme.shared.background(.bgTertiary)
+        case .blue: return theme.background(.bgElevatorTertiary)
+        case .white: return theme.background(.bgWhite)
+        case .dark: return theme.background(.bgTertiary)
         }
     }
-    var foreground: Color {
+    func foreground(_ theme: Theme) -> Color {
         switch self {
-        case .blue: return Theme.shared.text(.textHero)
-        case .white: return Theme.shared.text(.textPrimary)
-        case .dark: return Theme.shared.foreground(.fgSecondary)
+        case .blue: return theme.text(.textHero)
+        case .white: return theme.text(.textPrimary)
+        case .dark: return theme.foreground(.fgSecondary)
         }
     }
     var hasBorder: Bool { self == .white }
@@ -103,7 +103,7 @@ public struct Avatar: View {
 
     public var body: some View {
         ZStack {
-            clip.fill(background.fill)
+            clip.fill(background.fill(theme))
             if background.hasBorder {
                 clip.stroke(theme.border(.borderPrimary), lineWidth: 2)
             }
@@ -137,11 +137,11 @@ public struct Avatar: View {
         case .icon(let name):
             Image(systemName: name)
                 .font(.system(size: dim * 0.5))
-                .foregroundStyle(background.foreground)
+                .foregroundStyle(background.foreground(theme))
         case .initials(let text):
             Text(text.prefix(2).uppercased())
                 .font(.system(size: dim * 0.38, weight: .semibold))
-                .foregroundStyle(background.foreground)
+                .foregroundStyle(background.foreground(theme))
         case .image(let image):
             image.resizable().scaledToFill()
         }

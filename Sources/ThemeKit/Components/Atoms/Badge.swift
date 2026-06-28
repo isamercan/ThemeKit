@@ -10,41 +10,41 @@ public enum BadgeStyle: String, CaseIterable {
     case neutral, info, success, warning, error
     case pink, orange, turquoise, purple
 
-    var background: Color {
+    func background(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.background(.bgSecondaryLight)
-        case .info: return Theme.shared.background(.systemcolorsBgInfoLight)
-        case .success: return Theme.shared.background(.systemcolorsBgSuccessLight)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarningLight)
-        case .error: return Theme.shared.background(.systemcolorsBgErrorLight)
-        case .pink: return Theme.shared.background(.badgeBgMaximumpinkLight)
-        case .orange: return Theme.shared.background(.badgeBgOrange)
-        case .turquoise: return Theme.shared.background(.badgeBgTurquoiseLight)
-        case .purple: return Theme.shared.background(.badgeBgPurple)
+        case .neutral: return theme.background(.bgSecondaryLight)
+        case .info: return theme.background(.systemcolorsBgInfoLight)
+        case .success: return theme.background(.systemcolorsBgSuccessLight)
+        case .warning: return theme.background(.systemcolorsBgWarningLight)
+        case .error: return theme.background(.systemcolorsBgErrorLight)
+        case .pink: return theme.background(.badgeBgMaximumpinkLight)
+        case .orange: return theme.background(.badgeBgOrange)
+        case .turquoise: return theme.background(.badgeBgTurquoiseLight)
+        case .purple: return theme.background(.badgeBgPurple)
         }
     }
 
-    var foreground: Color {
+    func foreground(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.text(.textSecondary)
-        case .info: return Theme.shared.foreground(.systemcolorsFgInfo)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .pink: return Theme.shared.foreground(.badgeFgMaximumpink)
-        case .orange: return Theme.shared.foreground(.badgeFgOrange)
-        case .turquoise: return Theme.shared.foreground(.badgeFgTurquoise)
-        case .purple: return Theme.shared.text(.textPurple)
+        case .neutral: return theme.text(.textSecondary)
+        case .info: return theme.foreground(.systemcolorsFgInfo)
+        case .success: return theme.foreground(.systemcolorsFgSuccess)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .pink: return theme.foreground(.badgeFgMaximumpink)
+        case .orange: return theme.foreground(.badgeFgOrange)
+        case .turquoise: return theme.foreground(.badgeFgTurquoise)
+        case .purple: return theme.text(.textPurple)
         }
     }
 
-    var border: Color {
+    func border(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return Theme.shared.border(.borderPrimary)
-        case .info: return Theme.shared.border(.systemcolorsBorderInfoLight)
-        case .success: return Theme.shared.border(.systemcolorsBorderSuccessLight)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarningLight)
-        case .error: return Theme.shared.border(.systemcolorsBorderErrorLight)
+        case .neutral: return theme.border(.borderPrimary)
+        case .info: return theme.border(.systemcolorsBorderInfoLight)
+        case .success: return theme.border(.systemcolorsBorderSuccessLight)
+        case .warning: return theme.border(.systemcolorsBorderWarningLight)
+        case .error: return theme.border(.systemcolorsBorderErrorLight)
         case .pink, .orange, .turquoise, .purple: return .clear
         }
     }
@@ -107,6 +107,8 @@ public enum BadgeShape {
 /// by a semantic `BadgeStyle` (system + brand variants) instead of
 /// component-specific color lookups, and icons use SF Symbols.
 public struct Badge: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let style: BadgeStyle
     private let variant: FillVariant
@@ -174,7 +176,7 @@ public struct Badge: View {
     private var foreground: Color {
         if let textColor { return textColor }
         switch variant {
-        case .soft: return style.foreground
+        case .soft: return style.foreground(theme)
         case .solid: return style.semantic.onSolid
         case .outline, .ghost: return style.semantic.accent
         }
@@ -182,14 +184,14 @@ public struct Badge: View {
     private var backgroundStyle: AnyShapeStyle {
         if let gradient { return AnyShapeStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing)) }
         switch variant {
-        case .soft: return AnyShapeStyle(style.background)
+        case .soft: return AnyShapeStyle(style.background(theme))
         case .solid: return AnyShapeStyle(style.semantic.solid)
         case .outline, .ghost: return AnyShapeStyle(Color.clear)
         }
     }
     private var border: Color {
         switch variant {
-        case .soft: return style.border
+        case .soft: return style.border(theme)
         case .solid: return .clear
         case .outline: return style.semantic.border
         case .ghost: return .clear
