@@ -60,8 +60,6 @@ public struct TextInputModel {
     public var size: TextInputSize
     public var formatter: TextInputFormatter?
     public var infoMessages: [InfoMessage]
-    public var accessibilityID: String?
-    public var isEnabled: Bool
     public var keyboardType: TextInputKeyboard
     public var textContentType: TextInputContentType?
     public var submitLabel: SubmitLabel
@@ -85,8 +83,6 @@ public struct TextInputModel {
         size: TextInputSize = .medium,
         formatter: TextInputFormatter? = nil,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         keyboardType: TextInputKeyboard = .default,
         textContentType: TextInputContentType? = nil,
         submitLabel: SubmitLabel = .return,
@@ -109,8 +105,6 @@ public struct TextInputModel {
         self.size = size
         self.formatter = formatter
         self.infoMessages = infoMessages
-        self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.keyboardType = keyboardType
         self.textContentType = textContentType
         self.submitLabel = submitLabel
@@ -132,6 +126,8 @@ public struct TextInput: View {
     private let model: TextInputModel
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private let externalFocus: Binding<Bool>?
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    private var accessibilityID: String? = nil
 
     @FocusState private var isFocused: Bool
     @State private var reveal = false
@@ -162,9 +158,7 @@ public struct TextInput: View {
         errorText: String? = nil,
         warningText: String? = nil,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         externalFocus: Binding<Bool>? = nil,
-        isEnabled: Bool = true,
         keyboardType: TextInputKeyboard = .default,
         textContentType: TextInputContentType? = nil,
         submitLabel: SubmitLabel = .return,
@@ -185,7 +179,7 @@ public struct TextInput: View {
             suffixSystemImage: suffixSystemImage, addonBefore: addonBefore, addonAfter: addonAfter,
             isSecure: isSecure, allowClear: allowClear,
             maxLength: maxLength, showCount: showCount, size: size, formatter: formatter,
-            infoMessages: messages, accessibilityID: accessibilityID, isEnabled: isEnabled,
+            infoMessages: messages,
             keyboardType: keyboardType, textContentType: textContentType, submitLabel: submitLabel,
             autocapitalization: autocapitalization, autocorrectionDisabled: autocorrectionDisabled,
             hardLimit: hardLimit, countStyle: countStyle, onSubmit: onSubmit
@@ -196,7 +190,7 @@ public struct TextInput: View {
     private var dominant: InfoMessage.Kind? { model.infoMessages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { model.allowClear && !text.isEmpty && model.isEnabled && !model.isSecure }
+    private var showsClear: Bool { model.allowClear && !text.isEmpty && isEnabled && !model.isSecure }
 
     private var hasAddons: Bool { model.addonBefore != nil || model.addonAfter != nil }
     private var isOverLimit: Bool { Self.isOverLimit(count: text.count, maxLength: model.maxLength) }
@@ -231,7 +225,7 @@ public struct TextInput: View {
                     .textStyle(floating ? .labelSm600 : .bodyBase400)
                     .foregroundStyle(labelColor)
                     .offset(y: floating ? -11 : 0)
-                    .a11y(A11yElement.Field.label, in: model.accessibilityID)
+                    .a11y(A11yElement.Field.label, in: accessibilityID)
 
                 field
                     .opacity(floating ? 1 : 0)
@@ -284,7 +278,7 @@ public struct TextInput: View {
                 .strokeBorder(borderColor, lineWidth: isFocused || hasError || hasWarning ? 1.5 : 1)
         )
         .contentShape(Rectangle())
-        .onTapGesture { if model.isEnabled { isFocused = true } }
+        .onTapGesture { if isEnabled { isFocused = true } }
     }
 
     public var body: some View {
@@ -294,7 +288,7 @@ public struct TextInput: View {
             if !model.infoMessages.isEmpty || model.showCount {
                 HStack(alignment: .firstTextBaseline) {
                     InfoMessageList(model.infoMessages)
-                        .a11y(A11yElement.Field.message, in: model.accessibilityID)
+                        .a11y(A11yElement.Field.message, in: accessibilityID)
                     Spacer(minLength: Theme.SpacingKey.sm.value)
                     if model.showCount {
                         Text(Self.counterText(count: text.count, maxLength: model.maxLength, style: model.countStyle))
@@ -324,17 +318,17 @@ public struct TextInput: View {
         Group {
             if model.isSecure && !reveal {
                 SecureField(model.placeholder, text: $text)
-                    .a11y(A11yElement.Field.secureField, in: model.accessibilityID)
+                    .a11y(A11yElement.Field.secureField, in: accessibilityID)
             } else {
                 TextField(model.placeholder, text: $text)
-                    .a11y(A11yElement.Field.field, in: model.accessibilityID)
+                    .a11y(A11yElement.Field.field, in: accessibilityID)
             }
         }
         .focused($isFocused)
         .textStyle(.bodyBase400)
-        .foregroundStyle(model.isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+        .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
         .tint(theme.foreground(.fgHero))
-        .disabled(!model.isEnabled)
+        .disabled(!isEnabled)
         .submitLabel(model.submitLabel)
         .autocorrectionDisabled(model.autocorrectionDisabled)
         .textInputTraits(keyboard: model.keyboardType,
@@ -352,14 +346,14 @@ public struct TextInput: View {
                 Icon(systemName: reveal ? "eye.slash" : "eye", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
-            .a11y(A11yElement.Field.reveal, in: model.accessibilityID)
+            .a11y(A11yElement.Field.reveal, in: accessibilityID)
             .accessibilityLabel(reveal ? String(themeKit: "Hide password") : String(themeKit: "Show password"))
         } else if showsClear || (!text.isEmpty && isFocused && model.suffixSystemImage == nil) {
             Button { text = "" } label: {
                 Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
-            .a11y(A11yElement.Field.clear, in: model.accessibilityID)
+            .a11y(A11yElement.Field.clear, in: accessibilityID)
             .accessibilityLabel("Temizle")
         } else if let suffixSystemImage = model.suffixSystemImage {
             Icon(systemName: suffixSystemImage, size: .sm, color: iconColor)
@@ -374,11 +368,11 @@ public struct TextInput: View {
     }
 
     private var iconColor: Color {
-        model.isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled)
+        isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled)
     }
 
     private var backgroundColor: Color {
-        theme.background(model.isEnabled ? .bgWhite : .bgSecondaryLight)
+        theme.background(isEnabled ? .bgWhite : .bgSecondaryLight)
     }
 
     private var borderColor: Color {
@@ -470,13 +464,15 @@ private extension TextInputCapitalization {
             VStack(spacing: 16) {
                 // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
                 TextInput("Email", text: $email, leadingSystemImage: "envelope",
-                          allowClear: true, infoMessages: emailMessages, accessibilityID: "loginEmail",
+                          allowClear: true, infoMessages: emailMessages,
                           keyboardType: .emailAddress, textContentType: .emailAddress,
                           submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
+                    .a11yID("loginEmail")
                 // Password manager autofill on a secure field.
                 TextInput(TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true,
-                                         accessibilityID: "loginPass", textContentType: .password,
+                                         textContentType: .password,
                                          submitLabel: .go), text: $pass)
+                    .a11yID("loginPass")
                 // Soft limit: can exceed 80, counter turns red instead of truncating.
                 TextInput("Bio", text: $bio, maxLength: 80, showCount: true,
                           hardLimit: false, countStyle: .remaining)
@@ -485,4 +481,11 @@ private extension TextInputCapitalization {
         }
     }
     return Demo()
+}
+
+public extension TextInput {
+    /// Sets the accessibility-identifier namespace for this field (its sub-elements
+    /// — label, field, clear, reveal, messages — get `"<id>.<element>"`). Replaces
+    /// the `accessibilityID:` init/model param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

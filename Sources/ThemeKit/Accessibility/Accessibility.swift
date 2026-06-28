@@ -5,10 +5,10 @@
 //
 //  Accessibility identifier system (UI tests + VoiceOver), modeled on the
 //  reference's `UIElements+…` element ids + `accessibilityPrefix`. A component
-//  takes an `accessibilityID` namespace; its sub-elements get a stable,
-//  namespaced identifier via `.a11y(_:in:)`.
+//  takes an `accessibilityID` namespace via the `.a11yID(_:)` modifier; its
+//  sub-elements get a stable, namespaced identifier via `.a11y(_:in:)`.
 //
-//      TextInput("Email", text: $t, accessibilityID: "loginEmail")
+//      TextInput("Email", text: $t).a11yID("loginEmail")
 //      // field → "loginEmail.field", clear button → "loginEmail.clear"
 //
 

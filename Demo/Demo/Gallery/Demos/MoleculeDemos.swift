@@ -173,34 +173,44 @@ struct TextInputDemo: View {
                                     links: [("Giriş yap", { loggedIn = true })])]
             }
             return TextInputModel(label: "E-posta", placeholder: "ad@sirket.com", leadingSystemImage: "envelope",
-                                  allowClear: true, infoMessages: msgs, accessibilityID: "demoEmail",
+                                  allowClear: true, infoMessages: msgs,
                                   keyboardType: .emailAddress, textContentType: .emailAddress,
                                   submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
         case .password:
-            return TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true,
-                                  accessibilityID: "demoPassword", textContentType: .password, submitLabel: .go)
+            return TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true, textContentType: .password, submitLabel: .go)
         case .bio:
             // Soft limit: typing past 80 is allowed; the counter turns red instead of truncating.
             return TextInputModel(label: "Hakkımda", placeholder: "Kısaca kendinden bahset", maxLength: 80,
-                                  showCount: true, accessibilityID: "demoBio", hardLimit: false, countStyle: .remaining)
+                                  showCount: true, hardLimit: false, countStyle: .remaining)
         case .card:
             return TextInputModel(label: "Kart No", placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard",
-                                  formatter: .creditCard(), accessibilityID: "demoCard")
+                                  formatter: .creditCard())
         case .phone:
             return TextInputModel(label: "Telefon", placeholder: "0### ### ## ##", leadingSystemImage: "phone",
-                                  formatter: .phoneTR, accessibilityID: "demoPhone")
+                                  formatter: .phoneTR)
         case .currency:
             return TextInputModel(label: "Tutar", placeholder: "₺0", leadingSystemImage: "turkishlirasign.circle",
-                                  formatter: .currency(), accessibilityID: "demoAmount")
+                                  formatter: .currency())
         case .addons:
-            return TextInputModel(label: "Alan adı", placeholder: "siteniz", addonBefore: "https://", addonAfter: ".com.tr",
-                                  accessibilityID: "demoAddons")
+            return TextInputModel(label: "Alan adı", placeholder: "siteniz", addonBefore: "https://", addonAfter: ".com.tr")
+        }
+    }
+
+    private var demoA11yID: String {
+        switch mode {
+        case .email: return "demoEmail"
+        case .password: return "demoPassword"
+        case .bio: return "demoBio"
+        case .card: return "demoCard"
+        case .phone: return "demoPhone"
+        case .currency: return "demoAmount"
+        case .addons: return "demoAddons"
         }
     }
 
     var body: some View {
         ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("value", "\"\(text)\""), ("login", "\(loggedIn)")]) {
-            TextInput(model, text: $text)
+            TextInput(model, text: $text).a11yID(demoA11yID)
         } knobs: {
             Text("email = keyboard/autofill + validation. password = password-manager autofill. bio = soft limit (exceed 80 → red counter). card/phone/currency = format-as-you-type masks.").font(.caption).foregroundStyle(.secondary)
             Picker("Mode", selection: $mode) { ForEach(Mode.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
