@@ -14,26 +14,47 @@ public extension View {
     /// Overlays a count bubble in the top-trailing corner (Ant `Badge count`).
     func countBadge(_ count: Int, overflowCount: Int = 99, showZero: Bool = false, color: SemanticColor = .error) -> some View {
         overlay(alignment: .topTrailing) {
-            if count > 0 || showZero {
-                Text(count > overflowCount ? "\(overflowCount)+" : "\(count)")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(color.onSolid)
-                    .padding(.horizontal, 5)
-                    .frame(minWidth: 18, minHeight: 18)
-                    .background(color.solid, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Theme.shared.background(.bgWhite), lineWidth: 1.5))
-                    .offset(x: 9, y: -9)
-            }
+            CountBubble(count: count, overflowCount: overflowCount, showZero: showZero, color: color)
         }
     }
 
     /// Overlays a status dot in the top-trailing corner (Ant `Badge dot`).
     func dotBadge(color: SemanticColor = .error) -> some View {
-        overlay(alignment: .topTrailing) {
-            Circle().fill(color.solid).frame(width: 10, height: 10)
-                .overlay(Circle().strokeBorder(Theme.shared.background(.bgWhite), lineWidth: 1.5))
-                .offset(x: 4, y: -4)
+        overlay(alignment: .topTrailing) { DotBadge(color: color) }
+    }
+}
+
+// Extracted into Views so the white halo stroke resolves the injected `\.theme`
+// (an extension method can't read the environment; a View body can).
+private struct CountBubble: View {
+    let count: Int
+    let overflowCount: Int
+    let showZero: Bool
+    let color: SemanticColor
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        if count > 0 || showZero {
+            Text(count > overflowCount ? "\(overflowCount)+" : "\(count)")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(color.onSolid)
+                .padding(.horizontal, 5)
+                .frame(minWidth: 18, minHeight: 18)
+                .background(color.solid, in: Capsule())
+                .overlay(Capsule().strokeBorder(theme.background(.bgWhite), lineWidth: 1.5))
+                .offset(x: 9, y: -9)
         }
+    }
+}
+
+private struct DotBadge: View {
+    let color: SemanticColor
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Circle().fill(color.solid).frame(width: 10, height: 10)
+            .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 1.5))
+            .offset(x: 4, y: -4)
     }
 }
 

@@ -15,6 +15,8 @@ public struct RollingNumber: View {
     private let weight: Font.Weight
     private let color: Color?
 
+    @Environment(\.theme) private var theme
+
     public init(_ value: Int, size: CGFloat = 28, weight: Font.Weight = .bold, color: Color? = nil) {
         self.value = value
         self.size = size
@@ -26,7 +28,7 @@ public struct RollingNumber: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            if value < 0 { Text("-").rollingFont(size, weight, color) }
+            if value < 0 { Text("-").rollingFont(size, weight, color ?? theme.text(.textPrimary)) }
             ForEach(Array(digits.enumerated()), id: \.offset) { _, digit in
                 DigitColumn(digit: digit, size: size, weight: weight, color: color)
             }
@@ -42,13 +44,14 @@ private struct DigitColumn: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.microAnimations) private var micro
+    @Environment(\.theme) private var theme
 
     private var rowHeight: CGFloat { size * 1.25 }
 
     var body: some View {
         VStack(spacing: 0) {
             ForEach(0...9, id: \.self) { n in
-                Text("\(n)").rollingFont(size, weight, color).frame(height: rowHeight)
+                Text("\(n)").rollingFont(size, weight, color ?? theme.text(.textPrimary)).frame(height: rowHeight)
             }
         }
         .offset(y: -CGFloat(digit) * rowHeight)
@@ -60,9 +63,9 @@ private struct DigitColumn: View {
 }
 
 private extension Text {
-    func rollingFont(_ size: CGFloat, _ weight: Font.Weight, _ color: Color?) -> some View {
+    func rollingFont(_ size: CGFloat, _ weight: Font.Weight, _ color: Color) -> some View {
         font(.system(size: size, weight: weight, design: .rounded).monospacedDigit())
-            .foregroundStyle(color ?? Theme.shared.text(.textPrimary))
+            .foregroundStyle(color)
     }
 }
 
