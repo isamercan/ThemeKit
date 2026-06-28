@@ -116,7 +116,7 @@ public struct Upload: View {
     private func status(for status: UploadStatus) -> some View {
         switch status {
         case .uploading(let progress):
-            ProgressBar(value: progress, height: 4)
+            ProgressBar(value: progress).barHeight(4)
         case .done:
             Callout(String(themeKit: "Uploaded"), type: .success)
         case .failed(let reason):
