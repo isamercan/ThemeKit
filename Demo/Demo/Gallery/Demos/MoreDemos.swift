@@ -652,7 +652,7 @@ struct GalleryDemo: View {
 struct UploadDemo: View {
     private struct DemoUploadError: LocalizedError { var errorDescription: String? { "Dosya çok büyük" } }
 
-    @StateObject private var uploads = UploadController()
+    @State private var uploads = UploadController()
     @State private var counter = 0
     @State private var picked: [UploadFile] = []
 
@@ -885,7 +885,7 @@ struct ChatBubbleDemo: View {
 }
 
 struct DrawerDemo: View {
-    @EnvironmentObject private var drawer: DrawerPresenter
+    @Environment(DrawerPresenter.self) private var drawer: DrawerPresenter
     @State private var open = false
     @State private var trailing = false
     var body: some View {
@@ -1109,7 +1109,7 @@ struct DataTableDemo: View {
 }
 
 struct BottomSheetDemo: View {
-    @EnvironmentObject private var sheet: SheetPresenter
+    @Environment(SheetPresenter.self) private var sheet: SheetPresenter
     @State private var showDeclarative = false
     var body: some View {
         ComponentStage("BottomSheet") {
@@ -1299,7 +1299,7 @@ struct ColorLadderDemo: View {
 // MARK: - Feedback (unified presenter: toast + confirm)
 
 struct FeedbackDemo: View {
-    @EnvironmentObject private var feedback: FeedbackPresenter
+    @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
     @State private var kind: FeedbackKind = .success
     @State private var last = "—"
 
@@ -1510,7 +1510,7 @@ struct TreeSelectDemo: View {
 }
 
 struct TourDemo: View {
-    @StateObject private var tour = TourController()
+    @State private var tour = TourController()
     var body: some View {
         ComponentStage("Tour", inspector: [("active", "\(tour.isActive)"), ("step", "\(tour.index + 1)")]) {
             VStack(spacing: 20) {
@@ -1552,7 +1552,7 @@ struct TourDemo: View {
 struct FormDemo: View {
     private enum Field { case email, password, plan, terms }
 
-    @StateObject private var form = FormValidator<Field>([
+    @State private var form = FormValidator<Field>([
         .email: [.required("E-posta zorunlu"), .email()],
         .password: [.required("Şifre zorunlu"), .password(minLength: 8)],
         .plan: [.required("Bir paket seçin")],

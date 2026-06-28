@@ -5,7 +5,7 @@
 //
 //  Organism. A side drawer that slides in over a dimmed scrim. Two entry points:
 //    • `.drawer(isPresented:edge:)` — declarative, binding-driven.
-//    • `.drawerHost()` + `@EnvironmentObject DrawerPresenter` — imperative; open a
+//    • `.drawerHost()` + `@Environment(DrawerPresenter.self)` — imperative; open a
 //      drawer from anywhere without a local binding.
 //  Both support drag-toward-the-edge swipe-to-dismiss and scrim tap-to-dismiss.
 //  (daisyUI "Drawer".)
@@ -111,10 +111,11 @@ public extension View {
 /// Imperative side-drawer presenter. Install once with `.drawerHost()`, then from
 /// any descendant view:
 ///
-///     @EnvironmentObject var drawer: DrawerPresenter
+///     @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
 ///     drawer.present(edge: .leading) { MenuView() }
 ///     drawer.dismiss()
-public final class DrawerPresenter: ObservableObject {
+@Observable
+public final class DrawerPresenter {
 
     struct Request: Identifiable {
         let id = UUID()
@@ -124,7 +125,7 @@ public final class DrawerPresenter: ObservableObject {
         let content: AnyView
     }
 
-    @Published var current: Request?
+    var current: Request?
 
     public init() {}
 
@@ -144,14 +145,14 @@ public final class DrawerPresenter: ObservableObject {
 }
 
 private struct DrawerHostModifier: ViewModifier {
-    @StateObject private var presenter = DrawerPresenter()
+    @State private var presenter = DrawerPresenter()
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content
-            .environmentObject(presenter)
+            .environment(presenter)
             .overlay {
                 if let request = presenter.current {
                     DrawerContainer(edge: request.edge, width: request.width,
@@ -196,7 +197,7 @@ public extension View {
 
 #Preview("Imperative host") {
     struct Demo: View {
-        @EnvironmentObject var drawer: DrawerPresenter
+        @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
         var body: some View {
             PrimaryButton("Present (trailing)") {
                 drawer.present(edge: .trailing) {

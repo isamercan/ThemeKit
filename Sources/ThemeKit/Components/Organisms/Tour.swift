@@ -7,7 +7,7 @@
 //  shows a step card with prev / next / skip. (Ant Tour.)
 //
 //  Usage:
-//      @StateObject var tour = TourController()
+//      @State var tour = TourController()
 //      someView.tourTarget("search")
 //      rootView.tourHost(tour, steps: [TourStep("search", title: "Search", message: "…")])
 //      tour.start()
@@ -24,9 +24,10 @@ public struct TourStep: Identifiable {
     }
 }
 
-public final class TourController: ObservableObject {
-    @Published public var isActive = false
-    @Published public var index = 0
+@Observable
+public final class TourController {
+    public var isActive = false
+    public var index = 0
 
     public init() {}
 
@@ -65,7 +66,7 @@ public extension View {
 private struct TourHostModifier: ViewModifier {
     @Environment(\.theme) private var theme
 
-    @ObservedObject var controller: TourController
+    var controller: TourController
     let steps: [TourStep]
 
     func body(content: Content) -> some View {
