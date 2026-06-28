@@ -202,30 +202,29 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" width="33%"><img src="Screenshots/DateField.png" width="240" alt="DateField"><br><sub><b>DateField</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/Select.png" width="240" alt="Select"><br><sub><b>Select</b></sub></td>
-<td align="center" width="33%"><img src="Screenshots/SelectBox.png" width="240" alt="SelectBox"><br><sub><b>SelectBox</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"><br><sub><b>MultiSelect</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"><br><sub><b>MultiSelect</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/TreeSelect.png" width="240" alt="TreeSelect"><br><sub><b>TreeSelect</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/Autocomplete.png" width="240" alt="Autocomplete"><br><sub><b>Autocomplete</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/OTPInput.png" width="240" alt="OTPInput"><br><sub><b>OTPInput</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/InputNumber.png" width="240" alt="InputNumber"><br><sub><b>InputNumber</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"><br><sub><b>RangeSlider</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"><br><sub><b>RangeSlider</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/MultiLineTextInput.png" width="240" alt="MultiLineTextInput"><br><sub><b>MultiLineTextInput</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/Tooltip.png" width="240" alt="Tooltip"><br><sub><b>Tooltip</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Chips.png" width="240" alt="Chips"><br><sub><b>Chips</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="Screenshots/Chips.png" width="240" alt="Chips"><br><sub><b>Chips</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/FilterGroup.png" width="240" alt="FilterGroup"><br><sub><b>FilterGroup</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/ProgressIndicator.png" width="240" alt="ProgressIndicator"><br><sub><b>ProgressIndicator</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/ThemeController.png" width="240" alt="ThemeController"><br><sub><b>ThemeController</b></sub></td>
 </tr>
 <tr>
-<td align="center" width="33%"><img src="Screenshots/ThemeController.png" width="240" alt="ThemeController"><br><sub><b>ThemeController</b></sub></td>
 <td align="center" width="33%"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"><br><sub><b>Calendar</b></sub></td>
 </tr>
 </table>
