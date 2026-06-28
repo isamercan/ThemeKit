@@ -171,7 +171,7 @@ public struct DateField: View {
                 .environment(\.locale, locale)
                 .tint(theme.foreground(.fgHero))
                 .labelsHidden()
-            PrimaryButton("Tamam", isContentWidth: true) { showPicker = false }
+            PrimaryButton("Tamam", block: true) { showPicker = false }
         }
         .padding()
         .frame(minWidth: 320)

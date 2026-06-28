@@ -62,7 +62,7 @@ public struct Upload: View {
             Text(prompt)
                 .textStyle(.bodySm400)
                 .foregroundStyle(theme.text(.textSecondary))
-            PrimaryButton(buttonTitle, isContentWidth: true, isEnabled: .constant(!atLimit)) { onPick() }
+            PrimaryButton(buttonTitle, isEnabled: .constant(!atLimit)) { onPick() }
             if let maxCount {
                 Text("\(files.count)/\(maxCount)")
                     .textStyle(.overline400)

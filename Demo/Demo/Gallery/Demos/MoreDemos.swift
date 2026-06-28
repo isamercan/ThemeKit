@@ -308,9 +308,9 @@ struct ButtonGroupDemo: View {
     var body: some View {
         ComponentStage("ButtonGroup", inspector: [("axis", horizontal ? "horizontal" : "vertical")]) {
             if horizontal {
-                ButtonGroup(.horizontal) { SecondaryButton("Cancel", isContentWidth: true) { flash("Cancel") }; PrimaryButton("Confirm", isContentWidth: true) { flash("Confirm") } }
+                ButtonGroup(.horizontal) { SecondaryButton("Cancel") { flash("Cancel") }; PrimaryButton("Confirm") { flash("Confirm") } }
             } else {
-                ButtonGroup { PrimaryButton("Continue", isContentWidth: true) { flash("Continue") }; SecondaryButton("Not now", isContentWidth: true) { flash("Not now") } }
+                ButtonGroup { PrimaryButton("Continue", block: true) { flash("Continue") }; SecondaryButton("Not now", block: true) { flash("Not now") } }
             }
         } knobs: {
             Toggle("Horizontal", isOn: $horizontal)
@@ -564,8 +564,8 @@ struct NotificationDemo: View {
                                  date: "5 Aralık 2024", isUnread: unread, type: type,
                                  onClose: closable ? { flash("Notification kapatıldı") } : nil) {
                     ButtonGroup(.horizontal) {
-                        SecondaryButton("Sonra", size: .small, isContentWidth: true) { flash("Notification: Sonra") }
-                        PrimaryButton("İncele", size: .small, isContentWidth: true) { flash("Notification: İncele") }
+                        SecondaryButton("Sonra", size: .small) { flash("Notification: Sonra") }
+                        PrimaryButton("İncele", size: .small) { flash("Notification: İncele") }
                     }
                 }
             } else {
@@ -1192,7 +1192,7 @@ struct ThemeControllerDemo: View {
                     .init(name: "oceanTheme", label: "Ocean"),
                     .init(name: "sunsetTheme", label: "Sunset"),
                 ], selectedName: $name)
-                PrimaryButton("Sample button", isContentWidth: true) { flash("Sample button tıklandı") }
+                PrimaryButton("Sample button") { flash("Sample button tıklandı") }
             }
         } knobs: {
             Text("Switches Theme.shared live.").font(.footnote).foregroundStyle(.secondary)
@@ -1828,8 +1828,8 @@ struct DialogDemo: View {
     var body: some View {
         ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
-                PrimaryButton("Sözleşmeyi aç", isContentWidth: true) { show = true; flash("Dialog açıldı") }
-                OutlineButton("Hesabı sil (async)", isContentWidth: true) { deleted = false; showConfirm = true }
+                PrimaryButton("Sözleşmeyi aç") { show = true; flash("Dialog açıldı") }
+                OutlineButton("Hesabı sil (async)") { deleted = false; showConfirm = true }
                 Text(accepted ? "Kabul edildi ✓" : "Henüz onaylanmadı")
                     .textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textSecondary))
             }
@@ -1850,8 +1850,8 @@ struct DialogDemo: View {
                 }
             } footer: {
                 HStack(spacing: 12) {
-                    OutlineButton("Vazgeç", isContentWidth: true) { show = false; flash("Dialog: Vazgeç") }
-                    PrimaryButton("Kabul et", isContentWidth: true) { accepted = true; show = false; flash("Dialog onaylandı") }
+                    OutlineButton("Vazgeç") { show = false; flash("Dialog: Vazgeç") }
+                    PrimaryButton("Kabul et") { accepted = true; show = false; flash("Dialog onaylandı") }
                 }
             }
         } knobs: {
@@ -1896,14 +1896,14 @@ struct MicroMotionDemo: View {
             VStack(spacing: 18) {
                 Text("Bu alt-ağaç: .microAnimations(\(enabled ? "true" : "false")) — basınca scale, seçimde kayma.")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                PrimaryButton("Bana bas (micro press)", isContentWidth: true) { flash("Tap") }
+                PrimaryButton("Bana bas (micro press)") { flash("Tap") }
                 SegmentedControl(["Gün", "Hafta", "Ay"], selection: $sel)
                 ThemeToggle(isOn: $on)
 
                 DividerView(size: .small)
                 Text("Per-component override — bu buton her zaman kapalı:")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                SecondaryButton("Hareketsiz (.microAnimations(false))", isContentWidth: true) { flash("Tap") }
+                SecondaryButton("Hareketsiz (.microAnimations(false))") { flash("Tap") }
                     .microAnimations(false)
             }
             .microAnimations(enabled)

@@ -95,7 +95,7 @@ struct HotelDetailView: View {
                     Text(hotel.pricePerNight.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                     Text("/ gece").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
-                PrimaryButton("Rezerve et", isContentWidth: true) { path.append(.checkout(hotel)) }
+                PrimaryButton("Rezerve et", block: true) { path.append(.checkout(hotel)) }
             }
             .padding(.bottom, 4)
         }

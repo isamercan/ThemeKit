@@ -44,8 +44,8 @@ private struct ButtonDockBar<DockContent: View>: View {
     }
     .buttonDock {
         ButtonGroup(.horizontal) {
-            SecondaryButton("Cancel", isContentWidth: true) {}
-            PrimaryButton("Continue", isContentWidth: true) {}
+            SecondaryButton("Cancel") {}
+            PrimaryButton("Continue") {}
         }
     }
 }

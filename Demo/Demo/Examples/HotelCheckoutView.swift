@@ -69,7 +69,7 @@ struct HotelCheckoutView: View {
                     Text("Toplam").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                     Text(total.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                 }
-                PrimaryButton("Öde", isContentWidth: true, isEnabled: $acceptTerms) { showSuccess = true }
+                PrimaryButton("Öde", block: true, isEnabled: $acceptTerms) { showSuccess = true }
             }
             .padding(.bottom, 4)
         }

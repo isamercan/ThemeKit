@@ -30,7 +30,7 @@ private struct ThemedButton: View {
     let textStyle: TextStyle?
     let style: ThemeButtonStyle
     let size: ButtonSize
-    let isContentWidth: Bool
+    let block: Bool
     let confirmsSuccess: Bool
     let accessibilityID: String?
     @Binding var isEnabled: Bool
@@ -51,7 +51,7 @@ private struct ThemedButton: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .frame(maxWidth: isContentWidth ? nil : .infinity)
+        .frame(maxWidth: block ? .infinity : nil)
     }
 
     private var button: some View {
@@ -86,7 +86,7 @@ private struct ThemedButton: View {
                 }
             }
             .frame(height: size.height)
-            .frame(maxWidth: isContentWidth ? nil : .infinity)
+            .frame(maxWidth: block ? .infinity : nil)
             .padding(.horizontal, size.horizontalPadding)
             .foregroundStyle(foreground)
             .background(background)
@@ -141,7 +141,7 @@ public struct PrimaryButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = false,
@@ -152,7 +152,7 @@ public struct PrimaryButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .primary, size: size, isContentWidth: isContentWidth,
+            style: .primary, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: isLoading, run: { action() }
         )
@@ -163,7 +163,7 @@ public struct PrimaryButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = true,
@@ -173,7 +173,7 @@ public struct PrimaryButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .primary, size: size, isContentWidth: isContentWidth,
+            style: .primary, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: .constant(false), run: task
         )
@@ -188,7 +188,7 @@ public struct SecondaryButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = false,
@@ -199,7 +199,7 @@ public struct SecondaryButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .secondary, size: size, isContentWidth: isContentWidth,
+            style: .secondary, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: isLoading, run: { action() }
         )
@@ -209,7 +209,7 @@ public struct SecondaryButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = true,
@@ -219,7 +219,7 @@ public struct SecondaryButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .secondary, size: size, isContentWidth: isContentWidth,
+            style: .secondary, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: .constant(false), run: task
         )
@@ -234,7 +234,7 @@ public struct OutlineButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = false,
@@ -245,7 +245,7 @@ public struct OutlineButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .outline, size: size, isContentWidth: isContentWidth,
+            style: .outline, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: isLoading, run: { action() }
         )
@@ -255,7 +255,7 @@ public struct OutlineButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = true,
@@ -265,7 +265,7 @@ public struct OutlineButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .outline, size: size, isContentWidth: isContentWidth,
+            style: .outline, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: .constant(false), run: task
         )
@@ -280,7 +280,7 @@ public struct GhostButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = false,
@@ -291,7 +291,7 @@ public struct GhostButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .ghost, size: size, isContentWidth: isContentWidth,
+            style: .ghost, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: isLoading, run: { action() }
         )
@@ -301,7 +301,7 @@ public struct GhostButton: View {
     public init(
         _ title: String,
         size: ButtonSize = .medium,
-        isContentWidth: Bool = false,
+        block: Bool = false,
         helperText: String? = nil,
         textStyle: TextStyle? = nil,
         confirmsSuccess: Bool = true,
@@ -311,7 +311,7 @@ public struct GhostButton: View {
     ) {
         configuration = ButtonConfiguration(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: .ghost, size: size, isContentWidth: isContentWidth,
+            style: .ghost, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: .constant(false), run: task
         )
@@ -331,7 +331,7 @@ public struct LinkButton: View {
         action: @escaping () -> Void
     ) {
         configuration = ButtonConfiguration(
-            title: title, style: .link, size: size, isContentWidth: true,
+            title: title, style: .link, size: size, block: false,
             accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: .constant(false), run: { action() }
         )
@@ -348,7 +348,7 @@ private struct ButtonConfiguration {
     var textStyle: TextStyle? = nil
     let style: ThemeButtonStyle
     let size: ButtonSize
-    let isContentWidth: Bool
+    let block: Bool
     var confirmsSuccess: Bool = false
     let accessibilityID: String?
     let isEnabled: Binding<Bool>
@@ -361,7 +361,7 @@ private struct ButtonConfiguration {
     @MainActor var view: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: textStyle,
-            style: style, size: size, isContentWidth: isContentWidth,
+            style: style, size: size, block: block,
             confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
             isEnabled: isEnabled, isLoading: isLoading, run: run
         )
@@ -370,11 +370,12 @@ private struct ButtonConfiguration {
 
 #Preview {
     VStack(spacing: 16) {
-        PrimaryButton("Primary", isContentWidth: true) {}
-        SecondaryButton("Secondary", isContentWidth: true) {}
-        OutlineButton("Outline", isContentWidth: true) {}
-        PrimaryButton("Disabled", isContentWidth: true, isEnabled: .constant(false)) {}
-        PrimaryButton("Loading", isContentWidth: true, isLoading: .constant(true)) {}
+        PrimaryButton("Primary") {}
+        SecondaryButton("Secondary") {}
+        OutlineButton("Outline") {}
+        PrimaryButton("Disabled", isEnabled: .constant(false)) {}
+        PrimaryButton("Loading", isLoading: .constant(true)) {}
+        PrimaryButton("Full-width CTA", block: true) {}
     }
     .padding()
     .environment(Theme.shared)
