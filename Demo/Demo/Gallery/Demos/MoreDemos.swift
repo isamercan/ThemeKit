@@ -330,8 +330,8 @@ struct CheckboxGroupDemo: View {
         ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
             CheckboxGroup(title: "Amenities", options: options, selection: $sel,
                           selectAllTitle: selectAll ? "Tümünü seç" : nil,
-                          isEnabled: enabled,
                           isOptionEnabled: disableParking ? { $0 != "Parking" } : nil) { $0 }
+                .disabled(!enabled)
         } knobs: {
             Toggle("Select-all (indeterminate)", isOn: $selectAll)
             Toggle("Enabled (whole group)", isOn: $enabled)
@@ -352,11 +352,14 @@ struct RadioGroupDemo: View {
         ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline"), ("enabled", "\(enabled)")]) {
             switch styleIdx {
             case 1:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                    .disabled(!enabled)
             case 2:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                    .disabled(!enabled)
             default:
-                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel, isEnabled: enabled, isOptionEnabled: optionEnabled) { $0 }
+                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel, isOptionEnabled: optionEnabled) { $0 }
+                    .disabled(!enabled)
             }
         } knobs: {
             Picker("Style", selection: $styleIdx) { Text("Stacked").tag(0); Text("Button solid").tag(1); Text("Button outline").tag(2) }.pickerStyle(.segmented)

@@ -15,7 +15,7 @@ public struct RadioGroup<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Option?
     private let infoMessages: [InfoMessage]
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private var accessibilityID: String? = nil
@@ -25,7 +25,6 @@ public struct RadioGroup<Option: Hashable>: View {
         options: [Option],
         selection: Binding<Option?>,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -33,7 +32,6 @@ public struct RadioGroup<Option: Hashable>: View {
         self.options = options
         self._selection = selection
         self.infoMessages = infoMessages
-        self.isEnabled = isEnabled
         self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
@@ -93,7 +91,7 @@ public struct RadioButtonGroup<Option: Hashable>: View {
     @Binding private var selection: Option?
     private let style: RadioGroupButtonStyle
     private let expandsHorizontally: Bool
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private var accessibilityID: String? = nil
@@ -103,7 +101,6 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         selection: Binding<Option?>,
         style: RadioGroupButtonStyle = .solid,
         expandsHorizontally: Bool = false,
-        isEnabled: Bool = true,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -111,7 +108,6 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         self._selection = selection
         self.style = style
         self.expandsHorizontally = expandsHorizontally
-        self.isEnabled = isEnabled
         self.isOptionEnabled = isOptionEnabled
         self.label = label
     }

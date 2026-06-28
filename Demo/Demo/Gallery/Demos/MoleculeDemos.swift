@@ -311,9 +311,11 @@ struct SegmentedControlDemo: View {
                 SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
                                   SegmentItem("Grid", systemImage: "square.grid.2x2"),
                                   SegmentItem("Map", systemImage: "map", isEnabled: false)],
-                                 selection: $selection, block: block, size: size, isEnabled: enabled)
+                                 selection: $selection, block: block, size: size)
+                    .disabled(!enabled)
             } else {
-                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection, block: block, size: size, isEnabled: enabled)
+                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection, block: block, size: size)
+                    .disabled(!enabled)
             }
         } knobs: {
             Stepper("Selection: \(selection)", value: $selection, in: 0...2)
