@@ -37,6 +37,8 @@ public struct Select<Option: Hashable>: View {
     private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
 
+    @Environment(\.selectStyle) private var selectStyle
+
     @State private var open = false
     @State private var query = ""
 
@@ -95,13 +97,6 @@ public struct Select<Option: Hashable>: View {
     private var showsClear: Bool { allowClear && hasValue && isEnabled && !isLoading }
     private func optionEnabled(_ option: Option) -> Bool { isOptionEnabled?(option) ?? true }
     private var hasAnyResults: Bool { sections.contains { !filtered($0.options).isEmpty } }
-    private var borderColor: Color {
-        switch infoMessages.dominantKind {
-        case .error: return Theme.shared.border(.systemcolorsBorderError)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarning)
-        default: return open ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary)
-        }
-    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -130,7 +125,7 @@ public struct Select<Option: Hashable>: View {
 
     // MARK: Trigger field
 
-    private var field: some View {
+    private var fieldContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             ZStack(alignment: .leading) {
                 Text(label)
@@ -155,12 +150,17 @@ public struct Select<Option: Hashable>: View {
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .scaledControlHeight(size.height)
         .frame(maxWidth: .infinity)
-        .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
-                   in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(borderColor, lineWidth: open || infoMessages.dominantKind != nil ? 1.5 : 1)
-        )
+    }
+
+    /// The trigger field — content composed here, chrome supplied by the ``SelectStyle``.
+    private var field: some View {
+        selectStyle.makeBody(configuration: SelectStyleConfiguration(
+            content: AnyView(fieldContent),
+            isOpen: open,
+            isEnabled: isEnabled,
+            hasError: infoMessages.dominantKind == .error,
+            hasWarning: infoMessages.dominantKind == .warning
+        ))
     }
 
     @ViewBuilder

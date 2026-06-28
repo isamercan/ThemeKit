@@ -165,16 +165,26 @@ struct SelectDemo: View {
     @State private var searchable = false
     @State private var loading = false
     @State private var disableSoldOut = false   // marks "Konya" disabled
+    @State private var filled = false
+
+    private var selectView: some View {
+        Select("Şehir", sections: [
+            .init("Marmara", ["İstanbul", "Bursa", "Kocaeli"]),
+            .init("Ege", ["İzmir", "Aydın", "Muğla"]),
+            .init("İç Anadolu", ["Ankara", "Konya"]),
+        ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
+           isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
+    }
 
     var body: some View {
-        ComponentStage("Select", inspector: [("selection", city ?? "nil"), ("loading", "\(loading)")]) {
-            Select("Şehir", sections: [
-                .init("Marmara", ["İstanbul", "Bursa", "Kocaeli"]),
-                .init("Ege", ["İzmir", "Aydın", "Muğla"]),
-                .init("İç Anadolu", ["Ankara", "Konya"]),
-            ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
-               isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
+        ComponentStage("Select", inspector: [("style", filled ? "filled" : "default"), ("selection", city ?? "nil")]) {
+            if filled {
+                selectView.selectStyle(.filled)   // custom SelectStyle via .selectStyle(_:)
+            } else {
+                selectView
+            }
         } knobs: {
+            Toggle("Filled style (.selectStyle)", isOn: $filled)
             Toggle("Searchable (inline panel + sections)", isOn: $searchable)
             Toggle("Allow clear", isOn: $clearable)
             Toggle("Loading (async)", isOn: $loading)
