@@ -1579,11 +1579,13 @@ struct FormDemo: View {
             VStack(spacing: Theme.SpacingKey.md.value) {
                 Fieldset("Hesap oluştur", helper: "Tüm alanlar zorunlu.") {
                     TextInput(TextInputModel(label: "E-posta", leadingSystemImage: "envelope",
-                                             infoMessages: form.messages(for: .email), accessibilityID: "form.email"),
+                                             infoMessages: form.messages(for: .email)),
                               text: $email, externalFocus: form.focusBinding(.email))
+                        .a11yID("form.email")
                     TextInput(TextInputModel(label: "Şifre (8+, büyük harf, rakam)", isSecure: true,
-                                             infoMessages: form.messages(for: .password), accessibilityID: "form.password"),
+                                             infoMessages: form.messages(for: .password)),
                               text: $password, externalFocus: form.focusBinding(.password))
+                        .a11yID("form.password")
                     RadioGroup(title: "Paket", options: ["Standart", "Pro"], selection: $plan,
                                infoMessages: form.messages(for: .plan)) { $0 }
                     .a11yID("form.plan")
