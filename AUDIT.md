@@ -38,7 +38,7 @@
 | `#Preview` / slot | **Solid** | 102 `@ViewBuilder` slot, 114 `#Preview` |
 | Dokümantasyon | **Solid** | DocC katalog + 6 article (Sources/ThemeKit/Documentation.docc), 86 struct'ta `///` |
 | CI / tooling | **Solid** | ci.yml + docs.yml, .swiftlint.yml + .swiftformat, api-breakage gate PR'da (ci.yml:57) |
-| Erişilebilirlik | **Partial** | VoiceOver/RTL var, Reduce Motion **118** kullanım — ama `performAccessibilityAudit` = **0** (otomatik a11y denetimi yok) |
+| Erişilebilirlik | **Solid → kod hazır** | VoiceOver/RTL/Reduce Motion (**118**) + unit a11y testleri; `performAccessibilityAudit` XCUITest **yazıldı** (Demo/DemoUITests/AccessibilityAuditTests.swift) — UI-test target bağlama tek manuel Xcode adımı (docs/ACCESSIBILITY-AUDIT.md) |
 | Test çerçevesi | **Partial → improving** | Swift Testing **piloted** (SwiftTestingPilot.swift — parameterized `@Test`/`#expect`, XCTest'le yan yana çalışır); kalan 34 `XCTestCase` fırsatçı taşınır. Theming-injection regresyon testi eklendi. Snapshot 4 suite hâlâ ince |
 | **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
 | **Observation (frontier)** | **Solid** ✅ | **8/8** `@Observable` — 5 presenter + FormValidator + **Theme** (core engine dahil). `@Published`/`@ObservedObject`/`@EnvironmentObject` 0; `.id(theme.revision)` repaint korundu (revision tracked), runtime tema-switch simulator'da doğrulandı (Ocean render) |
@@ -69,8 +69,9 @@
 - **Yapıldı:** 5 presenter (Drawer/Tour/BottomSheet/Upload/Feedback) + FormValidator `@Observable`'a taşındı; `@Published` 0, `@StateObject`→`@State`, presenter enjeksiyonu `.environmentObject`→`.environment` + okuma `@Environment(_.self)`. 163 test + Demo (gerçek tüketici, güncellendi) yeşil.
 - **Theme de tamamlandı (ayrı PR):** `@Observable public final class Theme: @unchecked Sendable`; `objectWillChange.send()` kaldırıldı (revision bump @Observable tracking'i tetikler), root `@ObservedObject`→plain `let` + `.environmentObject`→`.environment`, tek `@EnvironmentObject Theme` consumer'ı `@Environment(Theme.self)`'e. `.id(theme.revision)` full-rebuild repaint'i korundu. Doğrulama: 163 test + revision-bump testi + Demo Ocean global temada render (teal accent).
 
-**4. Otomatik a11y denetimi (`performAccessibilityAudit`)** — ⏳ ORTAM-BAĞIMLI
-- **Durum:** `performAccessibilityAudit()` yalnız `XCUIApplication` üzerinde çalışır → Demo.xcodeproj'a bir **UI-test target'ı** (pbxproj target + scheme) eklenmesi gerekir. Bu, script ile güvenle yapılamaz (projeyi bozma riski); Xcode'da tek seferlik manuel kurulum gerektirir. Test kodu hazır yazılabilir, target bağlama kullanıcıya kalır.
+**4. Otomatik a11y denetimi (`performAccessibilityAudit`)** — ✅ KOD TESLİM (target bağlama manuel)
+- **Yapıldı:** `Demo/DemoUITests/AccessibilityAuditTests.swift` — galeri + Theme Injection + Form/Select/DataTable/Steps sayfalarını `-openDemo` deep-link ile gezip `performAccessibilityAudit()` çalıştırır. Kurulum dokümanı: `docs/ACCESSIBILITY-AUDIT.md`.
+- **Kalan tek adım (kullanıcı):** Xcode'da bir UI-test target eklemek (pbxproj script ile güvenle yapılamaz). Doküman birebir adımları içerir; target bağlanınca `⌘U` / `xcodebuild test`.
 
 **5. Snapshot kapsamını genişlet**
 - **Ne:** 4 suite → component grubu başına referans; `ScreenshotGenerator` zaten hepsini render ediyor, golden referansa bağla.
