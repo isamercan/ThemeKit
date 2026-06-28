@@ -42,15 +42,17 @@ public struct Accordion<Content: View>: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let subtitle: String?
-    private let number: Int?
     private let leadingSystemImage: String?
-    private let indicator: AccordionIndicator
-    private let titleSize: AccordionTitleSize
-    private let paddingSize: AccordionPaddingSize
-    private let truncateSubtitle: Bool
-    private let showDivider: Bool
     private let content: () -> Content
+    // Long-tail config — set via chainable modifiers, keeping the common call
+    // site to `Accordion("Title", initiallyExpanded:) { … }`.
+    private var subtitle: String? = nil
+    private var number: Int? = nil
+    private var indicator: AccordionIndicator = .chevron
+    private var titleSize: AccordionTitleSize = .medium
+    private var paddingSize: AccordionPaddingSize = .default
+    private var truncateSubtitle: Bool = false
+    private var showDivider: Bool = true
 
     @State private var expanded: Bool
     @Environment(\.microAnimations) private var micro
@@ -59,26 +61,12 @@ public struct Accordion<Content: View>: View {
 
     public init(
         _ title: String,
-        subtitle: String? = nil,
-        number: Int? = nil,
         leadingSystemImage: String? = nil,
-        indicator: AccordionIndicator = .chevron,
-        titleSize: AccordionTitleSize = .medium,
-        paddingSize: AccordionPaddingSize = .default,
-        truncateSubtitle: Bool = false,
         initiallyExpanded: Bool = false,
-        showDivider: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
-        self.subtitle = subtitle
-        self.number = number
         self.leadingSystemImage = leadingSystemImage
-        self.indicator = indicator
-        self.titleSize = titleSize
-        self.paddingSize = paddingSize
-        self.truncateSubtitle = truncateSubtitle
-        self.showDivider = showDivider
         self.content = content
         self._expanded = State(initialValue: initiallyExpanded)
     }
@@ -147,6 +135,23 @@ public struct Accordion<Content: View>: View {
             Icon(systemName: expanded ? collapse : expand, size: .sm, color: theme.text(.textTertiary))
         }
     }
+}
+
+public extension Accordion {
+    /// A secondary line under the title.
+    func subtitle(_ text: String?) -> Self { var copy = self; copy.subtitle = text; return copy }
+    /// A leading two-digit number badge (e.g. a numbered FAQ / step).
+    func number(_ value: Int?) -> Self { var copy = self; copy.number = value; return copy }
+    /// Expand/collapse indicator glyph (chevron / plus-minus / custom).
+    func indicator(_ indicator: AccordionIndicator) -> Self { var copy = self; copy.indicator = indicator; return copy }
+    /// Title text size.
+    func titleSize(_ size: AccordionTitleSize) -> Self { var copy = self; copy.titleSize = size; return copy }
+    /// Header row vertical padding (default / small / large).
+    func density(_ size: AccordionPaddingSize) -> Self { var copy = self; copy.paddingSize = size; return copy }
+    /// Clamps the subtitle to one line while collapsed.
+    func truncateSubtitle(_ on: Bool = true) -> Self { var copy = self; copy.truncateSubtitle = on; return copy }
+    /// Whether to draw the bottom divider (default true).
+    func divider(_ on: Bool) -> Self { var copy = self; copy.showDivider = on; return copy }
 }
 
 #Preview {
