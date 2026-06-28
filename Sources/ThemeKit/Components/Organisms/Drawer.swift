@@ -38,7 +38,8 @@ private struct DrawerContainer<DrawerContent: View>: View {
             content()
                 .frame(maxWidth: width, maxHeight: .infinity, alignment: .topLeading)
                 .frame(maxHeight: .infinity)
-                .background(theme.background(.bgWhite))
+                // Side-panel chrome → Liquid Glass on OS 26+, Material below, opaque under Reduce Transparency.
+                .glassChrome(in: Rectangle())
                 .ignoresSafeArea()
                 .offset(x: dragX)
                 .gesture(dragGesture)

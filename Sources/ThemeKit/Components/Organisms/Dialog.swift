@@ -61,8 +61,8 @@ struct DialogCard: View {
         }
         .padding(Theme.SpacingKey.lg.value)
         .frame(maxWidth: width ?? 320)
-        .background(theme.background(.bgWhite),
-                   in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
+        // Floating modal chrome → Liquid Glass on OS 26+, Material below, opaque under Reduce Transparency.
+        .glassChrome(in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
         .overlay(alignment: .topTrailing) {
             if let onClose {
                 Button(action: onClose) {
