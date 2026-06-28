@@ -25,13 +25,15 @@ public struct Autocomplete: View {
     @Binding private var text: String
     private let source: Source
     private let placeholder: String
-    private let maxResults: Int
-    private let debounce: TimeInterval
-    private var accessibilityID: String? = nil
-    private let isEnabled: Bool
-    private let isSuggestionEnabled: ((String) -> Bool)?
     private let onSelect: (String) -> Void
-    private let onSearch: ((String) -> Void)?
+    private var accessibilityID: String? = nil
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    // Tuning — set via chainable modifiers (the async init seeds a 0.3s debounce
+    // baseline, which `.debounce(_:)` can still override).
+    private var maxResults: Int = 5
+    private var debounce: TimeInterval = 0
+    private var isSuggestionEnabled: ((String) -> Bool)? = nil
+    private var onSearch: ((String) -> Void)? = nil
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -44,23 +46,13 @@ public struct Autocomplete: View {
         text: Binding<String>,
         suggestions: [String],
         placeholder: String = "Ara",
-        maxResults: Int = 5,
-        debounce: TimeInterval = 0,
-        isEnabled: Bool = true,
-        isSuggestionEnabled: ((String) -> Bool)? = nil,
-        onSelect: @escaping (String) -> Void = { _ in },
-        onSearch: ((String) -> Void)? = nil
+        onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
         self._text = text
         self.source = .staticList(suggestions)
         self.placeholder = placeholder
-        self.maxResults = maxResults
-        self.debounce = debounce
-        self.isEnabled = isEnabled
-        self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
-        self.onSearch = onSearch
     }
 
     /// Async suggestions from a provider (e.g. a remote search). Debounced, with a
@@ -71,22 +63,14 @@ public struct Autocomplete: View {
         text: Binding<String>,
         suggest: @escaping (String) async -> [String],
         placeholder: String = "Ara",
-        maxResults: Int = 5,
-        debounce: TimeInterval = 0.3,
-        isEnabled: Bool = true,
-        isSuggestionEnabled: ((String) -> Bool)? = nil,
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
         self._text = text
         self.source = .asyncProvider(suggest)
         self.placeholder = placeholder
-        self.maxResults = maxResults
-        self.debounce = debounce
-        self.isEnabled = isEnabled
-        self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
-        self.onSearch = nil
+        self.debounce = 0.3   // async baseline; `.debounce(_:)` overrides
     }
 
     /// Pure matcher for the static source (extracted for testing).
@@ -245,4 +229,13 @@ public extension Autocomplete {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Caps the number of suggestion rows (default 5).
+    func maxResults(_ count: Int) -> Self { var copy = self; copy.maxResults = count; return copy }
+    /// Debounce interval for typeahead (async init defaults to 0.3s).
+    func debounce(_ interval: TimeInterval) -> Self { var copy = self; copy.debounce = interval; return copy }
+    /// Per-suggestion enable predicate; disabled rows are shown greyed and unselectable.
+    func suggestionEnabled(_ predicate: ((String) -> Bool)?) -> Self { var copy = self; copy.isSuggestionEnabled = predicate; return copy }
+    /// Fires with the query text on each (debounced) change.
+    func onSearch(_ action: ((String) -> Void)?) -> Self { var copy = self; copy.onSearch = action; return copy }
 }
