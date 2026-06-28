@@ -57,7 +57,7 @@ enum ComponentRegistry {
         .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online", pulse: true)"#),
         .knob("Swap", .atoms, demo: SwapDemo(), usage: #"Swap(isOn: $on, on: "xmark", off: "line.3.horizontal")"#),
         .knob("TextLink", .atoms, demo: TextLinkDemo(), usage: #"TextLink("Forgot password?", underline: true) { }"#),
-        .knob("Rating", .atoms, demo: RatingDemo(), usage: #"Rating(value: 4.5, allowHalf: true) { value = $0 }"#),
+        .knob("Rating", .atoms, demo: RatingDemo(), usage: #"Rating(value: 4.5).allowHalf().onRate { value = $0 }"#),
         .knob("ScoreBadge", .atoms, demo: ScoreBadgeDemo(), usage: #"ScoreBadge(9.0, large: false)"#),
         .knob("Skeleton", .atoms, demo: SkeletonDemo(), usage: #"Text("Loading…").skeleton(isLoading)"#),
         .knob("Spinner", .atoms, demo: SpinnerDemo(), usage: #"Spinner(size: 24, lineWidth: 3)"#),

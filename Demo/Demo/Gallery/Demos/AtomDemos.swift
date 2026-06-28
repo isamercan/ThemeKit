@@ -194,11 +194,10 @@ struct RatingDemo: View {
 
     var body: some View {
         ComponentStage("Rating", inspector: [("value", String(format: "%.1f", value)), ("layout", "\(layout)"), ("reviewTaps", "\(taps)")]) {
-            Rating(value: value, layout: layout,
-                   allowHalf: allowHalf,
-                   countLabel: "1.284 yorum",
-                   onRate: (interactive && layoutIdx == 0) ? { value = $0; flash("Puan: \(String(format: "%.1f", $0))") } : nil,
-                   onReviewTap: reviewLink ? { taps += 1; flash("Yorumlara dokunuldu") } : nil)
+            Rating(value: value, layout: layout, countLabel: "1.284 yorum")
+                .allowHalf(allowHalf)
+                .onRate((interactive && layoutIdx == 0) ? { value = $0; flash("Puan: \(String(format: "%.1f", $0))") } : nil)
+                .onReviewTap(reviewLink ? { taps += 1; flash("Yorumlara dokunuldu") } : nil)
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value, in: 0...5, step: 0.1) }
             Picker("Layout", selection: $layoutIdx) { Text("Stars").tag(0); Text("Number").tag(1); Text("Number+text").tag(2) }.pickerStyle(.segmented)
