@@ -21,7 +21,7 @@ import SwiftUI
 /// ```
 @propertyWrapper
 public struct ThemeContext: DynamicProperty {
-    @EnvironmentObject private var theme: Theme
+    @Environment(\.theme) private var theme
 
     public init() {}
 

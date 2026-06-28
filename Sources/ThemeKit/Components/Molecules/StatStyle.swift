@@ -117,7 +117,7 @@ public extension StatStyle where Self == CenteredStatStyle {
 
 struct AnyStatStyle: StatStyle {
     private let _makeBody: @MainActor (StatStyleConfiguration) -> AnyView
-    init<S: StatStyle>(_ style: S) {
+    init<S: StatStyle>(_ style: sending S) {
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: StatStyleConfiguration) -> AnyView { _makeBody(configuration) }
@@ -136,7 +136,7 @@ extension EnvironmentValues {
 
 public extension View {
     /// Set the ``StatStyle`` for `Stat`s in this view and its descendants.
-    func statStyle<S: StatStyle>(_ style: S) -> some View {
+    func statStyle<S: StatStyle>(_ style: sending S) -> some View {
         environment(\.statStyle, AnyStatStyle(style))
     }
 }

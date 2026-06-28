@@ -202,8 +202,9 @@ public struct DateField: View {
 
     // MARK: - Formatting
 
-    /// Renders `date` per `style` / `locale` / `components`. Pure (extracted for testing).
-    static func text(for date: Date, style: DateFieldStyle, locale: Locale, components: DateFieldComponents) -> String {
+    /// Renders `date` per `style` / `locale` / `components`. Pure (extracted for
+    /// testing) and `nonisolated` — a string formatter, callable off the main actor.
+    nonisolated static func text(for date: Date, style: DateFieldStyle, locale: Locale, components: DateFieldComponents) -> String {
         switch style {
         case .relative:
             return date.formatted(.relative(presentation: .named).locale(locale))
