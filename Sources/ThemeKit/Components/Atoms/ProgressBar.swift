@@ -25,16 +25,18 @@ public struct ProgressBar: View {
     @Environment(\.theme) private var theme
 
     private let value: Double
-    private let height: CGFloat
     private let showPercentage: Bool
     private let status: ProgressStatus
-    private let gradient: Bool
-    private let steps: Int?
-    private let strokeColor: Color?
-    private let trailColor: Color?
-    private let successSegment: Double?
-    private let format: ((Double) -> String)?
-    private let accessibilityLabelText: String?
+    // Long-tail styling — configured via chainable modifiers, keeping the common
+    // call site to `ProgressBar(value:showPercentage:status:)`.
+    private var height: CGFloat = 8
+    private var gradient: Bool = false
+    private var steps: Int? = nil
+    private var strokeColor: Color? = nil
+    private var trailColor: Color? = nil
+    private var successSegment: Double? = nil
+    private var format: ((Double) -> String)? = nil
+    private var accessibilityLabelText: String? = nil
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -42,41 +44,21 @@ public struct ProgressBar: View {
 
     /// - Parameters:
     ///   - value: progress in 0...1.
-    ///   - height: bar thickness in points.
     ///   - showPercentage: draw the percentage label next to the bar.
     ///   - status: semantic state driving the fill color (normal / success / exception …).
-    ///   - gradient: fill with a gradient instead of a solid color.
-    ///   - steps: render as a segmented (stepped) bar with this many segments.
-    ///   - strokeColor: overrides the fill color.
-    ///   - trailColor: overrides the track color.
-    ///   - successSegment: 0...1 portion drawn in the success color on top of the fill (Ant `success.percent`).
-    ///   - format: custom formatter for the percentage label (receives the 0...1 value).
-    ///   - accessibilityLabel: VoiceOver name for the bar (e.g. "Upload"); lets
-    ///     several bars on one screen be told apart. Defaults to "Progress".
+    ///
+    /// Styling beyond this — thickness, gradient, stepped variant, color overrides,
+    /// a success segment, a custom label formatter, the VoiceOver name — is set via
+    /// chainable modifiers: `.barHeight(_:) .gradient(_:) .steps(_:)
+    /// .colors(fill:track:) .successSegment(_:) .valueFormat(_:) .progressLabel(_:)`.
     public init(
         value: Double,
-        height: CGFloat = 8,
         showPercentage: Bool = false,
-        status: ProgressStatus = .normal,
-        gradient: Bool = false,
-        steps: Int? = nil,
-        strokeColor: Color? = nil,
-        trailColor: Color? = nil,
-        successSegment: Double? = nil,
-        format: ((Double) -> String)? = nil,
-        accessibilityLabel: String? = nil
+        status: ProgressStatus = .normal
     ) {
         self.value = min(max(value, 0), 1)
-        self.height = height
         self.showPercentage = showPercentage
         self.status = status
-        self.gradient = gradient
-        self.steps = steps
-        self.strokeColor = strokeColor
-        self.trailColor = trailColor
-        self.successSegment = successSegment.map { min(max($0, 0), 1) }
-        self.format = format
-        self.accessibilityLabelText = accessibilityLabel
     }
 
     private var trackColor: Color { trailColor ?? theme.border(.borderPrimary) }
@@ -150,6 +132,29 @@ public struct ProgressBar: View {
     }
 }
 
+public extension ProgressBar {
+    /// Bar thickness in points (default 8).
+    func barHeight(_ points: CGFloat) -> Self { var copy = self; copy.height = points; return copy }
+    /// Fill with a status gradient instead of a solid color.
+    func gradient(_ on: Bool = true) -> Self { var copy = self; copy.gradient = on; return copy }
+    /// Render as a segmented (stepped) bar with this many segments.
+    func steps(_ count: Int?) -> Self { var copy = self; copy.steps = count; return copy }
+    /// Overrides the fill color and/or the track color (otherwise status-derived).
+    func colors(fill: Color? = nil, track: Color? = nil) -> Self {
+        var copy = self
+        if let fill { copy.strokeColor = fill }
+        if let track { copy.trailColor = track }
+        return copy
+    }
+    /// A 0...1 portion drawn in the success color on top of the fill (Ant `success.percent`).
+    func successSegment(_ portion: Double?) -> Self { var copy = self; copy.successSegment = portion.map { min(max($0, 0), 1) }; return copy }
+    /// Custom formatter for the percentage label (receives the 0...1 value).
+    func valueFormat(_ format: ((Double) -> String)?) -> Self { var copy = self; copy.format = format; return copy }
+    /// VoiceOver name for the bar (e.g. "Upload") so several bars can be told
+    /// apart. Defaults to "Progress".
+    func progressLabel(_ label: String?) -> Self { var copy = self; copy.accessibilityLabelText = label; return copy }
+}
+
 /// Segmented step indicator (e.g. carousels / onboarding).
 public struct StepIndicator: View {
     @Environment(\.theme) private var theme
@@ -195,10 +200,10 @@ public struct StepIndicator: View {
 #Preview {
     VStack(spacing: 24) {
         ProgressBar(value: 0.3, showPercentage: true)
-        ProgressBar(value: 0.7, showPercentage: true, gradient: true)
+        ProgressBar(value: 0.7, showPercentage: true).gradient()
         ProgressBar(value: 0.5, showPercentage: true, status: .exception)
         ProgressBar(value: 1.0, showPercentage: true, status: .success)
-        ProgressBar(value: 0.6, steps: 5)
+        ProgressBar(value: 0.6).steps(5)
         StepIndicator(current: 2, total: 5)
     }
     .padding()

@@ -161,10 +161,12 @@ struct ProgressBarDemo: View {
     var body: some View {
         ComponentStage("ProgressBar", inspector: [("value", String(format: "%.2f", value)), ("status", "\(status)")]) {
             VStack(spacing: 20) {
-                ProgressBar(value: value, showPercentage: true, status: status, gradient: gradient && !custom, steps: segmented ? 6 : nil,
-                            strokeColor: custom ? SemanticColor.purple.base : nil,
-                            trailColor: custom ? SemanticColor.purple.base.opacity(0.15) : nil,
-                            successSegment: success ? min(value, 0.4) : nil)
+                ProgressBar(value: value, showPercentage: true, status: status)
+                    .gradient(gradient && !custom)
+                    .steps(segmented ? 6 : nil)
+                    .colors(fill: custom ? SemanticColor.purple.base : nil,
+                            track: custom ? SemanticColor.purple.base.opacity(0.15) : nil)
+                    .successSegment(success ? min(value, 0.4) : nil)
                 StepIndicator(current: Int(value * 4), total: 5)
             }
         } knobs: {

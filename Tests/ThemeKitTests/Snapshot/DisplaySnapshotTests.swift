@@ -96,7 +96,7 @@ final class DisplaySnapshotTests: SnapshotTestCase {
         assertComponentSnapshot(
             VStack(spacing: 12) {
                 ProgressBar(value: 0.3, showPercentage: true)
-                ProgressBar(value: 0.7, showPercentage: true, gradient: true)
+                ProgressBar(value: 0.7, showPercentage: true).gradient()
                 ProgressBar(value: 0.5, showPercentage: true, status: .exception)
                 ProgressBar(value: 1.0, showPercentage: true, status: .success)
             }
