@@ -208,9 +208,11 @@ struct MultiSelectDemo: View {
     var body: some View {
         ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
             MultiSelect(label: "Cities", options: cities, selection: $picks,
-                        searchable: searchable, allowClear: clearable,
-                        maxTagCount: capTags ? 2 : nil, isLoading: loading,
                         isOptionEnabled: disableSoldOut ? { $0 != "Adana" } : nil) { $0 }
+            .searchable(searchable)
+            .clearable(clearable)
+            .maxTags(capTags ? 2 : nil)
+            .loading(loading)
             .disabled(!enabled)
         } knobs: {
             Toggle("Searchable", isOn: $searchable)
