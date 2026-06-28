@@ -62,6 +62,7 @@ final class ScreenshotGenerator: XCTestCase {
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 
         func renderAll() {
+            shot("Banner", featureBanner(), inGallery: false)   // README header banner (not a gallery row)
             category = "Atoms"; atoms()
             category = "Molecules"; molecules()
             category = "Organisms"; organisms()
@@ -334,6 +335,100 @@ final class ScreenshotGenerator: XCTestCase {
     /// through ImageRenderer. ImageRenderer can't draw `TextField`/`TextEditor`
     /// (they need a window + responder) and falls back to a yellow placeholder, so
     /// text-input components are captured by caching a live AppKit hierarchy.
+    /// The README header banner — a bento grid of the kit's selling points, rendered
+    /// BY ThemeKit's own tokens + components (so it re-skins light/dark for free).
+    @MainActor
+    private func featureBanner() -> some View {
+        let t = Theme.shared
+        func card<C: View>(_ fill: Color? = nil, stroke: Color? = nil, @ViewBuilder _ content: () -> C) -> some View {
+            content()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(20)
+                .background(fill ?? t.background(.bgWhite), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(stroke ?? .clear, lineWidth: 1.5))
+        }
+        func heading(_ s: String, _ color: Color) -> some View {
+            Text(s).font(.system(size: 28, weight: .heavy)).foregroundStyle(color).fixedSize(horizontal: false, vertical: true)
+        }
+        func tiny(_ s: String) -> some View { Text(s).textStyle(.labelSm600).foregroundStyle(t.text(.textTertiary)) }
+        func sub(_ s: String) -> some View { Text(s).textStyle(.bodyBase400).foregroundStyle(t.text(.textSecondary)) }
+
+        return VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                card { VStack(alignment: .leading, spacing: 6) {
+                    Text("108").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    tiny("COMPONENTS"); sub("26 atoms · 37 molecules · 45 organisms")
+                }}.frame(width: 330)
+                card { VStack(alignment: .leading, spacing: 6) { heading("Zero deps", t.text(.textPrimary)); sub("native SwiftUI core") }}
+                card(t.background(.systemcolorsBgSuccessLight)) { VStack(alignment: .leading, spacing: 6) {
+                    heading("Fully\nTokenized", t.foreground(.systemcolorsFgSuccess)); sub("JSON token pipeline")
+                }}.frame(width: 300)
+                card { VStack(alignment: .leading, spacing: 6) { heading("Swift 6", t.text(.textPrimary)); sub("@Observable · strict") }}
+            }
+            .frame(height: 148)
+
+            HStack(spacing: 16) {
+                card { VStack(alignment: .leading, spacing: 12) {
+                    heading("Per-subtree\nTheming", t.foreground(.fgHero))
+                    HStack(spacing: 0) {
+                        ForEach(Array([SemanticColor.info, .purple, .pink, .turquoise, .success].enumerated()), id: \.offset) { _, c in
+                            Rectangle().fill(c.solid).frame(height: 16)
+                        }
+                    }.clipShape(Capsule())
+                    tiny(".theme(_:) environment")
+                }}.frame(width: 330)
+
+                VStack(spacing: 10) {
+                    Text("ThemeKit").font(.system(size: 50, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    sub("Native SwiftUI design system")
+                    Badge("v0.2.0 · iOS 17+", style: .info, leadingSystemImage: "swift")
+                    HStack(spacing: 12) {
+                        RadialProgress(value: 0.72, size: 52, showLabel: false)
+                        ProgressBar(value: 0.62).frame(width: 130)
+                    }.padding(.top, 6)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(20)
+                .background(t.background(.bgWhite), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(t.border(.borderHero), lineWidth: 1.5))
+
+                card { VStack(alignment: .leading, spacing: 10) {
+                    heading("Variable\nThemes", SemanticColor.pink.solid)
+                    VStack(spacing: 0) {
+                        ForEach(Array(["Default", "Ocean", "Sunset", "Grape"].enumerated()), id: \.offset) { _, name in
+                            let on = name == "Ocean"
+                            HStack {
+                                Text(name).textStyle(.bodyBase400).foregroundStyle(on ? t.foreground(.fgSecondary) : t.text(.textPrimary))
+                                Spacer()
+                                if on { Icon(systemName: "checkmark", size: .sm, color: t.foreground(.fgSecondary)) }
+                            }
+                            .padding(.horizontal, 12).frame(height: 34)
+                            .background(on ? t.foreground(.fgHero) : Color.clear)
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(t.border(.borderPrimary)))
+                }}.frame(width: 330)
+            }
+            .frame(height: 250)
+
+            HStack(spacing: 16) {
+                card { VStack(alignment: .leading, spacing: 6) { heading("Liquid\nGlass", SemanticColor.purple.solid); tiny("iOS 26 · MATERIAL FALLBACK") }}
+                card { VStack(alignment: .leading, spacing: 6) { heading("Light +\nDark", t.text(.textPrimary)); tiny("EVERY COMPONENT") }}
+                card { VStack(alignment: .leading, spacing: 6) { heading("Accessible", t.foreground(.systemcolorsFgInfo)); tiny("VOICEOVER · RTL · REDUCE MOTION") }}
+                card { VStack(alignment: .leading, spacing: 8) {
+                    tiny("BUILT-IN")
+                    HStack(spacing: 6) { Tag("DocC"); Tag("Snapshots") }
+                    HStack(spacing: 6) { Tag("CI"); Tag("EN+TR") }
+                }}.frame(width: 300)
+            }
+            .frame(height: 148)
+        }
+        .frame(width: 1180)
+        .padding(28)
+        .background(t.background(.bgSecondaryLight))
+    }
+
     /// Proof that `.theme(_:)` re-skins a subtree: the SAME components rendered four
     /// times, each subtree given a different `Theme` instance via `.theme(_:)`. If the
     /// rollout works, each column shows that theme's brand/semantic colors — no
@@ -380,7 +475,7 @@ final class ScreenshotGenerator: XCTestCase {
         }
     }
 
-    private func shot(_ name: String, _ view: some View, hosted: Bool = false) {
+    private func shot(_ name: String, _ view: some View, hosted: Bool = false, inGallery: Bool = true) {
         // The backdrop reads the active theme's surface, so loading the dark theme
         // (in `testGenerateAll`) makes both component + backdrop dark.
         let decorated = view.padding(16)
@@ -395,7 +490,7 @@ final class ScreenshotGenerator: XCTestCase {
         }
         CGImageDestinationAddImage(dest, cg, nil)
         CGImageDestinationFinalize(dest)
-        if scheme == .light { manifest.append((category, name)) }   // manifest = one row per component
+        if scheme == .light && inGallery { manifest.append((category, name)) }   // manifest = one row per gallery component
     }
 
     private func imageRendererCGImage(_ view: some View) -> CGImage? {
