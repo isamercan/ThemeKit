@@ -15,7 +15,7 @@ public struct FileInput: View {
     private let fileName: String?
     private let buttonTitle: String
     private let placeholder: String
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let infoMessages: [InfoMessage]
     private let onPick: () -> Void
     private let onClear: (() -> Void)?
@@ -25,7 +25,6 @@ public struct FileInput: View {
         fileName: String? = nil,
         buttonTitle: String = "Choose file",
         placeholder: String = "No file chosen",
-        isEnabled: Bool = true,
         infoMessages: [InfoMessage] = [],
         onPick: @escaping () -> Void,
         onClear: (() -> Void)? = nil
@@ -34,7 +33,6 @@ public struct FileInput: View {
         self.fileName = fileName
         self.buttonTitle = buttonTitle
         self.placeholder = placeholder
-        self.isEnabled = isEnabled
         self.infoMessages = infoMessages
         self.onPick = onPick
         self.onClear = onClear

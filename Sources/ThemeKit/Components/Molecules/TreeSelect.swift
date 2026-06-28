@@ -27,7 +27,7 @@ public struct TreeSelect: View {
     private let placeholder: String
     private let cascade: Bool
     private let searchable: Bool
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isLoading: Bool
     private let isNodeEnabled: ((TreeNode) -> Bool)?
 
@@ -43,7 +43,6 @@ public struct TreeSelect: View {
         cascade: Bool = false,
         searchable: Bool = false,
         initiallyExpanded: Set<String> = [],
-        isEnabled: Bool = true,
         isLoading: Bool = false,
         isNodeEnabled: ((TreeNode) -> Bool)? = nil
     ) {
@@ -53,7 +52,6 @@ public struct TreeSelect: View {
         self.placeholder = placeholder
         self.cascade = cascade
         self.searchable = searchable
-        self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.isNodeEnabled = isNodeEnabled
         self._expanded = State(initialValue: initiallyExpanded)
