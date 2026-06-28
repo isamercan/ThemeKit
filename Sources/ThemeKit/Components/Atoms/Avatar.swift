@@ -187,3 +187,12 @@ public struct AvatarGroup: View {
     }
     .padding()
 }
+
+#Preview("States") {
+    PreviewMatrix("Avatar") {
+        PreviewCase("Icon")     { Avatar(.icon("person.fill")) }
+        PreviewCase("Initials") { Avatar(.initials("AB"), background: .dark, shape: .square) }
+        PreviewCase("Building") { Avatar(.icon("building.2.fill"), shape: .square) }
+        PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")], max: 3) }
+    }
+}
