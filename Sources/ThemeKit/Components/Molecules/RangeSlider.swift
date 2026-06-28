@@ -21,7 +21,7 @@ public struct RangeSlider: View {
     private let step: Double
     private let marks: [Double]
     private let valueLabel: ((Double) -> String)?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let onChangeEnd: ((Double, Double) -> Void)?
     private let accessibilityID: String?
 
@@ -44,7 +44,6 @@ public struct RangeSlider: View {
         marks: [Double] = [],
         showInputs: Bool = false,
         inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max")),
-        isEnabled: Bool = true,
         accessibilityID: String? = nil,
         onChangeEnd: ((Double, Double) -> Void)? = nil,
         valueLabel: ((Double) -> String)? = nil
@@ -56,7 +55,6 @@ public struct RangeSlider: View {
         self.marks = marks
         self.showInputs = showInputs
         self.inputTitles = inputTitles
-        self.isEnabled = isEnabled
         self.accessibilityID = accessibilityID
         self.onChangeEnd = onChangeEnd
         self.valueLabel = valueLabel

@@ -166,3 +166,4 @@ Ortak desen (form/input ailesi):
 _(Her component dönüştürüldükçe buraya işlenecek.)_
 
 - **Buton ailesi** ✅ (#96–#98): `isContentWidth: true` → (kaldır, default content-width) · `isContentWidth: false` → `block: true` · `isEnabled: $x` → `.disabled(!x)`.
+- **X1 `isEnabled`→`.disabled()`** ✅ (13 component): Chip, Rating, Checkbox, RadioButton, Pagination, DateField, MultiSelect, RangeSlider, SearchBar, SelectBox, Slider, InputNumber, MultiLineTextInput → `@Environment(\.isEnabled)`. Eşleme: `isEnabled: $x`→`.disabled(!x)` · `isEnabled: false`→`.disabled(true)`. **TextInput** (model-tabanlı) kendi refactor'una ertelendi; **RadioButtonGroup/CheckboxGroup/SegmentedControl/ThemeToggle** X1 kapsamı dışı (round 2).

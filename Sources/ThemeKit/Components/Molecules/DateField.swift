@@ -39,7 +39,7 @@ public struct DateField: View {
     private let components: DateFieldComponents
     private let infoMessages: [InfoMessage]
     private let allowClear: Bool
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let leadingSystemImage: String?
     private let accessibilityID: String?
 
@@ -56,7 +56,6 @@ public struct DateField: View {
         components: DateFieldComponents = .date,
         infoMessages: [InfoMessage] = [],
         allowClear: Bool = false,
-        isEnabled: Bool = true,
         leadingSystemImage: String? = nil,
         accessibilityID: String? = nil
     ) {
@@ -69,7 +68,6 @@ public struct DateField: View {
         self.components = components
         self.infoMessages = infoMessages
         self.allowClear = allowClear
-        self.isEnabled = isEnabled
         self.leadingSystemImage = leadingSystemImage
         self.accessibilityID = accessibilityID
     }
@@ -247,7 +245,7 @@ public struct DateField: View {
                           infoMessages: meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [],
                           allowClear: true)
                 // Disabled.
-                DateField(label: "Locked", date: .constant(.now), isEnabled: false)
+                DateField(label: "Locked", date: .constant(.now)).disabled(true)
             }
             .padding()
         }

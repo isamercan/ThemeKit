@@ -44,7 +44,7 @@ public struct Chip: View {
     private let isExist: Bool
     private let isInteractive: Bool
     private let expandsHorizontally: Bool
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
 
     public init(
         _ title: String,
@@ -67,7 +67,6 @@ public struct Chip: View {
         self.isExist = isExist
         self.isInteractive = isInteractive
         self.expandsHorizontally = expandsHorizontally
-        self.isEnabled = isEnabled
     }
 
     public var body: some View {
@@ -139,7 +138,7 @@ public struct Chip: View {
         HStack {
             Chip("Icon", isSelected: .constant(true), leadingSystemImage: "checkmark")
             Chip("Large", isSelected: .constant(false), size: .large)
-            Chip("Disabled", isSelected: .constant(false), isEnabled: false)
+            Chip("Disabled", isSelected: .constant(false)).disabled(true)
         }
     }
     .padding()

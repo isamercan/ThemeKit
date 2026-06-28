@@ -20,7 +20,7 @@ public struct SelectBox<Option: Hashable>: View {
     private let hint: String?
     private let errorText: String?
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
 
     public init(
         label: String? = nil,
@@ -30,7 +30,6 @@ public struct SelectBox<Option: Hashable>: View {
         hint: String? = nil,
         errorText: String? = nil,
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
@@ -40,7 +39,6 @@ public struct SelectBox<Option: Hashable>: View {
         self.hint = hint
         self.errorText = errorText
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.optionTitle = optionTitle
     }
 

@@ -22,7 +22,7 @@ public struct Pagination: View {
     private let boundaryCount: Int
     private let showJumper: Bool
     private let jumperTitle: String
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let showTotal: ((Int, Int) -> String)?
 
     @State private var jumpText = ""
@@ -35,7 +35,6 @@ public struct Pagination: View {
         boundaryCount: Int = 1,
         showJumper: Bool = false,
         jumperTitle: String = String(themeKit: "Go to"),
-        isEnabled: Bool = true,
         showTotal: ((Int, Int) -> String)? = nil
     ) {
         self._current = current
@@ -45,7 +44,6 @@ public struct Pagination: View {
         self.boundaryCount = boundaryCount
         self.showJumper = showJumper
         self.jumperTitle = jumperTitle
-        self.isEnabled = isEnabled
         self.showTotal = showTotal
     }
 

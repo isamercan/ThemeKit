@@ -20,7 +20,7 @@ public struct Slider: View {
     private let axis: Axis
     private let verticalHeight: CGFloat
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let showValueTooltip: Bool
     private let onChangeEnd: ((Double) -> Void)?
 
@@ -39,7 +39,6 @@ public struct Slider: View {
         axis: Axis = .horizontal,
         verticalHeight: CGFloat = 160,
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         showValueTooltip: Bool = false,
         onChangeEnd: ((Double) -> Void)? = nil
     ) {
@@ -51,7 +50,6 @@ public struct Slider: View {
         self.axis = axis
         self.verticalHeight = verticalHeight
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.showValueTooltip = showValueTooltip
         self.onChangeEnd = onChangeEnd
     }
@@ -228,7 +226,7 @@ public struct Slider: View {
             VStack(spacing: 32) {
                 Slider(value: $v, in: 0...8, label: "Volume \(Int(v))", showValueTooltip: true)
                 Slider(value: $v, in: 0...8, step: 2, marks: [0: "0", 4: "Mid", 8: "Max"])
-                Slider(value: .constant(3), in: 0...8, label: "Disabled", isEnabled: false)
+                Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true)
             }
             .padding()
         }

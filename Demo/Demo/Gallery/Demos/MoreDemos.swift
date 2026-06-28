@@ -209,8 +209,9 @@ struct MultiSelectDemo: View {
         ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
             MultiSelect(label: "Cities", options: cities, selection: $picks,
                         searchable: searchable, allowClear: clearable,
-                        maxTagCount: capTags ? 2 : nil, isEnabled: enabled, isLoading: loading,
+                        maxTagCount: capTags ? 2 : nil, isLoading: loading,
                         isOptionEnabled: disableSoldOut ? { $0 != "Adana" } : nil) { $0 }
+            .disabled(!enabled)
         } knobs: {
             Toggle("Searchable", isOn: $searchable)
             Toggle("Allow clear", isOn: $clearable)
@@ -230,7 +231,8 @@ struct SelectBoxDemo: View {
     var body: some View {
         ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
             SelectBox(label: "Country", options: ["Türkiye", "Germany", "France"], selection: $country,
-                      hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil, isEnabled: enabled) { $0 }
+                      hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil) { $0 }
+            .disabled(!enabled)
         } knobs: {
             Toggle("Error state", isOn: $error)
             Toggle("Enabled", isOn: $enabled)
@@ -1062,8 +1064,9 @@ struct DateFieldDemo: View {
         ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
             DateField(label: "Tarih", date: $date, style: style,
                       components: withTime ? .dateAndTime : .date,
-                      infoMessages: messages, allowClear: clearable, isEnabled: enabled,
+                      infoMessages: messages, allowClear: clearable,
                       leadingSystemImage: "calendar", accessibilityID: "demoDate")
+                    .disabled(!enabled)
         } knobs: {
             Text("style = display format (custom = \"EEE, d MMM\"). Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
             Picker("Style", selection: $styleSel) { ForEach(Style.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }

@@ -94,7 +94,8 @@ struct CheckboxDemo: View {
             Checkbox(withLabel ? "Şartları ve koşulları kabul ediyorum" : nil, isChecked: $checked,
                      size: small ? .small : .medium, customSize: big ? 32 : nil, type: type,
                      isIndeterminate: indeterminate, alignment: .top,
-                     infoMessages: messages, isEnabled: enabled)
+                     infoMessages: messages)
+                    .disabled(!enabled)
         } knobs: {
             Toggle("Checked", isOn: $checked)
             Toggle("Custom size (32)", isOn: $big)
@@ -120,7 +121,8 @@ struct RadioButtonDemo: View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
             RadioButton(inlineLabel ? "Hatırla beni" : nil, isSelected: $selected,
                         size: small ? .small : .medium, type: check ? .check : .select,
-                        style: inner ? .inner : .plain, padding: .medium, isEnabled: enabled)
+                        style: inner ? .inner : .plain, padding: .medium)
+                    .disabled(!enabled)
         } knobs: {
             Toggle("Selected", isOn: $selected)
             Toggle("Inline label", isOn: $inlineLabel)
@@ -227,13 +229,15 @@ struct SliderDemo: View {
         ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal"), ("onChangeEnd", committed)]) {
             if vertical {
                 ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
-                                          axis: .vertical, verticalHeight: 180, isEnabled: enabled,
+                                          axis: .vertical, verticalHeight: 180,
                                           onChangeEnd: { committed = "\(Int($0))" })
+                .disabled(!enabled)
             } else {
                 ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
                                           marks: marks ? [0: "0", 4: "4", 8: "8"] : [:],
-                                          isEnabled: enabled, showValueTooltip: tooltip,
+                                          showValueTooltip: tooltip,
                                           onChangeEnd: { committed = "\(Int($0))" })
+                .disabled(!enabled)
             }
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value, in: 0...8, step: 1) }
@@ -258,13 +262,15 @@ struct RangeSliderDemo: View {
         ComponentStage("RangeSlider", inspector: [("range", "\(Int(lo))–\(Int(hi))"), ("onChangeEnd", lastCommit)]) {
             if inputs {
                 RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, showInputs: true,
-                            inputTitles: ("En az ₺", "En çok ₺"), isEnabled: enabled,
+                            inputTitles: ("En az ₺", "En çok ₺"),
                             onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" })
+                .disabled(!enabled)
             } else {
                 RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50,
-                            marks: marks ? [0, 250, 500, 750, 1000] : [], isEnabled: enabled,
+                            marks: marks ? [0, 250, 500, 750, 1000] : [],
                             onChangeEnd: { l, u in lastCommit = "\(Int(l))–\(Int(u))" },
                             valueLabel: { "\(Int($0)) ₺" })
+                .disabled(!enabled)
             }
         } knobs: {
             Text("onChangeEnd fires on release / blur — drive the search there, not on every tick.").font(.caption).foregroundStyle(.secondary)
