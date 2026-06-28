@@ -21,6 +21,8 @@ public enum ButtonShape: String, CaseIterable {
 public enum ButtonIconPosition { case leading, trailing }
 
 public struct ThemeButton: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let systemImage: String?
     private let iconPosition: ButtonIconPosition
@@ -94,7 +96,7 @@ public struct ThemeButton: View {
             shape: shapeStyle,
             resting: background,
             pressed: pressedBackground,
-            stroke: variant == .outline ? (isEnabled ? color.border : Theme.shared.border(.borderPrimary)) : nil
+            stroke: variant == .outline ? (isEnabled ? color.border : theme.border(.borderPrimary)) : nil
         ))
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
@@ -122,7 +124,7 @@ public struct ThemeButton: View {
     }
 
     private var foreground: Color {
-        guard isEnabled else { return Theme.shared.text(.textDisabled) }
+        guard isEnabled else { return theme.text(.textDisabled) }
         switch variant {
         case .solid: return color.onSolid
         case .soft, .outline, .ghost, .link: return color.accent
@@ -130,7 +132,7 @@ public struct ThemeButton: View {
     }
 
     private var background: Color {
-        guard isEnabled else { return variant == .solid ? Theme.shared.background(.bgSecondary) : .clear }
+        guard isEnabled else { return variant == .solid ? theme.background(.bgSecondary) : .clear }
         switch variant {
         case .solid: return color.solid
         case .soft: return color.soft
@@ -196,6 +198,8 @@ public struct RowPressStyle: ButtonStyle {
 }
 
 private struct RowPressBody: View {
+    @Environment(\.theme) private var theme
+
     let configuration: ButtonStyleConfiguration
     let cornerRadius: CGFloat
     @Environment(\.microAnimations) private var micro
@@ -205,7 +209,7 @@ private struct RowPressBody: View {
     var body: some View {
         configuration.label
             .background(
-                configuration.isPressed ? Theme.shared.background(.bgElevatorTertiary) : .clear,
+                configuration.isPressed ? theme.background(.bgElevatorTertiary) : .clear,
                 in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             )
             .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)

@@ -21,6 +21,8 @@ public enum ThemeButtonStyle {
 /// haptics, an async `run` with an automatic loading spinner, and an optional
 /// success-confirmation that morphs the label into a checkmark.
 private struct ThemedButton: View {
+    @Environment(\.theme) private var theme
+
     enum Phase { case idle, running, success }
 
     let title: String
@@ -45,7 +47,7 @@ private struct ThemedButton: View {
             if let helperText {
                 Text(helperText)
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .multilineTextAlignment(.center)
             }
         }
@@ -100,19 +102,19 @@ private struct ThemedButton: View {
     }
 
     private var foreground: Color {
-        guard isEnabled else { return Theme.shared.text(.textDisabled) }
+        guard isEnabled else { return theme.text(.textDisabled) }
         switch style {
-        case .primary: return Theme.shared.foreground(.fgSecondary)   // white
-        case .secondary, .outline, .ghost, .link: return Theme.shared.text(.textHero)
+        case .primary: return theme.foreground(.fgSecondary)   // white
+        case .secondary, .outline, .ghost, .link: return theme.text(.textHero)
         }
     }
 
     private var background: Color {
         switch style {
         case .primary:
-            return Theme.shared.background(isEnabled ? .bgHero : .bgSecondary)
+            return theme.background(isEnabled ? .bgHero : .bgSecondary)
         case .secondary:
-            return Theme.shared.background(.bgWhite)
+            return theme.background(.bgWhite)
         case .outline, .ghost, .link:
             return .clear
         }
@@ -125,7 +127,7 @@ private struct ThemedButton: View {
             EmptyView()
         case .secondary, .outline:
             RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
-                .stroke(Theme.shared.border(isEnabled ? .borderHero : .borderPrimary), lineWidth: 1)
+                .stroke(theme.border(isEnabled ? .borderHero : .borderPrimary), lineWidth: 1)
         }
     }
 }

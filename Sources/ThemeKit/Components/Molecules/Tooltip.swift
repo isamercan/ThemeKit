@@ -60,13 +60,15 @@ private struct TooltipArrow: Shape {
 }
 
 private struct TooltipBubble: View {
+    @Environment(\.theme) private var theme
+
     let text: String
     let edge: TooltipEdge
     let style: BadgeStyle?
     let maxWidth: CGFloat?
 
-    private var bubbleColor: Color { style?.semantic.solid ?? Theme.shared.background(.bgTertiary) }
-    private var textColor: Color { style?.semantic.onSolid ?? Theme.shared.foreground(.fgSecondary) }
+    private var bubbleColor: Color { style?.semantic.solid ?? theme.background(.bgTertiary) }
+    private var textColor: Color { style?.semantic.onSolid ?? theme.foreground(.fgSecondary) }
 
     var body: some View {
         let bubble = Text(text)

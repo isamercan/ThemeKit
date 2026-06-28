@@ -170,6 +170,8 @@ private extension View {
 }
 
 private struct OTPDigitBox: View {
+    @Environment(\.theme) private var theme
+
     let digit: String
     let isActive: Bool
     let isFilled: Bool
@@ -183,7 +185,7 @@ private struct OTPDigitBox: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .fill(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight))
+                .fill(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: isActive || hasError ? 1.5 : 1)
@@ -195,7 +197,7 @@ private struct OTPDigitBox: View {
             if digit.isEmpty {
                 if isActive {
                     Rectangle()
-                        .fill(Theme.shared.foreground(.fgHero))
+                        .fill(theme.foreground(.fgHero))
                         .frame(width: 2, height: 24)
                         .opacity(reduceMotion ? 1 : (caretOn ? 1 : 0))
                         .onAppear {
@@ -214,15 +216,15 @@ private struct OTPDigitBox: View {
     }
 
     private var borderColor: Color {
-        if hasError { return Theme.shared.border(.systemcolorsBorderError) }
-        if isActive || isFilled { return Theme.shared.border(.borderHero) }
-        return Theme.shared.border(.borderPrimary)
+        if hasError { return theme.border(.systemcolorsBorderError) }
+        if isActive || isFilled { return theme.border(.borderHero) }
+        return theme.border(.borderPrimary)
     }
 
     private var textColor: Color {
-        if !isEnabled { return Theme.shared.text(.textDisabled) }
-        if hasError { return Theme.shared.foreground(.systemcolorsFgError) }
-        return Theme.shared.text(.textPrimary)
+        if !isEnabled { return theme.text(.textDisabled) }
+        if hasError { return theme.foreground(.systemcolorsFgError) }
+        return theme.text(.textPrimary)
     }
 }
 
