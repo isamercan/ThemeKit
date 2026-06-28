@@ -23,7 +23,7 @@ public struct RangeSlider: View {
     private let valueLabel: ((Double) -> String)?
     @Environment(\.isEnabled) private var isEnabled
     private let onChangeEnd: ((Double, Double) -> Void)?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     // Linked numeric inputs (validate-on-blur). Reference RangeSliderView parity.
     private let showInputs: Bool
@@ -44,7 +44,6 @@ public struct RangeSlider: View {
         marks: [Double] = [],
         showInputs: Bool = false,
         inputTitles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max")),
-        accessibilityID: String? = nil,
         onChangeEnd: ((Double, Double) -> Void)? = nil,
         valueLabel: ((Double) -> String)? = nil
     ) {
@@ -55,7 +54,6 @@ public struct RangeSlider: View {
         self.marks = marks
         self.showInputs = showInputs
         self.inputTitles = inputTitles
-        self.accessibilityID = accessibilityID
         self.onChangeEnd = onChangeEnd
         self.valueLabel = valueLabel
     }
@@ -274,4 +272,10 @@ public struct RangeSlider: View {
         }
     }
     return Demo()
+}
+
+public extension RangeSlider {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

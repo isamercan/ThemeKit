@@ -14,7 +14,7 @@ public struct OTPInput: View {
     @Binding private var code: String
     private let digitCount: Int
     private let messages: [InfoMessage]
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     private let isEnabled: Bool
     private let isSecure: Bool
     private let onComplete: ((String) -> Void)?
@@ -32,7 +32,6 @@ public struct OTPInput: View {
         isSecure: Bool = false,
         errorText: String? = nil,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         isEnabled: Bool = true,
         onComplete: ((String) -> Void)? = nil,
         resendInterval: TimeInterval? = nil,
@@ -44,7 +43,6 @@ public struct OTPInput: View {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         self.messages = messages
-        self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.onComplete = onComplete
         self.resendInterval = resendInterval
@@ -243,4 +241,10 @@ private struct OTPDigitBox: View {
         }
     }
     return Demo()
+}
+
+public extension OTPInput {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

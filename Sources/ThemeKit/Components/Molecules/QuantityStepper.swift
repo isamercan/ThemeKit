@@ -13,20 +13,18 @@ public struct QuantityStepper: View {
     @Binding private var value: Int
     private let range: ClosedRange<Int>
     private let step: Int
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     private let isEnabled: Bool
 
     public init(
         value: Binding<Int>,
         range: ClosedRange<Int> = 0...99,
         step: Int = 1,
-        accessibilityID: String? = nil,
         isEnabled: Bool = true
     ) {
         self._value = value
         self.range = range
         self.step = max(1, step)
-        self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
     }
 
@@ -74,4 +72,10 @@ public struct QuantityStepper: View {
         }
     }
     return Demo()
+}
+
+public extension QuantityStepper {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

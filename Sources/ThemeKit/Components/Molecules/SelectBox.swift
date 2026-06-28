@@ -19,7 +19,7 @@ public struct SelectBox<Option: Hashable>: View {
     private let placeholder: String
     private let hint: String?
     private let errorText: String?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
 
     public init(
@@ -29,7 +29,6 @@ public struct SelectBox<Option: Hashable>: View {
         placeholder: String = String(themeKit: "Select"),
         hint: String? = nil,
         errorText: String? = nil,
-        accessibilityID: String? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
@@ -38,7 +37,6 @@ public struct SelectBox<Option: Hashable>: View {
         self.placeholder = placeholder
         self.hint = hint
         self.errorText = errorText
-        self.accessibilityID = accessibilityID
         self.optionTitle = optionTitle
     }
 
@@ -116,4 +114,10 @@ public struct SelectBox<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+public extension SelectBox {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

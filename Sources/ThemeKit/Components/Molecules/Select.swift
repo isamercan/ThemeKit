@@ -34,7 +34,7 @@ public struct Select<Option: Hashable>: View {
     private let searchable: Bool
     private let size: TextInputSize
     private let infoMessages: [InfoMessage]
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     private let isEnabled: Bool
     private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
@@ -53,7 +53,6 @@ public struct Select<Option: Hashable>: View {
         searchable: Bool = false,
         size: TextInputSize = .medium,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         isEnabled: Bool = true,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
@@ -61,7 +60,7 @@ public struct Select<Option: Hashable>: View {
     ) {
         self.init(label, sections: [Section(nil, options)], selection: selection, placeholder: placeholder,
                   allowClear: allowClear, searchable: searchable, size: size, infoMessages: infoMessages,
-                  accessibilityID: accessibilityID, isEnabled: isEnabled, isLoading: isLoading,
+                  isEnabled: isEnabled, isLoading: isLoading,
                   isOptionEnabled: isOptionEnabled, optionTitle: optionTitle)
     }
 
@@ -74,7 +73,6 @@ public struct Select<Option: Hashable>: View {
         searchable: Bool = false,
         size: TextInputSize = .medium,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         isEnabled: Bool = true,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
@@ -88,7 +86,6 @@ public struct Select<Option: Hashable>: View {
         self.searchable = searchable
         self.size = size
         self.infoMessages = infoMessages
-        self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.isOptionEnabled = isOptionEnabled
@@ -286,4 +283,10 @@ public struct Select<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+public extension Select {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

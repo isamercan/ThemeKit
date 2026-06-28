@@ -16,7 +16,7 @@ public struct MultiLineTextInput: View {
     private let placeholder: String
     private let characterLimit: Int?
     private let messages: [InfoMessage]
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     private let minHeight: CGFloat
 
@@ -29,7 +29,6 @@ public struct MultiLineTextInput: View {
         characterLimit: Int? = nil,
         errorText: String? = nil,
         infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil,
         minHeight: CGFloat = 120
     ) {
         self.label = label
@@ -39,7 +38,6 @@ public struct MultiLineTextInput: View {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         self.messages = messages
-        self.accessibilityID = accessibilityID
         self.minHeight = minHeight
     }
 
@@ -134,4 +132,10 @@ public struct MultiLineTextInput: View {
         }
     }
     return Demo()
+}
+
+public extension MultiLineTextInput {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

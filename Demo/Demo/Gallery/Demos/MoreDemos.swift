@@ -1065,7 +1065,8 @@ struct DateFieldDemo: View {
             DateField(label: "Tarih", date: $date, style: style,
                       components: withTime ? .dateAndTime : .date,
                       infoMessages: messages, allowClear: clearable,
-                      leadingSystemImage: "calendar", accessibilityID: "demoDate")
+                      leadingSystemImage: "calendar")
+                    .a11yID("demoDate")
                     .disabled(!enabled)
         } knobs: {
             Text("style = display format (custom = \"EEE, d MMM\"). Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
@@ -1584,9 +1585,11 @@ struct FormDemo: View {
                                              infoMessages: form.messages(for: .password), accessibilityID: "form.password"),
                               text: $password, externalFocus: form.focusBinding(.password))
                     RadioGroup(title: "Paket", options: ["Standart", "Pro"], selection: $plan,
-                               infoMessages: form.messages(for: .plan), accessibilityID: "form.plan") { $0 }
+                               infoMessages: form.messages(for: .plan)) { $0 }
+                    .a11yID("form.plan")
                     Checkbox("Şartları ve koşulları kabul ediyorum", isChecked: $terms,
-                             infoMessages: form.messages(for: .terms), accessibilityID: "form.terms")
+                             infoMessages: form.messages(for: .terms))
+                    .a11yID("form.terms")
                 }
                 if done {
                     InfoBanner("Hesabınız oluşturuldu.", type: .success)

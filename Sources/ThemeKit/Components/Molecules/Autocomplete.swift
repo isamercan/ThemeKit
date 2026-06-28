@@ -27,7 +27,7 @@ public struct Autocomplete: View {
     private let placeholder: String
     private let maxResults: Int
     private let debounce: TimeInterval
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     private let isEnabled: Bool
     private let isSuggestionEnabled: ((String) -> Bool)?
     private let onSelect: (String) -> Void
@@ -46,7 +46,6 @@ public struct Autocomplete: View {
         placeholder: String = "Ara",
         maxResults: Int = 5,
         debounce: TimeInterval = 0,
-        accessibilityID: String? = nil,
         isEnabled: Bool = true,
         isSuggestionEnabled: ((String) -> Bool)? = nil,
         onSelect: @escaping (String) -> Void = { _ in },
@@ -58,7 +57,6 @@ public struct Autocomplete: View {
         self.placeholder = placeholder
         self.maxResults = maxResults
         self.debounce = debounce
-        self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
@@ -75,7 +73,6 @@ public struct Autocomplete: View {
         placeholder: String = "Ara",
         maxResults: Int = 5,
         debounce: TimeInterval = 0.3,
-        accessibilityID: String? = nil,
         isEnabled: Bool = true,
         isSuggestionEnabled: ((String) -> Bool)? = nil,
         onSelect: @escaping (String) -> Void = { _ in }
@@ -86,7 +83,6 @@ public struct Autocomplete: View {
         self.placeholder = placeholder
         self.maxResults = maxResults
         self.debounce = debounce
-        self.accessibilityID = accessibilityID
         self.isEnabled = isEnabled
         self.isSuggestionEnabled = isSuggestionEnabled
         self.onSelect = onSelect
@@ -243,4 +239,10 @@ public struct Autocomplete: View {
         }
     }
     return Demo()
+}
+
+public extension Autocomplete {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

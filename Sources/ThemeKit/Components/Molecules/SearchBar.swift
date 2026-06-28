@@ -42,7 +42,7 @@ public struct SearchBar: View {
     private let onTrailing: (() -> Void)?
     private let debounce: TimeInterval
     private let onSearch: ((String) -> Void)?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
 
     // Typeahead / recent-search additions (all opt-in).
@@ -69,7 +69,6 @@ public struct SearchBar: View {
         suggestions: [String] = [],
         recent: [String] = [],
         maxResults: Int = 6,
-        accessibilityID: String? = nil,
         onBack: (() -> Void)? = nil,
         onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
@@ -85,7 +84,6 @@ public struct SearchBar: View {
         self.source = suggestions.isEmpty ? .none : .staticList(suggestions)
         self.recent = recent
         self.maxResults = maxResults
-        self.accessibilityID = accessibilityID
         self.onBack = onBack
         self.onTrailing = onTrailing
         self.onSearch = onSearch
@@ -106,7 +104,6 @@ public struct SearchBar: View {
         debounce: TimeInterval = 0.3,
         recent: [String] = [],
         maxResults: Int = 6,
-        accessibilityID: String? = nil,
         onBack: (() -> Void)? = nil,
         onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
@@ -122,7 +119,6 @@ public struct SearchBar: View {
         self.source = .asyncProvider(suggest)
         self.recent = recent
         self.maxResults = maxResults
-        self.accessibilityID = accessibilityID
         self.onBack = onBack
         self.onTrailing = onTrailing
         self.onSearch = onSearch
@@ -414,4 +410,10 @@ public struct SearchBar: View {
         }
     }
     return Demo()
+}
+
+public extension SearchBar {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

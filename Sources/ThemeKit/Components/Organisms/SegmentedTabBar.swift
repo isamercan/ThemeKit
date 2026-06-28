@@ -34,7 +34,7 @@ public struct SegmentedTabBar: View {
     private let style: SegmentedTabBarStyle
     private let onClose: ((Int) -> Void)?
     private let onAdd: (() -> Void)?
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     @Namespace private var underline
     @Environment(\.microAnimations) private var micro
@@ -43,28 +43,24 @@ public struct SegmentedTabBar: View {
 
     public init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false,
                 style: SegmentedTabBarStyle = .underline,
-                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil,
-                accessibilityID: String? = nil) {
+                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {
         self.items = items
         self._selection = selection
         self.scrollable = scrollable
         self.style = style
         self.onClose = onClose
         self.onAdd = onAdd
-        self.accessibilityID = accessibilityID
     }
 
     public init(_ items: [String], selection: Binding<Int>, scrollable: Bool = false,
                 style: SegmentedTabBarStyle = .underline,
-                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil,
-                accessibilityID: String? = nil) {
+                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {
         self.items = items.map { TabItem($0) }
         self._selection = selection
         self.scrollable = scrollable
         self.style = style
         self.onClose = onClose
         self.onAdd = onAdd
-        self.accessibilityID = accessibilityID
     }
 
     public var body: some View {
@@ -210,4 +206,10 @@ public struct SegmentedTabBar: View {
         }
     }
     return Demo()
+}
+
+public extension SegmentedTabBar {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

@@ -43,7 +43,7 @@ public struct Checkbox: View {
     private let alignment: VerticalAlignment
     private let infoMessages: [InfoMessage]
     @Environment(\.isEnabled) private var isEnabled
-    private let accessibilityID: String?
+    private var accessibilityID: String? = nil
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -57,8 +57,7 @@ public struct Checkbox: View {
         type: CheckboxType = .plain,
         isIndeterminate: Bool = false,
         alignment: VerticalAlignment = .center,
-        infoMessages: [InfoMessage] = [],
-        accessibilityID: String? = nil
+        infoMessages: [InfoMessage] = []
     ) {
         self.label = label
         self._isChecked = isChecked
@@ -68,7 +67,6 @@ public struct Checkbox: View {
         self.isIndeterminate = isIndeterminate
         self.alignment = alignment
         self.infoMessages = infoMessages
-        self.accessibilityID = accessibilityID
     }
 
     private var side: CGFloat { customSize ?? size.side }
@@ -169,4 +167,10 @@ public struct Checkbox: View {
         Checkbox(isChecked: .constant(true)).disabled(true)
     }
     .padding()
+}
+
+public extension Checkbox {
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
+    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }
