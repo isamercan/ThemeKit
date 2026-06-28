@@ -14,18 +14,16 @@ public struct QuantityStepper: View {
     private let range: ClosedRange<Int>
     private let step: Int
     private var accessibilityID: String? = nil
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
     public init(
         value: Binding<Int>,
         range: ClosedRange<Int> = 0...99,
-        step: Int = 1,
-        isEnabled: Bool = true
+        step: Int = 1
     ) {
         self._value = value
         self.range = range
         self.step = max(1, step)
-        self.isEnabled = isEnabled
     }
 
     public var body: some View {

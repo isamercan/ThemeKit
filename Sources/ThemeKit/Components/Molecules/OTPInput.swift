@@ -15,7 +15,7 @@ public struct OTPInput: View {
     private let digitCount: Int
     private let messages: [InfoMessage]
     private var accessibilityID: String? = nil
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isSecure: Bool
     private let onComplete: ((String) -> Void)?
     private let resendInterval: TimeInterval?
@@ -32,7 +32,6 @@ public struct OTPInput: View {
         isSecure: Bool = false,
         errorText: String? = nil,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         onComplete: ((String) -> Void)? = nil,
         resendInterval: TimeInterval? = nil,
         onResend: (() -> Void)? = nil
@@ -43,7 +42,6 @@ public struct OTPInput: View {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         self.messages = messages
-        self.isEnabled = isEnabled
         self.onComplete = onComplete
         self.resendInterval = resendInterval
         self.onResend = onResend

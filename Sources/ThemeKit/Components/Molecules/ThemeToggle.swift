@@ -14,7 +14,7 @@ public struct ThemeToggle: View {
 
     @Binding private var isOn: Bool
     @Environment(\.controlSize) private var controlSize
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isLoading: Bool
     private let onSystemImage: String?
     private let offSystemImage: String?
@@ -26,13 +26,11 @@ public struct ThemeToggle: View {
 
     public init(
         isOn: Binding<Bool>,
-        isEnabled: Bool = true,
         isLoading: Bool = false,
         onSystemImage: String? = nil,
         offSystemImage: String? = nil
     ) {
         self._isOn = isOn
-        self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.onSystemImage = onSystemImage
         self.offSystemImage = offSystemImage
@@ -95,7 +93,7 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true)).controlSize(.small)
         ThemeToggle(isOn: .constant(true), onSystemImage: "checkmark", offSystemImage: "xmark")
         ThemeToggle(isOn: .constant(true), isLoading: true)
-        ThemeToggle(isOn: .constant(true), isEnabled: false)
+        ThemeToggle(isOn: .constant(true)).disabled(true)
     }
     .padding()
 }
