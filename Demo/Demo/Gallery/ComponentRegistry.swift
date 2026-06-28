@@ -66,8 +66,26 @@ enum ComponentRegistry {
         .static("InlineText", .atoms, usage: #"InlineText("Accept the Terms.", links: [("Terms", { })])"#) {
             InlineText("By continuing you accept the Terms and the Privacy Policy.", links: [("Terms", {}), ("Privacy Policy", {})])
         },
+        .static("Join", .atoms, usage: #"Join { ButtonA; ButtonB; ButtonC }   // connected group, rounded outer corners"#) {
+            Join { ForEach(["Day", "Week", "Month"], id: \.self) { Text($0).textStyle(.labelBase600).padding(.horizontal, 14).frame(height: 40) } }
+        },
+        .static("Mask", .atoms, usage: #"image.themeMask(.squircle)   // .circle / .squircle / .hexagon / .star"#) {
+            HStack(spacing: 14) { ForEach(MaskShape.allCases, id: \.self) { Rectangle().fill(.blue.gradient).frame(width: 52, height: 52).themeMask($0) } }
+        },
+        .static("TextRotate", .atoms, usage: #"TextRotate(["faster.", "themed.", "accessible."], interval: 2)"#) {
+            HStack(spacing: 4) { Text("Build").textStyle(.headingSm); TextRotate(["faster.", "themed.", "accessible."]) }
+        },
+        .static("Gauge", .atoms, usage: #"GaugeView(value: 0.72, label: "CPU", style: .circular)"#) {
+            HStack(spacing: 24) { GaugeView(value: 0.72, label: "CPU"); GaugeView(value: 0.4, label: "Disk", style: .linear).frame(width: 140) }
+        },
+        .static("ShareButton", .atoms, usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#) {
+            ShareButton(item: "https://github.com/isamercan/ThemeKit")
+        },
 
         // MARK: Molecules
+        .static("ColorField", .molecules, usage: #"ColorField("Brand color", selection: $color)"#) {
+            ColorField("Brand color", selection: .constant(.blue)).frame(maxWidth: 320)
+        },
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete(label: "Destination", text: $text, suggestions: items)\n// async: Autocomplete(text: $text, suggest: { await api.search($0) })"#),
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue", isContentWidth: true) { }"#),
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK", isContentWidth: true) { } }"#),

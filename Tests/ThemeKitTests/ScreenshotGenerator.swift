@@ -137,6 +137,26 @@ final class ScreenshotGenerator: XCTestCase {
             .frame(width: 200, height: 80)
             .overlay(Text("Featured").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary)))
             .borderBeam(cornerRadius: 16, lineWidth: 2))
+        shot("Join", Join {
+            ForEach(["Day", "Week", "Month"], id: \.self) { l in
+                Text(l).textStyle(.labelBase600).padding(.horizontal, 14).frame(height: 40)
+                    .foregroundStyle(Theme.shared.text(.textPrimary))
+            }
+        })
+        shot("Mask", HStack(spacing: 14) {
+            ForEach(MaskShape.allCases, id: \.self) { s in
+                Rectangle().fill(Theme.shared.foreground(.fgHero).gradient).frame(width: 52, height: 52).themeMask(s)
+            }
+        })
+        shot("TextRotate", HStack(spacing: 4) {
+            Text("Build").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+            TextRotate(["themed.", "accessible."])
+        })
+        shot("Gauge", HStack(spacing: 24) {
+            GaugeView(value: 0.72, label: "CPU")
+            GaugeView(value: 0.4, label: "Disk", style: .linear).frame(width: 140)
+        }, hosted: true)
+        shot("ShareButton", ShareButton(item: "https://github.com/isamercan/ThemeKit"), hosted: true)
     }
 
     // MARK: Molecules
@@ -213,6 +233,7 @@ final class ScreenshotGenerator: XCTestCase {
                                                           .init(name: "sunsetTheme", label: "Sunset")],
                                                 selectedName: .constant("oceanTheme")).frame(width: 320))
         shot("Calendar", CalendarView(selection: .constant(nil)).frame(width: 320))
+        shot("ColorField", ColorField("Brand color", selection: .constant(Theme.shared.foreground(.fgHero))).frame(width: 280), hosted: true)
     }
 
     // MARK: Organisms
