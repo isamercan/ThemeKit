@@ -37,7 +37,7 @@ public struct SegmentedControl: View {
     @Binding private var selection: Int
     private let block: Bool
     private let size: SegmentedSize
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private var accessibilityID: String? = nil
 
     @Namespace private var pill
@@ -49,25 +49,22 @@ public struct SegmentedControl: View {
         _ items: [SegmentItem],
         selection: Binding<Int>,
         block: Bool = true,
-        size: SegmentedSize = .medium,
-        isEnabled: Bool = true
+        size: SegmentedSize = .medium
     ) {
         self.items = items
         self._selection = selection
         self.block = block
         self.size = size
-        self.isEnabled = isEnabled
     }
 
     public init(
         _ items: [String],
         selection: Binding<Int>,
         block: Bool = true,
-        size: SegmentedSize = .medium,
-        isEnabled: Bool = true
+        size: SegmentedSize = .medium
     ) {
         self.init(items.map { SegmentItem($0) }, selection: selection,
-                  block: block, size: size, isEnabled: isEnabled)
+                  block: block, size: size)
     }
 
     public var body: some View {

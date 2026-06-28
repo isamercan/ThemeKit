@@ -35,7 +35,7 @@ public struct Select<Option: Hashable>: View {
     private let size: TextInputSize
     private let infoMessages: [InfoMessage]
     private var accessibilityID: String? = nil
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
 
@@ -53,14 +53,13 @@ public struct Select<Option: Hashable>: View {
         searchable: Bool = false,
         size: TextInputSize = .medium,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.init(label, sections: [Section(nil, options)], selection: selection, placeholder: placeholder,
                   allowClear: allowClear, searchable: searchable, size: size, infoMessages: infoMessages,
-                  isEnabled: isEnabled, isLoading: isLoading,
+                  isLoading: isLoading,
                   isOptionEnabled: isOptionEnabled, optionTitle: optionTitle)
     }
 
@@ -73,7 +72,6 @@ public struct Select<Option: Hashable>: View {
         searchable: Bool = false,
         size: TextInputSize = .medium,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
@@ -86,7 +84,6 @@ public struct Select<Option: Hashable>: View {
         self.searchable = searchable
         self.size = size
         self.infoMessages = infoMessages
-        self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle

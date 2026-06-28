@@ -16,7 +16,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
     @Binding private var selection: Set<Option>
     private let infoMessages: [InfoMessage]
     private let selectAllTitle: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
     private var accessibilityID: String? = nil
@@ -27,7 +27,6 @@ public struct CheckboxGroup<Option: Hashable>: View {
         selection: Binding<Set<Option>>,
         infoMessages: [InfoMessage] = [],
         selectAllTitle: String? = nil,
-        isEnabled: Bool = true,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
     ) {
@@ -36,7 +35,6 @@ public struct CheckboxGroup<Option: Hashable>: View {
         self._selection = selection
         self.infoMessages = infoMessages
         self.selectAllTitle = selectAllTitle
-        self.isEnabled = isEnabled
         self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
