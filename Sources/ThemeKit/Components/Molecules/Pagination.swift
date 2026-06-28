@@ -13,6 +13,8 @@ import SwiftUI
 /// `siblingCount` pages on each side of the current page; gaps collapse to an
 /// ellipsis. An optional quick-jumper field jumps straight to a page.
 public struct Pagination: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var current: Int   // 1-based
     private let total: Int
     private let simple: Bool
@@ -52,7 +54,7 @@ public struct Pagination: View {
             if let showTotal {
                 Text(showTotal(current, total))
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .padding(.trailing, Theme.SpacingKey.xs.value)
             }
 
@@ -61,12 +63,12 @@ public struct Pagination: View {
             if simple {
                 Text("\(current) / \(total)")
                     .textStyle(.labelBase600)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
                     .frame(minWidth: 48)
             } else {
                 ForEach(Array(pages.enumerated()), id: \.offset) { _, page in
                     if page == -1 {
-                        Text("…").textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textTertiary)).frame(width: 36, height: 36)
+                        Text("…").textStyle(.labelBase600).foregroundStyle(theme.text(.textTertiary)).frame(width: 36, height: 36)
                     } else {
                         pageButton(page)
                     }
@@ -88,17 +90,17 @@ public struct Pagination: View {
 
     private var jumper: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            Text(jumperTitle).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text(jumperTitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             TextField("", text: $jumpText)
                 .multilineTextAlignment(.center)
                 .textStyle(.labelBase600)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
                 .frame(width: 44, height: 36)
-                .background(Theme.shared.background(.bgWhite),
+                .background(theme.background(.bgWhite),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                        .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
                 )
                 .jumperKeyboard()
                 .submitLabel(.go)
@@ -120,13 +122,13 @@ public struct Pagination: View {
         return Button { if isEnabled { current = page } } label: {
             Text("\(page)")
                 .textStyle(.labelBase600)
-                .foregroundStyle(isCurrent ? Theme.shared.foreground(.fgSecondary) : Theme.shared.text(.textPrimary))
+                .foregroundStyle(isCurrent ? theme.foreground(.fgSecondary) : theme.text(.textPrimary))
                 .frame(width: 36, height: 36)
-                .background(isCurrent ? Theme.shared.background(.bgHero) : .clear,
+                .background(isCurrent ? theme.background(.bgHero) : .clear,
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: isCurrent ? 0 : 1)
+                        .strokeBorder(theme.border(.borderPrimary), lineWidth: isCurrent ? 0 : 1)
                 )
         }
         .buttonStyle(.plain)
@@ -137,7 +139,7 @@ public struct Pagination: View {
     private func arrow(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Icon(systemName: systemName, size: .sm,
-                 color: enabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
+                 color: enabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                 .frame(width: 36, height: 36)
                 .mirrorsInRTL()
         }

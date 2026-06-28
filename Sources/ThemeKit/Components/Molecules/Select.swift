@@ -17,6 +17,8 @@ import SwiftUI
 /// Select("City", options: cities, selection: $city, searchable: true) { $0.name }
 /// ```
 public struct Select<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     public struct Section {
         public let title: String?
         public let options: [Option]
@@ -130,12 +132,12 @@ public struct Select<Option: Hashable>: View {
             ZStack(alignment: .leading) {
                 Text(label)
                     .textStyle(hasValue ? .labelSm600 : .bodyBase400)
-                    .foregroundStyle(hasValue ? Theme.shared.text(.textHero) : Theme.shared.text(.textTertiary))
+                    .foregroundStyle(hasValue ? theme.text(.textHero) : theme.text(.textTertiary))
                     .offset(y: hasValue ? -11 : 0)
                 if let selection {
                     Text(optionTitle(selection))
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                         .offset(y: 9)
                 }
             }
@@ -144,7 +146,7 @@ public struct Select<Option: Hashable>: View {
                 Spinner(size: IconSize.sm.value, lineWidth: 2)
             } else {
                 Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm,
-                     color: showsClear ? .clear : Theme.shared.text(.textTertiary))
+                     color: showsClear ? .clear : theme.text(.textTertiary))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -167,7 +169,7 @@ public struct Select<Option: Hashable>: View {
     private var clearButton: some View {
         if showsClear {
             Button { selection = nil } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .padding(.trailing, Theme.SpacingKey.md.value)
@@ -211,7 +213,7 @@ public struct Select<Option: Hashable>: View {
     private func panelMessage(spinner: Bool, _ text: String) -> some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             if spinner { Spinner(size: IconSize.sm.value, lineWidth: 2) }
-            Text(text).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text(text).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             Spacer()
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -221,8 +223,8 @@ public struct Select<Option: Hashable>: View {
     private var panel: some View {
         VStack(spacing: 0) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
-                TextField("Ara", text: $query).textStyle(.bodyBase400).tint(Theme.shared.foreground(.fgHero))
+                Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                TextField("Ara", text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(44)
@@ -237,7 +239,7 @@ public struct Select<Option: Hashable>: View {
                     let opts = filtered(section.options)
                     if !opts.isEmpty {
                         if let title = section.title {
-                            Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textTertiary))
+                            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.xs.value)
                         }
@@ -245,10 +247,10 @@ public struct Select<Option: Hashable>: View {
                             let enabled = optionEnabled(option)
                             Button { selection = option; open = false; query = "" } label: {
                                 HStack {
-                                    Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textPrimary))
+                                    Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
                                     Spacer()
                                     if selection == option {
-                                        Icon(systemName: "checkmark", size: .sm, color: Theme.shared.foreground(.fgHero))
+                                        Icon(systemName: "checkmark", size: .sm, color: theme.foreground(.fgHero))
                                     }
                                 }
                                 .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)
@@ -262,10 +264,10 @@ public struct Select<Option: Hashable>: View {
                 }
             }
         }
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                .stroke(theme.border(.borderPrimary), lineWidth: 1)
         )
         .themeShadow(.soft)
     }

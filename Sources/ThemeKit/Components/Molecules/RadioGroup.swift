@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. A labelled, single-select group composed from the RadioButton atom.
 /// Selection state is owned by the caller (single optional binding).
 public struct RadioGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Option?
@@ -42,9 +44,9 @@ public struct RadioGroup<Option: Hashable>: View {
 
     private var titleColor: Color {
         switch infoMessages.dominantKind {
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        default: return Theme.shared.text(.textPrimary)
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        default: return theme.text(.textPrimary)
         }
     }
 
@@ -62,7 +64,7 @@ public struct RadioGroup<Option: Hashable>: View {
                         RadioButton(isSelected: .constant(selection == option))
                         Text(label(option))
                             .textStyle(.bodyBase400)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                         Spacer()
                     }
                     .contentShape(Rectangle())
@@ -87,6 +89,8 @@ public enum RadioGroupButtonStyle { case solid, outline }
 /// A connected, segmented button-style single-select radio group — a distinct
 /// API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.
 public struct RadioButtonGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let options: [Option]
     @Binding private var selection: Option?
     private let style: RadioGroupButtonStyle
@@ -134,7 +138,7 @@ public struct RadioButtonGroup<Option: Hashable>: View {
                         .background(background(isSelected))
                         .overlay(alignment: .leading) {
                             if index > 0 {
-                                Rectangle().fill(Theme.shared.border(.borderPrimary)).frame(width: 1)
+                                Rectangle().fill(theme.border(.borderPrimary)).frame(width: 1)
                             }
                         }
                         .contentShape(Rectangle())
@@ -150,23 +154,23 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .stroke(Theme.shared.border(style == .outline ? .borderHero : .borderPrimary), lineWidth: 1)
+                .stroke(theme.border(style == .outline ? .borderHero : .borderPrimary), lineWidth: 1)
         )
     }
 
     private func foreground(_ isSelected: Bool) -> Color {
-        guard isSelected else { return Theme.shared.text(.textSecondary) }
+        guard isSelected else { return theme.text(.textSecondary) }
         switch style {
-        case .solid: return Theme.shared.foreground(.fgSecondary)
-        case .outline: return Theme.shared.text(.textHero)
+        case .solid: return theme.foreground(.fgSecondary)
+        case .outline: return theme.text(.textHero)
         }
     }
 
     private func background(_ isSelected: Bool) -> Color {
-        guard isSelected else { return Theme.shared.background(.bgWhite) }
+        guard isSelected else { return theme.background(.bgWhite) }
         switch style {
-        case .solid: return Theme.shared.background(.bgHero)
-        case .outline: return Theme.shared.background(.bgHero).opacity(0.1)
+        case .solid: return theme.background(.bgHero)
+        case .outline: return theme.background(.bgHero).opacity(0.1)
         }
     }
 }

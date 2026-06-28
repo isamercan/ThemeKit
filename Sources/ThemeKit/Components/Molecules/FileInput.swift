@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. A styled file-picker field: a "Choose file" segment + the selected
 /// filename. (daisyUI "File Input"; complements the list-based Upload.)
 public struct FileInput: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     private let fileName: String?
     private let buttonTitle: String
@@ -40,9 +42,9 @@ public struct FileInput: View {
 
     private var fieldBorder: Color {
         switch infoMessages.dominantKind {
-        case .error: return Theme.shared.border(.systemcolorsBorderError)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarning)
-        default: return Theme.shared.border(.borderPrimary)
+        case .error: return theme.border(.systemcolorsBorderError)
+        case .warning: return theme.border(.systemcolorsBorderWarning)
+        default: return theme.border(.borderPrimary)
         }
     }
 
@@ -56,17 +58,17 @@ public struct FileInput: View {
                         Image(systemName: "paperclip").font(.system(size: 13, weight: .semibold))
                         Text(buttonTitle).textStyle(.labelSm700)
                     }
-                    .foregroundStyle(Theme.shared.text(.textHero))
+                    .foregroundStyle(theme.text(.textHero))
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .frame(maxHeight: .infinity)
-                    .background(Theme.shared.background(.bgElevatorTertiary))
+                    .background(theme.background(.bgElevatorTertiary))
                 }
                 .buttonStyle(.plain)
                 .disabled(!isEnabled)
 
                 Text(fileName ?? placeholder)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(fileName != nil ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textTertiary))
+                    .foregroundStyle(fileName != nil ? theme.text(.textPrimary) : theme.text(.textTertiary))
                     .lineLimit(1)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
 
@@ -74,7 +76,7 @@ public struct FileInput: View {
 
                 if fileName != nil, let onClear {
                     Button(action: onClear) {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, Theme.SpacingKey.md.value)
@@ -82,7 +84,7 @@ public struct FileInput: View {
                 }
             }
             .frame(height: 48)
-            .background(Theme.shared.background(.bgWhite))
+            .background(theme.background(.bgWhite))
             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(fieldBorder, lineWidth: infoMessages.dominantKind != nil ? 1.5 : 1))
 

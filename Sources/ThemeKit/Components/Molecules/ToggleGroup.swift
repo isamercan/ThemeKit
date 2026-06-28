@@ -9,6 +9,8 @@ import SwiftUI
 /// Molecule. Rows of labelled switches with optional supporting text. Multi-state
 /// owned by the caller (single Set binding).
 public struct ToggleGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
@@ -35,18 +37,18 @@ public struct ToggleGroup<Option: Hashable>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(title).textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
             }
             ForEach(Array(options.enumerated()), id: \.element) { index, option in
                 HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(label(option))
                             .textStyle(.labelBase600)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                         if let description = description(option) {
                             Text(description)
                                 .textStyle(.bodySm400)
-                                .foregroundStyle(Theme.shared.text(.textSecondary))
+                                .foregroundStyle(theme.text(.textSecondary))
                         }
                     }
                     Spacer(minLength: Theme.SpacingKey.sm.value)

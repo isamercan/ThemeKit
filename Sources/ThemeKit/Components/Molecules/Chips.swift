@@ -26,6 +26,8 @@ public enum ImageChipSize {
 
 /// A selectable remote-image tile with a selection border. (Reference ImageChip.)
 public struct ImageChip: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isSelected: Bool
     private let url: URL?
     private let size: ImageChipSize
@@ -44,7 +46,7 @@ public struct ImageChip: View {
             .frame(width: s.width, height: s.height)
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(isSelected ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                    .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
                                   lineWidth: isSelected ? 2 : 1)
             )
             .opacity(isEnabled ? 1 : 0.5)
@@ -58,6 +60,8 @@ public struct ImageChip: View {
 /// A selectable card: an optional rating + label row, then an optional logo +
 /// price row. (Reference CompactChip.)
 public struct CompactChip: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isSelected: Bool
     private let text: String
     private let price: String
@@ -78,27 +82,27 @@ public struct CompactChip: View {
                 if let rating {
                     HStack(spacing: 2) {
                         Image(systemName: "star.fill").font(.system(size: 11))
-                            .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+                            .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                         Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
-                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .foregroundStyle(theme.text(.textPrimary))
                     }
                 }
                 Text(text).textStyle(.labelBase600).lineLimit(1)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
             }
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let imageURL {
                     RemoteImage(imageURL, contentMode: .fit).frame(height: 16)
                 }
-                Text(price).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(price).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
             }
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(isSelected ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
                               lineWidth: isSelected ? 2 : 1)
         )
         .contentShape(Rectangle())
@@ -111,6 +115,8 @@ public struct CompactChip: View {
 /// A selectable card: a leading icon, a title with an optional "free" gradient
 /// badge, and a rating + description row. (Reference ChoseChip.)
 public struct ChoseChip: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isSelected: Bool
     private let title: String
     private let description: String?
@@ -140,36 +146,36 @@ public struct ChoseChip: View {
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             if let systemImage {
-                Icon(systemName: systemImage, size: .md, color: Theme.shared.foreground(.fgHero))
+                Icon(systemName: systemImage, size: .md, color: theme.foreground(.fgHero))
             }
             VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     Text(title).textStyle(.labelMd600).lineLimit(1)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                     if showFree { freeBadge }
                 }
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     if let rating {
                         HStack(spacing: 2) {
                             Image(systemName: "star.fill").font(.system(size: 11))
-                                .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+                                .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                             Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
-                                .foregroundStyle(Theme.shared.text(.textPrimary))
+                                .foregroundStyle(theme.text(.textPrimary))
                         }
                     }
                     if let description {
                         Text(description).textStyle(.bodySm400).lineLimit(1)
-                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                            .foregroundStyle(theme.text(.textSecondary))
                     }
                 }
             }
             Spacer(minLength: 0)
         }
         .padding(Theme.SpacingKey.base.value)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(isSelected ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary),
+                .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
                               lineWidth: isSelected ? 2 : 1)
         )
         .contentShape(Rectangle())
@@ -179,7 +185,7 @@ public struct ChoseChip: View {
     private var freeBadge: some View {
         Text(freeLabel)
             .textStyle(.overline400)
-            .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+            .foregroundStyle(theme.foreground(.fgSecondary))
             .padding(.vertical, 2).padding(.horizontal, Theme.SpacingKey.xs.value)
             .background(
                 LinearGradient(colors: [SemanticColor.primary.base, SemanticColor.purple.base],
@@ -196,6 +202,8 @@ public enum FilterChipShape { case pill, square }
 /// A dismissible filter chip in a pill (with a soft shadow) or square shape.
 /// (Reference FilterChip.)
 public struct FilterChip: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let shape: FilterChipShape
     private let showsClose: Bool
@@ -224,19 +232,19 @@ public struct FilterChip: View {
 
     private var chipBody: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
+            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
             if showsClose {
                 Button { onDismiss?() } label: {
                     Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.vertical, Theme.SpacingKey.sm.value)
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .background(Theme.shared.background(.bgWhite), in: clipShape)
-        .overlay(clipShape.stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .background(theme.background(.bgWhite), in: clipShape)
+        .overlay(clipShape.stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 }
 
@@ -244,6 +252,8 @@ public struct FilterChip: View {
 
 /// A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
 public struct ChipGroup<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
@@ -267,7 +277,7 @@ public struct ChipGroup<Option: Hashable>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(title).textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Theme.SpacingKey.sm.value) {

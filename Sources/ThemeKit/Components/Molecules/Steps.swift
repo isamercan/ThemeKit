@@ -21,6 +21,8 @@ public enum StepState {
 /// Steps([.init("Cart", state: .done), .init("Pay", state: .active)]) { active = $0 }
 /// ```
 public struct Steps: View {
+    @Environment(\.theme) private var theme
+
     public struct Step: Identifiable {
         public let id = UUID()
         let title: String
@@ -69,7 +71,7 @@ public struct Steps: View {
                             .foregroundStyle(titleColor(step.state))
                             .multilineTextAlignment(.center)
                         if let description = step.description {
-                            Text(description).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                            Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                                 .multilineTextAlignment(.center)
                         }
                     }
@@ -93,7 +95,7 @@ public struct Steps: View {
                                 .textStyle(.labelBase600)
                                 .foregroundStyle(titleColor(step.state))
                             if let description = step.description {
-                                Text(description).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                                Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                             }
                         }
                         .padding(.top, 4)
@@ -116,7 +118,7 @@ public struct Steps: View {
                 glyph(step, number: number)
                 if let percent = step.percent, step.state == .active {
                     Circle().trim(from: 0, to: CGFloat(min(max(percent, 0), 1)))
-                        .stroke(Theme.shared.background(.bgHero), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .stroke(theme.background(.bgHero), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                         .frame(width: dotSize + 7, height: dotSize + 7)
                 }
@@ -127,9 +129,9 @@ public struct Steps: View {
 
     private func dotFill(_ state: StepState) -> Color {
         switch state {
-        case .done, .active: return Theme.shared.background(.bgHero)
-        case .error: return Theme.shared.background(.systemcolorsBgError)
-        case .todo: return Theme.shared.border(.borderPrimary)
+        case .done, .active: return theme.background(.bgHero)
+        case .error: return theme.background(.systemcolorsBgError)
+        case .todo: return theme.border(.borderPrimary)
         }
     }
 
@@ -138,43 +140,43 @@ public struct Steps: View {
         let iconSize = small ? 10.0 : 12.0
         switch step.state {
         case .done:
-            Image(systemName: step.systemImage ?? "checkmark").font(.system(size: iconSize, weight: .bold)).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+            Image(systemName: step.systemImage ?? "checkmark").font(.system(size: iconSize, weight: .bold)).foregroundStyle(theme.foreground(.fgSecondary))
         case .error:
-            Image(systemName: "xmark").font(.system(size: iconSize, weight: .bold)).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+            Image(systemName: "xmark").font(.system(size: iconSize, weight: .bold)).foregroundStyle(theme.foreground(.fgSecondary))
         case .active:
             if let icon = step.systemImage {
-                Image(systemName: icon).font(.system(size: iconSize, weight: .bold)).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                Image(systemName: icon).font(.system(size: iconSize, weight: .bold)).foregroundStyle(theme.foreground(.fgSecondary))
             } else {
-                Text("\(number)").textStyle(.labelSm700).foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                Text("\(number)").textStyle(.labelSm700).foregroundStyle(theme.foreground(.fgSecondary))
             }
         case .todo:
-            Text("\(number)").textStyle(.labelSm700).foregroundStyle(Theme.shared.text(.textTertiary))
+            Text("\(number)").textStyle(.labelSm700).foregroundStyle(theme.text(.textTertiary))
         }
     }
 
     private func fill(_ state: StepState) -> Color {
         switch state {
-        case .done, .active: return Theme.shared.background(.bgHero)
-        case .error: return Theme.shared.background(.systemcolorsBgError)
-        case .todo: return Theme.shared.background(.bgWhite)
+        case .done, .active: return theme.background(.bgHero)
+        case .error: return theme.background(.systemcolorsBgError)
+        case .todo: return theme.background(.bgWhite)
         }
     }
     private func stroke(_ state: StepState) -> Color {
         switch state {
-        case .todo: return Theme.shared.border(.borderPrimary)
-        case .error: return Theme.shared.background(.systemcolorsBgError)
-        case .done, .active: return Theme.shared.background(.bgHero)
+        case .todo: return theme.border(.borderPrimary)
+        case .error: return theme.background(.systemcolorsBgError)
+        case .done, .active: return theme.background(.bgHero)
         }
     }
     private func titleColor(_ state: StepState) -> Color {
         switch state {
-        case .todo: return Theme.shared.text(.textTertiary)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .done, .active: return Theme.shared.text(.textPrimary)
+        case .todo: return theme.text(.textTertiary)
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .done, .active: return theme.text(.textPrimary)
         }
     }
     private func connectorColor(_ index: Int) -> Color {
-        steps[index].state == .done ? Theme.shared.background(.bgHero) : Theme.shared.border(.borderPrimary)
+        steps[index].state == .done ? theme.background(.bgHero) : theme.border(.borderPrimary)
     }
 }
 

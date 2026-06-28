@@ -11,6 +11,8 @@ import SwiftUI
 /// panel with a search field and checkable rows. The single-value `Select`
 /// remains for the simple case.
 public struct MultiSelect<Option: Hashable>: View {
+    @Environment(\.theme) private var theme
+
     private let label: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
@@ -59,11 +61,11 @@ public struct MultiSelect<Option: Hashable>: View {
     }
 
     private var fieldBorder: Color {
-        if open { return Theme.shared.border(.borderHero) }
+        if open { return theme.border(.borderHero) }
         switch infoMessages.dominantKind {
-        case .error: return Theme.shared.border(.systemcolorsBorderError)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarning)
-        default: return Theme.shared.border(.borderPrimary)
+        case .error: return theme.border(.systemcolorsBorderError)
+        case .warning: return theme.border(.systemcolorsBorderWarning)
+        default: return theme.border(.borderPrimary)
         }
     }
 
@@ -103,7 +105,7 @@ public struct MultiSelect<Option: Hashable>: View {
                 if selection.isEmpty {
                     Text(placeholder)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: Theme.SpacingKey.xs.value) {
@@ -119,20 +121,20 @@ public struct MultiSelect<Option: Hashable>: View {
                 Spacer(minLength: 0)
                 if allowClear && !selection.isEmpty && isEnabled && !isLoading {
                     Button { selection.removeAll() } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
                 if isLoading {
                     Spinner(size: IconSize.sm.value, lineWidth: 2)
                 } else {
-                    Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: theme.text(.textTertiary))
                 }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .frame(minHeight: 56)
             .frame(maxWidth: .infinity)
-            .background(Theme.shared.background(isEnabled ? .bgWhite : .bgSecondaryLight),
+            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -150,10 +152,10 @@ public struct MultiSelect<Option: Hashable>: View {
         VStack(spacing: 0) {
             if searchable {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "magnifyingglass", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
                     TextField("Ara", text: $query)
                         .textStyle(.bodyBase400)
-                        .tint(Theme.shared.foreground(.fgHero))
+                        .tint(theme.foreground(.fgHero))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(44)
@@ -162,14 +164,14 @@ public struct MultiSelect<Option: Hashable>: View {
             if isLoading {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     Spinner(size: IconSize.sm.value, lineWidth: 2)
-                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textTertiary))
+                    Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                     Spacer()
                 }
                 .padding(Theme.SpacingKey.md.value)
             } else if filtered.isEmpty {
                 Text(String(themeKit: "No results"))
                     .textStyle(.bodySm400)
-                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .foregroundStyle(theme.text(.textTertiary))
                     .padding(Theme.SpacingKey.md.value)
             } else {
                 ForEach(filtered, id: \.self) { opt in
@@ -180,7 +182,7 @@ public struct MultiSelect<Option: Hashable>: View {
                                 .allowsHitTesting(false)
                             Text(optionTitle(opt))
                                 .textStyle(.bodyBase400)
-                                .foregroundStyle(Theme.shared.text(.textPrimary))
+                                .foregroundStyle(theme.text(.textPrimary))
                             Spacer()
                         }
                         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -194,10 +196,10 @@ public struct MultiSelect<Option: Hashable>: View {
                 }
             }
         }
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
         )
         .themeShadow(.soft)
     }

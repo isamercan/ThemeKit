@@ -30,6 +30,8 @@ public enum StatTrend {
 /// Molecule. A single statistic block: title, value, optional description,
 /// figure icon and trend. (daisyUI "Stat".)
 public struct Stat: View {
+    @Environment(\.theme) private var theme
+
     private enum Value { case text(String), number(Int) }
 
     private let title: String
@@ -101,11 +103,11 @@ public struct Stat: View {
     private var valueRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             if let prefix {
-                Text(prefix).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textSecondary))
+                Text(prefix).textStyle(.headingSm).foregroundStyle(theme.text(.textSecondary))
             }
             valueView
             if let suffix {
-                Text(suffix).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textSecondary))
+                Text(suffix).textStyle(.headingSm).foregroundStyle(theme.text(.textSecondary))
             }
         }
     }
@@ -117,11 +119,11 @@ public struct Stat: View {
         } else {
             switch value {
             case .text(let string):
-                Text(string).textStyle(.headingMd).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(string).textStyle(.headingMd).foregroundStyle(theme.text(.textPrimary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             case .number(let number):
-                RollingNumber(number, size: 28, weight: .semibold, color: Theme.shared.text(.textPrimary))
+                RollingNumber(number, size: 28, weight: .semibold, color: theme.text(.textPrimary))
             }
         }
     }

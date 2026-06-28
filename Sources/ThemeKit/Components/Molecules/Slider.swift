@@ -10,6 +10,8 @@ import SwiftUI
 /// value tooltip and a disabled state. (Ant Slider parity.) Shares the visual
 /// language of RangeSlider (token track / fill / thumb).
 public struct Slider: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var value: Double
     private let bounds: ClosedRange<Double>
     private let step: Double
@@ -75,13 +77,13 @@ public struct Slider: View {
     private var verticalBody: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
             if let label {
-                Text(label).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(label).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
             }
             GeometryReader { geo in
                 let usable = max(geo.size.height - thumbSize, 1)
                 let y = CGFloat((value - bounds.lowerBound) / span) * usable
                 ZStack(alignment: .bottom) {
-                    Capsule().fill(Theme.shared.border(.borderPrimary)).frame(width: trackHeight)
+                    Capsule().fill(theme.border(.borderPrimary)).frame(width: trackHeight)
                     Capsule().fill(fillColor).frame(width: trackHeight, height: y + thumbSize / 2)
                     thumb
                         .offset(y: -y)
@@ -110,20 +112,20 @@ public struct Slider: View {
             if let label {
                 Text(label)
                     .textStyle(.labelBase600)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
             }
             GeometryReader { geo in
                 let usable = max(geo.size.width - thumbSize, 1)
                 let x = CGFloat((value - bounds.lowerBound) / span) * usable
 
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.shared.border(.borderPrimary)).frame(height: trackHeight)
+                    Capsule().fill(theme.border(.borderPrimary)).frame(height: trackHeight)
                     Capsule().fill(fillColor)
                         .frame(width: x + thumbSize / 2, height: trackHeight)
 
                     ForEach(marks.keys.sorted(), id: \.self) { mark in
                         Circle()
-                            .fill(mark <= value ? Theme.shared.foreground(.fgSecondary) : Theme.shared.border(.borderPrimary))
+                            .fill(mark <= value ? theme.foreground(.fgSecondary) : theme.border(.borderPrimary))
                             .frame(width: 6, height: 6)
                             .offset(x: CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2 - 3)
                     }
@@ -143,7 +145,7 @@ public struct Slider: View {
                     ForEach(marks.keys.sorted(), id: \.self) { mark in
                         Text(marks[mark] ?? "")
                             .textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .foregroundStyle(theme.text(.textTertiary))
                             .fixedSize()
                             .position(x: CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2, y: 8)
                     }
@@ -168,7 +170,7 @@ public struct Slider: View {
     private var thumb: some View {
         Circle()
             .fill(fillColor)
-            .overlay(Circle().strokeBorder(Theme.shared.foreground(.fgSecondary), lineWidth: 2))
+            .overlay(Circle().strokeBorder(theme.foreground(.fgSecondary), lineWidth: 2))
             .frame(width: thumbSize, height: thumbSize)
             .themeShadow(.soft)
     }
@@ -178,16 +180,16 @@ public struct Slider: View {
         if showValueTooltip && dragging {
             Text(valueText(value))
                 .textStyle(.labelSm600)
-                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                .foregroundStyle(theme.foreground(.fgSecondary))
                 .padding(.horizontal, Theme.SpacingKey.sm.value)
                 .padding(.vertical, 2)
-                .background(Theme.shared.background(.bgTertiary), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value))
+                .background(theme.background(.bgTertiary), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value))
                 .fixedSize()
         }
     }
 
     private var fillColor: Color {
-        Theme.shared.background(isEnabled ? .bgHero : .bgSecondary)
+        theme.background(isEnabled ? .bgHero : .bgSecondary)
     }
 
     private func drag(usable: CGFloat) -> some Gesture {

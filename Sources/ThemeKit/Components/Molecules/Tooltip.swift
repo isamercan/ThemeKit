@@ -177,15 +177,17 @@ public extension View {
 
 #Preview {
     struct Demo: View {
+    @Environment(\.theme) private var theme
+
         @State var show = true
         var body: some View {
             VStack(spacing: 64) {
-                Icon(systemName: "info.circle", size: .md, color: Theme.shared.foreground(.fgHero))
+                Icon(systemName: "info.circle", size: .md, color: theme.foreground(.fgHero))
                     .tooltip("Helpful hint", isPresented: $show)
                 HStack(spacing: 56) {
-                    Icon(systemName: "questionmark.circle", size: .md, color: Theme.shared.foreground(.fgHero))
+                    Icon(systemName: "questionmark.circle", size: .md, color: theme.foreground(.fgHero))
                         .tooltip("On the trailing side", edge: .trailing, style: .info)
-                    Icon(systemName: "exclamationmark.triangle", size: .md, color: Theme.shared.foreground(.fgHero))
+                    Icon(systemName: "exclamationmark.triangle", size: .md, color: theme.foreground(.fgHero))
                         .tooltip("A longer hint that wraps onto several lines", edge: .leading, style: .warning, maxWidth: 140)
                 }
             }

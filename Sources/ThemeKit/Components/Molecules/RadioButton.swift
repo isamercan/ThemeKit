@@ -37,6 +37,8 @@ public enum RadioButtonPadding {
 /// Figma "Control Items" → Radioboxes. Sizes Small (20) / Medium (24);
 /// states selected / disabled. Colors from theme tokens.
 public struct RadioButton: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isSelected: Bool
     private let label: String?
     private let size: ControlSize
@@ -81,7 +83,7 @@ public struct RadioButton: View {
 
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
     private var filled: Bool { isSelected && type == .check && style == .plain }
-    private var fillColor: Color { backgroundColor ?? Theme.shared.background(isEnabled ? .bgHero : .bgSecondary) }
+    private var fillColor: Color { backgroundColor ?? theme.background(isEnabled ? .bgHero : .bgSecondary) }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -98,7 +100,7 @@ public struct RadioButton: View {
                     if let label {
                         Text(label)
                             .textStyle(.bodyBase400)
-                            .foregroundStyle(isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
+                            .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                     }
                 }
                 .contentShape(Rectangle())
@@ -117,10 +119,10 @@ public struct RadioButton: View {
     }
 
     private var stroke: Color {
-        if !isEnabled { return Theme.shared.border(.borderPrimary) }
-        if dominant == .error { return Theme.shared.border(.systemcolorsBorderError) }
-        if dominant == .warning { return Theme.shared.border(.systemcolorsBorderWarning) }
-        return (isSelected) ? Theme.shared.border(.borderHero) : Theme.shared.border(.borderPrimary)
+        if !isEnabled { return theme.border(.borderPrimary) }
+        if dominant == .error { return theme.border(.systemcolorsBorderError) }
+        if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
+        return (isSelected) ? theme.border(.borderHero) : theme.border(.borderPrimary)
     }
 
     @ViewBuilder
@@ -132,10 +134,10 @@ public struct RadioButton: View {
             case (.check, .plain):
                 Image(systemName: "checkmark")
                     .font(.system(size: size.side * 0.55, weight: .bold))
-                    .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                    .foregroundStyle(theme.foreground(.fgSecondary))
             case (.check, .inner):
                 ZStack {
-                    Circle().fill(Theme.shared.background(.bgWhite))
+                    Circle().fill(theme.background(.bgWhite))
                     Circle().fill(fillColor).padding(size.side * 0.18)
                 }
                 .frame(width: size.side * 0.74, height: size.side * 0.74)

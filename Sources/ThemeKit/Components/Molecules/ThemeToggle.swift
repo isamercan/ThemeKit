@@ -10,6 +10,8 @@ import SwiftUI
 /// states active / disabled / loading, with optional on/off glyphs in the knob.
 /// (Ant Switch parity.) Colors + motion from theme tokens.
 public struct ThemeToggle: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isOn: Bool
     private let size: ControlSize
     private let isEnabled: Bool
@@ -68,24 +70,24 @@ public struct ThemeToggle: View {
 
     private var knob: some View {
         Circle()
-            .fill(Theme.shared.foreground(.fgSecondary))
+            .fill(theme.foreground(.fgSecondary))
             .frame(width: knobSize, height: knobSize)
             .overlay {
                 if isLoading {
                     ProgressView()
                         .controlSize(.mini)
-                        .tint(Theme.shared.foreground(.fgHero))
+                        .tint(theme.foreground(.fgHero))
                 } else if let glyph = isOn ? onSystemImage : offSystemImage {
                     Image(systemName: glyph)
                         .font(.system(size: knobSize * 0.55, weight: .bold))
-                        .foregroundStyle(isOn ? Theme.shared.text(.textHero) : Theme.shared.text(.textTertiary))
+                        .foregroundStyle(isOn ? theme.text(.textHero) : theme.text(.textTertiary))
                 }
             }
     }
 
     private var track: Color {
-        guard isEnabled else { return Theme.shared.background(.bgSecondary) }
-        return isOn ? Theme.shared.background(.bgHero) : Theme.shared.background(.bgSecondary)
+        guard isEnabled else { return theme.background(.bgSecondary) }
+        return isOn ? theme.background(.bgHero) : theme.background(.bgSecondary)
     }
 }
 

@@ -8,6 +8,8 @@ import SwiftUI
 
 /// A token-bound quantity stepper (− value +), bounded by a range.
 public struct QuantityStepper: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var value: Int
     private let range: ClosedRange<Int>
     private let step: Int
@@ -36,7 +38,7 @@ public struct QuantityStepper: View {
 
             Text("\(value)")
                 .textStyle(.labelMd600)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
                 .frame(minWidth: 24)
                 .monospacedDigit()
 
@@ -47,7 +49,7 @@ public struct QuantityStepper: View {
         .padding(.horizontal, Theme.SpacingKey.sm.value)
         .padding(.vertical, Theme.SpacingKey.xs.value)
         .overlay(
-            Capsule().strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+            Capsule().strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
         )
         .a11y(A11yElement.Control.stepper, in: accessibilityID)
         .accessibilityValue("\(value)")
@@ -56,7 +58,7 @@ public struct QuantityStepper: View {
     private func stepButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Icon(systemName: systemName, size: .sm,
-                 color: enabled && isEnabled ? Theme.shared.text(.textHero) : Theme.shared.text(.textDisabled))
+                 color: enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)

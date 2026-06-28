@@ -13,6 +13,8 @@ import SwiftUI
 /// (labeled ticks), a disabled state, an `onChangeEnd` commit callback (fire the
 /// search on release, not on every drag tick), and VoiceOver-adjustable thumbs.
 public struct RangeSlider: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var lowerValue: Double
     @Binding private var upperValue: Double
     private let bounds: ClosedRange<Double>
@@ -71,7 +73,7 @@ public struct RangeSlider: View {
                     Text(valueLabel(upperValue))
                 }
                 .textStyle(.labelBase600)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
             }
 
             GeometryReader { geo in
@@ -82,10 +84,10 @@ public struct RangeSlider: View {
 
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Theme.shared.border(.borderPrimary))
+                        .fill(theme.border(.borderPrimary))
                         .frame(height: trackHeight)
                     Capsule()
-                        .fill(Theme.shared.background(isEnabled ? .bgHero : .bgSecondaryLight))
+                        .fill(theme.background(isEnabled ? .bgHero : .bgSecondaryLight))
                         .frame(width: max(upperX - lowerX, 0), height: trackHeight)
                         .offset(x: lowerX + thumbSize / 2)
 
@@ -132,10 +134,10 @@ public struct RangeSlider: View {
                 let ratio = span > 0 ? (mark - bounds.lowerBound) / span : 0
                 let centerX = thumbSize / 2 + CGFloat(ratio) * usable
                 VStack(spacing: 2) {
-                    Capsule().fill(Theme.shared.border(.borderPrimary)).frame(width: 1, height: 5)
+                    Capsule().fill(theme.border(.borderPrimary)).frame(width: 1, height: 5)
                     Text(markLabel(mark))
                         .textStyle(.labelSm600)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                         .fixedSize()
                 }
                 .position(x: centerX, y: 11)
@@ -149,7 +151,7 @@ public struct RangeSlider: View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             field(title: inputTitles.min, text: $lowerText, field: .lower)
             Rectangle()
-                .fill(Theme.shared.border(.borderPrimary))
+                .fill(theme.border(.borderPrimary))
                 .frame(width: 10, height: 1)
                 .padding(.top, Theme.SpacingKey.base.value)
             field(title: inputTitles.max, text: $upperText, field: .upper)
@@ -160,7 +162,7 @@ public struct RangeSlider: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Text(title)
                 .textStyle(.labelSm600)
-                .foregroundStyle(Theme.shared.text(.textSecondary))
+                .foregroundStyle(theme.text(.textSecondary))
             Group {
                 #if os(iOS)
                 TextField("", text: text).keyboardType(.numberPad)
@@ -169,17 +171,17 @@ public struct RangeSlider: View {
                 #endif
             }
                 .textStyle(.bodyBase400)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
                 .focused($focusedField, equals: field)
                 .disabled(!isEnabled)
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .frame(height: 44)
-                .background(Theme.shared.background(.bgWhite),
+                .background(theme.background(.bgWhite),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                        .strokeBorder(focusedField == field ? Theme.shared.border(.borderHero)
-                                                             : Theme.shared.border(.borderPrimary), lineWidth: 1)
+                        .strokeBorder(focusedField == field ? theme.border(.borderHero)
+                                                             : theme.border(.borderPrimary), lineWidth: 1)
                 )
         }
         .frame(maxWidth: .infinity)
@@ -205,10 +207,10 @@ public struct RangeSlider: View {
 
     private func thumb(value: Double, title: String, isLower: Bool) -> some View {
         Circle()
-            .fill(Theme.shared.background(.bgWhite))
+            .fill(theme.background(.bgWhite))
             .overlay(
-                Circle().strokeBorder(isEnabled ? Theme.shared.border(.borderHero)
-                                                : Theme.shared.border(.borderPrimary), lineWidth: 2)
+                Circle().strokeBorder(isEnabled ? theme.border(.borderHero)
+                                                : theme.border(.borderPrimary), lineWidth: 2)
             )
             .frame(width: thumbSize, height: thumbSize)
             .themeShadow(.soft)

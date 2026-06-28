@@ -126,6 +126,8 @@ public struct TextInputModel {
 /// a `TextInputModel` config struct, a structured `[InfoMessage]` validation
 /// model, and namespaced accessibility identifiers — alongside the flat init.
 public struct TextInput: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var text: String
     private let model: TextInputModel
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
@@ -247,14 +249,14 @@ public struct TextInput: View {
     private func addonSegment(_ text: String) -> some View {
         Text(text)
             .textStyle(.bodyBase400)
-            .foregroundStyle(Theme.shared.text(.textSecondary))
+            .foregroundStyle(theme.text(.textSecondary))
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .frame(maxHeight: .infinity)
-            .background(Theme.shared.background(.bgElevatorTertiary))
+            .background(theme.background(.bgElevatorTertiary))
     }
 
     private var addonSeparator: some View {
-        Rectangle().fill(Theme.shared.border(.borderPrimary)).frame(width: 1)
+        Rectangle().fill(theme.border(.borderPrimary)).frame(width: 1)
     }
 
     @ViewBuilder
@@ -297,7 +299,7 @@ public struct TextInput: View {
                     if model.showCount {
                         Text(Self.counterText(count: text.count, maxLength: model.maxLength, style: model.countStyle))
                             .textStyle(.bodySm400)
-                            .foregroundStyle(isOverLimit ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textTertiary))
+                            .foregroundStyle(isOverLimit ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
                             .monospacedDigit()
                     }
                 }
@@ -330,8 +332,8 @@ public struct TextInput: View {
         }
         .focused($isFocused)
         .textStyle(.bodyBase400)
-        .foregroundStyle(model.isEnabled ? Theme.shared.text(.textPrimary) : Theme.shared.text(.textDisabled))
-        .tint(Theme.shared.foreground(.fgHero))
+        .foregroundStyle(model.isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+        .tint(theme.foreground(.fgHero))
         .disabled(!model.isEnabled)
         .submitLabel(model.submitLabel)
         .autocorrectionDisabled(model.autocorrectionDisabled)
@@ -347,14 +349,14 @@ public struct TextInput: View {
     private var trailing: some View {
         if model.isSecure {
             Button { reveal.toggle() } label: {
-                Icon(systemName: reveal ? "eye.slash" : "eye", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: reveal ? "eye.slash" : "eye", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.reveal, in: model.accessibilityID)
             .accessibilityLabel(reveal ? String(themeKit: "Hide password") : String(themeKit: "Show password"))
         } else if showsClear || (!text.isEmpty && isFocused && model.suffixSystemImage == nil) {
             Button { text = "" } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: Theme.shared.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: model.accessibilityID)
@@ -365,25 +367,25 @@ public struct TextInput: View {
     }
 
     private var labelColor: Color {
-        if hasError { return Theme.shared.foreground(.systemcolorsFgError) }
-        if hasWarning { return Theme.shared.foreground(.systemcolorsFgWarning) }
-        if isFocused { return Theme.shared.text(.textHero) }
-        return Theme.shared.text(.textTertiary)
+        if hasError { return theme.foreground(.systemcolorsFgError) }
+        if hasWarning { return theme.foreground(.systemcolorsFgWarning) }
+        if isFocused { return theme.text(.textHero) }
+        return theme.text(.textTertiary)
     }
 
     private var iconColor: Color {
-        model.isEnabled ? Theme.shared.text(.textTertiary) : Theme.shared.text(.textDisabled)
+        model.isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled)
     }
 
     private var backgroundColor: Color {
-        Theme.shared.background(model.isEnabled ? .bgWhite : .bgSecondaryLight)
+        theme.background(model.isEnabled ? .bgWhite : .bgSecondaryLight)
     }
 
     private var borderColor: Color {
-        if hasError { return Theme.shared.border(.systemcolorsBorderError) }
-        if hasWarning { return Theme.shared.border(.systemcolorsBorderWarning) }
-        if isFocused { return Theme.shared.border(.borderHero) }
-        return Theme.shared.border(.borderPrimary)
+        if hasError { return theme.border(.systemcolorsBorderError) }
+        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
+        if isFocused { return theme.border(.borderHero) }
+        return theme.border(.borderPrimary)
     }
 }
 

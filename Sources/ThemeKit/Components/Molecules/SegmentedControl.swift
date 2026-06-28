@@ -31,6 +31,8 @@ public enum SegmentedSize {
 /// Molecule. Enclosed single-select control — the selected segment is a raised
 /// white pill. Options can carry an icon and a disabled state. (Ant Segmented.)
 public struct SegmentedControl: View {
+    @Environment(\.theme) private var theme
+
     private let items: [SegmentItem]
     @Binding private var selection: Int
     private let block: Bool
@@ -91,7 +93,7 @@ public struct SegmentedControl: View {
                     .background {
                         if isActive {
                             RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
-                                .fill(Theme.shared.background(.bgWhite))
+                                .fill(theme.background(.bgWhite))
                                 .themeShadow(.soft)
                                 .matchedGeometryEffect(id: "pill", in: pill)
                         }
@@ -103,7 +105,7 @@ public struct SegmentedControl: View {
             }
         }
         .padding(4)
-        .background(Theme.shared.background(.bgElevatorPrimary),
+        .background(theme.background(.bgElevatorPrimary),
                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         .opacity(isEnabled ? 1 : 0.5)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
@@ -111,8 +113,8 @@ public struct SegmentedControl: View {
     }
 
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
-        guard enabled else { return Theme.shared.text(.textDisabled) }
-        return isActive ? Theme.shared.text(.textHero) : Theme.shared.text(.textSecondary)
+        guard enabled else { return theme.text(.textDisabled) }
+        return isActive ? theme.text(.textHero) : theme.text(.textSecondary)
     }
 }
 

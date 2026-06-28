@@ -29,6 +29,8 @@ public enum ProgressStepText { case none, slash, padded }
 /// continuous bar. Optional "3 / 10" or "01 | 05" step text. Distinct from the
 /// dot-style `StepIndicator` and the value-driven `ProgressBar`.
 public struct ProgressIndicator: View {
+    @Environment(\.theme) private var theme
+
     private let variant: ProgressIndicatorVariant
     private let current: Int   // 1-based active step
     private let total: Int
@@ -60,7 +62,7 @@ public struct ProgressIndicator: View {
             if stepText != .none {
                 Text(stepLabel)
                     .textStyle(.labelSm700)
-                    .foregroundStyle(Theme.shared.text(.textSecondary))
+                    .foregroundStyle(theme.text(.textSecondary))
                     .monospacedDigit()
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -91,8 +93,8 @@ public struct ProgressIndicator: View {
     private func segment(fill: Double) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                shape.fill(Theme.shared.border(.borderPrimary))
-                shape.fill(Theme.shared.background(.bgHero))
+                shape.fill(theme.border(.borderPrimary))
+                shape.fill(theme.background(.bgHero))
                     .frame(width: geo.size.width * fill)
             }
         }
