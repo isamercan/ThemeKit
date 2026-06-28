@@ -18,14 +18,16 @@ public struct MultiSelect<Option: Hashable>: View {
     @Binding private var selection: Set<Option>
     private let optionTitle: (Option) -> String
     private let placeholder: String
-    private let searchable: Bool
-    private let allowClear: Bool
-    private let maxTagCount: Int?
     private let infoMessages: [InfoMessage]
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
-    private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
+    // Behaviour flags — set via chainable modifiers (search + clear are on by
+    // default, matching a tag picker).
+    private var searchable: Bool = true
+    private var allowClear: Bool = true
+    private var maxTagCount: Int? = nil
+    private var isLoading: Bool = false
 
     @State private var open = false
     @State private var query = ""
@@ -35,11 +37,7 @@ public struct MultiSelect<Option: Hashable>: View {
         options: [Option],
         selection: Binding<Set<Option>>,
         placeholder: String = String(themeKit: "Select"),
-        searchable: Bool = true,
-        allowClear: Bool = true,
-        maxTagCount: Int? = nil,
         infoMessages: [InfoMessage] = [],
-        isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
@@ -47,11 +45,7 @@ public struct MultiSelect<Option: Hashable>: View {
         self.options = options
         self._selection = selection
         self.placeholder = placeholder
-        self.searchable = searchable
-        self.allowClear = allowClear
-        self.maxTagCount = maxTagCount
         self.infoMessages = infoMessages
-        self.isLoading = isLoading
         self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
     }
@@ -222,4 +216,13 @@ public extension MultiSelect {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Whether the dropdown shows a search field (default true).
+    func searchable(_ on: Bool = true) -> Self { var copy = self; copy.searchable = on; return copy }
+    /// Whether a clear-all button is offered (default true).
+    func clearable(_ on: Bool = true) -> Self { var copy = self; copy.allowClear = on; return copy }
+    /// Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
+    func maxTags(_ count: Int?) -> Self { var copy = self; copy.maxTagCount = count; return copy }
+    /// Shows a loading spinner in place of the chevron (async option fetch).
+    func loading(_ on: Bool = true) -> Self { var copy = self; copy.isLoading = on; return copy }
 }
