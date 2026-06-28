@@ -18,20 +18,20 @@ struct ContentView: View {
                 .tabItem { Label("Components", systemImage: "square.grid.2x2") }
                 .tag(0)
 
+            ThemesView()
+                .tabItem { Label("Themes", systemImage: "swatchpalette") }
+                .tag(1)
+
             ThemeGalleryView()
                 .tabItem { Label("Colors", systemImage: "paintpalette") }
-                .tag(1)
+                .tag(2)
 
             TypographyView()
                 .tabItem { Label("Type", systemImage: "textformat") }
-                .tag(2)
+                .tag(3)
 
             LayoutTokensView()
                 .tabItem { Label("Layout", systemImage: "ruler") }
-                .tag(3)
-
-            ThemesView()
-                .tabItem { Label("Themes", systemImage: "swatchpalette") }
                 .tag(4)
 
             HotelSearchView()
