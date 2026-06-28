@@ -70,11 +70,12 @@ private struct BorderBeamModifier: ViewModifier {
 
     @State private var start = Date()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.theme) private var theme
 
     private let segments = 22
 
     private var palette: [Color] {
-        colors ?? [Theme.shared.background(.bgHero), SemanticColor.turquoise.base]
+        colors ?? [theme.background(.bgHero), SemanticColor.turquoise.base]
     }
 
     func body(content: Content) -> some View {

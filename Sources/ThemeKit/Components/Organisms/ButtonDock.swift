@@ -13,14 +13,24 @@ public extension View {
     /// Pins `content` to the bottom edge as a docked action bar.
     func buttonDock<DockContent: View>(@ViewBuilder content: () -> DockContent) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                DividerView(size: .small)
-                content()
-                    .padding(.horizontal, Theme.SpacingKey.md.value)
-                    .padding(.top, Theme.SpacingKey.sm.value)
-            }
-            .background(Theme.shared.background(.bgWhite))
+            ButtonDockBar(content: content())
         }
+    }
+}
+
+// Extracted into a View so the dock surface resolves the injected `\.theme`.
+private struct ButtonDockBar<DockContent: View>: View {
+    let content: DockContent
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(spacing: 0) {
+            DividerView(size: .small)
+            content
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .padding(.top, Theme.SpacingKey.sm.value)
+        }
+        .background(theme.background(.bgWhite))
     }
 }
 

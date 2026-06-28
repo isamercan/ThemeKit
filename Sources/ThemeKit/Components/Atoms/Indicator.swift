@@ -41,12 +41,20 @@ public extension View {
 
     /// Overlays a small status dot at a corner.
     func indicatorDot(_ color: Color? = nil, position: IndicatorPosition = .topTrailing) -> some View {
-        indicator(position) {
-            Circle()
-                .fill(color ?? Theme.shared.foreground(.systemcolorsFgError))
-                .frame(width: 10, height: 10)
-                .overlay(Circle().stroke(Theme.shared.background(.bgWhite), lineWidth: 2))
-        }
+        indicator(position) { IndicatorDot(color: color) }
+    }
+}
+
+// Extracted into a View so the dot + halo resolve the injected `\.theme`.
+private struct IndicatorDot: View {
+    let color: Color?
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Circle()
+            .fill(color ?? theme.foreground(.systemcolorsFgError))
+            .frame(width: 10, height: 10)
+            .overlay(Circle().stroke(theme.background(.bgWhite), lineWidth: 2))
     }
 }
 
