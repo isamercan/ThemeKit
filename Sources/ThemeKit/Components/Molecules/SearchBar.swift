@@ -16,6 +16,12 @@
 
 import SwiftUI
 
+/// A search field with optional typeahead suggestions, a recent-searches list and
+/// submit/clear callbacks.
+///
+/// ```swift
+/// SearchBar(text: $query, suggestions: cities, recent: recents, onSubmit: search)
+/// ```
 public struct SearchBar: View {
 
     /// Where typeahead suggestions come from. `.none` keeps the classic bar
