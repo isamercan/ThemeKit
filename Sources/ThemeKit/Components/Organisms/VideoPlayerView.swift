@@ -3,16 +3,15 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop,
-//  mute, aspect-fill, and active-gating (only the visible item plays). Optional
-//  depth: a `progress` binding (0…1), resume-from-last-position, a tap overlay
-//  that toggles play/pause, and a mute toggle button. Controls hidden by default.
-//  iOS uses AVPlayerViewController; macOS falls back to the SwiftUI `VideoPlayer`.
-//
 
 import SwiftUI
 import AVKit
 
+/// Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop,
+/// mute, aspect-fill, and active-gating (only the visible item plays). Optional
+/// depth: a `progress` binding (0…1), resume-from-last-position, a tap overlay
+/// that toggles play/pause, and a mute toggle button. Controls hidden by default.
+/// iOS uses AVPlayerViewController; macOS falls back to the SwiftUI `VideoPlayer`.
 public struct VideoPlayerView: View {
     private let url: URL?
     private let autoplay: Bool

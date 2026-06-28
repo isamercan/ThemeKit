@@ -3,11 +3,10 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A token-bound quantity stepper (− value +), bounded by a range.
-//
 
 import SwiftUI
 
+/// A token-bound quantity stepper (− value +), bounded by a range.
 public struct QuantityStepper: View {
     @Binding private var value: Int
     private let range: ClosedRange<Int>

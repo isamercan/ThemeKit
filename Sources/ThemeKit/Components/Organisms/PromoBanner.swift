@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A promotional banner (campaign / offer). Distinct from InfoBanner
-//  (status). Leading visual + title + subtitle + optional CTA, on a tinted card.
-//
 
 import SwiftUI
 
@@ -33,6 +30,8 @@ public enum PromoBannerTint {
     }
 }
 
+/// Organism. A promotional banner (campaign / offer). Distinct from InfoBanner
+/// (status). Leading visual + title + subtitle + optional CTA, on a tinted card.
 public struct PromoBanner: View {
     private let title: String
     private let subtitle: String?

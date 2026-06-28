@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A theme-driven divider: horizontal / vertical, solid / dashed, with an
-//  optional inline text label (left / center / right). (Ant Divider parity.)
-//  Colors come exclusively from the active theme.
-//
 
 import SwiftUI
 
@@ -27,6 +23,9 @@ public enum DividerViewSize {
 public enum DividerAxis { case horizontal, vertical }
 public enum DividerTextAlign { case leading, center, trailing }
 
+/// A theme-driven divider: horizontal / vertical, solid / dashed, with an
+/// optional inline text label (left / center / right). (Ant Divider parity.)
+/// Colors come exclusively from the active theme.
 public struct DividerView: View {
     private let size: DividerViewSize
     private let axis: DividerAxis

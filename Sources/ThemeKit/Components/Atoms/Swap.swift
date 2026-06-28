@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. Animated toggle between two SF Symbols (e.g. menu↔close, sun↔moon).
-//  (daisyUI "Swap".)
-//
 
 import SwiftUI
 
+/// Atom. Animated toggle between two SF Symbols (e.g. menu↔close, sun↔moon).
+/// (daisyUI "Swap".)
 public struct Swap: View {
     @Binding private var isOn: Bool
     private let onSystemImage: String

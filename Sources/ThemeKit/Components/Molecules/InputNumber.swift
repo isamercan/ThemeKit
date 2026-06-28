@@ -3,17 +3,15 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A labelled numeric field with filled − / + steppers, hint / error
-//  text and default / disabled / error states. (Form-field counterpart of the
-//  pill-shaped QuantityStepper.)
-//
-//  Reference: Ant Design `InputNumber` / Chakra `NumberInput` — the value is
-//  directly editable (type a number, clamped to `range` on commit), steppers move
-//  by `step`, and an optional `unit` suffix labels the value (e.g. "kişi", "₺").
-//
 
 import SwiftUI
 
+/// Molecule. A labelled numeric field with filled − / + steppers, hint / error
+/// text and default / disabled / error states. (Form-field counterpart of the
+/// pill-shaped QuantityStepper.)
+/// Reference: Ant Design `InputNumber` / Chakra `NumberInput` — the value is
+/// directly editable (type a number, clamped to `range` on commit), steppers move
+/// by `step`, and an optional `unit` suffix labels the value (e.g. "kişi", "₺").
 public struct InputNumber: View {
     private let label: String?
     @Binding private var value: Int

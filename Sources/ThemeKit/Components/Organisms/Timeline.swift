@@ -3,11 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Vertical timeline of events with a connecting rail, dot/icon
-//  markers, done / active / todo / error states, optional per-item color and a
-//  trailing "pending" (loading) node. `mode` places the content left, right or
-//  alternating around the rail; `reverse` flips the order. (Ant Timeline parity.)
-//
 
 import SwiftUI
 
@@ -21,6 +16,10 @@ public enum TimelineMode: Sendable {
     case alternate
 }
 
+/// Organism. Vertical timeline of events with a connecting rail, dot/icon
+/// markers, done / active / todo / error states, optional per-item color and a
+/// trailing "pending" (loading) node. `mode` places the content left, right or
+/// alternating around the rail; `reverse` flips the order. (Ant Timeline parity.)
 public struct Timeline: View {
     public struct Item: Identifiable {
         public let id = UUID()

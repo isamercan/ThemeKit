@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A prominent hero section: centered title + subtitle + optional CTA
-//  over a color or custom background. (daisyUI "Hero".)
-//
 
 import SwiftUI
 
+/// Organism. A prominent hero section: centered title + subtitle + optional CTA
+/// over a color or custom background. (daisyUI "Hero".)
 public struct Hero<Background: View>: View {
     private let title: String
     private let subtitle: String?

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A bordered form group with a legend + optional helper text.
-//  (daisyUI "Fieldset".)
-//
 
 import SwiftUI
 
+/// Molecule. A bordered form group with a legend + optional helper text.
+/// (daisyUI "Fieldset".)
 public struct Fieldset<Content: View>: View {
     private let title: String
     private let helper: String?

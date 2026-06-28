@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Figma "Control Items" → Radioboxes. Sizes Small (20) / Medium (24);
-//  states selected / disabled. Colors from theme tokens.
-//
 
 import SwiftUI
 
@@ -37,6 +34,8 @@ public enum RadioButtonPadding {
     }
 }
 
+/// Figma "Control Items" → Radioboxes. Sizes Small (20) / Medium (24);
+/// states selected / disabled. Colors from theme tokens.
 public struct RadioButton: View {
     @Binding private var isSelected: Bool
     private let label: String?

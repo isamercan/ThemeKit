@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A packaged theme switcher: selecting an option loads that theme via
-//  `Theme.shared.loadTheme(named:)`. (daisyUI "Theme Controller".)
-//
 
 import SwiftUI
 
+/// Molecule. A packaged theme switcher: selecting an option loads that theme via
+/// `Theme.shared.loadTheme(named:)`. (daisyUI "Theme Controller".)
 public struct ThemeController: View {
     public struct Option: Identifiable {
         public let id = UUID()

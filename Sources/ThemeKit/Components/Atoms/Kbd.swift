@@ -3,11 +3,10 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A keyboard key cap. (daisyUI "Kbd".)
-//
 
 import SwiftUI
 
+/// Atom. A keyboard key cap. (daisyUI "Kbd".)
 public struct Kbd: View {
     private let text: String
 

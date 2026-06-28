@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A surface container with token padding / radius / elevation. An
-//  optional header (title / subtitle + a trailing `extra` action, divided from
-//  the body) and an `isLoading` skeleton bring it toward Ant Card.
-//
 
 import SwiftUI
 
@@ -14,6 +10,9 @@ public enum CardElevation {
     case none, soft, elevated
 }
 
+/// Organism. A surface container with token padding / radius / elevation. An
+/// optional header (title / subtitle + a trailing `extra` action, divided from
+/// the body) and an `isLoading` skeleton bring it toward Ant Card.
 public struct Card<Content: View>: View {
     private let elevation: CardElevation
     private let padding: CGFloat

@@ -3,15 +3,14 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A group of accordion rows with single- or multiple-open behavior (the
-//  reference `AccordionView` tracks a `Set` of open ids). Single mode collapses
-//  the others when one opens.
-//
 
 import SwiftUI
 
 public enum AccordionExpandMode { case single, multiple }
 
+/// A group of accordion rows with single- or multiple-open behavior (the
+/// reference `AccordionView` tracks a `Set` of open ids). Single mode collapses
+/// the others when one opens.
 public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     private let items: [Item]
     private let mode: AccordionExpandMode

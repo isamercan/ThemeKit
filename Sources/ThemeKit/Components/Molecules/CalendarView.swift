@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. An inline month calendar with day selection + month navigation.
-//  (daisyUI "Calendar"; complements DateField which presents a popover.)
-//
 
 import SwiftUI
 
+/// Molecule. An inline month calendar with day selection + month navigation.
+/// (daisyUI "Calendar"; complements DateField which presents a popover.)
 public struct CalendarView: View {
     @Binding private var selection: Date?
     @State private var displayed: Date

@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference AccordionView — a single
-//  expandable row with a @ViewBuilder body instead of type-erased AnyView models.
-//
 
 import SwiftUI
 
@@ -39,6 +36,8 @@ public enum AccordionPaddingSize {
     }
 }
 
+/// Improved, token-bound rewrite of the reference AccordionView — a single
+/// expandable row with a @ViewBuilder body instead of type-erased AnyView models.
 public struct Accordion<Content: View>: View {
     private let title: String
     private let subtitle: String?

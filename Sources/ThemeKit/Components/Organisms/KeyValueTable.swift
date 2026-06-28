@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A label/value table (Figma "Table"). Values can carry a status
-//  style (plain / success / error / muted / strikethrough).
-//
 
 import SwiftUI
 
@@ -22,6 +19,8 @@ public enum TableValueStyle {
     }
 }
 
+/// Organism. A label/value table (Figma "Table"). Values can carry a status
+/// style (plain / success / error / muted / strikethrough).
 public struct KeyValueTable: View {
     public struct Row: Identifiable {
         public let id = UUID()

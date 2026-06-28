@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Lays out related buttons in a vertical stack or an equal-width
-//  horizontal row. Pass buttons with `isContentWidth: true`.
-//
 
 import SwiftUI
 
@@ -13,6 +10,8 @@ public enum ButtonGroupAxis {
     case vertical, horizontal
 }
 
+/// Molecule. Lays out related buttons in a vertical stack or an equal-width
+/// horizontal row. Pass buttons with `isContentWidth: true`.
 public struct ButtonGroup<Content: View>: View {
     private let axis: ButtonGroupAxis
     private let spacing: CGFloat

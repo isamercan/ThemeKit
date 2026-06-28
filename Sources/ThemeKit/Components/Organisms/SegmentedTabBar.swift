@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Tab bar with a selection binding and an animated underline. Tabs can carry an
-//  icon, a count badge and a disabled state. (Ant Tabs parity.)
-//
 
 import SwiftUI
 
@@ -26,6 +23,8 @@ public struct TabItem {
 /// Visual style of `SegmentedTabBar` (Ant Tabs `type`).
 public enum SegmentedTabBarStyle { case underline, card }
 
+/// Tab bar with a selection binding and an animated underline. Tabs can carry an
+/// icon, a count badge and a disabled state. (Ant Tabs parity.)
 public struct SegmentedTabBar: View {
     private let items: [TabItem]
     @Binding private var selection: Int

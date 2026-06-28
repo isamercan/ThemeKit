@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A file-upload prompt plus a list of files with per-item status
-//  (uploading / done / failed). State owned by the caller.
-//
 
 import SwiftUI
 
@@ -26,6 +23,8 @@ public struct UploadFile: Identifiable, Equatable {
     }
 }
 
+/// Organism. A file-upload prompt plus a list of files with per-item status
+/// (uploading / done / failed). State owned by the caller.
 public struct Upload: View {
     private let prompt: String
     private let buttonTitle: String

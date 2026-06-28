@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A floating action button with an optional speed-dial of sub-actions.
-//  (daisyUI "FAB / Speed Dial".)
-//
 
 import SwiftUI
 
@@ -23,6 +20,8 @@ public struct FABAction: Identifiable {
 
 public enum FABShape { case circle, square }
 
+/// Organism. A floating action button with an optional speed-dial of sub-actions.
+/// (daisyUI "FAB / Speed Dial".)
 public struct FloatingActionButton: View {
     private let systemImage: String
     private let actions: [FABAction]

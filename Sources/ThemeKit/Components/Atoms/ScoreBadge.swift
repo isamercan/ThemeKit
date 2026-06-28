@@ -3,11 +3,10 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A numeric rating score in a filled rounded box (e.g. "9.0").
-//
 
 import SwiftUI
 
+/// Atom. A numeric rating score in a filled rounded box (e.g. "9.0").
 public struct ScoreBadge: View {
     private let score: Double
     private let large: Bool

@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A chat message bubble (incoming / outgoing) with optional avatar,
-//  author and timestamp. (daisyUI "Chat bubble".)
-//
 
 import SwiftUI
 
@@ -13,6 +10,8 @@ public enum ChatSide {
     case incoming, outgoing
 }
 
+/// Organism. A chat message bubble (incoming / outgoing) with optional avatar,
+/// author and timestamp. (daisyUI "Chat bubble".)
 public struct ChatBubble: View {
     private let text: String
     private let side: ChatSide

@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. Represents a person/business as an icon, initials or image, in a circle
-//  or square, plus an `AvatarGroup` that stacks avatars with a +N overflow.
-//  (Ant Avatar parity.) Figma sizes 24/32/40/48.
-//
 
 import SwiftUI
 
@@ -47,6 +43,9 @@ public enum AvatarContent {
     case image(Image)
 }
 
+/// Atom. Represents a person/business as an icon, initials or image, in a circle
+/// or square, plus an `AvatarGroup` that stacks avatars with a +N overflow.
+/// (Ant Avatar parity.) Figma sizes 24/32/40/48.
 public struct Avatar: View {
     private let content: AvatarContent
     private let size: AvatarSize

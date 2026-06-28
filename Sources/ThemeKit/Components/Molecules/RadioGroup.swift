@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A labelled, single-select group composed from the RadioButton atom.
-//  Selection state is owned by the caller (single optional binding).
-//
 
 import SwiftUI
 
+/// Molecule. A labelled, single-select group composed from the RadioButton atom.
+/// Selection state is owned by the caller (single optional binding).
 public struct RadioGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]

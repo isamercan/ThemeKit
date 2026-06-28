@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A page footer: columns of titled links + an optional bottom note.
-//  (daisyUI "Footer".)
-//
 
 import SwiftUI
 
+/// Organism. A page footer: columns of titled links + an optional bottom note.
+/// (daisyUI "Footer".)
 public struct Footer: View {
     public struct Item: Identifiable {
         public let id = UUID()

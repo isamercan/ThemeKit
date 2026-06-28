@@ -3,16 +3,14 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A compact label, optionally removable. Distinct from Badge (status) and
-//  Chip (selectable): Tag represents an applied keyword/filter.
-//
-//  An optional semantic `style` + `variant` colors the tag (Ant Tag colors),
-//  reusing Badge's `BadgeStyle` / `FillVariant`. With no `style` it keeps the
-//  original neutral keyword look.
-//
 
 import SwiftUI
 
+/// Atom. A compact label, optionally removable. Distinct from Badge (status) and
+/// Chip (selectable): Tag represents an applied keyword/filter.
+/// An optional semantic `style` + `variant` colors the tag (Ant Tag colors),
+/// reusing Badge's `BadgeStyle` / `FillVariant`. With no `style` it keeps the
+/// original neutral keyword look.
 public struct Tag: View {
     private let text: String
     private let leadingSystemImage: String?

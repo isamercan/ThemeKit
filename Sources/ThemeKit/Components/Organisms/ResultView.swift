@@ -3,11 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Ant-style "Result" template: a full-page status view for the outcome of an
-//  operation (success / info / warning / error) or an exception page
-//  (404 / 403 / 500), with up to two actions. Generalizes `EmptyState`.
-//  See docs/result-templates.md.
-//
 
 import SwiftUI
 
@@ -51,6 +46,10 @@ public enum ResultStatus: String, CaseIterable {
     }
 }
 
+/// Ant-style "Result" template: a full-page status view for the outcome of an
+/// operation (success / info / warning / error) or an exception page
+/// (404 / 403 / 500), with up to two actions. Generalizes `EmptyState`.
+/// See docs/result-templates.md.
 public struct ResultView: View {
     private let status: ResultStatus
     private let title: String

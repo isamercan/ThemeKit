@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Displays a promo code with a copy action. Styles: filled / outlined
-//  (dashed) / plain.
-//
 
 import SwiftUI
 
@@ -13,6 +10,8 @@ public enum CouponStyle {
     case filled, outlined, plain
 }
 
+/// Organism. Displays a promo code with a copy action. Styles: filled / outlined
+/// (dashed) / plain.
 public struct Coupon: View {
     private let code: String
     private let label: String

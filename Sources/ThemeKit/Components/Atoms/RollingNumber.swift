@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Odometer / slot-machine number — each digit column rolls vertically to its
-//  new value when `value` changes (reference `RollingText`). Good for prices,
-//  counters, live stats.
-//
 
 import SwiftUI
 
+/// Odometer / slot-machine number — each digit column rolls vertically to its
+/// new value when `value` changes (reference `RollingText`). Good for prices,
+/// counters, live stats.
 public struct RollingNumber: View {
     private let value: Int
     private let size: CGFloat

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Floating bottom tab bar. Active item uses a filled glyph + hero
-//  underline. Selection owned by the caller.
-//
 
 import SwiftUI
 
+/// Organism. Floating bottom tab bar. Active item uses a filled glyph + hero
+/// underline. Selection owned by the caller.
 public struct NavigationBar: View {
     public struct Item: Identifiable {
         public let id = UUID()

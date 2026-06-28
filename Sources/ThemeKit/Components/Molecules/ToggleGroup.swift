@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Rows of labelled switches with optional supporting text. Multi-state
-//  owned by the caller (single Set binding).
-//
 
 import SwiftUI
 
+/// Molecule. Rows of labelled switches with optional supporting text. Multi-state
+/// owned by the caller (single Set binding).
 public struct ToggleGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]

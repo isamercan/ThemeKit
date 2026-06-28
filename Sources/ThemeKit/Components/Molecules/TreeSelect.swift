@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Hierarchical (nested) select with expand/collapse and multi-selection.
-//  (Ant TreeSelect.) Nodes are a simple value tree; selection is a set of node ids.
-//
 
 import SwiftUI
 
@@ -19,6 +16,8 @@ public struct TreeNode: Identifiable {
     }
 }
 
+/// Hierarchical (nested) select with expand/collapse and multi-selection.
+/// (Ant TreeSelect.) Nodes are a simple value tree; selection is a set of node ids.
 public struct TreeSelect: View {
     private let label: String?
     private let nodes: [TreeNode]

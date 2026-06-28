@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Single-thumb value slider with optional labeled marks, a drag
-//  value tooltip and a disabled state. (Ant Slider parity.) Shares the visual
-//  language of RangeSlider (token track / fill / thumb).
-//
 
 import SwiftUI
 
+/// Molecule. Single-thumb value slider with optional labeled marks, a drag
+/// value tooltip and a disabled state. (Ant Slider parity.) Shares the visual
+/// language of RangeSlider (token track / fill / thumb).
 public struct Slider: View {
     @Binding private var value: Double
     private let bounds: ClosedRange<Double>

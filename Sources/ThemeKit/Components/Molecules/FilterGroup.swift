@@ -3,11 +3,10 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A single-select chip filter with a reset control. (daisyUI "Filter".)
-//
 
 import SwiftUI
 
+/// Molecule. A single-select chip filter with a reset control. (daisyUI "Filter".)
 public struct FilterGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]

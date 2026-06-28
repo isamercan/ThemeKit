@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A multi-column data table with a header and optional zebra striping.
-//  Supports tap-to-sort columns, row selection, and fully custom cell views.
-//  (daisyUI "Table"; complements the label/value KeyValueTable.)
-//
 
 import SwiftUI
 
@@ -34,6 +30,9 @@ public enum TableSortKey: Comparable {
     }
 }
 
+/// Organism. A multi-column data table with a header and optional zebra striping.
+/// Supports tap-to-sort columns, row selection, and fully custom cell views.
+/// (daisyUI "Table"; complements the label/value KeyValueTable.)
 public struct DataTable<Row: Identifiable>: View {
     public struct Column {
         let title: String

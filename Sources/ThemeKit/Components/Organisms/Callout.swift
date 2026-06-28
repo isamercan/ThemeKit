@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Inline status text with a leading icon. More compact than
-//  InfoBanner — used to highlight a single line of information.
-//  Figma: success / error / info / warning / neutral; plain or soft style.
-//
 
 import SwiftUI
 
@@ -46,6 +42,9 @@ public enum CalloutStyle {
     case soft    // light tinted surface
 }
 
+/// Organism. Inline status text with a leading icon. More compact than
+/// InfoBanner — used to highlight a single line of information.
+/// Figma: success / error / info / warning / neutral; plain or soft style.
 public struct Callout: View {
     private let text: String
     private let type: CalloutType

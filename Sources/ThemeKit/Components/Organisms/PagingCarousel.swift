@@ -3,14 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Custom drag-paging carousel with PEEKING neighbors + threshold snap (the
-//  reference `PagingScrollView`). Distinct from `Carousel` (full-width TabView):
-//  here the active tile is narrower so the previous/next peek at the edges.
-//  Optional autoplay wraps around.
-//
 
 import SwiftUI
 
+/// Custom drag-paging carousel with PEEKING neighbors + threshold snap (the
+/// reference `PagingScrollView`). Distinct from `Carousel` (full-width TabView):
+/// here the active tile is narrower so the previous/next peek at the edges.
+/// Optional autoplay wraps around.
 public struct PagingCarousel<Item: Identifiable, Content: View>: View {
     private let items: [Item]
     private let peek: CGFloat

@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference BasicChip — a single clear
-//  selection API (tonal / solid) instead of the reference's nested
-//  status × mode × fullSelect × isExist matrix.
-//
 
 import SwiftUI
 
@@ -33,6 +29,9 @@ public enum ChipSelectionStyle {
     case solid   // hero fill + white text
 }
 
+/// Improved, token-bound rewrite of the reference BasicChip — a single clear
+/// selection API (tonal / solid) instead of the reference's nested
+/// status × mode × fullSelect × isExist matrix.
 public struct Chip: View {
     @Binding private var isSelected: Bool
     private let title: String

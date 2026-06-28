@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference MultiLineInput — a bordered
-//  TextEditor with header label, placeholder, character counter and error state.
-//
 
 import SwiftUI
 
+/// Improved, token-bound rewrite of the reference MultiLineInput — a bordered
+/// TextEditor with header label, placeholder, character counter and error state.
 public struct MultiLineTextInput: View {
     @Binding private var text: String
     private let label: String

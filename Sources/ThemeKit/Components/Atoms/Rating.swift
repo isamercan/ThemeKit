@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Star rating with two layouts (stars / numeric-leading), continuous fractional
-//  fill (display) or half-step interaction, a tappable review count, a custom
-//  character and a disabled state. (Reference RatingView parity + interactive.)
-//
 
 import SwiftUI
 
@@ -20,6 +16,9 @@ public enum RatingLayout {
     case rateNumberText
 }
 
+/// Star rating with two layouts (stars / numeric-leading), continuous fractional
+/// fill (display) or half-step interaction, a tappable review count, a custom
+/// character and a disabled state. (Reference RatingView parity + interactive.)
 public struct Rating: View {
     private let value: Double
     private let maxValue: Int

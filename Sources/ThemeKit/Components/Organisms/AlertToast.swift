@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference AlertView — a solid-fill
-//  status banner (complements the light-surface InfoBanner).
-//
 
 import SwiftUI
 
@@ -51,6 +48,8 @@ public struct ToastAction {
     }
 }
 
+/// Improved, token-bound rewrite of the reference AlertView — a solid-fill
+/// status banner (complements the light-surface InfoBanner).
 public struct AlertToast: View {
     private let title: String
     private let message: String?

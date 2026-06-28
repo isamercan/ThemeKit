@@ -3,11 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Icon system. The Figma design system uses Font Awesome Pro, which is a
-//  licensed font and cannot be bundled here. `Icon` renders an SF Symbol by
-//  default; to switch to Font Awesome, bundle the FA Pro `.ttf` and render a
-//  glyph with `IconSize.font` instead.
-//
 
 import SwiftUI
 
@@ -31,6 +26,10 @@ public enum IconSize: String, CaseIterable {
     }
 }
 
+/// Icon system. The Figma design system uses Font Awesome Pro, which is a
+/// licensed font and cannot be bundled here. `Icon` renders an SF Symbol by
+/// default; to switch to Font Awesome, bundle the FA Pro `.ttf` and render a
+/// glyph with `IconSize.font` instead.
 public struct Icon: View {
     private let systemName: String
     private let size: IconSize

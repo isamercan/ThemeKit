@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference OTPInputView. A row of digit
-//  boxes backed by a single hidden field, with focus caret + error state.
-//
 
 import SwiftUI
 
+/// Improved, token-bound rewrite of the reference OTPInputView. A row of digit
+/// boxes backed by a single hidden field, with focus caret + error state.
 public struct OTPInput: View {
     @Binding private var code: String
     private let digitCount: Int

@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Ant-style List container: optional header/footer, bordered surface, row
-//  dividers (split), and a loading (skeleton) state. Generic over the item +
-//  row content; pairs naturally with `ListRow`.
-//
 
 import SwiftUI
 
+/// Ant-style List container: optional header/footer, bordered surface, row
+/// dividers (split), and a loading (skeleton) state. Generic over the item +
+/// row content; pairs naturally with `ListRow`.
 public struct ListView<Item: Identifiable, Row: View>: View {
     private let items: [Item]
     private let header: String?

@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Figma "Control Items" → Switch Toggles. Sizes Medium (40×24) / Small (32×20);
-//  states active / disabled / loading, with optional on/off glyphs in the knob.
-//  (Ant Switch parity.) Colors + motion from theme tokens.
-//
 
 import SwiftUI
 
+/// Figma "Control Items" → Switch Toggles. Sizes Medium (40×24) / Small (32×20);
+/// states active / disabled / loading, with optional on/off glyphs in the knob.
+/// (Ant Switch parity.) Colors + motion from theme tokens.
 public struct ThemeToggle: View {
     @Binding private var isOn: Bool
     private let size: ControlSize

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A review summary row: score badge + qualitative label + review
-//  count link. (Star display lives in the Rating atom.)
-//
 
 import SwiftUI
 
+/// Organism. A review summary row: score badge + qualitative label + review
+/// count link. (Star display lives in the Rating atom.)
 public struct RatingSummary: View {
     private let score: Double
     private let label: String?
