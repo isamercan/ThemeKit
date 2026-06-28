@@ -19,7 +19,8 @@ import SwiftUI
 /// `@unchecked Sendable` rather than `@MainActor`: actor-isolating it would force
 /// the whole nonisolated token layer (`SemanticColor`, `TextStyle`, `SpacingKey`,
 /// `ShapeStyle` conformances …) onto the main actor, which they don't need.
-public final class Theme: ObservableObject, @unchecked Sendable {
+@Observable
+public final class Theme: @unchecked Sendable {
 
     struct ThemeData: Codable {
         let colors: [AppColor]?
@@ -186,9 +187,8 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     public static let persistedConfigKey = "themeKitConfig"
 
     private func apply(_ decoded: ThemeData) {
-        // Signal subscribers BEFORE mutating (correct ObservableObject ordering)
-        // so every theme-reading view refreshes in the same render pass.
-        objectWillChange.send()
+        // Bumping `revision` (an @Observable-tracked property read by the root's
+        // `.id(theme.revision)`) drives the full-subtree refresh on theme change.
         revision += 1
         resetThemeState()
 

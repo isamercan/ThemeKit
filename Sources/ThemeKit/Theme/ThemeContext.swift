@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// Use this instead of repeating `@Environment(\.theme) private var theme`
 /// in views that need app-wide theme access. Inject the theme at the root with
-/// `.environmentObject(Theme.shared)` in pure SwiftUI flows or via
+/// `.environment(Theme.shared)` in pure SwiftUI flows or via
 /// `ThemedHostingController` in UIKit-hosted flows.
 ///
 /// Example:

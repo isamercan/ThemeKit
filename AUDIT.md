@@ -11,7 +11,7 @@
 
 ### Yürütme özeti (bu denetimden sonra uygulanan)
 - ✅ **P0** Swift 6 dil modu + upcoming flags (PR #82)
-- ✅ **P1** Observation `@Observable` (5 presenter + FormValidator) (PR #83)
+- ✅ **P1** Observation `@Observable` — 8/8 (5 presenter + FormValidator #83, **Theme** ayrı PR)
 - ✅ **P1** Liquid Glass chrome `.glassChrome()` (PR #84)
 - ✅ **P2** Swift Testing pilotu + `DateFieldStyle: Sendable` (PR #85)
 - ⏳ **P1 #4-5** (a11y audit + snapshot recording): **ortam-bağımlı** — Xcode UI-test target / test-scheme env konfigürasyonu gerektirir, güvenle script'lenemez (aşağıda).
@@ -41,7 +41,7 @@
 | Erişilebilirlik | **Partial** | VoiceOver/RTL var, Reduce Motion **118** kullanım — ama `performAccessibilityAudit` = **0** (otomatik a11y denetimi yok) |
 | Test çerçevesi | **Partial → improving** | Swift Testing **piloted** (SwiftTestingPilot.swift — parameterized `@Test`/`#expect`, XCTest'le yan yana çalışır); kalan 34 `XCTestCase` fırsatçı taşınır. Theming-injection regresyon testi eklendi. Snapshot 4 suite hâlâ ince |
 | **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
-| **Observation (frontier)** | **Solid** ✅ | 6/8 `@Observable`'a taşındı (5 presenter + FormValidator); `@Published` 0, `@StateObject`→`@State`, presenter env'i `@Environment(_.self)`. Yalnız `Theme` (`@unchecked Sendable` singleton + revision-repaint) bilinçli ertelendi |
+| **Observation (frontier)** | **Solid** ✅ | **8/8** `@Observable` — 5 presenter + FormValidator + **Theme** (core engine dahil). `@Published`/`@ObservedObject`/`@EnvironmentObject` 0; `.id(theme.revision)` repaint korundu (revision tracked), runtime tema-switch simulator'da doğrulandı (Ocean render) |
 | **Liquid Glass (frontier)** | **Solid** ✅ | `.glassChrome()` modifier (Extensions/GlassChrome.swift): `.glassEffect` on OS 26+, `Material` fallback 17–25, opaque fill under Reduce Transparency; adopted in Dialog + Drawer chrome. Gated & additive (iOS 17 min korunur) |
 | Magic-number spacing | **Partial** | 34 literal `.padding(n)` (token yerine); örn. Molecules/Tooltip.swift:196 `.padding(80)` |
 | Preview state-matrix | **Partial** | `PreviewMatrix` helper var (Utils/PreviewMatrix.swift) ama yalnız 3/108 component adopte (Tag/Stat/Avatar); 114 preview'ın çoğu tek-durum |
@@ -67,7 +67,7 @@
 
 **3. `ObservableObject` → `@Observable` (Observation)** — ✅ TAMAMLANDI (Theme hariç)
 - **Yapıldı:** 5 presenter (Drawer/Tour/BottomSheet/Upload/Feedback) + FormValidator `@Observable`'a taşındı; `@Published` 0, `@StateObject`→`@State`, presenter enjeksiyonu `.environmentObject`→`.environment` + okuma `@Environment(_.self)`. 163 test + Demo (gerçek tüketici, güncellendi) yeşil.
-- **Ertelendi — Theme:** `@unchecked Sendable` singleton, root'ta `@ObservedObject` ile revision-tabanlı repaint (Theme/ThemeKit.swift:45). Core engine olduğundan ayrı odaklı bir çalışma; `@Observable`'a taşımak theming pipeline'ını riske atar.
+- **Theme de tamamlandı (ayrı PR):** `@Observable public final class Theme: @unchecked Sendable`; `objectWillChange.send()` kaldırıldı (revision bump @Observable tracking'i tetikler), root `@ObservedObject`→plain `let` + `.environmentObject`→`.environment`, tek `@EnvironmentObject Theme` consumer'ı `@Environment(Theme.self)`'e. `.id(theme.revision)` full-rebuild repaint'i korundu. Doğrulama: 163 test + revision-bump testi + Demo Ocean global temada render (teal accent).
 
 **4. Otomatik a11y denetimi (`performAccessibilityAudit`)** — ⏳ ORTAM-BAĞIMLI
 - **Durum:** `performAccessibilityAudit()` yalnız `XCUIApplication` üzerinde çalışır → Demo.xcodeproj'a bir **UI-test target'ı** (pbxproj target + scheme) eklenmesi gerekir. Bu, script ile güvenle yapılamaz (projeyi bozma riski); Xcode'da tek seferlik manuel kurulum gerektirir. Test kodu hazır yazılabilir, target bağlama kullanıcıya kalır.

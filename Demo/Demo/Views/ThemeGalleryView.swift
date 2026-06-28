@@ -130,6 +130,6 @@ struct ThemeGalleryView: View {
 
 #Preview {
     ThemeGalleryView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

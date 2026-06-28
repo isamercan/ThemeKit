@@ -57,6 +57,6 @@ struct CatalogView: View {
 
 #Preview {
     CatalogView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

@@ -106,4 +106,18 @@ final class ThemeInjectionTests: XCTestCase {
         let after = try XCTUnwrap(pixels(ThemeSwatch()))
         XCTAssertEqual(before, after, "Injecting `.theme(_:)` must not change `Theme.shared` rendering.")
     }
+
+    /// `revision` (read by the root's `.id(theme.revision)`) must bump on every theme
+    /// application — the data-layer trigger for the full-subtree repaint. Guards the
+    /// @Observable Theme migration: if it stops bumping, runtime theme switches stop
+    /// repainting.
+    func testThemeApplicationBumpsRevision() {
+        let theme = Theme()
+        let r0 = theme.revision
+        theme.loadTheme(named: "oceanTheme")
+        XCTAssertGreaterThan(theme.revision, r0, "loadTheme must bump revision (drives the .id repaint).")
+        let r1 = theme.revision
+        theme.applyGenerated(primaryHex: "7C3AED")
+        XCTAssertGreaterThan(theme.revision, r1, "apply must bump revision.")
+    }
 }

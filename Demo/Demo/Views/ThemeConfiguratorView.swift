@@ -235,6 +235,6 @@ extension Color {
 
 #Preview {
     ThemeConfiguratorView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }
