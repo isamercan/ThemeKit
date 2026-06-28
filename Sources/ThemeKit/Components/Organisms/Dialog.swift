@@ -55,7 +55,7 @@ struct DialogCard: View {
                     PrimaryButton(primaryTitle, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 }
                 if let secondaryTitle, let onSecondary {
-                    OutlineButton(secondaryTitle, isEnabled: .constant(!isPrimaryLoading), action: onSecondary)
+                    OutlineButton(secondaryTitle, action: onSecondary).disabled(isPrimaryLoading)
                 }
             }
         }
