@@ -27,8 +27,14 @@ struct ThemeInjectionDemo: View {
         ]
     }()
 
-    @State private var selected = "Default"
+    @State private var selected = ThemeInjectionDemo.initialSelection
     private var active: Theme { Self.options.first { $0.name == selected }?.theme ?? Theme.shared }
+
+    /// Deep-link the starting theme for screenshots: launch with `-injectTheme <name>`.
+    private static var initialSelection: String {
+        let arg = UserDefaults.standard.string(forKey: "injectTheme") ?? "Default"
+        return options.contains { $0.name == arg } ? arg : "Default"
+    }
 
     var body: some View {
         ComponentStage(
