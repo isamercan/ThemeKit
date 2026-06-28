@@ -31,7 +31,7 @@
 | Dokümantasyon | **Solid** | DocC katalog + 6 article (Sources/ThemeKit/Documentation.docc), 86 struct'ta `///` |
 | CI / tooling | **Solid** | ci.yml + docs.yml, .swiftlint.yml + .swiftformat, api-breakage gate PR'da (ci.yml:57) |
 | Erişilebilirlik | **Partial** | VoiceOver/RTL var, Reduce Motion **118** kullanım — ama `performAccessibilityAudit` = **0** (otomatik a11y denetimi yok) |
-| Test çerçevesi | **Partial** | 34 `XCTestCase`, Swift Testing (`@Test`/`#expect`) = **0**; snapshot 4 suite (~108 component'e karşı, opt-in/iOS-only) |
+| Test çerçevesi | **Partial → improving** | Swift Testing **piloted** (SwiftTestingPilot.swift — parameterized `@Test`/`#expect`, XCTest'le yan yana çalışır); kalan 34 `XCTestCase` fırsatçı taşınır. Theming-injection regresyon testi eklendi. Snapshot 4 suite hâlâ ince |
 | **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
 | **Observation (frontier)** | **Solid** ✅ | 6/8 `@Observable`'a taşındı (5 presenter + FormValidator); `@Published` 0, `@StateObject`→`@State`, presenter env'i `@Environment(_.self)`. Yalnız `Theme` (`@unchecked Sendable` singleton + revision-repaint) bilinçli ertelendi |
 | **Liquid Glass (frontier)** | **Solid** ✅ | `.glassChrome()` modifier (Extensions/GlassChrome.swift): `.glassEffect` on OS 26+, `Material` fallback 17–25, opaque fill under Reduce Transparency; adopted in Dialog + Drawer chrome. Gated & additive (iOS 17 min korunur) |

@@ -7,7 +7,7 @@
 import SwiftUI
 
 /// How the chosen date renders inside the field.
-public enum DateFieldStyle: Equatable {
+public enum DateFieldStyle: Equatable, Sendable {
     case numeric        // 1/5/2026
     case abbreviated    // Jan 5, 2026   (default)
     case long           // January 5, 2026
