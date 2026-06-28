@@ -60,12 +60,16 @@ public struct ListView<Item: Identifiable, Row: View>: View {
             } else if items.isEmpty {
                 emptyRow
             } else {
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                    rowContent(item)
-                        .padding(.horizontal, Theme.SpacingKey.md.value)
-                        .padding(.vertical, Theme.SpacingKey.sm.value)
-                    if split && index < items.count - 1 {
-                        DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                // Lazy so a long list inside a ScrollView only builds visible rows
+                // (a no-op cost when used standalone / unscrolled).
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        rowContent(item)
+                            .padding(.horizontal, Theme.SpacingKey.md.value)
+                            .padding(.vertical, Theme.SpacingKey.sm.value)
+                        if split && index < items.count - 1 {
+                            DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                        }
                     }
                 }
             }
