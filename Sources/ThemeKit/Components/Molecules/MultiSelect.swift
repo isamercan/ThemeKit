@@ -174,7 +174,8 @@ public struct MultiSelect<Option: Hashable>: View {
                     let enabled = optionEnabled(opt)
                     Button { toggle(opt) } label: {
                         HStack(spacing: Theme.SpacingKey.sm.value) {
-                            Checkbox(isChecked: .constant(selection.contains(opt)), size: .small)
+                            Checkbox(isChecked: .constant(selection.contains(opt)))
+                                .controlSize(.small)
                                 .allowsHitTesting(false)
                             Text(optionTitle(opt))
                                 .textStyle(.bodyBase400)

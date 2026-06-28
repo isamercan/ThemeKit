@@ -13,7 +13,7 @@ public struct ThemeToggle: View {
     @Environment(\.theme) private var theme
 
     @Binding private var isOn: Bool
-    private let size: ControlSize
+    @Environment(\.controlSize) private var controlSize
     private let isEnabled: Bool
     private let isLoading: Bool
     private let onSystemImage: String?
@@ -26,22 +26,21 @@ public struct ThemeToggle: View {
 
     public init(
         isOn: Binding<Bool>,
-        size: ControlSize = .medium,
         isEnabled: Bool = true,
         isLoading: Bool = false,
         onSystemImage: String? = nil,
         offSystemImage: String? = nil
     ) {
         self._isOn = isOn
-        self.size = size
         self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.onSystemImage = onSystemImage
         self.offSystemImage = offSystemImage
     }
 
-    private var trackWidth: CGFloat { size == .medium ? 40 : 32 }
-    private var trackHeight: CGFloat { size == .medium ? 24 : 20 }
+    private var isCompact: Bool { controlSize == .mini || controlSize == .small }
+    private var trackWidth: CGFloat { isCompact ? 32 : 40 }
+    private var trackHeight: CGFloat { isCompact ? 20 : 24 }
     private var knobSize: CGFloat { trackHeight - 4 }
     private var interactive: Bool { isEnabled && !isLoading }
 
@@ -93,7 +92,7 @@ public struct ThemeToggle: View {
     VStack(alignment: .leading, spacing: 16) {
         ThemeToggle(isOn: .constant(true))
         ThemeToggle(isOn: .constant(false))
-        ThemeToggle(isOn: .constant(true), size: .small)
+        ThemeToggle(isOn: .constant(true)).controlSize(.small)
         ThemeToggle(isOn: .constant(true), onSystemImage: "checkmark", offSystemImage: "xmark")
         ThemeToggle(isOn: .constant(true), isLoading: true)
         ThemeToggle(isOn: .constant(true), isEnabled: false)
