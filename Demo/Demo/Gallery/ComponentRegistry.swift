@@ -172,7 +172,7 @@ enum ComponentRegistry {
         .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i)"#),
         .knob("SelectionCards", .organisms, demo: SelectionCardsDemo(), usage: #"RadioCard("Standard", description: "…", isSelected: sel == id) { sel = id }"#),
         .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@State var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),
-        .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items, autoplay: 2, showsArrows: true) { item in mediaView }"#),
+        .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items, peek: 36, autoplay: 2) { item in mediaView }"#),
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url, autoplay: true, loop: true, muted: true)"#),
         .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Özet", bordered: true)"#) {
