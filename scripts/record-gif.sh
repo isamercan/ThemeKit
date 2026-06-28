@@ -21,7 +21,7 @@ DEVICE="${RECORD_DEVICE:-iPhone 17 Pro}"
 DERIVED=".build/demo"
 mkdir -p Screenshots
 
-echo "▸ Booting $DEVICE…"
+echo "▸ Booting ${DEVICE}…"
 UDID=$(xcrun simctl list devices available | grep -F "$DEVICE (" | head -1 | grep -oE '[0-9A-Fa-f-]{36}')
 [ -n "$UDID" ] || { echo "✗ no available '$DEVICE' simulator"; exit 1; }
 xcrun simctl boot "$UDID" 2>/dev/null || true
