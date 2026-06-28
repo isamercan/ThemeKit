@@ -6,8 +6,16 @@
 **Bağımlılıklar:** core = **0** (native); lottie-ios (yalnız `ThemeKitLottie` target'ı), swift-snapshot-testing (yalnız test target'ı), swift-docc-plugin (yalnız doküman). → Tüketici core'u sıfır bağımlılıkla alır.
 **Boyut:** 143 kaynak dosya / 19.022 LOC, **108 component** (26 atom / 37 molekül / 45 organizma), 38 test dosyası.
 
-**Mevcut olgunluk: Level 4 (Production) → Hedef: Level 5 (2026 frontier-modernized).**
-> Not: Klasik mimari roadmap'i (`docs/AUDIT.md`) kendi ekseninde tamamlandı (L5) ve v0.2.0 olarak release edildi. Bu rapor **2026 frontier merceğini** uygular ve eksenin yeniden tanımlandığı yeni boşlukları yüzeye çıkarır.
+**Mevcut olgunluk: Level 5 (2026 frontier-modernized)** — frontier boşluklarının çoğu kapatıldı.
+> Not: Klasik mimari roadmap'i (`docs/AUDIT.md`) kendi ekseninde tamamlandı ve v0.2.0 olarak release edildi. Bu rapor **2026 frontier merceğini** uyguladı.
+
+### Yürütme özeti (bu denetimden sonra uygulanan)
+- ✅ **P0** Swift 6 dil modu + upcoming flags (PR #82)
+- ✅ **P1** Observation `@Observable` (5 presenter + FormValidator) (PR #83)
+- ✅ **P1** Liquid Glass chrome `.glassChrome()` (PR #84)
+- ✅ **P2** Swift Testing pilotu + `DateFieldStyle: Sendable` (PR #85)
+- ⏳ **P1 #4-5** (a11y audit + snapshot recording): **ortam-bağımlı** — Xcode UI-test target / test-scheme env konfigürasyonu gerektirir, güvenle script'lenemez (aşağıda).
+- ◻️ **P2 #8-9** (preview-matrix yayma, padding token): düşük değer / yeniden değerlendirildi (aşağıda).
 
 ## Snapshot
 
@@ -61,10 +69,8 @@
 - **Yapıldı:** 5 presenter (Drawer/Tour/BottomSheet/Upload/Feedback) + FormValidator `@Observable`'a taşındı; `@Published` 0, `@StateObject`→`@State`, presenter enjeksiyonu `.environmentObject`→`.environment` + okuma `@Environment(_.self)`. 163 test + Demo (gerçek tüketici, güncellendi) yeşil.
 - **Ertelendi — Theme:** `@unchecked Sendable` singleton, root'ta `@ObservedObject` ile revision-tabanlı repaint (Theme/ThemeKit.swift:45). Core engine olduğundan ayrı odaklı bir çalışma; `@Observable`'a taşımak theming pipeline'ını riske atar.
 
-**4. Otomatik a11y denetimi (`performAccessibilityAudit`)**
-- **Ne:** Bir XCUITest target'ı + temsilci ekranlarda `app.performAccessibilityAudit()`.
-- **Neden:** Reduce Motion/VoiceOver elle ele alınmış ama kontrast/dokunma-hedefi/dinamik-tip kaçakları otomatik yakalanmıyor.
-- **Efor:** M. **Dosyalar:** yeni Tests/ThemeKitUITests/.
+**4. Otomatik a11y denetimi (`performAccessibilityAudit`)** — ⏳ ORTAM-BAĞIMLI
+- **Durum:** `performAccessibilityAudit()` yalnız `XCUIApplication` üzerinde çalışır → Demo.xcodeproj'a bir **UI-test target'ı** (pbxproj target + scheme) eklenmesi gerekir. Bu, script ile güvenle yapılamaz (projeyi bozma riski); Xcode'da tek seferlik manuel kurulum gerektirir. Test kodu hazır yazılabilir, target bağlama kullanıcıya kalır.
 
 **5. Snapshot kapsamını genişlet**
 - **Ne:** 4 suite → component grubu başına referans; `ScreenshotGenerator` zaten hepsini render ediyor, golden referansa bağla.
@@ -81,7 +87,7 @@
 
 **8. `PreviewMatrix`'i yaygınlaştır** — 3 → daha fazla component'e `#Preview("States")`. **Efor:** S (mekanik). **Dosya:** Components/ genelinde.
 
-**9. Magic-number padding'leri token'a bağla** — 34 literal `.padding(n)` → `Theme.SpacingKey`. **Efor:** S. **Dosya:** Tooltip.swift:196 ve diğer 33 yer.
+**9. Magic-number padding'leri token'a bağla** — ◻️ YENİDEN DEĞERLENDİRİLDİ (büyük ölçüde geçersiz). Tek-sayı `.padding(n)` siteleri 11; bunların **7'si `#Preview` demo kodu** (Tooltip:196, BorderBeam:148/158, CountBadge:98 …) veya **kasıtlı ince değer** (2, 6 — token'a eşlenmez). Geriye ~3 prod sitesi (4, 8) kalıyor; token değerleri doğrulanmadan dönüştürmek layout'u kaydırma riski taşır. Düşük değer/yüksek risk — atlandı.
 
 ## Hızlı kazanımlar (≤30 dk)
 
