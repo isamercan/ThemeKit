@@ -27,6 +27,8 @@ public enum DividerTextAlign { case leading, center, trailing }
 /// optional inline text label (left / center / right). (Ant Divider parity.)
 /// Colors come exclusively from the active theme.
 public struct DividerView: View {
+    @Environment(\.theme) private var theme
+
     private let size: DividerViewSize
     private let axis: DividerAxis
     private let dashed: Bool
@@ -59,7 +61,7 @@ public struct DividerView: View {
                     line(vertical: false).frame(maxWidth: .infinity).frame(width: titleAlign == .leading ? 16 : nil)
                     Text(title)
                         .textStyle(.labelSm600)
-                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                        .foregroundStyle(theme.text(.textTertiary))
                         .fixedSize()
                     line(vertical: false).frame(maxWidth: .infinity).frame(width: titleAlign == .trailing ? 16 : nil)
                 }
@@ -76,17 +78,17 @@ public struct DividerView: View {
         VStack(spacing: 0) {
             switch size {
             case .small:
-                Theme.shared.border(.borderPrimary).frame(height: 1)
+                theme.border(.borderPrimary).frame(height: 1)
             case .medium, .large:
-                Theme.shared.border(.borderPrimary).frame(height: 1)
-                Theme.shared.background(.bgElevatorPrimary).frame(height: size.height - 1)
+                theme.border(.borderPrimary).frame(height: 1)
+                theme.background(.bgElevatorPrimary).frame(height: size.height - 1)
             }
         }
     }
 
     private func line(vertical: Bool) -> some View {
         LineShape(vertical: vertical)
-            .stroke(Theme.shared.border(.borderPrimary),
+            .stroke(theme.border(.borderPrimary),
                     style: StrokeStyle(lineWidth: 1, dash: dashed ? [4, 4] : []))
     }
 }

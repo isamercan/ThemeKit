@@ -10,6 +10,8 @@ import SwiftUI
 /// UnderlineText by using AttributedString + openURL routing instead of manual
 /// NSRange math.
 public struct InlineText: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let links: [(substring: String, action: () -> Void)]
     private let baseColor: Color?
@@ -37,10 +39,10 @@ public struct InlineText: View {
     private var attributed: AttributedString {
         var string = AttributedString(text)
         string.font = style.font
-        string.foregroundColor = baseColor ?? Theme.shared.text(.textSecondary)
+        string.foregroundColor = baseColor ?? theme.text(.textSecondary)
         for (index, link) in links.enumerated() {
             if let range = string.range(of: link.substring) {
-                string[range].foregroundColor = Theme.shared.text(.textHero)
+                string[range].foregroundColor = theme.text(.textHero)
                 string[range].underlineStyle = .single
                 string[range].link = URL(string: "inline:\(index)")
             }

@@ -22,6 +22,8 @@ public enum ProgressStatus {
 /// a segmented (steps) variant and a custom format label. (Ant Progress parity.)
 /// Plus a segmented `StepIndicator`.
 public struct ProgressBar: View {
+    @Environment(\.theme) private var theme
+
     private let value: Double
     private let height: CGFloat
     private let showPercentage: Bool
@@ -77,7 +79,7 @@ public struct ProgressBar: View {
         self.accessibilityLabelText = accessibilityLabel
     }
 
-    private var trackColor: Color { trailColor ?? Theme.shared.border(.borderPrimary) }
+    private var trackColor: Color { trailColor ?? theme.border(.borderPrimary) }
 
     /// Spoken/displayed percentage. Rounded mid-range (0.756 → "76%", not "75%"),
     /// but capped at 99% until the value is actually complete, so the label can
@@ -132,7 +134,7 @@ public struct ProgressBar: View {
         } else if showPercentage {
             Text(percentText)
                 .textStyle(.labelSm600)
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
                 .frame(minWidth: 40, alignment: .trailing)
         }
     }
@@ -150,6 +152,8 @@ public struct ProgressBar: View {
 
 /// Segmented step indicator (e.g. carousels / onboarding).
 public struct StepIndicator: View {
+    @Environment(\.theme) private var theme
+
     private let current: Int
     private let total: Int
 
@@ -166,7 +170,7 @@ public struct StepIndicator: View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             ForEach(0..<max(total, 0), id: \.self) { index in
                 Capsule()
-                    .fill(index == current ? Theme.shared.background(.bgHero) : Theme.shared.border(.borderPrimary))
+                    .fill(index == current ? theme.background(.bgHero) : theme.border(.borderPrimary))
                     .frame(width: index == current ? 20 : 6, height: 6)
                     .animation(motion, value: current)
             }

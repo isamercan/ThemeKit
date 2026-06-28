@@ -31,6 +31,8 @@ public enum RemoteImageRatio {
 /// aspect ratio (number or "16:9" string) + shimmer placeholder + failure state.
 /// Covers the reference `ImageView`/`CustomImageView` role.
 public struct RemoteImage: View {
+    @Environment(\.theme) private var theme
+
     private let url: URL?
     private let aspectRatio: CGFloat?
     private let contentMode: ContentMode
@@ -96,8 +98,8 @@ public struct RemoteImage: View {
     @ViewBuilder
     private func placeholder(icon: String?) -> some View {
         ZStack {
-            Theme.shared.background(.bgSecondaryLight)
-            if let icon { Icon(systemName: icon, size: .lg, color: Theme.shared.text(.textTertiary)) }
+            theme.background(.bgSecondaryLight)
+            if let icon { Icon(systemName: icon, size: .lg, color: theme.text(.textTertiary)) }
         }
         .skeleton(icon == nil)
     }

@@ -20,6 +20,8 @@ public enum RatingLayout {
 /// fill (display) or half-step interaction, a tappable review count, a custom
 /// character and a disabled state. (Reference RatingView parity + interactive.)
 public struct Rating: View {
+    @Environment(\.theme) private var theme
+
     private let value: Double
     private let maxValue: Int
     private let size: CGFloat
@@ -95,19 +97,19 @@ public struct Rating: View {
         case .numberRate:
             Text(String(format: "%.1f", value))
                 .font(.system(size: size * 1.15, weight: .bold))
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
             Image(systemName: "\(systemImage).fill")
                 .font(.system(size: size))
-                .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+                .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
         case .rateNumberText:
             Text(String(format: "%.1f", value))
                 .font(.system(size: size * 1.15, weight: .bold))
-                .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+                .foregroundStyle(theme.foreground(.fgSecondary))
                 .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(Theme.shared.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+                .background(theme.background(.bgHero), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             Text(resolvedSentiment)
                 .font(.system(size: size, weight: .semibold))
-                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .foregroundStyle(theme.text(.textPrimary))
         }
     }
 
@@ -191,7 +193,7 @@ public struct Rating: View {
             ForEach(1...maxValue, id: \.self) { _ in
                 Image(systemName: filled ? "\(systemImage).fill" : systemImage)
                     .font(.system(size: size))
-                    .foregroundStyle(filled ? Theme.shared.foreground(.systemcolorsFgWarning) : Theme.shared.border(.borderPrimary))
+                    .foregroundStyle(filled ? theme.foreground(.systemcolorsFgWarning) : theme.border(.borderPrimary))
             }
         }
     }
@@ -202,11 +204,11 @@ public struct Rating: View {
             let text = Text(countLabel).textStyle(.bodySm400)
             if let onReviewTap {
                 Button(action: onReviewTap) {
-                    text.underline().foregroundStyle(Theme.shared.text(.textHero))
+                    text.underline().foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
             } else {
-                text.foregroundStyle(Theme.shared.text(.textTertiary))
+                text.foregroundStyle(theme.text(.textTertiary))
             }
         }
     }
@@ -223,8 +225,8 @@ public struct Rating: View {
 
     private func color(for index: Int) -> Color {
         value >= Double(index) - 0.5
-            ? Theme.shared.foreground(.systemcolorsFgWarning)
-            : Theme.shared.border(.borderPrimary)
+            ? theme.foreground(.systemcolorsFgWarning)
+            : theme.border(.borderPrimary)
     }
 
     private func star(for index: Int) -> Image {
