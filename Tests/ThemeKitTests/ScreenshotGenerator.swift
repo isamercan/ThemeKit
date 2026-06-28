@@ -36,6 +36,10 @@ final class ScreenshotGenerator: XCTestCase {
     /// the README gallery can be rebuilt grouped, without duplicating this list.
     private var manifest: [(String, String)] = []
     private var category = ""
+    /// Active appearance for the current render pass — drives the file suffix
+    /// (`<name>` vs `<name>-dark`) and the backdrop, so the README can serve a
+    /// `<picture>` that follows the reader's color scheme.
+    private var scheme: ColorScheme = .light
 
     /// Identifiable stand-in + colored tiles for the media containers (Carousel /
     /// Gallery / CardStack) so they render without network images.
@@ -55,12 +59,19 @@ final class ScreenshotGenerator: XCTestCase {
             ProcessInfo.processInfo.environment["GENERATE_SCREENSHOTS"] == "1",
             "Set GENERATE_SCREENSHOTS=1 to render component screenshots."
         )
-        Theme.shared.loadTheme(named: "defaultTheme")
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-        category = "Atoms"; atoms()
-        category = "Molecules"; molecules()
-        category = "Organisms"; organisms()
-        category = "Guides"; shot("ThemeInjection", themeInjectionProof())
+
+        func renderAll() {
+            category = "Atoms"; atoms()
+            category = "Molecules"; molecules()
+            category = "Organisms"; organisms()
+            category = "Guides"; shot("ThemeInjection", themeInjectionProof())
+        }
+
+        // Light pass → `<name>.png` (+ manifest). Dark pass → `<name>-dark.png`.
+        scheme = .light; Theme.shared.loadTheme(named: "defaultTheme", dark: false); renderAll()
+        scheme = .dark;  Theme.shared.loadTheme(named: "defaultTheme", dark: true);  renderAll()
+        Theme.shared.loadTheme(named: "defaultTheme", dark: false)   // restore
 
         let tsv = manifest.map { "\($0.0)\t\($0.1)" }.joined(separator: "\n") + "\n"
         try tsv.write(to: outDir.appendingPathComponent("manifest.tsv"), atomically: true, encoding: .utf8)
@@ -349,16 +360,21 @@ final class ScreenshotGenerator: XCTestCase {
     }
 
     private func shot(_ name: String, _ view: some View, hosted: Bool = false) {
-        let decorated = view.padding(16).background(Theme.shared.background(.bgWhite))
+        // The backdrop reads the active theme's surface, so loading the dark theme
+        // (in `testGenerateAll`) makes both component + backdrop dark.
+        let decorated = view.padding(16)
+            .background(Theme.shared.background(.bgWhite))
+            .environment(\.colorScheme, scheme)
         let cg = hosted ? hostedCGImage(decorated) : imageRendererCGImage(decorated)
         guard let cg else { XCTFail("\(name): no image"); return }
-        let url = outDir.appendingPathComponent("\(name).png")
+        let fileName = scheme == .dark ? "\(name)-dark" : name
+        let url = outDir.appendingPathComponent("\(fileName).png")
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
             XCTFail("\(name): no PNG destination"); return
         }
         CGImageDestinationAddImage(dest, cg, nil)
         CGImageDestinationFinalize(dest)
-        manifest.append((category, name))
+        if scheme == .light { manifest.append((category, name)) }   // manifest = one row per component
     }
 
     private func imageRendererCGImage(_ view: some View) -> CGImage? {

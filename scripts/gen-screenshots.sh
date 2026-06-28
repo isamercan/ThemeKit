@@ -31,7 +31,7 @@ emit_category() {
         local i=0
         while IFS= read -r name; do
             [ "$((i % COLS))" -eq 0 ] && echo "<tr>"
-            printf '<td align="center" width="33%%"><img src="Screenshots/%s.png" width="240" alt="%s"><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$name"
+            printf '<td align="center" width="33%%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/%s-dark.png"><img src="Screenshots/%s.png" width="240" alt="%s"></picture><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$name" "$name"
             i=$((i + 1))
             [ "$((i % COLS))" -eq 0 ] && echo "</tr>"
         done <<< "$names"
