@@ -13,6 +13,8 @@
 import SwiftUI
 
 private struct PopconfirmModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
     @Binding var isPresented: Bool
     let title: String
     let message: String?
@@ -44,11 +46,11 @@ private struct PopconfirmModifier: ViewModifier {
     private var card: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "exclamationmark.circle.fill", size: .sm, color: Theme.shared.foreground(.systemcolorsFgWarning))
+                Icon(systemName: "exclamationmark.circle.fill", size: .sm, color: theme.foreground(.systemcolorsFgWarning))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).textStyle(.labelBase600).foregroundStyle(Theme.shared.text(.textPrimary))
+                    Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     if let message {
-                        Text(message).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                        Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                     }
                 }
             }
@@ -69,8 +71,8 @@ private struct PopconfirmModifier: ViewModifier {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(width: 260)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
         .themeShadow(.elevated)
     }
 }
