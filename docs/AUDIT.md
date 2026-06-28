@@ -23,7 +23,7 @@ singleton; the rest is polish and discipline.
 |---|---|---|
 | A. Structure | Solid | tokens→atoms→molecules→organisms, 1 file/component, 2 products (Lottie isolated), 781 public (deliberate) |
 | B. Tokens | Solid | JSON + generator semantic tokens, light+dark, Dynamic Type, only 6 hardcoded colors |
-| C. Theming | Solid | runtime theming + `\.theme` environment rolled out across all 580 view-body reads (#57, #66–#68); per-subtree theming works. ~156 static (enum/init/presenter) reads remain on the singleton by design |
+| C. Theming | Solid | runtime theming + `\.theme` environment fully rolled out (#57, #66–#73): 719/736 reads honor an injected subtree theme; the 17 left are `#Preview` demo code / a doc comment / structurally-static defaults, by design |
 | D. API design | Solid | ButtonStyle/BadgeStyle patterns, slot composition; no VM in leaf components (the 7 ObservableObjects are presenters in organisms) |
 | E. State & data flow | Solid | value-driven (`let`+`@Binding`), no business logic in leaves |
 | F. Accessibility | Solid | VoiceOver labels/traits, Slider adjustable action, Reduce Motion (micro-motion), RTL, a11y semantics tests |
@@ -39,7 +39,14 @@ singleton; the rest is polish and discipline.
 
 ### P0 — structural lever
 - [x] **`\.theme` environment injection** (PR #57) — `EnvironmentValues.theme` defaulting to `Theme.shared` (crash-proof, backward compatible) + `.theme(_:)` override; pilot `Card`/`Tag` migrated; +2 tests.
-- [x] **Full singleton → environment rollout** (PRs #66–#68) — the **view-body** migration is done across all three layers: **580 reads** (Atoms 66 · Molecules 333 · Organisms 181) now resolve `\.theme` from the environment, so an injected `.theme(_:)` re-skins any subtree. Compiler-guarded and pixel-verified (every regenerated screenshot byte-identical; default render unchanged because `\.theme` defaults to `Theme.shared`). The remaining ~156 reads are *static* contexts that can't read environment — `BadgeStyle`/`SemanticColor` enum resolvers, `init` defaults, `ButtonStyle` inner-views, and the 7 `ObservableObject` presenters — which need an explicit theme *parameter* (not environment) to be subtree-themeable; that parameterization is a separate, lower-value pass.
+- [x] **Full singleton → environment rollout** (PRs #66–#73) — done. **719 of 736 reads** now resolve `\.theme` from the environment, so an injected `.theme(_:)` re-skins any subtree.
+  - **View bodies** (#66–#68): 580 reads across Atoms (66) · Molecules (333) · Organisms (181).
+  - **Private / sub-directory Views the first matcher skipped** (#70): 33 reads (`private struct`s + `Buttons/`).
+  - **Enum color resolvers** (#71): 78 reads — `BadgeStyle`/`InfoBannerType`/`StatTrend`/… converted from `var x: Color` to `func x(_ theme:)`, with each owning View passing its `@Environment(\.theme)` (internal members, no public API change).
+  - **Overlay host `ViewModifier`s** (#72): 21 reads — Feedback/Tour/Popconfirm/Dialog.
+  - **Extension-method statics** (#73): 7 reads — inline content extracted into small `@Environment`-reading wrapper Views (CountBadge/Indicator/ButtonDock/RollingNumber/BorderBeam).
+  - Every step is compiler-guarded and pixel-verified (regenerated screenshots byte-identical; default render unchanged because `\.theme` defaults to `Theme.shared`).
+  - **Irreducible floor — 17 reads, by design:** `#Preview` demo code (no injected theme; the singleton is correct there), one doc-comment mention, DataTable's nested `Column` (a non-View value type), and Hero's `Background == Color` convenience default (the generic constrains the default to a `Color` *value*, which can't read the environment).
 
 ### P1 — high leverage
 - [x] **Lazy row stacks** (PR #58) — `LazyVStack` for `ListView`/`DataTable` rows.
