@@ -194,8 +194,8 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Steps", Steps([.init("Cart", description: "2 items", systemImage: "cart", state: .done),
                              .init("Payment", description: "Card", state: .active),
                              .init("Done", state: .todo)]).frame(width: 360))
-        shot("Slider", ThemeKit.Slider(value: .constant(4), in: 0...8, label: "Guests",
-                                       marks: [0: "0", 4: "4", 8: "8"], showValueTooltip: false).frame(width: 300))
+        shot("Slider", ThemeKit.Slider(value: .constant(4), in: 0...8, label: "Guests")
+                                       .marks([0: "0", 4: "4", 8: "8"]).frame(width: 300))
         shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("İstanbul")]).frame(width: 320))
         shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
         shot("FileInput", FileInput(label: "Passport", fileName: "passport-scan.jpg", onPick: {}, onClear: {}).frame(width: 320))

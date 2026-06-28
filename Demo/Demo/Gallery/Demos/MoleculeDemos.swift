@@ -241,16 +241,16 @@ struct SliderDemo: View {
     var body: some View {
         ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal"), ("onChangeEnd", committed)]) {
             if vertical {
-                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
-                                          axis: .vertical, verticalHeight: 180,
-                                          onChangeEnd: { committed = "\(Int($0))" })
-                .disabled(!enabled)
+                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))")
+                    .axis(.vertical, height: 180)
+                    .onChangeEnd { committed = "\(Int($0))" }
+                    .disabled(!enabled)
             } else {
-                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))",
-                                          marks: marks ? [0: "0", 4: "4", 8: "8"] : [:],
-                                          showValueTooltip: tooltip,
-                                          onChangeEnd: { committed = "\(Int($0))" })
-                .disabled(!enabled)
+                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))")
+                    .marks(marks ? [0: "0", 4: "4", 8: "8"] : [:])
+                    .showsValueTooltip(tooltip)
+                    .onChangeEnd { committed = "\(Int($0))" }
+                    .disabled(!enabled)
             }
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value, in: 0...8, step: 1) }

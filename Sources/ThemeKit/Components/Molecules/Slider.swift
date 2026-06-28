@@ -16,13 +16,14 @@ public struct Slider: View {
     private let bounds: ClosedRange<Double>
     private let step: Double
     private let label: String?
-    private let marks: [Double: String]
-    private let axis: Axis
-    private let verticalHeight: CGFloat
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
-    private let showValueTooltip: Bool
-    private let onChangeEnd: ((Double) -> Void)?
+    // Opt-in presentation — set via chainable modifiers.
+    private var marks: [Double: String] = [:]
+    private var axis: Axis = .horizontal
+    private var verticalHeight: CGFloat = 160
+    private var showValueTooltip: Bool = false
+    private var onChangeEnd: ((Double) -> Void)? = nil
 
     @State private var dragging = false
     @State private var dragStartValue: Double?
@@ -34,22 +35,12 @@ public struct Slider: View {
         value: Binding<Double>,
         in bounds: ClosedRange<Double>,
         step: Double = 1,
-        label: String? = nil,
-        marks: [Double: String] = [:],
-        axis: Axis = .horizontal,
-        verticalHeight: CGFloat = 160,
-        showValueTooltip: Bool = false,
-        onChangeEnd: ((Double) -> Void)? = nil
+        label: String? = nil
     ) {
         self._value = value
         self.bounds = bounds
         self.step = step
         self.label = label
-        self.marks = marks
-        self.axis = axis
-        self.verticalHeight = verticalHeight
-        self.showValueTooltip = showValueTooltip
-        self.onChangeEnd = onChangeEnd
     }
 
     /// Clamp + snap to step, commit, and fire the change-end callback (used by the
@@ -222,8 +213,8 @@ public struct Slider: View {
         @State var v: Double = 4
         var body: some View {
             VStack(spacing: 32) {
-                Slider(value: $v, in: 0...8, label: "Volume \(Int(v))", showValueTooltip: true)
-                Slider(value: $v, in: 0...8, step: 2, marks: [0: "0", 4: "Mid", 8: "Max"])
+                Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip()
+                Slider(value: $v, in: 0...8, step: 2).marks([0: "0", 4: "Mid", 8: "Max"])
                 Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true)
             }
             .padding()
@@ -236,4 +227,15 @@ public extension Slider {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
     func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+
+    /// Labeled tick marks at the given values (e.g. `[0: "0", 4: "Mid", 8: "Max"]`).
+    func marks(_ marks: [Double: String]) -> Self { var copy = self; copy.marks = marks; return copy }
+    /// Lays the slider out vertically with the given track height (default 160).
+    func axis(_ axis: Axis, height: CGFloat = 160) -> Self {
+        var copy = self; copy.axis = axis; copy.verticalHeight = height; return copy
+    }
+    /// Shows a value tooltip above the thumb while dragging.
+    func showsValueTooltip(_ on: Bool = true) -> Self { var copy = self; copy.showValueTooltip = on; return copy }
+    /// Fires with the snapped value when a drag ends (not on every step).
+    func onChangeEnd(_ action: ((Double) -> Void)?) -> Self { var copy = self; copy.onChangeEnd = action; return copy }
 }
