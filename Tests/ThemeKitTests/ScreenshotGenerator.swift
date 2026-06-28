@@ -220,7 +220,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
         shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "₺").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
-                                        in: 0...1000, step: 50, marks: [0, 500, 1000]).frame(width: 320))
+                                        in: 0...1000, step: 50).marks([0, 500, 1000]).frame(width: 320))
         shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("Harika bir konaklama oldu, kesinlikle tavsiye ederim.")).frame(width: 300), hosted: true)
         shot("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
             .tooltip("Yardımcı ipucu", isPresented: .constant(true), edge: .top)

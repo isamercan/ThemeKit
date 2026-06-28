@@ -112,7 +112,7 @@ enum ComponentRegistry {
         .knob("Micro-motion", .molecules, demo: MicroMotionDemo(), usage: #"View().microAnimations(false)   // theme-wide at root, or per-component"#),
         .knob("RadioButton", .molecules, demo: RadioButtonDemo(), usage: #"RadioButton(isSelected: $on)"#),
         .knob("RadioGroup", .molecules, demo: RadioGroupDemo(), usage: #"RadioGroup(options: items, selection: $sel) { $0 }"#),
-        .knob("RangeSlider", .molecules, demo: RangeSliderDemo(), usage: #"RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50, marks: [0, 500, 1000], onChangeEnd: search)"#),
+        .knob("RangeSlider", .molecules, demo: RangeSliderDemo(), usage: #"RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50).marks([0, 500, 1000]).onChangeEnd(search)"#),
         .knob("SearchBar", .molecules, demo: SearchBarDemo(), usage: #"SearchBar(text: $text, suggestions: cities, recent: recent, onSubmit: search)"#),
         .knob("SegmentedControl", .molecules, demo: SegmentedControlDemo(), usage: #"SegmentedControl([SegmentItem("List", systemImage: "list.bullet")], selection: $i)"#),
         .knob("Select", .molecules, demo: SelectDemo(), usage: #"Select("City", options: items, selection: $city, searchable: true, isLoading: loading) { $0 }"#),
