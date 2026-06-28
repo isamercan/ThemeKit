@@ -141,19 +141,20 @@ private struct BorderBeamModifier: ViewModifier {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     VStack(spacing: 36) {
         Text("Featured")
             .textStyle(.headingSm)
             .padding(40)
-            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
             .borderBeam(cornerRadius: 20, lineWidth: 2.5)
 
         Text("Pro")
             .padding(.horizontal, 28).padding(.vertical, 14)
-            .background(Theme.shared.background(.bgElevatorTertiary), in: Capsule())
+            .background(theme.background(.bgElevatorTertiary), in: Capsule())
             .borderBeam(cornerRadius: 100, lineWidth: 2, duration: 3,
                         colors: [SemanticColor.purple.base, SemanticColor.pink.base])
     }
     .padding(48)
-    .background(Theme.shared.background(.bgTertiary))
+    .background(theme.background(.bgTertiary))
 }

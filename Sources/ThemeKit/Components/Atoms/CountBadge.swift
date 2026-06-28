@@ -86,12 +86,13 @@ public struct Ribbon<Content: View>: View {
 }
 
 #Preview {
+    @Previewable @Environment(\.theme) var theme
     HStack(spacing: 32) {
         Image(systemName: "bell.fill").font(.title).countBadge(5)
         Image(systemName: "envelope.fill").font(.title).countBadge(128)
         Image(systemName: "cart.fill").font(.title).dotBadge(color: .success)
         Ribbon("New", color: .error) {
-            RoundedRectangle(cornerRadius: 12).fill(Theme.shared.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
+            RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
         }
     }
     .padding(40)
