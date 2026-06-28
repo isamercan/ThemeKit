@@ -63,20 +63,46 @@ enum DemoTheme: String, CaseIterable, Identifiable {
 final class DemoThemeStore: ObservableObject {
     @Published private(set) var current: DemoTheme
     @Published private(set) var isDark: Bool
+    /// The active daisyUI theme `id`, or `nil` when a bundled `DemoTheme` is active.
+    @Published private(set) var daisyID: String?
+
+    private static let daisyKey = "selectedDaisyTheme"
 
     init() {
         current = DemoTheme.stored
         isDark = DemoTheme.storedDark
-        current.apply(dark: DemoTheme.storedDark)
+        // A persisted daisyUI theme wins at launch; otherwise the bundled theme.
+        if let id = UserDefaults.standard.string(forKey: Self.daisyKey),
+           let daisy = DaisyTheme.named(id) {
+            daisyID = id
+            isDark = daisy.isDark
+            daisy.apply()
+        } else {
+            current.apply(dark: DemoTheme.storedDark)
+        }
     }
 
     func select(_ theme: DemoTheme) {
+        daisyID = nil
+        UserDefaults.standard.removeObject(forKey: Self.daisyKey)
         current = theme
         theme.apply(dark: isDark)
     }
 
     func setDark(_ dark: Bool) {
+        // daisyUI themes are single-scheme — toggling light/dark returns to the
+        // bundled theme, where the scheme switch applies.
+        daisyID = nil
+        UserDefaults.standard.removeObject(forKey: Self.daisyKey)
         isDark = dark
         current.apply(dark: dark)
+    }
+
+    /// Applies a daisyUI theme live (and follows its light/dark scheme).
+    func applyDaisy(_ theme: DaisyTheme) {
+        daisyID = theme.id
+        isDark = theme.isDark
+        UserDefaults.standard.set(theme.id, forKey: Self.daisyKey)
+        theme.apply()
     }
 }

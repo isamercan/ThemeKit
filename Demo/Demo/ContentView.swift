@@ -30,9 +30,13 @@ struct ContentView: View {
                 .tabItem { Label("Layout", systemImage: "ruler") }
                 .tag(3)
 
+            ThemesView()
+                .tabItem { Label("Themes", systemImage: "swatchpalette") }
+                .tag(4)
+
             HotelSearchView()
                 .tabItem { Label("Example", systemImage: "sparkles") }
-                .tag(4)
+                .tag(5)
         }
         // A top "did fire" toast for every component callback (`flash("…")`).
         .modifier(ActionFlashOverlay())

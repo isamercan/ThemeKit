@@ -238,13 +238,34 @@ enum ThemeGenerator {
 
     // MARK: - Public entry point
 
+    /// Surface "paper" keys that take the theme's `baseHex` tone (the background a
+    /// card / page sits on), each nudged toward the contrast color for elevation.
+    /// Mirrors daisyUI's `base-100 … base-300` ramp.
+    private static let baseSurfaceBlend: [(String, Double)] = [
+        ("background.bg-white", 0),
+        ("background.bg-elevator-primary", 5),
+        ("background.bg-secondary-light", 8),
+        ("background.bg-secondary", 16),
+    ]
+
     static func generate(
         primaryHex: String, tint: Double, dark: Bool,
-        font: String, fontScale: Double, radiusScale: Double, spacingScale: Double, shadowScale: Double
+        font: String, fontScale: Double, radiusScale: Double, spacingScale: Double, shadowScale: Double,
+        baseHex: String? = nil
     ) -> Theme.ThemeData {
         let primary = primaryHex.hasPrefix("#") ? String(primaryHex.dropFirst()) : primaryHex
         let palette = buildPalette(primaryBase: primary, dark: dark, tint: tint)
         let surfaceTint = tint * 0.25
+
+        // When a base tone is supplied (e.g. a daisyUI theme's `base-100`), the
+        // "paper" surfaces derive from it instead of the neutral ramp, so the theme
+        // keeps its signature background (cupcake cream, cyberpunk yellow, dracula
+        // slate) rather than a primary-tinted grey. Text/borders still follow `dark`.
+        let baseOverrides: [String: String] = baseHex.map { rawBase in
+            let base = rawBase.hasPrefix("#") ? String(rawBase.dropFirst()) : rawBase
+            let contrast = dark ? "ffffff" : "000000"
+            return Dictionary(uniqueKeysWithValues: baseSurfaceBlend.map { ($0.0, mix(base, contrast, $0.1)) })
+        } ?? [:]
 
         var colors: [Theme.AppColor] = []
         let categories: [(String, [(String, Tok)])] = [
@@ -252,11 +273,14 @@ enum ThemeGenerator {
         ]
         for (cat, table) in categories {
             for (sub, tok) in table {
+                let name = jsonName(cat, sub)
                 var hex = resolve(tok, palette, dark)
-                if surfaceTint > 0, surfaceTintKeys.contains("\(cat).\(sub)") {
+                if let override = baseOverrides[name] {
+                    hex = override
+                } else if surfaceTint > 0, surfaceTintKeys.contains("\(cat).\(sub)") {
                     hex = mix(hex, primary, surfaceTint * 100)
                 }
-                colors.append(.init(name: jsonName(cat, sub), hex: hex))
+                colors.append(.init(name: name, hex: hex))
             }
         }
         for (key, hex) in palette {
