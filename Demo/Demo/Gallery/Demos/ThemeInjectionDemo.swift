@@ -63,7 +63,7 @@ struct ThemeInjectionDemo: View {
             }
             InfoBanner("Subtree-themed banner", type: .success)
             Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
-            PrimaryButton("Continue") {}
+            PrimaryButton("Continue", block: true) {}
         }
     }
 }

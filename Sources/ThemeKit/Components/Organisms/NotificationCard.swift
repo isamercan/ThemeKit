@@ -99,8 +99,8 @@ public extension NotificationCard where Actions == EmptyView {
                          message: "Hilton İstanbul oteline yaptığın rezervasyona 24 gün kaldı.",
                          date: "5 Aralık Perşembe 2024", isUnread: true) {
             ButtonGroup(.horizontal) {
-                SecondaryButton("Sec", size: .small, isContentWidth: true) {}
-                PrimaryButton("Pri", size: .small, isContentWidth: true) {}
+                SecondaryButton("Sec", size: .small) {}
+                PrimaryButton("Pri", size: .small) {}
             }
         }
         NotificationCard(title: "Tatilin başlamasına 7 gün kaldı",

@@ -65,7 +65,7 @@ struct HotelSearchView: View {
                 }
             }
             .buttonDock {
-                PrimaryButton("\(guests) misafir · Otelleri ara", isContentWidth: true) { path.append(.results) }
+                PrimaryButton("\(guests) misafir · Otelleri ara", block: true) { path.append(.results) }
                     .padding(.bottom, 4)
             }
             .onAppear {

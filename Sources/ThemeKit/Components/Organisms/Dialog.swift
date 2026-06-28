@@ -52,10 +52,10 @@ struct DialogCard: View {
                 if let primaryColor {
                     ThemeButton(primaryTitle, color: primaryColor, block: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 } else {
-                    PrimaryButton(primaryTitle, isContentWidth: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
+                    PrimaryButton(primaryTitle, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 }
                 if let secondaryTitle, let onSecondary {
-                    OutlineButton(secondaryTitle, isContentWidth: true, isEnabled: .constant(!isPrimaryLoading), action: onSecondary)
+                    OutlineButton(secondaryTitle, isEnabled: .constant(!isPrimaryLoading), action: onSecondary)
                 }
             }
         }

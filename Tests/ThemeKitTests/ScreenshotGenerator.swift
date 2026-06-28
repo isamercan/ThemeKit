@@ -164,9 +164,9 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func molecules() {
         shot("Button", HStack(spacing: 10) {
-            PrimaryButton("Continue", isContentWidth: true) {}
-            SecondaryButton("Cancel", isContentWidth: true) {}
-            OutlineButton("More", isContentWidth: true) {}
+            PrimaryButton("Continue", block: true) {}
+            SecondaryButton("Cancel") {}
+            OutlineButton("More") {}
         })
         shot("ThemeButton", HStack(spacing: 10) {
             ThemeButton("Solid", color: .primary) {}
@@ -449,7 +449,7 @@ final class ScreenshotGenerator: XCTestCase {
             }
             InfoBanner("Subtree-themed", type: .success)
             Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
-            PrimaryButton("Continue") {}
+            PrimaryButton("Continue", block: true) {}
         }
 
         func column(_ title: String, _ theme: Theme) -> some View {

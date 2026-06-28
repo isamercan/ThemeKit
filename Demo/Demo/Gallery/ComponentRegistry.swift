@@ -87,8 +87,8 @@ enum ComponentRegistry {
             ColorField("Brand color", selection: .constant(.blue)).frame(maxWidth: 320)
         },
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete(label: "Destination", text: $text, suggestions: items)\n// async: Autocomplete(text: $text, suggest: { await api.search($0) })"#),
-        .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue", isContentWidth: true) { }"#),
-        .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK", isContentWidth: true) { } }"#),
+        .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue") { }"#),
+        .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save", color: .success, variant: .soft, size: .medium, shape: .pill) { }"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on, infoMessages: error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
