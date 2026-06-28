@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Enclosed single-select control — the selected segment is a raised
-//  white pill. Options can carry an icon and a disabled state. (Ant Segmented.)
-//
 
 import SwiftUI
 
@@ -31,6 +28,8 @@ public enum SegmentedSize {
     }
 }
 
+/// Molecule. Enclosed single-select control — the selected segment is a raised
+/// white pill. Options can carry an icon and a disabled state. (Ant Segmented.)
 public struct SegmentedControl: View {
     private let items: [SegmentItem]
     @Binding private var selection: Int

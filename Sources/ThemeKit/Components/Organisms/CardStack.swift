@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Layers items into a stacked "deck" with offset + scale.
-//  (daisyUI "Stack".)
-//
 
 import SwiftUI
 
+/// Organism. Layers items into a stacked "deck" with offset + scale.
+/// (daisyUI "Stack".)
 public struct CardStack<Item: Identifiable, Content: View>: View {
     private let items: [Item]
     private let content: (Item) -> Content

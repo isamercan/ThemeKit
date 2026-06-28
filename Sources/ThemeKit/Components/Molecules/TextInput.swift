@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Single floating-label text field. Carries the reference's production layers:
-//  a `TextInputModel` config struct, a structured `[InfoMessage]` validation
-//  model, and namespaced accessibility identifiers — alongside the flat init.
-//
 
 import SwiftUI
 #if canImport(UIKit)
@@ -126,6 +122,9 @@ public struct TextInputModel {
     }
 }
 
+/// Single floating-label text field. Carries the reference's production layers:
+/// a `TextInputModel` config struct, a structured `[InfoMessage]` validation
+/// model, and namespaced accessibility identifiers — alongside the flat init.
 public struct TextInput: View {
     @Binding private var text: String
     private let model: TextInputModel

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Displays numeric values in labelled boxes — e.g. a countdown
-//  (Gün / Saat / Dakika).
-//
 
 import SwiftUI
 
+/// Organism. Displays numeric values in labelled boxes — e.g. a countdown
+/// (Gün / Saat / Dakika).
 public struct Counter: View {
     public struct Segment: Identifiable {
         public let id = UUID()

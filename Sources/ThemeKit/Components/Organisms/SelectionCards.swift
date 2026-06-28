@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organisms. Card-shaped selectable controls (radio / checkbox) — selected
-//  state raises a hero border + tinted surface. State owned by the caller.
-//
 
 import SwiftUI
 
@@ -49,6 +46,8 @@ private struct SelectionCard<Control: View>: View {
     }
 }
 
+/// Organisms. Card-shaped selectable controls (radio / checkbox) — selected
+/// state raises a hero border + tinted surface. State owned by the caller.
 public struct RadioCard: View {
     private let title: String
     private let description: String?

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Before / after comparison with a draggable divider that reveals the
-//  two layers. (daisyUI "Diff".)
-//
 
 import SwiftUI
 
+/// Organism. Before / after comparison with a draggable divider that reveals the
+/// two layers. (daisyUI "Diff".)
 public struct Diff<Before: View, After: View>: View {
     private let aspectRatio: CGFloat
     private let before: () -> Before

@@ -3,12 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Segmented position/progress indicator (Reference ProgressIndicator parity).
-//  `.carousel` = one segment per page (filled up to the current one); `.video` =
-//  the active segment fills by `videoProgress`; `.progress` = a single
-//  continuous bar. Optional "3 / 10" or "01 | 05" step text. Distinct from the
-//  dot-style `StepIndicator` and the value-driven `ProgressBar`.
-//
 
 import SwiftUI
 
@@ -29,6 +23,11 @@ public enum ProgressIndicatorSize {
 /// Step-count caption format. (Reference "3/10" / "01 | 05".)
 public enum ProgressStepText { case none, slash, padded }
 
+/// Segmented position/progress indicator (Reference ProgressIndicator parity).
+/// `.carousel` = one segment per page (filled up to the current one); `.video` =
+/// the active segment fills by `videoProgress`; `.progress` = a single
+/// continuous bar. Optional "3 / 10" or "01 | 05" step text. Distinct from the
+/// dot-style `StepIndicator` and the value-driven `ProgressBar`.
 public struct ProgressIndicator: View {
     private let variant: ProgressIndicatorVariant
     private let current: Int   // 1-based active step

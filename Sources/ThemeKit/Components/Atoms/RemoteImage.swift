@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Async remote image on native `AsyncImage` (no Kingfisher dependency): URL +
-//  aspect ratio (number or "16:9" string) + shimmer placeholder + failure state.
-//  Covers the reference `ImageView`/`CustomImageView` role.
-//
 
 import SwiftUI
 
@@ -31,6 +27,9 @@ public enum RemoteImageRatio {
     }
 }
 
+/// Async remote image on native `AsyncImage` (no Kingfisher dependency): URL +
+/// aspect ratio (number or "16:9" string) + shimmer placeholder + failure state.
+/// Covers the reference `ImageView`/`CustomImageView` role.
 public struct RemoteImage: View {
     private let url: URL?
     private let aspectRatio: CGFloat?

@@ -3,14 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Multiple / tags select with optional search (Ant Select mode="multiple").
-//  Selected options render as removable tag chips; the dropdown is a token-bound
-//  panel with a search field and checkable rows. The single-value `Select`
-//  remains for the simple case.
-//
 
 import SwiftUI
 
+/// Multiple / tags select with optional search (Ant Select mode="multiple").
+/// Selected options render as removable tag chips; the dropdown is a token-bound
+/// panel with a search field and checkable rows. The single-value `Select`
+/// remains for the simple case.
 public struct MultiSelect<Option: Hashable>: View {
     private let label: String?
     private let options: [Option]

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A form field label: text + optional required asterisk + optional info
-//  glyph. Shared by the input components.
-//
 
 import SwiftUI
 
+/// Atom. A form field label: text + optional required asterisk + optional info
+/// glyph. Shared by the input components.
 public struct InputLabel: View {
     private let text: String
     private let isRequired: Bool

@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference InfoMessage. Semantic types
-//  drive a light-surface banner with a colored icon, optional title and an
-//  optional dismiss action.
-//
 
 import SwiftUI
 
@@ -53,6 +49,9 @@ public enum InfoBannerType {
     }
 }
 
+/// Improved, token-bound rewrite of the reference InfoMessage. Semantic types
+/// drive a light-surface banner with a colored icon, optional title and an
+/// optional dismiss action.
 public struct InfoBanner: View {
     private let type: InfoBannerType
     private let title: String?

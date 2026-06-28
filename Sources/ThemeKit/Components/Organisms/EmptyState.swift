@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference EmptyCardView. An SF Symbol in
-//  a faded circle, title, message and an optional primary action. (Lottie /
-//  AppIcon dependencies dropped.)
-//
 
 import SwiftUI
 
+/// Improved, token-bound rewrite of the reference EmptyCardView. An SF Symbol in
+/// a faded circle, title, message and an optional primary action. (Lottie /
+/// AppIcon dependencies dropped.)
 public struct EmptyState: View {
     private let systemImage: String
     private let image: Image?

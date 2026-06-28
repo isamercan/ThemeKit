@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A styled file-picker field: a "Choose file" segment + the selected
-//  filename. (daisyUI "File Input"; complements the list-based Upload.)
-//
 
 import SwiftUI
 
+/// Molecule. A styled file-picker field: a "Choose file" segment + the selected
+/// filename. (daisyUI "File Input"; complements the list-based Upload.)
 public struct FileInput: View {
     private let label: String?
     private let fileName: String?

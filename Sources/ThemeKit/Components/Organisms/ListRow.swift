@@ -3,13 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A flexible list row that consolidates the reference ListItem family
-//  (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one
-//  token-bound view. Leading: SF Symbol, remote image, number badge or a radio
-//  selector. Trailing: chevron / value / toggle / checkmark / bound checkbox /
-//  inline button / price block / status text. Plus a per-row meta line (rating,
-//  sentiment, comment count), an active-selected background and an info button.
-//
 
 import SwiftUI
 
@@ -79,6 +72,12 @@ public struct ListRowInfo: Identifiable {
     }
 }
 
+/// A flexible list row that consolidates the reference ListItem family
+/// (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one
+/// token-bound view. Leading: SF Symbol, remote image, number badge or a radio
+/// selector. Trailing: chevron / value / toggle / checkmark / bound checkbox /
+/// inline button / price block / status text. Plus a per-row meta line (rating,
+/// sentiment, comment count), an active-selected background and an info button.
 public struct ListRow: View {
     private let title: String
     private let subtitle: String?

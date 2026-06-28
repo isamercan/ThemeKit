@@ -3,15 +3,14 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Animated GIF / APNG playback with NO third-party dependency — frames and
-//  per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven
-//  by a `TimelineView(.animation)`. Handles variable frame durations and loops.
-//  (Reference AVIFAnimatedImage / animated `ImageView` role, native.)
-//
 
 import SwiftUI
 import ImageIO
 
+/// Animated GIF / APNG playback with NO third-party dependency — frames and
+/// per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven
+/// by a `TimelineView(.animation)`. Handles variable frame durations and loops.
+/// (Reference AVIFAnimatedImage / animated `ImageView` role, native.)
 public struct AnimatedImage: View {
     private let url: URL?
     private let contentMode: ContentMode

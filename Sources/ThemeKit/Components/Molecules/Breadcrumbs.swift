@@ -3,15 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Horizontal navigation path with chevron separators; the last crumb
-//  is the current page. (daisyUI "Breadcrumbs" / Ant Design "Breadcrumb".)
-//
-//  When `maxItems` is set and exceeded, the middle crumbs collapse into a "…"
-//  menu that still navigates to any hidden crumb.
-//
 
 import SwiftUI
 
+/// Molecule. Horizontal navigation path with chevron separators; the last crumb
+/// is the current page. (daisyUI "Breadcrumbs" / Ant Design "Breadcrumb".)
+/// When `maxItems` is set and exceeded, the middle crumbs collapse into a "…"
+/// menu that still navigates to any hidden crumb.
 public struct Breadcrumbs: View {
     public struct Crumb: Identifiable {
         public let id = UUID()

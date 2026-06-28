@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A grid of media items rendered at a fixed aspect ratio (uses the
-//  AspectRatioToken + GridLayout tokens). Generic over the cell content.
-//
 
 import SwiftUI
 
+/// Organism. A grid of media items rendered at a fixed aspect ratio (uses the
+/// AspectRatioToken + GridLayout tokens). Generic over the cell content.
 public struct Gallery<Item: Identifiable, Content: View>: View {
     private let items: [Item]
     private let columns: Int

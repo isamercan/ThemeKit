@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
-//  states checked / disabled / indeterminate. Colors from theme tokens.
-//
 
 import SwiftUI
 
@@ -32,6 +29,8 @@ public enum CheckboxType: Equatable {
     case customInner(color: Color)
 }
 
+/// Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
+/// states checked / disabled / indeterminate. Colors from theme tokens.
 public struct Checkbox: View {
     @Binding private var isChecked: Bool
     private let label: String?

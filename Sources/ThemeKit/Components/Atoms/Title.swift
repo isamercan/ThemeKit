@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A section title: optional eyebrow, title + optional subtitle, and an
-//  optional trailing action (e.g. "See all").
-//
 
 import SwiftUI
 
+/// Atom. A section title: optional eyebrow, title + optional subtitle, and an
+/// optional trailing action (e.g. "See all").
 public struct Title: View {
     private let text: String
     private let subtitle: String?

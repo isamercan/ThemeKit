@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+)
-//  and a "+N" overlay on the last visible tile. Brand-neutral, token-bound; uses
-//  `RemoteImage` (native AsyncImage), no asset/Kingfisher dependency.
-//
 
 import SwiftUI
 
+/// A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+)
+/// and a "+N" overlay on the last visible tile. Brand-neutral, token-bound; uses
+/// `RemoteImage` (native AsyncImage), no asset/Kingfisher dependency.
 public struct ImageCollage: View {
     private let urls: [URL]
     private let height: CGFloat

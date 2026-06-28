@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A grouped list of navigable menu links inside a card surface.
-//  (Named MenuCard to avoid shadowing SwiftUI.Menu.)
-//
 
 import SwiftUI
 
+/// Organism. A grouped list of navigable menu links inside a card surface.
+/// (Named MenuCard to avoid shadowing SwiftUI.Menu.)
 public struct MenuCard: View {
     public struct Item: Identifiable {
         public let id = UUID()

@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A form-style dropdown field (label above, chevron, hint / error,
-//  default / focused / error / disabled states). Covers Figma SelectBox /
-//  Combobox / DropDown field. Single-select via native Menu.
-//
 
 import SwiftUI
 
+/// Molecule. A form-style dropdown field (label above, chevron, hint / error,
+/// default / focused / error / disabled states). Covers Figma SelectBox /
+/// Combobox / DropDown field. Single-select via native Menu.
 public struct SelectBox<Option: Hashable>: View {
     private let label: String?
     private let options: [Option]

@@ -3,11 +3,10 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. Indeterminate circular loading indicator (token-tinted).
-//
 
 import SwiftUI
 
+/// Atom. Indeterminate circular loading indicator (token-tinted).
 public struct Spinner: View {
     private let size: CGFloat
     private let lineWidth: CGFloat

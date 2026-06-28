@@ -3,13 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. Body text with tappable inline links. Improves on the reference
-//  UnderlineText by using AttributedString + openURL routing instead of manual
-//  NSRange math.
-//
 
 import SwiftUI
 
+/// Atom. Body text with tappable inline links. Improves on the reference
+/// UnderlineText by using AttributedString + openURL routing instead of manual
+/// NSRange math.
 public struct InlineText: View {
     private let text: String
     private let links: [(substring: String, action: () -> Void)]

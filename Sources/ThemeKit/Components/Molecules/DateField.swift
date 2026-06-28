@@ -3,14 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A date input field that presents a theme-tinted graphical calendar
-//  in a popover. (Form-field wrapper around the system date picker.)
-//
-//  Presentation mirrors TextInput's form chrome — info/error messages with a
-//  matching border, an optional clear button, a disabled state, and a leading
-//  icon. The displayed value is formatter-driven: pick a `DateFieldStyle` (or a
-//  custom pattern), a `locale`, and which `components` (date / time) to show.
-//
 
 import SwiftUI
 
@@ -29,6 +21,12 @@ public enum DateFieldComponents {
     case date, dateAndTime, time
 }
 
+/// Molecule. A date input field that presents a theme-tinted graphical calendar
+/// in a popover. (Form-field wrapper around the system date picker.)
+/// Presentation mirrors TextInput's form chrome — info/error messages with a
+/// matching border, an optional clear button, a disabled state, and a leading
+/// icon. The displayed value is formatter-driven: pick a `DateFieldStyle` (or a
+/// custom pattern), a `locale`, and which `components` (date / time) to show.
 public struct DateField: View {
     private let label: String?
     @Binding private var date: Date?

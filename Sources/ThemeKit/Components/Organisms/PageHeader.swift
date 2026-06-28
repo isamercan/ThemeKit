@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. Screen header: optional back button, title + subtitle, trailing
-//  icon actions.
-//
 
 import SwiftUI
 
+/// Organism. Screen header: optional back button, title + subtitle, trailing
+/// icon actions.
 public struct PageHeader: View {
     public struct Action: Identifiable {
         public let id = UUID()

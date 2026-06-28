@@ -3,15 +3,14 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A typeahead text field with a suggestion list. Two sources:
-//    • a static `[String]` filtered locally as the user types, or
-//    • an async `suggest` provider (remote search) with debounce, a loading
-//      spinner, an empty "no results" state, and in-flight cancellation.
-//  State (the bound text) is owned by the caller.
-//
 
 import SwiftUI
 
+/// Molecule. A typeahead text field with a suggestion list. Two sources:
+///   • a static `[String]` filtered locally as the user types, or
+///   • an async `suggest` provider (remote search) with debounce, a loading
+///     spinner, an empty "no results" state, and in-flight cancellation.
+/// State (the bound text) is owned by the caller.
 public struct Autocomplete: View {
 
     /// Where suggestions come from.

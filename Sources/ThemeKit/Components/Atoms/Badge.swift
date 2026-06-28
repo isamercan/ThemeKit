@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference BadgeView. Styling is driven
-//  by a semantic `BadgeStyle` (system + brand variants) instead of
-//  component-specific color lookups, and icons use SF Symbols.
-//
 
 import SwiftUI
 
@@ -107,6 +103,9 @@ public enum BadgeShape {
     case rounded
 }
 
+/// Improved, token-bound rewrite of the reference BadgeView. Styling is driven
+/// by a semantic `BadgeStyle` (system + brand variants) instead of
+/// component-specific color lookups, and icons use SF Symbols.
 public struct Badge: View {
     private let text: String
     private let style: BadgeStyle

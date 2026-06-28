@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. Circular determinate progress with status colors and an optional
-//  dashboard (gapped) variant. (Ant Progress type="circle"/"dashboard".)
-//
 
 import SwiftUI
 
+/// Atom. Circular determinate progress with status colors and an optional
+/// dashboard (gapped) variant. (Ant Progress type="circle"/"dashboard".)
 public struct RadialProgress: View {
     private let value: Double
     private let size: CGFloat

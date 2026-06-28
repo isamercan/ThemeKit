@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A small status indicator dot with an optional pulse + label.
-//  (daisyUI "Status".)
-//
 
 import SwiftUI
 
@@ -35,6 +32,8 @@ public enum StatusKind {
     }
 }
 
+/// Atom. A small status indicator dot with an optional pulse + label.
+/// (daisyUI "Status".)
 public struct StatusDot: View {
     private let kind: StatusKind
     private let size: CGFloat

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A labelled, multi-select group composed from the Checkbox atom.
-//  Selection state is owned by the caller (single Set binding — no per-row state).
-//
 
 import SwiftUI
 
+/// Molecule. A labelled, multi-select group composed from the Checkbox atom.
+/// Selection state is owned by the caller (single Set binding — no per-row state).
 public struct CheckboxGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]

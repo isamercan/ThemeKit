@@ -3,9 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. A single statistic block: title, value, optional description,
-//  figure icon and trend. (daisyUI "Stat".)
-//
 
 import SwiftUI
 
@@ -30,6 +27,8 @@ public enum StatTrend {
     var systemImage: String { switch self { case .up: return "arrow.up.right"; case .down: return "arrow.down.right" } }
 }
 
+/// Molecule. A single statistic block: title, value, optional description,
+/// figure icon and trend. (daisyUI "Stat".)
 public struct Stat: View {
     private enum Value { case text(String), number(Int) }
 

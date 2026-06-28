@@ -3,17 +3,15 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Improved, token-bound rewrite of the reference RangeSliderView — a
-//  self-contained dual-thumb slider over a numeric range (decoupled from the
-//  reference's text-field wiring).
-//
-//  Reference: Ant Design `Slider` (range) / MUI `Slider` — optional `marks`
-//  (labeled ticks), a disabled state, an `onChangeEnd` commit callback (fire the
-//  search on release, not on every drag tick), and VoiceOver-adjustable thumbs.
-//
 
 import SwiftUI
 
+/// Improved, token-bound rewrite of the reference RangeSliderView — a
+/// self-contained dual-thumb slider over a numeric range (decoupled from the
+/// reference's text-field wiring).
+/// Reference: Ant Design `Slider` (range) / MUI `Slider` — optional `marks`
+/// (labeled ticks), a disabled state, an `onChangeEnd` commit callback (fire the
+/// search on release, not on every drag tick), and VoiceOver-adjustable thumbs.
 public struct RangeSlider: View {
     @Binding private var lowerValue: Double
     @Binding private var upperValue: Double

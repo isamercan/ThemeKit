@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. An article card: media + title + excerpt + read-more link, with a
-//  compact (media-left) variant. Media supplied via a ViewBuilder.
-//
 
 import SwiftUI
 
+/// Organism. An article card: media + title + excerpt + read-more link, with a
+/// compact (media-left) variant. Media supplied via a ViewBuilder.
 public struct BlogCard<Media: View>: View {
     private let title: String
     private let excerpt: String?

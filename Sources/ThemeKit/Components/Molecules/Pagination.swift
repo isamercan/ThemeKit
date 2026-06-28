@@ -3,17 +3,15 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Molecule. Numbered pagination with prev / next, windowed around the current
-//  page, plus a simple mode, an optional total label and a disabled state.
-//  (Ant Pagination / MUI Pagination parity.) Selection owned by the caller.
-//
-//  The window is configurable: `boundaryCount` pages always show at each end and
-//  `siblingCount` pages on each side of the current page; gaps collapse to an
-//  ellipsis. An optional quick-jumper field jumps straight to a page.
-//
 
 import SwiftUI
 
+/// Molecule. Numbered pagination with prev / next, windowed around the current
+/// page, plus a simple mode, an optional total label and a disabled state.
+/// (Ant Pagination / MUI Pagination parity.) Selection owned by the caller.
+/// The window is configurable: `boundaryCount` pages always show at each end and
+/// `siblingCount` pages on each side of the current page; gaps collapse to an
+/// ellipsis. An optional quick-jumper field jumps straight to a page.
 public struct Pagination: View {
     @Binding private var current: Int   // 1-based
     private let total: Int

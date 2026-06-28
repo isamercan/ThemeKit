@@ -3,10 +3,6 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Linear determinate progress with status colors, an optional ladder gradient,
-//  a segmented (steps) variant and a custom format label. (Ant Progress parity.)
-//  Plus a segmented `StepIndicator`.
-//
 
 import SwiftUI
 
@@ -22,6 +18,9 @@ public enum ProgressStatus {
     }
 }
 
+/// Linear determinate progress with status colors, an optional ladder gradient,
+/// a segmented (steps) variant and a custom format label. (Ant Progress parity.)
+/// Plus a segmented `StepIndicator`.
 public struct ProgressBar: View {
     private let value: Double
     private let height: CGFloat

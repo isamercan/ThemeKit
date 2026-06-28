@@ -3,14 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A generic paging carousel with dot indicators, optional autoplay and optional
-//  prev/next arrows. Supports seamless infinite looping (clone-edge technique), a
-//  two-way `currentIndex` binding, and an active-gating content variant so video
-//  pages can play only while visible. (Ant Carousel parity.)
-//
 
 import SwiftUI
 
+/// A generic paging carousel with dot indicators, optional autoplay and optional
+/// prev/next arrows. Supports seamless infinite looping (clone-edge technique), a
+/// two-way `currentIndex` binding, and an active-gating content variant so video
+/// pages can play only while visible. (Ant Carousel parity.)
 public struct Carousel<Item: Identifiable, Content: View>: View {
     private let items: [Item]
     private let autoplay: TimeInterval?

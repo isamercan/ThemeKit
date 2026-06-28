@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Organism. A notification surface: bell icon, optional unread dot + timestamp,
-//  title, message and optional actions.
-//
 
 import SwiftUI
 
+/// Organism. A notification surface: bell icon, optional unread dot + timestamp,
+/// title, message and optional actions.
 public struct NotificationCard<Actions: View>: View {
     private let title: String
     private let message: String?

@@ -3,12 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Atom. A standalone tappable text link. (daisyUI "Link"; for links inside a
-//  paragraph use InlineText, for a button use LinkButton.)
-//
 
 import SwiftUI
 
+/// Atom. A standalone tappable text link. (daisyUI "Link"; for links inside a
+/// paragraph use InlineText, for a button use LinkButton.)
 public struct TextLink: View {
     private let title: String
     private let underline: Bool
