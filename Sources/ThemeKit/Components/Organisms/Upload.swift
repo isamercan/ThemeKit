@@ -144,9 +144,10 @@ public typealias UploadOperation = (@escaping UploadProgress) async throws -> Vo
 /// to `.done` or `.failed`. Mirrors the toast `toastTask` pattern. Bind it to the
 /// UI with `UploadList(controller:)`.
 @MainActor
-public final class UploadController: ObservableObject {
+@Observable
+public final class UploadController {
 
-    @Published public private(set) var files: [UploadFile] = []
+    public private(set) var files: [UploadFile] = []
     private var operations: [UUID: UploadOperation] = [:]
 
     public init() {}
@@ -194,7 +195,7 @@ public final class UploadController: ObservableObject {
 
 /// `Upload` wired to an `UploadController` — renders its files with remove + retry.
 public struct UploadList: View {
-    @ObservedObject private var controller: UploadController
+    private var controller: UploadController
     private let prompt: String
     private let buttonTitle: String
     private let onPick: () -> Void
@@ -234,7 +235,7 @@ public struct UploadList: View {
 
 #Preview("Controller") {
     struct Demo: View {
-        @StateObject private var uploads = UploadController()
+        @State private var uploads = UploadController()
         var body: some View {
             UploadList(controller: uploads) {
                 Task {

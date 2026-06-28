@@ -33,7 +33,7 @@
 | Erişilebilirlik | **Partial** | VoiceOver/RTL var, Reduce Motion **118** kullanım — ama `performAccessibilityAudit` = **0** (otomatik a11y denetimi yok) |
 | Test çerçevesi | **Partial** | 34 `XCTestCase`, Swift Testing (`@Test`/`#expect`) = **0**; snapshot 4 suite (~108 component'e karşı, opt-in/iOS-only) |
 | **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
-| **Observation (frontier)** | **Partial** | `@Observable` = **0**, `ObservableObject` = **8** (Theme + 5 presenter); hâlâ `@Published` (11) |
+| **Observation (frontier)** | **Solid** ✅ | 6/8 `@Observable`'a taşındı (5 presenter + FormValidator); `@Published` 0, `@StateObject`→`@State`, presenter env'i `@Environment(_.self)`. Yalnız `Theme` (`@unchecked Sendable` singleton + revision-repaint) bilinçli ertelendi |
 | **Liquid Glass (frontier)** | **Missing** | `.glassEffect` = 0, `GlassEffectContainer` = 0, `reduceTransparency` = 0 |
 | Magic-number spacing | **Partial** | 34 literal `.padding(n)` (token yerine); örn. Molecules/Tooltip.swift:196 `.padding(80)` |
 | Preview state-matrix | **Partial** | `PreviewMatrix` helper var (Utils/PreviewMatrix.swift) ama yalnız 3/108 component adopte (Tag/Stat/Avatar); 114 preview'ın çoğu tek-durum |
@@ -57,10 +57,9 @@
 
 ### P1 — yüksek kaldıraç
 
-**3. `ObservableObject` → `@Observable` (Observation)**
-- **Ne:** 5 presenter + Theme'i `@Observable` makrosuna taşı; `@Published` kaldır, `@StateObject` → `@State`.
-- **Neden:** Daha az boilerplate, alan-bazlı invalidation (gereksiz redraw azalır), Apple'ın yönü.
-- **Efor:** M. **Dosyalar:** Organisms/Drawer.swift, Tour.swift, BottomSheet.swift, Upload.swift, Feedback.swift, Theme/Theme.swift.
+**3. `ObservableObject` → `@Observable` (Observation)** — ✅ TAMAMLANDI (Theme hariç)
+- **Yapıldı:** 5 presenter (Drawer/Tour/BottomSheet/Upload/Feedback) + FormValidator `@Observable`'a taşındı; `@Published` 0, `@StateObject`→`@State`, presenter enjeksiyonu `.environmentObject`→`.environment` + okuma `@Environment(_.self)`. 163 test + Demo (gerçek tüketici, güncellendi) yeşil.
+- **Ertelendi — Theme:** `@unchecked Sendable` singleton, root'ta `@ObservedObject` ile revision-tabanlı repaint (Theme/ThemeKit.swift:45). Core engine olduğundan ayrı odaklı bir çalışma; `@Observable`'a taşımak theming pipeline'ını riske atar.
 
 **4. Otomatik a11y denetimi (`performAccessibilityAudit`)**
 - **Ne:** Bir XCUITest target'ı + temsilci ekranlarda `app.performAccessibilityAudit()`.

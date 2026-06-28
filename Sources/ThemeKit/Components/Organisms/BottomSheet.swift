@@ -6,7 +6,7 @@
 //  Organism. Presents content in a bottom sheet with detents + drag indicator
 //  (native sheet under the hood). Two entry points:
 //    • `.bottomSheet(isPresented:detents:)` — declarative, binding-driven.
-//    • `.sheetHost()` + `@EnvironmentObject SheetPresenter` — imperative; present
+//    • `.sheetHost()` + `@Environment(SheetPresenter.self)` — imperative; present
 //      a sheet from anywhere without owning a binding.
 //  Detent modifiers are iOS-only; the content still presents on macOS.
 //
@@ -54,10 +54,11 @@ public extension View {
 /// Imperative bottom-sheet presenter. Install once with `.sheetHost()`, then from
 /// any descendant view:
 ///
-///     @EnvironmentObject var sheet: SheetPresenter
+///     @Environment(SheetPresenter.self) var sheet: SheetPresenter
 ///     sheet.present(detents: [.height(280), .large]) { FilterView() }
 ///     sheet.dismiss()
-public final class SheetPresenter: ObservableObject {
+@Observable
+public final class SheetPresenter {
 
     struct Request: Identifiable {
         let id = UUID()
@@ -66,7 +67,7 @@ public final class SheetPresenter: ObservableObject {
         let content: AnyView
     }
 
-    @Published var current: Request?
+    var current: Request?
 
     public init() {}
 
@@ -85,11 +86,11 @@ public final class SheetPresenter: ObservableObject {
 }
 
 private struct SheetHostModifier: ViewModifier {
-    @StateObject private var presenter = SheetPresenter()
+    @State private var presenter = SheetPresenter()
 
     func body(content: Content) -> some View {
         content
-            .environmentObject(presenter)
+            .environment(presenter)
             .sheet(item: $presenter.current) { request in
                 request.content
                     .padding(Theme.SpacingKey.md.value)
@@ -139,7 +140,7 @@ private extension View {
 
 #Preview("Imperative host") {
     struct Demo: View {
-        @EnvironmentObject var sheet: SheetPresenter
+        @Environment(SheetPresenter.self) var sheet: SheetPresenter
         var body: some View {
             PrimaryButton("Present") {
                 sheet.present(detents: [.medium, .large]) {

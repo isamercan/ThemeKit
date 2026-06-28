@@ -8,7 +8,7 @@
 //  first invalid field. Pairs with `TextInput(externalFocus:)`.
 //
 //      enum Field { case email, password }
-//      @StateObject var form = FormValidator<Field>([
+//      @State var form = FormValidator<Field>([
 //          .email: [.required(), .email()],
 //          .password: [.required(), .minLength(8)],
 //      ])
@@ -20,10 +20,11 @@
 import SwiftUI
 
 @MainActor
-public final class FormValidator<Field: Hashable>: ObservableObject {
-    @Published public private(set) var messages: [Field: [InfoMessage]] = [:]
+@Observable
+public final class FormValidator<Field: Hashable> {
+    public private(set) var messages: [Field: [InfoMessage]] = [:]
     /// The field that should currently hold focus (set to the first invalid on submit).
-    @Published public var focusedField: Field?
+    public var focusedField: Field?
 
     private let order: [Field]
     private let rulesByField: [Field: [ValidationRule]]

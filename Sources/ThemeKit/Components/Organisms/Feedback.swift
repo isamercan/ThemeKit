@@ -9,7 +9,7 @@
 //  developer-placed in the view tree. See docs/feedback-patterns.md.
 //
 //  Install once at the app root with `.feedbackHost()`, then from anywhere:
-//      @EnvironmentObject var feedback: FeedbackPresenter
+//      @Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter
 //      feedback.toast("Saved", kind: .success)
 //      feedback.confirm(title: "Delete?", primaryTitle: "Delete", primaryKind: .error) { … }
 //
@@ -55,7 +55,8 @@ public enum ToastPosition { case top, bottom }
 
 /// Imperative presenter for app-global feedback. A single shared instance is
 /// injected via `.feedbackHost()`; call it from any descendant view.
-public final class FeedbackPresenter: ObservableObject {
+@Observable
+public final class FeedbackPresenter {
 
     public struct ToastItem: Identifiable {
         public let id = UUID()
@@ -88,10 +89,10 @@ public final class FeedbackPresenter: ObservableObject {
     }
 
     /// Stacked toasts (newest last), capped at `maxVisibleToasts`.
-    @Published var toasts: [ToastItem] = []
-    @Published var activeConfirm: ConfirmRequest?
-    @Published var activeNotification: NotificationItem?
-    @Published var activeLoading: String?
+    var toasts: [ToastItem] = []
+    var activeConfirm: ConfirmRequest?
+    var activeNotification: NotificationItem?
+    var activeLoading: String?
 
     private let maxVisibleToasts: Int
 
@@ -186,17 +187,17 @@ public final class FeedbackPresenter: ObservableObject {
 private struct FeedbackHostModifier: ViewModifier {
     @Environment(\.theme) private var theme
 
-    @StateObject private var presenter: FeedbackPresenter
+    @State private var presenter: FeedbackPresenter
     private let toastEdge: Edge
 
     init(maxVisibleToasts: Int, toastPosition: ToastPosition) {
-        _presenter = StateObject(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
+        _presenter = State(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
         toastEdge = toastPosition == .top ? .top : .bottom
     }
 
     func body(content: Content) -> some View {
         content
-            .environmentObject(presenter)
+            .environment(presenter)
             .overlay(alignment: .top) { notificationLayer }
             .overlay(alignment: toastEdge == .top ? .top : .bottom) { toastLayer }
             .overlay { confirmLayer }
@@ -350,7 +351,7 @@ public extension View {
 
 #Preview("Toasts: stack / action / task") {
     struct Demo: View {
-        @EnvironmentObject private var feedback: FeedbackPresenter
+        @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
         var body: some View {
             VStack(spacing: 12) {
                 ThemeButton("Stack ×3") {

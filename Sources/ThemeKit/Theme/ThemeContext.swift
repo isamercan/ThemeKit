@@ -8,7 +8,7 @@ import SwiftUI
 
 /// A lightweight theme accessor for SwiftUI views.
 ///
-/// Use this instead of repeating `@EnvironmentObject private var theme: Theme`
+/// Use this instead of repeating `@Environment(\.theme) private var theme`
 /// in views that need app-wide theme access. Inject the theme at the root with
 /// `.environmentObject(Theme.shared)` in pure SwiftUI flows or via
 /// `ThemedHostingController` in UIKit-hosted flows.
