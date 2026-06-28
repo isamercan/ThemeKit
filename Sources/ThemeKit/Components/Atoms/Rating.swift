@@ -23,42 +23,30 @@ public struct Rating: View {
     @Environment(\.theme) private var theme
 
     private let value: Double
-    private let maxValue: Int
-    private let size: CGFloat
     private let layout: RatingLayout
-    private let allowHalf: Bool
-    @Environment(\.isEnabled) private var isEnabled
-    private let systemImage: String
     private let countLabel: String?
-    private let sentiment: String?
-    private let onRate: ((Double) -> Void)?
-    private let onReviewTap: (() -> Void)?
+    @Environment(\.isEnabled) private var isEnabled
+    // Long-tail config — set via chainable modifiers, keeping the common call
+    // site to `Rating(value:layout:countLabel:)`.
+    private var maxValue: Int = 5
+    private var size: CGFloat = 16
+    private var allowHalf: Bool = false
+    private var systemImage: String = "star"
+    private var sentiment: String? = nil
+    private var onRate: ((Double) -> Void)? = nil
+    private var onReviewTap: (() -> Void)? = nil
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         value: Double,
-        maxValue: Int = 5,
-        size: CGFloat = 16,
         layout: RatingLayout = .stars,
-        allowHalf: Bool = false,
-        systemImage: String = "star",
-        countLabel: String? = nil,
-        sentiment: String? = nil,
-        onRate: ((Double) -> Void)? = nil,
-        onReviewTap: (() -> Void)? = nil
+        countLabel: String? = nil
     ) {
         self.value = value
-        self.maxValue = maxValue
-        self.size = size
         self.layout = layout
-        self.allowHalf = allowHalf
-        self.systemImage = systemImage
         self.countLabel = countLabel
-        self.sentiment = sentiment
-        self.onRate = onRate
-        self.onReviewTap = onReviewTap
     }
 
     private var interactive: Bool { onRate != nil && isEnabled }
@@ -237,15 +225,32 @@ public struct Rating: View {
     }
 }
 
+public extension Rating {
+    /// Number of glyphs / the score denominator (default 5).
+    func maxValue(_ max: Int) -> Self { var copy = self; copy.maxValue = max; return copy }
+    /// Glyph point size (default 16).
+    func starSize(_ points: CGFloat) -> Self { var copy = self; copy.size = points; return copy }
+    /// Enables half-step interaction (and half-star tap targets).
+    func allowHalf(_ on: Bool = true) -> Self { var copy = self; copy.allowHalf = on; return copy }
+    /// Overrides the SF Symbol used for the glyph (default "star").
+    func symbol(_ systemImage: String) -> Self { var copy = self; copy.systemImage = systemImage; return copy }
+    /// Sentiment word for the `.rateNumberText` layout (otherwise score-derived).
+    func sentiment(_ text: String?) -> Self { var copy = self; copy.sentiment = text; return copy }
+    /// Makes the rating interactive: the closure receives the newly tapped value.
+    func onRate(_ action: ((Double) -> Void)?) -> Self { var copy = self; copy.onRate = action; return copy }
+    /// Makes the review count label a tappable link.
+    func onReviewTap(_ action: (() -> Void)?) -> Self { var copy = self; copy.onReviewTap = action; return copy }
+}
+
 #Preview {
     struct Demo: View {
         @State var v = 3.5
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
                 Rating(value: 4.3, countLabel: "(128)")                                  // continuous fill
-                Rating(value: 4.3, layout: .numberRate, countLabel: "1.284 yorum", onReviewTap: {})  // numeric + tappable review
-                Rating(value: v, allowHalf: true) { v = $0 }                              // interactive
-                Rating(value: 3, systemImage: "heart")
+                Rating(value: 4.3, layout: .numberRate, countLabel: "1.284 yorum").onReviewTap {}  // numeric + tappable review
+                Rating(value: v).allowHalf().onRate { v = $0 }                            // interactive
+                Rating(value: 3).symbol("heart")
             }
             .padding()
         }
