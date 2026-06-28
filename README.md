@@ -282,6 +282,22 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <td align="center" width="33%"><img src="Screenshots/Diff.png" width="240" alt="Diff"><br><sub><b>Diff</b></sub></td>
 </tr>
 </table>
+
+### Overlays (animated)
+
+_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations and are best seen in the [Demo app](#demo)._
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/Dialog.gif" width="260" alt="Dialog"><br><sub><b>Dialog</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Drawer.gif" width="260" alt="Drawer"><br><sub><b>Drawer</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Popconfirm.gif" width="260" alt="Popconfirm"><br><sub><b>Popconfirm</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="33%"><img src="Screenshots/AlertToast.gif" width="260" alt="AlertToast"><br><sub><b>AlertToast</b></sub></td>
+<td align="center" width="33%"><img src="Screenshots/Tooltip.gif" width="260" alt="Tooltip"><br><sub><b>Tooltip</b></sub></td>
+</tr>
+</table>
 <!-- GALLERY:END -->
 
 ## Token system

@@ -10,8 +10,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "▸ Rendering component screenshots…"
-GENERATE_SCREENSHOTS=1 swift test --filter ScreenshotGenerator >/dev/null
+echo "▸ Rendering component screenshots + overlay GIFs…"
+# Both generators share "Generator" in their name.
+GENERATE_SCREENSHOTS=1 swift test --filter Generator >/dev/null
 
 MANIFEST="Screenshots/manifest.tsv"
 [ -f "$MANIFEST" ] || { echo "✗ $MANIFEST missing (did the generator run?)"; exit 1; }
@@ -42,6 +43,28 @@ emit_category() {
 emit_category "Atoms"
 emit_category "Molecules"
 emit_category "Organisms"
+
+# Animated overlay GIFs (presented state — they can't be a single static frame).
+if [ -f "Screenshots/gifs.tsv" ]; then
+    {
+        echo
+        echo "### Overlays (animated)"
+        echo
+        echo "_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations and are best seen in the [Demo app](#demo)._"
+        echo
+        echo "<table>"
+        i=0
+        while IFS=$'\t' read -r _ name; do
+            [ -z "$name" ] && continue
+            [ "$((i % COLS))" -eq 0 ] && echo "<tr>"
+            printf '<td align="center" width="33%%"><img src="Screenshots/%s.gif" width="260" alt="%s"><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$name"
+            i=$((i + 1))
+            [ "$((i % COLS))" -eq 0 ] && echo "</tr>"
+        done < "Screenshots/gifs.tsv"
+        [ "$((i % COLS))" -ne 0 ] && echo "</tr>"
+        echo "</table>"
+    } >> "$GALLERY"
+fi
 
 COUNT=$(grep -c '<img ' "$GALLERY")
 echo "▸ $COUNT components → rebuilding README gallery…"
