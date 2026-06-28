@@ -14,6 +14,12 @@ public enum StepState {
     case done, active, todo, error
 }
 
+/// A horizontal or vertical step / progress indicator with done / active / todo /
+/// error states, an optional progress dot, and tap-to-navigate.
+///
+/// ```swift
+/// Steps([.init("Cart", state: .done), .init("Pay", state: .active)]) { active = $0 }
+/// ```
 public struct Steps: View {
     public struct Step: Identifiable {
         public let id = UUID()

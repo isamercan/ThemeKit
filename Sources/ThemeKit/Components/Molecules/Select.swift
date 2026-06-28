@@ -10,6 +10,12 @@
 
 import SwiftUI
 
+/// A single-select dropdown — a native `Menu` by default, or a searchable inline
+/// panel with section headers when `searchable` is on.
+///
+/// ```swift
+/// Select("City", options: cities, selection: $city, searchable: true) { $0.name }
+/// ```
 public struct Select<Option: Hashable>: View {
     public struct Section {
         public let title: String?
