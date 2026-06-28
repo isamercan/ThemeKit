@@ -379,9 +379,11 @@ struct PaginationDemo: View {
 
     var body: some View {
         ComponentStage("Pagination", inspector: [("current", "\(page)"), ("total", "\(Int(total))"), ("siblings", wideWindow ? "2" : "1")]) {
-            Pagination(current: $page, total: Int(total), simple: simple,
-                       siblingCount: wideWindow ? 2 : 1, showJumper: jumper && !simple, jumperTitle: "Git",
-                       showTotal: showTotal ? { _, t in "\(t) sayfa" } : nil)
+            Pagination(current: $page, total: Int(total))
+                .simple(simple)
+                .window(sibling: wideWindow ? 2 : 1)
+                .jumper(jumper && !simple, title: "Git")
+                .showTotal(showTotal ? { _, t in "\(t) sayfa" } : nil)
         } knobs: {
             Stepper("Current: \(page)", value: $page, in: 1...Int(total))
             HStack { Text("Total"); SwiftUI.Slider(value: $total, in: 3...50, step: 1) }
