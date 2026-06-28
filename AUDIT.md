@@ -32,7 +32,7 @@
 | CI / tooling | **Solid** | ci.yml + docs.yml, .swiftlint.yml + .swiftformat, api-breakage gate PR'da (ci.yml:57) |
 | Erişilebilirlik | **Partial** | VoiceOver/RTL var, Reduce Motion **118** kullanım — ama `performAccessibilityAudit` = **0** (otomatik a11y denetimi yok) |
 | Test çerçevesi | **Partial** | 34 `XCTestCase`, Swift Testing (`@Test`/`#expect`) = **0**; snapshot 4 suite (~108 component'e karşı, opt-in/iOS-only) |
-| **Concurrency (frontier)** | **Anti-pattern** | tools 6.2 ama `swiftLanguageModes: [.v5]`; swiftSettings 0 upcoming flag; `@concurrent` = 0 (@MainActor 15, Sendable 14) |
+| **Concurrency (frontier)** | **Solid** ✅ | ~~tools 6.2 ama v5~~ → **Swift 6 dil modu** + 2 upcoming flag (NonisolatedNonsendingByDefault, InferIsolatedConformances); 0 hata / 0 warning, 163 test + Demo yeşil (Package.swift) |
 | **Observation (frontier)** | **Partial** | `@Observable` = **0**, `ObservableObject` = **8** (Theme + 5 presenter); hâlâ `@Published` (11) |
 | **Liquid Glass (frontier)** | **Missing** | `.glassEffect` = 0, `GlassEffectContainer` = 0, `reduceTransparency` = 0 |
 | Magic-number spacing | **Partial** | 34 literal `.padding(n)` (token yerine); örn. Molecules/Tooltip.swift:196 `.padding(80)` |
@@ -40,7 +40,9 @@
 
 ## Aksiyon planı
 
-### P0 — önce yapılacak
+### P0 — önce yapılacak ✅ TAMAMLANDI (PR'da)
+
+> Swift 6 dil moduna geçildi (`swiftLanguageModes: [.v6]`) + 2 upcoming flag. 46 strict-concurrency hatası idiomatik fix'lerle çözüldü: 3 style erasure init'inde `sending` parametre, `ThemeContext` `@EnvironmentObject`→`@Environment(\.theme)`, `DateField.text` `nonisolated`, `FormValidator` `@MainActor`. 0 hata / 0 warning, 163 test + Demo yeşil.
 
 **1. Swift 6 dil moduna geç**
 - **Ne:** `swiftLanguageModes: [.v6]` + `ThemeKit` target'ına `swiftSettings: [.swiftLanguageMode(.v6)]` ekleyip çıkan strict-concurrency hatalarını gider.

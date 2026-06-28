@@ -44,6 +44,13 @@ let package = Package(
             name: "ThemeKit",
             resources: [
                 .process("Resources"),
+            ],
+            swiftSettings: [
+                // Swift 6.2 upcoming behaviours, adopted early:
+                // nonisolated async stays on the caller's actor (no hidden hops),
+                // and a @MainActor type's protocol conformances infer @MainActor.
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
             ]
         ),
         // Lottie add-on: depends on the core + Lottie. Keeps Lottie out of the core
@@ -63,5 +70,5 @@ let package = Package(
             ]
         ),
     ],
-    swiftLanguageModes: [.v5]
+    swiftLanguageModes: [.v6]
 )

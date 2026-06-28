@@ -93,7 +93,7 @@ public extension CardStyle where Self == OutlinedCardStyle {
 
 struct AnyCardStyle: CardStyle {
     private let _makeBody: @MainActor (CardStyleConfiguration) -> AnyView
-    init<S: CardStyle>(_ style: S) {
+    init<S: CardStyle>(_ style: sending S) {
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: CardStyleConfiguration) -> AnyView { _makeBody(configuration) }
@@ -112,7 +112,7 @@ extension EnvironmentValues {
 
 public extension View {
     /// Set the ``CardStyle`` for `Card`s in this view and its descendants.
-    func cardStyle<S: CardStyle>(_ style: S) -> some View {
+    func cardStyle<S: CardStyle>(_ style: sending S) -> some View {
         environment(\.cardStyle, AnyCardStyle(style))
     }
 }

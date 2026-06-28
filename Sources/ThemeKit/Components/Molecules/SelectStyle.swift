@@ -107,7 +107,7 @@ public extension SelectStyle where Self == FilledSelectStyle {
 
 struct AnySelectStyle: SelectStyle {
     private let _makeBody: @MainActor (SelectStyleConfiguration) -> AnyView
-    init<S: SelectStyle>(_ style: S) {
+    init<S: SelectStyle>(_ style: sending S) {
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: SelectStyleConfiguration) -> AnyView { _makeBody(configuration) }
@@ -126,7 +126,7 @@ extension EnvironmentValues {
 
 public extension View {
     /// Set the ``SelectStyle`` for `Select`s in this view and its descendants.
-    func selectStyle<S: SelectStyle>(_ style: S) -> some View {
+    func selectStyle<S: SelectStyle>(_ style: sending S) -> some View {
         environment(\.selectStyle, AnySelectStyle(style))
     }
 }

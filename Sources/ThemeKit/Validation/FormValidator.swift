@@ -19,6 +19,7 @@
 
 import SwiftUI
 
+@MainActor
 public final class FormValidator<Field: Hashable>: ObservableObject {
     @Published public private(set) var messages: [Field: [InfoMessage]] = [:]
     /// The field that should currently hold focus (set to the first invalid on submit).
@@ -69,13 +70,8 @@ public final class FormValidator<Field: Hashable>: ObservableObject {
     }
 
     /// A bool focus binding for a field — true while it's the focused field.
-    /// Hand this to `TextInput(externalFocus:)`.
-    ///
-    /// Note: under `-strict-concurrency=complete` this emits Sendable-capture
-    /// warnings (SwiftUI's `Binding` get/set are `@Sendable`, and `self`/`Field`
-    /// are not). Clearing them would require a `Field: Sendable` constraint, which
-    /// is a source-breaking API change — so we keep the binding always evaluated
-    /// on the main thread instead. Harmless in the default `.v5` language mode.
+    /// Hand this to `TextInput(externalFocus:)`. The validator is `@MainActor`, so
+    /// the binding's get/set are main-actor isolated — clean under Swift 6.
     public func focusBinding(_ field: Field) -> Binding<Bool> {
         Binding(
             get: { [weak self] in self?.focusedField == field },

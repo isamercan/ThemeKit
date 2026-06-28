@@ -1,6 +1,7 @@
 import XCTest
 @testable import ThemeKit
 
+@MainActor
 final class ValidationTests: XCTestCase {
 
     func testRequiredAndEmail() {
