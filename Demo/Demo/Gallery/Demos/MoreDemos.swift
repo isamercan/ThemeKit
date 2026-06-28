@@ -394,9 +394,11 @@ struct AutocompleteDemo: View {
                 Autocomplete(label: "Destination", text: $text, suggest: { query in
                     try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
                     return cities.filter { $0.localizedCaseInsensitiveContains(query) }
-                }, isSuggestionEnabled: enabledPredicate)
+                })
+                .suggestionEnabled(enabledPredicate)
             } else {
-                Autocomplete(label: "Destination", text: $text, suggestions: cities, isSuggestionEnabled: enabledPredicate)
+                Autocomplete(label: "Destination", text: $text, suggestions: cities)
+                    .suggestionEnabled(enabledPredicate)
             }
         } knobs: {
             Toggle("Async (remote-style)", isOn: $asyncMode)
