@@ -285,7 +285,7 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 ### Overlays (animated)
 
-_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations and are best seen in the [Demo app](#demo)._
+_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations (native `Menu` / `.sheet`) that no offscreen renderer can capture — record them from the running app with `make record-gif NAME=SelectBox` (boots the simulator, you tap to open the dropdown; see [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md))._
 
 <table>
 <tr>

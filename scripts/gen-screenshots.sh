@@ -50,7 +50,7 @@ if [ -f "Screenshots/gifs.tsv" ]; then
         echo
         echo "### Overlays (animated)"
         echo
-        echo "_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations and are best seen in the [Demo app](#demo)._"
+        echo "_Entrance previews rendered from the live components. SelectBox, BottomSheet, Tour and Feedback use OS-owned presentations (native \`Menu\` / \`.sheet\`) that no offscreen renderer can capture — record them from the running app with \`make record-gif NAME=SelectBox\` (boots the simulator, you tap to open the dropdown; see [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md))._"
         echo
         echo "<table>"
         i=0

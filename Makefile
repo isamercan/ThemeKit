@@ -32,5 +32,8 @@ hooks: ## Install the pre-push CI hook
 screenshots: ## Render component screenshots + rebuild the README gallery
 	@bash scripts/gen-screenshots.sh
 
+record-gif: ## Record a Demo-app interaction → GIF (NAME=SelectBox [SECS=7]); tap the component during recording
+	@bash scripts/record-gif.sh "$(NAME)" "$(SECS)"
+
 clean: ## Remove build artifacts
 	rm -rf .build .ci-test.log
