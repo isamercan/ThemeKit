@@ -95,3 +95,13 @@ public struct Tag: View {
     }
     .padding()
 }
+
+#Preview("States") {
+    PreviewMatrix("Tag", dynamicType: true) {
+        PreviewCase("Default")   { Tag("React") }
+        PreviewCase("Removable") { Tag("Filter", onRemove: {}) }
+        PreviewCase("With icon") { Tag("Beach", leadingSystemImage: "beach.umbrella") }
+        PreviewCase("Semantic")  { Tag("Error", style: .error, variant: .solid) }
+        PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
+    }
+}
