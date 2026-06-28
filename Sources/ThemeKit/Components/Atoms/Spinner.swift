@@ -8,6 +8,8 @@ import SwiftUI
 
 /// Atom. Indeterminate circular loading indicator (token-tinted).
 public struct Spinner: View {
+    @Environment(\.theme) private var theme
+
     private let size: CGFloat
     private let lineWidth: CGFloat
     private let color: Color?
@@ -24,7 +26,7 @@ public struct Spinner: View {
         Circle()
             .trim(from: 0, to: 0.75)
             .stroke(
-                (color ?? Theme.shared.foreground(.fgHero)),
+                (color ?? theme.foreground(.fgHero)),
                 style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
             )
             .frame(width: size, height: size)

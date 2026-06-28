@@ -8,6 +8,8 @@ import SwiftUI
 
 /// Atom. A numeric rating score in a filled rounded box (e.g. "9.0").
 public struct ScoreBadge: View {
+    @Environment(\.theme) private var theme
+
     private let score: Double
     private let large: Bool
 
@@ -19,10 +21,10 @@ public struct ScoreBadge: View {
     public var body: some View {
         Text(String(format: "%.1f", score))
             .textStyle(large ? .labelMd700 : .labelSm700)
-            .foregroundStyle(Theme.shared.foreground(.fgSecondary))
+            .foregroundStyle(theme.foreground(.fgSecondary))
             .padding(.horizontal, large ? Theme.SpacingKey.sm.value : Theme.SpacingKey.xs.value)
             .frame(minWidth: large ? 40 : 32, minHeight: large ? 32 : 24)
-            .background(Theme.shared.background(.bgTurquoise),
+            .background(theme.background(.bgTurquoise),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             // Give the bare number context: VoiceOver reads "Score: 9.0".
             .accessibilityElement(children: .ignore)

@@ -29,19 +29,21 @@ public enum SkeletonShape: Equatable {
 
 /// The shimmering fill, reused by the modifier and the standalone view.
 struct SkeletonShimmer: View {
+    @Environment(\.theme) private var theme
+
     let shape: SkeletonShape
     @State private var animate = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         shape.anyShape
-            .fill(Theme.shared.background(.skeletonBgSkeletonBase))
+            .fill(theme.background(.skeletonBgSkeletonBase))
             .overlay {
                 // Honor Reduce Motion: a static placeholder, no traveling sweep.
                 if !reduceMotion {
                     GeometryReader { geo in
                         LinearGradient(
-                            colors: [.clear, Theme.shared.background(.bgWhite).opacity(0.7), .clear],
+                            colors: [.clear, theme.background(.bgWhite).opacity(0.7), .clear],
                             startPoint: .leading, endPoint: .trailing
                         )
                         .frame(width: geo.size.width * 0.5)

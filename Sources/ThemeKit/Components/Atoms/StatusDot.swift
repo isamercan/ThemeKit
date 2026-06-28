@@ -35,6 +35,8 @@ public enum StatusKind {
 /// Atom. A small status indicator dot with an optional pulse + label.
 /// (daisyUI "Status".)
 public struct StatusDot: View {
+    @Environment(\.theme) private var theme
+
     private let kind: StatusKind
     private let size: CGFloat
     private let label: String?
@@ -66,7 +68,7 @@ public struct StatusDot: View {
             .onAppear { if pulses { withAnimation(.easeOut(duration: 1.2).repeatForever(autoreverses: false)) { animating = true } } }
 
             if let label {
-                Text(label).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text(label).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
             }
         }
         // Collapse dot + label into one element so the status is always spoken,

@@ -9,6 +9,8 @@ import SwiftUI
 /// Atom. A section title: optional eyebrow, title + optional subtitle, and an
 /// optional trailing action (e.g. "See all").
 public struct Title: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let subtitle: String?
     private let eyebrow: String?
@@ -35,21 +37,21 @@ public struct Title: View {
                 if let eyebrow {
                     Text(eyebrow.uppercased())
                         .textStyle(.overline500)
-                        .foregroundStyle(Theme.shared.text(.textHero))
+                        .foregroundStyle(theme.text(.textHero))
                 }
                 Text(text)
                     .textStyle(.headingBase)
-                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                    .foregroundStyle(theme.text(.textPrimary))
                 if let subtitle {
                     Text(subtitle)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                 }
             }
             Spacer(minLength: Theme.SpacingKey.sm.value)
             if let actionTitle, let action {
                 Button(action: action) {
-                    Text(actionTitle).textStyle(.linkBase).foregroundStyle(Theme.shared.text(.textHero))
+                    Text(actionTitle).textStyle(.linkBase).foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
             }

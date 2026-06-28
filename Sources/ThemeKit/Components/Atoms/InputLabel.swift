@@ -9,6 +9,8 @@ import SwiftUI
 /// Atom. A form field label: text + optional required asterisk + optional info
 /// glyph. Shared by the input components.
 public struct InputLabel: View {
+    @Environment(\.theme) private var theme
+
     private let text: String
     private let isRequired: Bool
     private let hasInfo: Bool
@@ -25,12 +27,12 @@ public struct InputLabel: View {
         HStack(spacing: 4) {
             Text(text)
                 .textStyle(.labelSm600)
-                .foregroundStyle(hasError ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textPrimary))
+                .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textPrimary))
             if isRequired {
-                Text("*").textStyle(.labelSm600).foregroundStyle(Theme.shared.foreground(.systemcolorsFgError))
+                Text("*").textStyle(.labelSm600).foregroundStyle(theme.foreground(.systemcolorsFgError))
             }
             if hasInfo {
-                Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(Theme.shared.text(.textTertiary))
+                Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(theme.text(.textTertiary))
             }
         }
     }

@@ -47,6 +47,8 @@ public enum AvatarContent {
 /// or square, plus an `AvatarGroup` that stacks avatars with a +N overflow.
 /// (Ant Avatar parity.) Figma sizes 24/32/40/48.
 public struct Avatar: View {
+    @Environment(\.theme) private var theme
+
     private let content: AvatarContent
     private let size: AvatarSize
     private let customDimension: CGFloat?
@@ -103,7 +105,7 @@ public struct Avatar: View {
         ZStack {
             clip.fill(background.fill)
             if background.hasBorder {
-                clip.stroke(Theme.shared.border(.borderPrimary), lineWidth: 2)
+                clip.stroke(theme.border(.borderPrimary), lineWidth: 2)
             }
             contentView
         }
@@ -120,7 +122,7 @@ public struct Avatar: View {
             let dot = max(8, dim * 0.28)
             let ring = max(1.5, dim * 0.05)
             ZStack {
-                Circle().fill(Theme.shared.background(.bgWhite))
+                Circle().fill(theme.background(.bgWhite))
                     .frame(width: dot + ring * 2, height: dot + ring * 2)
                 StatusDot(presence, size: dot, pulse: presencePulse)
             }
@@ -148,6 +150,8 @@ public struct Avatar: View {
 
 /// Overlapping stack of avatars with a "+N" overflow bubble. (Ant Avatar.Group.)
 public struct AvatarGroup: View {
+    @Environment(\.theme) private var theme
+
     private let avatars: [AvatarContent]
     private let size: AvatarSize
     private let max: Int
@@ -166,11 +170,11 @@ public struct AvatarGroup: View {
         HStack(spacing: -size.dimension * 0.35) {
             ForEach(Array(avatars.prefix(max).enumerated()), id: \.offset) { _, content in
                 Avatar(content, size: size, background: background)
-                    .overlay(Circle().strokeBorder(Theme.shared.background(.bgWhite), lineWidth: 2))
+                    .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
             if overflow > 0 {
                 Avatar(.initials("+\(overflow)"), size: size, background: .dark)
-                    .overlay(Circle().strokeBorder(Theme.shared.background(.bgWhite), lineWidth: 2))
+                    .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
         }
     }

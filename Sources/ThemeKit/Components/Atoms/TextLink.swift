@@ -9,6 +9,8 @@ import SwiftUI
 /// Atom. A standalone tappable text link. (daisyUI "Link"; for links inside a
 /// paragraph use InlineText, for a button use LinkButton.)
 public struct TextLink: View {
+    @Environment(\.theme) private var theme
+
     private let title: String
     private let underline: Bool
     private let action: () -> Void
@@ -24,7 +26,7 @@ public struct TextLink: View {
             Text(title)
                 .textStyle(.linkBase)
                 .underline(underline)
-                .foregroundStyle(Theme.shared.text(.textHero))
+                .foregroundStyle(theme.text(.textHero))
         }
         .buttonStyle(.plain)
     }

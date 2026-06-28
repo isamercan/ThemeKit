@@ -9,6 +9,8 @@ import SwiftUI
 /// Atom. Circular determinate progress with status colors and an optional
 /// dashboard (gapped) variant. (Ant Progress type="circle"/"dashboard".)
 public struct RadialProgress: View {
+    @Environment(\.theme) private var theme
+
     private let value: Double
     private let size: CGFloat
     private let lineWidth: CGFloat
@@ -55,7 +57,7 @@ public struct RadialProgress: View {
         ZStack {
             Circle()
                 .trim(from: 0, to: 1 - gap)
-                .stroke(Theme.shared.border(.borderPrimary), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(theme.border(.borderPrimary), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(rotation))
             Circle()
                 .trim(from: 0, to: value * (1 - gap))
@@ -70,7 +72,7 @@ public struct RadialProgress: View {
                 } else {
                     Text("\(percent)%")
                         .font(.system(size: size * 0.26, weight: .semibold))
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                 }
             }
         }

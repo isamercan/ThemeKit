@@ -9,6 +9,8 @@ import SwiftUI
 /// Atom. Animated toggle between two SF Symbols (e.g. menu↔close, sun↔moon).
 /// (daisyUI "Swap".)
 public struct Swap: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isOn: Bool
     private let onSystemImage: String
     private let offSystemImage: String
@@ -45,7 +47,7 @@ public struct Swap: View {
     private func glyph(_ name: String, visible: Bool, angle: Double) -> some View {
         Image(systemName: name)
             .font(.system(size: size, weight: .medium))
-            .foregroundStyle(Theme.shared.text(.textPrimary))
+            .foregroundStyle(theme.text(.textPrimary))
             .opacity(visible ? 1 : 0)
             .rotationEffect(.degrees(visible ? 0 : angle))
             .scaleEffect(visible ? 1 : 0.6)

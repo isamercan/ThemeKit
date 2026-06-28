@@ -33,6 +33,8 @@ public enum ChipSelectionStyle {
 /// selection API (tonal / solid) instead of the reference's nested
 /// status × mode × fullSelect × isExist matrix.
 public struct Chip: View {
+    @Environment(\.theme) private var theme
+
     @Binding private var isSelected: Bool
     private let title: String
     private let size: ChipSize
@@ -79,12 +81,12 @@ public struct Chip: View {
                 if let rating {
                     HStack(spacing: 2) {
                         Image(systemName: "star.fill").font(.system(size: 11))
-                            .foregroundStyle(Theme.shared.foreground(.systemcolorsFgWarning))
+                            .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                         Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
                     }
                 }
                 Text(title).textStyle(.labelBase600)
-                    .strikethrough(!isExist, color: Theme.shared.text(.textTertiary))
+                    .strikethrough(!isExist, color: theme.text(.textTertiary))
             }
             .foregroundStyle(foreground)
             .frame(maxWidth: expandsHorizontally ? .infinity : nil)
@@ -100,29 +102,29 @@ public struct Chip: View {
     }
 
     private var foreground: Color {
-        if !isEnabled || !isExist { return Theme.shared.text(.textDisabled) }
-        guard isSelected else { return Theme.shared.text(.textSecondary) }
+        if !isEnabled || !isExist { return theme.text(.textDisabled) }
+        guard isSelected else { return theme.text(.textSecondary) }
         switch selectionStyle {
-        case .tonal: return Theme.shared.text(.textHero)
-        case .solid: return Theme.shared.foreground(.fgSecondary)
+        case .tonal: return theme.text(.textHero)
+        case .solid: return theme.foreground(.fgSecondary)
         }
     }
 
     private var background: Color {
-        if !isEnabled || !isExist { return Theme.shared.background(.bgSecondaryLight) }
-        guard isSelected else { return Theme.shared.background(.bgWhite) }
+        if !isEnabled || !isExist { return theme.background(.bgSecondaryLight) }
+        guard isSelected else { return theme.background(.bgWhite) }
         switch selectionStyle {
-        case .tonal: return Theme.shared.background(.bgElevatorTertiary)
-        case .solid: return Theme.shared.background(.bgHero)
+        case .tonal: return theme.background(.bgElevatorTertiary)
+        case .solid: return theme.background(.bgHero)
         }
     }
 
     private var border: Color {
-        if !isEnabled { return Theme.shared.border(.borderPrimary) }
-        guard isSelected else { return Theme.shared.border(.borderPrimary) }
+        if !isEnabled { return theme.border(.borderPrimary) }
+        guard isSelected else { return theme.border(.borderPrimary) }
         switch selectionStyle {
-        case .tonal: return Theme.shared.border(.borderHero)
-        case .solid: return Theme.shared.background(.bgHero)
+        case .tonal: return theme.border(.borderHero)
+        case .solid: return theme.background(.bgHero)
         }
     }
 }

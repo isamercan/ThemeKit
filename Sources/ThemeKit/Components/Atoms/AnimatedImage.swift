@@ -12,6 +12,8 @@ import ImageIO
 /// by a `TimelineView(.animation)`. Handles variable frame durations and loops.
 /// (Reference AVIFAnimatedImage / animated `ImageView` role, native.)
 public struct AnimatedImage: View {
+    @Environment(\.theme) private var theme
+
     private let url: URL?
     private let contentMode: ContentMode
     private let cornerRadius: CGFloat
@@ -49,8 +51,8 @@ public struct AnimatedImage: View {
                 .aspectRatio(contentMode: contentMode)
         } else {
             ZStack {
-                Theme.shared.background(.bgSecondaryLight)
-                if failed { Icon(systemName: "photo", size: .lg, color: Theme.shared.text(.textTertiary)) }
+                theme.background(.bgSecondaryLight)
+                if failed { Icon(systemName: "photo", size: .lg, color: theme.text(.textTertiary)) }
             }
             .skeleton(!failed)
         }
