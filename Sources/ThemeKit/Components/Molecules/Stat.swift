@@ -42,6 +42,8 @@ public struct Stat: View {
     private let systemImage: String?
     private let trend: StatTrend?
 
+    @Environment(\.statStyle) private var statStyle
+
     public init(
         title: String, value: String,
         prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false,
@@ -76,32 +78,25 @@ public struct Stat: View {
     }
 
     public var body: some View {
-        HStack(alignment: .center, spacing: Theme.SpacingKey.md.value) {
-            if let systemImage {
-                Icon(systemName: systemImage, size: .xl, color: Theme.shared.foreground(.fgHero))
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textTertiary))
-                valueRow
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    if let trend {
-                        HStack(spacing: 2) {
-                            Image(systemName: trend.systemImage).font(.system(size: 11, weight: .bold))
-                            Text(trend.text).textStyle(.labelSm600)
-                        }
-                        .foregroundStyle(trend.color)
-                    }
-                    if let description {
-                        Text(description).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
-                    }
-                }
-            }
-            Spacer(minLength: 0)
-        }
+        statStyle.makeBody(configuration: StatStyleConfiguration(
+            title: title,
+            value: AnyView(valueRow),
+            trend: trend.map { AnyView(trendBadge($0)) },
+            description: description,
+            systemImage: systemImage
+        ))
         // Read the whole stat as one phrase instead of four disconnected swipes,
         // and turn the trend arrow glyph into spoken direction.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(accessibilityLabel))
+    }
+
+    private func trendBadge(_ trend: StatTrend) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: trend.systemImage).font(.system(size: 11, weight: .bold))
+            Text(trend.text).textStyle(.labelSm600)
+        }
+        .foregroundStyle(trend.color)
     }
 
     private var valueRow: some View {

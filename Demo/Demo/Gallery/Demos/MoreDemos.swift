@@ -744,18 +744,27 @@ struct StatDemo: View {
     @State private var figure = true
     @State private var loading = false
     @State private var animated = false
+    @State private var centered = false
     @State private var count = 1284
     private var statTrend: StatTrend? { trend == .up ? .up("+12%") : trend == .down ? .down("-3%") : nil }
+    @ViewBuilder private var statView: some View {
+        if animated {
+            Stat(title: "Total bookings", value: count, suffix: "₺", isLoading: loading,
+                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+        } else {
+            Stat(title: "Total bookings", value: "1,284", suffix: "₺", isLoading: loading,
+                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+        }
+    }
     var body: some View {
-        ComponentStage("Stat", inspector: [("trend", trend.rawValue), ("value", animated ? "\(count)" : "1,284"), ("loading", "\(loading)")]) {
-            if animated {
-                Stat(title: "Total bookings", value: count, suffix: "₺", isLoading: loading,
-                     description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+        ComponentStage("Stat", inspector: [("style", centered ? "centered" : "default"), ("trend", trend.rawValue), ("loading", "\(loading)")]) {
+            if centered {
+                statView.statStyle(.centered)   // custom StatStyle via .statStyle(_:)
             } else {
-                Stat(title: "Total bookings", value: "1,284", suffix: "₺", isLoading: loading,
-                     description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+                statView
             }
         } knobs: {
+            Toggle("Centered style (.statStyle)", isOn: $centered)
             Picker("Trend", selection: $trend) { ForEach(Trend.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
             Toggle("Figure icon", isOn: $figure)
             Toggle("Loading (skeleton)", isOn: $loading)
