@@ -1,0 +1,51 @@
+name: previews
+
+# Regenerates the README component gallery (light + dark) and opens a PR with the
+# result. Triggered manually, or automatically when a component changes on main.
+#
+# It opens a PR (not a direct commit) on purpose: ImageRenderer output can vary across
+# machines/OS builds, so a human should confirm a diff is a real component change and
+# not runner-specific rendering noise before merging.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Sources/ThemeKit/Components/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  render:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/swift-setup
+
+      - name: Render previews (light + dark) + rebuild README gallery
+        run: make screenshots
+
+      - name: Drop non-deterministic renders (animated + hosted TextFields)
+        run: |
+          for f in BorderBeam Autocomplete Fieldset InputNumber SearchBar \
+                   TextInput MultiLineTextInput Select; do
+            git checkout -- "Screenshots/$f.png" "Screenshots/$f-dark.png" 2>/dev/null || true
+          done
+
+      - name: Open PR if previews changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/regenerate-previews
+          delete-branch: true
+          title: "docs: regenerate component previews"
+          commit-message: "docs: regenerate component previews (light + dark)"
+          body: |
+            Auto-regenerated component previews (light + dark `<picture>` gallery).
+
+            ⚠️ `ImageRenderer` output can vary across machines/OS builds — review the
+            diff and merge only **real** component changes, not runner rendering noise.
+          add-paths: |
+            Screenshots/*.png
+            README.md
