@@ -106,7 +106,7 @@ struct HotelDetailView: View {
     NavigationStack {
         HotelDetailView(hotel: Hotel.samples[0], path: .constant([]))
     }
-    .environmentObject(Theme.shared)
+    .environment(Theme.shared)
     .environmentObject(DemoThemeStore())
     .environmentObject(FavoritesStore())
 }

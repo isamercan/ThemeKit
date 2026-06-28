@@ -138,6 +138,6 @@ struct HotelCheckoutView: View {
         }
     }
     return Demo()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

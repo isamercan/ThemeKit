@@ -54,6 +54,6 @@ struct TypographyView: View {
 
 #Preview {
     TypographyView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

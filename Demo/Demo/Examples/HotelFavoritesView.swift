@@ -63,6 +63,6 @@ struct HotelFavoritesView: View {
     store.toggle(Hotel.samples[0])
     return NavigationStack { HotelFavoritesView(path: .constant([.favorites])) }
         .environmentObject(store)
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

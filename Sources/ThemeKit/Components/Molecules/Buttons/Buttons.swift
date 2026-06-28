@@ -376,5 +376,5 @@ private struct ButtonConfiguration {
         PrimaryButton("Loading", isContentWidth: true, isLoading: .constant(true)) {}
     }
     .padding()
-    .environmentObject(Theme.shared)
+    .environment(Theme.shared)
 }

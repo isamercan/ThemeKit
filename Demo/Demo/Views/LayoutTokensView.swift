@@ -14,7 +14,7 @@ import ThemeKit
 
 struct LayoutTokensView: View {
     // Re-render when the theme (hence the resolved token values) changes.
-    @EnvironmentObject private var theme: Theme
+    @Environment(Theme.self) private var theme: Theme
 
     private let spacingKeys = Theme.SpacingKey.allCases
     private let radiusKeys = Theme.RadiusKey.allCases
@@ -159,6 +159,6 @@ struct LayoutTokensView: View {
 
 #Preview {
     LayoutTokensView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }

@@ -42,17 +42,19 @@ public extension View {
 }
 
 private struct ThemeKitModifier: ViewModifier {
-    @ObservedObject private var theme = Theme.shared
+    private let theme = Theme.shared
     let reactToRuntimeChanges: Bool
 
     func body(content: Content) -> some View {
         Group {
             if reactToRuntimeChanges {
+                // Reading `theme.revision` here tracks the @Observable Theme, so a
+                // runtime theme switch bumps the id and rebuilds the whole subtree.
                 content.id(theme.revision)
             } else {
                 content
             }
         }
-        .environmentObject(theme)
+        .environment(theme)
     }
 }

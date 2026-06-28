@@ -85,6 +85,6 @@ struct HotelSearchView: View {
 
 #Preview {
     HotelSearchView()
-        .environmentObject(Theme.shared)
+        .environment(Theme.shared)
         .environmentObject(DemoThemeStore())
 }
