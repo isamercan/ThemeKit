@@ -26,7 +26,7 @@ public struct InputNumber: View {
     private let hasInfo: Bool
     private let onChange: ((Int) -> Void)?
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let height: CGFloat
 
     @FocusState private var isFocused: Bool
@@ -44,7 +44,6 @@ public struct InputNumber: View {
         hasInfo: Bool = false,
         onChange: ((Int) -> Void)? = nil,
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         large: Bool = false
     ) {
         self.label = label
@@ -58,7 +57,6 @@ public struct InputNumber: View {
         self.hasInfo = hasInfo
         self.onChange = onChange
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.height = large ? 48 : 40
         self._textValue = State(initialValue: String(value.wrappedValue))
     }

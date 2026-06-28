@@ -27,7 +27,7 @@ public struct Rating: View {
     private let size: CGFloat
     private let layout: RatingLayout
     private let allowHalf: Bool
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let systemImage: String
     private let countLabel: String?
     private let sentiment: String?
@@ -43,7 +43,6 @@ public struct Rating: View {
         size: CGFloat = 16,
         layout: RatingLayout = .stars,
         allowHalf: Bool = false,
-        isEnabled: Bool = true,
         systemImage: String = "star",
         countLabel: String? = nil,
         sentiment: String? = nil,
@@ -55,7 +54,6 @@ public struct Rating: View {
         self.size = size
         self.layout = layout
         self.allowHalf = allowHalf
-        self.isEnabled = isEnabled
         self.systemImage = systemImage
         self.countLabel = countLabel
         self.sentiment = sentiment

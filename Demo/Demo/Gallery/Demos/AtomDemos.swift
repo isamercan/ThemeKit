@@ -133,7 +133,8 @@ struct ChipDemo: View {
         ]) {
             Chip(exists ? "Recommended" : "Sold out", isSelected: $selected, size: large ? .large : .small,
                  selectionStyle: solid ? .solid : .tonal,
-                 rating: rating ? 4.6 : nil, isExist: exists, expandsHorizontally: expands, isEnabled: enabled)
+                 rating: rating ? 4.6 : nil, isExist: exists, expandsHorizontally: expands)
+                    .disabled(!enabled)
         } knobs: {
             Toggle("Selected", isOn: $selected)
             Toggle("Embedded rating", isOn: $rating)

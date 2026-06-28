@@ -42,7 +42,7 @@ public struct Checkbox: View {
     private let isIndeterminate: Bool
     private let alignment: VerticalAlignment
     private let infoMessages: [InfoMessage]
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let accessibilityID: String?
 
     @Environment(\.microAnimations) private var micro
@@ -58,7 +58,6 @@ public struct Checkbox: View {
         isIndeterminate: Bool = false,
         alignment: VerticalAlignment = .center,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         accessibilityID: String? = nil
     ) {
         self.label = label
@@ -69,7 +68,6 @@ public struct Checkbox: View {
         self.isIndeterminate = isIndeterminate
         self.alignment = alignment
         self.infoMessages = infoMessages
-        self.isEnabled = isEnabled
         self.accessibilityID = accessibilityID
     }
 
@@ -168,7 +166,7 @@ public struct Checkbox: View {
         Checkbox(isChecked: .constant(true))
         Checkbox(isChecked: .constant(true), isIndeterminate: true)
         Checkbox(isChecked: .constant(true), size: .small)
-        Checkbox(isChecked: .constant(true), isEnabled: false)
+        Checkbox(isChecked: .constant(true)).disabled(true)
     }
     .padding()
 }

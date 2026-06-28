@@ -23,7 +23,7 @@ public struct MultiSelect<Option: Hashable>: View {
     private let maxTagCount: Int?
     private let infoMessages: [InfoMessage]
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let isLoading: Bool
     private let isOptionEnabled: ((Option) -> Bool)?
 
@@ -40,7 +40,6 @@ public struct MultiSelect<Option: Hashable>: View {
         maxTagCount: Int? = nil,
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         isLoading: Bool = false,
         isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
@@ -54,7 +53,6 @@ public struct MultiSelect<Option: Hashable>: View {
         self.maxTagCount = maxTagCount
         self.infoMessages = infoMessages
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.isLoading = isLoading
         self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle

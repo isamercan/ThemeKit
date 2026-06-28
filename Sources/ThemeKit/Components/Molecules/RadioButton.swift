@@ -48,7 +48,7 @@ public struct RadioButton: View {
     private let backgroundColor: Color?
     private let verticalAlignment: VerticalAlignment
     private let infoMessages: [InfoMessage]
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let accessibilityID: String?
 
     @Environment(\.microAnimations) private var micro
@@ -65,7 +65,6 @@ public struct RadioButton: View {
         backgroundColor: Color? = nil,
         verticalAlignment: VerticalAlignment = .center,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         accessibilityID: String? = nil
     ) {
         self.label = label
@@ -77,7 +76,6 @@ public struct RadioButton: View {
         self.backgroundColor = backgroundColor
         self.verticalAlignment = verticalAlignment
         self.infoMessages = infoMessages
-        self.isEnabled = isEnabled
         self.accessibilityID = accessibilityID
     }
 
@@ -158,7 +156,6 @@ public extension RadioButton {
         padding: RadioButtonPadding = .small,
         backgroundColor: Color? = nil,
         infoMessages: [InfoMessage] = [],
-        isEnabled: Bool = true,
         accessibilityID: String? = nil
     ) {
         self.init(
@@ -172,7 +169,6 @@ public extension RadioButton {
             padding: padding,
             backgroundColor: backgroundColor,
             infoMessages: infoMessages,
-            isEnabled: isEnabled,
             accessibilityID: accessibilityID
         )
     }
@@ -183,7 +179,7 @@ public extension RadioButton {
         RadioButton(isSelected: .constant(false))
         RadioButton(isSelected: .constant(true))
         RadioButton(isSelected: .constant(true), size: .small)
-        RadioButton(isSelected: .constant(true), isEnabled: false)
+        RadioButton(isSelected: .constant(true)).disabled(true)
     }
     .padding()
 }

@@ -54,7 +54,7 @@ final class FormControlSnapshotTests: SnapshotTestCase {
                 Checkbox("Checked", isChecked: .constant(true))
                 Checkbox("Unchecked", isChecked: .constant(false))
                 Checkbox("Indeterminate", isChecked: .constant(false), isIndeterminate: true)
-                Checkbox("Disabled", isChecked: .constant(true), isEnabled: false)
+                Checkbox("Disabled", isChecked: .constant(true)).disabled(true)
             }
         )
     }
@@ -66,7 +66,7 @@ final class FormControlSnapshotTests: SnapshotTestCase {
             VStack(alignment: .leading, spacing: 8) {
                 RadioButton("Selected", isSelected: .constant(true))
                 RadioButton("Unselected", isSelected: .constant(false))
-                RadioButton("Disabled", isSelected: .constant(false), isEnabled: false)
+                RadioButton("Disabled", isSelected: .constant(false)).disabled(true)
             }
         )
     }

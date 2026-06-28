@@ -43,7 +43,7 @@ public struct SearchBar: View {
     private let debounce: TimeInterval
     private let onSearch: ((String) -> Void)?
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
 
     // Typeahead / recent-search additions (all opt-in).
     private let source: Source
@@ -70,7 +70,6 @@ public struct SearchBar: View {
         recent: [String] = [],
         maxResults: Int = 6,
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         onBack: (() -> Void)? = nil,
         onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
@@ -87,7 +86,6 @@ public struct SearchBar: View {
         self.recent = recent
         self.maxResults = maxResults
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.onBack = onBack
         self.onTrailing = onTrailing
         self.onSearch = onSearch
@@ -109,7 +107,6 @@ public struct SearchBar: View {
         recent: [String] = [],
         maxResults: Int = 6,
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         onBack: (() -> Void)? = nil,
         onTrailing: (() -> Void)? = nil,
         onSearch: ((String) -> Void)? = nil,
@@ -126,7 +123,6 @@ public struct SearchBar: View {
         self.recent = recent
         self.maxResults = maxResults
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.onBack = onBack
         self.onTrailing = onTrailing
         self.onSearch = onSearch

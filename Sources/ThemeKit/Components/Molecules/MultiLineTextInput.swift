@@ -17,7 +17,7 @@ public struct MultiLineTextInput: View {
     private let characterLimit: Int?
     private let messages: [InfoMessage]
     private let accessibilityID: String?
-    private let isEnabled: Bool
+    @Environment(\.isEnabled) private var isEnabled
     private let minHeight: CGFloat
 
     @FocusState private var isFocused: Bool
@@ -30,7 +30,6 @@ public struct MultiLineTextInput: View {
         errorText: String? = nil,
         infoMessages: [InfoMessage] = [],
         accessibilityID: String? = nil,
-        isEnabled: Bool = true,
         minHeight: CGFloat = 120
     ) {
         self.label = label
@@ -41,7 +40,6 @@ public struct MultiLineTextInput: View {
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         self.messages = messages
         self.accessibilityID = accessibilityID
-        self.isEnabled = isEnabled
         self.minHeight = minHeight
     }
 
