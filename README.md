@@ -386,6 +386,21 @@ changes, so every view re-reads the regenerated tokens.
   `.themeKit(reactToRuntimeChanges: false)` so the editor isn't torn down,
   and scope `.id(Theme.shared.revision)` onto just the live-preview subtree.
 
+### Per-subtree theming (`\.theme`)
+
+Components also read the theme from the `\.theme` environment value, which
+**defaults to `Theme.shared`** (so unthemed components never crash). Inject a
+different `Theme` instance to re-theme a branch — a second brand in one screen, or
+a pinned theme in a preview/snapshot — without mutating global state:
+
+```swift
+SomeComponent()
+    .theme(brandBTheme)        // this subtree only
+```
+
+This is migrating in: pilot components (`Card`, `Tag`) read `\.theme` today; the
+rest still read `Theme.shared` directly and are moving over incrementally.
+
 ### Fonts
 
 `Montserrat` is bundled. `System` / `SystemRounded` / `SystemSerif` / `SystemMono`

@@ -25,6 +25,8 @@ public struct Card<Content: View>: View {
     private let action: (() -> Void)?
     private let content: () -> Content
 
+    @Environment(\.theme) private var theme
+
     public init(
         elevation: CardElevation = .soft,
         padding: CGFloat = 16,
@@ -54,16 +56,16 @@ public struct Card<Content: View>: View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
             VStack(alignment: .leading, spacing: 2) {
                 if let title {
-                    Text(title).textStyle(.labelLg600).foregroundStyle(Theme.shared.text(.textPrimary))
+                    Text(title).textStyle(.labelLg600).foregroundStyle(theme.text(.textPrimary))
                 }
                 if let subtitle {
-                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                 }
             }
             Spacer(minLength: 0)
             if let extraTitle, let onExtra {
                 Button(action: onExtra) {
-                    Text(extraTitle).textStyle(.labelSm600).foregroundStyle(Theme.shared.foreground(.fgHero))
+                    Text(extraTitle).textStyle(.labelSm600).foregroundStyle(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
             }
@@ -94,11 +96,11 @@ public struct Card<Content: View>: View {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Theme.shared.background(.bgWhite),
+        .background(theme.background(.bgWhite),
                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: elevation == .none ? 1 : 0)
+                .strokeBorder(theme.border(.borderPrimary), lineWidth: elevation == .none ? 1 : 0)
         )
         .modifier(CardShadow(elevation: elevation))
     }
