@@ -68,7 +68,8 @@ private struct TooltipBubble: View {
     let maxWidth: CGFloat?
 
     private var bubbleColor: Color { style?.semantic.solid ?? theme.background(.bgTertiary) }
-    private var textColor: Color { style?.semantic.onSolid ?? theme.foreground(.fgSecondary) }
+    // Auto-contrast against whatever bubble is shown (styled solid or the dark default).
+    private var textColor: Color { ColorContrast.content(on: bubbleColor) }
 
     var body: some View {
         let bubble = Text(text)
