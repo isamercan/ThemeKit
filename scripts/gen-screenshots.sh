@@ -40,7 +40,10 @@ emit_category() {
             # small ones (Badge, Spinner) stay small instead of being upscaled.
             local pw; pw=$(sips -g pixelWidth "Screenshots/$name.png" 2>/dev/null | awk '/pixelWidth/{print $2}')
             local w=$(( ${pw:-480} / 2 )); [ "$w" -gt 240 ] && w=240
-            printf '<td align="center" valign="top" width="33%%"><picture><source media="(prefers-color-scheme: dark)" srcset="Screenshots/%s-dark.png"><img src="Screenshots/%s.png" width="%s" alt="%s"></picture><br><sub><b>%s</b></sub></td>\n' "$name" "$name" "$w" "$name" "$name"
+            # GitHub light/dark image fragments instead of <picture> — the GitHub
+            # mobile app doesn't render <picture> (shows broken), but it honors
+            # `#gh-light-mode-only` / `#gh-dark-mode-only`.
+            printf '<td align="center" valign="top" width="33%%"><img src="Screenshots/%s.png#gh-light-mode-only" width="%s" alt="%s"><img src="Screenshots/%s-dark.png#gh-dark-mode-only" width="%s" alt="%s"><br><sub><b>%s</b></sub></td>\n' "$name" "$w" "$name" "$name" "$w" "$name" "$name"
             i=$((i + 1))
             [ "$((i % COLS))" -eq 0 ] && echo "</tr>"
         done <<< "$names"
