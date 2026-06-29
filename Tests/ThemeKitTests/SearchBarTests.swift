@@ -38,7 +38,7 @@ final class SearchBarTests: XCTestCase {
     }
 
     func testEmptyFieldShowsRecent() {
-        XCTAssertEqual(content(text: "", recent: ["İstanbul", "Bursa"]), .recent(["İstanbul", "Bursa"]))
+        XCTAssertEqual(content(text: "", recent: ["Istanbul", "Bursa"]), .recent(["Istanbul", "Bursa"]))
     }
 
     func testRecentIsCappedAtMaxRecent() {
@@ -59,6 +59,6 @@ final class SearchBarTests: XCTestCase {
     }
 
     func testMatchingResultsAreShown() {
-        XCTAssertEqual(content(text: "ist", results: ["İstanbul"]), .results(["İstanbul"]))
+        XCTAssertEqual(content(text: "ist", results: ["Istanbul"]), .results(["Istanbul"]))
     }
 }

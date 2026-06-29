@@ -45,34 +45,34 @@ final class GifGenerator: XCTestCase {
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 
         gif("Dialog", Color.clear.frame(width: 360, height: 300)
-            .dialog(isPresented: .constant(true), title: "Hesabı sil?",
-                    message: "Bu işlem geri alınamaz.", primaryTitle: "Sil",
-                    onPrimary: {}, secondaryTitle: "Vazgeç", onSecondary: {}, kind: .error))
+            .dialog(isPresented: .constant(true), title: "Delete account?",
+                    message: "This action cannot be undone.", primaryTitle: "Delete",
+                    onPrimary: {}, secondaryTitle: "Cancel", onSecondary: {}, kind: .error))
 
         gif("Drawer", Color.clear.frame(width: 380, height: 300)
             .drawer(isPresented: .constant(true), edge: .leading) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Menü").textStyle(.headingSm).padding(.bottom, 4)
-                    ListRow("Hesabım", leadingSystemImage: "person.circle", action: {})
-                    ListRow("Rezervasyonlar", leadingSystemImage: "calendar", action: {})
-                    ListRow("Ayarlar", leadingSystemImage: "gearshape", action: {})
+                    Text("Menu").textStyle(.headingSm).padding(.bottom, 4)
+                    ListRow("My account", leadingSystemImage: "person.circle", action: {})
+                    ListRow("Reservations", leadingSystemImage: "calendar", action: {})
+                    ListRow("Settings", leadingSystemImage: "gearshape", action: {})
                 }.padding()
             })
 
         gif("Popconfirm", VStack {
             Spacer()
-            ThemeButton("Sil", systemImage: "trash", color: .error, variant: .soft) {}
+            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) {}
         }
             .frame(width: 320, height: 240)
-            .popconfirm(isPresented: .constant(true), title: "Bu öğeyi sil?",
-                        message: "Bu işlem geri alınamaz.", confirmTitle: "Sil",
-                        cancelTitle: "Vazgeç", edge: .top, onConfirm: {}))
+            .popconfirm(isPresented: .constant(true), title: "Delete this item?",
+                        message: "This action cannot be undone.", confirmTitle: "Delete",
+                        cancelTitle: "Cancel", edge: .top, onConfirm: {}))
 
         gif("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.",
                                      type: .success, onClose: {}).frame(width: 360).padding(.vertical, 12))
 
         gif("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
-            .tooltip("Yardımcı ipucu", isPresented: .constant(true), edge: .bottom)
+            .tooltip("Helpful tip", isPresented: .constant(true), edge: .bottom)
             .padding(.vertical, 44).padding(.horizontal, 60))
 
         let tsv = names.map { "Organisms\t\($0)" }.joined(separator: "\n") + "\n"

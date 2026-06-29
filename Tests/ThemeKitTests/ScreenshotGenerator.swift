@@ -88,7 +88,7 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func atoms() {
         shot("Avatar", HStack(spacing: 12) {
-            Avatar(.initials("İM"), size: .lg, presence: .online)
+            Avatar(.initials("CD"), size: .lg, presence: .online)
             Avatar(.initials("AB"), size: .md)
             Avatar(.icon("person.fill"), size: .md)
         })
@@ -195,14 +195,14 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("SegmentedControl", SegmentedControl(["Daily", "Weekly", "Monthly"], selection: .constant(1)).frame(width: 300))
         shot("QuantityStepper", QuantityStepper(value: .constant(2), range: 0...10))
-        shot("Stat", Stat(title: "Total bookings", value: "1,284", suffix: "₺",
+        shot("Stat", Stat(title: "Total bookings", value: "1,284", suffix: "$",
                           description: "this month", systemImage: "ticket", trend: .up("+12%")).frame(width: 280))
         shot("Steps", Steps([.init("Cart", description: "2 items", systemImage: "cart", state: .done),
                              .init("Payment", description: "Card", state: .active),
                              .init("Done", state: .todo)]).frame(width: 360))
         shot("Slider", ThemeKit.Slider(value: .constant(4), in: 0...8, label: "Guests")
                                        .marks([0: "0", 4: "4", 8: "8"]).frame(width: 300))
-        shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("İstanbul")]).frame(width: 320))
+        shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul")]).frame(width: 320))
         shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
         shot("FileInput", FileInput(label: "Passport", fileName: "passport-scan.jpg", onPick: {}, onClear: {}).frame(width: 320))
         shot("Pagination", Pagination(current: .constant(4), total: 50).frame(width: 360))
@@ -210,30 +210,30 @@ final class ScreenshotGenerator: XCTestCase {
             TextInput("Email", text: .constant("user@example.com"))
         }.frame(width: 320), hosted: true)
         shot("DateField", DateField(label: "Check-in", date: .constant(nil)).frame(width: 280))
-        shot("Select", Select("City", options: ["İstanbul", "Ankara", "İzmir"],
-                              selection: .constant(Optional("İstanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
+        shot("Select", Select("City", options: ["Istanbul", "Ankara", "Izmir"],
+                              selection: .constant(Optional("Istanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
         // SelectBox is a native SwiftUI Menu — its label doesn't draw into an
         // offscreen snapshot, so it's shown live in the Demo app instead.
-        shot("MultiSelect", MultiSelect(label: "Cities", options: ["İstanbul", "Ankara", "İzmir"],
-                                        selection: .constant(Set(["İstanbul", "Ankara"]))) { $0 }.frame(width: 300))
-        shot("TreeSelect", TreeSelect(label: "Şehirler",
-                                      nodes: [TreeNode(id: "tr", "Türkiye", systemImage: "flag",
-                                                       children: [TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara")])],
+        shot("MultiSelect", MultiSelect(label: "Cities", options: ["Istanbul", "Ankara", "Izmir"],
+                                        selection: .constant(Set(["Istanbul", "Ankara"]))) { $0 }.frame(width: 300))
+        shot("TreeSelect", TreeSelect(label: "Cities",
+                                      nodes: [TreeNode(id: "tr", "Turkey", systemImage: "flag",
+                                                       children: [TreeNode(id: "ist", "Istanbul"), TreeNode(id: "ank", "Ankara")])],
                                       selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))
-        shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("İstanbul"),
-                                          suggestions: ["İstanbul", "İzmir"]).frame(width: 300), hosted: true)
-        shot("SearchBar", SearchBar(text: .constant("İstanbul")).frame(width: 320), hosted: true)
+        shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("Istanbul"),
+                                          suggestions: ["Istanbul", "Izmir"]).frame(width: 300), hosted: true)
+        shot("SearchBar", SearchBar(text: .constant("Istanbul")).frame(width: 320), hosted: true)
         shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
-        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "₺").frame(width: 280), hosted: true)
+        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "$").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
                                         in: 0...1000, step: 50).marks([0, 500, 1000]).frame(width: 320))
-        shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("Harika bir konaklama oldu, kesinlikle tavsiye ederim.")).frame(width: 300), hosted: true)
+        shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("It was a wonderful stay, I would definitely recommend it.")).frame(width: 300), hosted: true)
         shot("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
-            .tooltip("Yardımcı ipucu", isPresented: .constant(true), edge: .top)
+            .tooltip("Helpful tip", isPresented: .constant(true), edge: .top)
             .padding(.top, 36))
-        shot("Chips", CompactChip(isSelected: .constant(true), text: "Suit", price: "₺899", rating: 4.6))
-        shot("FilterGroup", FilterGroup(options: ["Tümü", "Otel", "Villa", "Apart"],
-                                        selection: .constant(Optional("Otel"))) { $0 }.frame(width: 320))
+        shot("Chips", CompactChip(isSelected: .constant(true), text: "Suit", price: "$899", rating: 4.6))
+        shot("FilterGroup", FilterGroup(options: ["All", "Hotel", "Villa", "Apartment"],
+                                        selection: .constant(Optional("Hotel"))) { $0 }.frame(width: 320))
         shot("ProgressIndicator", ProgressIndicator(variant: .carousel, current: 2, total: 8).frame(width: 240))
         shot("ThemeController", ThemeController(options: [.init(name: "defaultTheme", label: "Default"),
                                                           .init(name: "oceanTheme", label: "Ocean"),
@@ -246,8 +246,8 @@ final class ScreenshotGenerator: XCTestCase {
     // MARK: Organisms
 
     private func organisms() {
-        shot("Accordion", Accordion("İade politikanız nedir?", initiallyExpanded: true) {
-            Text("Satın alımdan sonraki 14 gün içinde iade talep edebilirsiniz.")
+        shot("Accordion", Accordion("What is your return policy?", initiallyExpanded: true) {
+            Text("You can request a refund within 14 days of purchase.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 340))
         shot("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.", type: .success).frame(width: 340))
@@ -256,13 +256,13 @@ final class ScreenshotGenerator: XCTestCase {
             Callout("Please review your details.", type: .warning, style: .soft)
             Callout("Something went wrong.", type: .error, style: .soft)
         }.frame(width: 320))
-        shot("Card", Card(elevation: .soft, title: "Rezervasyon", subtitle: "2 gece · 2 misafir", extraTitle: "Detay", onExtra: {}) {
-            Text("Hilton İstanbul Bomonti — Deluxe oda, kahvaltı dahil.")
+        shot("Card", Card(elevation: .soft, title: "Reservation", subtitle: "2 nights · 2 guests", extraTitle: "Details", onExtra: {}) {
+            Text("Hilton London — Deluxe room, breakfast included.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 320))
         shot("ChatBubble", VStack(alignment: .leading, spacing: 8) {
-            ChatBubble("Merhaba! Rezervasyonunuz onaylandı.", side: .incoming, author: "Destek", time: "09:24")
-            ChatBubble("Teşekkürler!", side: .outgoing, time: "09:25")
+            ChatBubble("Hi! Your reservation is confirmed.", side: .incoming, author: "Support", time: "09:24")
+            ChatBubble("Thanks!", side: .outgoing, time: "09:25")
         }.frame(width: 320))
         shot("Counter", Counter(days: 2, hours: 8, minutes: 45))
         shot("Coupon", Coupon(code: "UXMUQ", style: .outlined).frame(width: 300))
@@ -270,40 +270,40 @@ final class ScreenshotGenerator: XCTestCase {
                                       message: "Try adjusting your search or filters.",
                                       buttonTitle: "Clear filters", action: {},
                                       secondaryTitle: "Learn more", onSecondary: {}).frame(width: 320))
-        shot("InfoBanner", InfoBanner("Rezervasyonun onaylandı. Detaylar için bilet sayfasına git.",
+        shot("InfoBanner", InfoBanner("Your reservation is confirmed. Go to the ticket page for details.",
                                       type: .info, title: "Heads up").frame(width: 340))
-        shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success),
-                                                   .init("Old price", value: "5.000 TL", style: .strikethrough),
-                                                   .init("Total", value: "4.250 TL")],
-                                            title: "Rezervasyon özeti", bordered: true).frame(width: 320))
+        shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Active", style: .success),
+                                                   .init("Old price", value: "$5,000", style: .strikethrough),
+                                                   .init("Total", value: "$4,250")],
+                                            title: "Reservation summary", bordered: true).frame(width: 320))
         shot("ListRow", VStack(spacing: 0) {
-            ListRow("Hesabım", subtitle: "Profil ve güvenlik", leadingSystemImage: "person.circle", action: {})
+            ListRow("My account", subtitle: "Profile and security", leadingSystemImage: "person.circle", action: {})
             DividerView(size: .small)
-            ListRow("Bildirimler", subtitle: "E-posta ve push", leadingSystemImage: "bell", action: {})
+            ListRow("Notifications", subtitle: "Email and push", leadingSystemImage: "bell", action: {})
         }.frame(width: 320))
-        shot("NotificationCard", NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
-                                                  message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
-                                                  date: "5 Aralık 2024", isUnread: true, type: .success).frame(width: 340))
+        shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip",
+                                                  message: "24 days until your Hilton London reservation.",
+                                                  date: "December 5, 2024", isUnread: true, type: .success).frame(width: 340))
         shot("PageHeader", PageHeader("Search results", subtitle: "128 hotels",
-                                      tags: [.init("Aktif", style: .success)], onBack: {}).frame(width: 340))
-        shot("RatingSummary", RatingSummary(score: 9.0, label: "Mükemmel", reviewCount: 1200).frame(width: 300))
-        shot("ResultView", ResultView(.notFound, title: "Sayfa bulunamadı",
-                                      message: "Aradığınız sayfa taşınmış olabilir.",
-                                      primaryTitle: "Ana sayfa", onPrimary: {}).frame(width: 320))
-        shot("SegmentedTabBar", SegmentedTabBar([TabItem("Genel"), TabItem("Yorumlar", badge: "12"),
-                                                 TabItem("Konum")], selection: .constant(1)).frame(width: 340))
-        shot("Timeline", Timeline([.init(title: "Sipariş alındı", time: "09:24", systemImage: "cart", state: .done, color: .success),
-                                   .init(title: "Hazırlanıyor", time: "09:40", systemImage: "shippingbox", state: .active),
-                                   .init(title: "Yolda", state: .todo)], pending: "Kurye bekleniyor…").frame(width: 320))
-        shot("Upload", Upload(prompt: "En fazla 3 fotoğraf yükleyebilirsin.", buttonTitle: "Fotoğraf ekle",
+                                      tags: [.init("Active", style: .success)], onBack: {}).frame(width: 340))
+        shot("RatingSummary", RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200).frame(width: 300))
+        shot("ResultView", ResultView(.notFound, title: "Page not found",
+                                      message: "The page you're looking for may have moved.",
+                                      primaryTitle: "Home", onPrimary: {}).frame(width: 320))
+        shot("SegmentedTabBar", SegmentedTabBar([TabItem("Overview"), TabItem("Reviews", badge: "12"),
+                                                 TabItem("Location")], selection: .constant(1)).frame(width: 340))
+        shot("Timeline", Timeline([.init(title: "Order received", time: "09:24", systemImage: "cart", state: .done, color: .success),
+                                   .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .active),
+                                   .init(title: "On the way", state: .todo)], pending: "Waiting for courier…").frame(width: 320))
+        shot("Upload", Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
                               files: [.init(name: "room-1.jpg", status: .done),
                                       .init(name: "room-2.jpg", status: .uploading(0.6))], maxCount: 3,
                               onPick: {}, onRemove: { _ in }).frame(width: 320))
         shot("PromoBanner", PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
                                         systemImage: "sun.max.fill", ctaTitle: "Explore", action: {}).frame(width: 340))
-        let rowTitles = ["Hesabım", "Bildirimler", "Dil", "Ödeme"]
-        shot("ListView", ListView(tiles, header: "Ayarlar", footer: "\(tiles.count) öğe", bordered: true) { tile in
-            ListRow(rowTitles[tile.id], subtitle: "Detaylar", leadingSystemImage: "gearshape", action: {})
+        let rowTitles = ["My account", "Notifications", "Language", "Payment"]
+        shot("ListView", ListView(tiles, header: "Settings", footer: "\(tiles.count) items", bordered: true) { tile in
+            ListRow(rowTitles[tile.id], subtitle: "Details", leadingSystemImage: "gearshape", action: {})
         }.frame(width: 320))
         shot("MenuCard", MenuCard(items: [
             .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
@@ -314,11 +314,11 @@ final class ScreenshotGenerator: XCTestCase {
             .init(systemImage: "house"), .init(systemImage: "heart"), .init(systemImage: "bag"), .init(systemImage: "person"),
         ], selection: .constant(0)).frame(width: 320))
         shot("FAB", FloatingActionButton(systemImage: "plus") {})
-        shot("Hero", Hero(title: "Erken rezervasyon", subtitle: "Yaz tatilinde %30'a varan indirim",
-                          ctaTitle: "Keşfet", action: {}) { Theme.shared.background(.bgHero) }.frame(width: 340, height: 180))
+        shot("Hero", Hero(title: "Early booking", subtitle: "Up to 30% off your summer holiday",
+                          ctaTitle: "Explore", action: {}) { Theme.shared.background(.bgHero) }.frame(width: 340, height: 180))
         shot("SelectionCards", VStack(spacing: 10) {
-            RadioCard("Standart", description: "Ücretsiz iptal", isSelected: true) {}
-            RadioCard("Esnek", description: "İstediğin zaman değiştir", isSelected: false) {}
+            RadioCard("Standard", description: "Free cancellation", isSelected: true) {}
+            RadioCard("Flexible", description: "Change anytime", isSelected: false) {}
         }.frame(width: 320))
         shot("CardStack", CardStack(tiles) { self.tileView($0) }.frame(width: 300))
         // Carousel / PagingCarousel use a paged TabView, which ImageRenderer can't

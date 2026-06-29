@@ -30,14 +30,14 @@ final class ValidatorsExtensibilityTests: XCTestCase {
     }
 
     func testAsyncRule() async {
-        let unique = AsyncValidationRule("Bu kullanıcı adı alınmış") { name in
+        let unique = AsyncValidationRule("This username is taken") { name in
             // pretend a server call:
             try? await Task.sleep(nanoseconds: 1_000_000)
             return name != "taken"
         }
         let taken = await Validator.validate("taken", async: [unique])
         let free = await Validator.validate("available", async: [unique])
-        XCTAssertEqual(taken.first?.text, "Bu kullanıcı adı alınmış")
+        XCTAssertEqual(taken.first?.text, "This username is taken")
         XCTAssertTrue(free.isEmpty)
     }
 }
