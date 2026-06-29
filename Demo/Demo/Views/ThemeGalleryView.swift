@@ -41,7 +41,7 @@ struct ThemeGalleryView: View {
                 Image(systemName: "slider.horizontal.3")
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Theme Generator").textStyle(.labelBase600)
-                    Text("Primary · secondary · accent · base + ölçek").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    Text("Primary · secondary · accent · base + scale").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                 }
                 Spacer()
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)

@@ -95,16 +95,16 @@ public extension NotificationCard where Actions == EmptyView {
 
 #Preview {
     VStack(spacing: 12) {
-        NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
-                         message: "Hilton İstanbul oteline yaptığın rezervasyona 24 gün kaldı.",
-                         date: "5 Aralık Perşembe 2024", isUnread: true) {
+        NotificationCard(title: "We Have a Suggestion for Your Holiday",
+                         message: "24 days left until your reservation at Hilton Istanbul.",
+                         date: "Thursday, December 5, 2024", isUnread: true) {
             ButtonGroup(.horizontal) {
                 SecondaryButton("Sec", size: .small) {}
                 PrimaryButton("Pri", size: .small) {}
             }
         }
-        NotificationCard(title: "Tatilin başlamasına 7 gün kaldı",
-                         message: "Rixos Sungate", date: "28 Kasım 2024")
+        NotificationCard(title: "7 days left until your holiday begins",
+                         message: "Rixos Sungate", date: "November 28, 2024")
     }
     .padding()
 }

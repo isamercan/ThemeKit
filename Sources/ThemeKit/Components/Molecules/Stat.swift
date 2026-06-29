@@ -158,6 +158,6 @@ public struct Stat: View {
         PreviewCase("Default")  { Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%")) }
         PreviewCase("Loading")  { Stat(title: "Bookings", value: "0", isLoading: true) }
         PreviewCase("Down")     { Stat(title: "Cancellations", value: "32", trend: .down("-3%")) }
-        PreviewCase("Centered") { Stat(title: "Revenue", value: "₺48,210", systemImage: "creditcard").statStyle(.centered) }
+        PreviewCase("Centered") { Stat(title: "Revenue", value: "$48,210", systemImage: "creditcard").statStyle(.centered) }
     }
 }

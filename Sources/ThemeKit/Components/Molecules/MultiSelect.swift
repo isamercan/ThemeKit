@@ -202,8 +202,8 @@ public struct MultiSelect<Option: Hashable>: View {
 
 #Preview {
     struct Demo: View {
-        @State var picks: Set<String> = ["İstanbul"]
-        let cities = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa", "Adana"]
+        @State var picks: Set<String> = ["Istanbul"]
+        let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
         var body: some View {
             MultiSelect(label: "Cities", options: cities, selection: $picks) { $0 }
                 .padding()

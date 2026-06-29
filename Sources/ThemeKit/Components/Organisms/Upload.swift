@@ -228,7 +228,7 @@ public struct UploadList: View {
     Upload(files: [
         UploadFile(name: "room-1.jpg", status: .uploading(0.6)),
         UploadFile(name: "room-2.jpg", status: .done),
-        UploadFile(name: "huge-file.jpg", status: .failed("Dosya çok büyük")),
+        UploadFile(name: "huge-file.jpg", status: .failed("File too large")),
     ], onRetry: { _ in })
     .padding()
 }

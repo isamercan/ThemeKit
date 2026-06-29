@@ -7,7 +7,7 @@
 import SwiftUI
 
 /// Organism. Displays numeric values in labelled boxes — e.g. a countdown
-/// (Gün / Saat / Dakika).
+/// (Day / Hour / Minute).
 public struct Counter: View {
     @Environment(\.theme) private var theme
 

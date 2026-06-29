@@ -28,21 +28,21 @@ struct HotelResultsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SegmentedControl(["Liste", "Harita"], selection: $mode)
+            SegmentedControl(["List", "Map"], selection: $mode)
                 .padding([.horizontal, .top])
 
             if mode == 0 { listView } else { mapView }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("\(destination) · \(hotels.count) otel")
+        .navigationTitle("\(destination) · \(hotels.count) hotels")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var listView: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SegmentedControl(["Önerilen", "Fiyat", "Puan"], selection: $sort)
-                FilterGroup(options: ["Ücretsiz iptal", "Havuz", "Kahvaltı", "Spa"], selection: $filter) { $0 }
+                SegmentedControl(["Recommended", "Price", "Rating"], selection: $sort)
+                FilterGroup(options: ["Free cancellation", "Pool", "Breakfast", "Spa"], selection: $filter) { $0 }
 
                 ForEach(hotels) { hotel in
                     ZStack(alignment: .topTrailing) {
@@ -107,7 +107,7 @@ struct HotelCard: View {
                         .frame(maxWidth: .infinity)
                         .clipped()
                     if let discount = hotel.discount {
-                        Badge("%\(discount) indirim", style: .error, size: .small).padding(10)
+                        Badge("\(discount)% off", style: .error, size: .small).padding(10)
                     }
                 }
 
@@ -130,10 +130,10 @@ struct HotelCard: View {
                             Text(old.priceText).textStyle(.bodySm400).strikethrough().foregroundStyle(Theme.shared.text(.textTertiary))
                         }
                         Text(hotel.pricePerNight.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-                        Text("/ gece").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                        Text("/ night").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         Spacer()
                         if hotel.freeCancellation {
-                            Callout("Ücretsiz iptal", type: .success)
+                            Callout("Free cancellation", type: .success)
                         }
                     }
                     .padding(.top, 2)

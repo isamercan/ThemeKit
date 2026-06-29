@@ -469,7 +469,7 @@ private extension TextInputCapitalization {
                           submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
                     .a11yID("loginEmail")
                 // Password manager autofill on a secure field.
-                TextInput(TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true,
+                TextInput(TextInputModel(label: "Password", isSecure: true, maxLength: 24, showCount: true,
                                          textContentType: .password,
                                          submitLabel: .go), text: $pass)
                     .a11yID("loginPass")

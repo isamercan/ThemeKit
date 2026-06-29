@@ -12,7 +12,7 @@ public enum RatingLayout {
     case stars
     /// A bold number + a single star glyph.
     case numberRate
-    /// A bold number + a sentiment word (e.g. "8.4 Mükemmel"). `sentiment` text.
+    /// A bold number + a sentiment word (e.g. "8.4 Excellent"). `sentiment` text.
     case rateNumberText
 }
 

@@ -366,14 +366,14 @@ public struct ListSectionHeader: View {
                     ListRow("Accept terms", leadingSystemImage: "doc.text", trailing: .checkbox($agree))
                     DividerView(size: .small)
                     ListRow("Premium plan", subtitle: "Billed monthly", number: 1, isSelected: plan,
-                            trailing: .price(.init(total: "₺14.400", each: "₺1.200", unit: "/ ay")), action: { plan.toggle() })
+                            trailing: .price(.init(total: "$14,400", each: "$1,200", unit: "/ month")), action: { plan.toggle() })
                     DividerView(size: .small)
-                    ListRow("Grand Hotel", subtitle: "İstanbul · Deniz manzarası",
+                    ListRow("Grand Hotel", subtitle: "Istanbul · Sea view",
                             leadingSystemImage: "building.2",
-                            meta: ListRowMeta(rating: 8.4, sentiment: "Mükemmel", commentLabel: "1.284 yorum"),
-                            trailing: .status("Müsait", systemImage: "checkmark.seal.fill"), action: {})
+                            meta: ListRowMeta(rating: 8.4, sentiment: "Excellent", commentLabel: "1,284 reviews"),
+                            trailing: .status("Available", systemImage: "checkmark.seal.fill"), action: {})
                     DividerView(size: .small)
-                    ListRow("Update payment", trailing: .button("Düzenle", action: {}))
+                    ListRow("Update payment", trailing: .button("Edit", action: {}))
                 }
                 .padding()
             }

@@ -115,11 +115,11 @@ struct ThemeConfiguratorView: View {
             Card {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
                     HStack {
-                        Text("Başlık").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                        Text("Title").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                         Spacer()
-                        Badge("Yeni", style: .info)
+                        Badge("New", style: .info)
                     }
-                    Text("Tema canlı olarak yeniden üretiliyor — primary, secondary, accent, yüzeyler hepsi.")
+                    Text("The theme regenerates live — primary, secondary, accent, surfaces, all of it.")
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                     HStack(spacing: Theme.SpacingKey.sm.value) {
                         PrimaryButton("Primary") {}
@@ -127,16 +127,16 @@ struct ThemeConfiguratorView: View {
                         OutlineButton("Outline") {}
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Chip("Seçili", isSelected: $chipOn, selectionStyle: .solid)
-                        Chip("Boş", isSelected: .constant(false))
+                        Chip("Selected", isSelected: $chipOn, selectionStyle: .solid)
+                        Chip("Empty", isSelected: .constant(false))
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Bilgi", type: .info)
-                        InfoBanner("Başarılı", type: .success)
+                        InfoBanner("Info", type: .info)
+                        InfoBanner("Success", type: .success)
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Uyarı", type: .warning)
-                        InfoBanner("Hata", type: .error)
+                        InfoBanner("Warning", type: .warning)
+                        InfoBanner("Error", type: .error)
                     }
                     ladder("Primary", .primary)
                     ladder("Secondary", .secondary)
@@ -205,15 +205,15 @@ struct ThemeConfiguratorView: View {
                     .font(.caption).foregroundStyle(.secondary)
 
                 codeCard("theme.json  (Codable recipe)", configJSON) {
-                    UIPasteboard.general.string = configJSON; flash("Config JSON kopyalandı")
+                    UIPasteboard.general.string = configJSON; flash("Config JSON copied")
                 }
                 codeCard("Apply (Swift)", usageSwift) {
-                    UIPasteboard.general.string = usageSwift; flash("Swift kodu kopyalandı")
+                    UIPasteboard.general.string = usageSwift; flash("Swift code copied")
                 }
                 Button {
                     if let data = Theme.shared.generatedTokenJSON(for: draft.themeConfig),
                        let s = String(data: data, encoding: .utf8) {
-                        UIPasteboard.general.string = s; flash("Full token JSON kopyalandı (\(data.count) byte)")
+                        UIPasteboard.general.string = s; flash("Full token JSON copied (\(data.count) bytes)")
                     }
                 } label: {
                     Label("Copy full token JSON (Python-free, bundle + loadTheme)", systemImage: "doc.on.doc").font(.caption)

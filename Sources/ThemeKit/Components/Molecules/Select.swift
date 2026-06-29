@@ -272,8 +272,8 @@ public struct Select<Option: Hashable>: View {
         @State var city: String?
         var body: some View {
             VStack(spacing: 16) {
-                Select("City", options: ["İstanbul", "Ankara", "İzmir"], selection: $city, allowClear: true) { $0 }
-                Select("Searchable", sections: [.init("Marmara", ["İstanbul", "Bursa"]), .init("Ege", ["İzmir", "Aydın"])],
+                Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city, allowClear: true) { $0 }
+                Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
                        selection: $city, searchable: true) { $0 }
             }
             .padding()

@@ -82,7 +82,7 @@ public struct Tag: View {
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
         HStack {
-            Tag("İstanbul", onRemove: {})
+            Tag("Istanbul", onRemove: {})
             Tag("Beach", leadingSystemImage: "beach.umbrella")
             Tag("5 stars")
         }

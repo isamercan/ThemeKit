@@ -81,8 +81,8 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
 
 #Preview {
     struct FAQ: Identifiable { let id = UUID(); let q: String; let a: String }
-    let faqs = [FAQ(q: "İptal edebilir miyim?", a: "Evet, 24 saat öncesine kadar ücretsiz."),
-                FAQ(q: "Ödeme seçenekleri?", a: "Kredi kartı ve havale.")]
+    let faqs = [FAQ(q: "Can I cancel?", a: "Yes, free up to 24 hours before."),
+                FAQ(q: "Payment options?", a: "Credit card and bank transfer.")]
     return VStack(spacing: 24) {
         AccordionGroup(faqs, mode: .single) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
         AccordionGroup(faqs, mode: .multiple) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }

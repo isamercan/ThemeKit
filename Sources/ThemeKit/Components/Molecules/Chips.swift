@@ -303,16 +303,16 @@ public struct ChipGroup<Option: Hashable>: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        CompactChip(isSelected: $a, text: "Standart Oda", price: "₺399,90", rating: 4.6)
-                        CompactChip(isSelected: $b, text: "Suit Oda", price: "₺899,90")
+                        CompactChip(isSelected: $a, text: "Standard Room", price: "$399.90", rating: 4.6)
+                        CompactChip(isSelected: $b, text: "Suite Room", price: "$899.90")
                     }
-                    ChoseChip(isSelected: $c, title: "Esnek Tarife", description: "Ücretsiz iptal",
+                    ChoseChip(isSelected: $c, title: "Flexible rate", description: "Free cancellation",
                               rating: 4.8, showFree: true, systemImage: "wind")
                     HStack {
-                        FilterChip("İstanbul") {}
-                        FilterChip("4+ yıldız", shape: .square) {}
+                        FilterChip("Istanbul") {}
+                        FilterChip("4+ stars", shape: .square) {}
                     }
-                    ChipGroup(title: "Olanaklar", options: ["Wifi", "Havuz", "Spa", "Otopark"], selection: $multi) { $0 }
+                    ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
                 }
                 .padding()
             }

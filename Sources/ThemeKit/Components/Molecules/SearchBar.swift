@@ -375,7 +375,7 @@ public struct SearchBar: View {
 #Preview("Suggestions + recent") {
     struct Demo: View {
         @State var text = ""
-        let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+        let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
         var body: some View {
             SearchBar(
                 text: $text,

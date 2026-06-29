@@ -97,7 +97,7 @@ struct BadgeDemo: View {
         ]) {
             Badge(text, style: style, variant: variant, size: size,
                   leadingSystemImage: icon ? "star.fill" : nil,
-                  action: tappable ? { tapped += 1; flash("Badge tıklandı") } : nil)
+                  action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
                 .badgeShape(pill ? .pill : .rounded)
                 .badgeColor(gradient ? Theme.shared.foreground(.fgSecondary) : nil)
                 .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)
@@ -194,10 +194,10 @@ struct RatingDemo: View {
 
     var body: some View {
         ComponentStage("Rating", inspector: [("value", String(format: "%.1f", value)), ("layout", "\(layout)"), ("reviewTaps", "\(taps)")]) {
-            Rating(value: value, layout: layout, countLabel: "1.284 yorum")
+            Rating(value: value, layout: layout, countLabel: "1,284 reviews")
                 .allowHalf(allowHalf)
-                .onRate((interactive && layoutIdx == 0) ? { value = $0; flash("Puan: \(String(format: "%.1f", $0))") } : nil)
-                .onReviewTap(reviewLink ? { taps += 1; flash("Yorumlara dokunuldu") } : nil)
+                .onRate((interactive && layoutIdx == 0) ? { value = $0; flash("Rating: \(String(format: "%.1f", $0))") } : nil)
+                .onReviewTap(reviewLink ? { taps += 1; flash("Reviews tapped") } : nil)
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value, in: 0...5, step: 0.1) }
             Picker("Layout", selection: $layoutIdx) { Text("Stars").tag(0); Text("Number").tag(1); Text("Number+text").tag(2) }.pickerStyle(.segmented)
@@ -224,7 +224,7 @@ struct SpinnerDemo: View {
 }
 
 struct TagDemo: View {
-    @State private var text = "İstanbul"
+    @State private var text = "Istanbul"
     @State private var removable = true
     @State private var icon = false
     @State private var styleIdx = 0   // 0 = neutral (no style)
@@ -238,7 +238,7 @@ struct TagDemo: View {
         ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
             Tag(text, leadingSystemImage: icon ? "mappin" : nil,
                 style: styles[styleIdx].1, variant: variant,
-                onRemove: removable ? { flash("Tag silindi") } : nil)
+                onRemove: removable ? { flash("Tag removed") } : nil)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $styleIdx) {

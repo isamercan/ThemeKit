@@ -80,8 +80,8 @@ public struct PagingCarousel<Item: Identifiable, Content: View>: View {
 
 #Preview {
     struct Slide: Identifiable { let id = UUID(); let color: Color; let title: String }
-    let slides = [Slide(color: .blue, title: "Bir"), Slide(color: .teal, title: "İki"),
-                  Slide(color: .orange, title: "Üç"), Slide(color: .purple, title: "Dört")]
+    let slides = [Slide(color: .blue, title: "One"), Slide(color: .teal, title: "Two"),
+                  Slide(color: .orange, title: "Three"), Slide(color: .purple, title: "Four")]
     return PagingCarousel(slides, peek: 36, autoplay: 2) { s in
         s.color.opacity(0.3).overlay(Text(s.title).font(.title))
     }
