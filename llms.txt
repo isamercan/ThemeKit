@@ -1,0 +1,34 @@
+# ThemeKit
+
+> A token-driven, brand-neutral SwiftUI design system — 115 components, runtime theming, and the 32 daisyUI themes. Every color / radius / spacing / type style is a design token resolved at runtime from the active `Theme`; components never hardcode a color.
+
+Rules for generating ThemeKit code:
+- Read the theme via `@Environment(\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root. Never hardcode a color — use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.
+- Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.
+- Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`.
+- Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a daisyUI theme: `DaisyTheme.named("dracula")?.apply()`.
+
+## Docs
+- [SKILL.md](skills/themekit/SKILL.md): idioms, setup, patterns, anti-patterns
+- [Components reference](skills/themekit/references/components.md): every component's init + modifiers
+- [Themes reference](skills/themekit/references/themes.md): the daisyUI theme catalog
+
+## Atoms
+
+`AnimatedImage`, `Avatar`, `AvatarGroup`, `Badge`, `Chip`, `Ribbon`, `DividerView`, `GaugeView`, `Icon`, `InlineText`, `InputLabel`, `Join`, `Kbd`, `ProgressBar`, `StepIndicator`, `RadialProgress`, `Rating`, `RemoteImage`, `RollingNumber`, `ScoreBadge`, `ShareButton`, `Skeleton`, `Spinner`, `StatusDot`, `Swap`, `Tag`, `TextLink`, `TextRotate`, `Title`
+
+## Molecules
+
+`Autocomplete`, `Breadcrumbs`, `ButtonGroup`, `PrimaryButton`, `SecondaryButton`, `OutlineButton`, `GhostButton`, `LinkButton`, `ThemeButton`, `CalendarView`, `Checkbox`, `CheckboxGroup`, `ImageChip`, `CompactChip`, `ChoseChip`, `FilterChip`, `ChipGroup`, `ColorField`, `DateField`, `Fieldset`, `FileInput`, `FilterGroup`, `InputNumber`, `MultiLineTextInput`, `MultiSelect`, `OTPInput`, `Pagination`, `ProgressIndicator`, `QuantityStepper`, `RadioButton`, `RadioGroup`, `RadioButtonGroup`, `RangeSlider`, `SearchBar`, `SegmentedControl`, `Select`, `SelectBox`, `Slider`, `Stat`, `Steps`, `TextInput`, `ThemeController`, `ThemeToggle`, `ToggleGroup`, `TreeSelect`
+
+## Organisms
+
+`Accordion`, `AccordionGroup`, `AlertToast`, `BlogCard`, `Callout`, `Card`, `CardStack`, `Carousel`, `ChatBubble`, `Counter`, `Coupon`, `DataTable`, `Diff`, `EmptyState`, `FloatingActionButton`, `Footer`, `Gallery`, `Hero`, `HeroSurface`, `ImageCollage`, `InfoBanner`, `KeyValueTable`, `ListRow`, `ListSectionHeader`, `ListView`, `MenuCard`, `NavigationBar`, `NotificationCard`, `PageHeader`, `PagingCarousel`, `PromoBanner`, `RatingSummary`, `ResultView`, `SegmentedTabBar`, `RadioCard`, `CheckboxCard`, `ThemePicker`, `Timeline`, `Upload`, `UploadList`, `VideoPlayerView`
+
+## Chainable modifiers
+
+`.a11yID()` `.allowHalf()` `.arrows()` `.autoplay()` `.axis()` `.backButton()` `.badgeColor()` `.badgeShape()` `.barHeight()` `.clearable()` `.colors()` `.debounce()` `.density()` `.divider()` `.dots()` `.editable()` `.exists()` `.expands()` `.fade()` `.gradient()` `.hasInfo()` `.highlighted()` `.icon()` `.indicator()` `.inputs()` `.interactive()` `.jumper()` `.loading()` `.loop()` `.marks()` `.maxResults()` `.maxTags()` `.maxValue()` `.muteToggle()` `.muted()` `.number()` `.onChangeEnd()` `.onRate()` `.onReviewTap()` `.onSearch()` `.onValueChange()` `.progressLabel()` `.rating()` `.searchable()` `.sentiment()` `.showTotal()` `.showsValueTooltip()` `.simple()` `.starSize()` `.steps()` `.subtitle()` `.successSegment()` `.suggestionEnabled()` `.symbol()` `.tapToToggle()` `.titleSize()` `.trailingIcon()` `.truncateSubtitle()` `.valueFormat()` `.valueLabel()` `.window()`
+
+## daisyUI themes
+
+`light`, `dark`, `cupcake`, `bumblebee`, `emerald`, `corporate`, `synthwave`, `retro`, `cyberpunk`, `valentine`, `halloween`, `garden`, `forest`, `aqua`, `lofi`, `pastel`, `fantasy`, `wireframe`, `black`, `luxury`, `dracula`, `cmyk`, `autumn`, `business`, `acid`, `lemonade`, `night`, `coffee`, `winter`, `dim`, `nord`, `sunset`
