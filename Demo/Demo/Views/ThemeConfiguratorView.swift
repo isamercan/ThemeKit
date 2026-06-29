@@ -3,11 +3,16 @@
 //  Demo
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  A LIVE theme configurator: pick an accent color + tint + scale knobs (radius /
-//  spacing / font / shadow) + font family + dark, and the whole app re-skins
-//  instantly via `Theme.shared.applyGenerated(...)` — the runtime port of
-//  `tools/gen_tokens.py`. Includes an Export that prints the equivalent
-//  `applyGenerated` call and the `build_theme(...)` params for a permanent theme.
+//  A LIVE theme generator: edit the role colors (primary / secondary / accent /
+//  base surface) + scale knobs (radius / spacing / font / shadow) + font + dark,
+//  and the whole Ant-style palette regenerates on the fly via `ThemeConfig` +
+//  `ThemeGenerator` (the runtime port of `tools/gen_tokens.py`).
+//
+//  It SEEDS from the currently active theme (preset, custom, or bundled) so you
+//  tweak what you see — opening it never resets your theme. Edits are a live
+//  preview only; **Apply** commits the recipe (and syncs the demo's theme store),
+//  **Cancel** reverts to the previously active theme. Export the recipe as a
+//  Codable `theme.json`, an `apply(...)` snippet, or a full baked token JSON.
 //
 
 import SwiftUI
@@ -15,9 +20,12 @@ import ThemeKit
 
 struct ThemeConfiguratorView: View {
     @ThemeContext private var theme
+    @EnvironmentObject private var store: DemoThemeStore
     @Environment(\.dismiss) private var dismiss
 
-    @State private var config = ConfigState()
+    @State private var draft = ConfigState()
+    @State private var applied = false
+    @State private var live = false            // gates the seeding change from applying
     @State private var chipOn = true
     // Theme-wide micro-animation switch — shared with the app root via the same key.
     @AppStorage("themekit.microAnimations") private var microAnimations = true
@@ -29,25 +37,51 @@ struct ThemeConfiguratorView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     preview
-                    accentSection
+                    colorsSection
                     scaleSection
                     fontSection
                     exportSection
-                    Button("Reset to default") { config = ConfigState(); apply(config) }
+                    Button("Reset to default") { draft = ConfigState() }
                         .font(.callout)
                 }
                 .padding()
             }
-            .navigationTitle("Theme Configurator")
+            .navigationTitle("Theme Generator")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
-            .onAppear { apply(config) }
-            .onChange(of: config) { _, new in apply(new) }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Apply") { commit() }.fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                draft = seed()
+                // Let the seeding assignment settle before live edits apply, so
+                // opening the sheet doesn't regenerate a bundled theme.
+                DispatchQueue.main.async { live = true }
+            }
+            .onChange(of: draft) { _, new in
+                if live { Theme.shared.apply(new.themeConfig) }   // live preview only
+            }
+            .onDisappear { if !applied { store.reapplyActive() } }   // revert preview on cancel
         }
     }
 
-    private func apply(_ c: ConfigState) {
-        Theme.shared.apply(c.themeConfig)
+    /// Commit the draft: persist + apply + sync the demo's theme store.
+    private func commit() {
+        store.applyGenerated(draft.themeConfig)
+        applied = true
+        dismiss()
+    }
+
+    /// Seed the UI from the active theme — a preset / custom recipe exactly, or a
+    /// bundled JSON theme approximated from its live primary + surface colors.
+    private func seed() -> ConfigState {
+        if let cfg = store.activeConfig { return ConfigState(cfg) }
+        if let id = store.presetID, let preset = ThemePreset.named(id) { return ConfigState(preset.config) }
+        return ConfigState(ThemeConfig(primaryHex: SemanticColor.primary.solid.hexRGB,
+                                       baseHex: theme.background(.bgWhite).hexRGB,
+                                       dark: store.isDark))
     }
 
     // MARK: Live preview
@@ -62,18 +96,28 @@ struct ThemeConfiguratorView: View {
                         Spacer()
                         Badge("Yeni", style: .info)
                     }
-                    Text("Tema canlı olarak yeniden üretiliyor — accent, neutral, yüzeyler hepsi.")
+                    Text("Tema canlı olarak yeniden üretiliyor — primary, secondary, accent, yüzeyler hepsi.")
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        PrimaryButton("Birincil") {}
-                        OutlineButton("İkincil") {}
+                        PrimaryButton("Primary") {}
+                        SecondaryButton("Secondary") {}
+                        OutlineButton("Outline") {}
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
                         Chip("Seçili", isSelected: $chipOn, selectionStyle: .solid)
                         Chip("Boş", isSelected: .constant(false))
                     }
-                    InfoBanner("Bilgilendirme mesajı.", type: .info)
-                    ladder
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        InfoBanner("Bilgi", type: .info)
+                        InfoBanner("Başarılı", type: .success)
+                    }
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        InfoBanner("Uyarı", type: .warning)
+                        InfoBanner("Hata", type: .error)
+                    }
+                    ladder("Primary", .primary)
+                    ladder("Secondary", .secondary)
+                    ladder("Accent", .accent)
                 }
             }
             // Force the whole preview subtree to rebuild on each theme change so
@@ -82,23 +126,29 @@ struct ThemeConfiguratorView: View {
         }
     }
 
-    private var ladder: some View {
-        HStack(spacing: 0) {
-            ForEach(SemanticColor.Shade.allCases, id: \.self) { shade in
-                Rectangle().fill(SemanticColor.primary.shade(shade)).frame(height: 22)
+    private func ladder(_ label: String, _ color: SemanticColor) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
+            HStack(spacing: 0) {
+                ForEach(SemanticColor.Shade.allCases, id: \.self) { shade in
+                    Rectangle().fill(color.shade(shade)).frame(height: 20)
+                }
             }
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
     // MARK: Controls
 
-    private var accentSection: some View {
-        section("Accent") {
+    private var colorsSection: some View {
+        section("Colors") {
             VStack(spacing: 14) {
-                ColorPicker("Primary color", selection: $config.primary, supportsOpacity: false)
-                sliderRow("Tint (re-skin strength)", $config.tint, 0...0.25, "%.2f")
-                Toggle("Dark mode", isOn: $config.dark)
+                ColorPicker("Primary", selection: $draft.primary, supportsOpacity: false)
+                ColorPicker("Secondary", selection: $draft.secondary, supportsOpacity: false)
+                ColorPicker("Accent", selection: $draft.accent, supportsOpacity: false)
+                ColorPicker("Base (surface)", selection: $draft.base, supportsOpacity: false)
+                sliderRow("Tint (re-skin strength)", $draft.tint, 0...0.25, "%.2f")
+                Toggle("Dark mode", isOn: $draft.dark)
                 Toggle("Micro-animations (theme-wide)", isOn: $microAnimations)
             }
         }
@@ -107,9 +157,9 @@ struct ThemeConfiguratorView: View {
     private var scaleSection: some View {
         section("Scale") {
             VStack(spacing: 14) {
-                sliderRow("Radius ×", $config.radiusScale, 0.25...2, "%.2f")
-                sliderRow("Spacing ×", $config.spacingScale, 0.7...1.5, "%.2f")
-                sliderRow("Shadow ×", $config.shadowScale, 0...2, "%.2f")
+                sliderRow("Radius ×", $draft.radiusScale, 0.25...2, "%.2f")
+                sliderRow("Spacing ×", $draft.spacingScale, 0.7...1.5, "%.2f")
+                sliderRow("Shadow ×", $draft.shadowScale, 0...2, "%.2f")
             }
         }
     }
@@ -117,10 +167,10 @@ struct ThemeConfiguratorView: View {
     private var fontSection: some View {
         section("Typography") {
             VStack(spacing: 14) {
-                Picker("Font", selection: $config.font) {
+                Picker("Font", selection: $draft.font) {
                     ForEach(fonts, id: \.self) { Text($0).tag($0) }
                 }
-                sliderRow("Font ×", $config.fontScale, 0.85...1.25, "%.2f")
+                sliderRow("Font ×", $draft.fontScale, 0.85...1.25, "%.2f")
             }
         }
     }
@@ -138,7 +188,7 @@ struct ThemeConfiguratorView: View {
                     UIPasteboard.general.string = usageSwift; flash("Swift kodu kopyalandı")
                 }
                 Button {
-                    if let data = Theme.shared.generatedTokenJSON(for: config.themeConfig),
+                    if let data = Theme.shared.generatedTokenJSON(for: draft.themeConfig),
                        let s = String(data: data, encoding: .utf8) {
                         UIPasteboard.general.string = s; flash("Full token JSON kopyalandı (\(data.count) byte)")
                     }
@@ -167,7 +217,7 @@ struct ThemeConfiguratorView: View {
     }
 
     private var configJSON: String {
-        (try? config.themeConfig.jsonData()).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        (try? draft.themeConfig.jsonData()).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
     }
 
     private var usageSwift: String {
@@ -203,30 +253,62 @@ struct ThemeConfiguratorView: View {
 }
 
 struct ConfigState: Equatable {
-    var primary: Color = Color(hex: "056bfd")
-    var tint: Double = 0.06
-    var radiusScale: Double = 1.0
-    var spacingScale: Double = 1.0
-    var fontScale: Double = 1.0
-    var shadowScale: Double = 1.0
-    var font: String = "Montserrat"
-    var dark: Bool = false
+    var primary: Color
+    var secondary: Color
+    var accent: Color
+    var base: Color
+    var tint: Double
+    var radiusScale: Double
+    var spacingScale: Double
+    var fontScale: Double
+    var shadowScale: Double
+    var font: String
+    var dark: Bool
+
+    init(primary: Color = Color(hex: "056bfd"), secondary: Color = Color(hex: "7c3aed"),
+         accent: Color = Color(hex: "0fb4ab"), base: Color = Color(hex: "ffffff"),
+         tint: Double = 0.06, radiusScale: Double = 1, spacingScale: Double = 1,
+         fontScale: Double = 1, shadowScale: Double = 1, font: String = "Montserrat", dark: Bool = false) {
+        self.primary = primary; self.secondary = secondary; self.accent = accent; self.base = base
+        self.tint = tint; self.radiusScale = radiusScale; self.spacingScale = spacingScale
+        self.fontScale = fontScale; self.shadowScale = shadowScale; self.font = font; self.dark = dark
+    }
+
+    /// Seed the UI from a portable recipe (a preset, a saved custom config, or a
+    /// bundled-theme approximation). Missing brand colors fall back to primary.
+    init(_ c: ThemeConfig) {
+        primary = Color(hex: c.primaryHex)
+        secondary = Color(hex: c.secondaryHex ?? c.primaryHex)
+        accent = Color(hex: c.accentHex ?? c.primaryHex)
+        base = Color(hex: c.baseHex ?? (c.dark ? "1d232a" : "ffffff"))
+        tint = c.tint; radiusScale = c.radiusScale; spacingScale = c.spacingScale
+        fontScale = c.fontScale; shadowScale = c.shadowScale; font = c.font; dark = c.dark
+    }
 
     /// The portable, Codable recipe this UI state represents.
     var themeConfig: ThemeConfig {
-        ThemeConfig(primaryHex: primary.hexRGB, tint: tint, dark: dark, font: font,
-                    fontScale: fontScale, radiusScale: radiusScale, spacingScale: spacingScale, shadowScale: shadowScale)
+        ThemeConfig(primaryHex: primary.hexRGB, baseHex: base.hexRGB,
+                    secondaryHex: secondary.hexRGB, accentHex: accent.hexRGB,
+                    tint: tint, dark: dark, font: font, fontScale: fontScale,
+                    radiusScale: radiusScale, spacingScale: spacingScale, shadowScale: shadowScale)
     }
 }
 
 extension Color {
-    /// 6-digit RRGGBB hex of this color (for the theme generator).
+    /// 6-digit RRGGBB hex of this color in **sRGB** — the space the generator
+    /// works in. Converting first keeps wide-gamut / Display-P3 picks from drifting
+    /// and clamps any out-of-range components.
     var hexRGB: String {
         #if canImport(UIKit)
-        let ui = UIColor(self)
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return String(format: "%02x%02x%02x", Int((r * 255).rounded()), Int((g * 255).rounded()), Int((b * 255).rounded()))
+        let cg = UIColor(self).cgColor
+        let comps = CGColorSpace(name: CGColorSpace.sRGB)
+            .flatMap { cg.converted(to: $0, intent: .defaultIntent, options: nil) }?.components
+            ?? cg.components ?? [0, 0, 0, 1]
+        func ch(_ i: Int) -> Int {
+            let v = comps.count > i ? comps[i] : (comps.first ?? 0)   // grayscale → 1 component
+            return Int((min(max(v, 0), 1) * 255).rounded())
+        }
+        return String(format: "%02x%02x%02x", ch(0), ch(1), ch(2))
         #else
         return "056bfd"
         #endif
