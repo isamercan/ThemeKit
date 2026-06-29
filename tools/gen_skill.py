@@ -19,6 +19,18 @@ THEMES_OUT = ROOT / "skills/themekit/references/themes.md"
 LLMS_OUT = ROOT / "llms.txt"
 JSON_OUT = ROOT / "mcp/themekit.json"
 THEME_RE = re.compile(r'\.init\(\s*"(\w+)",\s*"([^"]+)"')
+THEME_FULL_RE = re.compile(
+    r'\.init\(\s*"(\w+)",\s*"([^"]+)",\s*primary:\s*"(\w+)",\s*secondary:\s*"(\w+)",'
+    r'\s*accent:\s*"(\w+)",\s*base:\s*"(\w+)"'
+)
+
+
+def full_themes():
+    src = THEMES_SRC.read_text(encoding="utf-8")
+    return [
+        {"id": m[0], "name": m[1], "primary": m[2], "secondary": m[3], "accent": m[4], "base": m[5]}
+        for m in THEME_FULL_RE.findall(src)
+    ]
 
 RULES = [
     "Read the theme via `@Environment(\\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root.",
@@ -43,47 +55,71 @@ CATEGORIES = [("Atoms", "Atoms"), ("Molecules", "Molecules"), ("Organisms", "Org
 
 # `public struct Name: View` / `public struct Name<...>: View`
 STRUCT_RE = re.compile(r"^public struct (\w+)(?:<[^>]*>)?\s*:\s*View\b", re.M)
-# self-returning chainable modifiers: `func name(...) -> Self`
-MODIFIER_RE = re.compile(r"\bfunc (\w+)\s*\([^;{]*?\)\s*->\s*Self\b")
-# first public init's leading parameter labels (a usage hint, best-effort)
+# self-returning chainable modifiers: `func name(params) -> Self`
+MODIFIER_RE = re.compile(r"\bfunc (\w+)\s*\(([^;{]*?)\)\s*->\s*Self\b", re.S)
 INIT_RE = re.compile(r"public init\(\s*(.*?)\)\s*\{", re.S)
 
 
-def param_labels(swift: str) -> str:
-    m = INIT_RE.search(swift)
-    if not m:
-        return ""
-    body = m.group(1)
-    labels = []
-    depth = 0
-    token = ""
-    # split top-level commas only (ignore commas inside <>, (), [])
+def split_top(body: str):
+    """Split a param list on top-level commas only (ignore < > ( ) [ ] nesting)."""
+    out, depth, token = [], 0, ""
     for ch in body:
         if ch in "<([":
             depth += 1
         elif ch in ">)]":
             depth -= 1
         if ch == "," and depth == 0:
-            labels.append(token)
-            token = ""
+            out.append(token); token = ""
         else:
             token += ch
-    labels.append(token)
+    out.append(token)
+    return [p.strip() for p in out if p.strip()]
+
+
+def param_labels(swift: str) -> str:
+    m = INIT_RE.search(swift)
+    if not m:
+        return ""
     names = []
-    for p in labels:
-        p = p.strip()
-        if not p:
-            continue
-        # `_ title: String` -> "title" (positional) ; `label: String` -> "label:"
+    for p in split_top(m.group(1)):
         head = p.split(":")[0].strip()
         parts = head.split()
         if not parts:
             continue
-        if parts[0] == "_":
-            names.append(parts[1] if len(parts) > 1 else "_")
-        else:
-            names.append(parts[0] + ":")
+        names.append(parts[1] if parts[0] == "_" and len(parts) > 1 else parts[0] + ":")
     return ", ".join(names[:6]) + (" …" if len(names) > 6 else "")
+
+
+def doc_above(lines, idx) -> str:
+    """Contiguous `///` doc lines just above line `idx` (skips a blank/attr gap)."""
+    doc, i = [], idx - 1
+    while i >= 0:
+        s = lines[i].strip()
+        if s.startswith("///"):
+            doc.append(s[3:].strip())
+        elif s.startswith("@") or s.startswith("//") or s == "":
+            if s == "" and doc:
+                break
+            i -= 1
+            continue
+        else:
+            break
+        i -= 1
+    doc.reverse()
+    text = " ".join(d for d in doc if d).strip()
+    return text.split(". ")[0].rstrip(".") + ("." if text else "")  # first sentence
+
+
+def parse_modifiers(swift, lines):
+    found = {}
+    for m in MODIFIER_RE.finditer(swift):
+        name = m.group(1)
+        if name in found:
+            continue
+        params = re.sub(r"\s+", " ", m.group(2)).strip()
+        ln = swift.count("\n", 0, m.start())
+        found[name] = {"name": name, "signature": f"{name}({params})", "doc": doc_above(lines, ln)}
+    return found
 
 
 def collect():
@@ -94,16 +130,21 @@ def collect():
         base = COMPONENTS / folder
         for path in sorted(base.rglob("*.swift")):
             swift = path.read_text(encoding="utf-8")
-            structs = STRUCT_RE.findall(swift)
+            lines = swift.split("\n")
+            structs = [(m.group(1), swift[:m.start()].count("\n")) for m in STRUCT_RE.finditer(swift)]
             if not structs:
                 continue
-            mods = sorted(set(MODIFIER_RE.findall(swift)))
-            all_modifiers.update(mods)
-            primary = structs[0]
+            mods = parse_modifiers(swift, lines)
             primary_params = param_labels(swift)
-            for name in structs:
-                is_primary = name == primary
-                items.append((name, primary_params if is_primary else "", mods if is_primary else []))
+            for i, (name, ln) in enumerate(structs):
+                is_primary = i == 0
+                all_modifiers.update(mods.keys())
+                items.append({
+                    "name": name,
+                    "doc": doc_above(lines, ln),
+                    "params": primary_params if is_primary else "",
+                    "modifiers": list(mods.values()) if is_primary else [],
+                })
         out[label] = items
     return out, sorted(all_modifiers)
 
@@ -124,10 +165,11 @@ def render(cats, modifiers):
         items = cats[label]
         lines.append(f"## {label} ({len(items)})")
         lines.append("")
-        for name, params, mods in items:
-            sig = f"`{name}({params})`" if params else f"`{name}`"
-            extra = f" — modifiers: {', '.join('`.' + m + '()`' for m in mods)}" if mods else ""
-            lines.append(f"- {sig}{extra}")
+        for c in items:
+            sig = f"`{c['name']}({c['params']})`" if c["params"] else f"`{c['name']}`"
+            doc = f" — {c['doc']}" if c["doc"] else ""
+            extra = f" · modifiers: {', '.join('`.' + m['name'] + '()`' for m in c['modifiers'])}" if c["modifiers"] else ""
+            lines.append(f"- {sig}{doc}{extra}")
         lines.append("")
     lines.append("## Chainable modifiers (all components)")
     lines.append("")
@@ -192,7 +234,7 @@ def render_llms(cats, modifiers, themes):
         "",
     ]
     for label, _ in CATEGORIES:
-        names = ", ".join(f"`{n}`" for n, _, _ in cats[label])
+        names = ", ".join(f"`{c['name']}`" for c in cats[label])
         lines.append(f"## {label}")
         lines.append("")
         lines.append(names)
@@ -211,12 +253,16 @@ def render_llms(cats, modifiers, themes):
 def render_json(cats, modifiers, themes):
     components = []
     for label, _ in CATEGORIES:
-        for name, params, mods in cats[label]:
+        for c in cats[label]:
             components.append({
-                "name": name,
+                "name": c["name"],
                 "category": label,
-                "init": f"{name}({params})" if params else name,
-                "modifiers": [f".{m}()" for m in mods],
+                "doc": c["doc"],
+                "init": f"{c['name']}({c['params']})" if c["params"] else c["name"],
+                "modifiers": [
+                    {"name": m["name"], "signature": m["signature"], "doc": m["doc"]}
+                    for m in c["modifiers"]
+                ],
             })
     return json.dumps({
         "name": "themekit",
@@ -227,7 +273,7 @@ def render_json(cats, modifiers, themes):
         "tokens": TOKENS,
         "components": components,
         "modifiers": [f".{m}()" for m in modifiers],
-        "themes": [{"id": t[0], "name": t[1]} for t in themes],
+        "themes": full_themes(),
     }, indent=2)
 
 
