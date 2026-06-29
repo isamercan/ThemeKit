@@ -33,6 +33,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `scaffold_screen(kind)` | A starter form / list / detail / settings screen |
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit |
 | `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
+| **`figma_to_swiftui(fileKey, nodeId, dryRun?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven), emits **verified-API** code + a mapping report. Needs `FIGMA_TOKEN` |
 
 ### Themes
 | Tool | What it returns |
@@ -42,6 +43,23 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 
 Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
 and prompts (`themekit-screen`, `migrate-to-themekit`).
+
+## Figma → SwiftUI
+
+`figma_to_swiftui` turns a Figma node into ThemeKit SwiftUI:
+
+1. **Fetch** the node subtree via the Figma REST API (`FIGMA_TOKEN`).
+2. **Token match** — fills → nearest color token (CIE76 ΔE), padding/`itemSpacing`
+   → spacing scale, corner radius → radius token. No match → reported as *needs review*.
+3. **Component match** — `figma-mapping.json` rules first (e.g. `"Button/Primary" → PrimaryButton`),
+   then heuristics; unmapped nodes become raw SwiftUI marked `// ⚠️ unmapped`.
+4. **Codegen** with parameter names **verified against the symbol-graph API**.
+5. A **mapping report** (matched / unmapped / token snaps / needs-review); `dryRun: true`
+   returns just the plan.
+
+It's **config-driven** — edit `figma-mapping.json` to add/override rules. Set the
+token: `export FIGMA_TOKEN=figd_…`. (Complements an official Figma MCP — this one is
+the mapping/codegen layer and fetches node data itself.)
 
 ## Install
 
@@ -66,13 +84,15 @@ claude mcp add themekit -- node "$(pwd)/dist/index.js"
   "mcpServers": {
     "themekit": {
       "command": "npx",
-      "args": ["-y", "@isamercan/themekit-mcp"]
+      "args": ["-y", "@isamercan/themekit-mcp"],
+      "env": { "FIGMA_TOKEN": "figd_…" }
     }
   }
 }
 ```
 
-Then ask your agent: *"Use the themekit MCP — build a sign-up screen."*
+`FIGMA_TOKEN` is optional — only `figma_to_swiftui` needs it; every other tool
+works without it. Then ask your agent: *"Use the themekit MCP — build a sign-up screen."*
 
 ## Develop
 
