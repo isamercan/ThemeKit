@@ -3,7 +3,7 @@
 //  Demo
 //  Created by İsa Mercan on 29.06.2026.
 //
-//  The "Themes" tab — a daisyUI-style theme gallery. Tap any card to switch the
+//  The "Themes" tab — a theme-preset gallery. Tap any card to switch the
 //  whole app's theme live; a preview strip up top shows real ThemeKit components
 //  re-coloring with the active choice.
 //
@@ -23,12 +23,12 @@ struct ThemesView: View {
                     livePreview
                         // Force a full rebuild of the static-leaf preview on swap.
                         .id(theme.revision)
-                    Text("\(DaisyTheme.all.count) themes from daisyUI — tap to switch")
+                    Text("\(ThemePreset.all.count) theme presets — tap to switch")
                         .textStyle(.labelSm700)
                         .foregroundStyle(theme.text(.textTertiary))
                     ThemePicker(
-                        selection: Binding(get: { store.daisyID }, set: { _ in }),
-                        onSelect: { store.applyDaisy($0) }
+                        selection: Binding(get: { store.presetID }, set: { _ in }),
+                        onSelect: { store.applyPreset($0) }
                     )
                 }
                 .padding()
@@ -40,10 +40,10 @@ struct ThemesView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(store.daisyID.flatMap { DaisyTheme.named($0)?.name } ?? "daisyUI Themes")
+            Text(store.presetID.flatMap { ThemePreset.named($0)?.name } ?? "Theme presets")
                 .textStyle(.headingBase)
                 .foregroundStyle(theme.text(.textPrimary))
-            Text("Inject any daisyUI theme into ThemeKit and switch on the fly.")
+            Text("Inject any theme preset into ThemeKit and switch on the fly.")
                 .textStyle(.bodyBase400)
                 .foregroundStyle(theme.text(.textSecondary))
         }
@@ -62,7 +62,7 @@ struct ThemesView: View {
                 Text("The quick brown fox jumps over the lazy dog.")
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
-                // The three daisyUI brand colors — primary / secondary / accent.
+                // The three brand colors — primary / secondary / accent.
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     ThemeButton("Primary", color: .primary, variant: .solid) {}
                     ThemeButton("Secondary", color: .secondary, variant: .solid) {}

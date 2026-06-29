@@ -2,31 +2,31 @@ import XCTest
 import SwiftUI
 @testable import ThemeKit
 
-/// Visual proof for the daisyUI theme gallery. Run explicitly:
-///   RENDER_DAISY=1 swift test --filter DaisyRenderProof
-/// Writes Screenshots/DaisyThemes.png (the picker) and Screenshots/DaisyShowcase.png
-/// (the same UI under four injected daisyUI themes). Skipped in normal runs.
-final class DaisyRenderProof: XCTestCase {
+/// Visual proof for the theme-preset gallery. Run explicitly:
+///   RENDER_PRESETS=1 swift test --filter ThemePresetRenderProof
+/// Writes Screenshots/ThemePresets.png (the picker) and Screenshots/ThemeShowcase.png
+/// (the same UI under four injected theme presets). Skipped in normal runs.
+final class ThemePresetRenderProof: XCTestCase {
 
     @MainActor
     func testRenderPicker() throws {
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["RENDER_DAISY"] == "1", "set RENDER_DAISY=1")
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["RENDER_PRESETS"] == "1", "set RENDER_PRESETS=1")
 
         let grid = ThemePicker(selection: .constant("dracula"), onSelect: { _ in })
             .environment(Theme.shared)
             .frame(width: 760)
             .padding(20)
             .background(Color(white: 0.96))
-        try write(grid, to: "DaisyThemes.png")
+        try write(grid, to: "ThemePresets.png")
         Theme.shared.loadTheme(named: Theme.defaultThemeName)
     }
 
     @MainActor
     func testRenderShowcase() throws {
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["RENDER_DAISY"] == "1", "set RENDER_DAISY=1")
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["RENDER_PRESETS"] == "1", "set RENDER_PRESETS=1")
 
         // One fresh Theme per daisyUI config — injected into its own subtree.
-        func themed(_ id: String) -> Theme { let t = Theme(); DaisyTheme.named(id)!.apply(to: t); return t }
+        func themed(_ id: String) -> Theme { let t = Theme(); ThemePreset.named(id)!.apply(to: t); return t }
         let columns: [(String, Theme)] = [
             ("Cupcake", themed("cupcake")), ("Synthwave", themed("synthwave")),
             ("Cyberpunk", themed("cyberpunk")), ("Nord", themed("nord")),
@@ -73,7 +73,7 @@ final class DaisyRenderProof: XCTestCase {
         .padding(24)
         .background(Color(white: 0.95))
 
-        try write(strip, to: "DaisyShowcase.png")
+        try write(strip, to: "ThemeShowcase.png")
         Theme.shared.loadTheme(named: Theme.defaultThemeName)
     }
 

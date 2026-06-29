@@ -31,7 +31,7 @@ import ThemeKit
   code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
   accent (or `base-100`) color into a full Ant-style palette on device (no Python,
-  no baked files); the **32 [daisyUI](https://daisyui.com/docs/themes/) themes** ship built-in.
+  no baked files); **32 theme presets** ship built-in (color sets inspired by [daisyUI](https://daisyui.com/docs/themes/)).
 - **130+ components** — Atoms / Molecules / Organisms, all token-bound.
 - **Validation** — pure, testable predicates + a SwiftUI presentation layer.
 - **Accessibility** — Dynamic Type and Reduce Motion honored throughout.
@@ -136,28 +136,28 @@ injected theme while semantic colors (info, success…) stay consistent:
 Every component reads `@Environment(\.theme)` (default `Theme.shared`), so this is
 additive and backward-compatible. Try it live in the gallery's **Theme Injection** page.
 
-## daisyUI themes
+## Theme presets
 
-ThemeKit ships the full [daisyUI](https://daisyui.com/docs/themes/) theme set —
+ThemeKit ships 32 ready-made theme presets (color sets inspired by [daisyUI](https://daisyui.com/docs/themes/)) —
 **32 themes** (cupcake, dracula, cyberpunk, synthwave, nord, coffee…). Each is a
-`DaisyTheme` recipe: its accent recolors the whole Ant-style palette and its
+`ThemePreset` recipe: its accent recolors the whole Ant-style palette and its
 `base-100` becomes the surface tone, so every theme keeps its signature look —
 **cupcake stays cream, cyberpunk yellow, dracula slate**. The *same components*,
 four injected themes:
 
-<p align="center"><img src="Screenshots/DaisyShowcase.png" width="820" alt="The same ThemeKit components rendered under four daisyUI themes — Cupcake, Synthwave, Cyberpunk and Nord"></p>
+<p align="center"><img src="Screenshots/ThemeShowcase.png" width="820" alt="The same ThemeKit components rendered under four theme presets — Cupcake, Synthwave, Cyberpunk and Nord"></p>
 
 Apply one live, or drop the bundled **`ThemePicker`** into any screen for a
-daisyUI-style switcher (it's the demo app's **Themes** tab):
+theme switcher (it's the demo app's **Themes** tab):
 
 ```swift
-DaisyTheme.named("dracula")?.apply()        // recolors Theme.shared on the fly
+ThemePreset.named("dracula")?.apply()        // recolors Theme.shared on the fly
 
 @State private var active: String? = "cupcake"
 ThemePicker(selection: $active)             // a tappable grid of all 32 themes
 ```
 
-<p align="center"><img src="Screenshots/DaisyThemes.png" width="680" alt="ThemePicker — a grid of all 32 daisyUI themes, each card painted in its own colors"></p>
+<p align="center"><img src="Screenshots/ThemePresets.png" width="680" alt="ThemePicker — a grid of all 32 theme presets, each card painted in its own colors"></p>
 
 ## Components
 
@@ -542,8 +542,8 @@ component + modifier and resolves colors from tokens, never hardcoded values.
 
 | Tool | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 daisyUI themes as **on-demand tools** (`get_component`, `search_components`, `list_themes`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
-| **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the daisyUI themes — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
+| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 theme presets as **on-demand tools** (`get_component`, `search_components`, `list_themes`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
 Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."*
@@ -555,7 +555,7 @@ any tool that supports MCP or `llms.txt`.
 ## Demo
 
 `Demo/` — a SwiftUI app (local package reference) with **Components** (gallery),
-**Themes** (the daisyUI `ThemePicker` + a live preview), **Colors** (token gallery
+**Themes** (the `ThemePicker` + a live preview), **Colors** (token gallery
 + live Theme Configurator), **Type**, **Layout** (spacing / radius / shadow
 tokens), and **Example** (a full flow built from the real components), plus a
 light/dark switcher.

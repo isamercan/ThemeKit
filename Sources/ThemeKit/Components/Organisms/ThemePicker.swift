@@ -3,14 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 29.06.2026.
 //
-//  A daisyUI-style theme gallery: a grid of self-contained preview cards (each
-//  painted in its OWN theme's colors), tap to switch the live theme. Mirrors
-//  https://daisyui.com/docs/themes/. Reusable — drop it into any screen.
+//  A theme-preset gallery: a grid of self-contained preview cards (each
+//  painted in its OWN theme's colors), tap to switch the live theme. Reusable — drop it into any screen.
 //
 
 import SwiftUI
 
-/// A grid of `DaisyTheme` preview cards. Tapping a card calls `onSelect` (which
+/// A grid of `ThemePreset` preview cards. Tapping a card calls `onSelect` (which
 /// applies the theme by default) and marks it active.
 ///
 /// ```swift
@@ -21,17 +20,17 @@ public struct ThemePicker: View {
     @Environment(\.theme) private var theme
 
     @Binding private var selection: String?
-    private let themes: [DaisyTheme]
-    private let onSelect: (DaisyTheme) -> Void
+    private let themes: [ThemePreset]
+    private let onSelect: (ThemePreset) -> Void
 
     /// - Parameters:
     ///   - selection: the active theme `id`; updated on tap.
-    ///   - themes: the catalog to show (defaults to the full daisyUI set).
+    ///   - themes: the catalog to show (defaults to all presets).
     ///   - onSelect: tap handler. Defaults to applying the theme to `Theme.shared`.
     public init(
         selection: Binding<String?>,
-        themes: [DaisyTheme] = DaisyTheme.all,
-        onSelect: ((DaisyTheme) -> Void)? = nil
+        themes: [ThemePreset] = ThemePreset.all,
+        onSelect: ((ThemePreset) -> Void)? = nil
     ) {
         self._selection = selection
         self.themes = themes
@@ -58,10 +57,9 @@ public struct ThemePicker: View {
     }
 }
 
-/// One theme tile — painted entirely in its OWN theme's colors (a faithful daisyUI
-/// preview), independent of the currently active theme.
+/// One theme tile — painted entirely in its OWN theme's colors (a faithful preview), independent of the currently active theme.
 private struct ThemeCard: View {
-    let theme: DaisyTheme
+    let theme: ThemePreset
     let isActive: Bool
 
     /// Readable foreground on the theme's base surface.
@@ -93,7 +91,7 @@ private struct ThemeCard: View {
                 }
             }
 
-            // A mini button + text sample, like daisyUI's card preview.
+            // A mini button + text sample, like a theme-gallery card.
             HStack(spacing: 6) {
                 Text("Aa")
                     .font(.system(size: 13, weight: .semibold))

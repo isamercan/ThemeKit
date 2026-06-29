@@ -2,7 +2,7 @@
 
 An [MCP](https://modelcontextprotocol.io) server for the **ThemeKit** SwiftUI
 design system. It exposes ThemeKit's components, modifiers, tokens and the 32
-daisyUI themes as **on-demand tools**, so an MCP-compatible editor (Claude Code,
+theme presets as **on-demand tools**, so an MCP-compatible editor (Claude Code,
 Cursor, Windsurf, …) can pull accurate, focused context while generating code —
 instead of loading everything up front.
 
@@ -17,7 +17,7 @@ The data lives in `themekit.json`, generated from the Swift source by
 | `list_components(category?)` | Components by Atom / Molecule / Organism |
 | `get_component(name)` | A component's init signature + chainable modifiers |
 | `search_components(query)` | Components matching a keyword (e.g. "date", "progress") |
-| `list_themes` | The bundled daisyUI theme ids |
+| `list_themes` | The bundled theme-preset ids |
 | `theme_snippet(id?)` | Swift code to apply a theme / show `ThemePicker` |
 | `token_reference(kind?)` | Design tokens (colors, radius roles, spacing, semantic colors) |
 

@@ -132,7 +132,7 @@ server.registerTool("theme_snippet", {
   if (id && !found) return text(`No preset "${id}". Use list_themes.`);
   const tid = found?.id ?? data.themes[0].id;
   return text([
-    `DaisyTheme.named("${tid}")?.apply()          // recolor live`,
+    `ThemePreset.named("${tid}")?.apply()          // recolor live`,
     ``,
     `@State private var active: String? = "${tid}"`,
     `ThemePicker(selection: $active)              // a grid of all presets`,
@@ -271,7 +271,7 @@ server.registerPrompt("themekit-theme",
   { title: "Theme a ThemeKit app", description: "Apply or generate a theme",
     argsSchema: { idOrColor: z.string().describe("A preset id (e.g. dracula) or an accent hex") } },
   ({ idOrColor }) => ({ messages: [{ role: "user", content: { type: "text", text:
-    `Apply a ThemeKit theme: "${idOrColor}". If it's a preset id use DaisyTheme.named(...)?.apply(); if it's a hex use Theme.shared.applyGenerated(primaryHex:). Confirm with theme_colors / list_themes.` } }] }));
+    `Apply a ThemeKit theme: "${idOrColor}". If it's a preset id use ThemePreset.named(...)?.apply(); if it's a hex use Theme.shared.applyGenerated(primaryHex:). Confirm with theme_colors / list_themes.` } }] }));
 
 server.registerPrompt("migrate-to-themekit",
   { title: "Migrate to ThemeKit", description: "Rewrite plain SwiftUI with ThemeKit",
