@@ -2,7 +2,7 @@
 # `make ci` is the same set of checks GitHub runs; see docs/CI.md.
 
 .DEFAULT_GOAL := help
-.PHONY: help ci ci-fast build test lint format hooks screenshots skill mcp clean
+.PHONY: help ci ci-fast build test lint format hooks screenshots skill mcp-data mcp clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -35,11 +35,14 @@ screenshots: ## Render component screenshots + rebuild the README gallery
 record-gif: ## Record a Demo-app interaction → GIF (NAME=SelectBox [SECS=7]); tap the component during recording
 	@bash scripts/record-gif.sh "$(NAME)" "$(SECS)"
 
-skill: ## Regenerate the skill / llms.txt / MCP data from source (skills/, llms.txt, mcp/themekit.json)
+skill: ## Regenerate the skill + llms.txt from source (skills/, llms.txt)
 	@python3 tools/gen_skill.py
 
-mcp: skill ## Build the ThemeKit MCP server (mcp/dist)
-	@cd mcp && npm install --silent && npm run build
+mcp-data: ## Rebuild the MCP data from the DocC symbol graph + tokens (mcp/data/themekit.json)
+	@cd mcp && npm install --silent && npm run build:data
+
+mcp: mcp-data ## Build the ThemeKit MCP server (mcp/dist)
+	@cd mcp && npm run build
 
 clean: ## Remove build artifacts
 	rm -rf .build .ci-test.log

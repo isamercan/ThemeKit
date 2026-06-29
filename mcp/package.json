@@ -1,6 +1,6 @@
 {
   "name": "@isamercan/themekit-mcp",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "MCP server for the ThemeKit SwiftUI design system \u2014 components, modifiers, tokens and theme presets on demand.",
   "type": "module",
   "bin": {
@@ -8,12 +8,14 @@
   },
   "files": [
     "dist",
-    "themekit.json"
+    "data/themekit.json"
   ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "build:data": "tsc && node dist/datagen/buildData.js",
+    "test": "node --test test/*.test.mjs"
   },
   "keywords": [
     "mcp",

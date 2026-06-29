@@ -17,7 +17,6 @@ OUT = ROOT / "skills/themekit/references/components.md"
 THEMES_SRC = ROOT / "Sources/ThemeKit/Theme/ThemePresets.swift"
 THEMES_OUT = ROOT / "skills/themekit/references/themes.md"
 LLMS_OUT = ROOT / "llms.txt"
-JSON_OUT = ROOT / "mcp/themekit.json"
 THEME_RE = re.compile(r'\.init\(\s*"(\w+)",\s*"([^"]+)"')
 THEME_FULL_RE = re.compile(
     r'\.init\(\s*"(\w+)",\s*"([^"]+)",\s*primary:\s*"(\w+)",\s*secondary:\s*"(\w+)",'
@@ -250,32 +249,6 @@ def render_llms(cats, modifiers, themes):
     return "\n".join(lines)
 
 
-def render_json(cats, modifiers, themes):
-    components = []
-    for label, _ in CATEGORIES:
-        for c in cats[label]:
-            components.append({
-                "name": c["name"],
-                "category": label,
-                "doc": c["doc"],
-                "init": f"{c['name']}({c['params']})" if c["params"] else c["name"],
-                "modifiers": [
-                    {"name": m["name"], "signature": m["signature"], "doc": m["doc"]}
-                    for m in c["modifiers"]
-                ],
-            })
-    return json.dumps({
-        "name": "themekit",
-        "summary": "A token-driven, brand-neutral SwiftUI design system. Every color / "
-                   "radius / spacing / type style is a token resolved at runtime from the "
-                   "active Theme; components never hardcode a color.",
-        "rules": RULES,
-        "tokens": TOKENS,
-        "components": components,
-        "modifiers": [f".{m}()" for m in modifiers],
-        "themes": full_themes(),
-    }, indent=2)
-
 
 def main():
     cats, modifiers = collect()
@@ -285,14 +258,10 @@ def main():
     themes_md, n_themes = render_themes(themes)
     THEMES_OUT.write_text(themes_md, encoding="utf-8")
     LLMS_OUT.write_text(render_llms(cats, modifiers, themes), encoding="utf-8")
-    if JSON_OUT.parent.exists():
-        JSON_OUT.write_text(render_json(cats, modifiers, themes), encoding="utf-8")
     total = sum(len(v) for v in cats.values())
     print(f"Wrote {OUT.relative_to(ROOT)} — {total} components, {len(modifiers)} modifiers")
     print(f"Wrote {THEMES_OUT.relative_to(ROOT)} — {n_themes} theme presets")
     print(f"Wrote {LLMS_OUT.relative_to(ROOT)} — llms.txt index")
-    if JSON_OUT.parent.exists():
-        print(f"Wrote {JSON_OUT.relative_to(ROOT)} — MCP data")
 
 
 if __name__ == "__main__":
