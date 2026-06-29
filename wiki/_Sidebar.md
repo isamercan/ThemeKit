@@ -2,9 +2,9 @@
 - [[Kurulum|Installation]]
 - [[SSS|FAQ]]
 - [[Sorun Giderme|Troubleshooting]]
-- [[Sürümler & Release'ler|Versions-and-Releases]]
-- [[Yol Haritası|Roadmap]]
-- [[Katkı|Contributing]]
+- [[Versions and Releases|Versions-and-Releases]]
+- [[Roadmap]]
+- [[Contributing]]
 
 ---
 

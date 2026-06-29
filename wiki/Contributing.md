@@ -45,4 +45,4 @@ xcodebuild test -scheme ThemeKit-Package \
 
 Adding public API is fine (it's a MINOR change). Run `scripts/check-api.sh` to
 see how a change is classified; see `docs/API-STABILITY.md` and
-**[[Sürümler & Release'ler|Versions-and-Releases]]**.
+**[[Versions and Releases|Versions-and-Releases]]**.
