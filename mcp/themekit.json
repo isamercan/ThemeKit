@@ -1,0 +1,1069 @@
+{
+  "name": "themekit",
+  "summary": "A token-driven, brand-neutral SwiftUI design system. Every color / radius / spacing / type style is a token resolved at runtime from the active Theme; components never hardcode a color.",
+  "rules": [
+    "Read the theme via `@Environment(\\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root.",
+    "Never hardcode a color \u2014 use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.",
+    "Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.",
+    "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`; accessibility id uses `.a11yID(_:)`.",
+    "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a daisyUI theme: `DaisyTheme.named(\"dracula\")?.apply()`."
+  ],
+  "tokens": {
+    "text": [
+      "textPrimary",
+      "textSecondary",
+      "textTertiary",
+      "textDisabled",
+      "textHero"
+    ],
+    "background": [
+      "bgWhite",
+      "bgElevatorPrimary",
+      "bgSecondary",
+      "bgSecondaryLight",
+      "bgHero",
+      "bgTertiary"
+    ],
+    "border": [
+      "borderPrimary",
+      "borderHero"
+    ],
+    "foreground": [
+      "fgHero",
+      "fgSecondary"
+    ],
+    "semanticColor": [
+      "primary",
+      "secondary",
+      "accent",
+      "neutral",
+      "info",
+      "success",
+      "warning",
+      "error"
+    ],
+    "fillVariant": [
+      "solid",
+      "soft",
+      "outline",
+      "ghost"
+    ],
+    "radiusRole": [
+      "box",
+      "field",
+      "selector"
+    ],
+    "spacing": [
+      "xs",
+      "sm",
+      "md",
+      "base",
+      "lg",
+      "xl"
+    ]
+  },
+  "components": [
+    {
+      "name": "AnimatedImage",
+      "category": "Atoms",
+      "init": "AnimatedImage(url, contentMode:, cornerRadius:)",
+      "modifiers": []
+    },
+    {
+      "name": "Avatar",
+      "category": "Atoms",
+      "init": "Avatar(content, size:, background:, shape:, presence:, presencePulse:)",
+      "modifiers": []
+    },
+    {
+      "name": "AvatarGroup",
+      "category": "Atoms",
+      "init": "AvatarGroup",
+      "modifiers": []
+    },
+    {
+      "name": "Badge",
+      "category": "Atoms",
+      "init": "Badge(text, style:, variant:, size:, leadingSystemImage:, action:)",
+      "modifiers": [
+        ".badgeColor()",
+        ".badgeShape()",
+        ".gradient()",
+        ".highlighted()",
+        ".trailingIcon()"
+      ]
+    },
+    {
+      "name": "Chip",
+      "category": "Atoms",
+      "init": "Chip(title, isSelected:, size:, selectionStyle:)",
+      "modifiers": [
+        ".exists()",
+        ".expands()",
+        ".icon()",
+        ".interactive()",
+        ".rating()"
+      ]
+    },
+    {
+      "name": "Ribbon",
+      "category": "Atoms",
+      "init": "Ribbon(text, color:, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "DividerView",
+      "category": "Atoms",
+      "init": "DividerView(size:, axis:, dashed:, title:, titleAlign:)",
+      "modifiers": []
+    },
+    {
+      "name": "GaugeView",
+      "category": "Atoms",
+      "init": "GaugeView(value:, in:, label:, style:, showsValue:)",
+      "modifiers": []
+    },
+    {
+      "name": "Icon",
+      "category": "Atoms",
+      "init": "Icon(systemName:, size:, color:)",
+      "modifiers": []
+    },
+    {
+      "name": "InlineText",
+      "category": "Atoms",
+      "init": "InlineText(text, links:)",
+      "modifiers": []
+    },
+    {
+      "name": "InputLabel",
+      "category": "Atoms",
+      "init": "InputLabel(text, isRequired:, hasInfo:, hasError:)",
+      "modifiers": []
+    },
+    {
+      "name": "Join",
+      "category": "Atoms",
+      "init": "Join(axis, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "Kbd",
+      "category": "Atoms",
+      "init": "Kbd(text)",
+      "modifiers": []
+    },
+    {
+      "name": "ProgressBar",
+      "category": "Atoms",
+      "init": "ProgressBar(value:, showPercentage:, status:)",
+      "modifiers": [
+        ".barHeight()",
+        ".colors()",
+        ".gradient()",
+        ".progressLabel()",
+        ".steps()",
+        ".successSegment()",
+        ".valueFormat()"
+      ]
+    },
+    {
+      "name": "StepIndicator",
+      "category": "Atoms",
+      "init": "StepIndicator",
+      "modifiers": []
+    },
+    {
+      "name": "RadialProgress",
+      "category": "Atoms",
+      "init": "RadialProgress(value:, size:, lineWidth:, showLabel:, status:, dashboard: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "Rating",
+      "category": "Atoms",
+      "init": "Rating(value:, layout:, countLabel:)",
+      "modifiers": [
+        ".allowHalf()",
+        ".maxValue()",
+        ".onRate()",
+        ".onReviewTap()",
+        ".sentiment()",
+        ".starSize()",
+        ".symbol()"
+      ]
+    },
+    {
+      "name": "RemoteImage",
+      "category": "Atoms",
+      "init": "RemoteImage(url, aspectRatio:, contentMode:, cornerRadius:, circle:)",
+      "modifiers": []
+    },
+    {
+      "name": "RollingNumber",
+      "category": "Atoms",
+      "init": "RollingNumber(value, size:, weight:, color:)",
+      "modifiers": []
+    },
+    {
+      "name": "ScoreBadge",
+      "category": "Atoms",
+      "init": "ScoreBadge(score, large:)",
+      "modifiers": []
+    },
+    {
+      "name": "ShareButton",
+      "category": "Atoms",
+      "init": "ShareButton(title, item:)",
+      "modifiers": []
+    },
+    {
+      "name": "Skeleton",
+      "category": "Atoms",
+      "init": "Skeleton(shape, width:, height:)",
+      "modifiers": []
+    },
+    {
+      "name": "Spinner",
+      "category": "Atoms",
+      "init": "Spinner(size:, lineWidth:, color:)",
+      "modifiers": []
+    },
+    {
+      "name": "StatusDot",
+      "category": "Atoms",
+      "init": "StatusDot(kind, size:, label:, pulse:)",
+      "modifiers": []
+    },
+    {
+      "name": "Swap",
+      "category": "Atoms",
+      "init": "Swap(isOn:, on:, off:, size:, rotate:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "Tag",
+      "category": "Atoms",
+      "init": "Tag(text, leadingSystemImage:, style:, variant:, onRemove:)",
+      "modifiers": []
+    },
+    {
+      "name": "TextLink",
+      "category": "Atoms",
+      "init": "TextLink(title, underline:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "TextRotate",
+      "category": "Atoms",
+      "init": "TextRotate(words, interval:)",
+      "modifiers": []
+    },
+    {
+      "name": "Title",
+      "category": "Atoms",
+      "init": "Title(text, subtitle:, eyebrow:, actionTitle:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "Autocomplete",
+      "category": "Molecules",
+      "init": "Autocomplete(label:, text:, suggestions:, placeholder:, onSelect:)",
+      "modifiers": [
+        ".a11yID()",
+        ".debounce()",
+        ".maxResults()",
+        ".onSearch()",
+        ".suggestionEnabled()"
+      ]
+    },
+    {
+      "name": "Breadcrumbs",
+      "category": "Molecules",
+      "init": "Breadcrumbs(title, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "ButtonGroup",
+      "category": "Molecules",
+      "init": "ButtonGroup(axis, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "PrimaryButton",
+      "category": "Molecules",
+      "init": "PrimaryButton(title, size:, block:, helperText:, textStyle:, confirmsSuccess: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "SecondaryButton",
+      "category": "Molecules",
+      "init": "SecondaryButton",
+      "modifiers": []
+    },
+    {
+      "name": "OutlineButton",
+      "category": "Molecules",
+      "init": "OutlineButton",
+      "modifiers": []
+    },
+    {
+      "name": "GhostButton",
+      "category": "Molecules",
+      "init": "GhostButton",
+      "modifiers": []
+    },
+    {
+      "name": "LinkButton",
+      "category": "Molecules",
+      "init": "LinkButton",
+      "modifiers": []
+    },
+    {
+      "name": "ThemeButton",
+      "category": "Molecules",
+      "init": "ThemeButton(title, systemImage:, iconPosition:, color:, variant:, size: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "CalendarView",
+      "category": "Molecules",
+      "init": "CalendarView(selection:)",
+      "modifiers": []
+    },
+    {
+      "name": "Checkbox",
+      "category": "Molecules",
+      "init": "Checkbox(label, isChecked:, customSize:, type:, isIndeterminate:, alignment: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "CheckboxGroup",
+      "category": "Molecules",
+      "init": "CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "ImageChip",
+      "category": "Molecules",
+      "init": "ImageChip(isSelected:, url:, size:, isEnabled:)",
+      "modifiers": []
+    },
+    {
+      "name": "CompactChip",
+      "category": "Molecules",
+      "init": "CompactChip",
+      "modifiers": []
+    },
+    {
+      "name": "ChoseChip",
+      "category": "Molecules",
+      "init": "ChoseChip",
+      "modifiers": []
+    },
+    {
+      "name": "FilterChip",
+      "category": "Molecules",
+      "init": "FilterChip",
+      "modifiers": []
+    },
+    {
+      "name": "ChipGroup",
+      "category": "Molecules",
+      "init": "ChipGroup",
+      "modifiers": []
+    },
+    {
+      "name": "ColorField",
+      "category": "Molecules",
+      "init": "ColorField(label, selection:, supportsOpacity:)",
+      "modifiers": []
+    },
+    {
+      "name": "DateField",
+      "category": "Molecules",
+      "init": "DateField(label:, date:, placeholder:, range:, style:, locale: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "Fieldset",
+      "category": "Molecules",
+      "init": "Fieldset(title, helper:, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "FileInput",
+      "category": "Molecules",
+      "init": "FileInput(label:, fileName:, buttonTitle:, placeholder:, infoMessages:, onPick:)",
+      "modifiers": []
+    },
+    {
+      "name": "FilterGroup",
+      "category": "Molecules",
+      "init": "FilterGroup(title:, options:, selection:, label:)",
+      "modifiers": []
+    },
+    {
+      "name": "InputNumber",
+      "category": "Molecules",
+      "init": "InputNumber(label:, value:, range:, step:, unit:, hint: \u2026)",
+      "modifiers": [
+        ".a11yID()",
+        ".editable()",
+        ".hasInfo()",
+        ".onValueChange()"
+      ]
+    },
+    {
+      "name": "MultiLineTextInput",
+      "category": "Molecules",
+      "init": "MultiLineTextInput(label, text:, placeholder:, characterLimit:, errorText:, infoMessages: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "MultiSelect",
+      "category": "Molecules",
+      "init": "MultiSelect(label:, options:, selection:, placeholder:, infoMessages:, isOptionEnabled:)",
+      "modifiers": [
+        ".a11yID()",
+        ".clearable()",
+        ".loading()",
+        ".maxTags()",
+        ".searchable()"
+      ]
+    },
+    {
+      "name": "OTPInput",
+      "category": "Molecules",
+      "init": "OTPInput(code:, digitCount:, isSecure:, errorText:, infoMessages:, onComplete:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "Pagination",
+      "category": "Molecules",
+      "init": "Pagination(current:, total:)",
+      "modifiers": [
+        ".jumper()",
+        ".showTotal()",
+        ".simple()",
+        ".window()"
+      ]
+    },
+    {
+      "name": "ProgressIndicator",
+      "category": "Molecules",
+      "init": "ProgressIndicator(variant:, current:, total:, size:, videoProgress:, stepText: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "QuantityStepper",
+      "category": "Molecules",
+      "init": "QuantityStepper(value:, range:, step:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "RadioButton",
+      "category": "Molecules",
+      "init": "RadioButton(label, isSelected:, type:, style:, padding:, backgroundColor: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "RadioGroup",
+      "category": "Molecules",
+      "init": "RadioGroup(title:, options:, selection:, infoMessages:, isOptionEnabled:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "RadioButtonGroup",
+      "category": "Molecules",
+      "init": "RadioButtonGroup",
+      "modifiers": []
+    },
+    {
+      "name": "RangeSlider",
+      "category": "Molecules",
+      "init": "RangeSlider(lowerValue:, upperValue:, in:, step:)",
+      "modifiers": [
+        ".a11yID()",
+        ".inputs()",
+        ".marks()",
+        ".onChangeEnd()",
+        ".valueLabel()"
+      ]
+    },
+    {
+      "name": "SearchBar",
+      "category": "Molecules",
+      "init": "SearchBar(text:, placeholder:, suggestions:, recent:, onSearch:)",
+      "modifiers": [
+        ".a11yID()",
+        ".backButton()",
+        ".debounce()",
+        ".maxResults()",
+        ".trailingIcon()"
+      ]
+    },
+    {
+      "name": "SegmentedControl",
+      "category": "Molecules",
+      "init": "SegmentedControl(title, systemImage:, isEnabled:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "Select",
+      "category": "Molecules",
+      "init": "Select(title, options)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "SelectBox",
+      "category": "Molecules",
+      "init": "SelectBox(label:, options:, selection:, placeholder:, hint:, errorText: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "Slider",
+      "category": "Molecules",
+      "init": "Slider(value:, in:, step:, label:)",
+      "modifiers": [
+        ".a11yID()",
+        ".axis()",
+        ".marks()",
+        ".onChangeEnd()",
+        ".showsValueTooltip()"
+      ]
+    },
+    {
+      "name": "Stat",
+      "category": "Molecules",
+      "init": "Stat(title:, value:, prefix:, suffix:, isLoading:, description: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "Steps",
+      "category": "Molecules",
+      "init": "Steps(title, description:, systemImage:, state:, percent:)",
+      "modifiers": []
+    },
+    {
+      "name": "TextInput",
+      "category": "Molecules",
+      "init": "TextInput(label:, placeholder:, leadingSystemImage:, suffixSystemImage:, addonBefore:, addonAfter: \u2026)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "ThemeController",
+      "category": "Molecules",
+      "init": "ThemeController(name:, label:)",
+      "modifiers": []
+    },
+    {
+      "name": "ThemeToggle",
+      "category": "Molecules",
+      "init": "ThemeToggle(isOn:, isLoading:, onSystemImage:, offSystemImage:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "ToggleGroup",
+      "category": "Molecules",
+      "init": "ToggleGroup(title:, options:, selection:, label:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "TreeSelect",
+      "category": "Molecules",
+      "init": "TreeSelect(id:, title, systemImage:, children:)",
+      "modifiers": []
+    },
+    {
+      "name": "Accordion",
+      "category": "Organisms",
+      "init": "Accordion(title, leadingSystemImage:, initiallyExpanded:, @ViewBuilder:)",
+      "modifiers": [
+        ".density()",
+        ".divider()",
+        ".indicator()",
+        ".number()",
+        ".subtitle()",
+        ".titleSize()",
+        ".truncateSubtitle()"
+      ]
+    },
+    {
+      "name": "AccordionGroup",
+      "category": "Organisms",
+      "init": "AccordionGroup(items, mode:, initiallyExpanded:, title:)",
+      "modifiers": []
+    },
+    {
+      "name": "AlertToast",
+      "category": "Organisms",
+      "init": "AlertToast(title, handler:)",
+      "modifiers": []
+    },
+    {
+      "name": "BlogCard",
+      "category": "Organisms",
+      "init": "BlogCard(title:, excerpt:, readMoreTitle:, compact:, onReadMore:)",
+      "modifiers": []
+    },
+    {
+      "name": "Callout",
+      "category": "Organisms",
+      "init": "Callout(text, type:, style:, showIcon:, actionTitle:, onAction:)",
+      "modifiers": []
+    },
+    {
+      "name": "Card",
+      "category": "Organisms",
+      "init": "Card(elevation:, padding:, title:, subtitle:, extraTitle:, onExtra:)",
+      "modifiers": []
+    },
+    {
+      "name": "CardStack",
+      "category": "Organisms",
+      "init": "CardStack(items, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "Carousel",
+      "category": "Organisms",
+      "init": "Carousel(items, loop:, currentIndex:, @ViewBuilder:)",
+      "modifiers": [
+        ".arrows()",
+        ".autoplay()",
+        ".dots()",
+        ".fade()"
+      ]
+    },
+    {
+      "name": "ChatBubble",
+      "category": "Organisms",
+      "init": "ChatBubble(text, side:, author:, time:, avatarSystemImage:)",
+      "modifiers": []
+    },
+    {
+      "name": "Counter",
+      "category": "Organisms",
+      "init": "Counter(value:, label:)",
+      "modifiers": []
+    },
+    {
+      "name": "Coupon",
+      "category": "Organisms",
+      "init": "Coupon(code:, label:, style:, onCopy:)",
+      "modifiers": []
+    },
+    {
+      "name": "DataTable",
+      "category": "Organisms",
+      "init": "DataTable(title, align:, sortKey:)",
+      "modifiers": []
+    },
+    {
+      "name": "Diff",
+      "category": "Organisms",
+      "init": "Diff(aspectRatio:, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "EmptyState",
+      "category": "Organisms",
+      "init": "EmptyState(systemImage:, iconForeground:, iconBackground:, iconCircleSize:, title:, message: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "FloatingActionButton",
+      "category": "Organisms",
+      "init": "FloatingActionButton(systemImage:, label:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "Footer",
+      "category": "Organisms",
+      "init": "Footer(title, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "Gallery",
+      "category": "Organisms",
+      "init": "Gallery(items, columns:, aspect:, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "Hero",
+      "category": "Organisms",
+      "init": "Hero(title:, subtitle:, ctaTitle:, dark:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "HeroSurface",
+      "category": "Organisms",
+      "init": "HeroSurface",
+      "modifiers": []
+    },
+    {
+      "name": "ImageCollage",
+      "category": "Organisms",
+      "init": "ImageCollage(urls, height:, spacing:, cornerRadius:, onTap:)",
+      "modifiers": []
+    },
+    {
+      "name": "InfoBanner",
+      "category": "Organisms",
+      "init": "InfoBanner(message, type:, title:, links:)",
+      "modifiers": []
+    },
+    {
+      "name": "KeyValueTable",
+      "category": "Organisms",
+      "init": "KeyValueTable(label, value:, style:)",
+      "modifiers": []
+    },
+    {
+      "name": "ListRow",
+      "category": "Organisms",
+      "init": "ListRow(total:, each:, unit:)",
+      "modifiers": []
+    },
+    {
+      "name": "ListSectionHeader",
+      "category": "Organisms",
+      "init": "ListSectionHeader",
+      "modifiers": []
+    },
+    {
+      "name": "ListView",
+      "category": "Organisms",
+      "init": "ListView(items, header:, footer:, bordered:, loading:, split: \u2026)",
+      "modifiers": []
+    },
+    {
+      "name": "MenuCard",
+      "category": "Organisms",
+      "init": "MenuCard(title:, subtitle:, systemImage:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "NavigationBar",
+      "category": "Organisms",
+      "init": "NavigationBar(systemImage:, activeSystemImage:)",
+      "modifiers": []
+    },
+    {
+      "name": "NotificationCard",
+      "category": "Organisms",
+      "init": "NotificationCard(title:, message:, date:, isUnread:, type:, onClose:)",
+      "modifiers": []
+    },
+    {
+      "name": "PageHeader",
+      "category": "Organisms",
+      "init": "PageHeader(systemImage:, handler:)",
+      "modifiers": []
+    },
+    {
+      "name": "PagingCarousel",
+      "category": "Organisms",
+      "init": "PagingCarousel(items, peek:, spacing:, autoplay:, @ViewBuilder:)",
+      "modifiers": []
+    },
+    {
+      "name": "PromoBanner",
+      "category": "Organisms",
+      "init": "PromoBanner(title:, subtitle:, systemImage:, ctaTitle:, tint:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "RatingSummary",
+      "category": "Organisms",
+      "init": "RatingSummary(score:, label:, reviewCount:, onReviews:)",
+      "modifiers": []
+    },
+    {
+      "name": "ResultView",
+      "category": "Organisms",
+      "init": "ResultView(status, title:, message:, primaryTitle:, onPrimary:)",
+      "modifiers": []
+    },
+    {
+      "name": "SegmentedTabBar",
+      "category": "Organisms",
+      "init": "SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)",
+      "modifiers": [
+        ".a11yID()"
+      ]
+    },
+    {
+      "name": "RadioCard",
+      "category": "Organisms",
+      "init": "RadioCard(title, description:, isSelected:, isEnabled:, action:)",
+      "modifiers": []
+    },
+    {
+      "name": "CheckboxCard",
+      "category": "Organisms",
+      "init": "CheckboxCard",
+      "modifiers": []
+    },
+    {
+      "name": "ThemePicker",
+      "category": "Organisms",
+      "init": "ThemePicker(selection:, themes:, onSelect:)",
+      "modifiers": []
+    },
+    {
+      "name": "Timeline",
+      "category": "Organisms",
+      "init": "Timeline(title:, time:, description:, systemImage:, state:, color:)",
+      "modifiers": []
+    },
+    {
+      "name": "Upload",
+      "category": "Organisms",
+      "init": "Upload(id:, name:, status:)",
+      "modifiers": []
+    },
+    {
+      "name": "UploadList",
+      "category": "Organisms",
+      "init": "UploadList",
+      "modifiers": []
+    },
+    {
+      "name": "VideoPlayerView",
+      "category": "Organisms",
+      "init": "VideoPlayerView(url, progress:, isMuted:, onTap:)",
+      "modifiers": [
+        ".autoplay()",
+        ".loop()",
+        ".muteToggle()",
+        ".muted()",
+        ".tapToToggle()"
+      ]
+    }
+  ],
+  "modifiers": [
+    ".a11yID()",
+    ".allowHalf()",
+    ".arrows()",
+    ".autoplay()",
+    ".axis()",
+    ".backButton()",
+    ".badgeColor()",
+    ".badgeShape()",
+    ".barHeight()",
+    ".clearable()",
+    ".colors()",
+    ".debounce()",
+    ".density()",
+    ".divider()",
+    ".dots()",
+    ".editable()",
+    ".exists()",
+    ".expands()",
+    ".fade()",
+    ".gradient()",
+    ".hasInfo()",
+    ".highlighted()",
+    ".icon()",
+    ".indicator()",
+    ".inputs()",
+    ".interactive()",
+    ".jumper()",
+    ".loading()",
+    ".loop()",
+    ".marks()",
+    ".maxResults()",
+    ".maxTags()",
+    ".maxValue()",
+    ".muteToggle()",
+    ".muted()",
+    ".number()",
+    ".onChangeEnd()",
+    ".onRate()",
+    ".onReviewTap()",
+    ".onSearch()",
+    ".onValueChange()",
+    ".progressLabel()",
+    ".rating()",
+    ".searchable()",
+    ".sentiment()",
+    ".showTotal()",
+    ".showsValueTooltip()",
+    ".simple()",
+    ".starSize()",
+    ".steps()",
+    ".subtitle()",
+    ".successSegment()",
+    ".suggestionEnabled()",
+    ".symbol()",
+    ".tapToToggle()",
+    ".titleSize()",
+    ".trailingIcon()",
+    ".truncateSubtitle()",
+    ".valueFormat()",
+    ".valueLabel()",
+    ".window()"
+  ],
+  "themes": [
+    {
+      "id": "light",
+      "name": "Light"
+    },
+    {
+      "id": "dark",
+      "name": "Dark"
+    },
+    {
+      "id": "cupcake",
+      "name": "Cupcake"
+    },
+    {
+      "id": "bumblebee",
+      "name": "Bumblebee"
+    },
+    {
+      "id": "emerald",
+      "name": "Emerald"
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate"
+    },
+    {
+      "id": "synthwave",
+      "name": "Synthwave"
+    },
+    {
+      "id": "retro",
+      "name": "Retro"
+    },
+    {
+      "id": "cyberpunk",
+      "name": "Cyberpunk"
+    },
+    {
+      "id": "valentine",
+      "name": "Valentine"
+    },
+    {
+      "id": "halloween",
+      "name": "Halloween"
+    },
+    {
+      "id": "garden",
+      "name": "Garden"
+    },
+    {
+      "id": "forest",
+      "name": "Forest"
+    },
+    {
+      "id": "aqua",
+      "name": "Aqua"
+    },
+    {
+      "id": "lofi",
+      "name": "Lo-Fi"
+    },
+    {
+      "id": "pastel",
+      "name": "Pastel"
+    },
+    {
+      "id": "fantasy",
+      "name": "Fantasy"
+    },
+    {
+      "id": "wireframe",
+      "name": "Wireframe"
+    },
+    {
+      "id": "black",
+      "name": "Black"
+    },
+    {
+      "id": "luxury",
+      "name": "Luxury"
+    },
+    {
+      "id": "dracula",
+      "name": "Dracula"
+    },
+    {
+      "id": "cmyk",
+      "name": "CMYK"
+    },
+    {
+      "id": "autumn",
+      "name": "Autumn"
+    },
+    {
+      "id": "business",
+      "name": "Business"
+    },
+    {
+      "id": "acid",
+      "name": "Acid"
+    },
+    {
+      "id": "lemonade",
+      "name": "Lemonade"
+    },
+    {
+      "id": "night",
+      "name": "Night"
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee"
+    },
+    {
+      "id": "winter",
+      "name": "Winter"
+    },
+    {
+      "id": "dim",
+      "name": "Dim"
+    },
+    {
+      "id": "nord",
+      "name": "Nord"
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset"
+    }
+  ]
+}

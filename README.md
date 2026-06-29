@@ -542,13 +542,15 @@ component + modifier and resolves colors from tokens, never hardcoded values.
 
 | Tool | What it does | How to use it |
 |---|---|---|
-| **Agent skill** | A Claude Code skill (`skills/themekit/`): idioms + patterns, every component's init & modifiers, and the 32 daisyUI themes — the agent generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into your repo's `.claude/skills/` (zero-install). |
+| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 daisyUI themes as **on-demand tools** (`get_component`, `search_components`, `list_themes`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the daisyUI themes — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
 Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."*
 
-Both artifacts are generated from source by `make skill`, so they can't drift
-from the code. An **MCP server** is on the roadmap.
+All three are generated from one source by `make skill`, so they can't drift
+from the code. Works with **Claude Code, Cursor, Windsurf, GitHub Copilot**, and
+any tool that supports MCP or `llms.txt`.
 
 ## Demo
 
