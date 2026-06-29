@@ -5,127 +5,127 @@
 
 ## Atoms (29)
 
-- `AnimatedImage(url, contentMode:, cornerRadius:)`
-- `Avatar(content, size:, background:, shape:, presence:, presencePulse:)`
-- `AvatarGroup`
-- `Badge(text, style:, variant:, size:, leadingSystemImage:, action:)` — modifiers: `.badgeColor()`, `.badgeShape()`, `.gradient()`, `.highlighted()`, `.trailingIcon()`
-- `Chip(title, isSelected:, size:, selectionStyle:)` — modifiers: `.exists()`, `.expands()`, `.icon()`, `.interactive()`, `.rating()`
-- `Ribbon(text, color:, @ViewBuilder:)`
-- `DividerView(size:, axis:, dashed:, title:, titleAlign:)`
-- `GaugeView(value:, in:, label:, style:, showsValue:)`
-- `Icon(systemName:, size:, color:)`
-- `InlineText(text, links:)`
-- `InputLabel(text, isRequired:, hasInfo:, hasError:)`
-- `Join(axis, @ViewBuilder:)`
-- `Kbd(text)`
-- `ProgressBar(value:, showPercentage:, status:)` — modifiers: `.barHeight()`, `.colors()`, `.gradient()`, `.progressLabel()`, `.steps()`, `.successSegment()`, `.valueFormat()`
-- `StepIndicator`
-- `RadialProgress(value:, size:, lineWidth:, showLabel:, status:, dashboard: …)`
-- `Rating(value:, layout:, countLabel:)` — modifiers: `.allowHalf()`, `.maxValue()`, `.onRate()`, `.onReviewTap()`, `.sentiment()`, `.starSize()`, `.symbol()`
-- `RemoteImage(url, aspectRatio:, contentMode:, cornerRadius:, circle:)`
-- `RollingNumber(value, size:, weight:, color:)`
-- `ScoreBadge(score, large:)`
-- `ShareButton(title, item:)`
-- `Skeleton(shape, width:, height:)`
-- `Spinner(size:, lineWidth:, color:)`
-- `StatusDot(kind, size:, label:, pulse:)`
-- `Swap(isOn:, on:, off:, size:, rotate:)` — modifiers: `.a11yID()`
-- `Tag(text, leadingSystemImage:, style:, variant:, onRemove:)`
-- `TextLink(title, underline:, action:)`
-- `TextRotate(words, interval:)`
-- `Title(text, subtitle:, eyebrow:, actionTitle:, action:)`
+- `AnimatedImage(url, contentMode:, cornerRadius:)` — Animated GIF / APNG playback with NO third-party dependency — frames and per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven by a `TimelineView(.animation)`.
+- `Avatar(content, size:, background:, shape:, presence:, presencePulse:)` — Atom.
+- `AvatarGroup` — Overlapping stack of avatars with a "+N" overflow bubble.
+- `Badge(text, style:, variant:, size:, leadingSystemImage:, action:)` — Improved, token-bound rewrite of the reference BadgeView. · modifiers: `.badgeShape()`, `.trailingIcon()`, `.badgeColor()`, `.gradient()`, `.highlighted()`
+- `Chip(title, isSelected:, size:, selectionStyle:)` — Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix. · modifiers: `.icon()`, `.rating()`, `.exists()`, `.interactive()`, `.expands()`
+- `Ribbon(text, color:, @ViewBuilder:)` — A corner ribbon wrapping any content (Ant `Badge.Ribbon`).
+- `DividerView(size:, axis:, dashed:, title:, titleAlign:)` — A theme-driven divider: horizontal / vertical, solid / dashed, with an optional inline text label (left / center / right).
+- `GaugeView(value:, in:, label:, style:, showsValue:)` — Atom.
+- `Icon(systemName:, size:, color:)` — Icon system.
+- `InlineText(text, links:)` — Atom.
+- `InputLabel(text, isRequired:, hasInfo:, hasError:)` — Atom.
+- `Join(axis, @ViewBuilder:)` — Atom.
+- `Kbd(text)` — Atom.
+- `ProgressBar(value:, showPercentage:, status:)` — Linear determinate progress with status colors, an optional ladder gradient, a segmented (steps) variant and a custom format label. · modifiers: `.barHeight()`, `.gradient()`, `.steps()`, `.colors()`, `.successSegment()`, `.valueFormat()`, `.progressLabel()`
+- `StepIndicator` — Segmented step indicator (e.g.
+- `RadialProgress(value:, size:, lineWidth:, showLabel:, status:, dashboard: …)` — Atom.
+- `Rating(value:, layout:, countLabel:)` — Star rating with two layouts (stars / numeric-leading), continuous fractional fill (display) or half-step interaction, a tappable review count, a custom character and a disabled state. · modifiers: `.maxValue()`, `.starSize()`, `.allowHalf()`, `.symbol()`, `.sentiment()`, `.onRate()`, `.onReviewTap()`
+- `RemoteImage(url, aspectRatio:, contentMode:, cornerRadius:, circle:)` — Async remote image on native `AsyncImage` (no Kingfisher dependency): URL + aspect ratio (number or "16:9" string) + shimmer placeholder + failure state.
+- `RollingNumber(value, size:, weight:, color:)` — Odometer / slot-machine number — each digit column rolls vertically to its new value when `value` changes (reference `RollingText`).
+- `ScoreBadge(score, large:)` — Atom.
+- `ShareButton(title, item:)` — Atom.
+- `Skeleton(shape, width:, height:)` — A standalone skeleton block of an arbitrary shape and size.
+- `Spinner(size:, lineWidth:, color:)` — Atom.
+- `StatusDot(kind, size:, label:, pulse:)` — Atom.
+- `Swap(isOn:, on:, off:, size:, rotate:)` — Atom. · modifiers: `.a11yID()`
+- `Tag(text, leadingSystemImage:, style:, variant:, onRemove:)` — Atom.
+- `TextLink(title, underline:, action:)` — Atom.
+- `TextRotate(words, interval:)` — Atom.
+- `Title(text, subtitle:, eyebrow:, actionTitle:, action:)` — Atom.
 
 ## Molecules (45)
 
-- `Autocomplete(label:, text:, suggestions:, placeholder:, onSelect:)` — modifiers: `.a11yID()`, `.debounce()`, `.maxResults()`, `.onSearch()`, `.suggestionEnabled()`
-- `Breadcrumbs(title, action:)`
-- `ButtonGroup(axis, @ViewBuilder:)`
+- `Autocomplete(label:, text:, suggestions:, placeholder:, onSelect:)` — Molecule. · modifiers: `.a11yID()`, `.maxResults()`, `.debounce()`, `.suggestionEnabled()`, `.onSearch()`
+- `Breadcrumbs(title, action:)` — Molecule.
+- `ButtonGroup(axis, @ViewBuilder:)` — Molecule.
 - `PrimaryButton(title, size:, block:, helperText:, textStyle:, confirmsSuccess: …)`
 - `SecondaryButton`
 - `OutlineButton`
 - `GhostButton`
 - `LinkButton`
 - `ThemeButton(title, systemImage:, iconPosition:, color:, variant:, size: …)`
-- `CalendarView(selection:)`
-- `Checkbox(label, isChecked:, customSize:, type:, isIndeterminate:, alignment: …)` — modifiers: `.a11yID()`
-- `CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)` — modifiers: `.a11yID()`
-- `ImageChip(isSelected:, url:, size:, isEnabled:)`
-- `CompactChip`
-- `ChoseChip`
-- `FilterChip`
-- `ChipGroup`
-- `ColorField(label, selection:, supportsOpacity:)`
-- `DateField(label:, date:, placeholder:, range:, style:, locale: …)` — modifiers: `.a11yID()`
-- `Fieldset(title, helper:, @ViewBuilder:)`
-- `FileInput(label:, fileName:, buttonTitle:, placeholder:, infoMessages:, onPick:)`
-- `FilterGroup(title:, options:, selection:, label:)`
-- `InputNumber(label:, value:, range:, step:, unit:, hint: …)` — modifiers: `.a11yID()`, `.editable()`, `.hasInfo()`, `.onValueChange()`
-- `MultiLineTextInput(label, text:, placeholder:, characterLimit:, errorText:, infoMessages: …)` — modifiers: `.a11yID()`
-- `MultiSelect(label:, options:, selection:, placeholder:, infoMessages:, isOptionEnabled:)` — modifiers: `.a11yID()`, `.clearable()`, `.loading()`, `.maxTags()`, `.searchable()`
-- `OTPInput(code:, digitCount:, isSecure:, errorText:, infoMessages:, onComplete:)` — modifiers: `.a11yID()`
-- `Pagination(current:, total:)` — modifiers: `.jumper()`, `.showTotal()`, `.simple()`, `.window()`
-- `ProgressIndicator(variant:, current:, total:, size:, videoProgress:, stepText: …)`
-- `QuantityStepper(value:, range:, step:)` — modifiers: `.a11yID()`
-- `RadioButton(label, isSelected:, type:, style:, padding:, backgroundColor: …)` — modifiers: `.a11yID()`
-- `RadioGroup(title:, options:, selection:, infoMessages:, isOptionEnabled:)` — modifiers: `.a11yID()`
-- `RadioButtonGroup`
-- `RangeSlider(lowerValue:, upperValue:, in:, step:)` — modifiers: `.a11yID()`, `.inputs()`, `.marks()`, `.onChangeEnd()`, `.valueLabel()`
-- `SearchBar(text:, placeholder:, suggestions:, recent:, onSearch:)` — modifiers: `.a11yID()`, `.backButton()`, `.debounce()`, `.maxResults()`, `.trailingIcon()`
-- `SegmentedControl(title, systemImage:, isEnabled:)` — modifiers: `.a11yID()`
-- `Select(title, options)` — modifiers: `.a11yID()`
-- `SelectBox(label:, options:, selection:, placeholder:, hint:, errorText: …)` — modifiers: `.a11yID()`
-- `Slider(value:, in:, step:, label:)` — modifiers: `.a11yID()`, `.axis()`, `.marks()`, `.onChangeEnd()`, `.showsValueTooltip()`
-- `Stat(title:, value:, prefix:, suffix:, isLoading:, description: …)`
-- `Steps(title, description:, systemImage:, state:, percent:)`
-- `TextInput(label:, placeholder:, leadingSystemImage:, suffixSystemImage:, addonBefore:, addonAfter: …)` — modifiers: `.a11yID()`
-- `ThemeController(name:, label:)`
-- `ThemeToggle(isOn:, isLoading:, onSystemImage:, offSystemImage:)` — modifiers: `.a11yID()`
-- `ToggleGroup(title:, options:, selection:, label:)` — modifiers: `.a11yID()`
-- `TreeSelect(id:, title, systemImage:, children:)`
+- `CalendarView(selection:)` — Molecule.
+- `Checkbox(label, isChecked:, customSize:, type:, isIndeterminate:, alignment: …)` — Figma "Control Items" → Checkboxes. · modifiers: `.a11yID()`
+- `CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)` — Molecule. · modifiers: `.a11yID()`
+- `ImageChip(isSelected:, url:, size:, isEnabled:)` — A selectable remote-image tile with a selection border.
+- `CompactChip` — A selectable card: an optional rating + label row, then an optional logo + price row.
+- `ChoseChip` — A selectable card: a leading icon, a title with an optional "free" gradient badge, and a rating + description row.
+- `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
+- `ChipGroup` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
+- `ColorField(label, selection:, supportsOpacity:)` — Molecule.
+- `DateField(label:, date:, placeholder:, range:, style:, locale: …)` — Molecule. · modifiers: `.a11yID()`
+- `Fieldset(title, helper:, @ViewBuilder:)` — Molecule.
+- `FileInput(label:, fileName:, buttonTitle:, placeholder:, infoMessages:, onPick:)` — Molecule.
+- `FilterGroup(title:, options:, selection:, label:)` — Molecule.
+- `InputNumber(label:, value:, range:, step:, unit:, hint: …)` — Molecule. · modifiers: `.a11yID()`, `.editable()`, `.hasInfo()`, `.onValueChange()`
+- `MultiLineTextInput(label, text:, placeholder:, characterLimit:, errorText:, infoMessages: …)` — Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state. · modifiers: `.a11yID()`
+- `MultiSelect(label:, options:, selection:, placeholder:, infoMessages:, isOptionEnabled:)` — Multiple / tags select with optional search (Ant Select mode="multiple"). · modifiers: `.a11yID()`, `.searchable()`, `.clearable()`, `.maxTags()`, `.loading()`
+- `OTPInput(code:, digitCount:, isSecure:, errorText:, infoMessages:, onComplete:)` — Improved, token-bound rewrite of the reference OTPInputView. · modifiers: `.a11yID()`
+- `Pagination(current:, total:)` — Molecule. · modifiers: `.simple()`, `.window()`, `.jumper()`, `.showTotal()`
+- `ProgressIndicator(variant:, current:, total:, size:, videoProgress:, stepText: …)` — Segmented position/progress indicator (Reference ProgressIndicator parity).
+- `QuantityStepper(value:, range:, step:)` — A token-bound quantity stepper (− value +), bounded by a range. · modifiers: `.a11yID()`
+- `RadioButton(label, isSelected:, type:, style:, padding:, backgroundColor: …)` — Figma "Control Items" → Radioboxes. · modifiers: `.a11yID()`
+- `RadioGroup(title:, options:, selection:, infoMessages:, isOptionEnabled:)` — Molecule. · modifiers: `.a11yID()`
+- `RadioButtonGroup` — A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.
+- `RangeSlider(lowerValue:, upperValue:, in:, step:)` — Improved, token-bound rewrite of the reference RangeSliderView — a self-contained dual-thumb slider over a numeric range (decoupled from the reference's text-field wiring). · modifiers: `.a11yID()`, `.marks()`, `.inputs()`, `.onChangeEnd()`, `.valueLabel()`
+- `SearchBar(text:, placeholder:, suggestions:, recent:, onSearch:)` — A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks. · modifiers: `.a11yID()`, `.backButton()`, `.trailingIcon()`, `.debounce()`, `.maxResults()`
+- `SegmentedControl(title, systemImage:, isEnabled:)` — Molecule. · modifiers: `.a11yID()`
+- `Select(title, options)` — A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `searchable` is on. · modifiers: `.a11yID()`
+- `SelectBox(label:, options:, selection:, placeholder:, hint:, errorText: …)` — Molecule. · modifiers: `.a11yID()`
+- `Slider(value:, in:, step:, label:)` — Molecule. · modifiers: `.a11yID()`, `.marks()`, `.axis()`, `.showsValueTooltip()`, `.onChangeEnd()`
+- `Stat(title:, value:, prefix:, suffix:, isLoading:, description: …)` — Molecule.
+- `Steps(title, description:, systemImage:, state:, percent:)` — A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate.
+- `TextInput(label:, placeholder:, leadingSystemImage:, suffixSystemImage:, addonBefore:, addonAfter: …)` — Single floating-label text field. · modifiers: `.a11yID()`
+- `ThemeController(name:, label:)` — Molecule.
+- `ThemeToggle(isOn:, isLoading:, onSystemImage:, offSystemImage:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.a11yID()`
+- `ToggleGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.a11yID()`
+- `TreeSelect(id:, title, systemImage:, children:)` — Hierarchical (nested) select with expand/collapse and multi-selection.
 
 ## Organisms (41)
 
-- `Accordion(title, leadingSystemImage:, initiallyExpanded:, @ViewBuilder:)` — modifiers: `.density()`, `.divider()`, `.indicator()`, `.number()`, `.subtitle()`, `.titleSize()`, `.truncateSubtitle()`
-- `AccordionGroup(items, mode:, initiallyExpanded:, title:)`
-- `AlertToast(title, handler:)`
-- `BlogCard(title:, excerpt:, readMoreTitle:, compact:, onReadMore:)`
-- `Callout(text, type:, style:, showIcon:, actionTitle:, onAction:)`
-- `Card(elevation:, padding:, title:, subtitle:, extraTitle:, onExtra:)`
-- `CardStack(items, @ViewBuilder:)`
-- `Carousel(items, loop:, currentIndex:, @ViewBuilder:)` — modifiers: `.arrows()`, `.autoplay()`, `.dots()`, `.fade()`
-- `ChatBubble(text, side:, author:, time:, avatarSystemImage:)`
-- `Counter(value:, label:)`
-- `Coupon(code:, label:, style:, onCopy:)`
-- `DataTable(title, align:, sortKey:)`
-- `Diff(aspectRatio:, @ViewBuilder:)`
-- `EmptyState(systemImage:, iconForeground:, iconBackground:, iconCircleSize:, title:, message: …)`
-- `FloatingActionButton(systemImage:, label:, action:)`
-- `Footer(title, action:)`
-- `Gallery(items, columns:, aspect:, @ViewBuilder:)`
-- `Hero(title:, subtitle:, ctaTitle:, dark:, action:)`
-- `HeroSurface`
-- `ImageCollage(urls, height:, spacing:, cornerRadius:, onTap:)`
-- `InfoBanner(message, type:, title:, links:)`
-- `KeyValueTable(label, value:, style:)`
-- `ListRow(total:, each:, unit:)`
-- `ListSectionHeader`
-- `ListView(items, header:, footer:, bordered:, loading:, split: …)`
-- `MenuCard(title:, subtitle:, systemImage:, action:)`
-- `NavigationBar(systemImage:, activeSystemImage:)`
-- `NotificationCard(title:, message:, date:, isUnread:, type:, onClose:)`
-- `PageHeader(systemImage:, handler:)`
-- `PagingCarousel(items, peek:, spacing:, autoplay:, @ViewBuilder:)`
-- `PromoBanner(title:, subtitle:, systemImage:, ctaTitle:, tint:, action:)`
-- `RatingSummary(score:, label:, reviewCount:, onReviews:)`
-- `ResultView(status, title:, message:, primaryTitle:, onPrimary:)`
-- `SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)` — modifiers: `.a11yID()`
-- `RadioCard(title, description:, isSelected:, isEnabled:, action:)`
+- `Accordion(title, leadingSystemImage:, initiallyExpanded:, @ViewBuilder:)` — Improved, token-bound rewrite of the reference AccordionView — a single expandable row with a @ViewBuilder body instead of type-erased AnyView models. · modifiers: `.subtitle()`, `.number()`, `.indicator()`, `.titleSize()`, `.density()`, `.truncateSubtitle()`, `.divider()`
+- `AccordionGroup(items, mode:, initiallyExpanded:, title:)` — A group of accordion rows with single- or multiple-open behavior (the reference `AccordionView` tracks a `Set` of open ids).
+- `AlertToast(title, handler:)` — Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner).
+- `BlogCard(title:, excerpt:, readMoreTitle:, compact:, onReadMore:)` — Organism.
+- `Callout(text, type:, style:, showIcon:, actionTitle:, onAction:)` — Organism.
+- `Card(elevation:, padding:, title:, subtitle:, extraTitle:, onExtra:)` — Organism.
+- `CardStack(items, @ViewBuilder:)` — Organism.
+- `Carousel(items, loop:, currentIndex:, @ViewBuilder:)` — A generic paging carousel with dot indicators, optional autoplay and optional prev/next arrows. · modifiers: `.autoplay()`, `.arrows()`, `.dots()`, `.fade()`
+- `ChatBubble(text, side:, author:, time:, avatarSystemImage:)` — Organism.
+- `Counter(value:, label:)` — Organism.
+- `Coupon(code:, label:, style:, onCopy:)` — Organism.
+- `DataTable(title, align:, sortKey:)` — Organism.
+- `Diff(aspectRatio:, @ViewBuilder:)` — Organism.
+- `EmptyState(systemImage:, iconForeground:, iconBackground:, iconCircleSize:, title:, message: …)` — Improved, token-bound rewrite of the reference EmptyCardView.
+- `FloatingActionButton(systemImage:, label:, action:)` — Organism.
+- `Footer(title, action:)` — Organism.
+- `Gallery(items, columns:, aspect:, @ViewBuilder:)` — Organism.
+- `Hero(title:, subtitle:, ctaTitle:, dark:, action:)` — Organism.
+- `HeroSurface` — The default `Hero` surface.
+- `ImageCollage(urls, height:, spacing:, cornerRadius:, onTap:)` — A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+) and a "+N" overlay on the last visible tile.
+- `InfoBanner(message, type:, title:, links:)` — Improved, token-bound rewrite of the reference InfoMessage.
+- `KeyValueTable(label, value:, style:)` — Organism.
+- `ListRow(total:, each:, unit:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view.
+- `ListSectionHeader` — A non-interactive section-header row inside a list (Reference menu `.secondary`).
+- `ListView(items, header:, footer:, bordered:, loading:, split: …)` — Ant-style List container: optional header/footer, bordered surface, row dividers (split), and a loading (skeleton) state.
+- `MenuCard(title:, subtitle:, systemImage:, action:)` — Organism.
+- `NavigationBar(systemImage:, activeSystemImage:)` — Organism.
+- `NotificationCard(title:, message:, date:, isUnread:, type:, onClose:)` — Organism.
+- `PageHeader(systemImage:, handler:)` — Organism.
+- `PagingCarousel(items, peek:, spacing:, autoplay:, @ViewBuilder:)` — Custom drag-paging carousel with PEEKING neighbors + threshold snap (the reference `PagingScrollView`).
+- `PromoBanner(title:, subtitle:, systemImage:, ctaTitle:, tint:, action:)` — Organism.
+- `RatingSummary(score:, label:, reviewCount:, onReviews:)` — Organism.
+- `ResultView(status, title:, message:, primaryTitle:, onPrimary:)` — Ant-style "Result" template: a full-page status view for the outcome of an operation (success / info / warning / error) or an exception page (404 / 403 / 500), with up to two actions.
+- `SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.a11yID()`
+- `RadioCard(title, description:, isSelected:, isEnabled:, action:)` — Organisms.
 - `CheckboxCard`
-- `ThemePicker(selection:, themes:, onSelect:)`
-- `Timeline(title:, time:, description:, systemImage:, state:, color:)`
-- `Upload(id:, name:, status:)`
-- `UploadList`
-- `VideoPlayerView(url, progress:, isMuted:, onTap:)` — modifiers: `.autoplay()`, `.loop()`, `.muteToggle()`, `.muted()`, `.tapToToggle()`
+- `ThemePicker(selection:, themes:, onSelect:)` — A grid of `DaisyTheme` preview cards.
+- `Timeline(title:, time:, description:, systemImage:, state:, color:)` — Organism.
+- `Upload(id:, name:, status:)` — Organism.
+- `UploadList` — `Upload` wired to an `UploadController` — renders its files with remove + retry.
+- `VideoPlayerView(url, progress:, isMuted:, onTap:)` — Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop, mute, aspect-fill, and active-gating (only the visible item plays). · modifiers: `.autoplay()`, `.loop()`, `.muted()`, `.muteToggle()`, `.tapToToggle()`
 
 ## Chainable modifiers (all components)
 

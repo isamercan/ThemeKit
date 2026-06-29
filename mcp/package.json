@@ -1,7 +1,7 @@
 {
   "name": "@isamercan/themekit-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for the ThemeKit SwiftUI design system — components, modifiers, tokens and daisyUI themes on demand.",
+  "version": "1.1.0",
+  "description": "MCP server for the ThemeKit SwiftUI design system \u2014 components, modifiers, tokens and daisyUI themes on demand.",
   "type": "module",
   "bin": {
     "themekit-mcp": "dist/index.js"
@@ -15,7 +15,13 @@
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["mcp", "themekit", "swiftui", "design-system", "daisyui"],
+  "keywords": [
+    "mcp",
+    "themekit",
+    "swiftui",
+    "design-system",
+    "daisyui"
+  ],
   "author": "isamercan",
   "license": "MIT",
   "homepage": "https://github.com/isamercan/ThemeKit",
