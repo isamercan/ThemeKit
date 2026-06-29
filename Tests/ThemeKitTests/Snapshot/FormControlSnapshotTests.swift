@@ -26,7 +26,7 @@ final class FormControlSnapshotTests: SnapshotTestCase {
 
     func testTextInput_filled() {
         assertComponentSnapshot(
-            TextInput("Email", text: .constant("traveller@etstur.com"), leadingSystemImage: "envelope")
+            TextInput("Email", text: .constant("traveller@example.com"), leadingSystemImage: "envelope")
         )
     }
 
