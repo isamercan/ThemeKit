@@ -14,6 +14,9 @@ import { PNG } from "pngjs";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fetchFigmaNode } from "./figma/client.js";
+import { loadMapping } from "./figma/mapping.js";
+import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 
 interface Param { label: string; name: string; type: string; default?: string; }
 interface Modifier { name: string; signature: string; doc: string; }
@@ -361,6 +364,29 @@ server.registerTool("migrate_snippet", {
   sub(/\.cornerRadius\(\s*\d+\s*\)/g, ".cornerRadius(Theme.RadiusRole.box.value)", "hardcoded radius → RadiusRole.box");
   sub(/\bToggle\(("[^"]*",\s*)?isOn:\s*(\$\w+)\)/g, "ThemeToggle(isOn: $2)", "Toggle → ThemeToggle");
   return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (none automatic; run validate_code)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput; check param names with get_component_api.`);
+});
+
+// ── Figma → SwiftUI (the star) ─────────────────────────────────────────────
+
+server.registerTool("figma_to_swiftui", {
+  title: "Figma → SwiftUI (ThemeKit)",
+  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review). Set dryRun for the plan only. Needs FIGMA_TOKEN in the env.",
+  inputSchema: {
+    fileKey: z.string().describe("Figma file key (from the file URL)"),
+    nodeId: z.string().describe("Node id, e.g. 1:23 (from 'Copy link to selection')"),
+    dryRun: z.boolean().optional().describe("Return only the mapping plan + report, no code"),
+  },
+}, async ({ fileKey, nodeId, dryRun }) => {
+  const token = process.env.FIGMA_TOKEN;
+  if (!token) return text("FIGMA_TOKEN is not set. Add it to the MCP server's env (see the README) and retry.");
+  let node;
+  try { node = await fetchFigmaNode(fileKey, nodeId, token); }
+  catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
+  const mapping = loadMapping(join(here, "..", "figma-mapping.json"));
+  const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
+  const { code, report } = generate(node, mapping, data.tokens, apis);
+  if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}`);
+  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}\n\nReview the ⚠️ items; verify any param with get_component_api, then validate_code the result.`);
 });
 
 // ── Resources & prompts ────────────────────────────────────────────────────

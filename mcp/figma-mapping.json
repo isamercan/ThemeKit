@@ -1,0 +1,58 @@
+{
+  "//": "Config-driven Figma → ThemeKit mapping. Rules are tried top-to-bottom; the first match wins. Heuristics are the fallback when no rule matches. Override anything here — heuristics are intentionally last.",
+  "version": 1,
+
+  "tolerances": {
+    "//": "How forgiving the token matching is.",
+    "colorDeltaE": 10,
+    "spacingSnapPx": 2,
+    "radiusSnapPx": 2
+  },
+
+  "componentRules": [
+    {
+      "//": "Figma node → ThemeKit component. `match` is ANDed; `produce.argsFrom` pulls init args from the node.",
+      "match": { "namePattern": "^(Button|Btn)/Primary", "type": "INSTANCE" },
+      "produce": { "component": "PrimaryButton", "confidence": 0.95,
+                   "argsFrom": { "_": "{text}" }, "trailingClosure": "action" }
+    },
+    {
+      "match": { "namePattern": "^(Button|Btn)/Secondary", "type": "INSTANCE" },
+      "produce": { "component": "SecondaryButton", "confidence": 0.95,
+                   "argsFrom": { "_": "{text}" }, "trailingClosure": "action" }
+    },
+    {
+      "match": { "namePattern": "^Badge", "type": "INSTANCE" },
+      "produce": { "component": "Badge", "confidence": 0.9,
+                   "argsFrom": { "_": "{text}" }, "styleFromNameSegment": 1 }
+    },
+    {
+      "match": { "namePattern": "^Chip", "type": "INSTANCE" },
+      "produce": { "component": "Chip", "confidence": 0.85,
+                   "argsFrom": { "_": "{text}", "isSelected": ".constant(false)" } }
+    },
+    {
+      "match": { "namePattern": "^(Card|Surface)", "type": "FRAME" },
+      "produce": { "component": "Card", "confidence": 0.8, "container": true }
+    },
+    {
+      "match": { "namePattern": "^(Input|TextField|TextInput)", "type": "INSTANCE" },
+      "produce": { "component": "TextInput", "confidence": 0.85,
+                   "argsFrom": { "_": "{label}", "text": "$text" } }
+    }
+  ],
+
+  "heuristics": {
+    "//": "Used only when no rule matches. Override by adding a componentRule above.",
+    "autolayoutSingleTextFill": "PrimaryButton",
+    "frameContainer": "Card",
+    "textOnly": "Text",
+    "imageFill": "RemoteImage"
+  },
+
+  "tokenAliases": {
+    "//": "Optional shortcuts: a Figma style name → a token, skipping value matching.",
+    "color": { "Brand/500": "fgHero", "Surface/Card": "bgWhite", "Text/Primary": "textPrimary" },
+    "text": { "Heading/SM": "headingSm", "Body/Base": "bodyBase400" }
+  }
+}
