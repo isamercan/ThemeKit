@@ -23,6 +23,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `get_usage_snippet(name, variant?)` | A copy-paste example (basic / full) |
 | `search_components(intent)` | Intent search ("a selectable filter list") — keyword + synonym scoring |
 | `get_variants_states(name)` | Style variants (enum cases) + supported states |
+| `get_migration_guide(from, to?)` | What changed between two versions (breaking first), from the CHANGELOG |
 
 ### Act — generation
 | Tool | What it does |
@@ -31,6 +32,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `lint_snippet(swift)` | Flags hardcoded colors / radius / fonts / padding |
 | `scaffold_screen(kind)` | A starter form / list / detail / settings screen |
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit |
+| `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
 
 ### Themes
 | Tool | What it returns |
