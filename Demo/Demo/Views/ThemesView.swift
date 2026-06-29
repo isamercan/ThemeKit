@@ -62,6 +62,12 @@ struct ThemesView: View {
                 Text("The quick brown fox jumps over the lazy dog.")
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
+                // The three daisyUI brand colors — primary / secondary / accent.
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    ThemeButton("Primary", color: .primary, variant: .solid) {}
+                    ThemeButton("Secondary", color: .secondary, variant: .solid) {}
+                    ThemeButton("Accent", color: .accent, variant: .solid) {}
+                }
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     PrimaryButton("Continue") {}
                     SecondaryButton("Cancel") {}

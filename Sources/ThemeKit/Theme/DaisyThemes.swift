@@ -38,7 +38,8 @@ public struct DaisyTheme: Identifiable, Equatable, Sendable {
     /// The recipe that recreates this theme through `ThemeGenerator` — apply it
     /// with `Theme.shared.apply(_:)`.
     public var config: ThemeConfig {
-        ThemeConfig(primaryHex: primary, baseHex: base, tint: tint, dark: isDark)
+        ThemeConfig(primaryHex: primary, baseHex: base, secondaryHex: secondary,
+                    accentHex: accent, tint: tint, dark: isDark)
     }
 
     /// SwiftUI colors for the four signature swatches (primary, secondary, accent, base).

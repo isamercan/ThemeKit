@@ -49,6 +49,10 @@ public final class Theme: @unchecked Sendable {
     private var border: [BorderColorKey: Color] = [:]
     private var text: [TextColorKey: Color] = [:]
     private var palette: [PaletteColorKey: Color] = [:]
+    /// Additive brand-color ladders (daisyUI `secondary` / `accent`) that aren't
+    /// part of the generated Figma `PaletteColorKey` set. Keyed `"<family>.<step>"`
+    /// (e.g. `"accent.500"`). Empty unless a theme/config provides these hexes.
+    private var brandPalette: [String: Color] = [:]
     private var radiusList: [String: CGFloat] = [:]
     private var spacingList: [String: CGFloat] = [:]
     private var typographyList: [String: ResolvedTextStyle] = [:]
@@ -130,7 +134,7 @@ public final class Theme: @unchecked Sendable {
             primaryHex: config.primaryHex, tint: config.tint, dark: config.dark, font: config.font,
             fontScale: config.fontScale, radiusScale: config.radiusScale,
             spacingScale: config.spacingScale, shadowScale: config.shadowScale,
-            baseHex: config.baseHex
+            baseHex: config.baseHex, secondaryHex: config.secondaryHex, accentHex: config.accentHex
         ))
     }
 
@@ -161,7 +165,7 @@ public final class Theme: @unchecked Sendable {
             primaryHex: config.primaryHex, tint: config.tint, dark: config.dark, font: config.font,
             fontScale: config.fontScale, radiusScale: config.radiusScale,
             spacingScale: config.spacingScale, shadowScale: config.shadowScale,
-            baseHex: config.baseHex
+            baseHex: config.baseHex, secondaryHex: config.secondaryHex, accentHex: config.accentHex
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted]
@@ -207,6 +211,9 @@ public final class Theme: @unchecked Sendable {
                 text[key] = value
             } else if let key = PaletteColorKey(rawValue: color.name) {
                 palette[key] = value
+            } else if color.name.hasPrefix("palette.secondary.") || color.name.hasPrefix("palette.accent.") {
+                // Additive brand ladders (not in the generated PaletteColorKey set).
+                brandPalette[String(color.name.dropFirst("palette.".count))] = value
             }
         }
         for r in decoded.radius ?? [] { radiusList[r.name] = r.radius }
@@ -226,7 +233,7 @@ public final class Theme: @unchecked Sendable {
     }
 
     private func resetThemeState() {
-        foreground = [:]; background = [:]; border = [:]; text = [:]; palette = [:]
+        foreground = [:]; background = [:]; border = [:]; text = [:]; palette = [:]; brandPalette = [:]
         radiusList = [:]; spacingList = [:]; typographyList = [:]; shadowList = [:]
     }
 
@@ -239,6 +246,10 @@ public final class Theme: @unchecked Sendable {
 
     /// Primitive 50..900 ladder color (Ant-style). `step 500` is the base.
     public func palette(_ key: PaletteColorKey) -> Color { palette[key] ?? .clear }
+
+    /// An additive brand ladder step (daisyUI `secondary` / `accent`), or `nil`
+    /// when the active theme doesn't define one (callers fall back to primary).
+    public func brandShade(_ family: String, _ step: Int) -> Color? { brandPalette["\(family).\(step)"] }
 
     // MARK: - Metric accessors
 

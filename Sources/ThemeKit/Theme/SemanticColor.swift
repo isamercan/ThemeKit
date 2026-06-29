@@ -13,6 +13,9 @@ import SwiftUI
 public enum SemanticColor: String, CaseIterable {
     case primary, neutral, info, success, warning, error
     case turquoise, orange, purple, pink
+    /// daisyUI brand colors — backed by additive `palette.secondary/accent.*`
+    /// ladders; fall back to `primary` when a theme doesn't define them.
+    case secondary, accent
 
     /// Background for the `solid` variant.
     public var solid: Color {
@@ -27,6 +30,7 @@ public enum SemanticColor: String, CaseIterable {
         case .orange: return Theme.shared.background(.bgOrange)
         case .purple: return Theme.shared.text(.textPurple)
         case .pink: return Theme.shared.background(.badgeBgMaximumpinkBase)
+        case .secondary, .accent: return base
         }
     }
 
@@ -51,6 +55,7 @@ public enum SemanticColor: String, CaseIterable {
         case .orange: return Theme.shared.background(.badgeBgOrange)
         case .purple: return Theme.shared.background(.badgeBgPurple)
         case .pink: return Theme.shared.background(.badgeBgMaximumpinkLight)
+        case .secondary, .accent: return bg
         }
     }
 
@@ -67,6 +72,7 @@ public enum SemanticColor: String, CaseIterable {
         case .orange: return Theme.shared.foreground(.badgeFgOrange)
         case .purple: return Theme.shared.text(.textPurple)
         case .pink: return Theme.shared.foreground(.badgeFgMaximumpink)
+        case .secondary, .accent: return strong
         }
     }
 
@@ -83,6 +89,7 @@ public enum SemanticColor: String, CaseIterable {
         case .orange: return Theme.shared.border(.borderOrange)
         case .purple: return Theme.shared.text(.textPurple)
         case .pink: return Theme.shared.foreground(.badgeFgMaximumpink)
+        case .secondary, .accent: return base
         }
     }
 
@@ -96,6 +103,12 @@ public enum SemanticColor: String, CaseIterable {
 
     /// Resolve any ladder step for this color, e.g. `.primary.shade(.s700)`.
     public func shade(_ step: Shade) -> Color {
+        // Brand secondary/accent live in the additive ladder; fall back to primary
+        // when a theme doesn't define them, so they never resolve to `.clear`.
+        if self == .secondary || self == .accent {
+            return Theme.shared.brandShade(rawValue, step.rawValue)
+                ?? (Theme.PaletteColorKey(rawValue: "palette.primary.\(step.rawValue)").map { Theme.shared.palette($0) } ?? .clear)
+        }
         guard let key = Theme.PaletteColorKey(rawValue: "palette.\(rawValue).\(step.rawValue)") else { return .clear }
         return Theme.shared.palette(key)
     }
