@@ -3,9 +3,11 @@
 > **Native, brand-neutral SwiftUI design system** — 117 token-bound components that
 > re-skin from a single accent color: light/dark, per-subtree, zero core dependencies.
 
+[![CI](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml/badge.svg)](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014-blue.svg)
 ![Dependencies](https://img.shields.io/badge/Core%20dependencies-0-success.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
   <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
@@ -76,9 +78,6 @@ targets: [
     ),
 ]
 ```
-
-> This is a **private** repository — resolving it requires GitHub access
-> (an authenticated SSH key or token).
 
 ### Products
 
@@ -594,8 +593,10 @@ full tool list and the `figma-mapping.json` schema.
 
 ## Documentation
 
+📖 **Live docs: [isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/documentation/themekit)** — the DocC catalog, published from `main` on every push.
+
 A DocC catalog ships with the package
-(`Sources/ThemeKit/Documentation.docc`). Build it in Xcode via
+(`Sources/ThemeKit/Documentation.docc`). Build it locally in Xcode via
 **Product ▸ Build Documentation** (⌃⌘D), or from the command line:
 
 ```sh

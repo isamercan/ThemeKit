@@ -1,0 +1,55 @@
+name: Pages
+
+# Builds the DocC documentation and publishes it to GitHub Pages on every push to
+# main. Public repo → free macOS runner minutes. The manual artifact build in
+# docs.yml stays for local/offline use.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    name: Build DocC + deploy to Pages
+    runs-on: macos-15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # Project Pages serve under /<repo>/ — the base path must match or assets 404.
+      - name: Build DocC (static hosting)
+        run: |
+          swift package --disable-sandbox \
+            generate-documentation \
+            --target ThemeKit \
+            --transform-for-static-hosting \
+            --hosting-base-path ThemeKit \
+            --output-path ./docs-out
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs-out
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
