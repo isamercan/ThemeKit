@@ -243,6 +243,13 @@ public final class Theme: @unchecked Sendable {
     // MARK: - Metric accessors
 
     public func radius(_ key: RadiusKey) -> CGFloat { radiusList[key.rawValue] ?? 0 }
+
+    /// Resolved radius for a semantic *role* (box / field / selector). Reads the
+    /// theme's role token if present, otherwise the role's fallback size key — so
+    /// themes without role tokens (bundled JSON) keep their existing corners.
+    public func radius(_ role: RadiusRole) -> CGFloat {
+        radiusList[role.rawValue] ?? radius(role.fallback)
+    }
     public func spacing(_ key: SpacingKey) -> CGFloat { spacingList[key.rawValue] ?? 0 }
 
     // MARK: - Typography accessor

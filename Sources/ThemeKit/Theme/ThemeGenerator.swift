@@ -210,6 +210,8 @@ enum ThemeGenerator {
 
     private static let radiusBase: [(String, CGFloat)] = [
         ("radius-none", 0), ("rd-xs", 6), ("rd-sm", 8), ("rd-md", 16), ("rd-base", 24), ("rd-lg", 32), ("rd-xl", 40), ("rd-4xl", 64),
+        // Semantic radius roles (daisyUI parity) — box / field / selector.
+        ("radius-box", 16), ("radius-field", 8), ("radius-selector", 6),
     ]
     private static let spacingBase: [(String, CGFloat)] = [
         ("spacing-none", 0), ("sp-xs", 4), ("sp-sm", 8), ("sp-md", 16), ("sp-base", 24), ("sp-lg", 32), ("sp-xl", 40), ("sp-4xl", 64),

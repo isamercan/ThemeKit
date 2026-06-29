@@ -48,9 +48,9 @@ private struct DefaultCardSurface: View {
     var body: some View {
         configuration.content
             .background(theme.background(.bgWhite),
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
                     .strokeBorder(theme.border(.borderPrimary), lineWidth: configuration.elevation == .none ? 1 : 0)
             )
             .modifier(CardShadow(elevation: configuration.elevation))
@@ -73,7 +73,7 @@ private struct OutlinedCardSurface: View {
     var body: some View {
         configuration.content
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
                     .strokeBorder(theme.border(.borderPrimary), lineWidth: 1.5)
             )
     }

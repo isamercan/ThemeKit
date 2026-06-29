@@ -98,7 +98,7 @@ public struct Checkbox: View {
         }
     }
 
-    private var radius: CGFloat { Theme.RadiusKey.xs.value }
+    private var radius: CGFloat { Theme.RadiusRole.selector.value }
 
     private var box: some View {
         RoundedRectangle(cornerRadius: radius, style: .continuous)

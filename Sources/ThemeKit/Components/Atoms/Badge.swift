@@ -193,7 +193,7 @@ public struct Badge: View {
     private var shapeStyle: AnyShape {
         switch shape {
         case .pill: return AnyShape(Capsule())
-        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
         }
     }
 }
