@@ -535,12 +535,32 @@ xcodebuild docbuild -scheme ThemeKit -destination 'generic/platform=iOS'
 It curates every component by category and includes guide articles for
 **Theming**, **Accessibility**, and **Validation**. No extra dependency required.
 
+## Claude Code skill
+
+ThemeKit ships an **agent skill** so AI coding tools generate *correct* ThemeKit
+code — the right component + modifier for each job, tokens instead of hardcoded
+colors. It's a compact, always-accurate reference (`skills/themekit/`):
+`SKILL.md` (idioms + patterns) + a generated catalog of all components,
+modifiers and the 32 daisyUI themes (`make skill` regenerates it from source).
+
+Install it into your project as a Claude Code plugin:
+
+```sh
+# in Claude Code
+/plugin marketplace add isamercan/ThemeKit
+/plugin install themekit@themekit
+```
+
+…then just ask: *"Build a sign-up screen. Use the ThemeKit skill."* Or copy
+`skills/themekit/` into your repo's `.claude/skills/` for a zero-install setup.
+
 ## Demo
 
-`Demo/` — a SwiftUI app (local package reference) with five tabs: **Components**
-(gallery), **Colors** (token gallery + live Theme Configurator), **Type**,
-**Layout** (spacing / radius / shadow tokens), and **Example** (a full flow built
-from the real components), plus a light/dark switcher.
+`Demo/` — a SwiftUI app (local package reference) with **Components** (gallery),
+**Themes** (the daisyUI `ThemePicker` + a live preview), **Colors** (token gallery
++ live Theme Configurator), **Type**, **Layout** (spacing / radius / shadow
+tokens), and **Example** (a full flow built from the real components), plus a
+light/dark switcher.
 
 ## Adding / updating tokens
 
