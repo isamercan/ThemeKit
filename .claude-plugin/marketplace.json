@@ -12,9 +12,9 @@
     {
       "name": "themekit",
       "source": "./",
-      "description": "Build SwiftUI UIs with the ThemeKit design system: tokenized components, runtime theming, the 32 daisyUI themes, and chainable modifiers. The skill teaches Claude the correct APIs so generated UI uses tokens (never hardcoded colors) and the right component + modifier for each job.",
+      "description": "Build SwiftUI UIs with the ThemeKit design system: tokenized components, runtime theming, 32 theme presets, and chainable modifiers. The skill teaches Claude the correct APIs so generated UI uses tokens (never hardcoded colors) and the right component + modifier for each job.",
       "version": "1.0.0",
-      "keywords": ["swiftui", "design-system", "themekit", "theming", "daisyui", "ios"]
+      "keywords": ["swiftui", "design-system", "themekit", "theming", "ios"]
     }
   ]
 }

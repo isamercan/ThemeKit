@@ -46,8 +46,8 @@ final class BrandColorTests: XCTestCase {
 
     func testDaisyThemeAppliesSecondaryAndAccent() {
         // Dracula: secondary bd93f9, accent ffb86c (light-mode ladder seed == hex).
-        DaisyTheme.named("light")!.apply()   // light theme so the dark mix doesn't shift the seed
-        let light = DaisyTheme.named("light")!
+        ThemePreset.named("light")!.apply()   // light theme so the dark mix doesn't shift the seed
+        let light = ThemePreset.named("light")!
         XCTAssertEqual(rgb(SemanticColor.secondary.base), light.secondary)
         XCTAssertEqual(rgb(SemanticColor.accent.base), light.accent)
     }

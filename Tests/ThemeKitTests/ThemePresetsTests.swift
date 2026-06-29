@@ -9,7 +9,7 @@ import AppKit
 private typealias DaisyNativeColor = NSColor
 #endif
 
-final class DaisyThemesTests: XCTestCase {
+final class ThemePresetsTests: XCTestCase {
     private func hex(_ data: Theme.ThemeData, _ name: String) -> String? {
         data.colors?.first(where: { $0.name == name })?.hex
     }
@@ -22,7 +22,7 @@ final class DaisyThemesTests: XCTestCase {
     }
 
     func testCatalogIntegrity() {
-        let all = DaisyTheme.all
+        let all = ThemePreset.all
         XCTAssertGreaterThanOrEqual(all.count, 30)
         // Unique ids.
         XCTAssertEqual(Set(all.map(\.id)).count, all.count)
@@ -34,12 +34,12 @@ final class DaisyThemesTests: XCTestCase {
             }
         }
         // Lookup works.
-        XCTAssertEqual(DaisyTheme.named("dracula")?.name, "Dracula")
-        XCTAssertNil(DaisyTheme.named("does-not-exist"))
+        XCTAssertEqual(ThemePreset.named("dracula")?.name, "Dracula")
+        XCTAssertNil(ThemePreset.named("does-not-exist"))
     }
 
     func testConfigCarriesBaseHex() {
-        let dracula = DaisyTheme.named("dracula")!
+        let dracula = ThemePreset.named("dracula")!
         XCTAssertEqual(dracula.config.primaryHex, "ff79c6")
         XCTAssertEqual(dracula.config.baseHex, "282a36")
         XCTAssertTrue(dracula.config.dark)
@@ -69,13 +69,13 @@ final class DaisyThemesTests: XCTestCase {
     @MainActor
     func testApplyDaisyThemeUpdatesLiveTokens() {
         // Cupcake (light) — both primary and base land verbatim in the live theme.
-        DaisyTheme.named("cupcake")!.apply()
+        ThemePreset.named("cupcake")!.apply()
         XCTAssertEqual(rgb(Theme.shared.background(.bgHero)), "65c3c8")   // primary
         XCTAssertEqual(rgb(Theme.shared.background(.bgWhite)), "faf7f5")  // base surface
         XCTAssertEqual(Theme.shared.currentConfig?.baseHex, "faf7f5")
 
         // Dracula (dark) — the base surface still wins even though dark primary is mixed.
-        DaisyTheme.named("dracula")!.apply()
+        ThemePreset.named("dracula")!.apply()
         XCTAssertEqual(rgb(Theme.shared.background(.bgWhite)), "282a36")
         XCTAssertEqual(Theme.shared.currentConfig?.baseHex, "282a36")
         XCTAssertTrue(Theme.shared.isDark)
@@ -85,7 +85,7 @@ final class DaisyThemesTests: XCTestCase {
     }
 
     func testBaseHexSurvivesConfigRoundTrip() throws {
-        let original = DaisyTheme.named("cupcake")!.config
+        let original = ThemePreset.named("cupcake")!.config
         let restored = try ThemeConfig(jsonData: original.jsonData())
         XCTAssertEqual(restored, original)
         XCTAssertEqual(restored.baseHex, "faf7f5")

@@ -3,7 +3,7 @@ name: themekit
 description: >-
   Use when writing SwiftUI UI with the ThemeKit design system — its tokenized
   components (Badge, Card, TextInput, Select, Carousel…), runtime theming,
-  daisyUI themes, and chainable modifiers. Trigger on "ThemeKit", design tokens,
+  theme presets, and chainable modifiers. Trigger on "ThemeKit", design tokens,
   theme switching, or a request to build a screen with ThemeKit.
 license: MIT
 ---
@@ -16,7 +16,7 @@ from the active `Theme`. Write UI with its components + modifiers; the theme
 re-skins everything.
 
 For the full component list + each one's init params + modifiers, read
-[`references/components.md`](references/components.md). For the daisyUI theme
+[`references/components.md`](references/components.md). For the theme-preset
 catalog, read [`references/themes.md`](references/themes.md).
 
 ## Golden rules
@@ -111,13 +111,13 @@ let ocean = Theme(); ocean.applyGenerated(primaryHex: "0fb4ab")
 BookingCard().theme(ocean)
 ```
 
-### daisyUI themes
+### Theme presets
 
-ThemeKit bundles the 32 daisyUI themes. Apply one, or drop the `ThemePicker`
+ThemeKit bundles 32 theme presets (inspired by daisyUI). Apply one, or drop the `ThemePicker`
 grid into a screen:
 
 ```swift
-DaisyTheme.named("dracula")?.apply()        // recolor Theme.shared live
+ThemePreset.named("dracula")?.apply()        // recolor Theme.shared live
 
 @State private var active: String? = "cupcake"
 ThemePicker(selection: $active)             // tappable grid of all 32 themes
@@ -138,7 +138,7 @@ Card(title: "Sign up") {
 }
 ```
 
-**Theme switcher screen** — see `ThemePicker` + the daisyUI section above.
+**Theme switcher screen** — see `ThemePicker` + the theme-presets section above.
 
 ## Anti-patterns (don't)
 

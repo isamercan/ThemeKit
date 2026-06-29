@@ -6,7 +6,7 @@
     "Never hardcode a color \u2014 use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.",
     "Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.",
     "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`; accessibility id uses `.a11yID(_:)`.",
-    "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a daisyUI theme: `DaisyTheme.named(\"dracula\")?.apply()`."
+    "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a theme preset: `ThemePreset.named(\"dracula\")?.apply()`."
   ],
   "tokens": {
     "text": [
@@ -1285,7 +1285,7 @@
     {
       "name": "ThemePicker",
       "category": "Organisms",
-      "doc": "A grid of `DaisyTheme` preview cards.",
+      "doc": "A grid of `ThemePreset` preview cards.",
       "init": "ThemePicker(selection:, themes:, onSelect:)",
       "modifiers": []
     },

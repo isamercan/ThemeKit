@@ -121,7 +121,7 @@
 - `SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.a11yID()`
 - `RadioCard(title, description:, isSelected:, isEnabled:, action:)` — Organisms.
 - `CheckboxCard`
-- `ThemePicker(selection:, themes:, onSelect:)` — A grid of `DaisyTheme` preview cards.
+- `ThemePicker(selection:, themes:, onSelect:)` — A grid of `ThemePreset` preview cards.
 - `Timeline(title:, time:, description:, systemImage:, state:, color:)` — Organism.
 - `Upload(id:, name:, status:)` — Organism.
 - `UploadList` — `Upload` wired to an `UploadController` — renders its files with remove + retry.

@@ -1,25 +1,25 @@
 //
-//  DaisyThemes.swift
+//  ThemePresets.swift
 //  ThemeKit
 //  Created by İsa Mercan on 29.06.2026.
 //
-//  A catalog of themes ported from daisyUI (https://daisyui.com/docs/themes/).
-//  Each entry carries daisyUI's signature swatch colors — primary / secondary /
+//  A catalog of ready-made theme presets (color sets inspired by daisyUI).
+//  Each entry carries four signature swatch colors — primary / secondary /
 //  accent / base — for previewing, plus a `ThemeConfig` that drives ThemeKit's
 //  on-device `ThemeGenerator`: the primary recolors the whole Ant-style palette
 //  and the `base` becomes the surface "paper" tone (so cupcake stays cream,
 //  cyberpunk stays yellow, dracula stays slate). Apply any of them live with
-//  `Theme.shared.apply(daisyTheme.config)`.
+//  `Theme.shared.apply(preset.config)`.
 //
 
 import SwiftUI
 
-/// A single daisyUI-derived theme: its identity, four signature swatches and the
+/// A single theme preset: its identity, four signature swatches and the
 /// `ThemeConfig` recipe that reproduces it through `ThemeGenerator`.
-public struct DaisyTheme: Identifiable, Equatable, Sendable {
+public struct ThemePreset: Identifiable, Equatable, Sendable {
     public let id: String
     public let name: String
-    /// daisyUI swatch hexes (RRGGBB, no `#`) — shown in the picker.
+    /// Swatch hexes (RRGGBB, no `#`) — shown in the picker.
     public let primary: String
     public let secondary: String
     public let accent: String
@@ -51,9 +51,9 @@ public struct DaisyTheme: Identifiable, Equatable, Sendable {
     public func apply(to theme: Theme = .shared) { theme.apply(config) }
 }
 
-public extension DaisyTheme {
-    /// The full daisyUI theme set, in daisyUI's own order.
-    static let all: [DaisyTheme] = [
+public extension ThemePreset {
+    /// All theme presets (color sets inspired by daisyUI).
+    static let all: [ThemePreset] = [
         .init("light",     "Light",     primary: "422ad5", secondary: "009689", accent: "00d3bb", base: "ffffff"),
         .init("dark",      "Dark",      primary: "605dff", secondary: "f43098", accent: "00d3bb", base: "1d232a", dark: true),
         .init("cupcake",   "Cupcake",   primary: "65c3c8", secondary: "ef9fbc", accent: "eeaf3a", base: "faf7f5", tint: 0.07),
@@ -89,5 +89,5 @@ public extension DaisyTheme {
     ]
 
     /// Looks up a theme by `id` (e.g. "dracula").
-    static func named(_ id: String) -> DaisyTheme? { all.first { $0.id == id } }
+    static func named(_ id: String) -> ThemePreset? { all.first { $0.id == id } }
 }

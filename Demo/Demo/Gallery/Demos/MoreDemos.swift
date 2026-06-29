@@ -714,7 +714,7 @@ struct MenuCardDemo: View {
     }
 }
 
-// MARK: - daisyUI gap components
+// MARK: - Additional components
 
 struct RadialProgressDemo: View {
     @State private var value = 0.6
@@ -931,7 +931,7 @@ struct DrawerDemo: View {
     }
 }
 
-// MARK: - daisyUI gap components (batch 2)
+// MARK: - Additional components (batch 2)
 
 struct StatusDotDemo: View {
     @State private var kind: StatusKind = .online
@@ -1211,7 +1211,7 @@ struct ThemeControllerDemo: View {
     }
 }
 
-// MARK: - Configurable (daisyUI-style) components
+// MARK: - Configurable components
 
 struct ThemeButtonDemo: View {
     @State private var color: SemanticColor = .primary
