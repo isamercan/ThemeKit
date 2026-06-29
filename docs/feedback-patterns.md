@@ -32,12 +32,12 @@ ContentView().feedbackHost()
 @EnvironmentObject var feedback: FeedbackPresenter
 
 feedback.toast("Kaydedildi", kind: .success)            // transient
-feedback.toast("Bağlantı yok", kind: .error)
+feedback.toast("No connection", kind: .error)
 
 feedback.confirm(                                       // modal
     title: "Rezervasyonu iptal et?",
-    message: "Bu işlem geri alınamaz.",
-    primaryTitle: "İptal et", primaryKind: .error,
+    message: "This action cannot be undone.",
+    primaryTitle: "Cancel", primaryKind: .error,
     onPrimary: { … }
 )
 ```

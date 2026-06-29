@@ -21,9 +21,9 @@ commitment; dates and scope change.
 
 ## Done
 
-See **[[Sürümler & Release'ler|Versions-and-Releases]]** and the
+See **[[Versions and Releases|Versions-and-Releases]]** and the
 [changelog of releases](https://github.com/isamercan/ThemeKit/releases).
 
 ---
 
-Have a request? Open an issue — see **[[Katkı|Contributing]]**.
+Have a request? Open an issue — see **[[Contributing]]**.

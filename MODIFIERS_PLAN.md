@@ -1,17 +1,17 @@
 # Modifier Migration Plan — bloated inits → idiomatic SwiftUI modifiers
 
-**FAZ 1 (envanter + plan).** Amaç: şişkin `init`'leri SwiftUI'nin zincirlenebilir modifier
-desenine çevirmek; **public API'yi kırmadan** (eski init deprecate + forward). Solid (zaten
-ince) API'lere dokunulmaz.
+**PHASE 1 (inventory + plan).** Goal: convert bloated `init`s into SwiftUI's chainable modifier
+pattern, **without breaking the public API** (deprecate old init + forward). Solid (already
+lean) APIs are left untouched.
 
-## Envanter (kanıt)
+## Inventory (evidence)
 
-- **103 component**, ortalama **5.2** init parametresi.
-- **26 component ≥ 8 parametre** (anti-pattern hedefleri). **51 component ≤ 4** (temiz → dokunulmaz).
-- **Precedent:** buton ailesi zaten dönüştürüldü (#96–#98): `isContentWidth`→`block`,
-  `isEnabled`→`.disabled()`, label `.lineLimit(1)`. Bu plan aynı deseni yayar.
+- **103 components**, averaging **5.2** init parameters.
+- **26 components ≥ 8 parameters** (anti-pattern targets). **51 components ≤ 4** (clean → untouched).
+- **Precedent:** the button family has already been converted (#96–#98): `isContentWidth`→`block`,
+  `isEnabled`→`.disabled()`, label `.lineLimit(1)`. This plan spreads the same pattern.
 
-| Şişkinlik | Component'ler (init param sayısı) |
+| Bloat | Components (init param count) |
 |---|---|
 | 23 | TextInput |
 | 12 | ThemeButton✅(done), MultiSelect, DateField |
@@ -20,170 +20,170 @@ ince) API'lere dokunulmaz.
 | 9 | VideoPlayerView, SelectBox, Pagination, MultiLineTextInput, Carousel |
 | 8 | Stat |
 
-## Karar çerçevesi (özet)
+## Decision framework (summary)
 
-- **KALIR (init):** zorunlu içerik (`title/value/items/url`), `@Binding` (`selection/text/isOn`),
-  zorunlu closure (`action/onSubmit`), `@ViewBuilder` slot (`content/label`). Ayrıca *domain
-  verisi* sayılan `range/bounds`, `options`, `infoMessages` (gösterilecek validation) ve
-  `placeholder` → **kalır** (içerik/veri, görünüm değil).
-- **MODIFIER (mekanizma):**
-  - **(M-disabled)** `isEnabled: Bool` → SwiftUI native **`.disabled(_:)`** (custom değil; env'den okunur). *En yüksek kaldıraçlı, ~20 component.*
-  - **(M-a11y)** `accessibilityID: String?` → self-returning **`.a11yID(_:)`** (kit'in mevcut `.a11y()` altyapısına forward).
-  - **(M-style/3)** semantik varyant enum (`style/variant/type/selectionStyle`) → **self-returning** `.componentStyle(_:)` (custom *render* gerekmiyor; sadece semantik renk/emphasis). Açık render genişletmesi gereken yerlerde zaten Style-protokolü var (Card/Stat/Select).
-  - **(M-size/3)** `size`/`customSize`/`height` → self-returning `.size(_:)` ya da `ControlSize` kullananlarda native **`.controlSize()`** + `@Environment(\.controlSize)`.
-  - **(M-flag/3)** default'lu Bool config bayrakları (`allowClear/showCount/isSecure/showPercentage/gradient/loop/autoplay/searchable…`) → self-returning bayrak modifier'ları.
-  - **(M-color/3)** stil renkleri (`textColor/strokeColor/trailColor/backgroundColor/gradient`) → self-returning stil modifier'ları.
-  - **(M-env/2)** alt-ağaca cascade etmesi mantıklı çapraz config (yoğunluk) → EnvironmentKey modifier (ör. `.controlSize`, ileride `.fieldDensity`).
+- **STAYS (init):** required content (`title/value/items/url`), `@Binding` (`selection/text/isOn`),
+  required closures (`action/onSubmit`), `@ViewBuilder` slots (`content/label`). Also items considered
+  *domain data* — `range/bounds`, `options`, `infoMessages` (validation to display) and
+  `placeholder` → **stay** (content/data, not appearance).
+- **MODIFIER (mechanism):**
+  - **(M-disabled)** `isEnabled: Bool` → SwiftUI native **`.disabled(_:)`** (not custom; read from the environment). *Highest leverage, ~20 components.*
+  - **(M-a11y)** `accessibilityID: String?` → self-returning **`.a11yID(_:)`** (forwards to the kit's existing `.a11y()` infrastructure).
+  - **(M-style/3)** semantic variant enums (`style/variant/type/selectionStyle`) → **self-returning** `.componentStyle(_:)` (no custom *render* needed; just semantic color/emphasis). Where explicit render extension is required, a Style protocol already exists (Card/Stat/Select).
+  - **(M-size/3)** `size`/`customSize`/`height` → self-returning `.size(_:)`, or for those using `ControlSize`, native **`.controlSize()`** + `@Environment(\.controlSize)`.
+  - **(M-flag/3)** Bool config flags with defaults (`allowClear/showCount/isSecure/showPercentage/gradient/loop/autoplay/searchable…`) → self-returning flag modifiers.
+  - **(M-color/3)** style colors (`textColor/strokeColor/trailColor/backgroundColor/gradient`) → self-returning style modifiers.
+  - **(M-env/2)** cross-cutting config that makes sense to cascade into the subtree (density) → EnvironmentKey modifier (e.g. `.controlSize`, and `.fieldDensity` in the future).
 
-> Mekanizma seçimi: çok-varyant açık-render → Style-protokolü (1); cascade → Environment (2);
-> tek-instance one-off → self-returning (3). Bu kütüphanedeki çoğu vaka **(3)** veya native env.
+> Mechanism choice: multi-variant explicit-render → Style protocol (1); cascade → Environment (2);
+> single-instance one-off → self-returning (3). Most cases in this library are **(3)** or native env.
 
 ---
 
-## En yüksek kaldıraç: çapraz (cross-cutting) migrasyonlar
+## Highest leverage: cross-cutting migrations
 
-Bunlar TEK modifier ile ONLARCA component'i sadeleştirir — **önce bunlar yapılmalı**:
+These simplify DOZENS of components with a SINGLE modifier — **do these first**:
 
 ### X1 — `isEnabled: Bool` → `.disabled(_:)` (native)
-Taşıyan component'ler (init'ten kaldırılıp `@Environment(\.isEnabled)` okunacak; eski param deprecate+forward):
-`Chip, Rating, Checkbox, RadioButton, Pagination, DateField, MultiSelect, RangeSlider, SearchBar, SelectBox, Slider, InputNumber, MultiLineTextInput, TextInput` (+ButtonGroup zaten ✅).
-**~14 component, tek desen.** Eşleme: `isEnabled: $x` → `.disabled(!x)`; `isEnabled: false` → `.disabled(true)`.
+Affected components (removed from init and read via `@Environment(\.isEnabled)`; old param deprecated+forwarded):
+`Chip, Rating, Checkbox, RadioButton, Pagination, DateField, MultiSelect, RangeSlider, SearchBar, SelectBox, Slider, InputNumber, MultiLineTextInput, TextInput` (+ButtonGroup already ✅).
+**~14 components, one pattern.** Mapping: `isEnabled: $x` → `.disabled(!x)`; `isEnabled: false` → `.disabled(true)`.
 
 ### X2 — `accessibilityID: String?` → `.a11yID(_:)` (self-returning)
-Taşıyan: `Checkbox, RadioButton, DateField, MultiSelect, SearchBar, SelectBox, Slider, RangeSlider, InputNumber, MultiLineTextInput, TextInput, Pagination`. **~12 component.** Eski param deprecate+forward `.a11yID(id)`'ye.
+Affected: `Checkbox, RadioButton, DateField, MultiSelect, SearchBar, SelectBox, Slider, RangeSlider, InputNumber, MultiLineTextInput, TextInput, Pagination`. **~12 components.** Old param deprecated+forwarded to `.a11yID(id)`.
 
-### X3 — `size:` → native `.controlSize()` (ControlSize kullananlar)
-`Checkbox`, `RadioButton` zaten `ControlSize` alıyor → `@Environment(\.controlSize)` + native `.controlSize()`. Custom size enum'u olanlar (TextInput/Badge/Chip/…) self-returning `.size(_:)`.
+### X3 — `size:` → native `.controlSize()` (those using ControlSize)
+`Checkbox`, `RadioButton` already take `ControlSize` → `@Environment(\.controlSize)` + native `.controlSize()`. Those with a custom size enum (TextInput/Badge/Chip/…) get a self-returning `.size(_:)`.
 
 ---
 
-## Component bazlı plan (26 şişkin)
+## Per-component plan (26 bloated)
 
-Lejant: **KALIR** | **→.disabled** | **→.a11yID** | **→style(3)** | **→size** | **→flag(3)** | **→color(3)**
+Legend: **STAYS** | **→.disabled** | **→.a11yID** | **→style(3)** | **→size** | **→flag(3)** | **→color(3)**
 
-### TextInput (23 → hedef ~6 init)
-| Param | Karar | Modifier |
+### TextInput (23 → target ~6 init)
+| Param | Decision | Modifier |
 |---|---|---|
-| `label`, `text`(Binding), `onSubmit` | **KALIR** | — |
-| `placeholder`, `infoMessages` | **KALIR** (içerik/veri) | — |
+| `label`, `text`(Binding), `onSubmit` | **STAYS** | — |
+| `placeholder`, `infoMessages` | **STAYS** (content/data) | — |
 | `isEnabled` | →.disabled | `.disabled(_:)` |
 | `accessibilityID` | →.a11yID | `.a11yID(_:)` |
 | `size` | →size | `.size(_:)` (TextInputSize) |
 | `isSecure, allowClear, showCount, hardLimit, autocorrectionDisabled` | →flag | `.secure() .clearable() .characterCount(limit:style:) …` |
-| `maxLength, countStyle` | →flag (grupla) | `.characterCount(_ max:style:)` |
+| `maxLength, countStyle` | →flag (grouped) | `.characterCount(_ max:style:)` |
 | `leadingSystemImage, suffixSystemImage, addonBefore, addonAfter` | →style/slot | `.icon(leading:trailing:)` / `.addons(before:after:)` |
-| `keyboardType, textContentType, submitLabel, autocapitalization, formatter` | →flag (grupla) | `.keyboard(_:contentType:submit:caps:)` + `.formatter(_:)` |
-**Not:** TextInput zaten `TextInputModel` init varyantı taşıyor — model-based init korunur; bloated init `.modifier`'lara bölünür.
+| `keyboardType, textContentType, submitLabel, autocapitalization, formatter` | →flag (grouped) | `.keyboard(_:contentType:submit:caps:)` + `.formatter(_:)` |
+**Note:** TextInput already carries a `TextInputModel` init variant — the model-based init is preserved; the bloated init is split into `.modifier`s.
 
 ### Badge (11 → ~3 init)
-| `text`, `action` | **KALIR** |
-| `style, variant, size, shape` | →style/size | `.badgeStyle(_:) .badgeVariant(_:) .size(_:) .shape(_:)` (veya tek `.badgeStyle(_, variant:, size:, shape:)`) |
+| `text`, `action` | **STAYS** |
+| `style, variant, size, shape` | →style/size | `.badgeStyle(_:) .badgeVariant(_:) .size(_:) .shape(_:)` (or a single `.badgeStyle(_, variant:, size:, shape:)`) |
 | `leadingSystemImage, trailingSystemImage` | →style | `.icon(leading:trailing:)` |
-| `textColor, gradient` | →color | `.tint(_:)` / `.gradient(_:)` (⚠ `.tint` SwiftUI ile çakışmasın → `.badgeColor`) |
+| `textColor, gradient` | →color | `.tint(_:)` / `.gradient(_:)` (⚠ avoid clashing with SwiftUI's `.tint` → `.badgeColor`) |
 | `highlighted` | →flag | `.highlighted(_:)` |
 
 ### Chip (10 → ~3)
-| `title`, `isSelected`(Binding) | **KALIR** |
+| `title`, `isSelected`(Binding) | **STAYS** |
 | `size, selectionStyle` | →style/size | `.size(_:) .chipStyle(_:)` |
 | `leadingSystemImage, rating` | →style | `.icon(_:) .rating(_:)` |
 | `isExist, isInteractive, expandsHorizontally` | →flag | `.interactive(_:) .strikethrough(_:) .expands(_:)` |
 | `isEnabled` | →.disabled | `.disabled(_:)` |
 
 ### Rating (10 → ~3)
-| `value`, `onRate, onReviewTap` | **KALIR** |
+| `value`, `onRate, onReviewTap` | **STAYS** |
 | `maxValue, size, layout, allowHalf, systemImage` | →style/flag | `.scale(max:) .size(_:) .layout(_:) .allowHalf(_:) .symbol(_:)` |
 | `isEnabled` | →.disabled |
 | `countLabel, sentiment` | →flag | `.caption(count:sentiment:)` |
 
 ### Checkbox / RadioButton (10–11 → ~3)
-| `label`, `isChecked/isSelected`(Binding), `infoMessages` | **KALIR** |
+| `label`, `isChecked/isSelected`(Binding), `infoMessages` | **STAYS** |
 | `size`(ControlSize), `customSize` | →controlSize | native `.controlSize()` + `.size(custom:)` |
-| `type, style, padding, alignment, backgroundColor` | →style | `.checkboxStyle(_:)` / `.radioStyle(_:)` (type+style+padding+align tek protokol/modifier) |
+| `type, style, padding, alignment, backgroundColor` | →style | `.checkboxStyle(_:)` / `.radioStyle(_:)` (type+style+padding+align in one protocol/modifier) |
 | `isIndeterminate` | →flag | `.indeterminate(_:)` |
 | `isEnabled` | →.disabled · `accessibilityID` | →.a11yID |
 
 ### ProgressBar (10 → ~2)
-| `value` | **KALIR** |
+| `value` | **STAYS** |
 | `height, gradient, strokeColor, trailColor` | →color/size | `.barHeight(_:) .gradient(_:) .colors(stroke:trail:)` |
 | `showPercentage, status, steps, successSegment, format, accessibilityLabel` | →flag | `.percentage(_:) .status(_:) .steps(_:) .successAt(_:) .valueFormat(_:)` |
 
 ### Pagination (9 → ~3)
-| `current`(Binding), `total` | **KALIR** |
+| `current`(Binding), `total` | **STAYS** |
 | `simple, siblingCount, boundaryCount, showJumper, jumperTitle, showTotal` | →flag | `.simple(_:) .window(sibling:boundary:) .jumper(title:) .total(_:)` |
 | `isEnabled` | →.disabled |
 
 ### Accordion (11 → ~3)
-| `title`, `content`(@ViewBuilder) | **KALIR** |
-| `subtitle, number, leadingSystemImage` | →style/içerik | `.subtitle(_:) .number(_:) .icon(_:)` (veya subtitle/number KALIR — içerik) |
+| `title`, `content`(@ViewBuilder) | **STAYS** |
+| `subtitle, number, leadingSystemImage` | →style/content | `.subtitle(_:) .number(_:) .icon(_:)` (or subtitle/number STAYS — content) |
 | `indicator, titleSize, paddingSize` | →style/size | `.indicator(_:) .titleSize(_:) .density(_:)` |
 | `truncateSubtitle, initiallyExpanded, showDivider` | →flag | `.truncateSubtitle(_:) .expanded(_:) .divider(_:)` |
 
 ### Stat (8 → ~3)
-| `title, value`, `trend` | **KALIR** (StatStyle layout zaten var ✅) |
-| `prefix, suffix, description, systemImage` | →içerik/style | çoğu KALIR (içerik); `systemImage` →`.icon(_:)` |
+| `title, value`, `trend` | **STAYS** (StatStyle layout already exists ✅) |
+| `prefix, suffix, description, systemImage` | →content/style | most STAY (content); `systemImage` →`.icon(_:)` |
 | `isLoading` | →flag | `.loading(_:)` |
 
 ### DateField / SelectBox / MultiSelect / SearchBar / Slider / RangeSlider / InputNumber / MultiLineTextInput
-Ortak desen (form/input ailesi):
-- **KALIR:** binding (`date/selection/text/value/lowerValue/upperValue`), `options`, `range/bounds`, `optionTitle/isOptionEnabled`, `onChange*/onSubmit/onSearch`, `placeholder`, `infoMessages`, `marks`.
-- **→.disabled:** `isEnabled` (hepsi). **→.a11yID:** `accessibilityID` (hepsi).
-- **→flag(3):** `allowClear, searchable, isLoading, showInputs, showJumper, showValueTooltip, editable, showBackButton, showMuteToggle, loop, autoplay, muted, debounce, maxTagCount, maxResults, step` → her biri akıcı bayrak modifier (`.clearable() .searchable() .loading() .step(_:) .debounce(_:) …`).
-- **→style/size(3):** `style, size, axis, minHeight, verticalHeight, leadingSystemImage, hint, errorText` → stil/boyut modifier (hint/errorText `infoMessages`'a katlanabilir).
+Common pattern (form/input family):
+- **STAYS:** binding (`date/selection/text/value/lowerValue/upperValue`), `options`, `range/bounds`, `optionTitle/isOptionEnabled`, `onChange*/onSubmit/onSearch`, `placeholder`, `infoMessages`, `marks`.
+- **→.disabled:** `isEnabled` (all). **→.a11yID:** `accessibilityID` (all).
+- **→flag(3):** `allowClear, searchable, isLoading, showInputs, showJumper, showValueTooltip, editable, showBackButton, showMuteToggle, loop, autoplay, muted, debounce, maxTagCount, maxResults, step` → each a fluent flag modifier (`.clearable() .searchable() .loading() .step(_:) .debounce(_:) …`).
+- **→style/size(3):** `style, size, axis, minHeight, verticalHeight, leadingSystemImage, hint, errorText` → style/size modifiers (hint/errorText can fold into `infoMessages`).
 
-### Carousel / VideoPlayerView (medya)
-- **KALIR:** `items/url`, `content`(@ViewBuilder), `currentIndex/progress/isMuted`(Binding), `onTap`.
-- **→flag(3):** `autoplay, showsArrows, showsDots, loop, fade, dotPosition, muted, showMuteToggle, tapToToggle` → akıcı bayraklar (`.autoplay(_:) .arrows(_:) .dots(_:) .loop(_:) .muted(_:)`).
-
----
-
-## Temiz component'ler (≤4 param) — DOKUNULMAZ
-51 component (Avatar, Tag, Kbd, Spinner, Divider, Icon, StatusDot, Skeleton, Toast, Card, Hero, EmptyState, … + bu plandaki yeni 6: Join/Mask/TextRotate/Gauge/ShareButton/ColorField). Bunlar zaten içerik+binding+action ekseninde ince; **gereksiz değişiklik yapılmaz** (audit kuralı: Solid'e dokunma).
+### Carousel / VideoPlayerView (media)
+- **STAYS:** `items/url`, `content`(@ViewBuilder), `currentIndex/progress/isMuted`(Binding), `onTap`.
+- **→flag(3):** `autoplay, showsArrows, showsDots, loop, fade, dotPosition, muted, showMuteToggle, tapToToggle` → fluent flags (`.autoplay(_:) .arrows(_:) .dots(_:) .loop(_:) .muted(_:)`).
 
 ---
 
-## Migration güvenliği
+## Clean components (≤4 params) — UNTOUCHED
+51 components (Avatar, Tag, Kbd, Spinner, Divider, Icon, StatusDot, Skeleton, Toast, Card, Hero, EmptyState, … + the 6 new ones in this plan: Join/Mask/TextRotate/Gauge/ShareButton/ColorField). These are already lean along the content+binding+action axis; **no unnecessary changes** (audit rule: don't touch Solid).
 
-> **Not — repo henüz public değil.** Görev "deprecate+forward" diyor (kütüphane kuralı); ama
-> sahibi daha önce "public değil → deprecated kaldır, temiz break" tercih etti. **İki yol:**
-> **(A) deprecate+forward** (kurala uygun, source-compatible) — eski init `@available(*, deprecated, message: "Use .x() modifier")` + içeriden yeni API'ye forward.
-> **(B) temiz break** (public olmadığından) — eski init kaldır, tüm çağrı yerlerini güncelle (buton ailesinde yaptığımız gibi).
-> **Öneri:** public release'e kadar **(B)** (daha temiz, daha az boilerplate); 1.0'da API donunca **(A)**'ya geç. Karar sahibinin.
+---
 
-- Modifier default'ları eski param default'larıyla **birebir** aynı davranır → görsel sonuç değişmez.
-- public component → public modifier. Her component sonrası: çağrı yerleri + #Preview + gallery registry + snapshot + DocC güncellenir, `swift build`+`test`+Demo yeşil olmadan sonraki component'e geçilmez.
-- SwiftUI çakışan isimlerden kaçın: `.tint/.font/.controlSize` native'leri kullan; semantik renk için `.badgeColor` gibi ayrı isim.
+## Migration safety
 
-## Önerilen sıra (FAZ 2)
-1. **X1 `isEnabled`→`.disabled()`** (14 component, tek desen — en yüksek kaldıraç, en düşük risk).
-2. **X2 `accessibilityID`→`.a11yID()`** (12 component).
+> **Note — the repo is not public yet.** The task says "deprecate+forward" (library rule); but
+> the owner previously preferred "not public → drop deprecated, clean break." **Two paths:**
+> **(A) deprecate+forward** (rule-compliant, source-compatible) — old init `@available(*, deprecated, message: "Use .x() modifier")` + internally forwards to the new API.
+> **(B) clean break** (since it's not public) — remove the old init, update all call sites (as we did for the button family).
+> **Recommendation:** use **(B)** until public release (cleaner, less boilerplate); switch to **(A)** at 1.0 once the API freezes. Owner's call.
+
+- Modifier defaults behave **identically** to the old param defaults → no visual change.
+- public component → public modifier. After each component: update call sites + #Preview + gallery registry + snapshot + DocC; don't move to the next component until `swift build`+`test`+Demo are green.
+- Avoid names that clash with SwiftUI: use the natives `.tint/.font/.controlSize`; use a separate name like `.badgeColor` for semantic color.
+
+## Suggested order (PHASE 2)
+1. **X1 `isEnabled`→`.disabled()`** (14 components, one pattern — highest leverage, lowest risk).
+2. **X2 `accessibilityID`→`.a11yID()`** (12 components).
 3. **X3 `size`→`controlSize`/`.size()`**.
-4. Sonra component-component **şişkinden sıraya**: TextInput → MultiSelect/DateField → Badge/Chip/RadioButton/Checkbox → ProgressBar/Rating/Pagination/Accordion/Stat → form/medya ailesi.
-5. Her component: plan uygula → çağrı yerleri+preview+gallery+test+doc → build/test/Demo yeşil → MODIFIERS_PLAN.md'ye "eski→yeni" eşleme satırı işle.
+4. Then component-by-component, **bloated first**: TextInput → MultiSelect/DateField → Badge/Chip/RadioButton/Checkbox → ProgressBar/Rating/Pagination/Accordion/Stat → form/media family.
+5. Each component: apply plan → call sites+preview+gallery+test+doc → build/test/Demo green → record the "old→new" mapping line in MODIFIERS_PLAN.md.
 
 ---
 
-## FAZ 2 — uygulama günlüğü (eski → yeni eşleme)
-_(Her component dönüştürüldükçe buraya işlenecek.)_
+## PHASE 2 — implementation log (old → new mapping)
+_(Recorded here as each component is converted.)_
 
-- **Buton ailesi** ✅ (#96–#98): `isContentWidth: true` → (kaldır, default content-width) · `isContentWidth: false` → `block: true` · `isEnabled: $x` → `.disabled(!x)`.
-- **X1 `isEnabled`→`.disabled()`** ✅ (13 component): Chip, Rating, Checkbox, RadioButton, Pagination, DateField, MultiSelect, RangeSlider, SearchBar, SelectBox, Slider, InputNumber, MultiLineTextInput → `@Environment(\.isEnabled)`. Eşleme: `isEnabled: $x`→`.disabled(!x)` · `isEnabled: false`→`.disabled(true)`. **TextInput** (model-tabanlı) kendi refactor'una ertelendi; **RadioButtonGroup/CheckboxGroup/SegmentedControl/ThemeToggle** X1 kapsamı dışı (round 2).
-- **TextInput** ✅ (X1+X2 ertelemesi kapatıldı): `isEnabled`→`@Environment(\.isEnabled)` (native `.disabled()`), `accessibilityID`→`.a11yID()` modifier. İkisi de `TextInputModel`'den + flat init'ten kaldırıldı; View `@Environment(\.isEnabled)` + `private var accessibilityID` tutuyor (6× `model.isEnabled`→`isEnabled`, 6× `model.accessibilityID`→`accessibilityID`). Çağrı yerleri: MoleculeDemos (7 model, per-mode `demoA11yID` switch + `.a11yID()`), MoreDemos (2 form field), TextInput #Preview (2) + Accessibility.swift doc örneği. **Tam 23→6 teardown VERİ-TEMELLİ REDDEDİLDİ:** 23 call-site'ın **11'i `TextInputModel(...)`** config-bundle'ı kullanıyor (solid escape-hatch), flat init param'ları call-site'larda seyrek (en çok 3, çoğu 1), `isEnabled` 0 kullanım. 15 stil/flag param'ını 15 modifier'a bölmek 11 model call-site'ını kırardı + marjinal fayda → "Solid'i bozma / gereksiz değişiklik yapma" gereği model korundu, sadece cross-cut tutarlılığı uygulandı.
-- **VideoPlayerView** ✅ (10→5 init): playback flag'leri (`autoplay/loop/muted/showMuteToggle/tapToToggle`) → modifier; `url` (content) + binding'ler (`progress/isMuted/isActive`) + `onTap` init'te kalır. Modifier: `.autoplay(_:) .loop(_:) .muted(_:) .muteToggle(_:) .tapToToggle(_:)` (autoplay/loop/muted default `true` korundu — inline auto-play video). Çağrı yerleri: MoreDemos demo, ComponentRegistry usage.
-- **Carousel** ✅ (9→4 init ×2, veri-temelli): 2 init (content + activeContent). `items` (content) + `loop`+`currentIndex` (**@State `selection` seed'ini besliyor → init'te kalmalı**, Accordion gibi) + content init'te. `autoplay`(5)/`showsArrows`(3)/`showsDots`(0)/`fade`(1)/`dotPosition`(1) → modifier: `.autoplay(_:) .arrows(_:) .dots(_:position:) .fade(_:)` (showsDots+dotPosition → `.dots` gruplandı). Çağrı yerleri: OrganismDemos demo, ComponentRegistry usage, #Preview. (PagingCarousel ayrı component, etkilenmedi.)
-- **RangeSlider** ✅ (9→4 init, veri-temelli): 5 call-site → `lowerValue/upperValue/bounds/step` init'te kalır; `marks`(4)/`onChangeEnd`(3)/`valueLabel`(2)/`showInputs`+`inputTitles`(1) → modifier: `.marks(_:) .inputs(_:titles:) .onChangeEnd(_:) .valueLabel(_:)` (showInputs+inputTitles → `.inputs` gruplandı). Çağrı yerleri: MoleculeDemos demo (inputs+marks varyantları), ComponentRegistry usage, ScreenshotGenerator, #Preview.
-- **Slider** ✅ (9→4 init, veri-temelli): 8 call-site → `value/bounds/step/label` (step+label sık) init'te kalır; `marks` 4×, `showValueTooltip` 4×, `onChangeEnd` 2×, `axis`/`verticalHeight` 1× → modifier: `.marks(_:) .axis(_:height:) .showsValueTooltip(_:) .onChangeEnd(_:)` (axis+verticalHeight → `.axis(_:height:)` gruplandı). Çağrı yerleri: MoleculeDemos demo (vertical+horizontal), ComponentRegistry usage, ScreenshotGenerator (gallery shot), #Preview.
-- **Pagination** ✅ (8→2 init, veri-temelli): 9 call-site → tüm config param seyrek (siblingCount/showJumper 3×, simple/showTotal 2×, jumperTitle 1×, boundaryCount 0×) → hepsi modifier; `current`/`total` (content/data) init'te kalır. Modifier: `.simple(_:) .window(sibling:boundary:) .jumper(_:title:) .showTotal(_:)` (siblingCount+boundaryCount → `.window`, showJumper+jumperTitle → `.jumper` gruplandı). Çağrı yerleri: MoleculeDemos demo (4 modifier), ComponentRegistry usage, #Preview.
-- **InputNumber** ✅ (11→8 init, veri-temelli — minimal): 8 call-site → çoğu param **gerçekten kullanılıyor** (label 9×, range 7×, unit 6×, step 5×, large 4×, hint 3×) → init'te KALIR ("gereksiz değişiklik yapma"). Sadece seyrek/ölü: `editable` 2×, `hasInfo` 0×, `onChange` 0× → modifier: `.editable(_:) .hasInfo(_:) .onValueChange(_:)` (`.onValueChange` SwiftUI `.onChange(of:)` ile karışmasın diye). Çağrı yerleri: MoleculeDemos demo (2× `.editable`).
-- **MultiSelect** ✅ (11→7 init, veri-temelli): config flag'leri seyrek (isLoading 3×, searchable/allowClear/maxTagCount 1×) → modifier: `.searchable(_:) .clearable(_:) .maxTags(_:) .loading(_:)`. `label/options/selection/placeholder/infoMessages/isOptionEnabled/optionTitle` (content/data) init'te kalır. Çağrı yerleri: MoreDemos demo (4 modifier), ComponentRegistry usage.
-- **DateField / SelectBox / Stat** ⏭️ **(atlandı — veri-temelli)**: DateField param'ları çoğunlukla kullanılıyor (style 6×, allowClear 6×, leadingSystemImage 4×) → teardown "gereksiz değişiklik" olurdu. SelectBox ~7 param, çoğu content (label/options/selection/placeholder/hint/errorText/optionTitle). Stat zaten StatStyle protokolü kullanıyor + 8 param'ın çoğu display content. Üçü de "Solid'i bozma / gereksiz değişiklik yapma" gereği bırakıldı.
-- **Autocomplete** ✅ (10→5 init ×2 + X1): X1'e girmemişti → `isEnabled`→`@Environment(\.isEnabled)`. 2 init (static + async). `label/text/suggestions/suggest/placeholder/onSelect` (content/data/primary callback) init'te kalır; `maxResults`(0)/`debounce`(0)/`isSuggestionEnabled`(2)/`onSearch`(0) → modifier: `.maxResults(_:) .debounce(_:) .suggestionEnabled(_:) .onSearch(_:)`. Async init `debounce=0.3` baseline init gövdesinde (SearchBar gibi). Çağrı yerleri: MoreDemos demo (static+async, `.suggestionEnabled`).
-- **SearchBar** ✅ (14→8 init ×2, veri-temelli + ihtiyatlı): 2 init (classic + async `suggest`). `text/placeholder/suggestions/recent` (content/data) + **interaction callback'leri** (`onSearch/onSelect/onSubmit/onClearRecent`) init'te KALIR (component'in kontratı; ayrıca `onSubmit` SwiftUI native `.onSubmit` ile çakışırdı). **Chrome+tuning** → modifier: `.backButton(_:action:)` (showBackButton+onBack), `.trailingIcon(_:action:)` (trailingSystemImage+onTrailing), `.debounce(_:)`, `.maxResults(_:)`. Async init `debounce=0.3` baseline'ı init gövdesinde set ediyor (`.debounce(_:)` override edebilir) — per-init default korundu. Çağrı yerleri: MoreDemos demo (`.backButton/.trailingIcon`), 2 #Preview.
-- **Accordion** ✅ (11→4 init, veri-temelli): 7 call-site → `initiallyExpanded` 5× (+ `@State expanded` seed'i, init'te kalmalı), `leadingSystemImage` 3× **init'te kalır** (+ title/content @ViewBuilder); `subtitle`/`truncateSubtitle`/`showDivider` 0×, `number`/`indicator`/`titleSize`/`paddingSize` 1× → modifier: `.subtitle(_:) .number(_:) .indicator(_:) .titleSize(_:) .density(_:) .truncateSubtitle(_:) .divider(_:)` (`.density` = paddingSize; SwiftUI `.padding` çakışmasından kaçınıldı). Tek call-site (OrganismDemos demo) modifier'lara çevrildi.
-- **Rating** ✅ (10→3 init, veri-temelli): 9 call-site → `layout` 5×, `countLabel` 6× **init'te kalır** (+ content `value`); `allowHalf` 3×, `size`/`onReviewTap` 2×, `systemImage`/`onRate` 1×, `maxValue`/`sentiment` 0× → modifier: `.maxValue(_:) .starSize(_:) .allowHalf(_:) .symbol(_:) .sentiment(_:) .onRate(_:) .onReviewTap(_:)`. Optional callback'ler (`onRate/onReviewTap`) idiomatic `.onRate{} .onReviewTap{}` modifier'larına geçti (trailing closure korunur). Çağrı yerleri: AtomDemos demo, ComponentRegistry usage string, #Preview.
-- **Chip** ✅ (10→4 init, veri-temelli): X1 Chip'te `@Environment(\.isEnabled)` eklemiş ama init'te **ölü `isEnabled` param'ı** bırakmıştı (atanmıyordu, sessizce yok sayılıyordu — bug riski) → kaldırıldı. 16 call-site: `selectionStyle` 6×, `size` 3× **init'te kalır** (+ title/isSelected); `leadingSystemImage/rating/isExist/expandsHorizontally` 1×, `isInteractive` 0× → modifier: `.icon(_:) .rating(_:) .exists(_:) .interactive(_:) .expands(_:)`. Tek call-site (AtomDemos Chip demo) modifier showcase'ine çevrildi + #Preview (`.icon`).
-- **ProgressBar** ✅ (11→3 init, veri-temelli): 17 call-site ölçüldü → `showPercentage` 12×, `status` 5× **init'te kalır** (+ content `value`); `height` 3×, `gradient` 3×, `steps` 2×, `strokeColor`/`trailColor`/`successSegment` 1×, `format`/`accessibilityLabel` 0× → modifier: `.barHeight(_:) .gradient(_:) .steps(_:) .colors(fill:track:) .successSegment(_:) .valueFormat(_:) .progressLabel(_:)`. (strokeColor+trailColor `.colors(fill:track:)`'te gruplandı; successSegment clamp'i modifier'a taşındı.) Çağrı yerleri: Upload (`barHeight`), AtomDemos demo (5 modifier showcase), DisplaySnapshotTests (`.gradient()` — görsel aynı, snapshot geçerli), #Preview.
-- **Badge** ✅ (11→6 init, veri-temelli): call-site yoğunluğu ölçüldü (36 site) → `style` 33×, `leadingSystemImage` 11×, `size` 10×, `variant` 4× **init'te kalır** (gerçek kullanım); `shape` 2×, `textColor` 1×, `trailingSystemImage`/`gradient`/`highlighted` **0×** → self-dönen modifier'lara taşındı: `.badgeShape(_:) .trailingIcon(_:) .badgeColor(_:) .gradient(_:) .highlighted(_:)`. (`.badgeColor` SwiftUI `.tint/.foregroundColor` ile çakışmasın diye ayrı isim.) Tek call-site (AtomDemos Badge demo, tüm long-tail'i knob'larla kullanan) modifier showcase'ine çevrildi + #Preview. Churn ~2 site.
-- **X3 `size`→`.controlSize()`** ✅ (3 component — ControlSize üçlüsü): Checkbox, RadioButton, ThemeToggle. ThemeKit'in `public enum ControlSize` (small/medium) custom enum'u SwiftUI'nin `ControlSize`'ını **gölgeliyordu** (collision); kaldırıldı. Üçü de native `ControlSize` + `@Environment(\.controlSize)` + native `.controlSize(_:)` cascade'ine geçti. `size` init param'ı kaldırıldı. Metrik: `extension ControlSize { var checkboxSide }` (`.mini/.small`→20, default `.regular`→24) Checkbox+RadioButton'da; ThemeToggle track'i `isCompact` (32×20 / 40×24). Eşleme: `size: .small`→`.controlSize(.small)` · `size: .medium`→(kaldır, native default `.regular`=eski `.medium`=24, görsel aynı) · `size: small ? .small : .medium`→`.controlSize(small ? .small : .regular)`. `customSize: CGFloat?` (Checkbox piksel escape-hatch) init'te kaldı. Çağrı yerleri: TreeSelect, MultiSelect, MoleculeDemos(Checkbox/RadioButton/ThemeToggle demo). **Kalan size param'ları** (Avatar/Badge/Chip/Divider/ListRow/ProgressIndicator/SegmentedControl/Select/Rating/RadialProgress + buton/TextInput) component-özel enum'lar → component-component fazında ele alınacak (tek mekanik cross-cut değil).
-- **X1 round-2 (container'lar)** ✅ (4 component — X1 TAM KAPANDI): CheckboxGroup, RadioGroup (+ RadioButtonGroup 2. struct), SegmentedControl, Select → control-level `isEnabled` `@Environment(\.isEnabled)`'a. Multi-init forward'lar (convenience→designated) düşürüldü; SegmentedControl'da **per-item `SegmentItem.isEnabled` korundu** (ayrı kavram); Select'te `SelectStyleConfiguration(isEnabled:)` internal forward'u korundu (env'den okur). `.disabled()` native olarak child'lara cascade ediyor. Çağrı yerleri: SegmentedControl ×2, RadioGroup ×1, RadioButtonGroup ×2, CheckboxGroup ×1 → `.disabled(!enabled)`. **Artık hiçbir component init'te `isEnabled: Bool` taşımıyor.**
-- **X1 round-2 (leaf'ler)** ✅ (5 component): orijinal X1'e girmemiş leaf'ler → `isEnabled: Bool` init param'ı `@Environment(\.isEnabled)`'a (native `.disabled()`): ThemeToggle, OTPInput, QuantityStepper, FileInput, TreeSelect. OTPInput ana struct env'den okuyup içsel `OTPDigitBox`'a `isEnabled:` forward'unu koruyor. Çağrı yeri: ThemeToggle demo+#Preview (`.disabled()`); diğer 4'te call-site yok (default true). **Kalan X1 round-2 = container'lar** (CheckboxGroup/RadioGroup/SegmentedControl/Select) — child'a `isEnabled` forward + SegmentItem per-item `isEnabled` nedeniyle ayrı/dikkatli ele alınacak.
-- **X2 `accessibilityID`→`.a11yID()`** ✅ (21 component): SelectBox, Autocomplete, CheckboxGroup, RadioGroup, SegmentedControl, RangeSlider, SearchBar, Select, RadioButton, ToggleGroup, Slider, ThemeToggle, OTPInput, InputNumber, Checkbox, DateField, MultiSelect, MultiLineTextInput, QuantityStepper, Swap, SegmentedTabBar. Mekanizma: stored `accessibilityID` → `private var … = nil` (namespace gizli kalır), init param'ı kaldırıldı, self-dönen `func a11yID(_ id: String?) -> Self` modifier'ı eklendi (`var copy = self; copy.accessibilityID = …; return copy`). Eşleme: `accessibilityID: "x"` → trailing `.a11yID("x")`. Çağrı yerleri: DateField/Select/Checkbox demo'ları taşındı. **TextInput** (model-tabanlı) + **buton ailesi** (`ButtonConfiguration` intermediary; accessibilityID init param'ı korunur) X2 dışı.
+- **Button family** ✅ (#96–#98): `isContentWidth: true` → (remove, default content-width) · `isContentWidth: false` → `block: true` · `isEnabled: $x` → `.disabled(!x)`.
+- **X1 `isEnabled`→`.disabled()`** ✅ (13 components): Chip, Rating, Checkbox, RadioButton, Pagination, DateField, MultiSelect, RangeSlider, SearchBar, SelectBox, Slider, InputNumber, MultiLineTextInput → `@Environment(\.isEnabled)`. Mapping: `isEnabled: $x`→`.disabled(!x)` · `isEnabled: false`→`.disabled(true)`. **TextInput** (model-based) deferred to its own refactor; **RadioButtonGroup/CheckboxGroup/SegmentedControl/ThemeToggle** out of X1 scope (round 2).
+- **TextInput** ✅ (X1+X2 deferral closed): `isEnabled`→`@Environment(\.isEnabled)` (native `.disabled()`), `accessibilityID`→`.a11yID()` modifier. Both removed from `TextInputModel` + the flat init; the View holds `@Environment(\.isEnabled)` + `private var accessibilityID` (6× `model.isEnabled`→`isEnabled`, 6× `model.accessibilityID`→`accessibilityID`). Call sites: MoleculeDemos (7 models, per-mode `demoA11yID` switch + `.a11yID()`), MoreDemos (2 form fields), TextInput #Preview (2) + Accessibility.swift doc example. **Full 23→6 teardown DATA-DRIVEN REJECTED:** **11 of the 23 call sites use `TextInputModel(...)`** config bundles (solid escape hatch), flat init params are sparse at call sites (at most 3, mostly 1), `isEnabled` 0 usages. Splitting 15 style/flag params into 15 modifiers would break the 11 model call sites + marginal benefit → per "don't break Solid / don't make unnecessary changes" the model was preserved and only cross-cut consistency was applied.
+- **VideoPlayerView** ✅ (10→5 init): playback flags (`autoplay/loop/muted/showMuteToggle/tapToToggle`) → modifiers; `url` (content) + bindings (`progress/isMuted/isActive`) + `onTap` stay in init. Modifiers: `.autoplay(_:) .loop(_:) .muted(_:) .muteToggle(_:) .tapToToggle(_:)` (autoplay/loop/muted default `true` preserved — inline auto-play video). Call sites: MoreDemos demo, ComponentRegistry usage.
+- **Carousel** ✅ (9→4 init ×2, data-driven): 2 inits (content + activeContent). `items` (content) + `loop`+`currentIndex` (**seeds the @State `selection` → must stay in init**, like Accordion) + content stay in init. `autoplay`(5)/`showsArrows`(3)/`showsDots`(0)/`fade`(1)/`dotPosition`(1) → modifiers: `.autoplay(_:) .arrows(_:) .dots(_:position:) .fade(_:)` (showsDots+dotPosition → grouped into `.dots`). Call sites: OrganismDemos demo, ComponentRegistry usage, #Preview. (PagingCarousel is a separate component, unaffected.)
+- **RangeSlider** ✅ (9→4 init, data-driven): 5 call sites → `lowerValue/upperValue/bounds/step` stay in init; `marks`(4)/`onChangeEnd`(3)/`valueLabel`(2)/`showInputs`+`inputTitles`(1) → modifiers: `.marks(_:) .inputs(_:titles:) .onChangeEnd(_:) .valueLabel(_:)` (showInputs+inputTitles → grouped into `.inputs`). Call sites: MoleculeDemos demo (inputs+marks variants), ComponentRegistry usage, ScreenshotGenerator, #Preview.
+- **Slider** ✅ (9→4 init, data-driven): 8 call sites → `value/bounds/step/label` (step+label common) stay in init; `marks` 4×, `showValueTooltip` 4×, `onChangeEnd` 2×, `axis`/`verticalHeight` 1× → modifiers: `.marks(_:) .axis(_:height:) .showsValueTooltip(_:) .onChangeEnd(_:)` (axis+verticalHeight → grouped into `.axis(_:height:)`). Call sites: MoleculeDemos demo (vertical+horizontal), ComponentRegistry usage, ScreenshotGenerator (gallery shot), #Preview.
+- **Pagination** ✅ (8→2 init, data-driven): 9 call sites → all config params sparse (siblingCount/showJumper 3×, simple/showTotal 2×, jumperTitle 1×, boundaryCount 0×) → all to modifiers; `current`/`total` (content/data) stay in init. Modifiers: `.simple(_:) .window(sibling:boundary:) .jumper(_:title:) .showTotal(_:)` (siblingCount+boundaryCount → `.window`, showJumper+jumperTitle → grouped into `.jumper`). Call sites: MoleculeDemos demo (4 modifiers), ComponentRegistry usage, #Preview.
+- **InputNumber** ✅ (11→8 init, data-driven — minimal): 8 call sites → most params are **actually used** (label 9×, range 7×, unit 6×, step 5×, large 4×, hint 3×) → STAY in init ("don't make unnecessary changes"). Only sparse/dead: `editable` 2×, `hasInfo` 0×, `onChange` 0× → modifiers: `.editable(_:) .hasInfo(_:) .onValueChange(_:)` (`.onValueChange` to avoid confusion with SwiftUI `.onChange(of:)`). Call sites: MoleculeDemos demo (2× `.editable`).
+- **MultiSelect** ✅ (11→7 init, data-driven): config flags sparse (isLoading 3×, searchable/allowClear/maxTagCount 1×) → modifiers: `.searchable(_:) .clearable(_:) .maxTags(_:) .loading(_:)`. `label/options/selection/placeholder/infoMessages/isOptionEnabled/optionTitle` (content/data) stay in init. Call sites: MoreDemos demo (4 modifiers), ComponentRegistry usage.
+- **DateField / SelectBox / Stat** ⏭️ **(skipped — data-driven)**: DateField params are mostly used (style 6×, allowClear 6×, leadingSystemImage 4×) → teardown would be an "unnecessary change." SelectBox ~7 params, most content (label/options/selection/placeholder/hint/errorText/optionTitle). Stat already uses the StatStyle protocol + most of its 8 params are display content. All three left as-is per "don't break Solid / don't make unnecessary changes."
+- **Autocomplete** ✅ (10→5 init ×2 + X1): hadn't been in X1 → `isEnabled`→`@Environment(\.isEnabled)`. 2 inits (static + async). `label/text/suggestions/suggest/placeholder/onSelect` (content/data/primary callback) stay in init; `maxResults`(0)/`debounce`(0)/`isSuggestionEnabled`(2)/`onSearch`(0) → modifiers: `.maxResults(_:) .debounce(_:) .suggestionEnabled(_:) .onSearch(_:)`. Async init `debounce=0.3` baseline in the init body (like SearchBar). Call sites: MoreDemos demo (static+async, `.suggestionEnabled`).
+- **SearchBar** ✅ (14→8 init ×2, data-driven + cautious): 2 inits (classic + async `suggest`). `text/placeholder/suggestions/recent` (content/data) + **interaction callbacks** (`onSearch/onSelect/onSubmit/onClearRecent`) STAY in init (the component's contract; also `onSubmit` would clash with SwiftUI native `.onSubmit`). **Chrome+tuning** → modifiers: `.backButton(_:action:)` (showBackButton+onBack), `.trailingIcon(_:action:)` (trailingSystemImage+onTrailing), `.debounce(_:)`, `.maxResults(_:)`. Async init sets the `debounce=0.3` baseline in the init body (`.debounce(_:)` can override it) — per-init default preserved. Call sites: MoreDemos demo (`.backButton/.trailingIcon`), 2 #Preview.
+- **Accordion** ✅ (11→4 init, data-driven): 7 call sites → `initiallyExpanded` 5× (+ seeds `@State expanded`, must stay in init), `leadingSystemImage` 3× **stays in init** (+ title/content @ViewBuilder); `subtitle`/`truncateSubtitle`/`showDivider` 0×, `number`/`indicator`/`titleSize`/`paddingSize` 1× → modifiers: `.subtitle(_:) .number(_:) .indicator(_:) .titleSize(_:) .density(_:) .truncateSubtitle(_:) .divider(_:)` (`.density` = paddingSize; avoided clashing with SwiftUI `.padding`). The single call site (OrganismDemos demo) converted to modifiers.
+- **Rating** ✅ (10→3 init, data-driven): 9 call sites → `layout` 5×, `countLabel` 6× **stay in init** (+ content `value`); `allowHalf` 3×, `size`/`onReviewTap` 2×, `systemImage`/`onRate` 1×, `maxValue`/`sentiment` 0× → modifiers: `.maxValue(_:) .starSize(_:) .allowHalf(_:) .symbol(_:) .sentiment(_:) .onRate(_:) .onReviewTap(_:)`. Optional callbacks (`onRate/onReviewTap`) moved to idiomatic `.onRate{} .onReviewTap{}` modifiers (trailing closure preserved). Call sites: AtomDemos demo, ComponentRegistry usage string, #Preview.
+- **Chip** ✅ (10→4 init, data-driven): X1 had added `@Environment(\.isEnabled)` to Chip but left a **dead `isEnabled` param** in the init (it wasn't assigned, silently ignored — bug risk) → removed. 16 call sites: `selectionStyle` 6×, `size` 3× **stay in init** (+ title/isSelected); `leadingSystemImage/rating/isExist/expandsHorizontally` 1×, `isInteractive` 0× → modifiers: `.icon(_:) .rating(_:) .exists(_:) .interactive(_:) .expands(_:)`. The single call site (AtomDemos Chip demo) converted to a modifier showcase + #Preview (`.icon`).
+- **ProgressBar** ✅ (11→3 init, data-driven): 17 call sites measured → `showPercentage` 12×, `status` 5× **stay in init** (+ content `value`); `height` 3×, `gradient` 3×, `steps` 2×, `strokeColor`/`trailColor`/`successSegment` 1×, `format`/`accessibilityLabel` 0× → modifiers: `.barHeight(_:) .gradient(_:) .steps(_:) .colors(fill:track:) .successSegment(_:) .valueFormat(_:) .progressLabel(_:)`. (strokeColor+trailColor grouped into `.colors(fill:track:)`; the successSegment clamp moved into the modifier.) Call sites: Upload (`barHeight`), AtomDemos demo (5-modifier showcase), DisplaySnapshotTests (`.gradient()` — visually identical, snapshot valid), #Preview.
+- **Badge** ✅ (11→6 init, data-driven): call-site density measured (36 sites) → `style` 33×, `leadingSystemImage` 11×, `size` 10×, `variant` 4× **stay in init** (real usage); `shape` 2×, `textColor` 1×, `trailingSystemImage`/`gradient`/`highlighted` **0×** → moved to self-returning modifiers: `.badgeShape(_:) .trailingIcon(_:) .badgeColor(_:) .gradient(_:) .highlighted(_:)`. (`.badgeColor` is a separate name to avoid clashing with SwiftUI `.tint/.foregroundColor`.) The single call site (AtomDemos Badge demo, exercising the whole long tail via knobs) converted to a modifier showcase + #Preview. Churn ~2 sites.
+- **X3 `size`→`.controlSize()`** ✅ (3 components — the ControlSize trio): Checkbox, RadioButton, ThemeToggle. ThemeKit's `public enum ControlSize` (small/medium) custom enum was **shadowing** SwiftUI's `ControlSize` (collision); removed. All three moved to the native `ControlSize` + `@Environment(\.controlSize)` + native `.controlSize(_:)` cascade. The `size` init param was removed. Metric: `extension ControlSize { var checkboxSide }` (`.mini/.small`→20, default `.regular`→24) in Checkbox+RadioButton; ThemeToggle track uses `isCompact` (32×20 / 40×24). Mapping: `size: .small`→`.controlSize(.small)` · `size: .medium`→(remove, native default `.regular`=old `.medium`=24, visually identical) · `size: small ? .small : .medium`→`.controlSize(small ? .small : .regular)`. `customSize: CGFloat?` (Checkbox pixel escape hatch) stayed in init. Call sites: TreeSelect, MultiSelect, MoleculeDemos(Checkbox/RadioButton/ThemeToggle demo). **Remaining size params** (Avatar/Badge/Chip/Divider/ListRow/ProgressIndicator/SegmentedControl/Select/Rating/RadialProgress + button/TextInput) are component-specific enums → to be handled in the component-by-component phase (not a single mechanical cross-cut).
+- **X1 round-2 (containers)** ✅ (4 components — X1 FULLY CLOSED): CheckboxGroup, RadioGroup (+ RadioButtonGroup 2nd struct), SegmentedControl, Select → control-level `isEnabled` moved to `@Environment(\.isEnabled)`. Multi-init forwards (convenience→designated) were dropped; in SegmentedControl the **per-item `SegmentItem.isEnabled` was preserved** (a separate concept); in Select the `SelectStyleConfiguration(isEnabled:)` internal forward was preserved (reads from env). `.disabled()` cascades natively to children. Call sites: SegmentedControl ×2, RadioGroup ×1, RadioButtonGroup ×2, CheckboxGroup ×1 → `.disabled(!enabled)`. **No component now carries `isEnabled: Bool` in its init.**
+- **X1 round-2 (leaves)** ✅ (5 components): leaves not covered by the original X1 → `isEnabled: Bool` init param moved to `@Environment(\.isEnabled)` (native `.disabled()`): ThemeToggle, OTPInput, QuantityStepper, FileInput, TreeSelect. The OTPInput main struct reads from env and preserves the `isEnabled:` forward to the internal `OTPDigitBox`. Call site: ThemeToggle demo+#Preview (`.disabled()`); the other 4 have no call sites (default true). **Remaining X1 round-2 = containers** (CheckboxGroup/RadioGroup/SegmentedControl/Select) — to be handled separately/carefully due to the `isEnabled` forward to children + the per-item `SegmentItem.isEnabled`.
+- **X2 `accessibilityID`→`.a11yID()`** ✅ (21 components): SelectBox, Autocomplete, CheckboxGroup, RadioGroup, SegmentedControl, RangeSlider, SearchBar, Select, RadioButton, ToggleGroup, Slider, ThemeToggle, OTPInput, InputNumber, Checkbox, DateField, MultiSelect, MultiLineTextInput, QuantityStepper, Swap, SegmentedTabBar. Mechanism: stored `accessibilityID` → `private var … = nil` (namespace stays hidden), init param removed, self-returning `func a11yID(_ id: String?) -> Self` modifier added (`var copy = self; copy.accessibilityID = …; return copy`). Mapping: `accessibilityID: "x"` → trailing `.a11yID("x")`. Call sites: DateField/Select/Checkbox demos migrated. **TextInput** (model-based) + **button family** (`ButtonConfiguration` intermediary; accessibilityID init param preserved) are out of X2 scope.

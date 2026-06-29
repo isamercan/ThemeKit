@@ -18,16 +18,16 @@ or an exception page. `ResultView` covers both, and pairs with `EmptyState` for 
 ```swift
 ResultView(
     .success,
-    title: "Rezervasyon onaylandı",
-    message: "Onay e-postası gönderildi.",
+    title: "Reservation confirmed",
+    message: "A confirmation email has been sent.",
     primaryTitle: "Detaylar",   onPrimary: { … },
     secondaryTitle: "Ana sayfa", onSecondary: { … }
 )
 
 // Exception page
-ResultView(.notFound, title: "Sayfa bulunamadı",
-           message: "Aradığınız sayfa taşınmış olabilir.",
-           primaryTitle: "Ana sayfaya dön", onPrimary: { … })
+ResultView(.notFound, title: "Page not found",
+           message: "The page you are looking for may have moved.",
+           primaryTitle: "Back to home", onPrimary: { … })
 ```
 
 - `ResultStatus`: `success · info · warning · error · notFound(404) · forbidden(403) · serverError(500)`.

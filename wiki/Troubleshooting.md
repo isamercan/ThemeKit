@@ -50,4 +50,4 @@ They're opt-in. Set `RUN_SNAPSHOTS=1` on the test scheme's **Test action**
 (shell env vars don't cross into the Simulator). See the project's
 `docs/SNAPSHOT-TESTING.md`.
 
-Still stuck? Open an issue — see **[[Katkı|Contributing]]**.
+Still stuck? Open an issue — see **[[Contributing]]**.
