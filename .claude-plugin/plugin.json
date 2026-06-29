@@ -1,0 +1,12 @@
+{
+  "name": "themekit",
+  "version": "1.0.0",
+  "description": "ThemeKit SwiftUI design-system skill — tokenized components, runtime theming, daisyUI themes, chainable modifiers.",
+  "author": {
+    "name": "isamercan",
+    "url": "https://github.com/isamercan/ThemeKit"
+  },
+  "homepage": "https://github.com/isamercan/ThemeKit",
+  "license": "MIT",
+  "keywords": ["swiftui", "design-system", "themekit", "theming", "daisyui"]
+}
