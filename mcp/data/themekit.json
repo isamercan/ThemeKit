@@ -6696,6 +6696,14 @@
   ],
   "themes": [
     {
+      "id": "default",
+      "name": "Default",
+      "primary": "056bfd",
+      "secondary": "7c3aed",
+      "accent": "0fb4ab",
+      "base": "ffffff"
+    },
+    {
       "id": "light",
       "name": "Light",
       "primary": "422ad5",

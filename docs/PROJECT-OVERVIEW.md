@@ -26,7 +26,7 @@ debt, weeks of manual fixes on every rebrand, and repeated accessibility/localiz
 | **Architecture** | Atomic Design — Atoms · Molecules · Organisms |
 | **Codebase** | ~20,000 lines of Swift · 154 files |
 | **Third-party dependencies (core)** | **0** (native SwiftUI only) |
-| **Themes** | 32 theme presets + 3 bundled themes (default/ocean/sunset × light/dark) |
+| **Themes** | 33 theme presets (Default + 32 inspired by daisyUI) + 3 bundled themes (default/ocean/sunset × light/dark) |
 | **Color tokens** | 217 design tokens + 50–900 color ramps |
 | **Accessibility** | Dynamic Type + Reduce Motion + accessibility identifiers |
 | **Localization** | String Catalog — English by default + Turkish |

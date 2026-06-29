@@ -1,6 +1,6 @@
 # ThemeKit
 
-> A token-driven, brand-neutral SwiftUI design system — 115 components, runtime theming, and the 32 theme presets. Every color / radius / spacing / type style is a design token resolved at runtime from the active `Theme`; components never hardcode a color.
+> A token-driven, brand-neutral SwiftUI design system — 115 components, runtime theming, and the 33 theme presets. Every color / radius / spacing / type style is a design token resolved at runtime from the active `Theme`; components never hardcode a color.
 
 Rules for generating ThemeKit code:
 - Read the theme via `@Environment(\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root. Never hardcode a color — use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.
@@ -31,4 +31,4 @@ Rules for generating ThemeKit code:
 
 ## Theme presets
 
-`light`, `dark`, `cupcake`, `bumblebee`, `emerald`, `corporate`, `synthwave`, `retro`, `cyberpunk`, `valentine`, `halloween`, `garden`, `forest`, `aqua`, `lofi`, `pastel`, `fantasy`, `wireframe`, `black`, `luxury`, `dracula`, `cmyk`, `autumn`, `business`, `acid`, `lemonade`, `night`, `coffee`, `winter`, `dim`, `nord`, `sunset`
+`default`, `light`, `dark`, `cupcake`, `bumblebee`, `emerald`, `corporate`, `synthwave`, `retro`, `cyberpunk`, `valentine`, `halloween`, `garden`, `forest`, `aqua`, `lofi`, `pastel`, `fantasy`, `wireframe`, `black`, `luxury`, `dracula`, `cmyk`, `autumn`, `business`, `acid`, `lemonade`, `night`, `coffee`, `winter`, `dim`, `nord`, `sunset`

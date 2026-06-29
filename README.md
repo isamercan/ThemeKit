@@ -35,8 +35,8 @@ import ThemeKit
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
   shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
-- 🌈 **32 theme presets** — ready-made color sets (cupcake, dracula, cyberpunk,
-  nord…) inspired by [daisyUI](https://daisyui.com/docs/themes/), each recoloring the
+- 🌈 **33 theme presets** — ThemeKit's Default plus 32 ready-made color sets
+  (cupcake, dracula, cyberpunk, nord…) inspired by [daisyUI](https://daisyui.com/docs/themes/), each recoloring the
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
@@ -149,8 +149,8 @@ additive and backward-compatible. Try it live in the gallery's **Theme Injection
 
 ## Theme presets
 
-ThemeKit ships 32 ready-made theme presets (color sets inspired by [daisyUI](https://daisyui.com/docs/themes/)) —
-**32 themes** (cupcake, dracula, cyberpunk, synthwave, nord, coffee…). Each is a
+ThemeKit ships 33 ready-made theme presets — its **Default** plus **32 color sets
+inspired by [daisyUI](https://daisyui.com/docs/themes/)** (cupcake, dracula, cyberpunk, synthwave, nord, coffee…). Each is a
 `ThemePreset` recipe: its accent recolors the whole Ant-style palette and its
 `base-100` becomes the surface tone, so every theme keeps its signature look —
 **cupcake stays cream, cyberpunk yellow, dracula slate**. The *same components*,
@@ -165,10 +165,10 @@ theme switcher (it's the demo app's **Themes** tab):
 ThemePreset.named("dracula")?.apply()        // recolors Theme.shared on the fly
 
 @State private var active: String? = "cupcake"
-ThemePicker(selection: $active)             // a tappable grid of all 32 themes
+ThemePicker(selection: $active)             // a tappable grid of all 33 themes
 ```
 
-<p align="center"><img src="Screenshots/ThemePresets.png" width="680" alt="ThemePicker — a grid of all 32 theme presets, each card painted in its own colors"></p>
+<p align="center"><img src="Screenshots/ThemePresets.png" width="680" alt="ThemePicker — a grid of all 33 theme presets, each card painted in its own colors"></p>
 
 ## Screenshots
 
@@ -177,14 +177,16 @@ gallery, and a full booking flow built entirely from ThemeKit components.
 
 <table>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-components.png" width="230" alt="Component catalog screen"><br><sub><b>Component catalog</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-themes.png" width="230" alt="Live theming screen"><br><sub><b>Live theming · 32 presets</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-colors.png" width="230" alt="Design-token gallery screen"><br><sub><b>Design-token gallery</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-components.png" width="185" alt="Component catalog screen"><br><sub><b>Component catalog</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-themes.png" width="185" alt="Live theming screen"><br><sub><b>Live theming · 33 presets</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-colors.png" width="185" alt="Design-token gallery screen"><br><sub><b>Design-token gallery</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-theme-generator.png" width="185" alt="Theme Generator screen"><br><sub><b>Theme Generator</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-example.png" width="230" alt="Example app — hotel search"><br><sub><b>Example app · search</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-hotel-detail.png" width="230" alt="Example app — hotel detail"><br><sub><b>Example app · detail</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/app-datatable.png" width="230" alt="DataTable component demo"><br><sub><b>DataTable · sort · paginate</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-button.png" width="185" alt="Button component demo"><br><sub><b>Button · variants</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-datatable.png" width="185" alt="DataTable component demo"><br><sub><b>DataTable · sort/paginate</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-example.png" width="185" alt="Example app — hotel search"><br><sub><b>Example · search</b></sub></td>
+<td align="center" valign="top" width="25%"><img src="Screenshots/app-hotel-detail.png" width="185" alt="Example app — hotel detail"><br><sub><b>Example · detail</b></sub></td>
 </tr>
 </table>
 

@@ -121,7 +121,7 @@ struct ThemeConfiguratorView: View {
                     }
                     Text("The theme regenerates live — primary, secondary, accent, surfaces, all of it.")
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                    ButtonGroup(.horizontal) {
                         PrimaryButton("Primary") {}
                         SecondaryButton("Secondary") {}
                         OutlineButton("Outline") {}

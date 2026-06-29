@@ -32,6 +32,10 @@ struct ThemeGalleryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() } }
             .sheet(isPresented: $showConfigurator) { ThemeConfiguratorView() }
+            .onAppear {
+                // Deep-link for screenshots: launch with `-openConfigurator 1`.
+                if UserDefaults.standard.bool(forKey: "openConfigurator") { showConfigurator = true }
+            }
         }
     }
 
