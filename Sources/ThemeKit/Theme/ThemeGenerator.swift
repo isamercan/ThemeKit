@@ -253,7 +253,7 @@ enum ThemeGenerator {
     static func generate(
         primaryHex: String, tint: Double, dark: Bool,
         font: String, fontScale: Double, radiusScale: Double, spacingScale: Double, shadowScale: Double,
-        baseHex: String? = nil
+        baseHex: String? = nil, secondaryHex: String? = nil, accentHex: String? = nil
     ) -> Theme.ThemeData {
         let primary = primaryHex.hasPrefix("#") ? String(primaryHex.dropFirst()) : primaryHex
         let palette = buildPalette(primaryBase: primary, dark: dark, tint: tint)
@@ -287,6 +287,17 @@ enum ThemeGenerator {
         }
         for (key, hex) in palette {
             colors.append(.init(name: "palette." + key.replacingOccurrences(of: "/", with: "."), hex: hex))
+        }
+
+        // Additive brand ladders (daisyUI `secondary` / `accent`) — full 50..900
+        // ramps seeded from the given hexes, emitted alongside the typed palette.
+        for (family, seedHex) in [("secondary", secondaryHex), ("accent", accentHex)] {
+            guard let seedHex else { continue }
+            let seed = seedHex.hasPrefix("#") ? String(seedHex.dropFirst()) : seedHex
+            let shades = dark ? antGenerateDark(seed) : antGenerate(seed)
+            for (step, shadeHex) in zip(steps, shades) {
+                colors.append(.init(name: "palette.\(family).\(step)", hex: shadeHex))
+            }
         }
 
         let radius = radiusBase.map { Theme.AppRadius(name: $0.0, radius: ($0.1 * radiusScale).rounded()) }
