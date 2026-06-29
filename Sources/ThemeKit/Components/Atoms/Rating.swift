@@ -248,7 +248,7 @@ public extension Rating {
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
                 Rating(value: 4.3, countLabel: "(128)")                                  // continuous fill
-                Rating(value: 4.3, layout: .numberRate, countLabel: "1.284 yorum").onReviewTap {}  // numeric + tappable review
+                Rating(value: 4.3, layout: .numberRate, countLabel: "1,284 reviews").onReviewTap {}  // numeric + tappable review
                 Rating(value: v).allowHalf().onRate { v = $0 }                            // interactive
                 Rating(value: 3).symbol("heart")
             }

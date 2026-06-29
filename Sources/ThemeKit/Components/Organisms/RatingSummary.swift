@@ -35,7 +35,7 @@ public struct RatingSummary: View {
             if let reviewCount {
                 Button { onReviews?() } label: {
                     HStack(spacing: 4) {
-                        Text("\(reviewCount) Yorum").textStyle(.linkSm)
+                        Text("\(reviewCount) reviews").textStyle(.linkSm)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
                             .mirrorsInRTL()
                     }
