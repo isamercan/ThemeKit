@@ -34,12 +34,11 @@ public enum SemanticColor: String, CaseIterable {
         }
     }
 
-    /// Foreground on top of the `solid` background.
+    /// Foreground on top of the `solid` background — **auto-contrasting**: a bright
+    /// accent (amber, yellow, light primary) gets dark content, a deep one gets white,
+    /// computed from the background's luminance rather than hardcoded per color.
     public var onSolid: Color {
-        switch self {
-        case .warning: return Theme.shared.text(.textPrimary)   // dark text on bright amber
-        default: return Theme.shared.foreground(.fgSecondary)   // white
-        }
+        ColorContrast.content(on: solid)
     }
 
     /// Light surface for the `soft` variant.
