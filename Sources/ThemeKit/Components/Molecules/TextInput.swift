@@ -271,10 +271,10 @@ public struct TextInput: View {
             }
         }
         .frame(height: model.size.height)
-        .background(backgroundColor, in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(backgroundColor, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
                 .strokeBorder(borderColor, lineWidth: isFocused || hasError || hasWarning ? 1.5 : 1)
         )
         .contentShape(Rectangle())
