@@ -65,16 +65,27 @@ final class DemoThemeStore: ObservableObject {
     @Published private(set) var isDark: Bool
     /// The active theme preset `id`, or `nil` when a bundled `DemoTheme` is active.
     @Published private(set) var presetID: String?
+    /// The generated/preset recipe currently driving the theme — what the Theme
+    /// Configurator seeds from. `nil` when a bundled JSON theme is active.
+    @Published private(set) var activeConfig: ThemeConfig?
 
     private static let presetKey = "selectedThemePreset"
+    private static let customKey = "selectedThemeCustomConfig"
 
     init() {
         current = DemoTheme.stored
         isDark = DemoTheme.storedDark
-        // A persisted theme preset wins at launch; otherwise the bundled theme.
-        if let id = UserDefaults.standard.string(forKey: Self.presetKey),
-           let preset = ThemePreset.named(id) {
+        // Precedence at launch: a saved custom (generated) recipe wins, then a
+        // preset, then the bundled JSON theme.
+        if let data = UserDefaults.standard.data(forKey: Self.customKey),
+           let cfg = try? ThemeConfig(jsonData: data) {
+            activeConfig = cfg
+            isDark = cfg.dark
+            Theme.shared.apply(cfg)
+        } else if let id = UserDefaults.standard.string(forKey: Self.presetKey),
+                  let preset = ThemePreset.named(id) {
             presetID = id
+            activeConfig = preset.config
             isDark = preset.isDark
             preset.apply()
         } else {
@@ -84,16 +95,20 @@ final class DemoThemeStore: ObservableObject {
 
     func select(_ theme: DemoTheme) {
         presetID = nil
+        activeConfig = nil
         UserDefaults.standard.removeObject(forKey: Self.presetKey)
+        UserDefaults.standard.removeObject(forKey: Self.customKey)
         current = theme
         theme.apply(dark: isDark)
     }
 
     func setDark(_ dark: Bool) {
-        // theme presets are single-scheme — toggling light/dark returns to the
-        // bundled theme, where the scheme switch applies.
+        // presets / generated recipes are single-scheme — toggling light/dark
+        // returns to the bundled theme, where the scheme switch applies.
         presetID = nil
+        activeConfig = nil
         UserDefaults.standard.removeObject(forKey: Self.presetKey)
+        UserDefaults.standard.removeObject(forKey: Self.customKey)
         isDark = dark
         current.apply(dark: dark)
     }
@@ -101,8 +116,35 @@ final class DemoThemeStore: ObservableObject {
     /// Applies a theme preset live (and follows its light/dark scheme).
     func applyPreset(_ theme: ThemePreset) {
         presetID = theme.id
+        activeConfig = theme.config
         isDark = theme.isDark
+        UserDefaults.standard.removeObject(forKey: Self.customKey)
         UserDefaults.standard.set(theme.id, forKey: Self.presetKey)
         theme.apply()
+    }
+
+    /// Commits a recipe from the Theme Configurator: applies it, persists it, and
+    /// makes it the active theme so the switcher + dark state stay in sync.
+    func applyGenerated(_ config: ThemeConfig) {
+        presetID = nil
+        activeConfig = config
+        isDark = config.dark
+        UserDefaults.standard.removeObject(forKey: Self.presetKey)
+        if let data = try? config.jsonData() {
+            UserDefaults.standard.set(data, forKey: Self.customKey)
+        }
+        Theme.shared.apply(config)
+    }
+
+    /// Re-applies whatever theme is currently active — used to discard the
+    /// configurator's live preview when the user cancels.
+    func reapplyActive() {
+        if let cfg = activeConfig {
+            Theme.shared.apply(cfg)
+        } else if let id = presetID, let preset = ThemePreset.named(id) {
+            preset.apply()
+        } else {
+            current.apply(dark: isDark)
+        }
     }
 }

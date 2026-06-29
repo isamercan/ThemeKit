@@ -40,8 +40,8 @@ struct ThemeGalleryView: View {
             HStack(spacing: 10) {
                 Image(systemName: "slider.horizontal.3")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Theme Configurator").textStyle(.labelBase600)
-                    Text("Canlı renk + tint + ölçek + font").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    Text("Theme Generator").textStyle(.labelBase600)
+                    Text("Primary · secondary · accent · base + ölçek").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                 }
                 Spacer()
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
