@@ -26,6 +26,7 @@ struct ThemeConfiguratorView: View {
     @State private var draft = ConfigState()
     @State private var applied = false
     @State private var live = false            // gates the seeding change from applying
+    @State private var applyTask: Task<Void, Never>?
     @State private var chipOn = true
     // Theme-wide micro-animation switch — shared with the app root via the same key.
     @AppStorage("themekit.microAnimations") private var microAnimations = true
@@ -61,17 +62,39 @@ struct ThemeConfiguratorView: View {
                 DispatchQueue.main.async { live = true }
             }
             .onChange(of: draft) { _, new in
-                if live { Theme.shared.apply(new.themeConfig) }   // live preview only
+                if live { scheduleApply(new) }   // debounced live preview (no per-tick regen)
             }
-            .onDisappear { if !applied { store.reapplyActive() } }   // revert preview on cancel
+            .onDisappear {
+                applyTask?.cancel()
+                if !applied { store.reapplyActive() }   // revert preview on cancel
+            }
         }
     }
 
     /// Commit the draft: persist + apply + sync the demo's theme store.
     private func commit() {
+        applyTask?.cancel()
         store.applyGenerated(draft.themeConfig)
         applied = true
         dismiss()
+    }
+
+    /// Debounced live preview: coalesce rapid slider / color-picker changes and
+    /// regenerate the whole palette only once movement settles, so dragging stays
+    /// smooth instead of regenerating on every tick.
+    private func scheduleApply(_ state: ConfigState) {
+        applyTask?.cancel()
+        applyTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 110_000_000)   // ~110ms quiet period
+            if Task.isCancelled { return }
+            Theme.shared.apply(state.themeConfig)
+        }
+    }
+
+    /// Apply immediately — used the instant a slider drag ends, so release feels crisp.
+    private func applyNow() {
+        applyTask?.cancel()
+        Theme.shared.apply(draft.themeConfig)
     }
 
     /// Seed the UI from the active theme — a preset / custom recipe exactly, or a
@@ -247,7 +270,9 @@ struct ThemeConfiguratorView: View {
                 Text(String(format: fmt, value.wrappedValue))
                     .font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary)
             }
-            Slider(value: value, in: range)
+            Slider(value: value, in: range, onEditingChanged: { editing in
+                if !editing { applyNow() }   // commit the final value the moment the drag ends
+            })
         }
     }
 }
