@@ -114,7 +114,10 @@ public struct ThemeButton: View {
                     Image(systemName: systemImage).font(.system(size: size.fontSize, weight: .semibold))
                 }
                 if let title, !isIconOnly {
-                    Text(title).textStyle(size.textStyle).underline(variant == .link)
+                    Text(title)
+                        .textStyle(size.textStyle)
+                        .underline(variant == .link)
+                        .lineLimit(1)              // a single-word label never wraps; a ButtonGroup flows instead
                 }
                 if let systemImage, iconPosition == .trailing, !isIconOnly {
                     Image(systemName: systemImage).font(.system(size: size.fontSize, weight: .semibold))
