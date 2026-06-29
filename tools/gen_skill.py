@@ -8,6 +8,7 @@ Re-run with `make skill` (or `python3 tools/gen_skill.py`) so the reference can
 never drift from the code.
 """
 import re
+import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -16,7 +17,27 @@ OUT = ROOT / "skills/themekit/references/components.md"
 THEMES_SRC = ROOT / "Sources/ThemeKit/Theme/DaisyThemes.swift"
 THEMES_OUT = ROOT / "skills/themekit/references/themes.md"
 LLMS_OUT = ROOT / "llms.txt"
+JSON_OUT = ROOT / "mcp/themekit.json"
 THEME_RE = re.compile(r'\.init\(\s*"(\w+)",\s*"([^"]+)"')
+
+RULES = [
+    "Read the theme via `@Environment(\\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root.",
+    "Never hardcode a color — use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.",
+    "Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.",
+    "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`; accessibility id uses `.a11yID(_:)`.",
+    "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a daisyUI theme: `DaisyTheme.named(\"dracula\")?.apply()`.",
+]
+
+TOKENS = {
+    "text": ["textPrimary", "textSecondary", "textTertiary", "textDisabled", "textHero"],
+    "background": ["bgWhite", "bgElevatorPrimary", "bgSecondary", "bgSecondaryLight", "bgHero", "bgTertiary"],
+    "border": ["borderPrimary", "borderHero"],
+    "foreground": ["fgHero", "fgSecondary"],
+    "semanticColor": ["primary", "secondary", "accent", "neutral", "info", "success", "warning", "error"],
+    "fillVariant": ["solid", "soft", "outline", "ghost"],
+    "radiusRole": ["box", "field", "selector"],
+    "spacing": ["xs", "sm", "md", "base", "lg", "xl"],
+}
 
 CATEGORIES = [("Atoms", "Atoms"), ("Molecules", "Molecules"), ("Organisms", "Organisms")]
 
@@ -187,6 +208,29 @@ def render_llms(cats, modifiers, themes):
     return "\n".join(lines)
 
 
+def render_json(cats, modifiers, themes):
+    components = []
+    for label, _ in CATEGORIES:
+        for name, params, mods in cats[label]:
+            components.append({
+                "name": name,
+                "category": label,
+                "init": f"{name}({params})" if params else name,
+                "modifiers": [f".{m}()" for m in mods],
+            })
+    return json.dumps({
+        "name": "themekit",
+        "summary": "A token-driven, brand-neutral SwiftUI design system. Every color / "
+                   "radius / spacing / type style is a token resolved at runtime from the "
+                   "active Theme; components never hardcode a color.",
+        "rules": RULES,
+        "tokens": TOKENS,
+        "components": components,
+        "modifiers": [f".{m}()" for m in modifiers],
+        "themes": [{"id": t[0], "name": t[1]} for t in themes],
+    }, indent=2)
+
+
 def main():
     cats, modifiers = collect()
     themes = THEME_RE.findall(THEMES_SRC.read_text(encoding="utf-8"))
@@ -195,10 +239,14 @@ def main():
     themes_md, n_themes = render_themes(themes)
     THEMES_OUT.write_text(themes_md, encoding="utf-8")
     LLMS_OUT.write_text(render_llms(cats, modifiers, themes), encoding="utf-8")
+    if JSON_OUT.parent.exists():
+        JSON_OUT.write_text(render_json(cats, modifiers, themes), encoding="utf-8")
     total = sum(len(v) for v in cats.values())
     print(f"Wrote {OUT.relative_to(ROOT)} — {total} components, {len(modifiers)} modifiers")
     print(f"Wrote {THEMES_OUT.relative_to(ROOT)} — {n_themes} daisyUI themes")
     print(f"Wrote {LLMS_OUT.relative_to(ROOT)} — llms.txt index")
+    if JSON_OUT.parent.exists():
+        print(f"Wrote {JSON_OUT.relative_to(ROOT)} — MCP data")
 
 
 if __name__ == "__main__":
