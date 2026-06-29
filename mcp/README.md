@@ -6,30 +6,40 @@ theme presets as **on-demand tools**, so an MCP-compatible editor (Claude Code,
 Cursor, Windsurf, …) can pull accurate, focused context while generating code —
 instead of loading everything up front.
 
-The data lives in `themekit.json`, generated from the Swift source by
-`tools/gen_skill.py` (`make skill`), so it never drifts from the library.
+**Single source of truth.** `data/themekit.json` is built from the **DocC symbol
+graph** (`swift package dump-symbol-graph` → precise init params, types, defaults
+and modifiers) + the bundled **theme JSON** (token values). Run `make mcp-data`
+to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 
 ## Tools
 
+### Read — context (kills hallucinated APIs)
 | Tool | What it returns |
 |---|---|
 | `usage_guide` | The golden rules for writing ThemeKit code |
-| `list_components(category?)` | Components by Atom / Molecule / Organism |
-| `get_component(name)` | A component's summary, init signature + chainable modifiers |
-| `search_components(query)` | Components matching a keyword (e.g. "date", "progress") |
-| `lint_snippet(swift)` | Flags ThemeKit anti-patterns (hardcoded colors / radius / fonts) with fixes |
-| `validate_screen(swift)` | Full screen check: anti-patterns + raw-SwiftUI with ThemeKit equivalents + a pass/fail verdict |
+| `list_components(category?)` | Components by Atom / Molecule / Organism + a one-liner |
+| **`get_component_api(name)`** | The **exact** init params (label, type, default, required), extra inits, and modifiers — from the symbol graph |
+| `get_design_tokens(category?)` | Tokens with **real values** (colors, radius + box/field/selector roles, spacing, typography, semantic colors) |
+| `get_usage_snippet(name, variant?)` | A copy-paste example (basic / full) |
+| `search_components(intent)` | Intent search ("a selectable filter list") — keyword + synonym scoring |
+| `get_variants_states(name)` | Style variants (enum cases) + supported states |
+
+### Act — generation
+| Tool | What it does |
+|---|---|
+| `validate_code(swift)` | Anti-patterns + raw-SwiftUI-with-equivalents + a PASS/FAIL verdict |
+| `lint_snippet(swift)` | Flags hardcoded colors / radius / fonts / padding |
 | `scaffold_screen(kind)` | A starter form / list / detail / settings screen |
-| `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit, with notes |
-| `list_themes` | The bundled theme-preset ids |
-| `theme_colors(id)` | A preset's primary / secondary / accent / base hexes |
-| `theme_preview(id)` | A **PNG swatch card** for a preset (renders inline) |
-| `theme_snippet(id?)` | Swift code to apply a preset / show `ThemePicker` |
-| `generate_theme(...)` | A `ThemeConfig` apply snippet from accent / base / secondary / accent |
-| `token_reference(kind?)` | Design tokens (colors, radius roles, spacing, semantic colors) |
+| `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit |
+
+### Themes
+| Tool | What it returns |
+|---|---|
+| `list_themes` · `theme_colors(id)` · `theme_snippet(id?)` · `generate_theme(...)` | Preset ids / hexes / apply code / a custom `ThemeConfig` |
+| `theme_preview(id)` | A **PNG swatch card** (renders inline) |
 
 Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
-and prompts (`themekit-screen`, `themekit-theme`, `migrate-to-themekit`).
+and prompts (`themekit-screen`, `migrate-to-themekit`).
 
 ## Install
 

@@ -1,0 +1,6955 @@
+{
+  "name": "themekit",
+  "summary": "A token-driven, brand-neutral SwiftUI design system. Every color / radius / spacing / type style is a token resolved at runtime from the active Theme; components never hardcode a color.",
+  "rules": [
+    "Read the theme via `@Environment(\\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root.",
+    "Never hardcode a color — use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.",
+    "Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.",
+    "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`; accessibility id uses `.a11yID(_:)`.",
+    "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a preset: `ThemePreset.named(\"dracula\")?.apply()`."
+  ],
+  "components": [
+    {
+      "name": "Accordion",
+      "category": "Organisms",
+      "doc": "Improved, token-bound rewrite of the reference AccordionView — a single expandable row with a @ViewBuilder body instead of type-erased AnyView models.",
+      "init": "init(_ title: String, leadingSystemImage: String? = nil, initiallyExpanded: Bool = false, @ViewBuilder content: @escaping () -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "leadingSystemImage",
+          "name": "leadingSystemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "initiallyExpanded",
+          "name": "initiallyExpanded",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping () -> Content"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "density(_:)",
+          "signature": ".density(_ size: AccordionPaddingSize) -> Accordion<Content>",
+          "doc": "Header row vertical padding (default / small / large)."
+        },
+        {
+          "name": "divider(_:)",
+          "signature": ".divider(_ on: Bool) -> Accordion<Content>",
+          "doc": "Whether to draw the bottom divider (default true)."
+        },
+        {
+          "name": "indicator(_:)",
+          "signature": ".indicator(_ indicator: AccordionIndicator) -> Accordion<Content>",
+          "doc": "Expand/collapse indicator glyph (chevron / plus-minus / custom)."
+        },
+        {
+          "name": "number(_:)",
+          "signature": ".number(_ value: Int?) -> Accordion<Content>",
+          "doc": "A leading two-digit number badge (e.g."
+        },
+        {
+          "name": "subtitle(_:)",
+          "signature": ".subtitle(_ text: String?) -> Accordion<Content>",
+          "doc": "A secondary line under the title."
+        },
+        {
+          "name": "titleSize(_:)",
+          "signature": ".titleSize(_ size: AccordionTitleSize) -> Accordion<Content>",
+          "doc": "Title text size."
+        },
+        {
+          "name": "truncateSubtitle(_:)",
+          "signature": ".truncateSubtitle(_ on: Bool = true) -> Accordion<Content>",
+          "doc": "Clamps the subtitle to one line while collapsed."
+        }
+      ],
+      "usage": "Accordion(\"title\", @ViewBuilder: <@escaping () -> Content>)"
+    },
+    {
+      "name": "AccordionGroup",
+      "category": "Organisms",
+      "doc": "A group of accordion rows with single- or multiple-open behavior (the reference `AccordionView` tracks a `Set` of open ids).",
+      "init": "init(_ items: [Item], mode: AccordionExpandMode = .single, initiallyExpanded: Set<Item.ID> = [], title: @escaping (Item) -> String, @ViewBuilder content: @escaping (Item) -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "mode",
+          "name": "mode",
+          "type": "AccordionExpandMode",
+          "default": ".single"
+        },
+        {
+          "label": "initiallyExpanded",
+          "name": "initiallyExpanded",
+          "type": "Set<Item.ID>",
+          "default": "[]"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "@escaping (Item) -> String, @ViewBuilder content: @escaping (Item) -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "AccordionGroup(<[Item]>, title: \"title\")"
+    },
+    {
+      "name": "AlertToast",
+      "category": "Organisms",
+      "doc": "Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner).",
+      "init": "init(_ title: String, message: String? = nil, type: AlertToastType = .info, systemImage: String? = nil, isLoading: Bool = false, action: ToastAction? = nil, onClose: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "message",
+          "name": "message",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "AlertToastType",
+          "default": ".info"
+        },
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "ToastAction?",
+          "default": "nil"
+        },
+        {
+          "label": "onClose",
+          "name": "onClose",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "AlertToast(\"title\")"
+    },
+    {
+      "name": "AnimatedImage",
+      "category": "Atoms",
+      "doc": "Animated GIF / APNG playback with NO third-party dependency — frames and per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven by a `TimelineView(.animation)`.",
+      "init": "init(_ url: URL?, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0)",
+      "params": [
+        {
+          "label": "_",
+          "name": "url",
+          "type": "URL?"
+        },
+        {
+          "label": "contentMode",
+          "name": "contentMode",
+          "type": "ContentMode",
+          "default": ".fill"
+        },
+        {
+          "label": "cornerRadius",
+          "name": "cornerRadius",
+          "type": "CGFloat",
+          "default": "0"
+        }
+      ],
+      "modifiers": [],
+      "usage": "AnimatedImage(<URL>)"
+    },
+    {
+      "name": "Autocomplete",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "text",
+          "name": "text",
+          "type": "Binding<String>"
+        },
+        {
+          "label": "suggest",
+          "name": "suggest",
+          "type": "@escaping nonisolated(nonsending) (String) async -> [String], placeholder: String",
+          "default": "\"Ara\", onSelect: @escaping (String) -> Void = { _ in }"
+        }
+      ],
+      "inits": [
+        "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })",
+        "init(label: String? = nil, text: Binding<String>, suggestions: [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Autocomplete",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "debounce(_:)",
+          "signature": ".debounce(_ interval: TimeInterval) -> Autocomplete",
+          "doc": "Debounce interval for typeahead (async init defaults to 0.3s)."
+        },
+        {
+          "name": "maxResults(_:)",
+          "signature": ".maxResults(_ count: Int) -> Autocomplete",
+          "doc": "Caps the number of suggestion rows (default 5)."
+        },
+        {
+          "name": "onSearch(_:)",
+          "signature": ".onSearch(_ action: ((String) -> Void)?) -> Autocomplete",
+          "doc": "Fires with the query text on each (debounced) change."
+        },
+        {
+          "name": "suggestionEnabled(_:)",
+          "signature": ".suggestionEnabled(_ predicate: ((String) -> Bool)?) -> Autocomplete",
+          "doc": "Per-suggestion enable predicate; disabled rows are shown greyed and unselectable."
+        }
+      ],
+      "usage": "Autocomplete($text)"
+    },
+    {
+      "name": "Avatar",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ content: AvatarContent, size: AvatarSize = .md, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)",
+      "params": [
+        {
+          "label": "_",
+          "name": "content",
+          "type": "AvatarContent"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "AvatarSize",
+          "default": ".md"
+        },
+        {
+          "label": "background",
+          "name": "background",
+          "type": "AvatarBackground",
+          "default": ".blue"
+        },
+        {
+          "label": "shape",
+          "name": "shape",
+          "type": "AvatarShape",
+          "default": ".circle"
+        },
+        {
+          "label": "presence",
+          "name": "presence",
+          "type": "StatusKind?",
+          "default": "nil"
+        },
+        {
+          "label": "presencePulse",
+          "name": "presencePulse",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "inits": [
+        "init(_ content: AvatarContent, size: AvatarSize = .md, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)",
+        "init(_ content: AvatarContent, dimension: CGFloat, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)"
+      ],
+      "modifiers": [],
+      "usage": "Avatar(<AvatarContent>)"
+    },
+    {
+      "name": "AvatarGroup",
+      "category": "Atoms",
+      "doc": "Overlapping stack of avatars with a \"+N\" overflow bubble.",
+      "init": "init(_ avatars: [AvatarContent], size: AvatarSize = .md, max: Int = 4, background: AvatarBackground = .blue)",
+      "params": [
+        {
+          "label": "_",
+          "name": "avatars",
+          "type": "[AvatarContent]"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "AvatarSize",
+          "default": ".md"
+        },
+        {
+          "label": "max",
+          "name": "max",
+          "type": "Int",
+          "default": "4"
+        },
+        {
+          "label": "background",
+          "name": "background",
+          "type": "AvatarBackground",
+          "default": ".blue"
+        }
+      ],
+      "modifiers": [],
+      "usage": "AvatarGroup(<[AvatarContent]>)"
+    },
+    {
+      "name": "Badge",
+      "category": "Atoms",
+      "doc": "Improved, token-bound rewrite of the reference BadgeView.",
+      "init": "init(_ text: String, style: BadgeStyle = .neutral, variant: FillVariant = .soft, size: BadgeSize = .medium, leadingSystemImage: String? = nil, action: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "BadgeStyle",
+          "default": ".neutral"
+        },
+        {
+          "label": "variant",
+          "name": "variant",
+          "type": "FillVariant",
+          "default": ".soft"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "BadgeSize",
+          "default": ".medium"
+        },
+        {
+          "label": "leadingSystemImage",
+          "name": "leadingSystemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "badgeColor(_:)",
+          "signature": ".badgeColor(_ color: Color?) -> Badge",
+          "doc": "Overrides the text/foreground color (otherwise derived from style + variant)."
+        },
+        {
+          "name": "badgeShape(_:)",
+          "signature": ".badgeShape(_ shape: BadgeShape) -> Badge",
+          "doc": "Pill (default) or rounded-rectangle outline."
+        },
+        {
+          "name": "gradient(_:)",
+          "signature": ".gradient(_ colors: [Color]?) -> Badge",
+          "doc": "Fills the badge with a horizontal gradient instead of the style background."
+        },
+        {
+          "name": "highlighted(_:)",
+          "signature": ".highlighted(_ on: Bool = true) -> Badge",
+          "doc": "Lifts the badge off the surface with a subtle drop shadow."
+        },
+        {
+          "name": "trailingIcon(_:)",
+          "signature": ".trailingIcon(_ systemName: String?) -> Badge",
+          "doc": "A trailing SF Symbol after the text (e.g."
+        }
+      ],
+      "usage": "Badge(\"text\")"
+    },
+    {
+      "name": "BlogCard",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(title: String, excerpt: String? = nil, readMoreTitle: String = String(themeKit: \"Read more\"), compact: Bool = false, onReadMore: @escaping () -> Void = {}, @ViewBuilder media: @escaping () -> Media)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "excerpt",
+          "name": "excerpt",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "readMoreTitle",
+          "name": "readMoreTitle",
+          "type": "String",
+          "default": "String(themeKit: \"Read more\")"
+        },
+        {
+          "label": "compact",
+          "name": "compact",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "onReadMore",
+          "name": "onReadMore",
+          "type": "@escaping () -> Void",
+          "default": "{}, @ViewBuilder media: @escaping () -> Media"
+        }
+      ],
+      "modifiers": [],
+      "usage": "BlogCard(title: \"title\")"
+    },
+    {
+      "name": "Breadcrumbs",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ crumbs: [Breadcrumbs.Crumb], maxItems: Int? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "crumbs",
+          "type": "[Breadcrumbs.Crumb]"
+        },
+        {
+          "label": "maxItems",
+          "name": "maxItems",
+          "type": "Int?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Breadcrumbs(<[Breadcrumbs.Crumb]>)"
+    },
+    {
+      "name": "ButtonGroup",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ axis: ButtonGroupAxis = .vertical, @ViewBuilder content: @escaping () -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "axis",
+          "type": "ButtonGroupAxis",
+          "default": ".vertical"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping () -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ButtonGroup(@ViewBuilder: <@escaping () -> Content>)"
+    },
+    {
+      "name": "CalendarView",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(selection: Binding<Date?>)",
+      "params": [
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Date?>"
+        }
+      ],
+      "modifiers": [],
+      "usage": "CalendarView($selection)"
+    },
+    {
+      "name": "Callout",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ text: String, type: CalloutType = .info, style: CalloutStyle = .plain, showIcon: Bool = true, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onClose: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "CalloutType",
+          "default": ".info"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "CalloutStyle",
+          "default": ".plain"
+        },
+        {
+          "label": "showIcon",
+          "name": "showIcon",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "actionTitle",
+          "name": "actionTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "onAction",
+          "name": "onAction",
+          "type": "(() -> Void)?",
+          "default": "nil, onClose: (() -> Void)? = nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Callout(\"text\")"
+    },
+    {
+      "name": "Card",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(elevation: CardElevation = .soft, padding: CGFloat = 16, title: String? = nil, subtitle: String? = nil, extraTitle: String? = nil, onExtra: (() -> Void)? = nil, isLoading: Bool = false, action: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content)",
+      "params": [
+        {
+          "label": "elevation",
+          "name": "elevation",
+          "type": "CardElevation",
+          "default": ".soft"
+        },
+        {
+          "label": "padding",
+          "name": "padding",
+          "type": "CGFloat",
+          "default": "16"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "extraTitle",
+          "name": "extraTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "onExtra",
+          "name": "onExtra",
+          "type": "(() -> Void)?",
+          "default": "nil, isLoading: Bool = false, action: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Card()"
+    },
+    {
+      "name": "CardStack",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ items: [Item], @ViewBuilder content: @escaping (Item) -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping (Item) -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "CardStack(<[Item]>, @ViewBuilder: <@escaping (Item) -> Content>)"
+    },
+    {
+      "name": "Carousel",
+      "category": "Organisms",
+      "doc": "A generic paging carousel with dot indicators, optional autoplay and optional prev/next arrows.",
+      "init": "init(_ items: [Item], loop: Bool = false, currentIndex: Binding<Int>? = nil, @ViewBuilder content: @escaping (Item) -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "loop",
+          "name": "loop",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "currentIndex",
+          "name": "currentIndex",
+          "type": "Binding<Int>?",
+          "default": "nil"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping (Item) -> Content"
+        }
+      ],
+      "inits": [
+        "init(_ items: [Item], loop: Bool = false, currentIndex: Binding<Int>? = nil, @ViewBuilder content: @escaping (Item) -> Content)",
+        "init(_ items: [Item], loop: Bool = false, currentIndex: Binding<Int>? = nil, @ViewBuilder activeContent: @escaping (Item, Bool) -> Content)"
+      ],
+      "modifiers": [
+        {
+          "name": "arrows(_:)",
+          "signature": ".arrows(_ on: Bool = true) -> Carousel<Item, Content>",
+          "doc": "Shows prev / next arrow buttons."
+        },
+        {
+          "name": "autoplay(_:)",
+          "signature": ".autoplay(_ interval: TimeInterval?) -> Carousel<Item, Content>",
+          "doc": "Advances pages automatically every `interval` seconds."
+        },
+        {
+          "name": "dots(_:position:)",
+          "signature": ".dots(_ on: Bool = true, position: Edge = .bottom) -> Carousel<Item, Content>",
+          "doc": "Shows the page-dot indicators (default true) and where they sit."
+        },
+        {
+          "name": "fade(_:)",
+          "signature": ".fade(_ on: Bool = true) -> Carousel<Item, Content>",
+          "doc": "Cross-fades between pages instead of sliding."
+        }
+      ],
+      "usage": "Carousel(<[Item]>, @ViewBuilder: <@escaping (Item) -> Content>)"
+    },
+    {
+      "name": "ChatBubble",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ text: String, side: ChatSide = .incoming, author: String? = nil, time: String? = nil, avatarSystemImage: String? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "side",
+          "name": "side",
+          "type": "ChatSide",
+          "default": ".incoming"
+        },
+        {
+          "label": "author",
+          "name": "author",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "time",
+          "name": "time",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "avatarSystemImage",
+          "name": "avatarSystemImage",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ChatBubble(\"text\")"
+    },
+    {
+      "name": "Checkbox",
+      "category": "Molecules",
+      "doc": "Figma \"Control Items\" → Checkboxes.",
+      "init": "init(_ label: String? = nil, isChecked: Binding<Bool>, customSize: CGFloat? = nil, type: CheckboxType = .plain, isIndeterminate: Bool = false, alignment: VerticalAlignment = .center, infoMessages: [InfoMessage] = [])",
+      "params": [
+        {
+          "label": "_",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isChecked",
+          "name": "isChecked",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "customSize",
+          "name": "customSize",
+          "type": "CGFloat?",
+          "default": "nil"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "CheckboxType",
+          "default": ".plain"
+        },
+        {
+          "label": "isIndeterminate",
+          "name": "isIndeterminate",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "alignment",
+          "name": "alignment",
+          "type": "VerticalAlignment",
+          "default": ".center"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Checkbox",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "Checkbox($isChecked)"
+    },
+    {
+      "name": "CheckboxCard",
+      "category": "Organisms",
+      "doc": "",
+      "init": "init(_ title: String, description: String? = nil, isChecked: Bool, isEnabled: Bool = true, action: @escaping () -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "description",
+          "name": "description",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isChecked",
+          "name": "isChecked",
+          "type": "Bool"
+        },
+        {
+          "label": "isEnabled",
+          "name": "isEnabled",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void"
+        }
+      ],
+      "modifiers": [],
+      "usage": "CheckboxCard(\"title\", isChecked: true, action: { })"
+    },
+    {
+      "name": "CheckboxGroup",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, infoMessages: [InfoMessage] = [], selectAllTitle: String? = nil, isOptionEnabled: ((Option) -> Bool)? = nil, label: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<Option>>"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "selectAllTitle",
+          "name": "selectAllTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isOptionEnabled",
+          "name": "isOptionEnabled",
+          "type": "((Option) -> Bool)?",
+          "default": "nil, label: @escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> CheckboxGroup<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "CheckboxGroup(options: <[Option]>, $selection)"
+    },
+    {
+      "name": "Chip",
+      "category": "Atoms",
+      "doc": "Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix.",
+      "init": "init(_ title: String, isSelected: Binding<Bool>, size: ChipSize = .small, selectionStyle: ChipSelectionStyle = .tonal)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ChipSize",
+          "default": ".small"
+        },
+        {
+          "label": "selectionStyle",
+          "name": "selectionStyle",
+          "type": "ChipSelectionStyle",
+          "default": ".tonal"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "exists(_:)",
+          "signature": ".exists(_ on: Bool = true) -> Chip",
+          "doc": "Whether the represented item still exists; `false` strikes through and dims the chip (e.g."
+        },
+        {
+          "name": "expands(_:)",
+          "signature": ".expands(_ on: Bool = true) -> Chip",
+          "doc": "Stretches the chip to fill the available width (e.g."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemName: String?) -> Chip",
+          "doc": "A leading SF Symbol before the title."
+        },
+        {
+          "name": "interactive(_:)",
+          "signature": ".interactive(_ on: Bool = true) -> Chip",
+          "doc": "Whether the chip responds to taps (a read-only display chip passes `false`)."
+        },
+        {
+          "name": "rating(_:)",
+          "signature": ".rating(_ value: Double?) -> Chip",
+          "doc": "A leading star + numeric rating before the title."
+        }
+      ],
+      "usage": "Chip(\"title\", $isSelected)"
+    },
+    {
+      "name": "ChipGroup",
+      "category": "Molecules",
+      "doc": "A horizontally-scrolling, multi-select chip group backed by a `Set` binding.",
+      "init": "init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, selectionStyle: ChipSelectionStyle = .tonal, label: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<Option>>"
+        },
+        {
+          "label": "selectionStyle",
+          "name": "selectionStyle",
+          "type": "ChipSelectionStyle",
+          "default": ".tonal"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "@escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ChipGroup(options: <[Option]>, $selection, label: \"label\")"
+    },
+    {
+      "name": "ChoseChip",
+      "category": "Molecules",
+      "doc": "A selectable card: a leading icon, a title with an optional \"free\" gradient badge, and a rating + description row.",
+      "init": "init(isSelected: Binding<Bool>, title: String, description: String? = nil, rating: Double? = nil, showFree: Bool = false, freeLabel: String = String(themeKit: \"Free\"), systemImage: String? = nil)",
+      "params": [
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "description",
+          "name": "description",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "rating",
+          "name": "rating",
+          "type": "Double?",
+          "default": "nil"
+        },
+        {
+          "label": "showFree",
+          "name": "showFree",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "freeLabel",
+          "name": "freeLabel",
+          "type": "String",
+          "default": "String(themeKit: \"Free\")"
+        },
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ChoseChip($isSelected, title: \"title\")"
+    },
+    {
+      "name": "ColorField",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ label: String, selection: Binding<Color>, supportsOpacity: Bool = true)",
+      "params": [
+        {
+          "label": "_",
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Color>"
+        },
+        {
+          "label": "supportsOpacity",
+          "name": "supportsOpacity",
+          "type": "Bool",
+          "default": "true"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ColorField(\"label\", $selection)"
+    },
+    {
+      "name": "CompactChip",
+      "category": "Molecules",
+      "doc": "A selectable card: an optional rating + label row, then an optional logo + price row.",
+      "init": "init(isSelected: Binding<Bool>, text: String, price: String, imageURL: URL? = nil, rating: Double? = nil)",
+      "params": [
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "text",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "price",
+          "name": "price",
+          "type": "String"
+        },
+        {
+          "label": "imageURL",
+          "name": "imageURL",
+          "type": "URL?",
+          "default": "nil"
+        },
+        {
+          "label": "rating",
+          "name": "rating",
+          "type": "Double?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "CompactChip($isSelected, text: \"text\", price: \"price\")"
+    },
+    {
+      "name": "Counter",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(segments: [Counter.Segment])",
+      "params": [
+        {
+          "label": "segments",
+          "name": "segments",
+          "type": "[Counter.Segment]"
+        }
+      ],
+      "inits": [
+        "init(segments: [Counter.Segment])",
+        "init(days: Int, hours: Int, minutes: Int)"
+      ],
+      "modifiers": [],
+      "usage": "Counter(segments: <[Counter.Segment]>)"
+    },
+    {
+      "name": "Coupon",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(code: String, label: String = \"Kupon Kodu:\", style: CouponStyle = .outlined, onCopy: @escaping () -> Void = {})",
+      "params": [
+        {
+          "label": "code",
+          "name": "code",
+          "type": "String"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String",
+          "default": "\"Kupon Kodu:\""
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "CouponStyle",
+          "default": ".outlined"
+        },
+        {
+          "label": "onCopy",
+          "name": "onCopy",
+          "type": "@escaping () -> Void",
+          "default": "{}"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Coupon(code: \"code\")"
+    },
+    {
+      "name": "DataTable",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(columns: [DataTable<Row>.Column], rows: [Row], striped: Bool = true, selection: Binding<Set<Row.ID>>? = nil, pageSize: Int? = nil, isLoading: Bool = false, onRowTap: ((Row) -> Void)? = nil)",
+      "params": [
+        {
+          "label": "columns",
+          "name": "columns",
+          "type": "[DataTable<Row>.Column]"
+        },
+        {
+          "label": "rows",
+          "name": "rows",
+          "type": "[Row]"
+        },
+        {
+          "label": "striped",
+          "name": "striped",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<Row.ID>>?",
+          "default": "nil"
+        },
+        {
+          "label": "pageSize",
+          "name": "pageSize",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "onRowTap",
+          "name": "onRowTap",
+          "type": "((Row) -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "DataTable(columns: <[DataTable<Row>.Column]>, rows: <[Row]>)"
+    },
+    {
+      "name": "DateField",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(label: String? = nil, date: Binding<Date?>, placeholder: String = String(themeKit: \"Select a date\"), range: ClosedRange<Date>? = nil, style: DateFieldStyle = .abbreviated, locale: Locale? = nil, components: DateFieldComponents = .date, infoMessages: [InfoMessage] = [], allowClear: Bool = false, leadingSystemImage: String? = nil)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "date",
+          "name": "date",
+          "type": "Binding<Date?>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "String(themeKit: \"Select a date\")"
+        },
+        {
+          "label": "range",
+          "name": "range",
+          "type": "ClosedRange<Date>?",
+          "default": "nil"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "DateFieldStyle",
+          "default": ".abbreviated"
+        },
+        {
+          "label": "locale",
+          "name": "locale",
+          "type": "Locale?",
+          "default": "nil"
+        },
+        {
+          "label": "components",
+          "name": "components",
+          "type": "DateFieldComponents",
+          "default": ".date"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "allowClear",
+          "name": "allowClear",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "leadingSystemImage",
+          "name": "leadingSystemImage",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> DateField",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "DateField($date)"
+    },
+    {
+      "name": "Diff",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(aspectRatio: CGFloat = 16.0 / 9.0, @ViewBuilder before: @escaping () -> Before, @ViewBuilder after: @escaping () -> After)",
+      "params": [
+        {
+          "label": "aspectRatio",
+          "name": "aspectRatio",
+          "type": "CGFloat",
+          "default": "16.0 / 9.0"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "before",
+          "type": "@escaping () -> Before, @ViewBuilder after: @escaping () -> After"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Diff(@ViewBuilder: <@escaping () -> Before, @ViewBuilder after: @escaping () -> After>)"
+    },
+    {
+      "name": "DividerView",
+      "category": "Atoms",
+      "doc": "A theme-driven divider: horizontal / vertical, solid / dashed, with an optional inline text label (left / center / right).",
+      "init": "init(size: DividerViewSize = .small, axis: DividerAxis = .horizontal, dashed: Bool = false, title: String? = nil, titleAlign: DividerTextAlign = .center)",
+      "params": [
+        {
+          "label": "size",
+          "name": "size",
+          "type": "DividerViewSize",
+          "default": ".small"
+        },
+        {
+          "label": "axis",
+          "name": "axis",
+          "type": "DividerAxis",
+          "default": ".horizontal"
+        },
+        {
+          "label": "dashed",
+          "name": "dashed",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "titleAlign",
+          "name": "titleAlign",
+          "type": "DividerTextAlign",
+          "default": ".center"
+        }
+      ],
+      "modifiers": [],
+      "usage": "DividerView()"
+    },
+    {
+      "name": "EmptyState",
+      "category": "Organisms",
+      "doc": "Improved, token-bound rewrite of the reference EmptyCardView.",
+      "init": "init(image: Image, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "image",
+          "name": "image",
+          "type": "Image"
+        },
+        {
+          "label": "imageMaxHeight",
+          "name": "imageMaxHeight",
+          "type": "CGFloat",
+          "default": "160"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "message",
+          "name": "message",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "buttonTitle",
+          "name": "buttonTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "(() -> Void)?",
+          "default": "nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil"
+        }
+      ],
+      "inits": [
+        "init(image: Image, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
+        "init(animatedURL: URL?, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
+        "init(systemImage: String = \"tray\", iconForeground: Color? = nil, iconBackground: Color? = nil, iconCircleSize: CGFloat = 88, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)"
+      ],
+      "modifiers": [],
+      "usage": "EmptyState(image: <Image>)"
+    },
+    {
+      "name": "Fieldset",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ title: String, helper: String? = nil, @ViewBuilder content: @escaping () -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "helper",
+          "name": "helper",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping () -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Fieldset(\"title\", @ViewBuilder: <@escaping () -> Content>)"
+    },
+    {
+      "name": "FileInput",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(label: String? = nil, fileName: String? = nil, buttonTitle: String = \"Choose file\", placeholder: String = \"No file chosen\", infoMessages: [InfoMessage] = [], onPick: @escaping () -> Void, onClear: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "fileName",
+          "name": "fileName",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "buttonTitle",
+          "name": "buttonTitle",
+          "type": "String",
+          "default": "\"Choose file\""
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "\"No file chosen\""
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "onPick",
+          "name": "onPick",
+          "type": "@escaping () -> Void, onClear: (() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "FileInput()"
+    },
+    {
+      "name": "FilterChip",
+      "category": "Molecules",
+      "doc": "A dismissible filter chip in a pill (with a soft shadow) or square shape.",
+      "init": "init(_ title: String, shape: FilterChipShape = .pill, showsClose: Bool = true, onDismiss: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "shape",
+          "name": "shape",
+          "type": "FilterChipShape",
+          "default": ".pill"
+        },
+        {
+          "label": "showsClose",
+          "name": "showsClose",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "onDismiss",
+          "name": "onDismiss",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "FilterChip(\"title\")"
+    },
+    {
+      "name": "FilterGroup",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(title: String? = nil, options: [Option], selection: Binding<Option?>, label: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Option?>"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "@escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "FilterGroup(options: <[Option]>, $selection, label: \"label\")"
+    },
+    {
+      "name": "FloatingActionButton",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(systemImage: String = \"plus\", actions: [FABAction] = [], shape: FABShape = .circle, color: SemanticColor = .primary, badge: Int? = nil, action: @escaping () -> Void = {})",
+      "params": [
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String",
+          "default": "\"plus\""
+        },
+        {
+          "label": "actions",
+          "name": "actions",
+          "type": "[FABAction]",
+          "default": "[]"
+        },
+        {
+          "label": "shape",
+          "name": "shape",
+          "type": "FABShape",
+          "default": ".circle"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "SemanticColor",
+          "default": ".primary"
+        },
+        {
+          "label": "badge",
+          "name": "badge",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void",
+          "default": "{}"
+        }
+      ],
+      "modifiers": [],
+      "usage": "FloatingActionButton()"
+    },
+    {
+      "name": "Footer",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(columns: [Footer.Column], note: String? = nil)",
+      "params": [
+        {
+          "label": "columns",
+          "name": "columns",
+          "type": "[Footer.Column]"
+        },
+        {
+          "label": "note",
+          "name": "note",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Footer(columns: <[Footer.Column]>)"
+    },
+    {
+      "name": "Gallery",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ items: [Item], columns: Int = 2, aspect: AspectRatioToken = .square, @ViewBuilder content: @escaping (Item) -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "columns",
+          "name": "columns",
+          "type": "Int",
+          "default": "2"
+        },
+        {
+          "label": "aspect",
+          "name": "aspect",
+          "type": "AspectRatioToken",
+          "default": ".square"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping (Item) -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Gallery(<[Item]>, @ViewBuilder: <@escaping (Item) -> Content>)"
+    },
+    {
+      "name": "GaugeView",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(value: Double, in range: ClosedRange<Double> = 0...1, label: String? = nil, style: GaugeView.Style = .circular, showsValue: Bool = true)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Double"
+        },
+        {
+          "label": "in",
+          "name": "range",
+          "type": "ClosedRange<Double>",
+          "default": "0...1"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "GaugeView.Style",
+          "default": ".circular"
+        },
+        {
+          "label": "showsValue",
+          "name": "showsValue",
+          "type": "Bool",
+          "default": "true"
+        }
+      ],
+      "modifiers": [],
+      "usage": "GaugeView(value: 1)"
+    },
+    {
+      "name": "GhostButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "helperText",
+          "name": "helperText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "textStyle",
+          "name": "textStyle",
+          "type": "TextStyle?",
+          "default": "nil"
+        },
+        {
+          "label": "confirmsSuccess",
+          "name": "confirmsSuccess",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "task",
+          "name": "task",
+          "type": "@escaping nonisolated(nonsending) () async -> Void"
+        }
+      ],
+      "inits": [
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = false, accessibilityID: String? = nil, isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)"
+      ],
+      "modifiers": [],
+      "usage": "GhostButton(\"title\", task: { })"
+    },
+    {
+      "name": "Hero",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(title: String, subtitle: String? = nil, ctaTitle: String? = nil, dark: Bool = false, action: (() -> Void)? = nil, @ViewBuilder background: @escaping () -> Background)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "ctaTitle",
+          "name": "ctaTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "dark",
+          "name": "dark",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "(() -> Void)?",
+          "default": "nil, @ViewBuilder background: @escaping () -> Background"
+        }
+      ],
+      "inits": [
+        "init(title: String, subtitle: String? = nil, ctaTitle: String? = nil, dark: Bool = false, action: (() -> Void)? = nil, @ViewBuilder background: @escaping () -> Background)",
+        "init(title: String, subtitle: String? = nil, ctaTitle: String? = nil, dark: Bool = false, action: (() -> Void)? = nil)"
+      ],
+      "modifiers": [],
+      "usage": "Hero(title: \"title\")"
+    },
+    {
+      "name": "HeroSurface",
+      "category": "Organisms",
+      "doc": "The default `Hero` surface.",
+      "init": "init()",
+      "params": [],
+      "modifiers": [],
+      "usage": "HeroSurface()"
+    },
+    {
+      "name": "Icon",
+      "category": "Atoms",
+      "doc": "Icon system.",
+      "init": "init(systemName: String, size: IconSize = .md, color: Color? = nil)",
+      "params": [
+        {
+          "label": "systemName",
+          "name": "systemName",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "IconSize",
+          "default": ".md"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "Color?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Icon(systemName: \"systemName\")"
+    },
+    {
+      "name": "ImageChip",
+      "category": "Molecules",
+      "doc": "A selectable remote-image tile with a selection border.",
+      "init": "init(isSelected: Binding<Bool>, url: URL?, size: ImageChipSize = .medium, isEnabled: Bool = true)",
+      "params": [
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "url",
+          "name": "url",
+          "type": "URL?"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ImageChipSize",
+          "default": ".medium"
+        },
+        {
+          "label": "isEnabled",
+          "name": "isEnabled",
+          "type": "Bool",
+          "default": "true"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ImageChip($isSelected, url: <URL>)"
+    },
+    {
+      "name": "ImageCollage",
+      "category": "Organisms",
+      "doc": "A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+) and a \"+N\" overlay on the last visible tile.",
+      "init": "init(_ urls: [URL], height: CGFloat = 220, spacing: CGFloat = 4, cornerRadius: CGFloat = 12, onTap: ((Int) -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "urls",
+          "type": "[URL]"
+        },
+        {
+          "label": "height",
+          "name": "height",
+          "type": "CGFloat",
+          "default": "220"
+        },
+        {
+          "label": "spacing",
+          "name": "spacing",
+          "type": "CGFloat",
+          "default": "4"
+        },
+        {
+          "label": "cornerRadius",
+          "name": "cornerRadius",
+          "type": "CGFloat",
+          "default": "12"
+        },
+        {
+          "label": "onTap",
+          "name": "onTap",
+          "type": "((Int) -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ImageCollage(<[URL]>)"
+    },
+    {
+      "name": "InfoBanner",
+      "category": "Organisms",
+      "doc": "Improved, token-bound rewrite of the reference InfoMessage.",
+      "init": "init(_ message: String, type: InfoBannerType = .info, title: String? = nil, links: [(substring: String, action: () -> Void)] = [], showIcon: Bool = true, banner: Bool = false, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "InfoBannerType",
+          "default": ".info"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "links",
+          "name": "links",
+          "type": "[(substring: String, action: () -> Void)]",
+          "default": "[], showIcon: Bool = true, banner: Bool = false, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "InfoBanner(\"message\")"
+    },
+    {
+      "name": "InfoMessageList",
+      "category": "Organisms",
+      "doc": "Renders a list of `InfoMessage`s (icon + colored text) under a field.",
+      "init": "init(_ messages: [InfoMessage])",
+      "params": [
+        {
+          "label": "_",
+          "name": "messages",
+          "type": "[InfoMessage]"
+        }
+      ],
+      "modifiers": [],
+      "usage": "InfoMessageList(<[InfoMessage]>)"
+    },
+    {
+      "name": "InlineText",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ text: String, links: [(substring: String, action: () -> Void)] = [], baseColor: Color? = nil, style: TextStyle = .bodySm400)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "links",
+          "name": "links",
+          "type": "[(substring: String, action: () -> Void)]",
+          "default": "[], baseColor: Color? = nil, style: TextStyle = .bodySm400"
+        }
+      ],
+      "modifiers": [],
+      "usage": "InlineText(\"text\")"
+    },
+    {
+      "name": "InputLabel",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ text: String, isRequired: Bool = false, hasInfo: Bool = false, hasError: Bool = false)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "isRequired",
+          "name": "isRequired",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "hasInfo",
+          "name": "hasInfo",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "hasError",
+          "name": "hasError",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "modifiers": [],
+      "usage": "InputLabel(\"text\")"
+    },
+    {
+      "name": "InputNumber",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...99, step: Int = 1, unit: String? = nil, hint: String? = nil, errorText: String? = nil, large: Bool = false)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Binding<Int>"
+        },
+        {
+          "label": "range",
+          "name": "range",
+          "type": "ClosedRange<Int>",
+          "default": "0...99"
+        },
+        {
+          "label": "step",
+          "name": "step",
+          "type": "Int",
+          "default": "1"
+        },
+        {
+          "label": "unit",
+          "name": "unit",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "hint",
+          "name": "hint",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "errorText",
+          "name": "errorText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "large",
+          "name": "large",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> InputNumber",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "editable(_:)",
+          "signature": ".editable(_ on: Bool = true) -> InputNumber",
+          "doc": "Whether the value can be typed (default true); `false` shows it read-only with steppers still active."
+        },
+        {
+          "name": "hasInfo(_:)",
+          "signature": ".hasInfo(_ on: Bool = true) -> InputNumber",
+          "doc": "Shows an info-circle glyph next to the label."
+        },
+        {
+          "name": "onValueChange(_:)",
+          "signature": ".onValueChange(_ action: ((Int) -> Void)?) -> InputNumber",
+          "doc": "Fires with the clamped value whenever it changes (stepper / type / commit)."
+        }
+      ],
+      "usage": "InputNumber($value)"
+    },
+    {
+      "name": "Join",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ axis: Axis = .horizontal, @ViewBuilder content: () -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "axis",
+          "type": "Axis",
+          "default": ".horizontal"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "() -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Join(@ViewBuilder: { })"
+    },
+    {
+      "name": "Kbd",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ text: String)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Kbd(\"text\")"
+    },
+    {
+      "name": "KeyValueTable",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(rows: [KeyValueTable.Row], title: String? = nil, bordered: Bool = false)",
+      "params": [
+        {
+          "label": "rows",
+          "name": "rows",
+          "type": "[KeyValueTable.Row]"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "bordered",
+          "name": "bordered",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "modifiers": [],
+      "usage": "KeyValueTable(rows: <[KeyValueTable.Row]>)"
+    },
+    {
+      "name": "LinkButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String, size: ButtonSize = .medium, accessibilityID: String? = nil, action: @escaping () -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void"
+        }
+      ],
+      "modifiers": [],
+      "usage": "LinkButton(\"title\", action: { })"
+    },
+    {
+      "name": "ListRow",
+      "category": "Organisms",
+      "doc": "A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view.",
+      "init": "init(_ title: String, subtitle: String? = nil, number: Int? = nil, size: ListRowSize = .regular, leadingSystemImage: String? = nil, leadingImageURL: URL? = nil, leadingSelection: Binding<Bool>? = nil, alertCount: Int? = nil, badge: String? = nil, meta: ListRowMeta? = nil, infos: [ListRowInfo] = [], isSelected: Bool = false, multilineTitle: Bool = false, infoAction: (() -> Void)? = nil, trailing: ListRowTrailing = .chevron, action: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "number",
+          "name": "number",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ListRowSize",
+          "default": ".regular"
+        },
+        {
+          "label": "leadingSystemImage",
+          "name": "leadingSystemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "leadingImageURL",
+          "name": "leadingImageURL",
+          "type": "URL?",
+          "default": "nil"
+        },
+        {
+          "label": "leadingSelection",
+          "name": "leadingSelection",
+          "type": "Binding<Bool>?",
+          "default": "nil"
+        },
+        {
+          "label": "alertCount",
+          "name": "alertCount",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "badge",
+          "name": "badge",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "meta",
+          "name": "meta",
+          "type": "ListRowMeta?",
+          "default": "nil"
+        },
+        {
+          "label": "infos",
+          "name": "infos",
+          "type": "[ListRowInfo]",
+          "default": "[]"
+        },
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "multilineTitle",
+          "name": "multilineTitle",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "infoAction",
+          "name": "infoAction",
+          "type": "(() -> Void)?",
+          "default": "nil, trailing: ListRowTrailing = .chevron, action: (() -> Void)? = nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ListRow(\"title\")"
+    },
+    {
+      "name": "ListSectionHeader",
+      "category": "Organisms",
+      "doc": "A non-interactive section-header row inside a list (Reference menu `.secondary`).",
+      "init": "init(_ title: String)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ListSectionHeader(\"title\")"
+    },
+    {
+      "name": "ListView",
+      "category": "Organisms",
+      "doc": "Ant-style List container: optional header/footer, bordered surface, row dividers (split), and a loading (skeleton) state.",
+      "init": "init(_ items: [Item], header: String? = nil, footer: String? = nil, bordered: Bool = true, loading: Bool = false, split: Bool = true, emptyText: String? = nil, @ViewBuilder row: @escaping (Item) -> Row)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "header",
+          "name": "header",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "footer",
+          "name": "footer",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "bordered",
+          "name": "bordered",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "loading",
+          "name": "loading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "split",
+          "name": "split",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "emptyText",
+          "name": "emptyText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "row",
+          "type": "@escaping (Item) -> Row"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ListView(<[Item]>, @ViewBuilder: <@escaping (Item) -> Row>)"
+    },
+    {
+      "name": "MenuCard",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(items: [MenuCard.Item])",
+      "params": [
+        {
+          "label": "items",
+          "name": "items",
+          "type": "[MenuCard.Item]"
+        }
+      ],
+      "modifiers": [],
+      "usage": "MenuCard(items: <[MenuCard.Item]>)"
+    },
+    {
+      "name": "MultiLineTextInput",
+      "category": "Molecules",
+      "doc": "Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state.",
+      "init": "init(_ label: String, text: Binding<String>, placeholder: String = \"\", characterLimit: Int? = nil, errorText: String? = nil, infoMessages: [InfoMessage] = [], minHeight: CGFloat = 120)",
+      "params": [
+        {
+          "label": "_",
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "label": "text",
+          "name": "text",
+          "type": "Binding<String>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "\"\""
+        },
+        {
+          "label": "characterLimit",
+          "name": "characterLimit",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "errorText",
+          "name": "errorText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "minHeight",
+          "name": "minHeight",
+          "type": "CGFloat",
+          "default": "120"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> MultiLineTextInput",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "MultiLineTextInput(\"label\", $text)"
+    },
+    {
+      "name": "MultiSelect",
+      "category": "Molecules",
+      "doc": "Multiple / tags select with optional search (Ant Select mode=\"multiple\").",
+      "init": "init(label: String? = nil, options: [Option], selection: Binding<Set<Option>>, placeholder: String = String(themeKit: \"Select\"), infoMessages: [InfoMessage] = [], isOptionEnabled: ((Option) -> Bool)? = nil, optionTitle: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<Option>>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "String(themeKit: \"Select\")"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "isOptionEnabled",
+          "name": "isOptionEnabled",
+          "type": "((Option) -> Bool)?",
+          "default": "nil, optionTitle: @escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> MultiSelect<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "clearable(_:)",
+          "signature": ".clearable(_ on: Bool = true) -> MultiSelect<Option>",
+          "doc": "Whether a clear-all button is offered (default true)."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> MultiSelect<Option>",
+          "doc": "Shows a loading spinner in place of the chevron (async option fetch)."
+        },
+        {
+          "name": "maxTags(_:)",
+          "signature": ".maxTags(_ count: Int?) -> MultiSelect<Option>",
+          "doc": "Caps the visible selected-tag chips, collapsing the rest into a \"+N\" tag."
+        },
+        {
+          "name": "searchable(_:)",
+          "signature": ".searchable(_ on: Bool = true) -> MultiSelect<Option>",
+          "doc": "Whether the dropdown shows a search field (default true)."
+        }
+      ],
+      "usage": "MultiSelect(options: <[Option]>, $selection)"
+    },
+    {
+      "name": "NavigationBar",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(items: [NavigationBar.Item], selection: Binding<Int>)",
+      "params": [
+        {
+          "label": "items",
+          "name": "items",
+          "type": "[NavigationBar.Item]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Int>"
+        }
+      ],
+      "modifiers": [],
+      "usage": "NavigationBar(items: <[NavigationBar.Item]>, $selection)"
+    },
+    {
+      "name": "NotificationCard",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(title: String, message: String? = nil, date: String? = nil, isUnread: Bool = false, type: FeedbackKind? = nil, onClose: (() -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "message",
+          "name": "message",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "date",
+          "name": "date",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isUnread",
+          "name": "isUnread",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "FeedbackKind?",
+          "default": "nil"
+        },
+        {
+          "label": "onClose",
+          "name": "onClose",
+          "type": "(() -> Void)?",
+          "default": "nil, @ViewBuilder actions: () -> Actions"
+        }
+      ],
+      "inits": [
+        "init(title: String, message: String? = nil, date: String? = nil, isUnread: Bool = false, type: FeedbackKind? = nil, onClose: (() -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+        "init(title: String, message: String? = nil, date: String? = nil, isUnread: Bool = false, type: FeedbackKind? = nil, onClose: (() -> Void)? = nil)"
+      ],
+      "modifiers": [],
+      "usage": "NotificationCard(title: \"title\")"
+    },
+    {
+      "name": "OTPInput",
+      "category": "Molecules",
+      "doc": "Improved, token-bound rewrite of the reference OTPInputView.",
+      "init": "init(code: Binding<String>, digitCount: Int = 6, isSecure: Bool = false, errorText: String? = nil, infoMessages: [InfoMessage] = [], onComplete: ((String) -> Void)? = nil, resendInterval: TimeInterval? = nil, onResend: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "code",
+          "name": "code",
+          "type": "Binding<String>"
+        },
+        {
+          "label": "digitCount",
+          "name": "digitCount",
+          "type": "Int",
+          "default": "6"
+        },
+        {
+          "label": "isSecure",
+          "name": "isSecure",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "errorText",
+          "name": "errorText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "onComplete",
+          "name": "onComplete",
+          "type": "((String) -> Void)?",
+          "default": "nil, resendInterval: TimeInterval? = nil, onResend: (() -> Void)? = nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> OTPInput",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "OTPInput($code)"
+    },
+    {
+      "name": "OutlineButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "helperText",
+          "name": "helperText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "textStyle",
+          "name": "textStyle",
+          "type": "TextStyle?",
+          "default": "nil"
+        },
+        {
+          "label": "confirmsSuccess",
+          "name": "confirmsSuccess",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "task",
+          "name": "task",
+          "type": "@escaping nonisolated(nonsending) () async -> Void"
+        }
+      ],
+      "inits": [
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = false, accessibilityID: String? = nil, isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)"
+      ],
+      "modifiers": [],
+      "usage": "OutlineButton(\"title\", task: { })"
+    },
+    {
+      "name": "PageHeader",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ title: String, subtitle: String? = nil, tags: [PageHeader.Tag] = [], onBack: (() -> Void)? = nil, actions: [PageHeader.Action] = [])",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "tags",
+          "name": "tags",
+          "type": "[PageHeader.Tag]",
+          "default": "[]"
+        },
+        {
+          "label": "onBack",
+          "name": "onBack",
+          "type": "(() -> Void)?",
+          "default": "nil, actions: [PageHeader.Action] = []"
+        }
+      ],
+      "modifiers": [],
+      "usage": "PageHeader(\"title\")"
+    },
+    {
+      "name": "Pagination",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(current: Binding<Int>, total: Int)",
+      "params": [
+        {
+          "label": "current",
+          "name": "current",
+          "type": "Binding<Int>"
+        },
+        {
+          "label": "total",
+          "name": "total",
+          "type": "Int"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "jumper(_:title:)",
+          "signature": ".jumper(_ on: Bool = true, title: String = String(themeKit: \"Go to\")) -> Pagination",
+          "doc": "Shows a quick-jumper field that jumps straight to a typed page number."
+        },
+        {
+          "name": "showTotal(_:)",
+          "signature": ".showTotal(_ format: ((Int, Int) -> String)?) -> Pagination",
+          "doc": "A leading summary label built from `(current, total)` — e.g."
+        },
+        {
+          "name": "simple(_:)",
+          "signature": ".simple(_ on: Bool = true) -> Pagination",
+          "doc": "Compact \"current / total\" mode instead of the numbered page buttons."
+        },
+        {
+          "name": "window(sibling:boundary:)",
+          "signature": ".window(sibling: Int = 1, boundary: Int = 1) -> Pagination",
+          "doc": "Window size: `sibling` pages each side of the current page, `boundary` pages pinned at each end (gaps collapse to an ellipsis)."
+        }
+      ],
+      "usage": "Pagination($current, total: 1)"
+    },
+    {
+      "name": "PagingCarousel",
+      "category": "Organisms",
+      "doc": "Custom drag-paging carousel with PEEKING neighbors + threshold snap (the reference `PagingScrollView`).",
+      "init": "init(_ items: [Item], peek: CGFloat = 32, spacing: CGFloat = 12, autoplay: TimeInterval? = nil, @ViewBuilder content: @escaping (Item) -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Item]"
+        },
+        {
+          "label": "peek",
+          "name": "peek",
+          "type": "CGFloat",
+          "default": "32"
+        },
+        {
+          "label": "spacing",
+          "name": "spacing",
+          "type": "CGFloat",
+          "default": "12"
+        },
+        {
+          "label": "autoplay",
+          "name": "autoplay",
+          "type": "TimeInterval?",
+          "default": "nil"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "@escaping (Item) -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "PagingCarousel(<[Item]>, @ViewBuilder: <@escaping (Item) -> Content>)"
+    },
+    {
+      "name": "PreviewMatrix",
+      "category": "Organisms",
+      "doc": "A preview scaffold that lays a component's labeled **states** out as rows and renders each across appearance **columns** — light + dark by default, plus optional accessibility-size and RTL strips — so a single `#Preview` covers the *state × appearance* matrix at a glance instead of one happy-path snapshot.",
+      "init": "init(_ title: String? = nil, schemes: [ColorScheme] = [.light, .dark], dynamicType: Bool = false, rtl: Bool = false, @PreviewCaseBuilder _ cases: () -> [PreviewCase])",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "schemes",
+          "name": "schemes",
+          "type": "[ColorScheme]",
+          "default": "[.light, .dark]"
+        },
+        {
+          "label": "dynamicType",
+          "name": "dynamicType",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "rtl",
+          "name": "rtl",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "@PreviewCaseBuilder",
+          "name": "_",
+          "type": "() -> [PreviewCase]"
+        }
+      ],
+      "modifiers": [],
+      "usage": "PreviewMatrix(@PreviewCaseBuilder: { })"
+    },
+    {
+      "name": "PrimaryButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "helperText",
+          "name": "helperText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "textStyle",
+          "name": "textStyle",
+          "type": "TextStyle?",
+          "default": "nil"
+        },
+        {
+          "label": "confirmsSuccess",
+          "name": "confirmsSuccess",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "task",
+          "name": "task",
+          "type": "@escaping nonisolated(nonsending) () async -> Void"
+        }
+      ],
+      "inits": [
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = false, accessibilityID: String? = nil, isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)"
+      ],
+      "modifiers": [],
+      "usage": "PrimaryButton(\"title\", task: { })"
+    },
+    {
+      "name": "ProgressBar",
+      "category": "Atoms",
+      "doc": "Linear determinate progress with status colors, an optional ladder gradient, a segmented (steps) variant and a custom format label.",
+      "init": "init(value: Double, showPercentage: Bool = false, status: ProgressStatus = .normal)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Double"
+        },
+        {
+          "label": "showPercentage",
+          "name": "showPercentage",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "status",
+          "name": "status",
+          "type": "ProgressStatus",
+          "default": ".normal"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "barHeight(_:)",
+          "signature": ".barHeight(_ points: CGFloat) -> ProgressBar",
+          "doc": "Bar thickness in points (default 8)."
+        },
+        {
+          "name": "colors(fill:track:)",
+          "signature": ".colors(fill: Color? = nil, track: Color? = nil) -> ProgressBar",
+          "doc": "Overrides the fill color and/or the track color (otherwise status-derived)."
+        },
+        {
+          "name": "gradient(_:)",
+          "signature": ".gradient(_ on: Bool = true) -> ProgressBar",
+          "doc": "Fill with a status gradient instead of a solid color."
+        },
+        {
+          "name": "progressLabel(_:)",
+          "signature": ".progressLabel(_ label: String?) -> ProgressBar",
+          "doc": "VoiceOver name for the bar (e.g."
+        },
+        {
+          "name": "steps(_:)",
+          "signature": ".steps(_ count: Int?) -> ProgressBar",
+          "doc": "Render as a segmented (stepped) bar with this many segments."
+        },
+        {
+          "name": "successSegment(_:)",
+          "signature": ".successSegment(_ portion: Double?) -> ProgressBar",
+          "doc": "A 0...1 portion drawn in the success color on top of the fill (Ant `success.percent`)."
+        },
+        {
+          "name": "valueFormat(_:)",
+          "signature": ".valueFormat(_ format: ((Double) -> String)?) -> ProgressBar",
+          "doc": "Custom formatter for the percentage label (receives the 0...1 value)."
+        }
+      ],
+      "usage": "ProgressBar(value: 1)"
+    },
+    {
+      "name": "ProgressIndicator",
+      "category": "Molecules",
+      "doc": "Segmented position/progress indicator (Reference ProgressIndicator parity).",
+      "init": "init(variant: ProgressIndicatorVariant = .carousel, current: Int, total: Int, size: ProgressIndicatorSize = .medium, videoProgress: Double = 1, stepText: ProgressStepText = .none, cornerRadius: Bool = true)",
+      "params": [
+        {
+          "label": "variant",
+          "name": "variant",
+          "type": "ProgressIndicatorVariant",
+          "default": ".carousel"
+        },
+        {
+          "label": "current",
+          "name": "current",
+          "type": "Int"
+        },
+        {
+          "label": "total",
+          "name": "total",
+          "type": "Int"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ProgressIndicatorSize",
+          "default": ".medium"
+        },
+        {
+          "label": "videoProgress",
+          "name": "videoProgress",
+          "type": "Double",
+          "default": "1"
+        },
+        {
+          "label": "stepText",
+          "name": "stepText",
+          "type": "ProgressStepText",
+          "default": ".none"
+        },
+        {
+          "label": "cornerRadius",
+          "name": "cornerRadius",
+          "type": "Bool",
+          "default": "true"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ProgressIndicator(current: 1, total: 1)"
+    },
+    {
+      "name": "PromoBanner",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(title: String, subtitle: String? = nil, systemImage: String? = nil, ctaTitle: String? = nil, tint: PromoBannerTint = .blue, action: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "ctaTitle",
+          "name": "ctaTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "tint",
+          "name": "tint",
+          "type": "PromoBannerTint",
+          "default": ".blue"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "PromoBanner(title: \"title\")"
+    },
+    {
+      "name": "QuantityStepper",
+      "category": "Molecules",
+      "doc": "A token-bound quantity stepper (− value +), bounded by a range.",
+      "init": "init(value: Binding<Int>, range: ClosedRange<Int> = 0...99, step: Int = 1)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Binding<Int>"
+        },
+        {
+          "label": "range",
+          "name": "range",
+          "type": "ClosedRange<Int>",
+          "default": "0...99"
+        },
+        {
+          "label": "step",
+          "name": "step",
+          "type": "Int",
+          "default": "1"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> QuantityStepper",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "QuantityStepper($value)"
+    },
+    {
+      "name": "RadialProgress",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(value: Double, size: CGFloat = 64, lineWidth: CGFloat = 6, showLabel: Bool = true, status: ProgressStatus = .normal, dashboard: Bool = false, tint: Color? = nil, accessibilityLabel: String? = nil)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Double"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "CGFloat",
+          "default": "64"
+        },
+        {
+          "label": "lineWidth",
+          "name": "lineWidth",
+          "type": "CGFloat",
+          "default": "6"
+        },
+        {
+          "label": "showLabel",
+          "name": "showLabel",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "status",
+          "name": "status",
+          "type": "ProgressStatus",
+          "default": ".normal"
+        },
+        {
+          "label": "dashboard",
+          "name": "dashboard",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "tint",
+          "name": "tint",
+          "type": "Color?",
+          "default": "nil"
+        },
+        {
+          "label": "accessibilityLabel",
+          "name": "accessibilityLabel",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "RadialProgress(value: 1)"
+    },
+    {
+      "name": "RadioButton",
+      "category": "Molecules",
+      "doc": "Figma \"Control Items\" → Radioboxes.",
+      "init": "init<V>(tag: V, selection: Binding<V?>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, infoMessages: [InfoMessage] = []) where V : Hashable",
+      "params": [
+        {
+          "label": "tag",
+          "name": "tag",
+          "type": "V"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<V?>"
+        },
+        {
+          "label": "type",
+          "name": "type",
+          "type": "RadioButtonType",
+          "default": ".select"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "RadioButtonStyle",
+          "default": ".plain"
+        },
+        {
+          "label": "padding",
+          "name": "padding",
+          "type": "RadioButtonPadding",
+          "default": ".small"
+        },
+        {
+          "label": "backgroundColor",
+          "name": "backgroundColor",
+          "type": "Color?",
+          "default": "nil"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        }
+      ],
+      "inits": [
+        "init<V>(tag: V, selection: Binding<V?>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, infoMessages: [InfoMessage] = []) where V : Hashable",
+        "init(_ label: String? = nil, isSelected: Binding<Bool>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, verticalAlignment: VerticalAlignment = .center, infoMessages: [InfoMessage] = [])"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> RadioButton",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "RadioButton(tag: <V>, $selection)"
+    },
+    {
+      "name": "RadioButtonGroup",
+      "category": "Molecules",
+      "doc": "A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.",
+      "init": "init(options: [Option], selection: Binding<Option?>, style: RadioGroupButtonStyle = .solid, expandsHorizontally: Bool = false, isOptionEnabled: ((Option) -> Bool)? = nil, label: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Option?>"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "RadioGroupButtonStyle",
+          "default": ".solid"
+        },
+        {
+          "label": "expandsHorizontally",
+          "name": "expandsHorizontally",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "isOptionEnabled",
+          "name": "isOptionEnabled",
+          "type": "((Option) -> Bool)?",
+          "default": "nil, label: @escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "RadioButtonGroup(options: <[Option]>, $selection)"
+    },
+    {
+      "name": "RadioCard",
+      "category": "Organisms",
+      "doc": "Organisms.",
+      "init": "init(_ title: String, description: String? = nil, isSelected: Bool, isEnabled: Bool = true, action: @escaping () -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "description",
+          "name": "description",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Bool"
+        },
+        {
+          "label": "isEnabled",
+          "name": "isEnabled",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void"
+        }
+      ],
+      "modifiers": [],
+      "usage": "RadioCard(\"title\", isSelected: true, action: { })"
+    },
+    {
+      "name": "RadioGroup",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(title: String? = nil, options: [Option], selection: Binding<Option?>, infoMessages: [InfoMessage] = [], isOptionEnabled: ((Option) -> Bool)? = nil, label: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Option?>"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "isOptionEnabled",
+          "name": "isOptionEnabled",
+          "type": "((Option) -> Bool)?",
+          "default": "nil, label: @escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> RadioGroup<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "RadioGroup(options: <[Option]>, $selection)"
+    },
+    {
+      "name": "RangeSlider",
+      "category": "Molecules",
+      "doc": "Improved, token-bound rewrite of the reference RangeSliderView — a self-contained dual-thumb slider over a numeric range (decoupled from the reference's text-field wiring).",
+      "init": "init(lowerValue: Binding<Double>, upperValue: Binding<Double>, in bounds: ClosedRange<Double>, step: Double = 1)",
+      "params": [
+        {
+          "label": "lowerValue",
+          "name": "lowerValue",
+          "type": "Binding<Double>"
+        },
+        {
+          "label": "upperValue",
+          "name": "upperValue",
+          "type": "Binding<Double>"
+        },
+        {
+          "label": "in",
+          "name": "bounds",
+          "type": "ClosedRange<Double>"
+        },
+        {
+          "label": "step",
+          "name": "step",
+          "type": "Double",
+          "default": "1"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> RangeSlider",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "inputs(_:titles:)",
+          "signature": ".inputs(_ on: Bool = true, titles: (min: String, max: String) = (String(themeKit: \"Min\"), String(themeKit: \"Max\"))) -> RangeSlider",
+          "doc": "Shows linked numeric min/max input fields above the track."
+        },
+        {
+          "name": "marks(_:)",
+          "signature": ".marks(_ marks: [Double]) -> RangeSlider",
+          "doc": "Labeled tick marks at the given values."
+        },
+        {
+          "name": "onChangeEnd(_:)",
+          "signature": ".onChangeEnd(_ action: ((Double, Double) -> Void)?) -> RangeSlider",
+          "doc": "Fires with the snapped (lower, upper) pair when a drag ends."
+        },
+        {
+          "name": "valueLabel(_:)",
+          "signature": ".valueLabel(_ format: ((Double) -> String)?) -> RangeSlider",
+          "doc": "Formats the value readout shown above each thumb (e.g."
+        }
+      ],
+      "usage": "RangeSlider($lowerValue, $upperValue, in: 1)"
+    },
+    {
+      "name": "Rating",
+      "category": "Atoms",
+      "doc": "Star rating with two layouts (stars / numeric-leading), continuous fractional fill (display) or half-step interaction, a tappable review count, a custom character and a disabled state.",
+      "init": "init(value: Double, layout: RatingLayout = .stars, countLabel: String? = nil)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Double"
+        },
+        {
+          "label": "layout",
+          "name": "layout",
+          "type": "RatingLayout",
+          "default": ".stars"
+        },
+        {
+          "label": "countLabel",
+          "name": "countLabel",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "allowHalf(_:)",
+          "signature": ".allowHalf(_ on: Bool = true) -> Rating",
+          "doc": "Enables half-step interaction (and half-star tap targets)."
+        },
+        {
+          "name": "maxValue(_:)",
+          "signature": ".maxValue(_ max: Int) -> Rating",
+          "doc": "Number of glyphs / the score denominator (default 5)."
+        },
+        {
+          "name": "onRate(_:)",
+          "signature": ".onRate(_ action: ((Double) -> Void)?) -> Rating",
+          "doc": "Makes the rating interactive: the closure receives the newly tapped value."
+        },
+        {
+          "name": "onReviewTap(_:)",
+          "signature": ".onReviewTap(_ action: (() -> Void)?) -> Rating",
+          "doc": "Makes the review count label a tappable link."
+        },
+        {
+          "name": "sentiment(_:)",
+          "signature": ".sentiment(_ text: String?) -> Rating",
+          "doc": "Sentiment word for the `.rateNumberText` layout (otherwise score-derived)."
+        },
+        {
+          "name": "starSize(_:)",
+          "signature": ".starSize(_ points: CGFloat) -> Rating",
+          "doc": "Glyph point size (default 16)."
+        },
+        {
+          "name": "symbol(_:)",
+          "signature": ".symbol(_ systemImage: String) -> Rating",
+          "doc": "Overrides the SF Symbol used for the glyph (default \"star\")."
+        }
+      ],
+      "usage": "Rating(value: 1)"
+    },
+    {
+      "name": "RatingSummary",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(score: Double, label: String? = nil, reviewCount: Int? = nil, onReviews: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "score",
+          "name": "score",
+          "type": "Double"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "reviewCount",
+          "name": "reviewCount",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "onReviews",
+          "name": "onReviews",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "RatingSummary(score: 1)"
+    },
+    {
+      "name": "RemoteImage",
+      "category": "Atoms",
+      "doc": "Async remote image on native `AsyncImage` (no Kingfisher dependency): URL + aspect ratio (number or \"16:9\" string) + shimmer placeholder + failure state.",
+      "init": "init(_ url: URL?, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
+      "params": [
+        {
+          "label": "_",
+          "name": "url",
+          "type": "URL?"
+        },
+        {
+          "label": "aspectRatio",
+          "name": "aspectRatio",
+          "type": "CGFloat?",
+          "default": "nil"
+        },
+        {
+          "label": "contentMode",
+          "name": "contentMode",
+          "type": "ContentMode",
+          "default": ".fill"
+        },
+        {
+          "label": "cornerRadius",
+          "name": "cornerRadius",
+          "type": "CGFloat",
+          "default": "0"
+        },
+        {
+          "label": "circle",
+          "name": "circle",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "inits": [
+        "init(_ url: URL?, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
+        "init(_ url: URL?, ratio: String, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
+        "init(_ url: URL?, ratio: RemoteImageRatio, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)"
+      ],
+      "modifiers": [],
+      "usage": "RemoteImage(<URL>)"
+    },
+    {
+      "name": "ResultView",
+      "category": "Organisms",
+      "doc": "Ant-style \"Result\" template: a full-page status view for the outcome of an operation (success / info / warning / error) or an exception page (404 / 403 / 500), with up to two actions.",
+      "init": "init(_ status: ResultStatus, title: String, message: String? = nil, primaryTitle: String? = nil, onPrimary: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "status",
+          "type": "ResultStatus"
+        },
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "message",
+          "name": "message",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "primaryTitle",
+          "name": "primaryTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "onPrimary",
+          "name": "onPrimary",
+          "type": "(() -> Void)?",
+          "default": "nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ResultView(<ResultStatus>, title: \"title\")"
+    },
+    {
+      "name": "Ribbon",
+      "category": "Atoms",
+      "doc": "A corner ribbon wrapping any content (Ant `Badge.Ribbon`).",
+      "init": "init(_ text: String, color: SemanticColor = .primary, @ViewBuilder content: () -> Content)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "SemanticColor",
+          "default": ".primary"
+        },
+        {
+          "label": "@ViewBuilder",
+          "name": "content",
+          "type": "() -> Content"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Ribbon(\"text\", @ViewBuilder: { })"
+    },
+    {
+      "name": "RollingNumber",
+      "category": "Atoms",
+      "doc": "Odometer / slot-machine number — each digit column rolls vertically to its new value when `value` changes (reference `RollingText`).",
+      "init": "init(_ value: Int, size: CGFloat = 28, weight: Font.Weight = .bold, color: Color? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "value",
+          "type": "Int"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "CGFloat",
+          "default": "28"
+        },
+        {
+          "label": "weight",
+          "name": "weight",
+          "type": "Font.Weight",
+          "default": ".bold"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "Color?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "RollingNumber(1)"
+    },
+    {
+      "name": "ScoreBadge",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ score: Double, large: Bool = false)",
+      "params": [
+        {
+          "label": "_",
+          "name": "score",
+          "type": "Double"
+        },
+        {
+          "label": "large",
+          "name": "large",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ScoreBadge(1)"
+    },
+    {
+      "name": "SearchBar",
+      "category": "Molecules",
+      "doc": "A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks.",
+      "init": "init(text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Search\", recent: [String] = [], onSearch: ((String) -> Void)? = nil, onSelect: ((String) -> Void)? = nil, onSubmit: ((String) -> Void)? = nil, onClearRecent: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "text",
+          "name": "text",
+          "type": "Binding<String>"
+        },
+        {
+          "label": "suggest",
+          "name": "suggest",
+          "type": "@escaping nonisolated(nonsending) (String) async -> [String], placeholder: String",
+          "default": "\"Search\", recent: [String] = [], onSearch: ((String) -> Void)? = nil, onSelect: ((String) -> Void)? = nil, onSubmit: ((String) -> Void)? = nil, onClearRecent: (() -> Void)? = nil"
+        }
+      ],
+      "inits": [
+        "init(text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Search\", recent: [String] = [], onSearch: ((String) -> Void)? = nil, onSelect: ((String) -> Void)? = nil, onSubmit: ((String) -> Void)? = nil, onClearRecent: (() -> Void)? = nil)",
+        "init(text: Binding<String>, placeholder: String = \"Search\", suggestions: [String] = [], recent: [String] = [], onSearch: ((String) -> Void)? = nil, onSelect: ((String) -> Void)? = nil, onSubmit: ((String) -> Void)? = nil, onClearRecent: (() -> Void)? = nil)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> SearchBar",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "backButton(_:action:)",
+          "signature": ".backButton(_ on: Bool = true, action: (() -> Void)? = nil) -> SearchBar",
+          "doc": "Shows a leading back chevron; the optional action fires on tap."
+        },
+        {
+          "name": "debounce(_:)",
+          "signature": ".debounce(_ interval: TimeInterval) -> SearchBar",
+          "doc": "Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s)."
+        },
+        {
+          "name": "maxResults(_:)",
+          "signature": ".maxResults(_ count: Int) -> SearchBar",
+          "doc": "Caps the number of suggestion rows (default 6)."
+        },
+        {
+          "name": "trailingIcon(_:action:)",
+          "signature": ".trailingIcon(_ systemName: String?, action: (() -> Void)? = nil) -> SearchBar",
+          "doc": "A trailing SF Symbol button (shown when the field is empty); the optional action fires on tap (e.g."
+        }
+      ],
+      "usage": "SearchBar($text)"
+    },
+    {
+      "name": "SecondaryButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "helperText",
+          "name": "helperText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "textStyle",
+          "name": "textStyle",
+          "type": "TextStyle?",
+          "default": "nil"
+        },
+        {
+          "label": "confirmsSuccess",
+          "name": "confirmsSuccess",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "task",
+          "name": "task",
+          "type": "@escaping nonisolated(nonsending) () async -> Void"
+        }
+      ],
+      "inits": [
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = true, accessibilityID: String? = nil, task: @escaping nonisolated(nonsending) () async -> Void)",
+        "init(_ title: String, size: ButtonSize = .medium, block: Bool = false, helperText: String? = nil, textStyle: TextStyle? = nil, confirmsSuccess: Bool = false, accessibilityID: String? = nil, isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)"
+      ],
+      "modifiers": [],
+      "usage": "SecondaryButton(\"title\", task: { })"
+    },
+    {
+      "name": "SegmentedControl",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ items: [SegmentItem], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[SegmentItem]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Int>"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "SegmentedSize",
+          "default": ".medium"
+        }
+      ],
+      "inits": [
+        "init(_ items: [SegmentItem], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)",
+        "init(_ items: [String], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> SegmentedControl",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "SegmentedControl(<[SegmentItem]>, $selection)"
+    },
+    {
+      "name": "SegmentedTabBar",
+      "category": "Organisms",
+      "doc": "Tab bar with a selection binding and an animated underline.",
+      "init": "init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[TabItem]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Int>"
+        },
+        {
+          "label": "scrollable",
+          "name": "scrollable",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "SegmentedTabBarStyle",
+          "default": ".underline"
+        },
+        {
+          "label": "onClose",
+          "name": "onClose",
+          "type": "((Int) -> Void)?",
+          "default": "nil, onAdd: (() -> Void)? = nil"
+        }
+      ],
+      "inits": [
+        "init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
+        "init(_ items: [String], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> SegmentedTabBar",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "SegmentedTabBar(<[TabItem]>, $selection)"
+    },
+    {
+      "name": "Select",
+      "category": "Molecules",
+      "doc": "A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `searchable` is on.",
+      "init": "init(_ label: String, options: [Option], selection: Binding<Option?>, placeholder: String = \"Select\", allowClear: Bool = false, searchable: Bool = false, size: TextInputSize = .medium, infoMessages: [InfoMessage] = [], isLoading: Bool = false, isOptionEnabled: ((Option) -> Bool)? = nil, optionTitle: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "_",
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Option?>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "\"Select\""
+        },
+        {
+          "label": "allowClear",
+          "name": "allowClear",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "searchable",
+          "name": "searchable",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "TextInputSize",
+          "default": ".medium"
+        },
+        {
+          "label": "infoMessages",
+          "name": "infoMessages",
+          "type": "[InfoMessage]",
+          "default": "[]"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "isOptionEnabled",
+          "name": "isOptionEnabled",
+          "type": "((Option) -> Bool)?",
+          "default": "nil, optionTitle: @escaping (Option) -> String"
+        }
+      ],
+      "inits": [
+        "init(_ label: String, options: [Option], selection: Binding<Option?>, placeholder: String = \"Select\", allowClear: Bool = false, searchable: Bool = false, size: TextInputSize = .medium, infoMessages: [InfoMessage] = [], isLoading: Bool = false, isOptionEnabled: ((Option) -> Bool)? = nil, optionTitle: @escaping (Option) -> String)",
+        "init(_ label: String, sections: [Select<Option>.Section], selection: Binding<Option?>, placeholder: String = \"Select\", allowClear: Bool = false, searchable: Bool = false, size: TextInputSize = .medium, infoMessages: [InfoMessage] = [], isLoading: Bool = false, isOptionEnabled: ((Option) -> Bool)? = nil, optionTitle: @escaping (Option) -> String)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Select<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "Select(\"label\", options: <[Option]>, $selection)"
+    },
+    {
+      "name": "SelectBox",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(label: String? = nil, options: [Option], selection: Binding<Option?>, placeholder: String = String(themeKit: \"Select\"), hint: String? = nil, errorText: String? = nil, optionTitle: @escaping (Option) -> String)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Option?>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "String(themeKit: \"Select\")"
+        },
+        {
+          "label": "hint",
+          "name": "hint",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "errorText",
+          "name": "errorText",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "optionTitle",
+          "name": "optionTitle",
+          "type": "@escaping (Option) -> String"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> SelectBox<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "SelectBox(options: <[Option]>, $selection, optionTitle: \"optionTitle\")"
+    },
+    {
+      "name": "ShareButton",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ title: String = \"Share\", item: String)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String",
+          "default": "\"Share\""
+        },
+        {
+          "label": "item",
+          "name": "item",
+          "type": "String"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ShareButton(item: \"item\")"
+    },
+    {
+      "name": "Skeleton",
+      "category": "Atoms",
+      "doc": "A standalone skeleton block of an arbitrary shape and size.",
+      "init": "init(_ shape: SkeletonShape = .rounded(8), width: CGFloat? = nil, height: CGFloat? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "shape",
+          "type": "SkeletonShape",
+          "default": ".rounded(8)"
+        },
+        {
+          "label": "width",
+          "name": "width",
+          "type": "CGFloat?",
+          "default": "nil"
+        },
+        {
+          "label": "height",
+          "name": "height",
+          "type": "CGFloat?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Skeleton()"
+    },
+    {
+      "name": "Slider",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(value: Binding<Double>, in bounds: ClosedRange<Double>, step: Double = 1, label: String? = nil)",
+      "params": [
+        {
+          "label": "value",
+          "name": "value",
+          "type": "Binding<Double>"
+        },
+        {
+          "label": "in",
+          "name": "bounds",
+          "type": "ClosedRange<Double>"
+        },
+        {
+          "label": "step",
+          "name": "step",
+          "type": "Double",
+          "default": "1"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Slider",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "axis(_:height:)",
+          "signature": ".axis(_ axis: Axis, height: CGFloat = 160) -> Slider",
+          "doc": "Lays the slider out vertically with the given track height (default 160)."
+        },
+        {
+          "name": "marks(_:)",
+          "signature": ".marks(_ marks: [Double : String]) -> Slider",
+          "doc": "Labeled tick marks at the given values (e.g."
+        },
+        {
+          "name": "onChangeEnd(_:)",
+          "signature": ".onChangeEnd(_ action: ((Double) -> Void)?) -> Slider",
+          "doc": "Fires with the snapped value when a drag ends (not on every step)."
+        },
+        {
+          "name": "showsValueTooltip(_:)",
+          "signature": ".showsValueTooltip(_ on: Bool = true) -> Slider",
+          "doc": "Shows a value tooltip above the thumb while dragging."
+        }
+      ],
+      "usage": "Slider($value, in: 1)"
+    },
+    {
+      "name": "Spinner",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(size: CGFloat = 24, lineWidth: CGFloat = 3, color: Color? = nil)",
+      "params": [
+        {
+          "label": "size",
+          "name": "size",
+          "type": "CGFloat",
+          "default": "24"
+        },
+        {
+          "label": "lineWidth",
+          "name": "lineWidth",
+          "type": "CGFloat",
+          "default": "3"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "Color?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Spinner()"
+    },
+    {
+      "name": "Stat",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(title: String, value: String, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "value",
+          "name": "value",
+          "type": "String"
+        },
+        {
+          "label": "prefix",
+          "name": "prefix",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "suffix",
+          "name": "suffix",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "description",
+          "name": "description",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "trend",
+          "name": "trend",
+          "type": "StatTrend?",
+          "default": "nil"
+        }
+      ],
+      "inits": [
+        "init(title: String, value: String, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)",
+        "init(title: String, value: Int, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)"
+      ],
+      "modifiers": [],
+      "usage": "Stat(title: \"title\", value: \"value\")"
+    },
+    {
+      "name": "StatusDot",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ kind: StatusKind, size: CGFloat = 10, label: String? = nil, pulse: Bool = false)",
+      "params": [
+        {
+          "label": "_",
+          "name": "kind",
+          "type": "StatusKind"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "CGFloat",
+          "default": "10"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "pulse",
+          "name": "pulse",
+          "type": "Bool",
+          "default": "false"
+        }
+      ],
+      "modifiers": [],
+      "usage": "StatusDot(<StatusKind>)"
+    },
+    {
+      "name": "StepIndicator",
+      "category": "Atoms",
+      "doc": "Segmented step indicator (e.g.",
+      "init": "init(current: Int, total: Int)",
+      "params": [
+        {
+          "label": "current",
+          "name": "current",
+          "type": "Int"
+        },
+        {
+          "label": "total",
+          "name": "total",
+          "type": "Int"
+        }
+      ],
+      "modifiers": [],
+      "usage": "StepIndicator(current: 1, total: 1)"
+    },
+    {
+      "name": "Steps",
+      "category": "Molecules",
+      "doc": "A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate.",
+      "init": "init(_ steps: [Steps.Step], axis: Axis = .horizontal, small: Bool = false, progressDot: Bool = false, onSelect: ((Int) -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "steps",
+          "type": "[Steps.Step]"
+        },
+        {
+          "label": "axis",
+          "name": "axis",
+          "type": "Axis",
+          "default": ".horizontal"
+        },
+        {
+          "label": "small",
+          "name": "small",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "progressDot",
+          "name": "progressDot",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "onSelect",
+          "name": "onSelect",
+          "type": "((Int) -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Steps(<[Steps.Step]>)"
+    },
+    {
+      "name": "Swap",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(isOn: Binding<Bool>, on onSystemImage: String, off offSystemImage: String, size: CGFloat = 24, rotate: Bool = true)",
+      "params": [
+        {
+          "label": "isOn",
+          "name": "isOn",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "on",
+          "name": "onSystemImage",
+          "type": "String"
+        },
+        {
+          "label": "off",
+          "name": "offSystemImage",
+          "type": "String"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "CGFloat",
+          "default": "24"
+        },
+        {
+          "label": "rotate",
+          "name": "rotate",
+          "type": "Bool",
+          "default": "true"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Swap",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "Swap($isOn, on: \"onSystemImage\", off: \"offSystemImage\")"
+    },
+    {
+      "name": "Tag",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ text: String, leadingSystemImage: String? = nil, style: BadgeStyle? = nil, variant: FillVariant = .soft, onRemove: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "leadingSystemImage",
+          "name": "leadingSystemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "style",
+          "name": "style",
+          "type": "BadgeStyle?",
+          "default": "nil"
+        },
+        {
+          "label": "variant",
+          "name": "variant",
+          "type": "FillVariant",
+          "default": ".soft"
+        },
+        {
+          "label": "onRemove",
+          "name": "onRemove",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Tag(\"text\")"
+    },
+    {
+      "name": "TextInput",
+      "category": "Molecules",
+      "doc": "Single floating-label text field.",
+      "init": "init(_ model: TextInputModel, text: Binding<String>, externalFocus: Binding<Bool>? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "model",
+          "type": "TextInputModel"
+        },
+        {
+          "label": "text",
+          "name": "text",
+          "type": "Binding<String>"
+        },
+        {
+          "label": "externalFocus",
+          "name": "externalFocus",
+          "type": "Binding<Bool>?",
+          "default": "nil"
+        }
+      ],
+      "inits": [
+        "init(_ model: TextInputModel, text: Binding<String>, externalFocus: Binding<Bool>? = nil)",
+        "init(_ label: String, text: Binding<String>, placeholder: String = \"\", leadingSystemImage: String? = nil, suffixSystemImage: String? = nil, addonBefore: String? = nil, addonAfter: String? = nil, isSecure: Bool = false, allowClear: Bool = false, maxLength: Int? = nil, showCount: Bool = false, size: TextInputSize = .medium, formatter: TextInputFormatter? = nil, helperText: String? = nil, errorText: String? = nil, warningText: String? = nil, infoMessages: [InfoMessage] = [], externalFocus: Binding<Bool>? = nil, keyboardType: TextInputKeyboard = .default, textContentType: TextInputContentType? = nil, submitLabel: SubmitLabel = .return, autocapitalization: TextInputCapitalization? = nil, autocorrectionDisabled: Bool = false, hardLimit: Bool = true, countStyle: TextInputCountStyle = .count, onSubmit: (() -> Void)? = nil)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> TextInput",
+          "doc": "Sets the accessibility-identifier namespace for this field (its sub-elements — label, field, clear, reveal, messages — get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "TextInput(<TextInputModel>, $text)"
+    },
+    {
+      "name": "TextLink",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ title: String, underline: Bool = true, action: @escaping () -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "label": "underline",
+          "name": "underline",
+          "type": "Bool",
+          "default": "true"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void"
+        }
+      ],
+      "modifiers": [],
+      "usage": "TextLink(\"title\", action: { })"
+    },
+    {
+      "name": "TextRotate",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ words: [String], interval: Double = 2)",
+      "params": [
+        {
+          "label": "_",
+          "name": "words",
+          "type": "[String]"
+        },
+        {
+          "label": "interval",
+          "name": "interval",
+          "type": "Double",
+          "default": "2"
+        }
+      ],
+      "modifiers": [],
+      "usage": "TextRotate(\"words\")"
+    },
+    {
+      "name": "ThemeButton",
+      "category": "Molecules",
+      "doc": "",
+      "init": "init(_ title: String? = nil, systemImage: String? = nil, iconPosition: ButtonIconPosition = .leading, color: SemanticColor = .primary, variant: ButtonVariant = .solid, size: ButtonSize = .medium, shape: ButtonShape = .rounded, block: Bool = false, accessibilityID: String? = nil, isEnabled: Binding<Bool> = .constant(true), isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)",
+      "params": [
+        {
+          "label": "_",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "systemImage",
+          "name": "systemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "iconPosition",
+          "name": "iconPosition",
+          "type": "ButtonIconPosition",
+          "default": ".leading"
+        },
+        {
+          "label": "color",
+          "name": "color",
+          "type": "SemanticColor",
+          "default": ".primary"
+        },
+        {
+          "label": "variant",
+          "name": "variant",
+          "type": "ButtonVariant",
+          "default": ".solid"
+        },
+        {
+          "label": "size",
+          "name": "size",
+          "type": "ButtonSize",
+          "default": ".medium"
+        },
+        {
+          "label": "shape",
+          "name": "shape",
+          "type": "ButtonShape",
+          "default": ".rounded"
+        },
+        {
+          "label": "block",
+          "name": "block",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "accessibilityID",
+          "name": "accessibilityID",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "isEnabled",
+          "name": "isEnabled",
+          "type": "Binding<Bool>",
+          "default": ".constant(true)"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Binding<Bool>",
+          "default": ".constant(false)"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "@escaping () -> Void"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ThemeButton(action: { })"
+    },
+    {
+      "name": "ThemeController",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(options: [ThemeController.Option], selectedName: Binding<String>)",
+      "params": [
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[ThemeController.Option]"
+        },
+        {
+          "label": "selectedName",
+          "name": "selectedName",
+          "type": "Binding<String>"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ThemeController(options: <[ThemeController.Option]>, $selectedName)"
+    },
+    {
+      "name": "ThemePicker",
+      "category": "Organisms",
+      "doc": "A grid of `ThemePreset` preview cards.",
+      "init": "init(selection: Binding<String?>, themes: [ThemePreset] = ThemePreset.all, onSelect: ((ThemePreset) -> Void)? = nil)",
+      "params": [
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<String?>"
+        },
+        {
+          "label": "themes",
+          "name": "themes",
+          "type": "[ThemePreset]",
+          "default": "ThemePreset.all"
+        },
+        {
+          "label": "onSelect",
+          "name": "onSelect",
+          "type": "((ThemePreset) -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "ThemePicker($selection)"
+    },
+    {
+      "name": "ThemeToggle",
+      "category": "Molecules",
+      "doc": "Figma \"Control Items\" → Switch Toggles.",
+      "init": "init(isOn: Binding<Bool>, isLoading: Bool = false, onSystemImage: String? = nil, offSystemImage: String? = nil)",
+      "params": [
+        {
+          "label": "isOn",
+          "name": "isOn",
+          "type": "Binding<Bool>"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "onSystemImage",
+          "name": "onSystemImage",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "offSystemImage",
+          "name": "offSystemImage",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> ThemeToggle",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "ThemeToggle($isOn)"
+    },
+    {
+      "name": "Timeline",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(_ items: [Timeline.Item], axis: Axis = .vertical, mode: TimelineMode = .left, reverse: Bool = false, pending: String? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "items",
+          "type": "[Timeline.Item]"
+        },
+        {
+          "label": "axis",
+          "name": "axis",
+          "type": "Axis",
+          "default": ".vertical"
+        },
+        {
+          "label": "mode",
+          "name": "mode",
+          "type": "TimelineMode",
+          "default": ".left"
+        },
+        {
+          "label": "reverse",
+          "name": "reverse",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "pending",
+          "name": "pending",
+          "type": "String?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Timeline(<[Timeline.Item]>)"
+    },
+    {
+      "name": "Title",
+      "category": "Atoms",
+      "doc": "Atom.",
+      "init": "init(_ text: String, subtitle: String? = nil, eyebrow: String? = nil, actionTitle: String? = nil, action: (() -> Void)? = nil)",
+      "params": [
+        {
+          "label": "_",
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "label": "subtitle",
+          "name": "subtitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "eyebrow",
+          "name": "eyebrow",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "actionTitle",
+          "name": "actionTitle",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "action",
+          "name": "action",
+          "type": "(() -> Void)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Title(\"text\")"
+    },
+    {
+      "name": "ToggleGroup",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, label: @escaping (Option) -> String, description: @escaping (Option) -> String? = { _ in nil })",
+      "params": [
+        {
+          "label": "title",
+          "name": "title",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "options",
+          "name": "options",
+          "type": "[Option]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<Option>>"
+        },
+        {
+          "label": "label",
+          "name": "label",
+          "type": "@escaping (Option) -> String, description: @escaping (Option) -> String?",
+          "default": "{ _ in nil }"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> ToggleGroup<Option>",
+          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        }
+      ],
+      "usage": "ToggleGroup(options: <[Option]>, $selection)"
+    },
+    {
+      "name": "TreeSelect",
+      "category": "Molecules",
+      "doc": "Hierarchical (nested) select with expand/collapse and multi-selection.",
+      "init": "init(label: String? = nil, nodes: [TreeNode], selection: Binding<Set<String>>, placeholder: String = String(themeKit: \"Select\"), cascade: Bool = false, searchable: Bool = false, initiallyExpanded: Set<String> = [], isLoading: Bool = false, isNodeEnabled: ((TreeNode) -> Bool)? = nil)",
+      "params": [
+        {
+          "label": "label",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "nodes",
+          "name": "nodes",
+          "type": "[TreeNode]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<Set<String>>"
+        },
+        {
+          "label": "placeholder",
+          "name": "placeholder",
+          "type": "String",
+          "default": "String(themeKit: \"Select\")"
+        },
+        {
+          "label": "cascade",
+          "name": "cascade",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "searchable",
+          "name": "searchable",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "initiallyExpanded",
+          "name": "initiallyExpanded",
+          "type": "Set<String>",
+          "default": "[]"
+        },
+        {
+          "label": "isLoading",
+          "name": "isLoading",
+          "type": "Bool",
+          "default": "false"
+        },
+        {
+          "label": "isNodeEnabled",
+          "name": "isNodeEnabled",
+          "type": "((TreeNode) -> Bool)?",
+          "default": "nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "TreeSelect(nodes: <[TreeNode]>, $selection)"
+    },
+    {
+      "name": "Upload",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(prompt: String = String(themeKit: \"Add a photo from your device or take one with the camera.\"), buttonTitle: String = String(themeKit: \"Upload Photo\"), files: [UploadFile] = [], maxCount: Int? = nil, onPick: @escaping () -> Void = {}, onRemove: @escaping (UploadFile) -> Void = { _ in }, onRetry: ((UploadFile) -> Void)? = nil)",
+      "params": [
+        {
+          "label": "prompt",
+          "name": "prompt",
+          "type": "String",
+          "default": "String(themeKit: \"Add a photo from your device or take one with the camera.\")"
+        },
+        {
+          "label": "buttonTitle",
+          "name": "buttonTitle",
+          "type": "String",
+          "default": "String(themeKit: \"Upload Photo\")"
+        },
+        {
+          "label": "files",
+          "name": "files",
+          "type": "[UploadFile]",
+          "default": "[]"
+        },
+        {
+          "label": "maxCount",
+          "name": "maxCount",
+          "type": "Int?",
+          "default": "nil"
+        },
+        {
+          "label": "onPick",
+          "name": "onPick",
+          "type": "@escaping () -> Void",
+          "default": "{}, onRemove: @escaping (UploadFile) -> Void = { _ in }, onRetry: ((UploadFile) -> Void)? = nil"
+        }
+      ],
+      "modifiers": [],
+      "usage": "Upload()"
+    },
+    {
+      "name": "UploadList",
+      "category": "Organisms",
+      "doc": "`Upload` wired to an `UploadController` — renders its files with remove + retry.",
+      "init": "init(controller: UploadController, prompt: String = String(themeKit: \"Add a photo from your device or take one with the camera.\"), buttonTitle: String = String(themeKit: \"Upload Photo\"), onPick: @escaping () -> Void = {})",
+      "params": [
+        {
+          "label": "controller",
+          "name": "controller",
+          "type": "UploadController"
+        },
+        {
+          "label": "prompt",
+          "name": "prompt",
+          "type": "String",
+          "default": "String(themeKit: \"Add a photo from your device or take one with the camera.\")"
+        },
+        {
+          "label": "buttonTitle",
+          "name": "buttonTitle",
+          "type": "String",
+          "default": "String(themeKit: \"Upload Photo\")"
+        },
+        {
+          "label": "onPick",
+          "name": "onPick",
+          "type": "@escaping () -> Void",
+          "default": "{}"
+        }
+      ],
+      "modifiers": [],
+      "usage": "UploadList(controller: <UploadController>)"
+    },
+    {
+      "name": "VideoPlayerView",
+      "category": "Organisms",
+      "doc": "Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop, mute, aspect-fill, and active-gating (only the visible item plays).",
+      "init": "init(_ url: URL?, progress: Binding<Double>? = nil, isMuted: Binding<Bool>? = nil, onTap: (() -> Void)? = nil, isActive: Binding<Bool> = .constant(true))",
+      "params": [
+        {
+          "label": "_",
+          "name": "url",
+          "type": "URL?"
+        },
+        {
+          "label": "progress",
+          "name": "progress",
+          "type": "Binding<Double>?",
+          "default": "nil"
+        },
+        {
+          "label": "isMuted",
+          "name": "isMuted",
+          "type": "Binding<Bool>?",
+          "default": "nil"
+        },
+        {
+          "label": "onTap",
+          "name": "onTap",
+          "type": "(() -> Void)?",
+          "default": "nil, isActive: Binding<Bool> = .constant(true)"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "autoplay(_:)",
+          "signature": ".autoplay(_ on: Bool = true) -> VideoPlayerView",
+          "doc": "Whether the video starts playing on appear (default true)."
+        },
+        {
+          "name": "loop(_:)",
+          "signature": ".loop(_ on: Bool = true) -> VideoPlayerView",
+          "doc": "Whether playback loops back to the start (default true)."
+        },
+        {
+          "name": "muted(_:)",
+          "signature": ".muted(_ on: Bool = true) -> VideoPlayerView",
+          "doc": "Whether the audio starts muted (default true — required for iOS inline autoplay)."
+        },
+        {
+          "name": "muteToggle(_:)",
+          "signature": ".muteToggle(_ on: Bool = true) -> VideoPlayerView",
+          "doc": "Shows a mute/unmute toggle button overlay."
+        },
+        {
+          "name": "tapToToggle(_:)",
+          "signature": ".tapToToggle(_ on: Bool = true) -> VideoPlayerView",
+          "doc": "Whether tapping the video toggles play/pause."
+        }
+      ],
+      "usage": "VideoPlayerView(<URL>)"
+    }
+  ],
+  "modifiers": [
+    "a11yID(_:)",
+    "allowHalf(_:)",
+    "arrows(_:)",
+    "autoplay(_:)",
+    "axis(_:height:)",
+    "backButton(_:action:)",
+    "badgeColor(_:)",
+    "badgeShape(_:)",
+    "barHeight(_:)",
+    "clearable(_:)",
+    "colors(fill:track:)",
+    "debounce(_:)",
+    "density(_:)",
+    "divider(_:)",
+    "dots(_:position:)",
+    "editable(_:)",
+    "exists(_:)",
+    "expands(_:)",
+    "fade(_:)",
+    "gradient(_:)",
+    "hasInfo(_:)",
+    "highlighted(_:)",
+    "icon(_:)",
+    "indicator(_:)",
+    "inputs(_:titles:)",
+    "interactive(_:)",
+    "jumper(_:title:)",
+    "loading(_:)",
+    "loop(_:)",
+    "marks(_:)",
+    "maxResults(_:)",
+    "maxTags(_:)",
+    "maxValue(_:)",
+    "muteToggle(_:)",
+    "muted(_:)",
+    "number(_:)",
+    "onChangeEnd(_:)",
+    "onRate(_:)",
+    "onReviewTap(_:)",
+    "onSearch(_:)",
+    "onValueChange(_:)",
+    "progressLabel(_:)",
+    "rating(_:)",
+    "searchable(_:)",
+    "sentiment(_:)",
+    "showTotal(_:)",
+    "showsValueTooltip(_:)",
+    "simple(_:)",
+    "starSize(_:)",
+    "steps(_:)",
+    "subtitle(_:)",
+    "successSegment(_:)",
+    "suggestionEnabled(_:)",
+    "symbol(_:)",
+    "tapToToggle(_:)",
+    "titleSize(_:)",
+    "trailingIcon(_:)",
+    "trailingIcon(_:action:)",
+    "truncateSubtitle(_:)",
+    "valueFormat(_:)",
+    "valueLabel(_:)",
+    "window(sibling:boundary:)"
+  ],
+  "enums": {
+    "A11yElement.Field": [
+      "field",
+      "secureField",
+      "clear",
+      "reveal",
+      "label",
+      "message"
+    ],
+    "A11yElement.Control": [
+      "toggle",
+      "checkbox",
+      "radio",
+      "stepper",
+      "slider"
+    ],
+    "A11yElement.Action": [
+      "button",
+      "primary",
+      "secondary",
+      "close",
+      "back"
+    ],
+    "A11yElement.Select": [
+      "trigger",
+      "option",
+      "search",
+      "tag"
+    ],
+    "AvatarSize": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ],
+    "AvatarShape": [
+      "circle",
+      "square"
+    ],
+    "AvatarBackground": [
+      "blue",
+      "white",
+      "dark"
+    ],
+    "AvatarContent": [
+      "icon(_:)",
+      "initials(_:)",
+      "image(_:)"
+    ],
+    "BadgeStyle": [
+      "neutral",
+      "info",
+      "success",
+      "warning",
+      "error",
+      "pink",
+      "orange",
+      "turquoise",
+      "purple"
+    ],
+    "BadgeSize": [
+      "small",
+      "medium",
+      "large",
+      "xlarge"
+    ],
+    "BadgeShape": [
+      "pill",
+      "rounded"
+    ],
+    "ChipSize": [
+      "small",
+      "large"
+    ],
+    "ChipSelectionStyle": [
+      "tonal",
+      "solid"
+    ],
+    "DividerViewSize": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "DividerAxis": [
+      "horizontal",
+      "vertical"
+    ],
+    "DividerTextAlign": [
+      "leading",
+      "center",
+      "trailing"
+    ],
+    "GaugeView.Style": [
+      "circular",
+      "linear"
+    ],
+    "IconSize": [
+      "xs",
+      "sm",
+      "md",
+      "lg",
+      "xl"
+    ],
+    "IndicatorPosition": [
+      "topTrailing",
+      "topLeading",
+      "bottomTrailing",
+      "bottomLeading"
+    ],
+    "MaskShape": [
+      "circle",
+      "squircle",
+      "hexagon",
+      "star"
+    ],
+    "ProgressStatus": [
+      "normal",
+      "success",
+      "exception",
+      "active"
+    ],
+    "RatingLayout": [
+      "stars",
+      "numberRate",
+      "rateNumberText"
+    ],
+    "RemoteImageRatio": [
+      "square",
+      "productImage",
+      "fourToFive",
+      "fiveToFour",
+      "sixteenToNine",
+      "custom(_:)"
+    ],
+    "SkeletonShape": [
+      "rounded(_:)",
+      "circle",
+      "capsule"
+    ],
+    "StatusKind": [
+      "online",
+      "offline",
+      "busy",
+      "away",
+      "neutral"
+    ],
+    "ButtonGroupAxis": [
+      "vertical",
+      "horizontal"
+    ],
+    "ButtonSize": [
+      "xxsmall",
+      "xsmall",
+      "small",
+      "medium",
+      "large"
+    ],
+    "ThemeButtonStyle": [
+      "primary",
+      "secondary",
+      "outline",
+      "ghost",
+      "link"
+    ],
+    "ButtonVariant": [
+      "solid",
+      "soft",
+      "outline",
+      "ghost",
+      "link"
+    ],
+    "ButtonShape": [
+      "rounded",
+      "pill",
+      "circle",
+      "square"
+    ],
+    "ButtonIconPosition": [
+      "leading",
+      "trailing"
+    ],
+    "CheckboxType": [
+      "plain",
+      "inner",
+      "customInner(color:)"
+    ],
+    "ImageChipSize": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "FilterChipShape": [
+      "pill",
+      "square"
+    ],
+    "DateFieldStyle": [
+      "numeric",
+      "abbreviated",
+      "long",
+      "full",
+      "relative",
+      "custom(_:)"
+    ],
+    "DateFieldComponents": [
+      "date",
+      "dateAndTime",
+      "time"
+    ],
+    "ProgressIndicatorVariant": [
+      "progress",
+      "carousel",
+      "video"
+    ],
+    "ProgressIndicatorSize": [
+      "large",
+      "medium",
+      "small",
+      "xsmall"
+    ],
+    "ProgressStepText": [
+      "none",
+      "slash",
+      "padded"
+    ],
+    "RadioButtonType": [
+      "select",
+      "check"
+    ],
+    "RadioButtonStyle": [
+      "plain",
+      "inner"
+    ],
+    "RadioButtonPadding": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "RadioGroupButtonStyle": [
+      "solid",
+      "outline"
+    ],
+    "SegmentedSize": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "StatTrend": [
+      "up(_:)",
+      "down(_:)"
+    ],
+    "StepState": [
+      "done",
+      "active",
+      "todo",
+      "error"
+    ],
+    "TextInputSize": [
+      "xsmall",
+      "small",
+      "medium",
+      "large"
+    ],
+    "TextInputKeyboard": [
+      "default",
+      "asciiCapable",
+      "numberPad",
+      "decimalPad",
+      "phonePad",
+      "emailAddress",
+      "url",
+      "numbersAndPunctuation",
+      "webSearch"
+    ],
+    "TextInputContentType": [
+      "name",
+      "givenName",
+      "familyName",
+      "username",
+      "password",
+      "newPassword",
+      "oneTimeCode",
+      "emailAddress",
+      "telephoneNumber",
+      "fullStreetAddress",
+      "postalCode",
+      "creditCardNumber",
+      "url"
+    ],
+    "TextInputCapitalization": [
+      "never",
+      "characters",
+      "words",
+      "sentences"
+    ],
+    "TextInputCountStyle": [
+      "count",
+      "remaining"
+    ],
+    "TooltipEdge": [
+      "top",
+      "bottom",
+      "leading",
+      "trailing"
+    ],
+    "AccordionIndicator": [
+      "chevron",
+      "plusMinus",
+      "custom(expand:collapse:)"
+    ],
+    "AccordionTitleSize": [
+      "large",
+      "medium",
+      "small"
+    ],
+    "AccordionPaddingSize": [
+      "default",
+      "small",
+      "large"
+    ],
+    "AccordionExpandMode": [
+      "single",
+      "multiple"
+    ],
+    "AlertToastType": [
+      "success",
+      "warning",
+      "danger",
+      "info"
+    ],
+    "BottomSheetDetent": [
+      "medium",
+      "large",
+      "height(_:)",
+      "fraction(_:)"
+    ],
+    "CalloutType": [
+      "neutral",
+      "info",
+      "success",
+      "warning",
+      "error"
+    ],
+    "CalloutStyle": [
+      "plain",
+      "soft"
+    ],
+    "CardElevation": [
+      "none",
+      "soft",
+      "elevated"
+    ],
+    "ChatSide": [
+      "incoming",
+      "outgoing"
+    ],
+    "CouponStyle": [
+      "filled",
+      "outlined",
+      "plain"
+    ],
+    "ColumnAlign": [
+      "leading",
+      "center",
+      "trailing"
+    ],
+    "TableSortKey": [
+      "number(_:)",
+      "string(_:)",
+      "date(_:)"
+    ],
+    "FeedbackKind": [
+      "success",
+      "info",
+      "warning",
+      "error"
+    ],
+    "ToastPosition": [
+      "top",
+      "bottom"
+    ],
+    "FABShape": [
+      "circle",
+      "square"
+    ],
+    "InfoBannerType": [
+      "neutral",
+      "info",
+      "success",
+      "warning",
+      "error"
+    ],
+    "TableValueStyle": [
+      "plain",
+      "success",
+      "error",
+      "muted",
+      "strikethrough"
+    ],
+    "ListRowTrailing": [
+      "none",
+      "chevron",
+      "value(_:)",
+      "toggle(_:)",
+      "checkmark(_:)",
+      "checkbox(_:)",
+      "button(_:action:)",
+      "price(_:)",
+      "status(_:systemImage:)"
+    ],
+    "ListRowSize": [
+      "small",
+      "regular",
+      "bold"
+    ],
+    "PromoBannerTint": [
+      "blue",
+      "dark",
+      "turquoise"
+    ],
+    "ResultStatus": [
+      "success",
+      "info",
+      "warning",
+      "error",
+      "notFound",
+      "forbidden",
+      "serverError"
+    ],
+    "SegmentedTabBarStyle": [
+      "underline",
+      "card"
+    ],
+    "TimelineMode": [
+      "left",
+      "right",
+      "alternate"
+    ],
+    "UploadStatus": [
+      "uploading(_:)",
+      "done",
+      "failed(_:)"
+    ],
+    "AspectRatioToken": [
+      "square",
+      "portrait1x2",
+      "landscape2x1",
+      "portrait2x3",
+      "landscape3x2",
+      "landscape3x1",
+      "landscape4x1",
+      "portrait3x4",
+      "landscape4x3",
+      "portrait9x16",
+      "portrait10x16",
+      "landscape16x9",
+      "landscape16x10"
+    ],
+    "Theme.ForegroundColorKey": [
+      "fgHero",
+      "fgSecondary",
+      "fgTurquoise",
+      "badgeFgMaximumpink",
+      "badgeFgTurquoise",
+      "badgeFgOrange",
+      "systemcolorsFgSuccess",
+      "systemcolorsFgError",
+      "systemcolorsFgWarning",
+      "systemcolorsFgInfo"
+    ],
+    "Theme.BackgroundColorKey": [
+      "bgWhite",
+      "bgHero",
+      "bgElevatorPrimary",
+      "bgElevatorTertiary",
+      "bgSecondary",
+      "bgSecondaryLight",
+      "bgTertiary",
+      "bgTurquoise",
+      "bgTurquoiseLight",
+      "bgOrange",
+      "badgeBgMaximumpinkBase",
+      "badgeBgMaximumpinkLight",
+      "badgeBgPurple",
+      "badgeBgOrange",
+      "badgeBgTurquoiseLight",
+      "skeletonBgSkeletonBase",
+      "systemcolorsBgSuccess",
+      "systemcolorsBgSuccessLight",
+      "systemcolorsBgError",
+      "systemcolorsBgErrorLight",
+      "systemcolorsBgWarning",
+      "systemcolorsBgWarningLight",
+      "systemcolorsBgInfo",
+      "systemcolorsBgInfoLight"
+    ],
+    "Theme.BorderColorKey": [
+      "borderHero",
+      "borderPrimary",
+      "borderOrange",
+      "borderTurquoise",
+      "systemcolorsBorderSuccess",
+      "systemcolorsBorderSuccessLight",
+      "systemcolorsBorderError",
+      "systemcolorsBorderErrorLight",
+      "systemcolorsBorderWarning",
+      "systemcolorsBorderWarningLight",
+      "systemcolorsBorderInfo",
+      "systemcolorsBorderInfoLight"
+    ],
+    "Theme.TextColorKey": [
+      "textPrimary",
+      "textSecondary",
+      "textTertiary",
+      "textDisabled",
+      "textHero",
+      "textPurple",
+      "textSecondaryInverse"
+    ],
+    "Theme.PaletteColorKey": [
+      "primary50",
+      "primary100",
+      "primary200",
+      "primary300",
+      "primary400",
+      "primary500",
+      "primary600",
+      "primary700",
+      "primary800",
+      "primary900",
+      "neutral50",
+      "neutral100",
+      "neutral200",
+      "neutral300",
+      "neutral400",
+      "neutral500",
+      "neutral600",
+      "neutral700",
+      "neutral800",
+      "neutral900",
+      "info50",
+      "info100",
+      "info200",
+      "info300",
+      "info400",
+      "info500",
+      "info600",
+      "info700",
+      "info800",
+      "info900",
+      "success50",
+      "success100",
+      "success200",
+      "success300",
+      "success400",
+      "success500",
+      "success600",
+      "success700",
+      "success800",
+      "success900",
+      "warning50",
+      "warning100",
+      "warning200",
+      "warning300",
+      "warning400",
+      "warning500",
+      "warning600",
+      "warning700",
+      "warning800",
+      "warning900",
+      "error50",
+      "error100",
+      "error200",
+      "error300",
+      "error400",
+      "error500",
+      "error600",
+      "error700",
+      "error800",
+      "error900",
+      "turquoise50",
+      "turquoise100",
+      "turquoise200",
+      "turquoise300",
+      "turquoise400",
+      "turquoise500",
+      "turquoise600",
+      "turquoise700",
+      "turquoise800",
+      "turquoise900",
+      "orange50",
+      "orange100",
+      "orange200",
+      "orange300",
+      "orange400",
+      "orange500",
+      "orange600",
+      "orange700",
+      "orange800",
+      "orange900",
+      "purple50",
+      "purple100",
+      "purple200",
+      "purple300",
+      "purple400",
+      "purple500",
+      "purple600",
+      "purple700",
+      "purple800",
+      "purple900",
+      "pink50",
+      "pink100",
+      "pink200",
+      "pink300",
+      "pink400",
+      "pink500",
+      "pink600",
+      "pink700",
+      "pink800",
+      "pink900"
+    ],
+    "Motion": [
+      "instant",
+      "fast",
+      "base",
+      "slow",
+      "slower"
+    ],
+    "SemanticColor": [
+      "primary",
+      "neutral",
+      "info",
+      "success",
+      "warning",
+      "error",
+      "turquoise",
+      "orange",
+      "purple",
+      "pink",
+      "secondary",
+      "accent"
+    ],
+    "SemanticColor.Shade": [
+      "s50",
+      "s100",
+      "s200",
+      "s300",
+      "s400",
+      "s500",
+      "s600",
+      "s700",
+      "s800",
+      "s900"
+    ],
+    "FillVariant": [
+      "solid",
+      "soft",
+      "outline",
+      "ghost"
+    ],
+    "ShadowStyle": [
+      "elevated",
+      "tabBar",
+      "soft"
+    ],
+    "Theme.RadiusKey": [
+      "none",
+      "xs",
+      "sm",
+      "md",
+      "base",
+      "lg",
+      "xl",
+      "xl4"
+    ],
+    "Theme.RadiusRole": [
+      "box",
+      "field",
+      "selector"
+    ],
+    "Theme.SpacingKey": [
+      "none",
+      "xs",
+      "sm",
+      "md",
+      "base",
+      "lg",
+      "xl",
+      "xl4"
+    ],
+    "TextStyle": [
+      "displayLg",
+      "displayMd",
+      "displayBase",
+      "displaySm",
+      "heading2xl",
+      "headingXl",
+      "headingLg",
+      "headingMd",
+      "headingBase",
+      "headingSm",
+      "headingXs",
+      "heading2xs",
+      "heading3xs",
+      "labelLg600",
+      "labelLg700",
+      "labelMd600",
+      "labelMd700",
+      "labelBase600",
+      "labelBase700",
+      "labelSm600",
+      "labelSm700",
+      "bodyLg500",
+      "bodyLg400",
+      "bodyMd500",
+      "bodyMd400",
+      "bodyBase500",
+      "bodyBase400",
+      "bodySm500",
+      "bodySm400",
+      "overline400",
+      "overline500",
+      "linkMd",
+      "linkBase",
+      "linkSm"
+    ],
+    "InfoMessage.Kind": [
+      "info",
+      "success",
+      "warning",
+      "error"
+    ]
+  },
+  "tokens": [
+    {
+      "category": "foreground",
+      "name": "foreground.fg-hero",
+      "value": "#056bfd"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.fg-secondary",
+      "value": "#ffffff"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.fg-turquoise",
+      "value": "#0fb4ab"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.badge.fg-maximumpink",
+      "value": "#d90074"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.badge.fg-turquoise",
+      "value": "#048f8c"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.badge.fg-orange",
+      "value": "#a14f08"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.systemcolors.fg-success",
+      "value": "#12b76a"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.systemcolors.fg-error",
+      "value": "#f04438"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.systemcolors.fg-warning",
+      "value": "#f79009"
+    },
+    {
+      "category": "foreground",
+      "name": "foreground.systemcolors.fg-info",
+      "value": "#056bfd"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-white",
+      "value": "#fbfdff"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-hero",
+      "value": "#056bfd"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-elevator-primary",
+      "value": "#e8eff9"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-elevator-tertiary",
+      "value": "#e6f4ff"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-secondary",
+      "value": "#bcc5d2"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-secondary-light",
+      "value": "#dfe7f2"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-tertiary",
+      "value": "#000a2c"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-turquoise",
+      "value": "#0fb4ab"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-turquoise-light",
+      "value": "#dcf5ef"
+    },
+    {
+      "category": "background",
+      "name": "background.bg-orange",
+      "value": "#ee9124"
+    },
+    {
+      "category": "background",
+      "name": "background.badge.bg-maximumpink-base",
+      "value": "#ff0d87"
+    },
+    {
+      "category": "background",
+      "name": "background.badge.bg-maximumpink-light",
+      "value": "#ffe6ee"
+    },
+    {
+      "category": "background",
+      "name": "background.badge.bg-purple",
+      "value": "#f9f0ff"
+    },
+    {
+      "category": "background",
+      "name": "background.badge.bg-orange",
+      "value": "#fffaf0"
+    },
+    {
+      "category": "background",
+      "name": "background.badge.bg-turquoise-light",
+      "value": "#a7e8dc"
+    },
+    {
+      "category": "background",
+      "name": "background.skeleton.bg-skeleton-base",
+      "value": "#00092914"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-success",
+      "value": "#12b76a"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-success-light",
+      "value": "#dff7e8"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-error",
+      "value": "#f04438"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-error-light",
+      "value": "#fff3f0"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-warning",
+      "value": "#f79009"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-warning-light",
+      "value": "#fff8e6"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-info",
+      "value": "#056bfd"
+    },
+    {
+      "category": "background",
+      "name": "background.systemcolors.bg-info-light",
+      "value": "#e6f4ff"
+    },
+    {
+      "category": "border",
+      "name": "border.border-hero",
+      "value": "#056bfd"
+    },
+    {
+      "category": "border",
+      "name": "border.border-primary",
+      "value": "#d2dae6"
+    },
+    {
+      "category": "border",
+      "name": "border.border-orange",
+      "value": "#ffc978"
+    },
+    {
+      "category": "border",
+      "name": "border.border-turquoise",
+      "value": "#53cfc0"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-success",
+      "value": "#12b76a"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-success-light",
+      "value": "#81dea9"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-error",
+      "value": "#f04438"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-error-light",
+      "value": "#ffc1b5"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-warning",
+      "value": "#f79009"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-warning-light",
+      "value": "#ffd685"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-info",
+      "value": "#056bfd"
+    },
+    {
+      "category": "border",
+      "name": "border.systemcolors.border-info-light",
+      "value": "#80c1ff"
+    },
+    {
+      "category": "text",
+      "name": "text.text-primary",
+      "value": "#0e1219"
+    },
+    {
+      "category": "text",
+      "name": "text.text-secondary",
+      "value": "#444a56"
+    },
+    {
+      "category": "text",
+      "name": "text.text-tertiary",
+      "value": "#7c8398"
+    },
+    {
+      "category": "text",
+      "name": "text.text-disabled",
+      "value": "#bcc5d2"
+    },
+    {
+      "category": "text",
+      "name": "text.text-hero",
+      "value": "#056bfd"
+    },
+    {
+      "category": "text",
+      "name": "text.text-purple",
+      "value": "#b48bea"
+    },
+    {
+      "category": "text",
+      "name": "text.text-secondary-inverse",
+      "value": "#d8d9de"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.50",
+      "value": "#e6f4ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.100",
+      "value": "#a8d8ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.200",
+      "value": "#80c1ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.300",
+      "value": "#57a8ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.400",
+      "value": "#2e8cff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.500",
+      "value": "#056bfd"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.600",
+      "value": "#0052d6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.700",
+      "value": "#003eb0"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.800",
+      "value": "#002c8a"
+    },
+    {
+      "category": "palette",
+      "name": "palette.primary.900",
+      "value": "#001c63"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.50",
+      "value": "#e8eff9"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.100",
+      "value": "#dfe7f2"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.200",
+      "value": "#d2dae6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.300",
+      "value": "#bcc5d2"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.400",
+      "value": "#9da6b5"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.500",
+      "value": "#7c8398"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.600",
+      "value": "#585e6e"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.700",
+      "value": "#444a56"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.800",
+      "value": "#2a2e39"
+    },
+    {
+      "category": "palette",
+      "name": "palette.neutral.900",
+      "value": "#0e1219"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.50",
+      "value": "#e6f4ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.100",
+      "value": "#a8d8ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.200",
+      "value": "#80c1ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.300",
+      "value": "#57a8ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.400",
+      "value": "#2e8cff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.500",
+      "value": "#056bfd"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.600",
+      "value": "#0052d6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.700",
+      "value": "#003eb0"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.800",
+      "value": "#002c8a"
+    },
+    {
+      "category": "palette",
+      "name": "palette.info.900",
+      "value": "#001c63"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.50",
+      "value": "#dff7e8"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.100",
+      "value": "#aeebc6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.200",
+      "value": "#81dea9"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.300",
+      "value": "#58d190"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.400",
+      "value": "#33c47c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.500",
+      "value": "#12b76a"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.600",
+      "value": "#079156"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.700",
+      "value": "#006b40"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.800",
+      "value": "#00452c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.success.900",
+      "value": "#001f14"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.50",
+      "value": "#fff8e6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.100",
+      "value": "#ffe7ad"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.200",
+      "value": "#ffd685"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.300",
+      "value": "#ffc35c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.400",
+      "value": "#ffad33"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.500",
+      "value": "#f79009"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.600",
+      "value": "#d17000"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.700",
+      "value": "#ab5500"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.800",
+      "value": "#853e00"
+    },
+    {
+      "category": "palette",
+      "name": "palette.warning.900",
+      "value": "#5e2900"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.50",
+      "value": "#fff3f0"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.100",
+      "value": "#ffe4de"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.200",
+      "value": "#ffc1b5"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.300",
+      "value": "#ff9c8c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.400",
+      "value": "#fc7262"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.500",
+      "value": "#f04438"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.600",
+      "value": "#c92a24"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.700",
+      "value": "#a31515"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.800",
+      "value": "#7d0a0e"
+    },
+    {
+      "category": "palette",
+      "name": "palette.error.900",
+      "value": "#57060b"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.50",
+      "value": "#dcf5ef"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.100",
+      "value": "#a7e8dc"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.200",
+      "value": "#7bdbcd"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.300",
+      "value": "#53cfc0"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.400",
+      "value": "#2fc2b6"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.500",
+      "value": "#0fb4ab"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.600",
+      "value": "#048f8c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.700",
+      "value": "#006769"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.800",
+      "value": "#003f42"
+    },
+    {
+      "category": "palette",
+      "name": "palette.turquoise.900",
+      "value": "#001a1c"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.50",
+      "value": "#fffaf0"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.100",
+      "value": "#ffedc9"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.200",
+      "value": "#ffdca1"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.300",
+      "value": "#ffc978"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.400",
+      "value": "#faaf4d"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.500",
+      "value": "#ee9124"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.600",
+      "value": "#c76d14"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.700",
+      "value": "#a14f08"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.800",
+      "value": "#7a3500"
+    },
+    {
+      "category": "palette",
+      "name": "palette.orange.900",
+      "value": "#542200"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.50",
+      "value": "#f9f0ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.100",
+      "value": "#f8f0ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.200",
+      "value": "#f8f0ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.300",
+      "value": "#f4e8ff"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.400",
+      "value": "#d6baf7"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.500",
+      "value": "#b48bea"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.600",
+      "value": "#8e6ac4"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.700",
+      "value": "#6b4d9e"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.800",
+      "value": "#4b3578"
+    },
+    {
+      "category": "palette",
+      "name": "palette.purple.900",
+      "value": "#312352"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.50",
+      "value": "#ffe6ee"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.100",
+      "value": "#ffb0cd"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.200",
+      "value": "#ff87b7"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.300",
+      "value": "#ff5ea4"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.400",
+      "value": "#ff3694"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.500",
+      "value": "#ff0d87"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.600",
+      "value": "#d90074"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.700",
+      "value": "#b20065"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.800",
+      "value": "#8c0054"
+    },
+    {
+      "category": "palette",
+      "name": "palette.pink.900",
+      "value": "#660041"
+    },
+    {
+      "category": "radius",
+      "name": "radius-none",
+      "value": "0"
+    },
+    {
+      "category": "radius",
+      "name": "rd-xs",
+      "value": "6"
+    },
+    {
+      "category": "radius",
+      "name": "rd-sm",
+      "value": "8"
+    },
+    {
+      "category": "radius",
+      "name": "rd-md",
+      "value": "16"
+    },
+    {
+      "category": "radius",
+      "name": "rd-base",
+      "value": "24"
+    },
+    {
+      "category": "radius",
+      "name": "rd-lg",
+      "value": "32"
+    },
+    {
+      "category": "radius",
+      "name": "rd-xl",
+      "value": "40"
+    },
+    {
+      "category": "radius",
+      "name": "rd-4xl",
+      "value": "64"
+    },
+    {
+      "category": "spacing",
+      "name": "spacing-none",
+      "value": "0"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-xs",
+      "value": "4"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-sm",
+      "value": "8"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-md",
+      "value": "16"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-base",
+      "value": "24"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-lg",
+      "value": "32"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-xl",
+      "value": "40"
+    },
+    {
+      "category": "spacing",
+      "name": "sp-4xl",
+      "value": "64"
+    },
+    {
+      "category": "typography",
+      "name": "displayLg",
+      "value": "48/68 bold"
+    },
+    {
+      "category": "typography",
+      "name": "displayMd",
+      "value": "44/64 bold"
+    },
+    {
+      "category": "typography",
+      "name": "displayBase",
+      "value": "40/60 bold"
+    },
+    {
+      "category": "typography",
+      "name": "displaySm",
+      "value": "36/60 bold"
+    },
+    {
+      "category": "typography",
+      "name": "heading2xl",
+      "value": "40/60 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingXl",
+      "value": "36/54 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingLg",
+      "value": "32/44 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingMd",
+      "value": "28/40 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingBase",
+      "value": "24/30 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingSm",
+      "value": "20/26 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "headingXs",
+      "value": "18/24 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "heading2xs",
+      "value": "16/20 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "heading3xs",
+      "value": "14/16 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "labelLg600",
+      "value": "18/24 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "labelLg700",
+      "value": "18/24 bold"
+    },
+    {
+      "category": "typography",
+      "name": "labelMd600",
+      "value": "16/20 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "labelMd700",
+      "value": "16/20 bold"
+    },
+    {
+      "category": "typography",
+      "name": "labelBase600",
+      "value": "14/16 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "labelBase700",
+      "value": "14/16 bold"
+    },
+    {
+      "category": "typography",
+      "name": "labelSm600",
+      "value": "12/14 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "labelSm700",
+      "value": "12/14 bold"
+    },
+    {
+      "category": "typography",
+      "name": "bodyLg500",
+      "value": "18/28 medium"
+    },
+    {
+      "category": "typography",
+      "name": "bodyLg400",
+      "value": "18/28 regular"
+    },
+    {
+      "category": "typography",
+      "name": "bodyMd500",
+      "value": "16/24 medium"
+    },
+    {
+      "category": "typography",
+      "name": "bodyMd400",
+      "value": "16/24 regular"
+    },
+    {
+      "category": "typography",
+      "name": "bodyBase500",
+      "value": "14/20 medium"
+    },
+    {
+      "category": "typography",
+      "name": "bodyBase400",
+      "value": "14/20 regular"
+    },
+    {
+      "category": "typography",
+      "name": "bodySm500",
+      "value": "12/16 medium"
+    },
+    {
+      "category": "typography",
+      "name": "bodySm400",
+      "value": "12/16 regular"
+    },
+    {
+      "category": "typography",
+      "name": "overline400",
+      "value": "10/12 regular"
+    },
+    {
+      "category": "typography",
+      "name": "overline500",
+      "value": "10/12 medium"
+    },
+    {
+      "category": "typography",
+      "name": "linkMd",
+      "value": "16/24 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "linkBase",
+      "value": "14/20 semibold"
+    },
+    {
+      "category": "typography",
+      "name": "linkSm",
+      "value": "12/16 semibold"
+    },
+    {
+      "category": "shadow",
+      "name": "elevated",
+      "value": "3 layer(s)"
+    },
+    {
+      "category": "shadow",
+      "name": "tabBar",
+      "value": "1 layer(s)"
+    },
+    {
+      "category": "shadow",
+      "name": "soft",
+      "value": "1 layer(s)"
+    },
+    {
+      "category": "radiusRole",
+      "name": "box",
+      "value": "16",
+      "role": "falls back to rd-md"
+    },
+    {
+      "category": "radiusRole",
+      "name": "field",
+      "value": "8",
+      "role": "falls back to rd-sm"
+    },
+    {
+      "category": "radiusRole",
+      "name": "selector",
+      "value": "6",
+      "role": "falls back to rd-xs"
+    },
+    {
+      "category": "semanticColor",
+      "name": "primary",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "secondary",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "accent",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "neutral",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "info",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "success",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "warning",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    },
+    {
+      "category": "semanticColor",
+      "name": "error",
+      "value": ".solid / .soft / .outline / .ghost + 50..900 ladder",
+      "role": "brand/status"
+    }
+  ],
+  "themes": [
+    {
+      "id": "light",
+      "name": "Light",
+      "primary": "422ad5",
+      "secondary": "009689",
+      "accent": "00d3bb",
+      "base": "ffffff"
+    },
+    {
+      "id": "dark",
+      "name": "Dark",
+      "primary": "605dff",
+      "secondary": "f43098",
+      "accent": "00d3bb",
+      "base": "1d232a"
+    },
+    {
+      "id": "cupcake",
+      "name": "Cupcake",
+      "primary": "65c3c8",
+      "secondary": "ef9fbc",
+      "accent": "eeaf3a",
+      "base": "faf7f5"
+    },
+    {
+      "id": "bumblebee",
+      "name": "Bumblebee",
+      "primary": "e0a82e",
+      "secondary": "f9d72f",
+      "accent": "181830",
+      "base": "fffbeb"
+    },
+    {
+      "id": "emerald",
+      "name": "Emerald",
+      "primary": "66cc8a",
+      "secondary": "377cfb",
+      "accent": "ea5234",
+      "base": "ffffff"
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "primary": "4b6bfb",
+      "secondary": "7b92b2",
+      "accent": "67cba0",
+      "base": "ffffff"
+    },
+    {
+      "id": "synthwave",
+      "name": "Synthwave",
+      "primary": "e779c1",
+      "secondary": "58c7f3",
+      "accent": "f3cc30",
+      "base": "1a103c"
+    },
+    {
+      "id": "retro",
+      "name": "Retro",
+      "primary": "ef9995",
+      "secondary": "a4cbb4",
+      "accent": "dc8850",
+      "base": "ece3ca"
+    },
+    {
+      "id": "cyberpunk",
+      "name": "Cyberpunk",
+      "primary": "ff7598",
+      "secondary": "75d1f0",
+      "accent": "c07eec",
+      "base": "fff248"
+    },
+    {
+      "id": "valentine",
+      "name": "Valentine",
+      "primary": "e96d7b",
+      "secondary": "a991f7",
+      "accent": "88dbdd",
+      "base": "fae7f4"
+    },
+    {
+      "id": "halloween",
+      "name": "Halloween",
+      "primary": "f28c18",
+      "secondary": "6d3a9c",
+      "accent": "51a800",
+      "base": "212121"
+    },
+    {
+      "id": "garden",
+      "name": "Garden",
+      "primary": "5c7f67",
+      "secondary": "5a5b9f",
+      "accent": "ef9fbc",
+      "base": "e9e7e7"
+    },
+    {
+      "id": "forest",
+      "name": "Forest",
+      "primary": "1eb854",
+      "secondary": "1db990",
+      "accent": "1db98a",
+      "base": "171212"
+    },
+    {
+      "id": "aqua",
+      "name": "Aqua",
+      "primary": "09ecf3",
+      "secondary": "966fb3",
+      "accent": "ffe999",
+      "base": "345da7"
+    },
+    {
+      "id": "lofi",
+      "name": "Lo-Fi",
+      "primary": "0d0d0d",
+      "secondary": "1a1919",
+      "accent": "262626",
+      "base": "ffffff"
+    },
+    {
+      "id": "pastel",
+      "name": "Pastel",
+      "primary": "d1c1d7",
+      "secondary": "f6cbd1",
+      "accent": "b4e9d6",
+      "base": "ffffff"
+    },
+    {
+      "id": "fantasy",
+      "name": "Fantasy",
+      "primary": "6e0b75",
+      "secondary": "0075be",
+      "accent": "ff8d05",
+      "base": "ffffff"
+    },
+    {
+      "id": "wireframe",
+      "name": "Wireframe",
+      "primary": "b8b8b8",
+      "secondary": "b8b8b8",
+      "accent": "b8b8b8",
+      "base": "ffffff"
+    },
+    {
+      "id": "black",
+      "name": "Black",
+      "primary": "373737",
+      "secondary": "373737",
+      "accent": "373737",
+      "base": "000000"
+    },
+    {
+      "id": "luxury",
+      "name": "Luxury",
+      "primary": "d4af37",
+      "secondary": "152747",
+      "accent": "513448",
+      "base": "09090b"
+    },
+    {
+      "id": "dracula",
+      "name": "Dracula",
+      "primary": "ff79c6",
+      "secondary": "bd93f9",
+      "accent": "ffb86c",
+      "base": "282a36"
+    },
+    {
+      "id": "cmyk",
+      "name": "CMYK",
+      "primary": "45aeee",
+      "secondary": "e8488a",
+      "accent": "fff232",
+      "base": "ffffff"
+    },
+    {
+      "id": "autumn",
+      "name": "Autumn",
+      "primary": "8c0327",
+      "secondary": "d85251",
+      "accent": "d59b6a",
+      "base": "f1f1f1"
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "primary": "1c4e80",
+      "secondary": "7c909a",
+      "accent": "ea6947",
+      "base": "202020"
+    },
+    {
+      "id": "acid",
+      "name": "Acid",
+      "primary": "ff00f4",
+      "secondary": "ff7400",
+      "accent": "cbfd03",
+      "base": "fafafa"
+    },
+    {
+      "id": "lemonade",
+      "name": "Lemonade",
+      "primary": "519903",
+      "secondary": "e9e92f",
+      "accent": "f7fd03",
+      "base": "ffffff"
+    },
+    {
+      "id": "night",
+      "name": "Night",
+      "primary": "38bdf8",
+      "secondary": "818cf8",
+      "accent": "f471b5",
+      "base": "0f172a"
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "primary": "db924b",
+      "secondary": "6f4e37",
+      "accent": "10576d",
+      "base": "20161f"
+    },
+    {
+      "id": "winter",
+      "name": "Winter",
+      "primary": "047aff",
+      "secondary": "463aa2",
+      "accent": "c148ac",
+      "base": "ffffff"
+    },
+    {
+      "id": "dim",
+      "name": "Dim",
+      "primary": "9fe88d",
+      "secondary": "ff7d5c",
+      "accent": "c792e9",
+      "base": "2a303c"
+    },
+    {
+      "id": "nord",
+      "name": "Nord",
+      "primary": "5e81ac",
+      "secondary": "81a1c1",
+      "accent": "88c0d0",
+      "base": "eceff4"
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "primary": "ff865b",
+      "secondary": "fd6f9c",
+      "accent": "b387fa",
+      "base": "1a1626"
+    }
+  ]
+}

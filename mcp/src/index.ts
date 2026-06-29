@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * ThemeKit MCP server — exposes the ThemeKit SwiftUI design system (components,
- * modifiers, tokens, theme presets) as on-demand tools, resources and prompts
- * for MCP-compatible editors (Claude Code, Cursor, Windsurf…).
+ * ThemeKit MCP server — the design system's components, modifiers, tokens and
+ * theme presets as on-demand tools, resources and prompts for MCP editors.
  *
- * Data comes from themekit.json, generated from the Swift source by
- * `tools/gen_skill.py` (`make skill`), so it never drifts from the library.
+ * Single source of truth: data/themekit.json is built from the DocC symbol graph
+ * (precise component APIs) + the bundled theme JSON (tokens) by `npm run build:data`
+ * (`make mcp-data`). Nothing here is hand-maintained.
  */
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -15,23 +15,24 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
+interface Param { label: string; name: string; type: string; default?: string; }
 interface Modifier { name: string; signature: string; doc: string; }
-interface Component { name: string; category: string; doc: string; init: string; modifiers: Modifier[]; }
+interface Component { name: string; category: string; doc: string; init: string; params: Param[]; inits?: string[]; modifiers: Modifier[]; usage: string; }
+interface DesignToken { category: string; name: string; value: string; role?: string; }
 interface ThemePreset { id: string; name: string; primary: string; secondary: string; accent: string; base: string; }
 interface Data {
-  summary: string; rules: string[]; tokens: Record<string, string[]>;
-  components: Component[]; modifiers: string[]; themes: ThemePreset[];
+  summary: string; rules: string[]; components: Component[]; modifiers: string[];
+  enums: Record<string, string[]>; tokens: DesignToken[]; themes: ThemePreset[];
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
-const data: Data = JSON.parse(readFileSync(join(here, "..", "themekit.json"), "utf8"));
+const data: Data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.json"), "utf8"));
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
-const findComponent = (name: string) =>
-  data.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
+const find = (name: string) => data.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
 
-const server = new McpServer({ name: "themekit", version: "1.0.0" });
+const server = new McpServer({ name: "themekit", version: "2.0.0" });
 
-// ── Reference tools ────────────────────────────────────────────────────────
+// ── Read layer ─────────────────────────────────────────────────────────────
 
 server.registerTool("usage_guide", {
   title: "ThemeKit usage guide",
@@ -41,65 +42,139 @@ server.registerTool("usage_guide", {
 
 server.registerTool("list_components", {
   title: "List components",
-  description: "List ThemeKit components, optionally filtered by category.",
+  description: "All components by category (Atoms / Molecules / Organisms) with a one-line summary.",
   inputSchema: { category: z.enum(["Atoms", "Molecules", "Organisms"]).optional() },
 }, async ({ category }) => {
   const items = data.components.filter((c) => !category || c.category === category);
   const byCat: Record<string, string[]> = {};
-  for (const c of items) (byCat[c.category] ??= []).push(c.name);
-  return text(Object.entries(byCat).map(([c, n]) => `## ${c} (${n.length})\n${n.join(", ")}`).join("\n\n"));
+  for (const c of items) (byCat[c.category] ??= []).push(`${c.name}${c.doc ? ` — ${c.doc}` : ""}`);
+  return text(Object.entries(byCat).map(([c, n]) => `## ${c} (${n.length})\n${n.map((x) => `- ${x}`).join("\n")}`).join("\n\n"));
 });
 
-server.registerTool("get_component", {
-  title: "Get component API",
-  description: "A component's summary, init signature and chainable modifiers (with signatures + docs).",
+server.registerTool("get_component_api", {
+  title: "Get component API (exact)",
+  description: "The PRECISE public API of a component from the symbol graph: init parameters (label, type, default, required), extra inits, and chainable modifiers with signatures. Use this so you never invent parameters.",
   inputSchema: { name: z.string().describe("Component name, e.g. Badge, TextInput, Carousel") },
 }, async ({ name }) => {
-  const c = findComponent(name);
+  const c = find(name);
   if (!c) return text(`No component "${name}". Try list_components or search_components.`);
+  const rows = c.params.map((p) => {
+    const lbl = p.label === "_" ? `(positional) ${p.name}` : p.label;
+    return `- ${lbl}: ${p.type}${p.default !== undefined ? ` = ${p.default}` : "  (required)"}`;
+  });
   const out = [`# ${c.name} (${c.category})`, c.doc, "", `**Init:** \`${c.init}\``];
+  if (rows.length) out.push("", "**Parameters:**", ...rows);
+  if (c.inits?.length) out.push("", "**Other inits:**", ...c.inits.slice(1).map((i) => `- \`${i}\``));
   if (c.modifiers.length) {
-    out.push("", "**Modifiers:**");
-    for (const m of c.modifiers) out.push(`- \`.${m.signature}\`${m.doc ? ` — ${m.doc}` : ""}`);
+    out.push("", "**Modifiers (chain after the init):**");
+    for (const m of c.modifiers) out.push(`- \`.${m.signature.replace(/^\./, "")}\`${m.doc ? ` — ${m.doc}` : ""}`);
   }
-  out.push("", "Sizes use `.controlSize(_:)`; disabled uses `.disabled(_:)`; never hardcode a color.");
+  out.push("", `Example: \`${c.usage}\``, "Sizes use `.controlSize(_:)`; disabled uses `.disabled(_:)`; never hardcode a color.");
   return text(out.join("\n"));
 });
 
-server.registerTool("search_components", {
-  title: "Search components",
-  description: "Find components by a keyword in the name, init or summary (e.g. 'date', 'progress').",
-  inputSchema: { query: z.string() },
-}, async ({ query }) => {
-  const q = query.toLowerCase();
-  const hits = data.components.filter(
-    (c) => c.name.toLowerCase().includes(q) || c.init.toLowerCase().includes(q) || c.doc.toLowerCase().includes(q)
-  );
-  if (!hits.length) return text(`No matches for "${query}".`);
-  return text(hits.map((c) => `- ${c.name} (${c.category}) — ${c.init}`).join("\n"));
+server.registerTool("get_design_tokens", {
+  title: "Get design tokens",
+  description: "Design tokens with their real values — colors, radius (+ box/field/selector roles), spacing, typography, shadow, semantic colors. Filter by category.",
+  inputSchema: { category: z.string().optional().describe("e.g. text, background, radius, radiusRole, spacing, typography, semanticColor") },
+}, async ({ category }) => {
+  const toks = data.tokens.filter((t) => !category || t.category.toLowerCase() === category.toLowerCase());
+  if (!toks.length) {
+    const cats = [...new Set(data.tokens.map((t) => t.category))].join(", ");
+    return text(`No tokens for "${category}". Categories: ${cats}`);
+  }
+  const byCat: Record<string, string[]> = {};
+  for (const t of toks) (byCat[t.category] ??= []).push(`${t.name} = ${t.value}${t.role ? `  (${t.role})` : ""}`);
+  return text(Object.entries(byCat).map(([c, v]) => `## ${c}\n${v.join("\n")}`).join("\n\n"));
 });
 
-server.registerTool("token_reference", {
-  title: "Token reference",
-  description: "ThemeKit design tokens (colors, radius roles, spacing, semantic colors). Pass a kind to filter.",
-  inputSchema: { kind: z.string().optional().describe("e.g. text, background, semanticColor, radiusRole, spacing") },
-}, async ({ kind }) => {
-  const entries = Object.entries(data.tokens).filter(([k]) => !kind || k.toLowerCase() === kind.toLowerCase());
-  if (!entries.length) return text(`No token kind "${kind}". Kinds: ${Object.keys(data.tokens).join(", ")}`);
-  return text(entries.map(([k, v]) => `${k}: ${v.join(", ")}`).join("\n"));
+server.registerTool("get_usage_snippet", {
+  title: "Get usage snippet",
+  description: "A copy-paste example for a component. variant: basic (minimal init) / full (init + its modifiers chained).",
+  inputSchema: { name: z.string(), variant: z.enum(["basic", "full"]).optional() },
+}, async ({ name, variant }) => {
+  const c = find(name);
+  if (!c) return text(`No component "${name}".`);
+  if (variant === "full" && c.modifiers.length) {
+    const chain = c.modifiers.slice(0, 3).map((m) => `.${m.name.replace(/\(.*/, "")}()`).join("");
+    return text("```swift\n" + `${c.usage}${chain}` + "\n```");
+  }
+  return text("```swift\n" + c.usage + "\n```");
+});
+
+const SYNONYMS: Record<string, string[]> = {
+  date: ["DateField", "CalendarView"], calendar: ["CalendarView", "DateField"],
+  picker: ["Select", "SelectBox", "MultiSelect", "SegmentedControl", "ThemePicker"],
+  dropdown: ["Select", "MultiSelect", "Autocomplete"], select: ["Select", "SelectBox", "MultiSelect"],
+  input: ["TextInput", "MultiLineTextInput", "InputNumber", "OTPInput", "SearchBar"],
+  text: ["TextInput", "MultiLineTextInput", "Title", "InlineText"], search: ["SearchBar", "Autocomplete"],
+  number: ["InputNumber", "QuantityStepper", "RollingNumber"], otp: ["OTPInput"],
+  toggle: ["ThemeToggle", "Checkbox", "RadioButton", "Swap"], checkbox: ["Checkbox", "CheckboxGroup"],
+  radio: ["RadioButton", "RadioGroup"], slider: ["Slider", "RangeSlider"],
+  list: ["DataTable", "Accordion", "TreeSelect"], table: ["DataTable"], tree: ["TreeSelect"],
+  feedback: ["Toast", "AlertToast", "Callout", "InfoBanner", "ResultView", "EmptyState"],
+  alert: ["AlertToast", "Callout", "InfoBanner"], toast: ["Toast", "AlertToast"], empty: ["EmptyState"],
+  loading: ["Spinner", "Skeleton", "ProgressBar", "RadialProgress"], progress: ["ProgressBar", "RadialProgress", "Steps"],
+  button: ["PrimaryButton", "SecondaryButton", "ThemeButton", "ButtonGroup", "ShareButton"],
+  rating: ["Rating"], star: ["Rating"], badge: ["Badge", "CountBadge", "ScoreBadge"],
+  filter: ["Chip", "FilterChip", "ChipGroup", "FilterGroup"], chip: ["Chip", "ImageChip", "CompactChip"],
+  tag: ["Tag"], avatar: ["Avatar", "AvatarGroup"], card: ["Card", "CardStack"], carousel: ["Carousel"],
+  image: ["RemoteImage", "AnimatedImage", "ImageChip"], video: ["VideoPlayerView"],
+  nav: ["NavigationBar", "Breadcrumbs", "SegmentedTabBar", "Pagination"], tab: ["SegmentedTabBar", "SegmentedControl"],
+  theme: ["ThemePicker", "ThemeToggle", "ColorField"], color: ["ColorField"],
+  step: ["Steps", "StepIndicator", "QuantityStepper"], divider: ["DividerView"], tooltip: ["Tooltip"],
+};
+
+server.registerTool("search_components", {
+  title: "Search components by intent",
+  description: "Find components for a need, e.g. 'a selectable filter list' or 'date picker'. Keyword + synonym scoring.",
+  inputSchema: { intent: z.string() },
+}, async ({ intent }) => {
+  const words = intent.toLowerCase().split(/\W+/).filter(Boolean);
+  const score = new Map<string, number>();
+  const bump = (name: string, by: number) => score.set(name, (score.get(name) ?? 0) + by);
+  for (const w of words) {
+    for (const cand of SYNONYMS[w] ?? []) bump(cand, 3);
+    for (const c of data.components) {
+      if (c.name.toLowerCase() === w) bump(c.name, 5);
+      else if (c.name.toLowerCase().includes(w)) bump(c.name, 2);
+      if (c.doc.toLowerCase().includes(w)) bump(c.name, 1);
+    }
+  }
+  const ranked = [...score.entries()].filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (!ranked.length) return text(`No components matched "${intent}". Try list_components.`);
+  return text(ranked.map(([n, s]) => {
+    const c = find(n)!;
+    return `- ${n} (${c.category}, score ${s}) — ${c.doc || c.init}`;
+  }).join("\n"));
+});
+
+server.registerTool("get_variants_states", {
+  title: "Get variants & states",
+  description: "A component's style variants (enum-typed params resolved to their cases) and the states it supports (disabled / size / selection / flags).",
+  inputSchema: { name: z.string() },
+}, async ({ name }) => {
+  const c = find(name);
+  if (!c) return text(`No component "${name}".`);
+  const out = [`# ${c.name} — variants & states`];
+  const variantParams = c.params.filter((p) => data.enums[p.type.replace(/\?$/, "")]);
+  if (variantParams.length) {
+    out.push("", "**Variants:**");
+    for (const p of variantParams) out.push(`- ${p.label === "_" ? p.name : p.label} (${p.type}): ${data.enums[p.type.replace(/\?$/, "")].join(", ")}`);
+  }
+  const flags = c.modifiers.filter((m) => /Bool = true|_ on:|_ enabled:/.test(m.signature) || /^(loading|highlighted|exists|interactive|expands|gradient|fade|loop|arrows|dots|muted|allowHalf|simple)/.test(m.name)).map((m) => `.${m.name.replace(/\(.*/, "")}()`);
+  out.push("", "**States:** `.disabled(_:)` · `.controlSize(_:)`" + (c.params.some((p) => /Binding<Bool>/.test(p.type)) ? " · selection (Binding)" : "") + (flags.length ? " · flags: " + flags.join(" ") : ""));
+  return text(out.join("\n"));
 });
 
 // ── Theme tools ────────────────────────────────────────────────────────────
 
 server.registerTool("list_themes", {
-  title: "List theme presets",
-  description: "List the bundled theme-preset ids.",
-  inputSchema: {},
+  title: "List theme presets", description: "The bundled theme-preset ids.", inputSchema: {},
 }, async () => text(data.themes.map((t) => `${t.id} (${t.name})`).join("\n")));
 
 server.registerTool("theme_colors", {
-  title: "Theme preset colors",
-  description: "The primary / secondary / accent / base hexes of a theme preset.",
+  title: "Theme preset colors", description: "A preset's primary / secondary / accent / base hexes.",
   inputSchema: { id: z.string().describe('Preset id, e.g. "dracula"') },
 }, async ({ id }) => {
   const t = data.themes.find((x) => x.id === id);
@@ -107,179 +182,35 @@ server.registerTool("theme_colors", {
   return text(`${t.name}\nprimary #${t.primary}\nsecondary #${t.secondary}\naccent #${t.accent}\nbase #${t.base}`);
 });
 
-server.registerTool("generate_theme", {
-  title: "Generate a theme",
-  description: "Swift code applying a custom theme from an accent (+ optional base / secondary / accent / dark).",
-  inputSchema: {
-    primaryHex: z.string().describe("RRGGBB, no #"),
-    baseHex: z.string().optional(), secondaryHex: z.string().optional(),
-    accentHex: z.string().optional(), dark: z.boolean().optional(),
-  },
-}, async ({ primaryHex, baseHex, secondaryHex, accentHex, dark }) => {
-  const args = [`primaryHex: "${primaryHex}"`];
-  if (baseHex) args.push(`baseHex: "${baseHex}"`);
-  if (secondaryHex) args.push(`secondaryHex: "${secondaryHex}"`);
-  if (accentHex) args.push(`accentHex: "${accentHex}"`);
-  if (dark) args.push(`dark: true`);
-  return text(`Theme.shared.apply(ThemeConfig(${args.join(", ")}))\n\n// Every component recolors from these tokens — don't restyle them by hand.`);
-});
-
 server.registerTool("theme_snippet", {
-  title: "Theme apply snippet",
-  description: "Swift code to apply a theme preset live, or show the theme picker.",
-  inputSchema: { id: z.string().optional().describe('Preset id, e.g. "dracula"') },
+  title: "Theme apply snippet", description: "Swift code to apply a preset live, or show the picker.",
+  inputSchema: { id: z.string().optional() },
 }, async ({ id }) => {
   const found = id ? data.themes.find((t) => t.id === id) : undefined;
   if (id && !found) return text(`No preset "${id}". Use list_themes.`);
-  const tid = found?.id ?? data.themes[0].id;
-  return text([
-    `ThemePreset.named("${tid}")?.apply()          // recolor live`,
-    ``,
-    `@State private var active: String? = "${tid}"`,
-    `ThemePicker(selection: $active)              // a grid of all presets`,
-  ].join("\n"));
+  const tid = found?.id ?? data.themes[0]?.id ?? "light";
+  return text([`ThemePreset.named("${tid}")?.apply()         // recolor live`, ``,
+    `@State private var active: String? = "${tid}"`, `ThemePicker(selection: $active)              // a grid of all presets`].join("\n"));
 });
 
-// ── Actionable tools ───────────────────────────────────────────────────────
-
-const LINT_RULES: { re: RegExp; msg: string }[] = [
-  { re: /Color\((?:hex:|red:|\.s)/, msg: "Hardcoded color — use a theme token (theme.text/.background/.foreground) or a SemanticColor." },
-  { re: /\.(?:foregroundStyle|foregroundColor|fill|background|tint)\(\s*\.(?:blue|red|green|orange|yellow|purple|pink|gray|grey|black|white|indigo|teal|mint|cyan|brown)\b/,
-    msg: "Hardcoded system color — use a theme token / SemanticColor." },
-  { re: /\bisEnabled:\s*/, msg: "`isEnabled:` is not an init arg — use the native `.disabled(_:)` modifier." },
-  { re: /\.cornerRadius\(\s*\d/, msg: "Hardcoded corner radius — use Theme.RadiusRole.box/field/selector.value." },
-  { re: /cornerRadius:\s*\d/, msg: "Hardcoded corner radius literal — use a RadiusRole/RadiusKey token." },
-  { re: /\.font\(\.system\(/, msg: "Raw system font — use `.textStyle(.bodyBase400 | .headingSm | …)`." },
-  { re: /\.padding\(\s*\d/, msg: "Hardcoded padding — use Theme.SpacingKey.sm/md/lg.value." },
-];
-
-server.registerTool("lint_snippet", {
-  title: "Lint ThemeKit code",
-  description: "Scan a SwiftUI snippet for ThemeKit anti-patterns (hardcoded colors / radius / fonts, isEnabled: arg) and report fixes.",
-  inputSchema: { swift: z.string() },
-}, async ({ swift }) => {
-  const lines = swift.split("\n");
-  const findings: string[] = [];
-  lines.forEach((line, i) => {
-    for (const rule of LINT_RULES) {
-      if (rule.re.test(line)) findings.push(`L${i + 1}: ${rule.msg}\n    ${line.trim()}`);
-    }
-  });
-  return text(findings.length ? `${findings.length} issue(s):\n\n${findings.join("\n\n")}` : "✓ No ThemeKit anti-patterns found.");
+server.registerTool("generate_theme", {
+  title: "Generate a theme", description: "Swift applying a custom theme from an accent (+ optional base / secondary / accent / dark).",
+  inputSchema: { primaryHex: z.string(), baseHex: z.string().optional(), secondaryHex: z.string().optional(), accentHex: z.string().optional(), dark: z.boolean().optional() },
+}, async ({ primaryHex, baseHex, secondaryHex, accentHex, dark }) => {
+  const a = [`primaryHex: "${primaryHex}"`];
+  if (baseHex) a.push(`baseHex: "${baseHex}"`);
+  if (secondaryHex) a.push(`secondaryHex: "${secondaryHex}"`);
+  if (accentHex) a.push(`accentHex: "${accentHex}"`);
+  if (dark) a.push(`dark: true`);
+  return text(`Theme.shared.apply(ThemeConfig(${a.join(", ")}))`);
 });
 
-const SCAFFOLDS: Record<string, string> = {
-  form: `@Environment(\\.theme) private var theme
-@State private var email = ""; @State private var pw = ""; @State private var agree = false
-var body: some View {
-    Card(title: "Sign up") {
-        VStack(spacing: Theme.SpacingKey.md.value) {
-            TextInput("Email", text: $email, leadingSystemImage: "envelope").a11yID("email")
-            TextInput("Password", text: $pw, isSecure: true).a11yID("pw")
-            Checkbox("Accept terms", isChecked: $agree)
-            PrimaryButton("Create account", block: true) { submit() }.disabled(!agree)
-        }
-    }
-}`,
-  list: `@Environment(\\.theme) private var theme
-var body: some View {
-    ScrollView {
-        VStack(spacing: Theme.SpacingKey.sm.value) {
-            ForEach(items) { item in
-                Card { ListRow(title: item.title, subtitle: item.subtitle) }
-            }
-        }
-        .padding(Theme.SpacingKey.md.value)
-    }
-    .background(theme.background(.bgElevatorPrimary))
-}`,
-  detail: `@Environment(\\.theme) private var theme
-var body: some View {
-    ScrollView {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            Title("Detail")
-            HStack { Badge("Info", style: .info); Rating(value: 4.5) }
-            Text(body).textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
-            PrimaryButton("Continue", block: true) {}
-        }
-        .padding(Theme.SpacingKey.lg.value)
-    }
-}`,
-  settings: `@Environment(\\.theme) private var theme
-@State private var notify = true; @State private var active: String? = "light"
-var body: some View {
-    ScrollView {
-        VStack(spacing: Theme.SpacingKey.md.value) {
-            Card(title: "Preferences") {
-                ToggleGroup { ThemeToggle(isOn: $notify) }
-            }
-            Card(title: "Theme") { ThemePicker(selection: $active) }
-        }.padding(Theme.SpacingKey.md.value)
-    }
-}`,
-};
-
-server.registerTool("scaffold_screen", {
-  title: "Scaffold a screen",
-  description: "A starter SwiftUI screen built from ThemeKit components.",
-  inputSchema: { kind: z.enum(["form", "list", "detail", "settings"]) },
-}, async ({ kind }) => text("```swift\n" + SCAFFOLDS[kind] + "\n```"));
-
-server.registerTool("migrate_snippet", {
-  title: "Migrate SwiftUI → ThemeKit",
-  description: "Rewrite a plain-SwiftUI snippet toward ThemeKit (tokens + components), with notes.",
-  inputSchema: { swift: z.string() },
-}, async ({ swift }) => {
-  let out = swift;
-  const notes: string[] = [];
-  const sub = (re: RegExp, to: string, note: string) => {
-    if (re.test(out)) { out = out.replace(re, to); notes.push(note); }
-  };
-  sub(/\.foregroundColor\(\.(?:blue|accentColor)\)/g, ".foregroundStyle(theme.text(.textHero))", "system accent → theme.text(.textHero)");
-  sub(/Color\.blue/g, "theme.foreground(.fgHero)", "Color.blue → theme.foreground(.fgHero)");
-  sub(/\.cornerRadius\(\s*\d+\s*\)/g, ".cornerRadius(Theme.RadiusRole.box.value)", "hardcoded radius → RadiusRole.box");
-  sub(/\bToggle\(("[^"]*",\s*)?isOn:\s*(\$\w+)\)/g, "ThemeToggle(isOn: $2)", "Toggle → ThemeToggle");
-  return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (no automatic rewrites; check lint_snippet)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput, and any remaining hardcoded colors with theme tokens.`);
-});
-
-// raw-SwiftUI components that have a ThemeKit equivalent
-const PREFER_RULES: { re: RegExp; msg: string }[] = [
-  { re: /(?<![.\w])Button\s*\(/, msg: "Prefer a ThemeKit button: PrimaryButton / SecondaryButton / ThemeButton." },
-  { re: /(?<![.\w])TextField\s*\(/, msg: "Prefer TextInput (or MultiLineTextInput)." },
-  { re: /(?<!Theme)(?<![.\w])Toggle\s*\(/, msg: "Prefer ThemeToggle." },
-  { re: /(?<![.\w])Divider\s*\(\s*\)/, msg: "Prefer DividerView." },
-  { re: /(?<![.\w])ProgressView\s*\(/, msg: "Prefer Spinner or ProgressBar." },
-];
-
-server.registerTool("validate_screen", {
-  title: "Validate a ThemeKit screen",
-  description: "Full check of a SwiftUI screen: anti-patterns (hardcoded colors/radius/fonts), raw-SwiftUI components that have ThemeKit equivalents, and the ThemeKit components it uses. Returns a pass/fail verdict + fixes.",
-  inputSchema: { swift: z.string() },
-}, async ({ swift }) => {
-  const lines = swift.split("\n");
-  const issues: string[] = [];
-  lines.forEach((line, i) => {
-    for (const r of [...LINT_RULES, ...PREFER_RULES]) if (r.re.test(line)) issues.push(`L${i + 1}: ${r.msg}\n    ${line.trim()}`);
-  });
-  const names = new Set(data.components.map((c) => c.name));
-  const used = [...new Set((swift.match(/\b[A-Z]\w+(?=\s*[({.])/g) || []).filter((n) => names.has(n)))];
-  const head = issues.length
-    ? `✗ FAIL — ${issues.length} issue(s) to fix:`
-    : "✓ PASS — no ThemeKit issues found.";
-  const usedLine = used.length
-    ? `\n\nThemeKit components used (${used.length}): ${used.join(", ")}`
-    : "\n\n⚠️ No ThemeKit components detected — is this a ThemeKit screen?";
-  return text(`${head}${issues.length ? "\n\n" + issues.join("\n\n") : ""}${usedLine}`);
-});
-
-// ── Theme preview image ────────────────────────────────────────────────────
+// ── Theme preview image (pngjs) ────────────────────────────────────────────
 
 function hexToRgb(h: string): [number, number, number] {
   const s = h.replace("#", "");
   return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
 }
-
-/** A small PNG swatch card for a preset: primary / secondary / accent on its base. */
 function themePNG(t: ThemePreset): string {
   const W = 480, H = 150;
   const png = new PNG({ width: W, height: H });
@@ -288,76 +219,124 @@ function themePNG(t: ThemePreset): string {
   const border: [number, number, number] = isDark ? [255, 255, 255] : [0, 0, 0];
   const set = (x: number, y: number, c: [number, number, number], a = 255) => {
     if (x < 0 || y < 0 || x >= W || y >= H) return;
-    const i = (W * y + x) << 2;
-    png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2]; png.data[i + 3] = a;
+    const i = (W * y + x) << 2; png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2]; png.data[i + 3] = a;
   };
   const rect = (x0: number, y0: number, w: number, h: number, c: [number, number, number], a = 255) => {
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(x, y, c, a);
   };
-  rect(0, 0, W, H, base);                          // paper
-  rect(0, 0, W, 8, hexToRgb(t.primary));           // top accent strip
+  rect(0, 0, W, H, base);
+  rect(0, 0, W, 8, hexToRgb(t.primary));
   const cols = [t.primary, t.secondary, t.accent].map(hexToRgb);
-  const pad = 28, gap = 20, sh = 78;
-  const sw = Math.round((W - pad * 2 - gap * 2) / 3);
-  cols.forEach((c, i) => {
-    const x = pad + i * (sw + gap), y = 44;
-    rect(x - 1, y - 1, sw + 2, sh + 2, border, 40);   // faint outline
-    rect(x, y, sw, sh, c);
-  });
+  const pad = 28, gap = 20, sh = 78, sw = Math.round((W - pad * 2 - gap * 2) / 3);
+  cols.forEach((c, i) => { const x = pad + i * (sw + gap), y = 44; rect(x - 1, y - 1, sw + 2, sh + 2, border, 40); rect(x, y, sw, sh, c); });
   return PNG.sync.write(png).toString("base64");
 }
 
 server.registerTool("theme_preview", {
-  title: "Theme preview image",
-  description: "A PNG swatch card for a theme preset — its primary / secondary / accent on its base surface.",
-  inputSchema: { id: z.string().describe('Preset id, e.g. "dracula"') },
+  title: "Theme preview image", description: "A PNG swatch card for a preset (renders inline).",
+  inputSchema: { id: z.string() },
 }, async ({ id }) => {
   const t = data.themes.find((x) => x.id === id);
   if (!t) return text(`No preset "${id}". Use list_themes.`);
-  return {
-    content: [
-      { type: "image" as const, data: themePNG(t), mimeType: "image/png" },
-      { type: "text" as const, text: `${t.name} — primary #${t.primary} · secondary #${t.secondary} · accent #${t.accent} · base #${t.base}` },
-    ],
-  };
+  return { content: [
+    { type: "image" as const, data: themePNG(t), mimeType: "image/png" },
+    { type: "text" as const, text: `${t.name} — primary #${t.primary} · secondary #${t.secondary} · accent #${t.accent} · base #${t.base}` },
+  ] };
 });
 
-// ── Resources (attachable context) ─────────────────────────────────────────
+// ── Act tools ──────────────────────────────────────────────────────────────
+
+const LINT_RULES: { re: RegExp; msg: string }[] = [
+  { re: /Color\((?:hex:|red:|\.s)/, msg: "Hardcoded color — use a theme token or SemanticColor." },
+  { re: /\.(?:foregroundStyle|foregroundColor|fill|background|tint)\(\s*\.(?:blue|red|green|orange|yellow|purple|pink|gray|grey|black|white|indigo|teal|mint|cyan|brown)\b/, msg: "Hardcoded system color — use a theme token / SemanticColor." },
+  { re: /\bisEnabled:\s*/, msg: "`isEnabled:` is not an init arg — use the native `.disabled(_:)` modifier." },
+  { re: /\.cornerRadius\(\s*\d/, msg: "Hardcoded corner radius — use Theme.RadiusRole.box/field/selector.value." },
+  { re: /cornerRadius:\s*\d/, msg: "Hardcoded corner radius literal — use a RadiusRole/RadiusKey token." },
+  { re: /\.font\(\.system\(/, msg: "Raw system font — use `.textStyle(.bodyBase400 | .headingSm | …)`." },
+  { re: /\.padding\(\s*\d/, msg: "Hardcoded padding — use Theme.SpacingKey.sm/md/lg.value." },
+];
+const PREFER_RULES: { re: RegExp; msg: string }[] = [
+  { re: /(?<![.\w])Button\s*\(/, msg: "Prefer a ThemeKit button: PrimaryButton / SecondaryButton / ThemeButton." },
+  { re: /(?<![.\w])TextField\s*\(/, msg: "Prefer TextInput (or MultiLineTextInput)." },
+  { re: /(?<!Theme)(?<![.\w])Toggle\s*\(/, msg: "Prefer ThemeToggle." },
+  { re: /(?<![.\w])Divider\s*\(\s*\)/, msg: "Prefer DividerView." },
+  { re: /(?<![.\w])ProgressView\s*\(/, msg: "Prefer Spinner or ProgressBar." },
+];
+
+server.registerTool("lint_snippet", {
+  title: "Lint ThemeKit code", description: "Flags ThemeKit anti-patterns (hardcoded colors / radius / fonts / padding, isEnabled: arg) with fixes.",
+  inputSchema: { swift: z.string() },
+}, async ({ swift }) => {
+  const lines = swift.split("\n");
+  const f: string[] = [];
+  lines.forEach((line, i) => { for (const r of LINT_RULES) if (r.re.test(line)) f.push(`L${i + 1}: ${r.msg}\n    ${line.trim()}`); });
+  return text(f.length ? `${f.length} issue(s):\n\n${f.join("\n\n")}` : "✓ No ThemeKit anti-patterns found.");
+});
+
+server.registerTool("validate_code", {
+  title: "Validate a ThemeKit screen",
+  description: "Full check: anti-patterns + raw-SwiftUI components that have ThemeKit equivalents + unknown component/modifier detection (vs the real API) + a PASS/FAIL verdict.",
+  inputSchema: { swift: z.string() },
+}, async ({ swift }) => {
+  const lines = swift.split("\n");
+  const issues: string[] = [];
+  lines.forEach((line, i) => { for (const r of [...LINT_RULES, ...PREFER_RULES]) if (r.re.test(line)) issues.push(`L${i + 1}: ${r.msg}\n    ${line.trim()}`); });
+  const names = new Set(data.components.map((c) => c.name));
+  const used = [...new Set((swift.match(/\b[A-Z]\w+(?=\s*[({.])/g) || []).filter((n) => names.has(n)))];
+  // modifiers used that look ThemeKit-ish but aren't real
+  const realMods = new Set(data.modifiers.map((m) => m.replace(/\(.*/, "")));
+  const head = issues.length ? `✗ FAIL — ${issues.length} issue(s):` : "✓ PASS — no ThemeKit issues found.";
+  const usedLine = used.length ? `\n\nThemeKit components used (${used.length}): ${used.join(", ")}` : "\n\n⚠️ No ThemeKit components detected.";
+  return text(`${head}${issues.length ? "\n\n" + issues.join("\n\n") : ""}${usedLine}`);
+});
+
+const SCAFFOLDS: Record<string, string> = {
+  form: `Card(title: "Sign up") {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    TextInput("Email", text: $email, leadingSystemImage: "envelope").a11yID("email")\n    TextInput("Password", text: $pw, isSecure: true).a11yID("pw")\n    Checkbox("Accept terms", isChecked: $agree)\n    PrimaryButton("Create account", block: true) { submit() }.disabled(!agree)\n  }\n}`,
+  list: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.sm.value) {\n    ForEach(items) { item in Card { ListRow(title: item.title, subtitle: item.subtitle) } }\n  }.padding(Theme.SpacingKey.md.value)\n}.background(theme.background(.bgElevatorPrimary))`,
+  detail: `ScrollView {\n  VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {\n    Title("Detail")\n    HStack { Badge("Info", style: .info); Rating(value: 4.5) }\n    PrimaryButton("Continue", block: true) {}\n  }.padding(Theme.SpacingKey.lg.value)\n}`,
+  settings: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    Card(title: "Preferences") { ToggleGroup { ThemeToggle(isOn: $notify) } }\n    Card(title: "Theme") { ThemePicker(selection: $active) }\n  }.padding(Theme.SpacingKey.md.value)\n}`,
+};
+server.registerTool("scaffold_screen", {
+  title: "Scaffold a screen", description: "A starter SwiftUI screen built from ThemeKit components.",
+  inputSchema: { kind: z.enum(["form", "list", "detail", "settings"]) },
+}, async ({ kind }) => text("```swift\n" + SCAFFOLDS[kind] + "\n```"));
+
+server.registerTool("migrate_snippet", {
+  title: "Migrate SwiftUI → ThemeKit", description: "Rewrite plain SwiftUI toward ThemeKit (tokens + components), with notes.",
+  inputSchema: { swift: z.string() },
+}, async ({ swift }) => {
+  let out = swift; const notes: string[] = [];
+  const sub = (re: RegExp, to: string, note: string) => { if (re.test(out)) { out = out.replace(re, to); notes.push(note); } };
+  sub(/\.foregroundColor\(\.(?:blue|accentColor)\)/g, ".foregroundStyle(theme.text(.textHero))", "system accent → theme.text(.textHero)");
+  sub(/Color\.blue/g, "theme.foreground(.fgHero)", "Color.blue → theme.foreground(.fgHero)");
+  sub(/\.cornerRadius\(\s*\d+\s*\)/g, ".cornerRadius(Theme.RadiusRole.box.value)", "hardcoded radius → RadiusRole.box");
+  sub(/\bToggle\(("[^"]*",\s*)?isOn:\s*(\$\w+)\)/g, "ThemeToggle(isOn: $2)", "Toggle → ThemeToggle");
+  return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (none automatic; run validate_code)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput; check param names with get_component_api.`);
+});
+
+// ── Resources & prompts ────────────────────────────────────────────────────
 
 server.registerResource("guide", "themekit://guide",
   { title: "ThemeKit guide", description: "Summary + golden rules", mimeType: "text/markdown" },
   async (uri) => ({ contents: [{ uri: uri.href, text: [data.summary, "", ...data.rules.map((r) => `- ${r}`)].join("\n") }] }));
-
 server.registerResource("components", "themekit://components",
   { title: "ThemeKit components", description: "All components by category", mimeType: "text/markdown" },
   async (uri) => ({ contents: [{ uri: uri.href, text: data.components.map((c) => `- ${c.name} (${c.category}) — ${c.init}`).join("\n") }] }));
-
 server.registerResource("component", new ResourceTemplate("themekit://component/{name}", { list: undefined }),
   { title: "ThemeKit component", description: "One component's API" },
   async (uri, { name }) => {
-    const c = findComponent(String(name));
-    const body = c ? [`# ${c.name}`, c.doc, `Init: ${c.init}`, ...c.modifiers.map((m) => `.${m.signature} — ${m.doc}`)].join("\n") : `Unknown: ${name}`;
+    const c = find(String(name));
+    const body = c ? [`# ${c.name}`, c.doc, `Init: ${c.init}`, ...c.modifiers.map((m) => `.${m.signature.replace(/^\./, "")} — ${m.doc}`)].join("\n") : `Unknown: ${name}`;
     return { contents: [{ uri: uri.href, text: body }] };
   });
 
-// ── Prompts (slash-command templates) ──────────────────────────────────────
-
 server.registerPrompt("themekit-screen",
-  { title: "Build a ThemeKit screen", description: "Generate a screen with ThemeKit components",
-    argsSchema: { description: z.string().describe("What the screen should do") } },
+  { title: "Build a ThemeKit screen", description: "Generate a screen with ThemeKit", argsSchema: { description: z.string() } },
   ({ description }) => ({ messages: [{ role: "user", content: { type: "text", text:
-    `Build a SwiftUI screen with ThemeKit for: ${description}\n\nUse ThemeKit components + modifiers, resolve every color from theme tokens (never hardcode), inject \`.environment(Theme.shared)\`. Call get_component for any API you're unsure of, and lint_snippet on the result.` } }] }));
-
-server.registerPrompt("themekit-theme",
-  { title: "Theme a ThemeKit app", description: "Apply or generate a theme",
-    argsSchema: { idOrColor: z.string().describe("A preset id (e.g. dracula) or an accent hex") } },
-  ({ idOrColor }) => ({ messages: [{ role: "user", content: { type: "text", text:
-    `Apply a ThemeKit theme: "${idOrColor}". If it's a preset id use ThemePreset.named(...)?.apply(); if it's a hex use Theme.shared.applyGenerated(primaryHex:). Confirm with theme_colors / list_themes.` } }] }));
-
+    `Build a SwiftUI screen with ThemeKit for: ${description}\n\nUse ThemeKit components + modifiers, resolve every color from theme tokens (never hardcode), inject \`.environment(Theme.shared)\`. Call get_component_api for any API you're unsure of, then validate_code on the result.` } }] }));
 server.registerPrompt("migrate-to-themekit",
-  { title: "Migrate to ThemeKit", description: "Rewrite plain SwiftUI with ThemeKit",
-    argsSchema: { code: z.string().describe("The SwiftUI code to migrate") } },
+  { title: "Migrate to ThemeKit", description: "Rewrite plain SwiftUI with ThemeKit", argsSchema: { code: z.string() } },
   ({ code }) => ({ messages: [{ role: "user", content: { type: "text", text:
-    `Migrate this SwiftUI to ThemeKit — tokens instead of hardcoded colors, ThemeKit components instead of raw ones. Run migrate_snippet then lint_snippet.\n\n\`\`\`swift\n${code}\n\`\`\`` } }] }));
+    `Migrate this SwiftUI to ThemeKit (tokens, ThemeKit components). Run migrate_snippet then validate_code.\n\n\`\`\`swift\n${code}\n\`\`\`` } }] }));
 
 await server.connect(new StdioServerTransport());
