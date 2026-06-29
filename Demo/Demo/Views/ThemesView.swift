@@ -62,13 +62,15 @@ struct ThemesView: View {
                 Text("The quick brown fox jumps over the lazy dog.")
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
-                // The three brand colors — primary / secondary / accent.
-                HStack(spacing: Theme.SpacingKey.sm.value) {
+                // The three brand colors — primary / secondary / accent. A ButtonGroup
+                // keeps each label on one line and wraps to the next row when they
+                // don't fit, instead of squeezing the text onto two lines.
+                ButtonGroup(.horizontal) {
                     ThemeButton("Primary", color: .primary, variant: .solid) {}
                     ThemeButton("Secondary", color: .secondary, variant: .solid) {}
                     ThemeButton("Accent", color: .accent, variant: .solid) {}
                 }
-                HStack(spacing: Theme.SpacingKey.sm.value) {
+                ButtonGroup(.horizontal) {
                     PrimaryButton("Continue") {}
                     SecondaryButton("Cancel") {}
                 }

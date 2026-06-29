@@ -13,6 +13,10 @@ public enum ButtonGroupAxis {
 /// Molecule. Lays out related buttons in a vertical stack or a side-by-side row.
 /// Buttons are content-width by default (ideal for a horizontal row); for a
 /// vertical full-width CTA stack, pass the buttons `block: true`.
+///
+/// A horizontal group **wraps**: each button keeps its single-line label at its
+/// natural width and overflowing buttons flow to the next line, instead of being
+/// squeezed until the text wraps onto two lines.
 public struct ButtonGroup<Content: View>: View {
     private let axis: ButtonGroupAxis
     private let spacing: CGFloat
@@ -29,7 +33,9 @@ public struct ButtonGroup<Content: View>: View {
         case .vertical:
             VStack(spacing: spacing) { content() }
         case .horizontal:
-            HStack(spacing: spacing) { content() }
+            // FlowLayout (not HStack) so buttons wrap to the next line rather than
+            // compressing — hugs content when it fits, wraps when it doesn't.
+            FlowLayout(spacing: spacing, lineSpacing: spacing) { content() }
         }
     }
 }
