@@ -15,11 +15,21 @@ The data lives in `themekit.json`, generated from the Swift source by
 |---|---|
 | `usage_guide` | The golden rules for writing ThemeKit code |
 | `list_components(category?)` | Components by Atom / Molecule / Organism |
-| `get_component(name)` | A component's init signature + chainable modifiers |
+| `get_component(name)` | A component's summary, init signature + chainable modifiers |
 | `search_components(query)` | Components matching a keyword (e.g. "date", "progress") |
+| `lint_snippet(swift)` | Flags ThemeKit anti-patterns (hardcoded colors / radius / fonts) with fixes |
+| `validate_screen(swift)` | Full screen check: anti-patterns + raw-SwiftUI with ThemeKit equivalents + a pass/fail verdict |
+| `scaffold_screen(kind)` | A starter form / list / detail / settings screen |
+| `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit, with notes |
 | `list_themes` | The bundled theme-preset ids |
-| `theme_snippet(id?)` | Swift code to apply a theme / show `ThemePicker` |
+| `theme_colors(id)` | A preset's primary / secondary / accent / base hexes |
+| `theme_preview(id)` | A **PNG swatch card** for a preset (renders inline) |
+| `theme_snippet(id?)` | Swift code to apply a preset / show `ThemePicker` |
+| `generate_theme(...)` | A `ThemeConfig` apply snippet from accent / base / secondary / accent |
 | `token_reference(kind?)` | Design tokens (colors, radius roles, spacing, semantic colors) |
+
+Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
+and prompts (`themekit-screen`, `themekit-theme`, `migrate-to-themekit`).
 
 ## Install
 

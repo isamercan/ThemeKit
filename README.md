@@ -542,7 +542,7 @@ component + modifier and resolves colors from tokens, never hardcoded values.
 
 | Tool | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 theme presets as **on-demand tools** (`get_component`, `search_components`, `list_themes`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 theme presets as **on-demand tools** (`get_component`, `validate_screen`, `theme_preview`, `scaffold_screen`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
 | **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
