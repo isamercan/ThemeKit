@@ -170,6 +170,27 @@ ThemePicker(selection: $active)             // a tappable grid of all 32 themes
 
 <p align="center"><img src="Screenshots/ThemePresets.png" width="680" alt="ThemePicker — a grid of all 32 theme presets, each card painted in its own colors"></p>
 
+## Screenshots
+
+The demo app on device — the component catalog, live theming, the design-token
+gallery, and a full booking flow built entirely from ThemeKit components.
+
+<table>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-components.png" width="230" alt="Component catalog screen"><br><sub><b>Component catalog</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-themes.png" width="230" alt="Live theming screen"><br><sub><b>Live theming · 32 presets</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-colors.png" width="230" alt="Design-token gallery screen"><br><sub><b>Design-token gallery</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-example.png" width="230" alt="Example app — hotel search"><br><sub><b>Example app · search</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-hotel-detail.png" width="230" alt="Example app — hotel detail"><br><sub><b>Example app · detail</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/app-datatable.png" width="230" alt="DataTable component demo"><br><sub><b>DataTable · sort · paginate</b></sub></td>
+</tr>
+</table>
+
+> Real screens from the bundled [Demo](#demo) app, not mockups — every pixel is
+> a ThemeKit component reading live design tokens.
+
 ## Components
 
 117 token-bound components, grouped by complexity:

@@ -95,7 +95,7 @@ public struct TreeSelect: View {
     private var searchField: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
-            TextField("Ara", text: $searchText)
+            TextField("Search", text: $searchText)
                 .textStyle(.bodyBase400)
                 .foregroundStyle(theme.text(.textPrimary))
             if !searchText.isEmpty {

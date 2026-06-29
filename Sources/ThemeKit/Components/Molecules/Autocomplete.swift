@@ -45,7 +45,7 @@ public struct Autocomplete: View {
         label: String? = nil,
         text: Binding<String>,
         suggestions: [String],
-        placeholder: String = "Ara",
+        placeholder: String = "Search",
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
@@ -62,7 +62,7 @@ public struct Autocomplete: View {
         label: String? = nil,
         text: Binding<String>,
         suggest: @escaping (String) async -> [String],
-        placeholder: String = "Ara",
+        placeholder: String = "Search",
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label

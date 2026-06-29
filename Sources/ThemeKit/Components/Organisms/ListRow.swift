@@ -323,7 +323,7 @@ public struct ListRow: View {
                         .textStyle(.bodySm400)
                         .foregroundStyle(theme.text(.textTertiary))
                 }
-                Text("Toplam: \(price.total)")
+                Text("Total: \(price.total)")
                     .textStyle(.bodySm400)
                     .foregroundStyle(theme.text(.textTertiary))
             } else {

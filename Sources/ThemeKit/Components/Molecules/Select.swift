@@ -218,7 +218,7 @@ public struct Select<Option: Hashable>: View {
         VStack(spacing: 0) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
-                TextField("Ara", text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
+                TextField("Search", text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(44)
