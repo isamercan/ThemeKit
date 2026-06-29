@@ -61,8 +61,13 @@ final class ScreenshotGenerator: XCTestCase {
         )
         try FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 
+        // Opt-in: BANNER_ONLY=1 re-renders just the header banner (e.g. after a
+        // count change) without touching the 96 component PNGs.
+        let bannerOnly = ProcessInfo.processInfo.environment["BANNER_ONLY"] == "1"
+
         func renderAll() {
             shot("Banner", featureBanner(), inGallery: false)   // README header banner (not a gallery row)
+            if bannerOnly { return }
             category = "Atoms"; atoms()
             category = "Molecules"; molecules()
             category = "Organisms"; organisms()
@@ -74,6 +79,7 @@ final class ScreenshotGenerator: XCTestCase {
         scheme = .dark;  Theme.shared.loadTheme(named: "defaultTheme", dark: true);  renderAll()
         Theme.shared.loadTheme(named: "defaultTheme", dark: false)   // restore
 
+        guard !bannerOnly else { return }   // keep the existing manifest.tsv intact
         let tsv = manifest.map { "\($0.0)\t\($0.1)" }.joined(separator: "\n") + "\n"
         try tsv.write(to: outDir.appendingPathComponent("manifest.tsv"), atomically: true, encoding: .utf8)
     }
@@ -356,8 +362,8 @@ final class ScreenshotGenerator: XCTestCase {
         return VStack(spacing: 16) {
             HStack(spacing: 16) {
                 card { VStack(alignment: .leading, spacing: 6) {
-                    Text("108").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
-                    tiny("COMPONENTS"); sub("26 atoms · 37 molecules · 45 organisms")
+                    Text("117").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    tiny("COMPONENTS"); sub("29 atoms · 45 molecules · 43 organisms")
                 }}.frame(width: 330)
                 card { VStack(alignment: .leading, spacing: 6) { heading("Zero deps", t.text(.textPrimary)); sub("native SwiftUI core") }}
                 card(t.background(.systemcolorsBgSuccessLight)) { VStack(alignment: .leading, spacing: 6) {
