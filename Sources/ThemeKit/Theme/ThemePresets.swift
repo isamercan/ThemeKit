@@ -54,6 +54,7 @@ public struct ThemePreset: Identifiable, Equatable, Sendable {
 public extension ThemePreset {
     /// All theme presets (color sets inspired by daisyUI).
     static let all: [ThemePreset] = [
+        .init("default",   "Default",   primary: "056bfd", secondary: "7c3aed", accent: "0fb4ab", base: "ffffff", tint: 0.06),
         .init("light",     "Light",     primary: "422ad5", secondary: "009689", accent: "00d3bb", base: "ffffff"),
         .init("dark",      "Dark",      primary: "605dff", secondary: "f43098", accent: "00d3bb", base: "1d232a", dark: true),
         .init("cupcake",   "Cupcake",   primary: "65c3c8", secondary: "ef9fbc", accent: "eeaf3a", base: "faf7f5", tint: 0.07),

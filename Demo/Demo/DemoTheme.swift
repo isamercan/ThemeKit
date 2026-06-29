@@ -88,6 +88,12 @@ final class DemoThemeStore: ObservableObject {
             activeConfig = preset.config
             isDark = preset.isDark
             preset.apply()
+        } else if let def = ThemePreset.named("default") {
+            // Fresh launch → ThemeKit's Default preset (first in the grid, selected).
+            presetID = "default"
+            activeConfig = def.config
+            isDark = def.isDark
+            def.apply()
         } else {
             current.apply(dark: DemoTheme.storedDark)
         }

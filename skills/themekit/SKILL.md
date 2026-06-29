@@ -113,14 +113,14 @@ BookingCard().theme(ocean)
 
 ### Theme presets
 
-ThemeKit bundles 32 theme presets (inspired by daisyUI). Apply one, or drop the `ThemePicker`
+ThemeKit bundles 33 theme presets (inspired by daisyUI). Apply one, or drop the `ThemePicker`
 grid into a screen:
 
 ```swift
 ThemePreset.named("dracula")?.apply()        // recolor Theme.shared live
 
 @State private var active: String? = "cupcake"
-ThemePicker(selection: $active)             // tappable grid of all 32 themes
+ThemePicker(selection: $active)             // tappable grid of all 33 themes
 ```
 
 ## Patterns

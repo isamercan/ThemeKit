@@ -212,7 +212,7 @@ def render_llms(cats, modifiers, themes):
         "# ThemeKit",
         "",
         f"> A token-driven, brand-neutral SwiftUI design system — {total} components, "
-        "runtime theming, and the 32 theme presets. Every color / radius / spacing / "
+        f"runtime theming, and the {len(themes)} theme presets. Every color / radius / spacing / "
         "type style is a design token resolved at runtime from the active `Theme`; "
         "components never hardcode a color.",
         "",
