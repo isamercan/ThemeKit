@@ -11,7 +11,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { PNG } from "pngjs";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -25,7 +25,8 @@ interface Data {
   enums: Record<string, string[]>; tokens: DesignToken[]; themes: ThemePreset[];
 }
 
-const here = dirname(fileURLToPath(import.meta.url));
+const here = dirname(fileURLToPath(import.meta.url));        // mcp/dist
+const REPO = join(here, "..", "..");                          // repo root (when run in-repo)
 const data: Data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.json"), "utf8"));
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 const find = (name: string) => data.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
@@ -167,6 +168,36 @@ server.registerTool("get_variants_states", {
   return text(out.join("\n"));
 });
 
+server.registerTool("get_migration_guide", {
+  title: "Migration guide between versions",
+  description: "What changed between two ThemeKit versions (from the CHANGELOG) — breaking changes first, then additions. Omit `to` for the latest.",
+  inputSchema: { fromVersion: z.string().describe('e.g. "0.1.1"'), toVersion: z.string().optional() },
+}, async ({ fromVersion, toVersion }) => {
+  const path = join(REPO, "CHANGELOG.md");
+  if (!existsSync(path)) return text("CHANGELOG.md not found (run the MCP from the ThemeKit repo).");
+  const md = readFileSync(path, "utf8");
+  // Split into [version] sections in file order (newest first).
+  const re = /^##\s*\[(\d+\.\d+\.\d+)\][^\n]*\n([\s\S]*?)(?=^##\s*\[|\Z)/gm;
+  const sections: { v: string; body: string }[] = [];
+  for (const m of md.matchAll(re)) sections.push({ v: m[1], body: m[2].trim() });
+  const versions = sections.map((s) => s.v);
+  const cmp = (a: string, b: string) => a.split(".").map(Number).reduce((acc, n, i) => acc || n - Number(b.split(".")[i]), 0);
+  if (!versions.includes(fromVersion)) return text(`Version "${fromVersion}" not in the changelog. Available: ${versions.join(", ")}`);
+  const to = toVersion ?? versions[0];
+  // Sections strictly above `from`, up to and including `to`.
+  const range = sections.filter((s) => cmp(s.v, fromVersion) > 0 && cmp(s.v, to) <= 0);
+  if (!range.length) return text(`No releases between ${fromVersion} and ${to}.`);
+  const out = [`# Migrating ${fromVersion} → ${to}`];
+  for (const s of range) {
+    out.push(`\n## ${s.v}`);
+    const breaking = s.body.match(/###\s*[⚠️\s]*Breaking[\s\S]*?(?=\n###|\Z)/);
+    if (breaking) out.push(breaking[0].trim());
+    else out.push(s.body.split("\n").slice(0, 12).join("\n"));
+  }
+  out.push("\nFor full details see CHANGELOG.md.");
+  return text(out.join("\n"));
+});
+
 // ── Theme tools ────────────────────────────────────────────────────────────
 
 server.registerTool("list_themes", {
@@ -241,6 +272,24 @@ server.registerTool("theme_preview", {
   return { content: [
     { type: "image" as const, data: themePNG(t), mimeType: "image/png" },
     { type: "text" as const, text: `${t.name} — primary #${t.primary} · secondary #${t.secondary} · accent #${t.accent} · base #${t.base}` },
+  ] };
+});
+
+server.registerTool("render_preview", {
+  title: "Render a component preview",
+  description: "Returns the rendered PNG of a component (the library's own gallery render), light or dark. Lets you see what it looks like before using it.",
+  inputSchema: { component: z.string().describe("Component name, e.g. Badge"), dark: z.boolean().optional() },
+}, async ({ component, dark }) => {
+  const c = find(component);
+  const name = c?.name ?? component;
+  const file = join(REPO, "Screenshots", `${name}${dark ? "-dark" : ""}.png`);
+  if (!existsSync(file)) {
+    return text(`No rendered preview for "${name}". Gallery renders live in Screenshots/ (regenerate with \`make screenshots\`); some live/overlay components aren't captured. Try get_component_api + get_usage_snippet instead.`);
+  }
+  const png = readFileSync(file).toString("base64");
+  return { content: [
+    { type: "image" as const, data: png, mimeType: "image/png" },
+    { type: "text" as const, text: `${name}${dark ? " (dark)" : ""} — ${c?.usage ?? ""}` },
   ] };
 });
 
