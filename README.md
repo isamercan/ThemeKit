@@ -1,9 +1,16 @@
 # ThemeKit
 
+> **Native, brand-neutral SwiftUI design system** — 117 token-bound components that
+> re-skin from a single accent color: light/dark, per-subtree, zero core dependencies.
+
+![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)
+![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014-blue.svg)
+![Dependencies](https://img.shields.io/badge/Core%20dependencies-0-success.svg)
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="Screenshots/Banner-dark.png">
-    <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 108 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+    <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
   </picture>
 </p>
 
@@ -12,14 +19,8 @@
 A theme-driven, **brand-neutral** SwiftUI component library. Every color,
 typography, spacing, radius and shadow is a **design token** resolved at runtime
 from the active `Theme`, so the whole UI re-skins from a single accent color —
-without touching component code.
-
-![Swift](https://img.shields.io/badge/Swift-6.2-orange.svg)
-![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014-blue.svg)
-![Dependencies](https://img.shields.io/badge/Core%20dependencies-0-success.svg)
-
-> **Principle:** components never hardcode a color — every value resolves from the
-> active `Theme`. Swap the theme and everything follows.
+without touching component code. **Components never hardcode a color** — swap the
+theme and everything follows.
 
 ```swift
 import ThemeKit
@@ -27,12 +28,22 @@ import ThemeKit
 
 ## Features
 
-- **Token system** — colors / radius / spacing from JSON, typography / shadows in
-  code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
+- 🎨 **Figma → SwiftUI** — the MCP's `figma_to_swiftui` turns a Figma node into
+  token-matched, verified-API ThemeKit code with a mapping report (see the
+  **Advanced — Figma → SwiftUI & MCP** section).
+- 🤖 **AI-native** — a 19-tool **MCP server**, a Claude Code **Agent skill**, and an
+  **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
+- 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
+  shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
+- 🌈 **32 theme presets** — ready-made color sets (cupcake, dracula, cyberpunk,
+  nord…) inspired by [daisyUI](https://daisyui.com/docs/themes/), each recoloring the
+  whole Ant-style palette on device.
+- 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
+  `ImageRenderer`; the suite guards tokens, themes, validation and renders.
+- **117 components** — Atoms / Molecules / Organisms, all token-bound.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
   accent (or `base-100`) color into a full Ant-style palette on device (no Python,
-  no baked files); **32 theme presets** ship built-in (color sets inspired by [daisyUI](https://daisyui.com/docs/themes/)).
-- **130+ components** — Atoms / Molecules / Organisms, all token-bound.
+  no baked files).
 - **Validation** — pure, testable predicates + a SwiftUI presentation layer.
 - **Accessibility** — Dynamic Type and Reduce Motion honored throughout.
 - **Localization** — English-default strings via a bundled String Catalog (with
@@ -161,13 +172,13 @@ ThemePicker(selection: $active)             // a tappable grid of all 32 themes
 
 ## Components
 
-~130 token-bound components, grouped by complexity:
+117 token-bound components, grouped by complexity:
 
-- **Atoms** (26) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
+- **Atoms** (29) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
   `StatusDot`, `Skeleton`, `ProgressBar`, `BorderBeam`, `RollingNumber`…
-- **Molecules** (35) — `TextInput`, `OTPInput`, `Select`, `Checkbox`,
+- **Molecules** (45) — `TextInput`, `OTPInput`, `Select`, `Checkbox`,
   `RadioGroup`, `Slider`, `RangeSlider`, `SearchBar`, `Tooltip`, buttons…
-- **Organisms** (45) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
+- **Organisms** (43) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
   `Timeline`, `ResultView`, `Upload`, `Tour`, `NavigationBar`, `ThemePicker`…
 
 Every component is curated by category in the [DocC catalog](#documentation).
@@ -522,6 +533,45 @@ default.
 > doesn't run the catalog compiler), so only English resolves there. Xcode /
 > `xcodebuild` compile it, so all bundled localizations resolve in real apps.
 
+## ⭐ Advanced — Figma → SwiftUI & MCP
+
+ThemeKit is built for the AI-assisted workflow — so generated UI uses the *right*
+component + modifier and resolves colors from tokens, never hardcoded values. One
+source (`make skill`) feeds three surfaces, so they can't drift from the code:
+
+| Surface | What it does | How to use it |
+|---|---|---|
+| **MCP server** ([`mcp/`](mcp/)) | 19 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `render_preview`, `theme_preview`, `scaffold_screen`, `figma_to_swiftui`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
+| **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
+
+Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."* Works with
+**Claude Code, Cursor, Windsurf, GitHub Copilot**, and any tool that supports MCP
+or `llms.txt`.
+
+### Figma → SwiftUI
+
+The star tool, `figma_to_swiftui`, turns a Figma node into ThemeKit SwiftUI with
+**verified** APIs instead of guesses: it snaps fills / spacing / radius to design
+tokens, maps nodes to components (config-driven via `figma-mapping.json`, then
+heuristics), and returns the code plus a mapping report. Unmapped nodes are
+flagged — never silently dropped.
+
+```text
+Card {
+    VStack(spacing: Theme.SpacingKey.md.value) {
+        Badge("Sale", style: .error)
+        PrimaryButton("Continue") { }
+        // ⚠️ unmapped: Mystery Widget (INSTANCE)
+    }
+}
+// 3/4 nodes mapped · fill #f04438 → fg-error (ΔE 0.0) · itemSpacing 16 → sp-md
+```
+
+Set `FIGMA_TOKEN` in the MCP server's env — it's **optional**, only this tool needs
+it; every other tool works without it. See [`mcp/README.md`](mcp/README.md) for the
+full tool list and the `figma-mapping.json` schema.
+
 ## Documentation
 
 A DocC catalog ships with the package
@@ -534,23 +584,6 @@ xcodebuild docbuild -scheme ThemeKit -destination 'generic/platform=iOS'
 
 It curates every component by category and includes guide articles for
 **Theming**, **Accessibility**, and **Validation**. No extra dependency required.
-
-## AI-assisted development
-
-ThemeKit is built for the AI-assisted workflow — so generated UI uses the *right*
-component + modifier and resolves colors from tokens, never hardcoded values.
-
-| Tool | What it does | How to use it |
-|---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | Components, modifiers, tokens and the 32 theme presets as **on-demand tools** (`get_component`, `validate_screen`, `theme_preview`, `scaffold_screen`…) — the agent pulls focused context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
-| **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
-| **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
-
-Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."*
-
-All three are generated from one source by `make skill`, so they can't drift
-from the code. Works with **Claude Code, Cursor, Windsurf, GitHub Copilot**, and
-any tool that supports MCP or `llms.txt`.
 
 ## Demo
 
@@ -580,7 +613,36 @@ swift test
 The suite covers the token generator, theme integrity across every bundled theme,
 validation, localization, accessibility mapping, and component render smoke tests.
 
+## Roadmap
+
+- **Per-subtree `\.theme` migration** — pilot components (`Card`, `Tag`) read
+  `\.theme` today; the rest are moving over incrementally so any subtree can be
+  re-themed without touching `Theme.shared`.
+- **Public release** — the MCP server (`@isamercan/themekit-mcp`) and the Claude
+  Code plugin ship to npm / the plugin marketplace once the repo goes public.
+<!-- Add upcoming components, platforms, or API milestones here. -->
+
+## Contributing
+
+```sh
+make ci            # format-lint + lint + build + test (the full gate)
+swift test         # the test suite
+make screenshots   # re-render component PNGs + rebuild the README gallery
+make skill         # regenerate the MCP data, the Agent skill, and llms.txt
+```
+
+Colors are generated — edit `tools/gen_tokens.py`, then `python3 tools/gen_tokens.py .`
+(see [Adding / updating tokens](#adding--updating-tokens)). Keep the build and tests
+green; the pre-push hook runs the same gates.
+
 ## License
 
 Proprietary — all rights reserved. (Replace with your chosen license before any
 public distribution.)
+
+## Acknowledgements
+
+- **Theme presets** — the 32 built-in color sets are inspired by [daisyUI](https://daisyui.com/docs/themes/).
+- **Palette ramps** — follow an Ant Design-style tonal scale.
+- **Montserrat** — the bundled type family (SIL Open Font License).
+- **Lottie** ([`lottie-ios`](https://github.com/airbnb/lottie-ios)) — powers the optional `ThemeKitLottie` add-on.

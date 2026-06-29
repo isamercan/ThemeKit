@@ -9,7 +9,7 @@ A token-driven, brand-neutral SwiftUI design system: a themable palette, a full
 component library, validation, and accessibility — with zero third-party
 dependencies.
 
-![A bento grid of ThemeKit's highlights — 108 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light and dark — rendered by ThemeKit's own tokens and components.](banner)
+![A bento grid of ThemeKit's highlights — 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light and dark — rendered by ThemeKit's own tokens and components.](banner)
 
 ## Overview
 
