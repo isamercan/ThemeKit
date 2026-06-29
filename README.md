@@ -637,8 +637,8 @@ green; the pre-push hook runs the same gates.
 
 ## License
 
-Proprietary — all rights reserved. (Replace with your chosen license before any
-public distribution.)
+[MIT](LICENSE) © 2026 İsa Mercan. Free for commercial and private use — keep the
+copyright notice; the software is provided without warranty.
 
 ## Acknowledgements
 
