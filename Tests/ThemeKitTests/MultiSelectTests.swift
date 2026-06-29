@@ -11,7 +11,7 @@ import XCTest
 
 final class MultiSelectTests: XCTestCase {
 
-    private let picks = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa"]
+    private let picks = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa"]
 
     func testNoLimitShowsAll() {
         let layout = MultiSelect<String>.tagLayout(selected: picks, maxTagCount: nil)
@@ -21,7 +21,7 @@ final class MultiSelectTests: XCTestCase {
 
     func testLimitSplitsOverflow() {
         let layout = MultiSelect<String>.tagLayout(selected: picks, maxTagCount: 2)
-        XCTAssertEqual(layout.visible, ["İstanbul", "Ankara"])
+        XCTAssertEqual(layout.visible, ["Istanbul", "Ankara"])
         XCTAssertEqual(layout.overflow, 3)
     }
 

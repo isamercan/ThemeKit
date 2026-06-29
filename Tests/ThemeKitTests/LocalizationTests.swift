@@ -58,7 +58,7 @@ final class LocalizationTests: XCTestCase {
 
     // Callers can still override every default (non-breaking).
     func testOverrideWins() {
-        XCTAssertEqual(ValidationRule.required("Zorunlu").message, "Zorunlu")
+        XCTAssertEqual(ValidationRule.required("Required").message, "Required")
         XCTAssertEqual(ValidationRule.email("Custom").message, "Custom")
     }
 }
