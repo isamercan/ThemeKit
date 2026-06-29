@@ -170,12 +170,12 @@ public struct RadioButtonGroup<Option: Hashable>: View {
 #Preview {
     struct Demo: View {
         @State var sel: String? = "Economy"
-        @State var seg: String? = "Gün"
+        @State var seg: String? = "Day"
         var body: some View {
             VStack(spacing: 24) {
                 RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                RadioButtonGroup(options: ["Gün", "Hafta", "Ay"], selection: $seg, style: .solid) { $0 }
-                RadioButtonGroup(options: ["Gün", "Hafta", "Ay"], selection: $seg, style: .outline, expandsHorizontally: true) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .solid) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .outline, expandsHorizontally: true) { $0 }
             }
             .padding()
         }

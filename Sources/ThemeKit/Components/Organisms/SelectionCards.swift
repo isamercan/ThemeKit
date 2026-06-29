@@ -102,7 +102,7 @@ public struct CheckboxCard: View {
             VStack(spacing: 12) {
                 RadioCard("Standard", description: "Free delivery in 3–5 days", isSelected: radio == "std") { radio = "std" }
                 RadioCard("Express", description: "Next-day delivery", isSelected: radio == "exp") { radio = "exp" }
-                CheckboxCard("Add checked bag", description: "+₺250", isChecked: bag) { bag.toggle() }
+                CheckboxCard("Add checked bag", description: "+$250", isChecked: bag) { bag.toggle() }
             }
             .padding()
         }

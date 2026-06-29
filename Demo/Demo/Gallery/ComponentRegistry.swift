@@ -92,7 +92,7 @@ enum ComponentRegistry {
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save", color: .success, variant: .soft, size: .medium, shape: .pill) { }"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on, infoMessages: error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
-        .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "₺")"#),
+        .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "$")"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text, characterLimit: 200)"#),
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")], maxItems: 4)"#),
@@ -102,7 +102,7 @@ enum ComponentRegistry {
         .knob("Form", .molecules, demo: FormDemo(), usage: ##"@State var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
         .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput(label: "Passport", fileName: name) { pick() }"#),
         .knob("FilterGroup", .molecules, demo: FilterGroupDemo(), usage: #"FilterGroup(options: items, selection: $sel) { $0 }"#),
-        .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip(isSelected: $on, text: "Suit", price: "₺899", rating: 4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
+        .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip(isSelected: $on, text: "Suit", price: "$899", rating: 4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
         .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8, stepText: .slash)"#),
         .knob("ThemeController", .molecules, demo: ThemeControllerDemo(), usage: #"ThemeController(options: [.init(name: "oceanTheme", label: "Ocean")], selectedName: $name)"#),
         .knob("Pagination", .molecules, demo: PaginationDemo(), usage: #"Pagination(current: $page, total: 50).window(sibling: 2).jumper()"#),
@@ -164,9 +164,9 @@ enum ComponentRegistry {
         .knob("NotificationCard", .organisms, demo: NotificationDemo(), usage: #"NotificationCard(title: "…", message: "…", date: "…", isUnread: true)"#),
         .knob("PageHeader", .organisms, demo: PageHeaderDemo(), usage: #"PageHeader("Title", subtitle: "…", onBack: { })"#),
         .knob("PromoBanner", .organisms, demo: PromoBannerDemo(), usage: #"PromoBanner(title: "…", systemImage: "sun.max.fill", ctaTitle: "Go", action: { })"#),
-        .knob("RatingSummary", .organisms, demo: RatingSummaryDemo(), usage: #"RatingSummary(score: 9.0, label: "Mükemmel", reviewCount: 1200)"#),
-        .knob("Result", .organisms, demo: ResultDemo(), usage: #"ResultView(.notFound, title: "Sayfa bulunamadı", message: "…", primaryTitle: "Ana sayfa") { }"#),
-        .knob("Popconfirm", .organisms, demo: PopconfirmDemo(), usage: ##"trigger.popconfirm(isPresented: $show, title: "Sil?", confirmTitle: "Sil") { delete() }"##),
+        .knob("RatingSummary", .organisms, demo: RatingSummaryDemo(), usage: #"RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200)"#),
+        .knob("Result", .organisms, demo: ResultDemo(), usage: #"ResultView(.notFound, title: "Page not found", message: "…", primaryTitle: "Home") { }"#),
+        .knob("Popconfirm", .organisms, demo: PopconfirmDemo(), usage: ##"trigger.popconfirm(isPresented: $show, title: "Delete?", confirmTitle: "Delete") { delete() }"##),
         .knob("Tour", .organisms, demo: TourDemo(), usage: ##"view.tourTarget("search");  root.tourHost(tour, steps: [TourStep("search", title: "…", message: "…")])"##),
         .knob("Dialog", .organisms, demo: DialogDemo(), usage: #"view.dialog(isPresented: $show, title: "…") { content } footer: { buttons }"#),
         .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i)"#),
@@ -175,8 +175,8 @@ enum ComponentRegistry {
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items, peek: 36, autoplay: 2) { item in mediaView }"#),
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url).loop().muted().muteToggle()"#),
-        .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Özet", bordered: true)"#) {
-            KeyValueTable(rows: [.init("Status", value: "Aktif", style: .success), .init("Old price", value: "5.000 TL", style: .strikethrough), .init("Total", value: "4.250 TL")], title: "Rezervasyon özeti", bordered: true)
+        .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...], title: "Summary", bordered: true)"#) {
+            KeyValueTable(rows: [.init("Status", value: "Active", style: .success), .init("Old price", value: "$5,000", style: .strikethrough), .init("Total", value: "$4,250")], title: "Reservation summary", bordered: true)
         },
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]

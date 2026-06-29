@@ -88,12 +88,12 @@ public struct BlogCard<Media: View>: View {
 #Preview {
     @Previewable @Environment(\.theme) var theme
     VStack(spacing: 20) {
-        BlogCard(title: "Kapadokya'yı Tek Başına Keşfetmeye Ne Dersin?",
-                 excerpt: "Kimine göre doğanın bir mucizesi, kimine göre periler diyarı…",
+        BlogCard(title: "How About Exploring Cappadocia on Your Own?",
+                 excerpt: "To some a miracle of nature, to others a fairyland…",
                  onReadMore: {}) {
             theme.background(.bgTertiary)
         }
-        BlogCard(title: "Kapadokya'yı Tek Başına Keşfetmeye Ne Dersin?", compact: true, onReadMore: {}) {
+        BlogCard(title: "How About Exploring Cappadocia on Your Own?", compact: true, onReadMore: {}) {
             theme.background(.bgTertiary)
         }
     }

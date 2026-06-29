@@ -50,9 +50,9 @@ public struct RatingSummary: View {
 
 #Preview {
     VStack(spacing: 12) {
-        RatingSummary(score: 9.0, label: "Mükemmel", reviewCount: 1200, onReviews: {})
-        RatingSummary(score: 8.5, label: "Çok İyi", reviewCount: 340)
-        RatingSummary(score: 9.8, label: "Mükemmel")
+        RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200, onReviews: {})
+        RatingSummary(score: 8.5, label: "Very Good", reviewCount: 340)
+        RatingSummary(score: 9.8, label: "Excellent")
     }
     .padding()
 }

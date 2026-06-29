@@ -262,17 +262,17 @@ public struct TreeSelect: View {
     struct Demo: View {
         @State var picks: Set<String> = ["ist"]
         let tree = [
-            TreeNode(id: "tr", "Türkiye", systemImage: "flag", children: [
-                TreeNode(id: "ist", "İstanbul"),
+            TreeNode(id: "tr", "Turkey", systemImage: "flag", children: [
+                TreeNode(id: "ist", "Istanbul"),
                 TreeNode(id: "ank", "Ankara"),
             ]),
-            TreeNode(id: "de", "Almanya", systemImage: "flag", children: [
+            TreeNode(id: "de", "Germany", systemImage: "flag", children: [
                 TreeNode(id: "ber", "Berlin"),
-                TreeNode(id: "mun", "Münih"),
+                TreeNode(id: "mun", "Munich"),
             ]),
         ]
         var body: some View {
-            TreeSelect(label: "Şehirler", nodes: tree, selection: $picks, initiallyExpanded: ["tr"]).padding()
+            TreeSelect(label: "Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"]).padding()
         }
     }
     return Demo()

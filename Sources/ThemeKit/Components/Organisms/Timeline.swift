@@ -222,7 +222,7 @@ public struct Timeline: View {
             ], pending: "Awaiting courier…")
 
             Timeline([
-                .init(title: "Departure", time: "08:00", description: "İstanbul (IST)", systemImage: "airplane.departure", state: .done),
+                .init(title: "Departure", time: "08:00", description: "Istanbul (IST)", systemImage: "airplane.departure", state: .done),
                 .init(title: "Layover", time: "12:30", description: "Munich (MUC)", systemImage: "clock", state: .active),
                 .init(title: "Arrival", time: "16:45", description: "Barcelona (BCN)", systemImage: "airplane.arrival", state: .todo),
             ], mode: .alternate)

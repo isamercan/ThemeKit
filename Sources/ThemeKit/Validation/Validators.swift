@@ -48,7 +48,7 @@ public enum Validators {
         requireUppercase: Bool = true, requireDigit: Bool = true, requireSpecial: Bool = false
     ) -> Bool {
         guard s.count >= minLength else { return false }
-        if requireUppercase, !matches(s, #"[A-ZĞÜŞİÖÇ]"#) { return false }
+        if requireUppercase, !matches(s, #"\p{Lu}"#) { return false }   // any Unicode uppercase letter
         if requireDigit, !matches(s, #"\d"#) { return false }
         if requireSpecial, !matches(s, #"[^A-Za-z0-9]"#) { return false }
         return true

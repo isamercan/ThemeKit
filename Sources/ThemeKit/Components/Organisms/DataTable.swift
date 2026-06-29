@@ -291,7 +291,7 @@ private struct DefaultTextCell: View {
                 .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
                 .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
                 .init("Price", align: .trailing, sortKey: { .number($0.price) }) { row in
-                    Text("₺\(Int(row.price))").textStyle(.labelSm700)
+                    Text("$\(Int(row.price))").textStyle(.labelSm700)
                 },
             ], rows: rows, selection: $selected)
             .padding()

@@ -258,7 +258,7 @@ public struct RangeSlider: View {
         var body: some View {
             RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
                 .marks([0, 250, 500, 750, 1000])
-                .valueLabel { "\(Int($0)) ₺" }
+                .valueLabel { "\(Int($0)) $" }
                 .padding()
         }
     }
@@ -278,6 +278,6 @@ public extension RangeSlider {
     }
     /// Fires with the snapped (lower, upper) pair when a drag ends.
     func onChangeEnd(_ action: ((Double, Double) -> Void)?) -> Self { var copy = self; copy.onChangeEnd = action; return copy }
-    /// Formats the value readout shown above each thumb (e.g. "₺500").
+    /// Formats the value readout shown above each thumb (e.g. "$500").
     func valueLabel(_ format: ((Double) -> String)?) -> Self { var copy = self; copy.valueLabel = format; return copy }
 }

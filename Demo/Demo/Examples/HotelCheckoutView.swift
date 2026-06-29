@@ -35,20 +35,20 @@ struct HotelCheckoutView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Steps([.init("Detay", state: .done), .init("Ödeme", state: .active), .init("Onay", state: .todo)])
+                Steps([.init("Details", state: .done), .init("Payment", state: .active), .init("Confirm", state: .todo)])
 
                 summaryCard
-                Fieldset("İletişim bilgileri") {
-                    TextInput("Ad Soyad", text: $name, placeholder: "Adın")
-                    TextInput("E-posta", text: $email, placeholder: "ornek@mail.com", leadingSystemImage: "envelope")
+                Fieldset("Contact details") {
+                    TextInput("Full name", text: $name, placeholder: "Your name")
+                    TextInput("Email", text: $email, placeholder: "you@example.com", leadingSystemImage: "envelope")
                 }
 
                 paymentMethod
                 if method == "card" {
-                    Fieldset("Kart bilgileri") {
-                        TextInput("Kart numarası", text: $cardNumber, placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard")
+                    Fieldset("Card details") {
+                        TextInput("Card number", text: $cardNumber, placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard")
                         HStack(spacing: 12) {
-                            TextInput("SKT", text: $expiry, placeholder: "AA/YY")
+                            TextInput("Expiry", text: $expiry, placeholder: "MM/YY")
                             TextInput("CVV", text: $cvv, placeholder: "123", isSecure: true)
                         }
                     }
@@ -61,22 +61,22 @@ struct HotelCheckoutView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Ödeme")
+        .navigationTitle("Payment")
         .navigationBarTitleDisplayMode(.inline)
         .buttonDock {
             HStack(spacing: Theme.SpacingKey.md.value) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Toplam").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    Text("Total").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                     Text(total.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                 }
-                PrimaryButton("Öde", block: true) { showSuccess = true }.disabled(!acceptTerms)
+                PrimaryButton("Pay", block: true) { showSuccess = true }.disabled(!acceptTerms)
             }
             .padding(.bottom, 4)
         }
         .dialog(isPresented: $showSuccess,
-                title: "Rezervasyon onaylandı 🎉",
-                message: "\(hotel.name) için ödemen alındı. İyi tatiller!",
-                primaryTitle: "Ana sayfaya dön",
+                title: "Booking confirmed 🎉",
+                message: "Your payment for \(hotel.name) has been received. Enjoy your trip!",
+                primaryTitle: "Back to home",
                 onPrimary: { path.removeAll() })
     }
 
@@ -86,46 +86,46 @@ struct HotelCheckoutView: View {
                 Text(hotel.name).textStyle(.labelMd700).foregroundStyle(Theme.shared.text(.textPrimary))
                 HStack(spacing: 6) {
                     Icon(systemName: "calendar", size: .sm, color: Theme.shared.text(.textTertiary))
-                    Text("23 Haz – 26 Haz · \(nights) gece").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    Text("23 Jun – 26 Jun · \(nights) nights").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
-                if hotel.freeCancellation { Callout("Ücretsiz iptal", type: .success) }
+                if hotel.freeCancellation { Callout("Free cancellation", type: .success) }
             }
         }
     }
 
     private var paymentMethod: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Ödeme yöntemi").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-            RadioCard("Kredi / banka kartı", description: "Visa, Mastercard, Troy", isSelected: method == "card") { method = "card" }
-            RadioCard("Apple Pay", description: "Tek dokunuşla öde", isSelected: method == "applepay") { method = "applepay" }
-            RadioCard("Havale / EFT", description: "Banka havalesi", isSelected: method == "transfer") { method = "transfer" }
+            Text("Payment method").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+            RadioCard("Credit / debit card", description: "Visa, Mastercard, Amex", isSelected: method == "card") { method = "card" }
+            RadioCard("Apple Pay", description: "Pay with one tap", isSelected: method == "applepay") { method = "applepay" }
+            RadioCard("Bank transfer", description: "Pay directly from your bank", isSelected: method == "transfer") { method = "transfer" }
         }
     }
 
     private var couponSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .bottom, spacing: 10) {
-                TextInput("Kupon kodu", text: $coupon, placeholder: "ÖrN: SUMMER")
-                SecondaryButton("Uygula") { couponApplied = !coupon.isEmpty }
+                TextInput("Coupon code", text: $coupon, placeholder: "e.g. SUMMER")
+                SecondaryButton("Apply") { couponApplied = !coupon.isEmpty }
             }
-            if couponApplied { Callout("Kupon uygulandı · %10 indirim", type: .success) }
+            if couponApplied { Callout("Coupon applied · 10% off", type: .success) }
         }
     }
 
     private var priceTable: some View {
         KeyValueTable(rows: [
-            .init("\(nights) gece × \(hotel.pricePerNight.priceText)", value: subtotal.priceText),
-            couponApplied ? .init("İndirim", value: "-" + discount.priceText, style: .success) : .init("İndirim", value: "—", style: .muted),
-            .init("Vergi (%10)", value: tax.priceText, style: .muted),
-            .init("Toplam", value: total.priceText),
+            .init("\(nights) nights × \(hotel.pricePerNight.priceText)", value: subtotal.priceText),
+            couponApplied ? .init("Discount", value: "-" + discount.priceText, style: .success) : .init("Discount", value: "—", style: .muted),
+            .init("Tax (10%)", value: tax.priceText, style: .muted),
+            .init("Total", value: total.priceText),
         ])
     }
 
     private var termsRow: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             Checkbox(isChecked: $acceptTerms)
-            InlineText("Devam ederek Koşullar ve Gizlilik Politikası'nı kabul ediyorum.",
-                       links: [("Koşullar", {}), ("Gizlilik Politikası", {})])
+            InlineText("By continuing, I accept the Terms and Privacy Policy.",
+                       links: [("Terms", {}), ("Privacy Policy", {})])
         }
     }
 }

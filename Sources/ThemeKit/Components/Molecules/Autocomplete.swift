@@ -203,7 +203,7 @@ public struct Autocomplete: View {
         @State var text = ""
         var body: some View {
             Autocomplete(label: "Destination", text: $text,
-                         suggestions: ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"])
+                         suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
                 .padding()
         }
     }
@@ -213,7 +213,7 @@ public struct Autocomplete: View {
 #Preview("Async") {
     struct Demo: View {
         @State var text = ""
-        let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+        let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
         var body: some View {
             Autocomplete(label: "Destination", text: $text, suggest: { query in
                 try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network

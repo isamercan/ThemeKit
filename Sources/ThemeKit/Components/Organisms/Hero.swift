@@ -88,7 +88,7 @@ public extension Hero where Background == HeroSurface {
 
 #Preview {
     VStack(spacing: 16) {
-        Hero(title: "Discover İstanbul", subtitle: "Hand-picked stays at the best prices.", ctaTitle: "Explore", action: {})
+        Hero(title: "Discover Istanbul", subtitle: "Hand-picked stays at the best prices.", ctaTitle: "Explore", action: {})
         Hero(title: "Summer Sale", subtitle: "Up to 30% off", ctaTitle: "Shop now", dark: true, action: {})
     }
     .padding()

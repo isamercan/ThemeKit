@@ -136,13 +136,13 @@ public struct ResultView: View {
 #Preview {
     ScrollView {
         VStack(spacing: 40) {
-            ResultView(.success, title: "Rezervasyon onaylandı",
-                       message: "Onay e-postası gönderildi.",
-                       primaryTitle: "Detaylar", onPrimary: {},
-                       secondaryTitle: "Ana sayfa", onSecondary: {})
-            ResultView(.notFound, title: "Sayfa bulunamadı",
-                       message: "Aradığınız sayfa taşınmış veya silinmiş olabilir.",
-                       primaryTitle: "Ana sayfaya dön", onPrimary: {})
+            ResultView(.success, title: "Reservation confirmed",
+                       message: "A confirmation email has been sent.",
+                       primaryTitle: "Details", onPrimary: {},
+                       secondaryTitle: "Home", onSecondary: {})
+            ResultView(.notFound, title: "Page not found",
+                       message: "The page you're looking for may have been moved or deleted.",
+                       primaryTitle: "Back to home", onPrimary: {})
         }
         .padding()
     }

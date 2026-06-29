@@ -91,10 +91,10 @@ public struct KeyValueTable: View {
 
 #Preview {
     KeyValueTable(rows: [
-        .init("Status", value: "Aktif", style: .success),
-        .init("Old price", value: "5.000 TL", style: .strikethrough),
-        .init("Total", value: "4.250 TL"),
-        .init("Refund", value: "İptal Edildi", style: .error),
+        .init("Status", value: "Active", style: .success),
+        .init("Old price", value: "$5,000", style: .strikethrough),
+        .init("Total", value: "$4,250"),
+        .init("Refund", value: "Cancelled", style: .error),
     ])
     .padding()
 }

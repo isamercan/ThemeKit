@@ -20,7 +20,7 @@ struct ButtonDemo: View {
     @State private var helper = false
     @State private var asyncMode = false
 
-    private var helperText: String? { helper ? "KDV dahil fiyat" : nil }
+    private var helperText: String? { helper ? "VAT included" : nil }
     private func tapped() { flash("\(style.rawValue.capitalized) button tapped") }
     // Simulates a 1.2s network call; the button auto-shows a spinner then a checkmark.
     private func work() async {
@@ -86,12 +86,12 @@ struct CheckboxDemo: View {
 
     // Required-checkbox semantic: error only while unchecked (like reference shouldWarn).
     private var messages: [InfoMessage] {
-        (requiredError && !checked) ? [InfoMessage("Devam etmek için kabul edin", kind: .error)] : []
+        (requiredError && !checked) ? [InfoMessage("Accept to continue", kind: .error)] : []
     }
 
     var body: some View {
         ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
-            Checkbox(withLabel ? "Şartları ve koşulları kabul ediyorum" : nil, isChecked: $checked,
+            Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked,
                      customSize: big ? 32 : nil, type: type,
                      isIndeterminate: indeterminate, alignment: .top,
                      infoMessages: messages)
@@ -120,7 +120,7 @@ struct RadioButtonDemo: View {
 
     var body: some View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
-            RadioButton(inlineLabel ? "Hatırla beni" : nil, isSelected: $selected,
+            RadioButton(inlineLabel ? "Remember me" : nil, isSelected: $selected,
                         type: check ? .check : .select,
                         style: inner ? .inner : .plain, padding: .medium)
                     .controlSize(small ? .small : .regular)
@@ -168,32 +168,32 @@ struct TextInputDemo: View {
     private var model: TextInputModel {
         switch mode {
         case .email:
-            var msgs = Validator.validate(text, [.required("E-posta zorunlu"), .email()], all: true)
+            var msgs = Validator.validate(text, [.required("Email is required"), .email()], all: true)
             if msgs.isEmpty, !text.isEmpty {   // clickable info link (reference clickableParts)
-                msgs = [InfoMessage("Bu e-posta kayıtlı. Giriş yap", kind: .info,
-                                    links: [("Giriş yap", { loggedIn = true })])]
+                msgs = [InfoMessage("This email is already registered. Log in", kind: .info,
+                                    links: [("Log in", { loggedIn = true })])]
             }
-            return TextInputModel(label: "E-posta", placeholder: "ad@sirket.com", leadingSystemImage: "envelope",
+            return TextInputModel(label: "Email", placeholder: "name@company.com", leadingSystemImage: "envelope",
                                   allowClear: true, infoMessages: msgs,
                                   keyboardType: .emailAddress, textContentType: .emailAddress,
                                   submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
         case .password:
-            return TextInputModel(label: "Şifre", isSecure: true, maxLength: 24, showCount: true, textContentType: .password, submitLabel: .go)
+            return TextInputModel(label: "Password", isSecure: true, maxLength: 24, showCount: true, textContentType: .password, submitLabel: .go)
         case .bio:
             // Soft limit: typing past 80 is allowed; the counter turns red instead of truncating.
-            return TextInputModel(label: "Hakkımda", placeholder: "Kısaca kendinden bahset", maxLength: 80,
+            return TextInputModel(label: "About me", placeholder: "Tell us a bit about yourself", maxLength: 80,
                                   showCount: true, hardLimit: false, countStyle: .remaining)
         case .card:
-            return TextInputModel(label: "Kart No", placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard",
+            return TextInputModel(label: "Card number", placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard",
                                   formatter: .creditCard())
         case .phone:
-            return TextInputModel(label: "Telefon", placeholder: "0### ### ## ##", leadingSystemImage: "phone",
+            return TextInputModel(label: "Phone", placeholder: "0### ### ## ##", leadingSystemImage: "phone",
                                   formatter: .phoneTR)
         case .currency:
-            return TextInputModel(label: "Tutar", placeholder: "₺0", leadingSystemImage: "turkishlirasign.circle",
+            return TextInputModel(label: "Amount", placeholder: "$0", leadingSystemImage: "dollarsign.circle",
                                   formatter: .currency())
         case .addons:
-            return TextInputModel(label: "Alan adı", placeholder: "siteniz", addonBefore: "https://", addonAfter: ".com.tr")
+            return TextInputModel(label: "Domain name", placeholder: "yoursite", addonBefore: "https://", addonAfter: ".com")
         }
     }
 
@@ -276,14 +276,14 @@ struct RangeSliderDemo: View {
         ComponentStage("RangeSlider", inspector: [("range", "\(Int(lo))–\(Int(hi))"), ("onChangeEnd", lastCommit)]) {
             if inputs {
                 RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
-                    .inputs(titles: ("En az ₺", "En çok ₺"))
+                    .inputs(titles: ("Min $", "Max $"))
                     .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
                     .disabled(!enabled)
             } else {
                 RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
                     .marks(marks ? [0, 250, 500, 750, 1000] : [])
                     .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
-                    .valueLabel { "\(Int($0)) ₺" }
+                    .valueLabel { "$\(Int($0))" }
                     .disabled(!enabled)
             }
         } knobs: {
@@ -332,16 +332,16 @@ struct InputNumberDemo: View {
     @State private var large = true
     @State private var showError = false
     @State private var editable = true
-    @State private var priceMode = false   // toggles a step:50 + "₺" unit config
+    @State private var priceMode = false   // toggles a step:50 + "$" unit config
 
     var body: some View {
         ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
             if priceMode {
-                InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "₺",
+                InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "$",
                             hint: "Type or step by 50", large: large)
                     .editable(editable)
             } else {
-                InputNumber(label: "Guests", value: $value, range: 1...9, unit: "kişi",
+                InputNumber(label: "Guests", value: $value, range: 1...9, unit: "guests",
                             hint: showError ? nil : "Type a number or use ± ",
                             errorText: showError ? "Too many" : nil, large: large)
                     .editable(editable)
@@ -350,7 +350,7 @@ struct InputNumberDemo: View {
             Text("editable = type the value directly (Ant InputNumber); ± steps by `step`.").font(.caption).foregroundStyle(.secondary)
             Stepper("Value: \(value)", value: $value, in: 0...10000)
             Toggle("Editable (type to enter)", isOn: $editable)
-            Toggle("Price mode (step 50, ₺)", isOn: $priceMode)
+            Toggle("Price mode (step 50, $)", isOn: $priceMode)
             Toggle("Large", isOn: $large)
             Toggle("Error state", isOn: $showError)
         }
@@ -385,8 +385,8 @@ struct PaginationDemo: View {
             Pagination(current: $page, total: Int(total))
                 .simple(simple)
                 .window(sibling: wideWindow ? 2 : 1)
-                .jumper(jumper && !simple, title: "Git")
-                .showTotal(showTotal ? { _, t in "\(t) sayfa" } : nil)
+                .jumper(jumper && !simple, title: "Go")
+                .showTotal(showTotal ? { _, t in "\(t) pages" } : nil)
         } knobs: {
             Stepper("Current: \(page)", value: $page, in: 1...Int(total))
             HStack { Text("Total"); SwiftUI.Slider(value: $total, in: 3...50, step: 1) }

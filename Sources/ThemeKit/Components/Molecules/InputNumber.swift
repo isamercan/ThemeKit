@@ -11,7 +11,7 @@ import SwiftUI
 /// pill-shaped QuantityStepper.)
 /// Reference: Ant Design `InputNumber` / Chakra `NumberInput` — the value is
 /// directly editable (type a number, clamped to `range` on commit), steppers move
-/// by `step`, and an optional `unit` suffix labels the value (e.g. "kişi", "₺").
+/// by `step`, and an optional `unit` suffix labels the value (e.g. "guest", "$").
 public struct InputNumber: View {
     @Environment(\.theme) private var theme
 
@@ -208,9 +208,9 @@ private extension View {
         @State var price = 500
         var body: some View {
             VStack(spacing: 16) {
-                InputNumber(label: "Adults", value: $a, range: 1...9, unit: "kişi", hint: "Type or step.", large: true)
+                InputNumber(label: "Adults", value: $a, range: 1...9, unit: "guest", hint: "Type or step.", large: true)
                 InputNumber(label: "Children", value: $b, errorText: "Too many")
-                InputNumber(label: "Max price", value: $price, range: 0...10000, step: 50, unit: "₺")
+                InputNumber(label: "Max price", value: $price, range: 0...10000, step: 50, unit: "$")
             }
             .padding()
         }

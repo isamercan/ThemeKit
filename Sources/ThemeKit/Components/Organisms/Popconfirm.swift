@@ -120,8 +120,8 @@ public extension View {
         @State var show = true
         var body: some View {
             ThemeButton("Delete", color: .error, variant: .soft) { show.toggle() }
-                .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Geri alınamaz.",
-                            confirmTitle: "Sil", cancelTitle: "Vazgeç") {}
+                .popconfirm(isPresented: $show, title: "Delete this item?", message: "This can't be undone.",
+                            confirmTitle: "Delete", cancelTitle: "Cancel") {}
                 .padding(80)
         }
     }

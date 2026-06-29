@@ -21,8 +21,8 @@ struct AccordionDemo: View {
 
     var body: some View {
         ComponentStage("Accordion", inspector: [("titleSize", sizeIdx == 0 ? "large" : sizeIdx == 2 ? "small" : "medium"), ("indicator", indicatorIdx == 1 ? "plusMinus" : "chevron")]) {
-            Accordion("İade politikanız nedir?", initiallyExpanded: expanded) {
-                Text("Satın alımdan sonraki 14 gün içinde iade talep edebilirsiniz.")
+            Accordion("What is your return policy?", initiallyExpanded: expanded) {
+                Text("You can request a return within 14 days of purchase.")
             }
             .number(number ? 1 : nil)
             .indicator(indicator)
@@ -76,7 +76,7 @@ struct AlertToastDemo: View {
 
     var body: some View {
         ComponentStage("AlertToast", inspector: [("type", "\(type)")]) {
-            AlertToast("Saved successfully", message: message ? "Your changes were stored." : nil, type: type, onClose: closable ? { flash("AlertToast kapatıldı") } : nil)
+            AlertToast("Saved successfully", message: message ? "Your changes were stored." : nil, type: type, onClose: closable ? { flash("AlertToast closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Success").tag(AlertToastType.success); Text("Warning").tag(AlertToastType.warning); Text("Danger").tag(AlertToastType.danger); Text("Info").tag(AlertToastType.info)
@@ -98,10 +98,10 @@ struct InfoBannerDemo: View {
     @State private var tapped = 0
 
     private var message: String {
-        inlineLink ? "Rezervasyonun onaylandı. Detaylar için bilet sayfasına git." : "This is an informational message."
+        inlineLink ? "Your reservation is confirmed. Go to the ticket page for details." : "This is an informational message."
     }
     private var links: [(substring: String, action: () -> Void)] {
-        inlineLink ? [("bilet sayfasına", { tapped += 1 })] : []
+        inlineLink ? [("ticket page", { tapped += 1 })] : []
     }
 
     var body: some View {
@@ -109,7 +109,7 @@ struct InfoBannerDemo: View {
             InfoBanner(message, type: type, title: title ? "Heads up" : nil, links: links,
                        showIcon: showIcon, banner: banner,
                        actionTitle: action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil,
-                       onDismiss: dismissable ? { flash("InfoBanner kapatıldı") } : nil)
+                       onDismiss: dismissable ? { flash("InfoBanner closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Neutral").tag(InfoBannerType.neutral); Text("Info").tag(InfoBannerType.info); Text("Success").tag(InfoBannerType.success); Text("Warning").tag(InfoBannerType.warning); Text("Error").tag(InfoBannerType.error)
@@ -194,7 +194,7 @@ struct SegmentedTabBarDemo: View {
     @State private var captions = false
     @State private var card = false
     @State private var editable = false
-    @State private var cardTabs = ["Sekme 1", "Sekme 2", "Sekme 3"]
+    @State private var cardTabs = ["Tab 1", "Tab 2", "Tab 3"]
     @State private var nextTab = 4
 
     var body: some View {
@@ -204,16 +204,16 @@ struct SegmentedTabBarDemo: View {
                                 onClose: editable ? { idx in
                                     cardTabs.remove(at: idx)
                                     if selection >= cardTabs.count { selection = max(0, cardTabs.count - 1) }
-                                    flash("Sekme kapatıldı")
+                                    flash("Tab closed")
                                 } : nil,
                                 onAdd: editable ? {
-                                    cardTabs.append("Sekme \(nextTab)"); nextTab += 1; selection = cardTabs.count - 1
-                                    flash("Sekme eklendi")
+                                    cardTabs.append("Tab \(nextTab)"); nextTab += 1; selection = cardTabs.count - 1
+                                    flash("Tab added")
                                 } : nil)
             } else if captions && !scrollable {
-                SegmentedTabBar([TabItem("Ekonomi", caption: "₺2.450", systemImage: "airplane"),
-                                 TabItem("Business", caption: "₺6.900", trailingSystemImage: "star.fill"),
-                                 TabItem("First", caption: "Dolu", isEnabled: false)], selection: $selection)
+                SegmentedTabBar([TabItem("Economy", caption: "$2,450", systemImage: "airplane"),
+                                 TabItem("Business", caption: "$6,900", trailingSystemImage: "star.fill"),
+                                 TabItem("First", caption: "Full", isEnabled: false)], selection: $selection)
             } else if rich && !scrollable {
                 SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
                                  TabItem("Reviews", badge: "12"),
@@ -239,7 +239,7 @@ struct SelectionCardsDemo: View {
     var body: some View {
         ComponentStage("SelectionCards", inspector: [("kind", useCheckbox ? "checkbox" : "radio")]) {
             if useCheckbox {
-                CheckboxCard("Add checked bag", description: "+₺250", isChecked: checked) { checked.toggle(); flash("CheckboxCard: \(checked ? "seçildi" : "kaldırıldı")") }
+                CheckboxCard("Add checked bag", description: "+$250", isChecked: checked) { checked.toggle(); flash("CheckboxCard: \(checked ? "selected" : "removed")") }
             } else {
                 VStack(spacing: 12) {
                     RadioCard("Standard", description: "Free delivery in 3–5 days", isSelected: radio == "std") { radio = "std"; flash("RadioCard: Standard") }

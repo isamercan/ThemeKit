@@ -41,8 +41,8 @@ public struct TextInputFormatter {
         }
     }
 
-    /// Thousands-grouped amount with an optional currency symbol (e.g. "₺1.234.567").
-    public static func currency(symbol: String = "₺", grouping: String = ".") -> TextInputFormatter {
+    /// Thousands-grouped amount with an optional currency symbol (e.g. "$1,234,567").
+    public static func currency(symbol: String = "$", grouping: String = ",") -> TextInputFormatter {
         TextInputFormatter { raw in
             let digits = raw.filter(\.isNumber)
             guard !digits.isEmpty else { return "" }

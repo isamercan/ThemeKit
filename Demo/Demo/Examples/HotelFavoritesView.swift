@@ -20,9 +20,9 @@ struct HotelFavoritesView: View {
         Group {
             if saved.isEmpty {
                 EmptyState(systemImage: "heart",
-                           title: "Henüz favorin yok",
-                           message: "Beğendiğin otelleri kalbe dokunarak buraya ekleyebilirsin.",
-                           buttonTitle: "Otellere göz at",
+                           title: "No favorites yet",
+                           message: "Tap the heart on hotels you like to save them here.",
+                           buttonTitle: "Browse hotels",
                            action: { if path.last == .favorites { path.removeLast() } })
                     .padding()
                     .frame(maxHeight: .infinity)
@@ -53,7 +53,7 @@ struct HotelFavoritesView: View {
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Favoriler · \(saved.count)")
+        .navigationTitle("Favorites · \(saved.count)")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

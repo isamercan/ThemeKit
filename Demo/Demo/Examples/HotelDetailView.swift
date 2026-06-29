@@ -24,7 +24,7 @@ struct HotelDetailView: View {
                     .frame(maxWidth: .infinity)
                     .overlay(alignment: .bottomLeading) {
                         if hotel.discount != nil {
-                            Badge("Fırsat", style: .error, leadingSystemImage: "flame.fill").padding()
+                            Badge("Deal", style: .error, leadingSystemImage: "flame.fill").padding()
                         }
                     }
 
@@ -40,14 +40,14 @@ struct HotelDetailView: View {
 
                     Card {
                         HStack {
-                            Stat(title: "Gecelik", value: hotel.pricePerNight.priceText, systemImage: "tag")
+                            Stat(title: "Per night", value: hotel.pricePerNight.priceText, systemImage: "tag")
                             Spacer()
-                            Stat(title: "Yorum", value: "\(hotel.reviewCount)", systemImage: "text.bubble")
+                            Stat(title: "Reviews", value: "\(hotel.reviewCount)", systemImage: "text.bubble")
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Konum").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Text("Location").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                         Map(initialPosition: .region(MKCoordinateRegion(center: hotel.coordinate, span: .init(latitudeDelta: 0.02, longitudeDelta: 0.02)))) {
                             Marker(hotel.name, coordinate: hotel.coordinate).tint(Theme.shared.background(.bgHero))
                         }
@@ -56,22 +56,22 @@ struct HotelDetailView: View {
                         .allowsHitTesting(false)
                         HStack(spacing: 4) {
                             Icon(systemName: "mappin.circle", size: .sm, color: Theme.shared.text(.textTertiary))
-                            Text(hotel.area + ", İstanbul").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                            Text(hotel.area + ", Istanbul").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         }
                     }
 
                     VStack(spacing: 8) {
-                        Accordion("İptal politikası", leadingSystemImage: "calendar", initiallyExpanded: true) {
-                            Text(hotel.freeCancellation ? "Girişten 24 saat öncesine kadar ücretsiz iptal." : "İptal koşulları rezervasyon sırasında belirtilir.")
+                        Accordion("Cancellation policy", leadingSystemImage: "calendar", initiallyExpanded: true) {
+                            Text(hotel.freeCancellation ? "Free cancellation up to 24 hours before check-in." : "Cancellation terms are shown during booking.")
                         }
-                        Accordion("Otel kuralları", leadingSystemImage: "list.bullet") {
-                            Text("Giriş 14:00 · Çıkış 12:00 · Evcil hayvan kabul edilmez.")
+                        Accordion("House rules", leadingSystemImage: "list.bullet") {
+                            Text("Check-in 2:00 PM · Check-out 12:00 PM · No pets allowed.")
                         }
                     }
 
-                    Text("Yorumlar").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-                    ChatBubble("Harika bir konaklamaydı, manzara muhteşemdi!", side: .incoming, author: "Ayşe", time: "2 gün önce", avatarSystemImage: "person.fill")
-                    ChatBubble("Personel çok ilgiliydi, kesinlikle tavsiye ederim.", side: .incoming, author: "Mehmet", time: "1 hafta önce", avatarSystemImage: "person.fill")
+                    Text("Reviews").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+                    ChatBubble("It was a wonderful stay, the view was amazing!", side: .incoming, author: "Emma", time: "2 days ago", avatarSystemImage: "person.fill")
+                    ChatBubble("The staff were very attentive, I highly recommend it.", side: .incoming, author: "James", time: "1 week ago", avatarSystemImage: "person.fill")
                 }
                 .padding()
             }
@@ -93,9 +93,9 @@ struct HotelDetailView: View {
             HStack(spacing: Theme.SpacingKey.md.value) {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(hotel.pricePerNight.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-                    Text("/ gece").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    Text("/ night").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
-                PrimaryButton("Rezerve et", block: true) { path.append(.checkout(hotel)) }
+                PrimaryButton("Reserve", block: true) { path.append(.checkout(hotel)) }
             }
             .padding(.bottom, 4)
         }

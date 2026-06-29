@@ -121,14 +121,14 @@ public struct ListView<Item: Identifiable, Row: View>: View {
 
 #Preview {
     struct Row: Identifiable { let id = UUID(); let title: String; let subtitle: String }
-    let rows = [Row(title: "Hesabım", subtitle: "Profil ve güvenlik"),
-                Row(title: "Bildirimler", subtitle: "E-posta ve push"),
-                Row(title: "Dil", subtitle: "Türkçe")]
+    let rows = [Row(title: "My Account", subtitle: "Profile & security"),
+                Row(title: "Notifications", subtitle: "Email & push"),
+                Row(title: "Language", subtitle: "English")]
     return VStack(spacing: 24) {
-        ListView(rows, header: "Ayarlar", footer: "3 öğe") { row in
+        ListView(rows, header: "Settings", footer: "3 items") { row in
             ListRow(row.title, subtitle: row.subtitle, action: {})
         }
-        ListView(rows, header: "Yükleniyor", loading: true) { _ in EmptyView() }
+        ListView(rows, header: "Loading", loading: true) { _ in EmptyView() }
     }
     .padding()
 }

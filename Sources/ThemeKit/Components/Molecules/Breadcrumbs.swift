@@ -106,10 +106,10 @@ public struct Breadcrumbs: View {
 
 #Preview {
     VStack(alignment: .leading, spacing: 16) {
-        Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("İstanbul", action: {}), .init("Grand Hotel")])
+        Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel")])
         Breadcrumbs([
             .init("Home", action: {}), .init("Hotels", action: {}), .init("Turkey", action: {}),
-            .init("Marmara", action: {}), .init("İstanbul", action: {}), .init("Grand Hotel"),
+            .init("Marmara", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel"),
         ], maxItems: 4)
     }
     .padding()

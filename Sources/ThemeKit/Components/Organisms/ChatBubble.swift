@@ -65,8 +65,8 @@ public struct ChatBubble: View {
 
 #Preview {
     VStack(spacing: 12) {
-        ChatBubble("Merhaba! Rezervasyonunuz onaylandı.", side: .incoming, author: "Destek", time: "09:24", avatarSystemImage: "person.fill")
-        ChatBubble("Teşekkürler, harika!", side: .outgoing, time: "09:25", avatarSystemImage: "person.fill")
+        ChatBubble("Hello! Your reservation is confirmed.", side: .incoming, author: "Support", time: "09:24", avatarSystemImage: "person.fill")
+        ChatBubble("Thanks, great!", side: .outgoing, time: "09:25", avatarSystemImage: "person.fill")
     }
     .padding()
 }

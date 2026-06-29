@@ -107,7 +107,7 @@ public struct SelectBox<Option: Hashable>: View {
         @State var country: String?
         var body: some View {
             VStack(spacing: 16) {
-                SelectBox(label: "Country", options: ["Türkiye", "Germany", "France"], selection: $country, hint: "Pick your country") { $0 }
+                SelectBox(label: "Country", options: ["Turkey", "Germany", "France"], selection: $country, hint: "Pick your country") { $0 }
                 SelectBox(label: "City", options: ["A", "B"], selection: .constant(nil), errorText: "Required") { $0 }
             }
             .padding()

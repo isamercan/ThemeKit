@@ -135,9 +135,9 @@ struct SearchBarDemo: View {
     @State private var back = false
     @State private var trailing = true
     @State private var typeahead = true
-    @State private var recent = ["İstanbul", "Bursa"]
+    @State private var recent = ["Istanbul", "Bursa"]
 
-    private let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa", "Adana"]
+    private let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa", "Adana"]
 
     var body: some View {
         ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("recent", "\(recent.count)")]) {
@@ -168,10 +168,10 @@ struct SelectDemo: View {
     @State private var filled = false
 
     private var selectView: some View {
-        Select("Şehir", sections: [
-            .init("Marmara", ["İstanbul", "Bursa", "Kocaeli"]),
-            .init("Ege", ["İzmir", "Aydın", "Muğla"]),
-            .init("İç Anadolu", ["Ankara", "Konya"]),
+        Select("City", sections: [
+            .init("Marmara", ["Istanbul", "Bursa", "Kocaeli"]),
+            .init("Aegean", ["Izmir", "Aydin", "Mugla"]),
+            .init("Central Anatolia", ["Ankara", "Konya"]),
         ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
            isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
     }
@@ -189,21 +189,21 @@ struct SelectDemo: View {
             Toggle("Allow clear", isOn: $clearable)
             Toggle("Loading (async)", isOn: $loading)
             Toggle("Disable \"Konya\"", isOn: $disableSoldOut)
-            Text(searchable ? "Tap → açılır panel: ara, loading & \"No results\" durumları." : "Tap → native Menu (gruplu Section'lar).").font(.caption).foregroundStyle(.secondary)
+            Text(searchable ? "Tap → expanding panel: search, loading & \"No results\" states." : "Tap → native Menu (grouped Sections).").font(.caption).foregroundStyle(.secondary)
             Button("Clear") { city = nil }
         }
     }
 }
 
 struct MultiSelectDemo: View {
-    @State private var picks: Set<String> = ["İstanbul", "Ankara", "İzmir", "Bursa"]
+    @State private var picks: Set<String> = ["Istanbul", "Ankara", "Izmir", "Bursa"]
     @State private var searchable = true
     @State private var clearable = true
     @State private var capTags = true
     @State private var enabled = true
     @State private var loading = false
     @State private var disableSoldOut = false   // marks "Adana" disabled
-    private let cities = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa", "Adana", "Konya"]
+    private let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana", "Konya"]
 
     var body: some View {
         ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
@@ -221,18 +221,18 @@ struct MultiSelectDemo: View {
             Toggle("Loading (async)", isOn: $loading)
             Toggle("Disable \"Adana\"", isOn: $disableSoldOut)
             Toggle("Enabled", isOn: $enabled)
-            Button("Reset") { picks = ["İstanbul", "Ankara", "İzmir", "Bursa"] }
+            Button("Reset") { picks = ["Istanbul", "Ankara", "Izmir", "Bursa"] }
         }
     }
 }
 
 struct SelectBoxDemo: View {
-    @State private var country: String? = "Türkiye"
+    @State private var country: String? = "Turkey"
     @State private var error = false
     @State private var enabled = true
     var body: some View {
         ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
-            SelectBox(label: "Country", options: ["Türkiye", "Germany", "France"], selection: $country,
+            SelectBox(label: "Country", options: ["Turkey", "Germany", "France"], selection: $country,
                       hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil) { $0 }
             .disabled(!enabled)
         } knobs: {
@@ -331,7 +331,7 @@ struct CheckboxGroupDemo: View {
     var body: some View {
         ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
             CheckboxGroup(title: "Amenities", options: options, selection: $sel,
-                          selectAllTitle: selectAll ? "Tümünü seç" : nil,
+                          selectAllTitle: selectAll ? "Select all" : nil,
                           isOptionEnabled: disableParking ? { $0 != "Parking" } : nil) { $0 }
                 .disabled(!enabled)
         } knobs: {
@@ -389,12 +389,12 @@ struct AutocompleteDemo: View {
     @State private var text = ""
     @State private var asyncMode = false
     @State private var disableSoldOut = false
-    private let cities = ["İstanbul", "İzmir", "İzmit", "Ankara", "Antalya", "Bursa"]
+    private let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
     private var enabledPredicate: ((String) -> Bool)? {
-        disableSoldOut ? { $0 != "İzmit" } : nil
+        disableSoldOut ? { $0 != "Izmit" } : nil
     }
     var body: some View {
-        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "İzmit" : "—")]) {
+        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "Izmit" : "—")]) {
             if asyncMode {
                 Autocomplete(label: "Destination", text: $text, suggest: { query in
                     try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
@@ -407,7 +407,7 @@ struct AutocompleteDemo: View {
             }
         } knobs: {
             Toggle("Async (remote-style)", isOn: $asyncMode)
-            Toggle("Disable “İzmit”", isOn: $disableSoldOut)
+            Toggle("Disable “Izmit”", isOn: $disableSoldOut)
             Text("Type to filter suggestions.").font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -426,12 +426,12 @@ struct CardDemo: View {
 
     private var cardBody: some View {
         Card(elevation: elevation, padding: padding,
-             title: header ? "Rezervasyon" : nil,
-             subtitle: header ? "2 gece · 2 misafir" : nil,
-             extraTitle: header ? "Detay" : nil,
-             onExtra: header ? { flash("Detay") } : nil,
+             title: header ? "Reservation" : nil,
+             subtitle: header ? "2 nights · 2 guests" : nil,
+             extraTitle: header ? "Details" : nil,
+             onExtra: header ? { flash("Details") } : nil,
              isLoading: loading,
-             action: tappable ? { taps += 1; flash("Card tıklandı") } : nil) {
+             action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
                 Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
@@ -469,12 +469,12 @@ struct EmptyStateDemo: View {
         ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol")]) {
             if animated {
                 EmptyState(animatedURL: gifURL, imageMaxHeight: 140,
-                           title: "Yükleniyor", message: "İçerik hazırlanıyor…",
-                           buttonTitle: hasButton ? "Yenile" : nil, action: hasButton ? { flash("EmptyState: Yenile") } : nil)
+                           title: "Loading", message: "Preparing content…",
+                           buttonTitle: hasButton ? "Refresh" : nil, action: hasButton ? { flash("EmptyState: Refresh") } : nil)
             } else if customImage {
                 EmptyState(image: Image(systemName: "sailboat.fill"), imageMaxHeight: 120,
-                           title: "Sepetin boş", message: "Henüz bir şey eklemedin.",
-                           buttonTitle: hasButton ? "Keşfet" : nil, action: hasButton ? { flash("EmptyState: Keşfet") } : nil)
+                           title: "Your cart is empty", message: "You haven't added anything yet.",
+                           buttonTitle: hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
             } else {
                 EmptyState(systemImage: "magnifyingglass",
                            iconForeground: tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil,
@@ -516,26 +516,26 @@ struct ListRowDemo: View {
         case .toggle: return .toggle($on)
         case .checkmark: return .checkmark(on)
         case .checkbox: return .checkbox($agree)
-        case .button: return .button("Düzenle", action: { flash("ListRow: Düzenle") })
-        case .price: return .price(.init(total: "₺14.400", each: "₺1.200", unit: "/ ay"))
-        case .status: return .status("Müsait", systemImage: "checkmark.seal.fill")
+        case .button: return .button("Edit", action: { flash("ListRow: Edit") })
+        case .price: return .price(.init(total: "$14,400", each: "$1,200", unit: "/ month"))
+        case .status: return .status("Available", systemImage: "checkmark.seal.fill")
         case .none: return .none
         }
     }
 
     private var imageURL: URL? { URL(string: "https://picsum.photos/seed/listrow/120") }
-    private var meta: ListRowMeta? { withMeta ? ListRowMeta(rating: 8.4, sentiment: "Mükemmel", commentLabel: "1.284 yorum") : nil }
+    private var meta: ListRowMeta? { withMeta ? ListRowMeta(rating: 8.4, sentiment: "Excellent", commentLabel: "1,284 reviews") : nil }
     private var infos: [ListRowInfo] {
-        moreInfo ? [ListRowInfo(systemImage: "checkmark", "Ücretsiz iptal"),
-                    ListRowInfo(systemImage: "wifi", "Ücretsiz wifi"),
-                    ListRowInfo("Kapıda ödeme yok")] : []
+        moreInfo ? [ListRowInfo(systemImage: "checkmark", "Free cancellation"),
+                    ListRowInfo(systemImage: "wifi", "Free wifi"),
+                    ListRowInfo("No payment on arrival")] : []
     }
 
     var body: some View {
         ComponentStage("ListRow", inspector: [("trailing", kind.rawValue), ("leading", lead.rawValue)]) {
             VStack(spacing: 0) {
-                ListSectionHeader("Konaklama")
-                ListRow("Grand Hotel İstanbul", subtitle: subtitle ? "Deniz manzaralı · Kahvaltı dahil" : nil,
+                ListSectionHeader("Accommodation")
+                ListRow("Grand Hotel Istanbul", subtitle: subtitle ? "Sea view · Breakfast included" : nil,
                         number: lead == .number ? 1 : nil,
                         leadingSystemImage: lead == .icon ? "building.2" : nil,
                         leadingImageURL: lead == .image ? imageURL : nil,
@@ -543,8 +543,8 @@ struct ListRowDemo: View {
                         alertCount: alert ? 3 : nil,
                         meta: meta, infos: infos, isSelected: selected,
                         multilineTitle: moreInfo,
-                        infoAction: kind == .price ? { flash("ListRow: fiyat bilgisi") } : nil,
-                        trailing: trailing, action: { flash("ListRow tıklandı") })
+                        infoAction: kind == .price ? { flash("ListRow: price info") } : nil,
+                        trailing: trailing, action: { flash("ListRow tapped") })
             }
         } knobs: {
             Picker("Trailing", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
@@ -568,20 +568,20 @@ struct NotificationDemo: View {
     var body: some View {
         ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("type", typed ? "success" : "default")]) {
             if actions {
-                NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
-                                 message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
-                                 date: "5 Aralık 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification kapatıldı") } : nil) {
+                NotificationCard(title: "We Have a Suggestion for Your Holiday",
+                                 message: "24 days left until your Hilton Istanbul reservation.",
+                                 date: "December 5, 2024", isUnread: unread, type: type,
+                                 onClose: closable ? { flash("Notification dismissed") } : nil) {
                     ButtonGroup(.horizontal) {
-                        SecondaryButton("Sonra", size: .small) { flash("Notification: Sonra") }
-                        PrimaryButton("İncele", size: .small) { flash("Notification: İncele") }
+                        SecondaryButton("Later", size: .small) { flash("Notification: Later") }
+                        PrimaryButton("View", size: .small) { flash("Notification: View") }
                     }
                 }
             } else {
-                NotificationCard(title: "Tatilinle İlgili Bir Önerimiz Var",
-                                 message: "Hilton İstanbul rezervasyonuna 24 gün kaldı.",
-                                 date: "5 Aralık 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification kapatıldı") } : nil)
+                NotificationCard(title: "We Have a Suggestion for Your Holiday",
+                                 message: "24 days left until your Hilton Istanbul reservation.",
+                                 date: "December 5, 2024", isUnread: unread, type: type,
+                                 onClose: closable ? { flash("Notification dismissed") } : nil)
             }
         } knobs: {
             Toggle("Unread", isOn: $unread)
@@ -600,9 +600,9 @@ struct PageHeaderDemo: View {
     var body: some View {
         ComponentStage("PageHeader") {
             PageHeader("Search results", subtitle: subtitle ? "128 hotels" : nil,
-                       tags: tags ? [.init("Aktif", style: .success), .init("Beta", style: .info)] : [],
-                       onBack: back ? { flash("PageHeader: geri") } : nil,
-                       actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filtre") }), .init(systemImage: "heart", handler: { flash("PageHeader: favori") })] : [])
+                       tags: tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [],
+                       onBack: back ? { flash("PageHeader: back") } : nil,
+                       actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Subtitle", isOn: $subtitle)
@@ -617,7 +617,7 @@ struct RatingSummaryDemo: View {
     @State private var reviews = true
     var body: some View {
         ComponentStage("RatingSummary", inspector: [("score", String(format: "%.1f", score))]) {
-            RatingSummary(score: score, label: "Mükemmel", reviewCount: reviews ? 1200 : nil, onReviews: reviews ? { flash("Yorumlara dokunuldu") } : nil)
+            RatingSummary(score: score, label: "Excellent", reviewCount: reviews ? 1200 : nil, onReviews: reviews ? { flash("Reviews tapped") } : nil)
         } knobs: {
             HStack { Text("Score"); SwiftUI.Slider(value: $score, in: 0...10, step: 0.1) }
             Toggle("Review count", isOn: $reviews)
@@ -629,9 +629,9 @@ struct BlogCardDemo: View {
     @State private var compact = false
     var body: some View {
         ComponentStage("BlogCard", inspector: [("compact", "\(compact)")]) {
-            BlogCard(title: "Kapadokya'yı Tek Başına Keşfetmeye Ne Dersin?",
-                     excerpt: "Kimine göre doğanın bir mucizesi, kimine göre periler diyarı…",
-                     compact: compact, onReadMore: { flash("BlogCard: devamını oku") }) {
+            BlogCard(title: "How About Exploring Cappadocia on Your Own?",
+                     excerpt: "To some a miracle of nature, to others a fairyland…",
+                     compact: compact, onReadMore: { flash("BlogCard: read more") }) {
                 Theme.shared.background(.bgTertiary)
             }
         } knobs: {
@@ -659,7 +659,7 @@ struct GalleryDemo: View {
 }
 
 struct UploadDemo: View {
-    private struct DemoUploadError: LocalizedError { var errorDescription: String? { "Dosya çok büyük" } }
+    private struct DemoUploadError: LocalizedError { var errorDescription: String? { "File too large" } }
 
     @State private var uploads = UploadController()
     @State private var counter = 0
@@ -669,7 +669,7 @@ struct UploadDemo: View {
         ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)"), ("picked", "\(picked.count)/3")]) {
             VStack(spacing: 20) {
                 UploadList(controller: uploads) { start(fail: false) }
-                Upload(prompt: "En fazla 3 fotoğraf yükleyebilirsin.", buttonTitle: "Fotoğraf ekle",
+                Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
                        files: picked, maxCount: 3,
                        onPick: { picked.append(.init(name: "img-\(picked.count + 1).jpg", status: .done)) },
                        onRemove: { file in picked.removeAll { $0.id == file.id } })
@@ -768,10 +768,10 @@ struct StatDemo: View {
     private var statTrend: StatTrend? { trend == .up ? .up("+12%") : trend == .down ? .down("-3%") : nil }
     @ViewBuilder private var statView: some View {
         if animated {
-            Stat(title: "Total bookings", value: count, suffix: "₺", isLoading: loading,
+            Stat(title: "Total bookings", value: count, suffix: "$", isLoading: loading,
                  description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
         } else {
-            Stat(title: "Total bookings", value: "1,284", suffix: "₺", isLoading: loading,
+            Stat(title: "Total bookings", value: "1,284", suffix: "$", isLoading: loading,
                  description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
         }
     }
@@ -801,7 +801,7 @@ struct StepsDemo: View {
     @State private var progressDot = false
     @State private var percent = false
     private let titles = ["Cart", "Address", "Payment", "Done"]
-    private let subs = ["2 items", "İstanbul", "Card ••42", "Confirm"]
+    private let subs = ["2 items", "Istanbul", "Card ••42", "Confirm"]
     private var steps: [Steps.Step] {
         titles.enumerated().map { i, t in
             let state: StepState = (error && i == active) ? .error
@@ -812,7 +812,7 @@ struct StepsDemo: View {
     }
     var body: some View {
         ComponentStage("Steps", inspector: [("active", "\(active)"), ("progressDot", "\(progressDot)")]) {
-            Steps(steps, axis: vertical ? .vertical : .horizontal, progressDot: progressDot) { active = $0; flash("Adım \($0 + 1) seçildi") }
+            Steps(steps, axis: vertical ? .vertical : .horizontal, progressDot: progressDot) { active = $0; flash("Step \($0 + 1) selected") }
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
@@ -828,7 +828,7 @@ struct StepsDemo: View {
 struct BreadcrumbsDemo: View {
     @State private var depth = 6.0
     @State private var collapse = true
-    private let all = ["Home", "Hotels", "Turkey", "Marmara", "İstanbul", "Grand Hotel"]
+    private let all = ["Home", "Hotels", "Turkey", "Marmara", "Istanbul", "Grand Hotel"]
     var body: some View {
         ComponentStage("Breadcrumbs", inspector: [("depth", "\(Int(depth))"), ("maxItems", collapse ? "4" : "—")]) {
             Breadcrumbs(all.prefix(Int(depth)).enumerated().map { i, t in .init(t, action: i < Int(depth) - 1 ? { flash("Breadcrumb: \(t)") } : nil) },
@@ -853,13 +853,13 @@ struct TimelineDemo: View {
     var body: some View {
         ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical"), ("mode", modeLabel), ("reverse", "\(reverse)")]) {
             Timeline([
-                .init(title: "Sipariş", time: "09:24", systemImage: "cart", state: .done, color: .success),
-                .init(title: "Hazırlanıyor", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
+                .init(title: "Order", time: "09:24", systemImage: "cart", state: .done, color: .success),
+                .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
                 failed
-                    ? .init(title: "Hata", time: "09:45", description: horizontal ? nil : "Kartı tekrar dene.", state: .error)
-                    : .init(title: "Yolda", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
+                    ? .init(title: "Error", time: "09:45", description: horizontal ? nil : "Try your card again.", state: .error)
+                    : .init(title: "On the way", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
             ], axis: horizontal ? .horizontal : .vertical, mode: mode, reverse: reverse,
-               pending: (!horizontal && pending) ? "Kurye bekleniyor…" : nil)
+               pending: (!horizontal && pending) ? "Waiting for courier…" : nil)
         } knobs: {
             Stepper("Active: \(Int(step))", value: $step, in: 0...3)
             Toggle("Horizontal", isOn: $horizontal)
@@ -881,9 +881,9 @@ struct ChatBubbleDemo: View {
     @State private var meta = true
     var body: some View {
         ComponentStage("ChatBubble", inspector: [("side", outgoing ? "outgoing" : "incoming")]) {
-            ChatBubble("Merhaba! Rezervasyonunuz onaylandı.",
+            ChatBubble("Hello! Your reservation is confirmed.",
                        side: outgoing ? .outgoing : .incoming,
-                       author: meta ? "Destek" : nil, time: meta ? "09:24" : nil,
+                       author: meta ? "Support" : nil, time: meta ? "09:24" : nil,
                        avatarSystemImage: avatar ? "person.fill" : nil)
         } knobs: {
             Toggle("Outgoing", isOn: $outgoing)
@@ -899,7 +899,7 @@ struct DrawerDemo: View {
     @State private var trailing = false
     var body: some View {
         ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", trailing ? "trailing" : "leading")]) {
-            PrimaryButton("Open drawer") { open = true; flash("Drawer açıldı") }
+            PrimaryButton("Open drawer") { open = true; flash("Drawer opened") }
                 .frame(maxWidth: .infinity, minHeight: 160)
                 .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -983,7 +983,7 @@ struct HeroDemo: View {
     @State private var cta = true
     var body: some View {
         ComponentStage("Hero", inspector: [("dark", "\(dark)")]) {
-            Hero(title: dark ? "Summer Sale" : "Discover İstanbul",
+            Hero(title: dark ? "Summer Sale" : "Discover Istanbul",
                  subtitle: subtitle ? "Hand-picked stays at the best prices." : nil,
                  ctaTitle: cta ? "Explore" : nil, dark: dark, action: cta ? { flash("Hero: Explore") } : nil)
         } knobs: {
@@ -1006,7 +1006,7 @@ struct FABDemo: View {
                 .init(systemImage: "camera", label: "Photo", action: { flash("FAB: Photo") }),
                 .init(systemImage: "doc", label: "Document", action: { flash("FAB: Document") }),
                 .init(systemImage: "link", label: "Link", action: { flash("FAB: Link") }),
-            ] : [], shape: square ? .square : .circle, color: color, badge: badge ? 3 : nil, action: { flash("FAB tıklandı") })
+            ] : [], shape: square ? .square : .circle, color: color, badge: badge ? 3 : nil, action: { flash("FAB tapped") })
             .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomTrailing)
         } knobs: {
             Toggle("Speed dial", isOn: $speedDial)
@@ -1065,11 +1065,11 @@ struct DateFieldDemo: View {
         case .custom: return .custom("EEE, d MMM")
         }
     }
-    private var messages: [InfoMessage] { error ? [InfoMessage("Tarih zorunlu", kind: .error)] : [] }
+    private var messages: [InfoMessage] { error ? [InfoMessage("Date is required", kind: .error)] : [] }
 
     var body: some View {
         ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
-            DateField(label: "Tarih", date: $date, style: style,
+            DateField(label: "Date", date: $date, style: style,
                       components: withTime ? .dateAndTime : .date,
                       infoMessages: messages, allowClear: clearable,
                       leadingSystemImage: "calendar")
@@ -1106,7 +1106,7 @@ struct DataTableDemo: View {
             DataTable(columns: [
                 .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
                 .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
-                .init("Price", align: .trailing, sortKey: { .number($0.price) }) { "₺\(Int($0.price))" },
+                .init("Price", align: .trailing, sortKey: { .number($0.price) }) { "$\(Int($0.price))" },
             ], rows: rows, striped: striped, selection: selectable ? $selected : nil,
                pageSize: paged ? 4 : nil, isLoading: loading)
         } knobs: {
@@ -1177,14 +1177,14 @@ struct FileInputDemo: View {
     @State private var error = false
     @State private var clearable = true
     private var messages: [InfoMessage] {
-        error ? [InfoMessage("Dosya 5 MB'tan küçük olmalı", kind: .error)] : []
+        error ? [InfoMessage("File must be smaller than 5 MB", kind: .error)] : []
     }
     var body: some View {
         ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil"), ("error", "\(error)")]) {
             FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil,
                       infoMessages: messages,
-                      onPick: { picked = true; flash("FileInput: dosya seçildi") },
-                      onClear: clearable ? { picked = false; flash("FileInput: temizlendi") } : nil)
+                      onPick: { picked = true; flash("FileInput: file selected") },
+                      onClear: clearable ? { picked = false; flash("FileInput: cleared") } : nil)
         } knobs: {
             Toggle("File chosen", isOn: $picked)
             Toggle("Validation error", isOn: $error)
@@ -1203,7 +1203,7 @@ struct ThemeControllerDemo: View {
                     .init(name: "oceanTheme", label: "Ocean"),
                     .init(name: "sunsetTheme", label: "Sunset"),
                 ], selectedName: $name)
-                PrimaryButton("Sample button") { flash("Sample button tıklandı") }
+                PrimaryButton("Sample button") { flash("Sample button tapped") }
             }
         } knobs: {
             Text("Switches Theme.shared live.").font(.footnote).foregroundStyle(.secondary)
@@ -1233,7 +1233,7 @@ struct ThemeButtonDemo: View {
                          systemImage: (icon || iconOnly) ? "star.fill" : nil,
                          iconPosition: trailingIcon ? .trailing : .leading,
                          color: color, variant: variant, size: size, shape: shape,
-                         block: block && !iconOnly, isLoading: $loading) { flash("ThemeButton tıklandı") }
+                         block: block && !iconOnly, isLoading: $loading) { flash("ThemeButton tapped") }
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
             Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -1317,9 +1317,9 @@ struct FeedbackDemo: View {
     var body: some View {
         ComponentStage("Feedback", inspector: [("level", "global"), ("last action", last)]) {
             VStack(spacing: 12) {
-                ThemeButton("Toast göster", color: kind.semanticColor, block: true) {
-                    feedback.toast("\(kind.rawValue.capitalized) mesajı",
-                                   message: "Bu bir \(kind.rawValue) bildirimi.", kind: kind)
+                ThemeButton("Show toast", color: kind.semanticColor, block: true) {
+                    feedback.toast("\(kind.rawValue.capitalized) message",
+                                   message: "This is a \(kind.rawValue) notification.", kind: kind)
                     last = "toast: \(kind.rawValue)"
                 }
                 ThemeButton("Stack (3 toast)", color: kind.semanticColor, variant: .soft, block: true) {
@@ -1327,37 +1327,37 @@ struct FeedbackDemo: View {
                     last = "stack: 3"
                 }
                 ThemeButton("Undo (action + sticky)", variant: .outline, block: true) {
-                    feedback.toast("Mesaj silindi", kind: .info,
-                                   action: ToastAction("Geri al") { feedback.toast("Geri alındı", kind: .success) },
+                    feedback.toast("Message deleted", kind: .info,
+                                   action: ToastAction("Undo") { feedback.toast("Undone", kind: .success) },
                                    duration: nil)
                     last = "undo toast"
                 }
-                ThemeButton("Async görev (task)", variant: .outline, block: true) {
+                ThemeButton("Async task (task)", variant: .outline, block: true) {
                     Task {
-                        await feedback.toastTask(loading: "Kaydediliyor…", success: "Kaydedildi") {
+                        await feedback.toastTask(loading: "Saving…", success: "Saved") {
                             try await Task.sleep(nanoseconds: 1_500_000_000)
                         }
                     }
                     last = "async task"
                 }
-                ThemeButton("Bildirim göster (notification)", color: kind.semanticColor, variant: .soft, block: true) {
-                    feedback.notify("\(kind.rawValue.capitalized)", message: "Üstten gelen bir bildirim.", kind: kind)
+                ThemeButton("Show notification (notification)", color: kind.semanticColor, variant: .soft, block: true) {
+                    feedback.notify("\(kind.rawValue.capitalized)", message: "A notification from the top.", kind: kind)
                     last = "notify: \(kind.rawValue)"
                 }
-                ThemeButton("Yükleniyor (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
-                    feedback.loading("Kaydediliyor…")
+                ThemeButton("Loading (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
+                    feedback.loading("Saving…")
                     last = "loading"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                        feedback.dismissLoading(); feedback.toast("Kaydedildi", kind: .success)
+                        feedback.dismissLoading(); feedback.toast("Saved", kind: .success)
                     }
                 }
-                ThemeButton("Onay iste (confirm)", color: .error, variant: .outline, block: true) {
+                ThemeButton("Ask for confirmation (confirm)", color: .error, variant: .outline, block: true) {
                     feedback.confirm(
-                        title: "Rezervasyonu iptal et?",
-                        message: "Bu işlem geri alınamaz.",
-                        primaryTitle: "İptal et", primaryKind: .error,
-                        onPrimary: { last = "confirmed"; feedback.toast("İptal edildi", kind: .success); flash("Onaylandı") },
-                        secondaryTitle: "Vazgeç", onSecondary: { last = "dismissed"; flash("Vazgeçildi") }
+                        title: "Cancel reservation?",
+                        message: "This action cannot be undone.",
+                        primaryTitle: "Cancel reservation", primaryKind: .error,
+                        onPrimary: { last = "confirmed"; feedback.toast("Cancelled", kind: .success); flash("Confirmed") },
+                        secondaryTitle: "Cancel", onSecondary: { last = "dismissed"; flash("Dismissed") }
                     )
                 }
             }
@@ -1370,10 +1370,10 @@ struct FeedbackDemo: View {
         .onAppear {
             // Screenshot hook: launch with `-feedbackDemo toast|confirm|notify`.
             switch UserDefaults.standard.string(forKey: "feedbackDemo") {
-            case "toast": feedback.toast("Kaydedildi", message: "Değişiklikler kaydedildi.", kind: .success)
-            case "notify": feedback.notify("Yeni mesaj", message: "Rezervasyonunuz onaylandı.", kind: .info)
-            case "confirm": feedback.confirm(title: "Rezervasyonu iptal et?", message: "Bu işlem geri alınamaz.",
-                                             primaryTitle: "İptal et", primaryKind: .error, secondaryTitle: "Vazgeç")
+            case "toast": feedback.toast("Saved", message: "Your changes have been saved.", kind: .success)
+            case "notify": feedback.notify("New message", message: "Your reservation has been confirmed.", kind: .info)
+            case "confirm": feedback.confirm(title: "Cancel reservation?", message: "This action cannot be undone.",
+                                             primaryTitle: "Cancel reservation", primaryKind: .error, secondaryTitle: "Cancel")
             default: break
             }
         }
@@ -1387,21 +1387,21 @@ struct ResultDemo: View {
 
     private var copy: (String, String) {
         switch status {
-        case .success: return ("Rezervasyon onaylandı", "Onay e-postası gönderildi.")
-        case .info: return ("Bilgilendirme", "İşleminiz sıraya alındı.")
-        case .warning: return ("Ödeme beklemede", "Banka onayı bekleniyor.")
-        case .error: return ("Ödeme başarısız", "Kart bilgilerinizi kontrol edip tekrar deneyin.")
-        case .notFound: return ("Sayfa bulunamadı", "Aradığınız sayfa taşınmış veya silinmiş olabilir.")
-        case .forbidden: return ("Erişim engellendi", "Bu sayfayı görüntüleme yetkiniz yok.")
-        case .serverError: return ("Bir şeyler ters gitti", "Sunucu hatası oluştu, lütfen tekrar deneyin.")
+        case .success: return ("Reservation confirmed", "A confirmation email has been sent.")
+        case .info: return ("Information", "Your request has been queued.")
+        case .warning: return ("Payment pending", "Waiting for bank approval.")
+        case .error: return ("Payment failed", "Check your card details and try again.")
+        case .notFound: return ("Page not found", "The page you're looking for may have been moved or deleted.")
+        case .forbidden: return ("Access denied", "You don't have permission to view this page.")
+        case .serverError: return ("Something went wrong", "A server error occurred, please try again.")
         }
     }
 
     var body: some View {
         ComponentStage("Result", inspector: [("status", status.rawValue), ("code", status.codeText)]) {
             ResultView(status, title: copy.0, message: copy.1,
-                       primaryTitle: "Tekrar dene", onPrimary: { flash("Result: Tekrar dene") },
-                       secondaryTitle: "Ana sayfa", onSecondary: { flash("Result: Ana sayfa") })
+                       primaryTitle: "Try again", onPrimary: { flash("Result: Try again") },
+                       secondaryTitle: "Home", onSecondary: { flash("Result: Home") })
         } knobs: {
             Picker("Status", selection: $status) {
                 ForEach(ResultStatus.allCases, id: \.self) { Text($0.rawValue).tag($0) }
@@ -1469,14 +1469,14 @@ struct PopconfirmDemo: View {
     @State private var last = "—"
     var body: some View {
         ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("edge", "\(edge)"), ("last", last)]) {
-            ThemeButton("Sil", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
-                .popconfirm(isPresented: $show, title: "Bu öğeyi sil?", message: "Bu işlem geri alınamaz.",
-                            confirmTitle: "Sil", cancelTitle: "Vazgeç", edge: edge,
+            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
+                .popconfirm(isPresented: $show, title: "Delete this item?", message: "This action cannot be undone.",
+                            confirmTitle: "Delete", cancelTitle: "Cancel", edge: edge,
                             onConfirm: {
                                 if asyncConfirm { try? await Task.sleep(nanoseconds: 1_200_000_000) }
-                                last = "confirmed"; flash("Popconfirm onaylandı")
+                                last = "confirmed"; flash("Popconfirm confirmed")
                             },
-                            onCancel: { last = "cancelled"; flash("Popconfirm iptal edildi") })
+                            onCancel: { last = "cancelled"; flash("Popconfirm cancelled") })
                 .padding(80)
         } knobs: {
             Toggle("Async confirm (1.2s)", isOn: $asyncConfirm)
@@ -1497,16 +1497,16 @@ struct TreeSelectDemo: View {
     @State private var loading = false
     @State private var disableIzmir = false
     private let tree = [
-        TreeNode(id: "tr", "Türkiye", systemImage: "flag", children: [
-            TreeNode(id: "ist", "İstanbul"), TreeNode(id: "ank", "Ankara"), TreeNode(id: "izm", "İzmir"),
+        TreeNode(id: "tr", "Turkey", systemImage: "flag", children: [
+            TreeNode(id: "ist", "Istanbul"), TreeNode(id: "ank", "Ankara"), TreeNode(id: "izm", "Izmir"),
         ]),
-        TreeNode(id: "de", "Almanya", systemImage: "flag", children: [
-            TreeNode(id: "ber", "Berlin"), TreeNode(id: "mun", "Münih"),
+        TreeNode(id: "de", "Germany", systemImage: "flag", children: [
+            TreeNode(id: "ber", "Berlin"), TreeNode(id: "mun", "Munich"),
         ]),
     ]
     var body: some View {
         ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)"), ("loading", "\(loading)")]) {
-            TreeSelect(label: "Şehirler", nodes: tree, selection: $picks,
+            TreeSelect(label: "Cities", nodes: tree, selection: $picks,
                        cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"],
                        isLoading: loading, isNodeEnabled: disableIzmir ? { $0.id != "izm" } : nil)
                 .id("\(cascade)\(searchable)\(loading)\(disableIzmir)")
@@ -1514,7 +1514,7 @@ struct TreeSelectDemo: View {
             Toggle("Cascade (parent ↔ child + indeterminate)", isOn: $cascade)
             Toggle("Searchable", isOn: $searchable)
             Toggle("Loading", isOn: $loading)
-            Toggle("Disable “İzmir”", isOn: $disableIzmir)
+            Toggle("Disable “Izmir”", isOn: $disableIzmir)
             Button("Reset") { picks = ["ist"] }
         }
     }
@@ -1530,15 +1530,15 @@ struct TourDemo: View {
                     tourIcon("heart", "fav")
                     tourIcon("person.crop.circle", "profile")
                 }
-                ThemeButton("Turu başlat", systemImage: "play.fill", block: true) { tour.start(); flash("Tur başlatıldı") }
+                ThemeButton("Start tour", systemImage: "play.fill", block: true) { tour.start(); flash("Tour started") }
             }
             .tourHost(tour, steps: [
-                TourStep("search", title: "Arama", message: "Buradan otel arayabilirsiniz."),
-                TourStep("fav", title: "Favoriler", message: "Beğendiklerinizi kaydedin."),
-                TourStep("profile", title: "Profil", message: "Hesabınızı buradan yönetin."),
+                TourStep("search", title: "Search", message: "Search for hotels here."),
+                TourStep("fav", title: "Favorites", message: "Save the ones you like."),
+                TourStep("profile", title: "Profile", message: "Manage your account here."),
             ])
         } knobs: {
-            Button("Turu başlat") { tour.start() }
+            Button("Start tour") { tour.start() }
         }
         .onAppear {
             // Screenshot hook: launch with `-startTour YES`.
@@ -1564,10 +1564,10 @@ struct FormDemo: View {
     private enum Field { case email, password, plan, terms }
 
     @State private var form = FormValidator<Field>([
-        .email: [.required("E-posta zorunlu"), .email()],
-        .password: [.required("Şifre zorunlu"), .password(minLength: 8)],
-        .plan: [.required("Bir paket seçin")],
-        .terms: [.required("Devam etmek için kabul edin")],
+        .email: [.required("Email is required"), .email()],
+        .password: [.required("Password is required"), .password(minLength: 8)],
+        .plan: [.required("Select a plan")],
+        .terms: [.required("Accept to continue")],
     ])
     @State private var email = ""
     @State private var password = ""
@@ -1584,33 +1584,33 @@ struct FormDemo: View {
     var body: some View {
         ComponentStage("Form", inspector: [("valid", submitted ? "\(form.isValid)" : "—"), ("focused", "\(form.focusedField.map { "\($0)" } ?? "—")")]) {
             VStack(spacing: Theme.SpacingKey.md.value) {
-                Fieldset("Hesap oluştur", helper: "Tüm alanlar zorunlu.") {
-                    TextInput(TextInputModel(label: "E-posta", leadingSystemImage: "envelope",
+                Fieldset("Create account", helper: "All fields are required.") {
+                    TextInput(TextInputModel(label: "Email", leadingSystemImage: "envelope",
                                              infoMessages: form.messages(for: .email)),
                               text: $email, externalFocus: form.focusBinding(.email))
                         .a11yID("form.email")
-                    TextInput(TextInputModel(label: "Şifre (8+, büyük harf, rakam)", isSecure: true,
+                    TextInput(TextInputModel(label: "Password (8+, uppercase, number)", isSecure: true,
                                              infoMessages: form.messages(for: .password)),
                               text: $password, externalFocus: form.focusBinding(.password))
                         .a11yID("form.password")
-                    RadioGroup(title: "Paket", options: ["Standart", "Pro"], selection: $plan,
+                    RadioGroup(title: "Plan", options: ["Standard", "Pro"], selection: $plan,
                                infoMessages: form.messages(for: .plan)) { $0 }
                     .a11yID("form.plan")
-                    Checkbox("Şartları ve koşulları kabul ediyorum", isChecked: $terms,
+                    Checkbox("I accept the terms and conditions", isChecked: $terms,
                              infoMessages: form.messages(for: .terms))
                     .a11yID("form.terms")
                 }
                 if done {
-                    InfoBanner("Hesabınız oluşturuldu.", type: .success)
+                    InfoBanner("Your account has been created.", type: .success)
                 }
-                ThemeButton("Kayıt ol", block: true, accessibilityID: "form.submit") {
+                ThemeButton("Sign up", block: true, accessibilityID: "form.submit") {
                     let firstInvalid = form.validateAll(values)
                     submitted = true
                     done = firstInvalid == nil
                 }
             }
         } knobs: {
-            Text("Boş submit → e-posta/şifre + RadioGroup + Checkbox hepsi hata gösterir; ilk hatalı text alan odaklanır.").font(.caption).foregroundStyle(.secondary)
+            Text("Empty submit → email/password + RadioGroup + Checkbox all show errors; focus jumps to the first invalid text field.").font(.caption).foregroundStyle(.secondary)
             Button("Reset") { email = ""; password = ""; plan = nil; terms = false; submitted = false; done = false; form.reset() }
         }
         .onChange(of: values.description) { _, _ in if submitted { _ = form.validateAll(values) } }
@@ -1632,9 +1632,9 @@ struct FormDemo: View {
 struct ListDemo: View {
     private struct Row: Identifiable { let id = UUID(); let title: String; let subtitle: String; let icon: String }
     private let rows = [
-        Row(title: "Hesabım", subtitle: "Profil ve güvenlik", icon: "person.circle"),
-        Row(title: "Bildirimler", subtitle: "E-posta ve push", icon: "bell"),
-        Row(title: "Dil", subtitle: "Türkçe", icon: "globe"),
+        Row(title: "My account", subtitle: "Profile and security", icon: "person.circle"),
+        Row(title: "Notifications", subtitle: "Email and push", icon: "bell"),
+        Row(title: "Language", subtitle: "English", icon: "globe"),
     ]
     @State private var withHeader = true
     @State private var bordered = true
@@ -1644,8 +1644,8 @@ struct ListDemo: View {
 
     var body: some View {
         ComponentStage("List", inspector: [("count", "\(empty ? 0 : rows.count)"), ("bordered", "\(bordered)"), ("empty", "\(empty)")]) {
-            ListView(empty ? [] : rows, header: withHeader ? "Ayarlar" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) öğe" : nil,
-                     bordered: bordered, loading: loading, split: split, emptyText: "Henüz ayar yok") { row in
+            ListView(empty ? [] : rows, header: withHeader ? "Settings" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) items" : nil,
+                     bordered: bordered, loading: loading, split: split, emptyText: "No settings yet") { row in
                 ListRow(row.title, subtitle: row.subtitle, leadingSystemImage: row.icon, action: { flash("List: \(row.title)") })
             }
         } knobs: {
@@ -1697,7 +1697,7 @@ struct ImageCollageDemo: View {
     }
     var body: some View {
         ComponentStage("ImageCollage", inspector: [("images", "\(Int(count))")]) {
-            ImageCollage(urls, height: 220, onTap: { flash("ImageCollage: \($0 + 1). görsel") })
+            ImageCollage(urls, height: 220, onTap: { flash("ImageCollage: image \($0 + 1)") })
         } knobs: {
             HStack { Text("Images"); SwiftUI.Slider(value: $count, in: 1...8, step: 1) }
             Text("Layouts adapt: 1 · 2 · 3 · 4+ with a +N overlay on the last tile.").font(.caption).foregroundStyle(.secondary)
@@ -1708,9 +1708,9 @@ struct ImageCollageDemo: View {
 struct AccordionGroupDemo: View {
     private struct FAQ: Identifiable { let id = UUID(); let q: String; let a: String }
     private let faqs = [
-        FAQ(q: "İptal edebilir miyim?", a: "Evet, girişten 24 saat öncesine kadar ücretsiz iptal."),
-        FAQ(q: "Ödeme seçenekleri neler?", a: "Kredi/banka kartı ve havale/EFT kabul edilir."),
-        FAQ(q: "Evcil hayvan kabul ediliyor mu?", a: "Küçük ırk evcil hayvanlar ek ücretle kabul edilir."),
+        FAQ(q: "Can I cancel?", a: "Yes, free cancellation up to 24 hours before check-in."),
+        FAQ(q: "What are the payment options?", a: "Credit/debit cards and bank transfers are accepted."),
+        FAQ(q: "Are pets allowed?", a: "Small-breed pets are allowed for an extra fee."),
     ]
     @State private var multi = false
 
@@ -1730,8 +1730,8 @@ struct AccordionGroupDemo: View {
 
 struct PagingCarouselDemo: View {
     private struct Slide: Identifiable { let id = UUID(); let color: Color; let title: String }
-    private let slides = [Slide(color: .blue, title: "Bir"), Slide(color: .teal, title: "İki"),
-                          Slide(color: .orange, title: "Üç"), Slide(color: .purple, title: "Dört")]
+    private let slides = [Slide(color: .blue, title: "One"), Slide(color: .teal, title: "Two"),
+                          Slide(color: .orange, title: "Three"), Slide(color: .purple, title: "Four")]
     @State private var autoplay = false
     @State private var peek = 36.0
 
@@ -1798,7 +1798,7 @@ struct ChipsDemo: View {
     @State private var kind: Kind = .compact
     @State private var a = true
     @State private var b = false
-    @State private var multi: Set<String> = ["Wifi", "Havuz"]
+    @State private var multi: Set<String> = ["Wifi", "Pool"]
     @State private var square = false
 
     private var imageURL: URL? { URL(string: "https://picsum.photos/seed/imgchip/200/300") }
@@ -1809,11 +1809,11 @@ struct ChipsDemo: View {
                 switch kind {
                 case .compact:
                     HStack(spacing: 12) {
-                        CompactChip(isSelected: $a, text: "Standart Oda", price: "₺399,90", rating: 4.6)
-                        CompactChip(isSelected: $b, text: "Suit Oda", price: "₺899,90")
+                        CompactChip(isSelected: $a, text: "Standard Room", price: "$399.90", rating: 4.6)
+                        CompactChip(isSelected: $b, text: "Suite Room", price: "$899.90")
                     }
                 case .chose:
-                    ChoseChip(isSelected: $a, title: "Esnek Tarife", description: "Ücretsiz iptal",
+                    ChoseChip(isSelected: $a, title: "Flexible rate", description: "Free cancellation",
                               rating: 4.8, showFree: true, systemImage: "wind")
                 case .image:
                     HStack(spacing: 12) {
@@ -1822,11 +1822,11 @@ struct ChipsDemo: View {
                     }
                 case .filter:
                     HStack(spacing: 8) {
-                        FilterChip("İstanbul", shape: square ? .square : .pill) { flash("FilterChip: İstanbul") }
-                        FilterChip("4+ yıldız", shape: square ? .square : .pill) { flash("FilterChip: 4+ yıldız") }
+                        FilterChip("Istanbul", shape: square ? .square : .pill) { flash("FilterChip: Istanbul") }
+                        FilterChip("4+ stars", shape: square ? .square : .pill) { flash("FilterChip: 4+ stars") }
                     }
                 case .group:
-                    ChipGroup(title: "Olanaklar", options: ["Wifi", "Havuz", "Spa", "Otopark", "Restoran"], selection: $multi) { $0 }
+                    ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking", "Restaurant"], selection: $multi) { $0 }
                 }
             }
         } knobs: {
@@ -1845,30 +1845,30 @@ struct DialogDemo: View {
     var body: some View {
         ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
-                PrimaryButton("Sözleşmeyi aç") { show = true; flash("Dialog açıldı") }
-                OutlineButton("Hesabı sil (async)") { deleted = false; showConfirm = true }
-                Text(accepted ? "Kabul edildi ✓" : "Henüz onaylanmadı")
+                PrimaryButton("Open agreement") { show = true; flash("Dialog opened") }
+                OutlineButton("Delete account (async)") { deleted = false; showConfirm = true }
+                Text(accepted ? "Accepted ✓" : "Not yet accepted")
                     .textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textSecondary))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 220)
-            .dialog(isPresented: $showConfirm, title: "Hesabı sil?", message: "Bu işlem geri alınamaz.",
-                    primaryTitle: "Sil", onPrimary: {
+            .dialog(isPresented: $showConfirm, title: "Delete account?", message: "This action cannot be undone.",
+                    primaryTitle: "Delete", onPrimary: {
                         try? await Task.sleep(nanoseconds: 1_200_000_000)   // async work; OK spins
-                        deleted = true; flash("Hesap silindi")
-                    }, secondaryTitle: "Vazgeç", onSecondary: { flash("Vazgeçildi") }, kind: .error)
-            .dialog(isPresented: $show, title: "Kullanım Koşulları", afterClose: {}) {
+                        deleted = true; flash("Account deleted")
+                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error)
+            .dialog(isPresented: $show, title: "Terms of Use", afterClose: {}) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(1...8, id: \.self) { i in
-                        Text("\(i). Madde").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
-                        Text("Bu uzun metin, dialog içeriğinin kaydırılabilir olduğunu gösterir. Footer sabit kalır.")
+                        Text("Article \(i)").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Text("This long text shows that the dialog content is scrollable. The footer stays pinned.")
                             .textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                     }
                 }
             } footer: {
                 HStack(spacing: 12) {
-                    OutlineButton("Vazgeç") { show = false; flash("Dialog: Vazgeç") }
-                    PrimaryButton("Kabul et") { accepted = true; show = false; flash("Dialog onaylandı") }
+                    OutlineButton("Cancel") { show = false; flash("Dialog: Cancel") }
+                    PrimaryButton("Accept") { accepted = true; show = false; flash("Dialog accepted") }
                 }
             }
         } knobs: {
@@ -1911,22 +1911,22 @@ struct MicroMotionDemo: View {
     var body: some View {
         ComponentStage("Micro-motion", inspector: [("microAnimations", "\(enabled)")]) {
             VStack(spacing: 18) {
-                Text("Bu alt-ağaç: .microAnimations(\(enabled ? "true" : "false")) — basınca scale, seçimde kayma.")
+                Text("This subtree: .microAnimations(\(enabled ? "true" : "false")) — scale on press, slide on selection.")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                PrimaryButton("Bana bas (micro press)") { flash("Tap") }
-                SegmentedControl(["Gün", "Hafta", "Ay"], selection: $sel)
+                PrimaryButton("Press me (micro press)") { flash("Tap") }
+                SegmentedControl(["Day", "Week", "Month"], selection: $sel)
                 ThemeToggle(isOn: $on)
 
                 DividerView(size: .small)
-                Text("Per-component override — bu buton her zaman kapalı:")
+                Text("Per-component override — this button is always off:")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                SecondaryButton("Hareketsiz (.microAnimations(false))") { flash("Tap") }
+                SecondaryButton("Static (.microAnimations(false))") { flash("Tap") }
                     .microAnimations(false)
             }
             .microAnimations(enabled)
         } knobs: {
-            Toggle("Micro-animations (bu alt-ağaç)", isOn: $enabled)
-            Text("Tema geneli için: Configurator → “Micro-animations”. Reduce Motion her zaman kazanır.")
+            Toggle("Micro-animations (this subtree)", isOn: $enabled)
+            Text("Theme-wide: Configurator → “Micro-animations”. Reduce Motion always wins.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
