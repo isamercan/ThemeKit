@@ -8,11 +8,10 @@
 ![Dependencies](https://img.shields.io/badge/Core%20dependencies-0-success.svg)
 
 <p align="center">
-  <img src="Screenshots/Banner.png#gh-light-mode-only" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
-  <img src="Screenshots/Banner-dark.png#gh-dark-mode-only" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
-> The banner above is rendered **by ThemeKit itself** (its own tokens + components) — so it re-skins light/dark for free, just like everything in the gallery.
+> The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
 
 A theme-driven, **brand-neutral** SwiftUI component library. Every color,
 typography, spacing, radius and shadow is a **design token** resolved at runtime
@@ -206,7 +205,7 @@ Every component is curated by category in the [DocC catalog](#documentation).
 
 ## Component gallery
 
-Rendered straight from the library via `ImageRenderer` — **theme-aware** (GitHub serves the dark variant via `#gh-dark-mode-only` image fragments, which also render in the GitHub mobile app) —
+Rendered straight from the library via `ImageRenderer` (plain `<img>` so they render everywhere, including the GitHub mobile app) —
 regenerate with `make screenshots`. Interactive overlays (Dialog, Drawer, Tour,
 BottomSheet…) and media components are best seen live in the [Demo app](#demo).
 
@@ -216,52 +215,52 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Avatar.png#gh-light-mode-only" width="184" alt="Avatar"><img src="Screenshots/Avatar-dark.png#gh-dark-mode-only" width="184" alt="Avatar"><br><sub><b>Avatar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Badge.png#gh-light-mode-only" width="223" alt="Badge"><img src="Screenshots/Badge-dark.png#gh-dark-mode-only" width="223" alt="Badge"><br><sub><b>Badge</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Chip.png#gh-light-mode-only" width="233" alt="Chip"><img src="Screenshots/Chip-dark.png#gh-dark-mode-only" width="233" alt="Chip"><br><sub><b>Chip</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Avatar.png" width="184" alt="Avatar"><br><sub><b>Avatar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Badge.png" width="223" alt="Badge"><br><sub><b>Badge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Chip.png" width="233" alt="Chip"><br><sub><b>Chip</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/CountBadge.png#gh-light-mode-only" width="68" alt="CountBadge"><img src="Screenshots/CountBadge-dark.png#gh-dark-mode-only" width="68" alt="CountBadge"><br><sub><b>CountBadge</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Divider.png#gh-light-mode-only" width="240" alt="Divider"><img src="Screenshots/Divider-dark.png#gh-dark-mode-only" width="240" alt="Divider"><br><sub><b>Divider</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Icon.png#gh-light-mode-only" width="182" alt="Icon"><img src="Screenshots/Icon-dark.png#gh-dark-mode-only" width="182" alt="Icon"><br><sub><b>Icon</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/CountBadge.png" width="68" alt="CountBadge"><br><sub><b>CountBadge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Divider.png" width="240" alt="Divider"><br><sub><b>Divider</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Icon.png" width="182" alt="Icon"><br><sub><b>Icon</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Indicator.png#gh-light-mode-only" width="68" alt="Indicator"><img src="Screenshots/Indicator-dark.png#gh-dark-mode-only" width="68" alt="Indicator"><br><sub><b>Indicator</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/InputLabel.png#gh-light-mode-only" width="93" alt="InputLabel"><img src="Screenshots/InputLabel-dark.png#gh-dark-mode-only" width="93" alt="InputLabel"><br><sub><b>InputLabel</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Kbd.png#gh-light-mode-only" width="94" alt="Kbd"><img src="Screenshots/Kbd-dark.png#gh-dark-mode-only" width="94" alt="Kbd"><br><sub><b>Kbd</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Indicator.png" width="68" alt="Indicator"><br><sub><b>Indicator</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InputLabel.png" width="93" alt="InputLabel"><br><sub><b>InputLabel</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Kbd.png" width="94" alt="Kbd"><br><sub><b>Kbd</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ProgressBar.png#gh-light-mode-only" width="240" alt="ProgressBar"><img src="Screenshots/ProgressBar-dark.png#gh-dark-mode-only" width="240" alt="ProgressBar"><br><sub><b>ProgressBar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RadialProgress.png#gh-light-mode-only" width="128" alt="RadialProgress"><img src="Screenshots/RadialProgress-dark.png#gh-dark-mode-only" width="128" alt="RadialProgress"><br><sub><b>RadialProgress</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Rating.png#gh-light-mode-only" width="184" alt="Rating"><img src="Screenshots/Rating-dark.png#gh-dark-mode-only" width="184" alt="Rating"><br><sub><b>Rating</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ProgressBar.png" width="240" alt="ProgressBar"><br><sub><b>ProgressBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RadialProgress.png" width="128" alt="RadialProgress"><br><sub><b>RadialProgress</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Rating.png" width="184" alt="Rating"><br><sub><b>Rating</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RollingNumber.png#gh-light-mode-only" width="138" alt="RollingNumber"><img src="Screenshots/RollingNumber-dark.png#gh-dark-mode-only" width="138" alt="RollingNumber"><br><sub><b>RollingNumber</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ScoreBadge.png#gh-light-mode-only" width="64" alt="ScoreBadge"><img src="Screenshots/ScoreBadge-dark.png#gh-dark-mode-only" width="64" alt="ScoreBadge"><br><sub><b>ScoreBadge</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Skeleton.png#gh-light-mode-only" width="240" alt="Skeleton"><img src="Screenshots/Skeleton-dark.png#gh-dark-mode-only" width="240" alt="Skeleton"><br><sub><b>Skeleton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RollingNumber.png" width="138" alt="RollingNumber"><br><sub><b>RollingNumber</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ScoreBadge.png" width="64" alt="ScoreBadge"><br><sub><b>ScoreBadge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Skeleton.png" width="240" alt="Skeleton"><br><sub><b>Skeleton</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Spinner.png#gh-light-mode-only" width="64" alt="Spinner"><img src="Screenshots/Spinner-dark.png#gh-dark-mode-only" width="64" alt="Spinner"><br><sub><b>Spinner</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/StatusDot.png#gh-light-mode-only" width="211" alt="StatusDot"><img src="Screenshots/StatusDot-dark.png#gh-dark-mode-only" width="211" alt="StatusDot"><br><sub><b>StatusDot</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Swap.png#gh-light-mode-only" width="72" alt="Swap"><img src="Screenshots/Swap-dark.png#gh-dark-mode-only" width="72" alt="Swap"><br><sub><b>Swap</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Spinner.png" width="64" alt="Spinner"><br><sub><b>Spinner</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/StatusDot.png" width="211" alt="StatusDot"><br><sub><b>StatusDot</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Swap.png" width="72" alt="Swap"><br><sub><b>Swap</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Tag.png#gh-light-mode-only" width="201" alt="Tag"><img src="Screenshots/Tag-dark.png#gh-dark-mode-only" width="201" alt="Tag"><br><sub><b>Tag</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/TextLink.png#gh-light-mode-only" width="161" alt="TextLink"><img src="Screenshots/TextLink-dark.png#gh-dark-mode-only" width="161" alt="TextLink"><br><sub><b>TextLink</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Title.png#gh-light-mode-only" width="240" alt="Title"><img src="Screenshots/Title-dark.png#gh-dark-mode-only" width="240" alt="Title"><br><sub><b>Title</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Tag.png" width="201" alt="Tag"><br><sub><b>Tag</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TextLink.png" width="161" alt="TextLink"><br><sub><b>TextLink</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Title.png" width="240" alt="Title"><br><sub><b>Title</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/InlineText.png#gh-light-mode-only" width="240" alt="InlineText"><img src="Screenshots/InlineText-dark.png#gh-dark-mode-only" width="240" alt="InlineText"><br><sub><b>InlineText</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/BorderBeam.png#gh-light-mode-only" width="232" alt="BorderBeam"><img src="Screenshots/BorderBeam-dark.png#gh-dark-mode-only" width="232" alt="BorderBeam"><br><sub><b>BorderBeam</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Join.png#gh-light-mode-only" width="234" alt="Join"><img src="Screenshots/Join-dark.png#gh-dark-mode-only" width="234" alt="Join"><br><sub><b>Join</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InlineText.png" width="240" alt="InlineText"><br><sub><b>InlineText</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/BorderBeam.png" width="232" alt="BorderBeam"><br><sub><b>BorderBeam</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Join.png" width="234" alt="Join"><br><sub><b>Join</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Mask.png#gh-light-mode-only" width="240" alt="Mask"><img src="Screenshots/Mask-dark.png#gh-dark-mode-only" width="240" alt="Mask"><br><sub><b>Mask</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/TextRotate.png#gh-light-mode-only" width="177" alt="TextRotate"><img src="Screenshots/TextRotate-dark.png#gh-dark-mode-only" width="177" alt="TextRotate"><br><sub><b>TextRotate</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Gauge.png#gh-light-mode-only" width="240" alt="Gauge"><img src="Screenshots/Gauge-dark.png#gh-dark-mode-only" width="240" alt="Gauge"><br><sub><b>Gauge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Mask.png" width="240" alt="Mask"><br><sub><b>Mask</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TextRotate.png" width="177" alt="TextRotate"><br><sub><b>TextRotate</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Gauge.png" width="240" alt="Gauge"><br><sub><b>Gauge</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ShareButton.png#gh-light-mode-only" width="146" alt="ShareButton"><img src="Screenshots/ShareButton-dark.png#gh-dark-mode-only" width="146" alt="ShareButton"><br><sub><b>ShareButton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ShareButton.png" width="146" alt="ShareButton"><br><sub><b>ShareButton</b></sub></td>
 </tr>
 </table>
 
@@ -269,63 +268,63 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Button.png#gh-light-mode-only" width="240" alt="Button"><img src="Screenshots/Button-dark.png#gh-dark-mode-only" width="240" alt="Button"><br><sub><b>Button</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeButton.png#gh-light-mode-only" width="240" alt="ThemeButton"><img src="Screenshots/ThemeButton-dark.png#gh-dark-mode-only" width="240" alt="ThemeButton"><br><sub><b>ThemeButton</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Checkbox.png#gh-light-mode-only" width="212" alt="Checkbox"><img src="Screenshots/Checkbox-dark.png#gh-dark-mode-only" width="212" alt="Checkbox"><br><sub><b>Checkbox</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Button.png" width="240" alt="Button"><br><sub><b>Button</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeButton.png" width="240" alt="ThemeButton"><br><sub><b>ThemeButton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Checkbox.png" width="212" alt="Checkbox"><br><sub><b>Checkbox</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/CheckboxGroup.png#gh-light-mode-only" width="240" alt="CheckboxGroup"><img src="Screenshots/CheckboxGroup-dark.png#gh-dark-mode-only" width="240" alt="CheckboxGroup"><br><sub><b>CheckboxGroup</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RadioButton.png#gh-light-mode-only" width="171" alt="RadioButton"><img src="Screenshots/RadioButton-dark.png#gh-dark-mode-only" width="171" alt="RadioButton"><br><sub><b>RadioButton</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RadioGroup.png#gh-light-mode-only" width="240" alt="RadioGroup"><img src="Screenshots/RadioGroup-dark.png#gh-dark-mode-only" width="240" alt="RadioGroup"><br><sub><b>RadioGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/CheckboxGroup.png" width="240" alt="CheckboxGroup"><br><sub><b>CheckboxGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RadioButton.png" width="171" alt="RadioButton"><br><sub><b>RadioButton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RadioGroup.png" width="240" alt="RadioGroup"><br><sub><b>RadioGroup</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ToggleGroup.png#gh-light-mode-only" width="72" alt="ToggleGroup"><img src="Screenshots/ToggleGroup-dark.png#gh-dark-mode-only" width="72" alt="ToggleGroup"><br><sub><b>ToggleGroup</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeToggle.png#gh-light-mode-only" width="128" alt="ThemeToggle"><img src="Screenshots/ThemeToggle-dark.png#gh-dark-mode-only" width="128" alt="ThemeToggle"><br><sub><b>ThemeToggle</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/SegmentedControl.png#gh-light-mode-only" width="240" alt="SegmentedControl"><img src="Screenshots/SegmentedControl-dark.png#gh-dark-mode-only" width="240" alt="SegmentedControl"><br><sub><b>SegmentedControl</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ToggleGroup.png" width="72" alt="ToggleGroup"><br><sub><b>ToggleGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeToggle.png" width="128" alt="ThemeToggle"><br><sub><b>ThemeToggle</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SegmentedControl.png" width="240" alt="SegmentedControl"><br><sub><b>SegmentedControl</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/QuantityStepper.png#gh-light-mode-only" width="168" alt="QuantityStepper"><img src="Screenshots/QuantityStepper-dark.png#gh-dark-mode-only" width="168" alt="QuantityStepper"><br><sub><b>QuantityStepper</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Stat.png#gh-light-mode-only" width="240" alt="Stat"><img src="Screenshots/Stat-dark.png#gh-dark-mode-only" width="240" alt="Stat"><br><sub><b>Stat</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Steps.png#gh-light-mode-only" width="240" alt="Steps"><img src="Screenshots/Steps-dark.png#gh-dark-mode-only" width="240" alt="Steps"><br><sub><b>Steps</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/QuantityStepper.png" width="168" alt="QuantityStepper"><br><sub><b>QuantityStepper</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Stat.png" width="240" alt="Stat"><br><sub><b>Stat</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Steps.png" width="240" alt="Steps"><br><sub><b>Steps</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Slider.png#gh-light-mode-only" width="240" alt="Slider"><img src="Screenshots/Slider-dark.png#gh-dark-mode-only" width="240" alt="Slider"><br><sub><b>Slider</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Breadcrumbs.png#gh-light-mode-only" width="240" alt="Breadcrumbs"><img src="Screenshots/Breadcrumbs-dark.png#gh-dark-mode-only" width="240" alt="Breadcrumbs"><br><sub><b>Breadcrumbs</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/TextInput.png#gh-light-mode-only" width="240" alt="TextInput"><img src="Screenshots/TextInput-dark.png#gh-dark-mode-only" width="240" alt="TextInput"><br><sub><b>TextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Slider.png" width="240" alt="Slider"><br><sub><b>Slider</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Breadcrumbs.png" width="240" alt="Breadcrumbs"><br><sub><b>Breadcrumbs</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TextInput.png" width="240" alt="TextInput"><br><sub><b>TextInput</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/FileInput.png#gh-light-mode-only" width="240" alt="FileInput"><img src="Screenshots/FileInput-dark.png#gh-dark-mode-only" width="240" alt="FileInput"><br><sub><b>FileInput</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Pagination.png#gh-light-mode-only" width="240" alt="Pagination"><img src="Screenshots/Pagination-dark.png#gh-dark-mode-only" width="240" alt="Pagination"><br><sub><b>Pagination</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Fieldset.png#gh-light-mode-only" width="240" alt="Fieldset"><img src="Screenshots/Fieldset-dark.png#gh-dark-mode-only" width="240" alt="Fieldset"><br><sub><b>Fieldset</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FileInput.png" width="240" alt="FileInput"><br><sub><b>FileInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Pagination.png" width="240" alt="Pagination"><br><sub><b>Pagination</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Fieldset.png" width="240" alt="Fieldset"><br><sub><b>Fieldset</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/DateField.png#gh-light-mode-only" width="240" alt="DateField"><img src="Screenshots/DateField-dark.png#gh-dark-mode-only" width="240" alt="DateField"><br><sub><b>DateField</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Select.png#gh-light-mode-only" width="240" alt="Select"><img src="Screenshots/Select-dark.png#gh-dark-mode-only" width="240" alt="Select"><br><sub><b>Select</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/MultiSelect.png#gh-light-mode-only" width="240" alt="MultiSelect"><img src="Screenshots/MultiSelect-dark.png#gh-dark-mode-only" width="240" alt="MultiSelect"><br><sub><b>MultiSelect</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/DateField.png" width="240" alt="DateField"><br><sub><b>DateField</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Select.png" width="240" alt="Select"><br><sub><b>Select</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"><br><sub><b>MultiSelect</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/TreeSelect.png#gh-light-mode-only" width="240" alt="TreeSelect"><img src="Screenshots/TreeSelect-dark.png#gh-dark-mode-only" width="240" alt="TreeSelect"><br><sub><b>TreeSelect</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Autocomplete.png#gh-light-mode-only" width="240" alt="Autocomplete"><img src="Screenshots/Autocomplete-dark.png#gh-dark-mode-only" width="240" alt="Autocomplete"><br><sub><b>Autocomplete</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/SearchBar.png#gh-light-mode-only" width="240" alt="SearchBar"><img src="Screenshots/SearchBar-dark.png#gh-dark-mode-only" width="240" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TreeSelect.png" width="240" alt="TreeSelect"><br><sub><b>TreeSelect</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Autocomplete.png" width="240" alt="Autocomplete"><br><sub><b>Autocomplete</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/OTPInput.png#gh-light-mode-only" width="240" alt="OTPInput"><img src="Screenshots/OTPInput-dark.png#gh-dark-mode-only" width="240" alt="OTPInput"><br><sub><b>OTPInput</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/InputNumber.png#gh-light-mode-only" width="240" alt="InputNumber"><img src="Screenshots/InputNumber-dark.png#gh-dark-mode-only" width="240" alt="InputNumber"><br><sub><b>InputNumber</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RangeSlider.png#gh-light-mode-only" width="240" alt="RangeSlider"><img src="Screenshots/RangeSlider-dark.png#gh-dark-mode-only" width="240" alt="RangeSlider"><br><sub><b>RangeSlider</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/OTPInput.png" width="240" alt="OTPInput"><br><sub><b>OTPInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InputNumber.png" width="240" alt="InputNumber"><br><sub><b>InputNumber</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"><br><sub><b>RangeSlider</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/MultiLineTextInput.png#gh-light-mode-only" width="240" alt="MultiLineTextInput"><img src="Screenshots/MultiLineTextInput-dark.png#gh-dark-mode-only" width="240" alt="MultiLineTextInput"><br><sub><b>MultiLineTextInput</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Tooltip.png#gh-light-mode-only" width="60" alt="Tooltip"><img src="Screenshots/Tooltip-dark.png#gh-dark-mode-only" width="60" alt="Tooltip"><br><sub><b>Tooltip</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Chips.png#gh-light-mode-only" width="132" alt="Chips"><img src="Screenshots/Chips-dark.png#gh-dark-mode-only" width="132" alt="Chips"><br><sub><b>Chips</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MultiLineTextInput.png" width="240" alt="MultiLineTextInput"><br><sub><b>MultiLineTextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Tooltip.png" width="60" alt="Tooltip"><br><sub><b>Tooltip</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Chips.png" width="132" alt="Chips"><br><sub><b>Chips</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/FilterGroup.png#gh-light-mode-only" width="240" alt="FilterGroup"><img src="Screenshots/FilterGroup-dark.png#gh-dark-mode-only" width="240" alt="FilterGroup"><br><sub><b>FilterGroup</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ProgressIndicator.png#gh-light-mode-only" width="240" alt="ProgressIndicator"><img src="Screenshots/ProgressIndicator-dark.png#gh-dark-mode-only" width="240" alt="ProgressIndicator"><br><sub><b>ProgressIndicator</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeController.png#gh-light-mode-only" width="240" alt="ThemeController"><img src="Screenshots/ThemeController-dark.png#gh-dark-mode-only" width="240" alt="ThemeController"><br><sub><b>ThemeController</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FilterGroup.png" width="240" alt="FilterGroup"><br><sub><b>FilterGroup</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ProgressIndicator.png" width="240" alt="ProgressIndicator"><br><sub><b>ProgressIndicator</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ThemeController.png" width="240" alt="ThemeController"><br><sub><b>ThemeController</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Calendar.png#gh-light-mode-only" width="240" alt="Calendar"><img src="Screenshots/Calendar-dark.png#gh-dark-mode-only" width="240" alt="Calendar"><br><sub><b>Calendar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ColorField.png#gh-light-mode-only" width="240" alt="ColorField"><img src="Screenshots/ColorField-dark.png#gh-dark-mode-only" width="240" alt="ColorField"><br><sub><b>ColorField</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"><br><sub><b>Calendar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"><br><sub><b>ColorField</b></sub></td>
 </tr>
 </table>
 
@@ -333,53 +332,53 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 
 <table>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Accordion.png#gh-light-mode-only" width="240" alt="Accordion"><img src="Screenshots/Accordion-dark.png#gh-dark-mode-only" width="240" alt="Accordion"><br><sub><b>Accordion</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/AlertToast.png#gh-light-mode-only" width="240" alt="AlertToast"><img src="Screenshots/AlertToast-dark.png#gh-dark-mode-only" width="240" alt="AlertToast"><br><sub><b>AlertToast</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Callout.png#gh-light-mode-only" width="240" alt="Callout"><img src="Screenshots/Callout-dark.png#gh-dark-mode-only" width="240" alt="Callout"><br><sub><b>Callout</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Accordion.png" width="240" alt="Accordion"><br><sub><b>Accordion</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/AlertToast.png" width="240" alt="AlertToast"><br><sub><b>AlertToast</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Callout.png" width="240" alt="Callout"><br><sub><b>Callout</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Card.png#gh-light-mode-only" width="240" alt="Card"><img src="Screenshots/Card-dark.png#gh-dark-mode-only" width="240" alt="Card"><br><sub><b>Card</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ChatBubble.png#gh-light-mode-only" width="240" alt="ChatBubble"><img src="Screenshots/ChatBubble-dark.png#gh-dark-mode-only" width="240" alt="ChatBubble"><br><sub><b>ChatBubble</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Counter.png#gh-light-mode-only" width="172" alt="Counter"><img src="Screenshots/Counter-dark.png#gh-dark-mode-only" width="172" alt="Counter"><br><sub><b>Counter</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Card.png" width="240" alt="Card"><br><sub><b>Card</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ChatBubble.png" width="240" alt="ChatBubble"><br><sub><b>ChatBubble</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Counter.png" width="172" alt="Counter"><br><sub><b>Counter</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Coupon.png#gh-light-mode-only" width="240" alt="Coupon"><img src="Screenshots/Coupon-dark.png#gh-dark-mode-only" width="240" alt="Coupon"><br><sub><b>Coupon</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/EmptyState.png#gh-light-mode-only" width="240" alt="EmptyState"><img src="Screenshots/EmptyState-dark.png#gh-dark-mode-only" width="240" alt="EmptyState"><br><sub><b>EmptyState</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/InfoBanner.png#gh-light-mode-only" width="240" alt="InfoBanner"><img src="Screenshots/InfoBanner-dark.png#gh-dark-mode-only" width="240" alt="InfoBanner"><br><sub><b>InfoBanner</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Coupon.png" width="240" alt="Coupon"><br><sub><b>Coupon</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/EmptyState.png" width="240" alt="EmptyState"><br><sub><b>EmptyState</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InfoBanner.png" width="240" alt="InfoBanner"><br><sub><b>InfoBanner</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/KeyValueTable.png#gh-light-mode-only" width="240" alt="KeyValueTable"><img src="Screenshots/KeyValueTable-dark.png#gh-dark-mode-only" width="240" alt="KeyValueTable"><br><sub><b>KeyValueTable</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ListRow.png#gh-light-mode-only" width="240" alt="ListRow"><img src="Screenshots/ListRow-dark.png#gh-dark-mode-only" width="240" alt="ListRow"><br><sub><b>ListRow</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/NotificationCard.png#gh-light-mode-only" width="240" alt="NotificationCard"><img src="Screenshots/NotificationCard-dark.png#gh-dark-mode-only" width="240" alt="NotificationCard"><br><sub><b>NotificationCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/KeyValueTable.png" width="240" alt="KeyValueTable"><br><sub><b>KeyValueTable</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ListRow.png" width="240" alt="ListRow"><br><sub><b>ListRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/NotificationCard.png" width="240" alt="NotificationCard"><br><sub><b>NotificationCard</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/PageHeader.png#gh-light-mode-only" width="240" alt="PageHeader"><img src="Screenshots/PageHeader-dark.png#gh-dark-mode-only" width="240" alt="PageHeader"><br><sub><b>PageHeader</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/RatingSummary.png#gh-light-mode-only" width="240" alt="RatingSummary"><img src="Screenshots/RatingSummary-dark.png#gh-dark-mode-only" width="240" alt="RatingSummary"><br><sub><b>RatingSummary</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ResultView.png#gh-light-mode-only" width="240" alt="ResultView"><img src="Screenshots/ResultView-dark.png#gh-dark-mode-only" width="240" alt="ResultView"><br><sub><b>ResultView</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PageHeader.png" width="240" alt="PageHeader"><br><sub><b>PageHeader</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RatingSummary.png" width="240" alt="RatingSummary"><br><sub><b>RatingSummary</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ResultView.png" width="240" alt="ResultView"><br><sub><b>ResultView</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/SegmentedTabBar.png#gh-light-mode-only" width="240" alt="SegmentedTabBar"><img src="Screenshots/SegmentedTabBar-dark.png#gh-dark-mode-only" width="240" alt="SegmentedTabBar"><br><sub><b>SegmentedTabBar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Timeline.png#gh-light-mode-only" width="240" alt="Timeline"><img src="Screenshots/Timeline-dark.png#gh-dark-mode-only" width="240" alt="Timeline"><br><sub><b>Timeline</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Upload.png#gh-light-mode-only" width="240" alt="Upload"><img src="Screenshots/Upload-dark.png#gh-dark-mode-only" width="240" alt="Upload"><br><sub><b>Upload</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SegmentedTabBar.png" width="240" alt="SegmentedTabBar"><br><sub><b>SegmentedTabBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Timeline.png" width="240" alt="Timeline"><br><sub><b>Timeline</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Upload.png" width="240" alt="Upload"><br><sub><b>Upload</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/PromoBanner.png#gh-light-mode-only" width="240" alt="PromoBanner"><img src="Screenshots/PromoBanner-dark.png#gh-dark-mode-only" width="240" alt="PromoBanner"><br><sub><b>PromoBanner</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ListView.png#gh-light-mode-only" width="240" alt="ListView"><img src="Screenshots/ListView-dark.png#gh-dark-mode-only" width="240" alt="ListView"><br><sub><b>ListView</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/MenuCard.png#gh-light-mode-only" width="240" alt="MenuCard"><img src="Screenshots/MenuCard-dark.png#gh-dark-mode-only" width="240" alt="MenuCard"><br><sub><b>MenuCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PromoBanner.png" width="240" alt="PromoBanner"><br><sub><b>PromoBanner</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ListView.png" width="240" alt="ListView"><br><sub><b>ListView</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MenuCard.png" width="240" alt="MenuCard"><br><sub><b>MenuCard</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/NavigationBar.png#gh-light-mode-only" width="240" alt="NavigationBar"><img src="Screenshots/NavigationBar-dark.png#gh-dark-mode-only" width="240" alt="NavigationBar"><br><sub><b>NavigationBar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/FAB.png#gh-light-mode-only" width="88" alt="FAB"><img src="Screenshots/FAB-dark.png#gh-dark-mode-only" width="88" alt="FAB"><br><sub><b>FAB</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Hero.png#gh-light-mode-only" width="240" alt="Hero"><img src="Screenshots/Hero-dark.png#gh-dark-mode-only" width="240" alt="Hero"><br><sub><b>Hero</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/NavigationBar.png" width="240" alt="NavigationBar"><br><sub><b>NavigationBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FAB.png" width="88" alt="FAB"><br><sub><b>FAB</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Hero.png" width="240" alt="Hero"><br><sub><b>Hero</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/SelectionCards.png#gh-light-mode-only" width="240" alt="SelectionCards"><img src="Screenshots/SelectionCards-dark.png#gh-dark-mode-only" width="240" alt="SelectionCards"><br><sub><b>SelectionCards</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/CardStack.png#gh-light-mode-only" width="240" alt="CardStack"><img src="Screenshots/CardStack-dark.png#gh-dark-mode-only" width="240" alt="CardStack"><br><sub><b>CardStack</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Gallery.png#gh-light-mode-only" width="240" alt="Gallery"><img src="Screenshots/Gallery-dark.png#gh-dark-mode-only" width="240" alt="Gallery"><br><sub><b>Gallery</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SelectionCards.png" width="240" alt="SelectionCards"><br><sub><b>SelectionCards</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/CardStack.png" width="240" alt="CardStack"><br><sub><b>CardStack</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Gallery.png" width="240" alt="Gallery"><br><sub><b>Gallery</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Footer.png#gh-light-mode-only" width="240" alt="Footer"><img src="Screenshots/Footer-dark.png#gh-dark-mode-only" width="240" alt="Footer"><br><sub><b>Footer</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Diff.png#gh-light-mode-only" width="240" alt="Diff"><img src="Screenshots/Diff-dark.png#gh-dark-mode-only" width="240" alt="Diff"><br><sub><b>Diff</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Footer.png" width="240" alt="Footer"><br><sub><b>Footer</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Diff.png" width="240" alt="Diff"><br><sub><b>Diff</b></sub></td>
 </tr>
 </table>
 
