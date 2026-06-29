@@ -10,6 +10,7 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { PNG } from "pngjs";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -239,6 +240,86 @@ server.registerTool("migrate_snippet", {
   sub(/\.cornerRadius\(\s*\d+\s*\)/g, ".cornerRadius(Theme.RadiusRole.box.value)", "hardcoded radius → RadiusRole.box");
   sub(/\bToggle\(("[^"]*",\s*)?isOn:\s*(\$\w+)\)/g, "ThemeToggle(isOn: $2)", "Toggle → ThemeToggle");
   return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (no automatic rewrites; check lint_snippet)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput, and any remaining hardcoded colors with theme tokens.`);
+});
+
+// raw-SwiftUI components that have a ThemeKit equivalent
+const PREFER_RULES: { re: RegExp; msg: string }[] = [
+  { re: /(?<![.\w])Button\s*\(/, msg: "Prefer a ThemeKit button: PrimaryButton / SecondaryButton / ThemeButton." },
+  { re: /(?<![.\w])TextField\s*\(/, msg: "Prefer TextInput (or MultiLineTextInput)." },
+  { re: /(?<!Theme)(?<![.\w])Toggle\s*\(/, msg: "Prefer ThemeToggle." },
+  { re: /(?<![.\w])Divider\s*\(\s*\)/, msg: "Prefer DividerView." },
+  { re: /(?<![.\w])ProgressView\s*\(/, msg: "Prefer Spinner or ProgressBar." },
+];
+
+server.registerTool("validate_screen", {
+  title: "Validate a ThemeKit screen",
+  description: "Full check of a SwiftUI screen: anti-patterns (hardcoded colors/radius/fonts), raw-SwiftUI components that have ThemeKit equivalents, and the ThemeKit components it uses. Returns a pass/fail verdict + fixes.",
+  inputSchema: { swift: z.string() },
+}, async ({ swift }) => {
+  const lines = swift.split("\n");
+  const issues: string[] = [];
+  lines.forEach((line, i) => {
+    for (const r of [...LINT_RULES, ...PREFER_RULES]) if (r.re.test(line)) issues.push(`L${i + 1}: ${r.msg}\n    ${line.trim()}`);
+  });
+  const names = new Set(data.components.map((c) => c.name));
+  const used = [...new Set((swift.match(/\b[A-Z]\w+(?=\s*[({.])/g) || []).filter((n) => names.has(n)))];
+  const head = issues.length
+    ? `✗ FAIL — ${issues.length} issue(s) to fix:`
+    : "✓ PASS — no ThemeKit issues found.";
+  const usedLine = used.length
+    ? `\n\nThemeKit components used (${used.length}): ${used.join(", ")}`
+    : "\n\n⚠️ No ThemeKit components detected — is this a ThemeKit screen?";
+  return text(`${head}${issues.length ? "\n\n" + issues.join("\n\n") : ""}${usedLine}`);
+});
+
+// ── Theme preview image ────────────────────────────────────────────────────
+
+function hexToRgb(h: string): [number, number, number] {
+  const s = h.replace("#", "");
+  return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+}
+
+/** A small PNG swatch card for a preset: primary / secondary / accent on its base. */
+function themePNG(t: ThemePreset): string {
+  const W = 480, H = 150;
+  const png = new PNG({ width: W, height: H });
+  const base = hexToRgb(t.base);
+  const isDark = (base[0] * 0.299 + base[1] * 0.587 + base[2] * 0.114) / 255 < 0.5;
+  const border: [number, number, number] = isDark ? [255, 255, 255] : [0, 0, 0];
+  const set = (x: number, y: number, c: [number, number, number], a = 255) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = (W * y + x) << 2;
+    png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2]; png.data[i + 3] = a;
+  };
+  const rect = (x0: number, y0: number, w: number, h: number, c: [number, number, number], a = 255) => {
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(x, y, c, a);
+  };
+  rect(0, 0, W, H, base);                          // paper
+  rect(0, 0, W, 8, hexToRgb(t.primary));           // top accent strip
+  const cols = [t.primary, t.secondary, t.accent].map(hexToRgb);
+  const pad = 28, gap = 20, sh = 78;
+  const sw = Math.round((W - pad * 2 - gap * 2) / 3);
+  cols.forEach((c, i) => {
+    const x = pad + i * (sw + gap), y = 44;
+    rect(x - 1, y - 1, sw + 2, sh + 2, border, 40);   // faint outline
+    rect(x, y, sw, sh, c);
+  });
+  return PNG.sync.write(png).toString("base64");
+}
+
+server.registerTool("theme_preview", {
+  title: "Theme preview image",
+  description: "A PNG swatch card for a theme preset — its primary / secondary / accent on its base surface.",
+  inputSchema: { id: z.string().describe('Preset id, e.g. "dracula"') },
+}, async ({ id }) => {
+  const t = data.themes.find((x) => x.id === id);
+  if (!t) return text(`No preset "${id}". Use list_themes.`);
+  return {
+    content: [
+      { type: "image" as const, data: themePNG(t), mimeType: "image/png" },
+      { type: "text" as const, text: `${t.name} — primary #${t.primary} · secondary #${t.secondary} · accent #${t.accent} · base #${t.base}` },
+    ],
+  };
 });
 
 // ── Resources (attachable context) ─────────────────────────────────────────
