@@ -535,24 +535,20 @@ xcodebuild docbuild -scheme ThemeKit -destination 'generic/platform=iOS'
 It curates every component by category and includes guide articles for
 **Theming**, **Accessibility**, and **Validation**. No extra dependency required.
 
-## Claude Code skill
+## AI-assisted development
 
-ThemeKit ships an **agent skill** so AI coding tools generate *correct* ThemeKit
-code — the right component + modifier for each job, tokens instead of hardcoded
-colors. It's a compact, always-accurate reference (`skills/themekit/`):
-`SKILL.md` (idioms + patterns) + a generated catalog of all components,
-modifiers and the 32 daisyUI themes (`make skill` regenerates it from source).
+ThemeKit is built for the AI-assisted workflow — so generated UI uses the *right*
+component + modifier and resolves colors from tokens, never hardcoded values.
 
-Install it into your project as a Claude Code plugin:
+| Tool | What it does | How to use it |
+|---|---|---|
+| **Agent skill** | A Claude Code skill (`skills/themekit/`): idioms + patterns, every component's init & modifiers, and the 32 daisyUI themes — the agent generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into your repo's `.claude/skills/` (zero-install). |
+| **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
-```sh
-# in Claude Code
-/plugin marketplace add isamercan/ThemeKit
-/plugin install themekit@themekit
-```
+Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."*
 
-…then just ask: *"Build a sign-up screen. Use the ThemeKit skill."* Or copy
-`skills/themekit/` into your repo's `.claude/skills/` for a zero-install setup.
+Both artifacts are generated from source by `make skill`, so they can't drift
+from the code. An **MCP server** is on the roadmap.
 
 ## Demo
 
