@@ -222,7 +222,7 @@ public struct Select<Option: Hashable>: View {
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(44)
-            DividerView(size: .small)
+            DividerView().size(.small)
 
             if isLoading {
                 panelMessage(spinner: true, String(themeKit: "Searching…"))

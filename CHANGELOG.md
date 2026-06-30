@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`DividerView` init reduced to `DividerView(_ title:)`.** The optional inline
+  title stays in init; the 4 appearance/state parameters moved to modifiers:
+  `size:`→`.size(_:)`, `axis:`→`.axis(_:)`, `dashed:`→`.dashed(_ on:)`,
+  `titleAlign:`→`.titleAlign(_:)`. Migration:
+  `DividerView(dashed: true, title: "OR", titleAlign: .center)`
+  → `DividerView("OR").dashed().titleAlign(.center)`;
+  `DividerView(size: .small)` → `DividerView().size(.small)`;
+  `DividerView(axis: .vertical)` → `DividerView().axis(.vertical)`.
 - **`Timeline` init reduced to `Timeline(_ items:)`.** The 4 layout/state
   parameters moved to modifiers: `axis:`→`.axis(_:)`, `mode:`→`.mode(_:)`,
   `reverse:`→`.reversed(_ on:)`, `pending:`→`.pending(_:)`. Migration:

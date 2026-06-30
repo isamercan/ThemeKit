@@ -149,7 +149,7 @@ public struct MultiSelect<Option: Hashable>: View {
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(44)
-                DividerView(size: .small)
+                DividerView().size(.small)
             }
             if isLoading {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -183,7 +183,7 @@ public struct MultiSelect<Option: Hashable>: View {
                     .buttonStyle(RowPressStyle())
                     .disabled(!enabled)
                     .opacity(enabled ? 1 : 0.4)
-                    if opt != filtered.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
+                    if opt != filtered.last { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             }
         }

@@ -62,7 +62,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                if index < items.count - 1 { DividerView(size: .small) }
+                if index < items.count - 1 { DividerView().size(.small) }
             }
         }
         .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))

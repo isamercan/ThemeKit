@@ -81,7 +81,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
                 .opacity(isEnabled ? 1 : 0.4)
                 .accessibilityLabel(selectAllTitle)
                 .accessibilityAddTraits(allSelected ? .isSelected : [])
-                DividerView(size: .small)
+                DividerView().size(.small)
             }
             ForEach(Array(options.enumerated()), id: \.element) { index, option in
                 let isOn = selection.contains(option)

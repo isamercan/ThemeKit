@@ -21,9 +21,9 @@ struct DividerDemo: View {
     var body: some View {
         ComponentStage("Divider", inspector: [("dashed", "\(dashed)"), ("text", withText ? "OR" : "—")]) {
             VStack(spacing: 24) {
-                DividerView(dashed: dashed, title: withText ? "OR" : nil, titleAlign: alignment)
+                DividerView(withText ? "OR" : nil).dashed(dashed).titleAlign(alignment)
                 HStack(spacing: 16) {
-                    Text("A"); DividerView(axis: .vertical, dashed: dashed); Text("B"); DividerView(axis: .vertical); Text("C")
+                    Text("A"); DividerView().axis(.vertical).dashed(dashed); Text("B"); DividerView().axis(.vertical); Text("C")
                 }
                 .frame(height: 24)
             }
@@ -1935,7 +1935,7 @@ struct MicroMotionDemo: View {
                 SegmentedControl(["Day", "Week", "Month"], selection: $sel)
                 ThemeToggle(isOn: $on)
 
-                DividerView(size: .small)
+                DividerView().size(.small)
                 Text("Per-component override — this button is always off:")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 SecondaryButton("Static (.microAnimations(false))") { flash("Tap") }

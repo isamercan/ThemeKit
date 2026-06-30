@@ -215,7 +215,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                         }
                         .frame(maxHeight: maxContentHeight)
 
-                        DividerView(size: .small)
+                        DividerView().size(.small)
 
                         footer()
                             .padding(Theme.SpacingKey.lg.value)

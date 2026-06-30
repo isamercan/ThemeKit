@@ -287,7 +287,7 @@ public struct SearchBar: View {
             }
             .buttonStyle(.plain)
             if item != items.last {
-                DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value)
             }
         }
     }

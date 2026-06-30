@@ -59,7 +59,7 @@ public struct TreeSelect: View {
                 VStack(spacing: 0) {
                     if searchable {
                         searchField
-                        DividerView(size: .small)
+                        DividerView().size(.small)
                     }
                     if isLoading {
                         loadingRow

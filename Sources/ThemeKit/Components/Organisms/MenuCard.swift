@@ -36,7 +36,7 @@ public struct MenuCard: View {
                     ListRow(item.title, action: item.action).subtitle(item.subtitle).icon(item.systemImage)
                         .padding(.horizontal, Theme.SpacingKey.md.value)
                     if item.id != items.last?.id {
-                        DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                        DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value)
                     }
                 }
             }

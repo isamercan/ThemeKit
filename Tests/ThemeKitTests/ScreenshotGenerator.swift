@@ -102,7 +102,7 @@ final class ScreenshotGenerator: XCTestCase {
             Chip("Unselected", isSelected: .constant(false))
         })
         shot("CountBadge", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).countBadge(5))
-        shot("Divider", DividerView(dashed: true, title: "OR", titleAlign: .center).frame(width: 240))
+        shot("Divider", DividerView("OR").dashed().titleAlign(.center).frame(width: 240))
         shot("Icon", HStack(spacing: 14) {
             Icon(systemName: "star.fill", size: .xl, color: Theme.shared.foreground(.fgHero))
             Icon(systemName: "heart.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgError))
@@ -279,7 +279,7 @@ final class ScreenshotGenerator: XCTestCase {
                                             title: "Reservation summary", bordered: true).frame(width: 320))
         shot("ListRow", VStack(spacing: 0) {
             ListRow("My account", action: {}).subtitle("Profile and security").icon("person.circle")
-            DividerView(size: .small)
+            DividerView().size(.small)
             ListRow("Notifications", action: {}).subtitle("Email and push").icon("bell")
         }.frame(width: 320))
         shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip",

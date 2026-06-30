@@ -44,7 +44,7 @@ enum ComponentRegistry {
         .knob("Color Palette", .atoms, demo: ColorLadderDemo(), usage: #"SemanticColor.primary.shade(.s500)   // base · .bg .hover .active .strong"#),
         .knob("CountBadge", .atoms, demo: CountBadgeDemo(), usage: ##"icon.countBadge(5)   //  .dotBadge() · Ribbon("New") { card }"##),
         .knob("BorderBeam", .atoms, demo: BorderBeamDemo(), usage: #"card.borderBeam(cornerRadius: 16, lineWidth: 2)"#),
-        .knob("Divider", .atoms, demo: DividerDemo(), usage: #"DividerView(dashed: true, title: "OR", titleAlign: .center)"#),
+        .knob("Divider", .atoms, demo: DividerDemo(), usage: #"DividerView("OR").dashed().titleAlign(.center)"#),
         .knob("Icon", .atoms, demo: IconDemo(), usage: #"Icon(systemName: "star.fill", size: .md, color: theme.foreground(.fgHero))"#),
         .knob("InputLabel", .atoms, demo: InputLabelDemo(), usage: #"InputLabel("Email", isRequired: true, hasInfo: true)"#),
         .knob("ProgressBar", .atoms, demo: ProgressBarDemo(), usage: #"ProgressBar(value: 0.4, showPercentage: true)"#),

@@ -50,13 +50,13 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .padding(.vertical, Theme.SpacingKey.sm.value)
-                if split { DividerView(size: .small) }
+                if split { DividerView().size(.small) }
             }
 
             if loading {
                 ForEach(0..<3, id: \.self) { index in
                     skeletonRow
-                    if split && index < 2 { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
+                    if split && index < 2 { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             } else if items.isEmpty {
                 emptyRow
@@ -69,14 +69,14 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                             .padding(.horizontal, Theme.SpacingKey.md.value)
                             .padding(.vertical, Theme.SpacingKey.sm.value)
                         if split && index < items.count - 1 {
-                            DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                            DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value)
                         }
                     }
                 }
             }
 
             if let footer {
-                if split { DividerView(size: .small) }
+                if split { DividerView().size(.small) }
                 Text(footer)
                     .textStyle(.bodySm400)
                     .foregroundStyle(theme.text(.textTertiary))

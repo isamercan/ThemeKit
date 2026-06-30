@@ -33,7 +33,7 @@ struct TypographyView: View {
                                         .font(.system(size: 10, design: .monospaced))
                                         .foregroundStyle(.secondary)
                                 }
-                                DividerView(size: .small)
+                                DividerView().size(.small)
                             }
                         }
                     }

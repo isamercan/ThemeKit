@@ -73,7 +73,7 @@ public struct Upload: View {
                 VStack(spacing: 0) {
                     ForEach(files) { file in
                         row(for: file)
-                        if file.id != files.last?.id { DividerView(size: .small) }
+                        if file.id != files.last?.id { DividerView().size(.small) }
                     }
                 }
             }

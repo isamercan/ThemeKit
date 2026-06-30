@@ -29,24 +29,16 @@ public enum DividerTextAlign { case leading, center, trailing }
 public struct DividerView: View {
     @Environment(\.theme) private var theme
 
-    private let size: DividerViewSize
-    private let axis: DividerAxis
-    private let dashed: Bool
-    private let title: String?
-    private let titleAlign: DividerTextAlign
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var size: DividerViewSize = .small
+    private var axis: DividerAxis = .horizontal
+    private var dashed: Bool = false
+    private var titleAlign: DividerTextAlign = .center
 
-    public init(
-        size: DividerViewSize = .small,
-        axis: DividerAxis = .horizontal,
-        dashed: Bool = false,
-        title: String? = nil,
-        titleAlign: DividerTextAlign = .center
-    ) {
-        self.size = size
-        self.axis = axis
-        self.dashed = dashed
+    private let title: String?
+
+    public init(_ title: String? = nil) {   // R1
         self.title = title
-        self.titleAlign = titleAlign
     }
 
     public var body: some View {
@@ -93,6 +85,28 @@ public struct DividerView: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension DividerView {
+    /// Thickness tier of the (non-titled, non-dashed) divider: small / medium / large.
+    func size(_ s: DividerViewSize) -> Self { copy { $0.size = s } }
+
+    /// Orientation: horizontal (default) or vertical.
+    func axis(_ a: DividerAxis) -> Self { copy { $0.axis = a } }
+
+    /// Render the line as a dashed stroke.
+    func dashed(_ on: Bool = true) -> Self { copy { $0.dashed = on } }
+
+    /// Inline title placement: leading / center / trailing.
+    func titleAlign(_ a: DividerTextAlign) -> Self { copy { $0.titleAlign = a } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 private struct LineShape: Shape {
     let vertical: Bool
     func path(in rect: CGRect) -> Path {
@@ -110,12 +124,12 @@ private struct LineShape: Shape {
 
 #Preview {
     VStack(spacing: 20) {
-        DividerView(size: .small)
-        DividerView(dashed: true)
-        DividerView(title: "OR")
-        DividerView(title: "Left", titleAlign: .leading)
+        DividerView().size(.small)
+        DividerView().dashed()
+        DividerView("OR")
+        DividerView("Left").titleAlign(.leading)
         HStack {
-            Text("A"); DividerView(axis: .vertical); Text("B"); DividerView(axis: .vertical, dashed: true); Text("C")
+            Text("A"); DividerView().axis(.vertical); Text("B"); DividerView().axis(.vertical).dashed(); Text("C")
         }
         .frame(height: 24)
     }
