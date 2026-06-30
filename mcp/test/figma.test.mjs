@@ -78,4 +78,5 @@ test("expandInstances on: recurses into the INSTANCE and emits valid spacing", (
   assert.match(code, /Text\("Giriş Yap"\)/);              // child surfaced
   assert.match(code, /Theme\.SpacingKey\.xl4\.value/);    // sp-4xl → xl4 (compiles)
   assert.doesNotMatch(code, /SpacingKey\.4xl/);           // never the invalid form
+  assert.doesNotMatch(code, /Text\("scribble"\)/);        // placeholder text filtered out
 });

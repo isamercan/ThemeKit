@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.json"), "utf8"));
@@ -42,4 +44,21 @@ test("tokens carry real values incl. radius roles", () => {
 test("multi-init components expose the extra inits", () => {
   const ti = data.components.find((c) => c.name === "TextInput");
   assert.ok(ti.inits && ti.inits.length >= 1, "TextInput has extra inits");
+});
+
+test("server registers design_to_code and its figma_to_swiftui alias", async () => {
+  const transport = new StdioClientTransport({
+    command: "node",
+    args: [join(here, "..", "dist", "index.js")],
+    env: { ...process.env, FIGMA_TOKEN: "x" },
+  });
+  const client = new Client({ name: "build-test", version: "1.0.0" });
+  await client.connect(transport);
+  try {
+    const names = (await client.listTools()).tools.map((t) => t.name);
+    assert.ok(names.includes("design_to_code"), "design_to_code is registered");
+    assert.ok(names.includes("figma_to_swiftui"), "figma_to_swiftui alias is registered");
+  } finally {
+    await client.close();
+  }
 });

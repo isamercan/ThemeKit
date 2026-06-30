@@ -55,11 +55,14 @@ and prompts (`themekit-screen`, `migrate-to-themekit`).
 1. **Fetch** the node subtree via the Figma REST API (`FIGMA_TOKEN`).
 2. **Token match** — fills → nearest color token (CIE76 ΔE), padding/`itemSpacing`
    → spacing scale, corner radius → radius token. No match → reported as *needs review*.
-3. **Component match** — `figma-mapping.json` rules first (e.g. `"Button/Primary" → PrimaryButton`),
-   then heuristics; unmapped nodes become raw SwiftUI marked `// ⚠️ unmapped`.
+3. **Component match** — `figma-mapping.json` rules first (e.g. `"Button/Primary" → PrimaryButton`,
+   plus built-ins for `Checkbox` / `Radio` / `Toggle` / `Divider` / inputs / badges / chips),
+   then heuristics; unmapped nodes become raw SwiftUI marked `// ⚠️ unmapped`. Design-system
+   placeholder text (`scribble`, `Input Label`, …) is dropped.
 4. **Codegen** with parameter names **verified against the symbol-graph API**.
-5. A **mapping report** (matched / unmapped / token snaps / needs-review); `dryRun: true`
-   returns just the plan.
+5. A **mapping report** (matched / unmapped / token snaps / needs-review) plus an
+   **auto-validation** pass (`validate_code` is run on the generated code and its
+   PASS/FAIL verdict appended); `dryRun: true` returns just the plan.
 
 It's **config-driven** — edit `figma-mapping.json` to add/override rules. Set the
 token: `export FIGMA_TOKEN=figd_…`. (Complements an official Figma MCP — this one is
