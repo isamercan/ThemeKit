@@ -68,9 +68,13 @@ final class DemoThemeStore: ObservableObject {
     /// The generated/preset recipe currently driving the theme — what the Theme
     /// Configurator seeds from. `nil` when a bundled JSON theme is active.
     @Published private(set) var activeConfig: ThemeConfig?
+    /// The `design.md` spec id whose import produced the active theme, if any.
+    /// Drives the "active design mode" badge; `nil` for presets / bundled themes.
+    @Published private(set) var activeDesignSpecID: String?
 
     private static let presetKey = "selectedThemePreset"
     private static let customKey = "selectedThemeCustomConfig"
+    private static let designSpecKey = "selectedDesignSpecID"
 
     init() {
         current = DemoTheme.stored
@@ -80,6 +84,7 @@ final class DemoThemeStore: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: Self.customKey),
            let cfg = try? ThemeConfig(jsonData: data) {
             activeConfig = cfg
+            activeDesignSpecID = UserDefaults.standard.string(forKey: Self.designSpecKey)
             isDark = cfg.dark
             Theme.shared.apply(cfg)
         } else if let id = UserDefaults.standard.string(forKey: Self.presetKey),
@@ -102,6 +107,7 @@ final class DemoThemeStore: ObservableObject {
     func select(_ theme: DemoTheme) {
         presetID = nil
         activeConfig = nil
+        clearDesignSpec()
         UserDefaults.standard.removeObject(forKey: Self.presetKey)
         UserDefaults.standard.removeObject(forKey: Self.customKey)
         current = theme
@@ -113,6 +119,7 @@ final class DemoThemeStore: ObservableObject {
         // returns to the bundled theme, where the scheme switch applies.
         presetID = nil
         activeConfig = nil
+        clearDesignSpec()
         UserDefaults.standard.removeObject(forKey: Self.presetKey)
         UserDefaults.standard.removeObject(forKey: Self.customKey)
         isDark = dark
@@ -124,22 +131,46 @@ final class DemoThemeStore: ObservableObject {
         presetID = theme.id
         activeConfig = theme.config
         isDark = theme.isDark
+        clearDesignSpec()
         UserDefaults.standard.removeObject(forKey: Self.customKey)
         UserDefaults.standard.set(theme.id, forKey: Self.presetKey)
         theme.apply()
     }
 
+    private func clearDesignSpec() {
+        activeDesignSpecID = nil
+        UserDefaults.standard.removeObject(forKey: Self.designSpecKey)
+    }
+
     /// Commits a recipe from the Theme Configurator: applies it, persists it, and
     /// makes it the active theme so the switcher + dark state stay in sync.
     func applyGenerated(_ config: ThemeConfig) {
+        applyGenerated(config, designSpecID: nil)
+    }
+
+    /// As `applyGenerated`, but records the originating design.md id (for the
+    /// "active design mode" badge). Passing `nil` clears the provenance.
+    func applyGenerated(_ config: ThemeConfig, designSpecID: String?) {
         presetID = nil
         activeConfig = config
         isDark = config.dark
+        activeDesignSpecID = designSpecID
         UserDefaults.standard.removeObject(forKey: Self.presetKey)
+        if let id = designSpecID {
+            UserDefaults.standard.set(id, forKey: Self.designSpecKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.designSpecKey)
+        }
         if let data = try? config.jsonData() {
             UserDefaults.standard.set(data, forKey: Self.customKey)
         }
         Theme.shared.apply(config)
+    }
+
+    /// Commits a parsed `design.md` result: applies its config and remembers which
+    /// spec produced it. Reuses the existing custom-config persistence.
+    func applyDesign(_ result: DesignParseResult, specID: String?) {
+        applyGenerated(result.config, designSpecID: specID)
     }
 
     /// Re-applies whatever theme is currently active — used to discard the
