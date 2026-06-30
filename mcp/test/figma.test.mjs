@@ -80,3 +80,13 @@ test("expandInstances on: recurses into the INSTANCE and emits valid spacing", (
   assert.doesNotMatch(code, /SpacingKey\.4xl/);           // never the invalid form
   assert.doesNotMatch(code, /Text\("scribble"\)/);        // placeholder text filtered out
 });
+
+test("figma-mapping: control instances map to their ThemeKit component", () => {
+  const leaf = (name, type = "INSTANCE") => ({ id: "n:1", name, type });
+  const gen1 = (node) => generate(node, mapping, data.tokens, apis).code;
+  assert.match(gen1(leaf("Checkbox")), /Checkbox\(isChecked: \.constant\(false\)\)/);
+  assert.match(gen1(leaf("Radio")), /RadioButton\(isSelected: \.constant\(false\)\)/);
+  assert.match(gen1(leaf("Toggle")), /ThemeToggle\(isOn: \.constant\(false\)\)/);
+  // Divider rule is type-agnostic — also matches a "Divider Container" frame.
+  assert.match(gen1(leaf("Divider Container", "FRAME")), /DividerView\(/);
+});
