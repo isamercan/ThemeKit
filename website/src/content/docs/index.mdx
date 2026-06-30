@@ -1,0 +1,39 @@
+---
+title: ThemeKit
+description: A themeable SwiftUI component library — accessible components, design tokens, light/dark, and RTL.
+template: splash
+hero:
+  tagline: Themeable SwiftUI components, built to ship. Accessible, tokenized, light/dark & RTL-ready.
+  image:
+    dark: ../../assets/banner-dark.png
+    light: ../../assets/banner.png
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/isamercan/ThemeKit
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="Design tokens" icon="setting">
+		Color, spacing, radius, and typography flow from a single theme. Restyle the
+		whole library by swapping one token set.
+	</Card>
+	<Card title="Accessible by default" icon="approve-check">
+		Dynamic Type, VoiceOver labels, and contrast baked in — not bolted on.
+	</Card>
+	<Card title="Light, dark & RTL" icon="moon">
+		Every component ships light/dark variants and mirrors correctly for
+		right-to-left layouts.
+	</Card>
+	<Card title="Swift Package" icon="seti:swift">
+		Drop-in via SwiftPM. Browse the full API in the
+		[DocC reference](/ThemeKit/api/documentation/themekit/).
+	</Card>
+</CardGrid>

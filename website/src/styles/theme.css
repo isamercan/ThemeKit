@@ -1,0 +1,60 @@
+/* ThemeKit docs — accent + chrome tuned to feel close to the library's own
+   palette. Starlight exposes these CSS custom properties for theming. */
+:root {
+  --sl-color-accent-low: #1b2333;
+  --sl-color-accent: #4f7cff;
+  --sl-color-accent-high: #c7d6ff;
+
+  --sl-color-text-accent: #6f97ff;
+
+  /* Slightly rounded, product-doc feel for code + cards. */
+  --sl-content-width: 50rem;
+}
+
+/* Light mode accents */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d8e3ff;
+  --sl-color-accent: #2f5fe0;
+  --sl-color-accent-high: #16224a;
+  --sl-color-text-accent: #2f5fe0;
+}
+
+/* Hero banner logo: keep it crisp and not oversized in the header. */
+.site-title img {
+  max-height: 1.75rem;
+  width: auto;
+}
+
+/* Component gallery cards (used on the Components page). */
+.tk-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.tk-gallery a {
+  display: block;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  text-decoration: none;
+  background: var(--sl-color-bg-nav);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.tk-gallery a:hover {
+  border-color: var(--sl-color-accent);
+  transform: translateY(-2px);
+}
+.tk-gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--sl-color-gray-6);
+}
+.tk-gallery .tk-label {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  font-size: var(--sl-text-sm);
+  font-weight: 600;
+  color: var(--sl-color-white);
+}

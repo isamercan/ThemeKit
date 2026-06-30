@@ -1,0 +1,9 @@
+# Astro / Starlight build output and tooling
+dist/
+.astro/
+node_modules/
+.DS_Store
+
+# Local env
+.env
+.env.production
