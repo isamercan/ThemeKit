@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`ImageChip` (the `Chips` family chip) init reduced to
+  `ImageChip(isSelected:url:)`.** The `isSelected` binding and the `url` data stay
+  in init; `size:`→`.size(_:)`. The component-level `isEnabled:` parameter is
+  **removed (R3)** in favor of native `@Environment(\.isEnabled)` + `.disabled(_:)`.
+  Migration:
+  `ImageChip(isSelected: $on, url: u, size: .large, isEnabled: ok)`
+  → `ImageChip(isSelected: $on, url: u).size(.large).disabled(!ok)`.
 - **`StatusDot` init reduced to `StatusDot(_ kind:label:)`.** The status kind and
   the (content) label stay in init; the 2 appearance/state parameters moved to
   modifiers: `size:`→`.size(_:)`, `pulse:`→`.pulse(_:)`. Migration:

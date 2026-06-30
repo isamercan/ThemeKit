@@ -1838,8 +1838,8 @@ struct ChipsDemo: View {
                               rating: 4.8, showFree: true, systemImage: "wind")
                 case .image:
                     HStack(spacing: 12) {
-                        ImageChip(isSelected: $a, url: imageURL, size: .medium)
-                        ImageChip(isSelected: $b, url: imageURL, size: .medium)
+                        ImageChip(isSelected: $a, url: imageURL).size(.medium)
+                        ImageChip(isSelected: $b, url: imageURL).size(.medium)
                     }
                 case .filter:
                     HStack(spacing: 8) {

@@ -49,7 +49,7 @@
 - `CalendarView(selection:)` — Molecule.
 - `Checkbox(label, isChecked:, infoMessages:)` — Figma "Control Items" → Checkboxes. · modifiers: `.type()`, `.indeterminate()`, `.alignment()`, `.customSize()`, `.a11yID()`
 - `CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)` — Molecule. · modifiers: `.a11yID()`
-- `ImageChip(isSelected:, url:, size:, isEnabled:)` — A selectable remote-image tile with a selection border.
+- `ImageChip(isSelected:, url:)` — A selectable remote-image tile with a selection border. · modifiers: `.size()`
 - `CompactChip` — A selectable card: an optional rating + label row, then an optional logo + price row.
 - `ChoseChip` — A selectable card: a leading icon, a title with an optional "free" gradient badge, and a rating + description row.
 - `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
