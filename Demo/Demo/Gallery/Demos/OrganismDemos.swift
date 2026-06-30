@@ -165,8 +165,8 @@ struct PromoBannerDemo: View {
 
     var body: some View {
         ComponentStage("PromoBanner", inspector: [("tint", "\(tint)")]) {
-            PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
-                        systemImage: "sun.max.fill", ctaTitle: cta ? "Explore" : nil, tint: tint, action: cta ? { flash("PromoBanner CTA") } : nil)
+            PromoBanner("Early booking", action: cta ? { flash("PromoBanner CTA") } : nil)
+                .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle(cta ? "Explore" : nil).color(tint)
         } knobs: {
             Picker("Tint", selection: $tint) {
                 Text("Blue").tag(PromoBannerTint.blue); Text("Dark").tag(PromoBannerTint.dark); Text("Turquoise").tag(PromoBannerTint.turquoise)

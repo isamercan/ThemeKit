@@ -33,3 +33,4 @@ API breakage: constructor FileInput.init(label:fileName:buttonTitle:placeholder:
 API breakage: constructor OTPInput.init(code:digitCount:isSecure:errorText:infoMessages:onComplete:resendInterval:onResend:) has been removed
 API breakage: constructor Callout.init(_:type:style:showIcon:actionTitle:onAction:onClose:) has been removed
 API breakage: constructor FloatingActionButton.init(systemImage:actions:shape:color:badge:action:) has been removed
+API breakage: constructor PromoBanner.init(title:subtitle:systemImage:ctaTitle:tint:action:) has been removed

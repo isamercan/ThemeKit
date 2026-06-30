@@ -300,8 +300,8 @@ final class ScreenshotGenerator: XCTestCase {
                               files: [.init(name: "room-1.jpg", status: .done),
                                       .init(name: "room-2.jpg", status: .uploading(0.6))], maxCount: 3,
                               onPick: {}, onRemove: { _ in }).frame(width: 320))
-        shot("PromoBanner", PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
-                                        systemImage: "sun.max.fill", ctaTitle: "Explore", action: {}).frame(width: 340))
+        shot("PromoBanner", PromoBanner("Early booking", action: {})
+                                        .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore").frame(width: 340))
         let rowTitles = ["My account", "Notifications", "Language", "Payment"]
         shot("ListView", ListView(tiles, header: "Settings", footer: "\(tiles.count) items", bordered: true) { tile in
             ListRow(rowTitles[tile.id], action: {}).subtitle("Details").icon("gearshape")

@@ -163,7 +163,7 @@ enum ComponentRegistry {
         .knob("NavigationBar", .organisms, demo: NavigationBarDemo(), usage: #"NavigationBar(items: [.init(systemImage: "house")], selection: $tab)"#),
         .knob("NotificationCard", .organisms, demo: NotificationDemo(), usage: #"NotificationCard(title: "…", message: "…", date: "…", isUnread: true)"#),
         .knob("PageHeader", .organisms, demo: PageHeaderDemo(), usage: #"PageHeader("Title", subtitle: "…", onBack: { })"#),
-        .knob("PromoBanner", .organisms, demo: PromoBannerDemo(), usage: #"PromoBanner(title: "…", systemImage: "sun.max.fill", ctaTitle: "Go", action: { })"#),
+        .knob("PromoBanner", .organisms, demo: PromoBannerDemo(), usage: #"PromoBanner("…", action: { }).icon("sun.max.fill").ctaTitle("Go")"#),
         .knob("RatingSummary", .organisms, demo: RatingSummaryDemo(), usage: #"RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200)"#),
         .knob("Result", .organisms, demo: ResultDemo(), usage: #"ResultView(.notFound, title: "Page not found", message: "…", primaryTitle: "Home") { }"#),
         .knob("Popconfirm", .organisms, demo: PopconfirmDemo(), usage: ##"trigger.popconfirm(isPresented: $show, title: "Delete?", confirmTitle: "Delete") { delete() }"##),

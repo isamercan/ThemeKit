@@ -25,8 +25,8 @@ struct HotelSearchView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Title("Find your stay", subtitle: "2M+ hotels worldwide")
 
-                    PromoBanner(title: "Early booking", subtitle: "Up to 30% off summer stays",
-                                systemImage: "sun.max.fill", ctaTitle: "Explore", action: {})
+                    PromoBanner("Early booking", action: {})
+                        .subtitle("Up to 30% off summer stays").icon("sun.max.fill").ctaTitle("Explore")
 
                     Card {
                         VStack(spacing: 14) {

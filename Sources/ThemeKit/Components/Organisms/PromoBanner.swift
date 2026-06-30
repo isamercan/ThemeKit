@@ -35,26 +35,17 @@ public enum PromoBannerTint {
 public struct PromoBanner: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/content — mutated only through the modifiers below (R2).
+    private var subtitle: String?
+    private var systemImage: String?
+    private var ctaTitle: String?
+    private var tint: PromoBannerTint = .blue
+
     private let title: String
-    private let subtitle: String?
-    private let systemImage: String?
-    private let ctaTitle: String?
-    private let tint: PromoBannerTint
     private let action: (() -> Void)?
 
-    public init(
-        title: String,
-        subtitle: String? = nil,
-        systemImage: String? = nil,
-        ctaTitle: String? = nil,
-        tint: PromoBannerTint = .blue,
-        action: (() -> Void)? = nil
-    ) {
+    public init(_ title: String, action: (() -> Void)? = nil) {   // R1 — content + primary action
         self.title = title
-        self.subtitle = subtitle
-        self.systemImage = systemImage
-        self.ctaTitle = ctaTitle
-        self.tint = tint
         self.action = action
     }
 
@@ -94,10 +85,34 @@ public struct PromoBanner: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension PromoBanner {
+    /// Secondary line under the title.
+    func subtitle(_ s: String?) -> Self { copy { $0.subtitle = s } }
+
+    /// Leading SF Symbol visual.
+    func icon(_ systemImage: String?) -> Self { copy { $0.systemImage = systemImage } }
+
+    /// Trailing call-to-action button title (renders only when paired with the init `action`).
+    func ctaTitle(_ title: String?) -> Self { copy { $0.ctaTitle = title } }
+
+    /// Banner tint treatment: blue / dark / turquoise (R4 token-bound).
+    func color(_ tint: PromoBannerTint) -> Self { copy { $0.tint = tint } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 12) {
-        PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer", systemImage: "sun.max.fill", ctaTitle: "Explore", action: {})
-        PromoBanner(title: "Plus", subtitle: "Members get exclusive deals", systemImage: "star.circle.fill", ctaTitle: "Join", tint: .dark, action: {})
+        PromoBanner("Early booking", action: {})
+            .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore")
+        PromoBanner("Plus", action: {})
+            .subtitle("Members get exclusive deals").icon("star.circle.fill").ctaTitle("Join").color(.dark)
     }
     .padding()
 }

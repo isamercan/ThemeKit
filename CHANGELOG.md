@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`PromoBanner` init reduced to `PromoBanner(_ title:action:)`.** The 4 other
+  parameters moved to modifiers: `subtitle:`→`.subtitle(_:)`,
+  `systemImage:`→`.icon(_:)`, `ctaTitle:`→`.ctaTitle(_:)` (renders only when
+  paired with the init `action`), `tint:`→`.color(_:)` (renamed to the standard
+  color vocabulary). Migration:
+  `PromoBanner(title: "Early booking", subtitle: "Save 30%", systemImage: "sun.max.fill", ctaTitle: "Explore", tint: .dark, action: { open() })`
+  → `PromoBanner("Early booking", action: { open() }).subtitle("Save 30%").icon("sun.max.fill").ctaTitle("Explore").color(.dark)`.
 - **`FloatingActionButton` init reduced to
   `FloatingActionButton(systemImage:actions:action:)`.** The content glyph, the
   speed-dial `actions:` data array and the primary `action:` (no-speed-dial mode)
