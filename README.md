@@ -112,7 +112,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: theme.spacing(.md)) {
             Text("Welcome").textStyle(.headingBase)
-            PrimaryButton(title: "Get started") { await signIn() }
+            PrimaryButton("Get started") { await signIn() }
         }
         .padding(theme.spacing(.base))
         .background(theme.background(.bgElevatorPrimary))
