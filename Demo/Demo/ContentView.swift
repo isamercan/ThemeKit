@@ -41,6 +41,10 @@ struct ContentView: View {
             HotelSearchView()
                 .tabItem { Label("Example", systemImage: "sparkles") }
                 .tag(5)
+
+            NavigationStack { LoginView() }
+                .tabItem { Label("Login", systemImage: "person.crop.circle") }
+                .tag(7)
         }
         // A top "did fire" toast for every component callback (`flash("…")`).
         .modifier(ActionFlashOverlay())
