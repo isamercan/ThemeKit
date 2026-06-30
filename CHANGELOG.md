@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Callout` init reduced to `Callout(_ text:)`.** The 6 other parameters moved
+  to modifiers: `type:`→`.variant(_:)`, `style:`→`.calloutStyle(_:)` (renamed to
+  avoid the generic `style` clash + match `CalloutStyle`),
+  `showIcon:`→`.showsIcon(_ on:)`, `actionTitle:`/`onAction:`→
+  `.action(_ title:onAction:)` (grouped), `onClose:`→`.onClose(_:)`. Migration:
+  `Callout("Saved", type: .success, style: .soft, actionTitle: "Undo", onAction: { undo() })`
+  → `Callout("Saved").variant(.success).calloutStyle(.soft).action("Undo") { undo() }`.
 - **`OTPInput` init reduced to `OTPInput(code:onComplete:)`.** The 6 other
   parameters moved to modifiers: `digitCount:`→`.digitCount(_:)`,
   `isSecure:`→`.secure(_ on:)`, `errorText:`→`.errorText(_:)`,

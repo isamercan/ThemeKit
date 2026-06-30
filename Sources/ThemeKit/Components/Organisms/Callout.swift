@@ -48,30 +48,18 @@ public enum CalloutStyle {
 public struct Callout: View {
     @Environment(\.theme) private var theme
 
-    private let text: String
-    private let type: CalloutType
-    private let style: CalloutStyle
-    private let showIcon: Bool
-    private let actionTitle: String?
-    private let onAction: (() -> Void)?
-    private let onClose: (() -> Void)?
+    // Appearance/content/state — mutated only through the modifiers below (R2).
+    private var type: CalloutType = .info
+    private var style: CalloutStyle = .plain
+    private var showIcon = true
+    private var actionTitle: String?
+    private var onAction: (() -> Void)?
+    private var onClose: (() -> Void)?
 
-    public init(
-        _ text: String,
-        type: CalloutType = .info,
-        style: CalloutStyle = .plain,
-        showIcon: Bool = true,
-        actionTitle: String? = nil,
-        onAction: (() -> Void)? = nil,
-        onClose: (() -> Void)? = nil
-    ) {
+    private let text: String
+
+    public init(_ text: String) {   // R1
         self.text = text
-        self.type = type
-        self.style = style
-        self.showIcon = showIcon
-        self.actionTitle = actionTitle
-        self.onAction = onAction
-        self.onClose = onClose
     }
 
     private var hasAction: Bool { actionTitle != nil && onAction != nil }
@@ -113,13 +101,40 @@ public struct Callout: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Callout {
+    /// Semantic status: neutral / info / success / warning / error (drives accent + icon).
+    func variant(_ t: CalloutType) -> Self { copy { $0.type = t } }
+
+    /// Surface treatment: plain (transparent) or soft (light tinted surface).
+    func calloutStyle(_ s: CalloutStyle) -> Self { copy { $0.style = s } }
+
+    /// Show or hide the leading status icon.
+    func showsIcon(_ on: Bool = true) -> Self { copy { $0.showIcon = on } }
+
+    /// Trailing inline action button (title + handler).
+    func action(_ title: String, onAction: @escaping () -> Void) -> Self {
+        copy { $0.actionTitle = title; $0.onAction = onAction }
+    }
+
+    /// Trailing dismiss (×) button handler.
+    func onClose(_ action: (() -> Void)?) -> Self { copy { $0.onClose = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 10) {
-        Callout("Lorem ipsum placeholder text.", type: .success)
-        Callout("Lorem ipsum placeholder text.", type: .error)
-        Callout("Lorem ipsum placeholder text.", type: .info)
-        Callout("Lorem ipsum placeholder text.", type: .warning, style: .soft)
-        Callout("Lorem ipsum placeholder text.", type: .neutral, style: .soft)
+        Callout("Lorem ipsum placeholder text.").variant(.success)
+        Callout("Lorem ipsum placeholder text.").variant(.error)
+        Callout("Lorem ipsum placeholder text.").variant(.info)
+        Callout("Lorem ipsum placeholder text.").variant(.warning).calloutStyle(.soft)
+        Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft)
     }
     .padding()
 }

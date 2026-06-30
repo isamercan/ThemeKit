@@ -131,7 +131,7 @@ enum ComponentRegistry {
         .knob("AlertToast", .organisms, demo: AlertToastDemo(), usage: #"AlertToast("Saved").variant(.success).onClose { }"#),
         .knob("BlogCard", .organisms, demo: BlogCardDemo(), usage: #"BlogCard(title: "…", excerpt: "…", onReadMore: { }) { mediaView }"#),
         .knob("BottomSheet", .organisms, demo: BottomSheetDemo(), usage: #"// install once: .sheetHost()\n@Environment(SheetPresenter.self) var sheet: SheetPresenter\nsheet.present(detents: [.height(280), .large]) { FilterView() }\n// or declarative: someView.bottomSheet(isPresented: $open, detents: [.medium]) { … }"#),
-        .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message", type: .success, style: .plain)"#),
+        .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message").variant(.success).calloutStyle(.plain)"#),
         .knob("Card", .organisms, demo: CardDemo(), usage: #"Card(elevation: .soft) { content }"#),
         .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", side: .outgoing, time: "09:24", avatarSystemImage: "person.fill")"#),
         .knob("Counter", .organisms, demo: CounterDemo(), usage: #"Counter(days: 2, hours: 8, minutes: 45)"#),

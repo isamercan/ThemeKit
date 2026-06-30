@@ -118,9 +118,9 @@ public struct Upload: View {
         case .uploading(let progress):
             ProgressBar(value: progress).barHeight(4)
         case .done:
-            Callout(String(themeKit: "Uploaded"), type: .success)
+            Callout(String(themeKit: "Uploaded")).variant(.success)
         case .failed(let reason):
-            Callout(reason, type: .error)
+            Callout(reason).variant(.error)
         }
     }
 

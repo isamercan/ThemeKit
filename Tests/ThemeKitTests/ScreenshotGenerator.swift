@@ -252,9 +252,9 @@ final class ScreenshotGenerator: XCTestCase {
         }.frame(width: 340))
         shot("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.").variant(.success).frame(width: 340))
         shot("Callout", VStack(alignment: .leading, spacing: 10) {
-            Callout("Saved successfully.", type: .success)
-            Callout("Please review your details.", type: .warning, style: .soft)
-            Callout("Something went wrong.", type: .error, style: .soft)
+            Callout("Saved successfully.").variant(.success)
+            Callout("Please review your details.").variant(.warning).calloutStyle(.soft)
+            Callout("Something went wrong.").variant(.error).calloutStyle(.soft)
         }.frame(width: 320))
         shot("Card", Card(elevation: .soft, title: "Reservation", subtitle: "2 nights · 2 guests", extraTitle: "Details", onExtra: {}) {
             Text("Hilton London — Deluxe room, breakfast included.")

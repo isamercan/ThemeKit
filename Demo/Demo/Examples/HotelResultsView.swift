@@ -133,7 +133,7 @@ struct HotelCard: View {
                         Text("/ night").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         Spacer()
                         if hotel.freeCancellation {
-                            Callout("Free cancellation", type: .success)
+                            Callout("Free cancellation").variant(.success)
                         }
                     }
                     .padding(.top, 2)

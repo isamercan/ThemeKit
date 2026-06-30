@@ -51,11 +51,14 @@ struct CalloutDemo: View {
             if dismissed {
                 Button("Reset") { dismissed = false }.buttonStyle(.plain).foregroundStyle(Theme.shared.foreground(.fgHero))
             } else {
-                Callout("Lorem ipsum placeholder text.", type: type, style: soft ? .soft : .plain,
-                        showIcon: showIcon,
-                        actionTitle: action ? "Undo" : nil,
-                        onAction: action ? { flash("Callout action") } : nil,
-                        onClose: closable ? { dismissed = true } : nil)
+                {
+                    let base = Callout("Lorem ipsum placeholder text.")
+                        .variant(type)
+                        .calloutStyle(soft ? .soft : .plain)
+                        .showsIcon(showIcon)
+                        .onClose(closable ? { dismissed = true } : nil)
+                    return action ? base.action("Undo") { flash("Callout action") } : base
+                }()
             }
         } knobs: {
             Picker("Type", selection: $type) {

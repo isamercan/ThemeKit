@@ -88,7 +88,7 @@ struct HotelCheckoutView: View {
                     Icon(systemName: "calendar", size: .sm, color: Theme.shared.text(.textTertiary))
                     Text("23 Jun – 26 Jun · \(nights) nights").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
-                if hotel.freeCancellation { Callout("Free cancellation", type: .success) }
+                if hotel.freeCancellation { Callout("Free cancellation").variant(.success) }
             }
         }
     }
@@ -108,7 +108,7 @@ struct HotelCheckoutView: View {
                 TextInput("Coupon code", text: $coupon, placeholder: "e.g. SUMMER")
                 SecondaryButton("Apply") { couponApplied = !coupon.isEmpty }
             }
-            if couponApplied { Callout("Coupon applied · 10% off", type: .success) }
+            if couponApplied { Callout("Coupon applied · 10% off").variant(.success) }
         }
     }
 

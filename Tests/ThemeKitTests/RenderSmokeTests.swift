@@ -35,7 +35,7 @@ final class RenderSmokeTests: XCTestCase {
         renders(Skeleton(width: 120, height: 16), "Skeleton")
         renders(Rating(value: 4.3, layout: .rateNumberText), "Rating")
         renders(ThemeButton("Tap") {}, "ThemeButton")
-        renders(Callout("Heads up", type: .warning), "Callout")
+        renders(Callout("Heads up").variant(.warning), "Callout")
     }
 
     // Components must also render under a runtime-generated theme + dark mode.

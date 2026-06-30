@@ -55,10 +55,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testCallout_types() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                Callout("Informational note", type: .info)
-                Callout("Saved successfully", type: .success)
-                Callout("Double-check this", type: .warning)
-                Callout("Something went wrong", type: .error)
+                Callout("Informational note").variant(.info)
+                Callout("Saved successfully").variant(.success)
+                Callout("Double-check this").variant(.warning)
+                Callout("Something went wrong").variant(.error)
             }
         )
     }
