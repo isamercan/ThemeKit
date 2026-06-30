@@ -56,15 +56,40 @@ export function snapMetric(px: number, tokens: DesignToken[], category: string, 
 
 /** Maps a Figma color token-name to a ThemeKit accessor, e.g. `theme.background(.bgWhite)`. */
 export function tokenAccessor(tokenName: string): string {
-  // tokenName like "background.bg-white" / "text.text-primary" / "radiusRole"
+  // tokenName like "background.bg-white" / "text.text-primary"
   const [cat, ...rest] = tokenName.split(".");
-  const key = rest.join("-").replace(/-(\w)/g, (_, c) => c.toUpperCase()).replace(/^bg/, "bg").replace(/^/, "");
   const camel = rest.join(".").replace(/[-.]+(\w)/g, (_, c: string) => c.toUpperCase());
   switch (cat) {
-    case "background": return `theme.background(.${camel})`;
     case "foreground": return `theme.foreground(.${camel})`;
     case "border": return `theme.border(.${camel})`;
     case "text": return `theme.text(.${camel})`;
+    case "background":
     default: return `theme.background(.${camel})`;
   }
+}
+
+/** Relative luminance (WCAG 2.x) of an "#RRGGBB" / "RRGGBB" hex. */
+export function relativeLuminance(hex: string): number {
+  const s = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(s.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio between two hex colors (1..21). */
+export function contrastRatio(hexA: string, hexB: string): number {
+  const la = relativeLuminance(hexA), lb = relativeLuminance(hexB);
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+export interface WcagVerdict { ratio: number; aaNormal: boolean; aaLarge: boolean; aaaNormal: boolean; level: string; }
+
+/** Grades a contrast ratio against WCAG 2.1 thresholds (normal & large text). */
+export function wcagGrade(ratio: number): WcagVerdict {
+  const aaNormal = ratio >= 4.5, aaLarge = ratio >= 3, aaaNormal = ratio >= 7;
+  const level = aaaNormal ? "AAA" : aaNormal ? "AA" : aaLarge ? "AA Large only" : "FAIL";
+  return { ratio, aaNormal, aaLarge, aaaNormal, level };
 }

@@ -1,12 +1,14 @@
 /** Walks a Figma node tree → ThemeKit SwiftUI, with token snapping + a mapping report. */
 import type { FigmaNode } from "./client.js";
-import { matchComponent, type Mapping } from "./mapping.js";
+import { matchComponent, type Mapping, type ProduceRule } from "./mapping.js";
 import { matchColor, snapMetric, figmaColorToHex, tokenAccessor, type DesignToken } from "./tokenMatch.js";
+import { auditA11y, formatA11y, type A11yFinding } from "./a11yAudit.js";
 
 export interface ComponentAPI { name: string; params: { label: string; name: string; type: string; default?: string }[]; }
 export interface Report {
   nodes: number; matched: number; unmapped: string[];
   tokenSnaps: string[]; needsReview: string[]; lowConfidence: string[];
+  a11y: A11yFinding[];
 }
 export interface GenResult { code: string; report: Report; }
 
@@ -21,8 +23,56 @@ function firstFill(node: FigmaNode) {
   return (node.fills ?? []).find((f) => f.visible !== false && f.type === "SOLID" && f.color);
 }
 
+/** Normalized Figma variant/boolean properties: { "state": "disabled", "size": "small", "enabled": false }. */
+function nodeProps(node: FigmaNode): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [rawKey, prop] of Object.entries(node.componentProperties ?? {})) {
+    const key = rawKey.split("#")[0].trim().toLowerCase();
+    out[key] = String(prop.value).toLowerCase();
+  }
+  return out;
+}
+
+/**
+ * State-aware chainable modifiers for a mapped leaf, from (1) explicit rule modifiers,
+ * then (2) automatic detection of disabled / size from the node name + variant props.
+ * Maps to the native, always-available `.disabled(_:)` / `.controlSize(_:)`.
+ */
+function stateModifiers(node: FigmaNode, produce: ProduceRule, report: Report): string[] {
+  const mods: string[] = [];
+  const name = node.name.toLowerCase();
+  const props = nodeProps(node);
+  const add = (m: string) => { if (!mods.includes(m)) mods.push(m); };
+
+  // 1) Explicit rule-driven modifiers.
+  for (const r of produce.modifiers ?? []) {
+    const byName = r.whenName && new RegExp(r.whenName, "i").test(node.name);
+    let byProp = false;
+    if (r.whenProp) {
+      const [k, v] = r.whenProp.split("=").map((s) => s.trim().toLowerCase());
+      byProp = props[k] === v;
+    }
+    if (byName || byProp) add(r.emit);
+  }
+
+  // 2) Automatic disabled detection (name or Enabled=false / State=Disabled).
+  const disabled = /\b(disabled|inactive)\b/.test(name) || props["enabled"] === "false" || props["state"] === "disabled" || props["disabled"] === "true";
+  if (disabled) add(".disabled(true)");
+
+  // 3) Automatic control size from name segment or a Size variant.
+  const sizeWord = props["size"] || (name.match(/\b(mini|small|large|regular)\b/)?.[1] ?? "");
+  const sizeMap: Record<string, string> = { mini: ".mini", small: ".small", regular: ".regular", large: ".large" };
+  if (sizeMap[sizeWord]) add(`.controlSize(${sizeMap[sizeWord]})`);
+
+  // 4) Selected/active is usually a binding — flag it for review rather than inventing one.
+  if (/\b(selected|active)\b/.test(name) || props["state"] === "selected") {
+    report.needsReview.push(`${node.name}: appears selected/active — wire a Binding (isSelected/isOn) on ${produce.component}.`);
+  }
+  return mods;
+}
+
 export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[], apis: Map<string, ComponentAPI>): GenResult {
-  const report: Report = { nodes: 0, matched: 0, unmapped: [], tokenSnaps: [], needsReview: [], lowConfidence: [] };
+  const report: Report = { nodes: 0, matched: 0, unmapped: [], tokenSnaps: [], needsReview: [], lowConfidence: [], a11y: [] };
 
   // Snap this node's visual values; record matches / needs-review.
   function snapColor(node: FigmaNode): void {
@@ -38,6 +88,13 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
     const t = snapMetric(node.itemSpacing, tokens, "spacing", mapping.tolerances.spacingSnapPx);
     if (t) report.tokenSnaps.push(`${node.name}: itemSpacing ${node.itemSpacing} → ${t}`);
     return t;
+  }
+  // Snapped foreground color modifier for a raw SwiftUI Text, or "" when no fill/token.
+  function textColorMod(node: FigmaNode): string {
+    const fill = firstFill(node);
+    if (!fill?.color) return "";
+    const cm = matchColor(figmaColorToHex(fill.color), tokens, mapping.tolerances.colorDeltaE);
+    return cm ? `.foregroundStyle(${tokenAccessor(cm.token)})` : "";
   }
 
   function gen(node: FigmaNode, d: number): string {
@@ -75,11 +132,18 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       }
       let call = `${match.component}(${args.join(", ")})`;
       if (match.produce.trailingClosure) call += ` { }`;
+      call += stateModifiers(node, match.produce, report).join("");
+      // Raw SwiftUI Text (heuristic) — snap its fill to a token color instead of leaving it bare.
+      if (match.component === "Text") call += textColorMod(node);
       return `${tag}${pad(d)}${call}`;
     }
 
     // Unmapped — raw SwiftUI fallback, flagged.
-    if (node.type === "TEXT") return `${pad(d)}Text("${textOf(node).replace(/"/g, "'")}")   // ⚠️ unmapped TEXT — use Text token style`;
+    if (node.type === "TEXT") {
+      const color = textColorMod(node);
+      const note = color ? `   // text color snapped to token` : `   // ⚠️ unmapped TEXT — use a Text token style`;
+      return `${pad(d)}Text("${textOf(node).replace(/"/g, "'")}")${color}${note}`;
+    }
     if ((node.type === "FRAME" || node.type === "GROUP") && node.children?.length) {
       report.unmapped.push(`${node.name} (${node.type})`);
       const sp = spacingToken(node);
@@ -92,6 +156,7 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
   }
 
   const code = gen(root, 0);
+  report.a11y = auditA11y(root);
   return { code, report };
 }
 
@@ -102,6 +167,7 @@ export function formatReport(r: Report): string {
     r.needsReview.length ? `\n⚠️ Needs review (${r.needsReview.length}):\n${r.needsReview.map((s) => `- ${s}`).join("\n")}` : "",
     r.unmapped.length ? `\n⚠️ Unmapped nodes (${r.unmapped.length}):\n${r.unmapped.map((s) => `- ${s}`).join("\n")}` : "",
     r.lowConfidence.length ? `\nLow-confidence (review): ${r.lowConfidence.join(", ")}` : "",
+    `\n${formatA11y(r.a11y)}`,
   ];
   return lines.filter(Boolean).join("\n");
 }

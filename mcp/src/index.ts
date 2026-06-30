@@ -17,7 +17,8 @@ import { dirname, join } from "node:path";
 import { fetchFigmaNode } from "./figma/client.js";
 import { loadMapping } from "./figma/mapping.js";
 import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
-
+import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
+import { auditA11y, formatA11y } from "./figma/a11yAudit.js";
 interface Param { label: string; name: string; type: string; default?: string; }
 interface Modifier { name: string; signature: string; doc: string; }
 interface Component { name: string; category: string; doc: string; init: string; params: Param[]; inits?: string[]; modifiers: Modifier[]; usage: string; }
@@ -34,7 +35,21 @@ const data: Data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.js
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 const find = (name: string) => data.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
 
-const server = new McpServer({ name: "themekit", version: "2.0.0" });
+// Single source of truth for the version — read package.json, never hardcode.
+const pkg = JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8")) as { version?: string };
+const server = new McpServer({ name: "themekit", version: pkg.version ?? "0.0.0" });
+
+// Config-driven SwiftUI → ThemeKit migration rules (migrate-rules.json). Editable, not hardcoded.
+interface MigrateRule { find: string; replace: string; note: string; flags?: string; }
+function loadMigrateRules(): MigrateRule[] {
+  const path = join(here, "..", "migrate-rules.json");
+  if (!existsSync(path)) return [];
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf8")) as { rules?: MigrateRule[] };
+    return (raw.rules ?? []).filter((r) => typeof r?.find === "string" && typeof r?.replace === "string");
+  } catch { return []; }
+}
+const MIGRATE_RULES = loadMigrateRules();
 
 // ── Read layer ─────────────────────────────────────────────────────────────
 
@@ -79,13 +94,28 @@ server.registerTool("get_component_api", {
 
 server.registerTool("get_design_tokens", {
   title: "Get design tokens",
-  description: "Design tokens with their real values — colors, radius (+ box/field/selector roles), spacing, typography, shadow, semantic colors. Filter by category.",
-  inputSchema: { category: z.string().optional().describe("e.g. text, background, radius, radiusRole, spacing, typography, semanticColor") },
+  description: "Design tokens with their real values — colors, radius (+ box/field/selector roles), spacing, typography, shadow, semantic colors. Use category 'contrast' for a WCAG text-on-surface contrast report. Filter by category.",
+  inputSchema: { category: z.string().optional().describe("e.g. text, background, radius, radiusRole, spacing, typography, semanticColor, contrast") },
 }, async ({ category }) => {
+  if (category && category.toLowerCase() === "contrast") {
+    const surfaces = data.tokens.filter((t) => t.category === "background" && /^#[0-9a-fA-F]{6}$/.test(t.value) && /bg-white|bg-elevator-primary|bg-hero|bg-tertiary/.test(t.name));
+    const texts = data.tokens.filter((t) => t.category === "text" && /^#[0-9a-fA-F]{6}$/.test(t.value));
+    const out: string[] = ["## Text-on-surface contrast (WCAG 2.1)", "Ratio ≥ 4.5 = AA normal · ≥ 3 = AA large · ≥ 7 = AAA.", ""];
+    for (const s of surfaces) {
+      out.push(`### on ${s.name} (${s.value})`);
+      for (const t of texts) {
+        const r = contrastRatio(t.value, s.value);
+        const g = wcagGrade(r);
+        out.push(`- ${t.name}: ${r.toFixed(2)}:1  ${g.level === "FAIL" ? "✗ FAIL" : "✓ " + g.level}`);
+      }
+      out.push("");
+    }
+    return text(out.join("\n"));
+  }
   const toks = data.tokens.filter((t) => !category || t.category.toLowerCase() === category.toLowerCase());
   if (!toks.length) {
     const cats = [...new Set(data.tokens.map((t) => t.category))].join(", ");
-    return text(`No tokens for "${category}". Categories: ${cats}`);
+    return text(`No tokens for "${category}". Categories: ${cats}, contrast`);
   }
   const byCat: Record<string, string[]> = {};
   for (const t of toks) (byCat[t.category] ??= []).push(`${t.name} = ${t.value}${t.role ? `  (${t.role})` : ""}`);
@@ -214,6 +244,29 @@ server.registerTool("theme_colors", {
   const t = data.themes.find((x) => x.id === id);
   if (!t) return text(`No preset "${id}". Use list_themes.`);
   return text(`${t.name}\nprimary #${t.primary}\nsecondary #${t.secondary}\naccent #${t.accent}\nbase #${t.base}`);
+});
+
+server.registerTool("diff_theme", {
+  title: "Diff two theme presets",
+  description: "Compares two presets channel by channel — primary / secondary / accent / base — with the per-channel CIE76 ΔE so you can see how far apart two brands really are. ΔE < 2 ≈ indistinguishable; 2–10 close; > 10 clearly different.",
+  inputSchema: {
+    a: z.string().describe('First preset id, e.g. "dracula"'),
+    b: z.string().describe('Second preset id, e.g. "nord"'),
+  },
+}, async ({ a, b }) => {
+  const ta = data.themes.find((t) => t.id === a);
+  const tb = data.themes.find((t) => t.id === b);
+  if (!ta) return text(`No preset "${a}". Use list_themes.`);
+  if (!tb) return text(`No preset "${b}". Use list_themes.`);
+  const channels: ("primary" | "secondary" | "accent" | "base")[] = ["primary", "secondary", "accent", "base"];
+  const rows = channels.map((ch) => {
+    const ha = `#${ta[ch]}`, hb = `#${tb[ch]}`;
+    const dE = deltaE(ha, hb);
+    const verdict = dE < 2 ? "≈ same" : dE <= 10 ? "close" : "different";
+    return `- ${ch}: ${ha} → ${hb}  (ΔE ${dE.toFixed(1)}, ${verdict})`;
+  });
+  const changed = channels.filter((ch) => ta[ch].toLowerCase() !== tb[ch].toLowerCase()).length;
+  return text([`# ${ta.name} → ${tb.name}`, `${changed}/${channels.length} channels differ.`, "", ...rows].join("\n"));
 });
 
 server.registerTool("theme_snippet", {
@@ -375,21 +428,113 @@ server.registerTool("lint_snippet", {
   return text(f.length ? `${f.length} issue(s):\n\n${f.join("\n\n")}` : "✓ No ThemeKit anti-patterns found.");
 });
 
+// Known SwiftUI / Foundation types & ThemeKit non-View types — so they're never flagged as "unknown".
+const SWIFTUI_BUILTINS = new Set([
+  "VStack", "HStack", "ZStack", "LazyVStack", "LazyHStack", "LazyVGrid", "LazyHGrid", "Grid", "GridRow",
+  "ScrollView", "List", "ForEach", "Group", "Section", "Text", "Image", "Color", "Label", "Spacer",
+  "Divider", "Button", "Toggle", "TextField", "SecureField", "Picker", "Slider", "Stepper", "ProgressView",
+  "NavigationStack", "NavigationView", "NavigationLink", "NavigationSplitView", "TabView", "Form",
+  "GeometryReader", "Rectangle", "RoundedRectangle", "Circle", "Capsule", "Ellipse", "Path", "Menu",
+  "Link", "DatePicker", "Gauge", "Table", "DisclosureGroup", "ControlGroup", "ViewThatFits", "AnyView",
+  "EmptyView", "Font", "LinearGradient", "RadialGradient", "AngularGradient", "Gradient", "Animation",
+  "Binding", "State", "EnvironmentObject", "ObservedObject", "StateObject",
+]);
+const THEMEKIT_TYPES = new Set([
+  "Theme", "ThemeConfig", "ThemePreset", "ThemeContext", "SemanticColor", "TextStyle", "ShadowStyle",
+  "ValidationRule", "AsyncValidationRule", "Validator", "FormValidator", "InfoMessage",
+]);
+
+/** Blanks string literals and strips line comments so detectors don't trip on text/comments. */
+function maskCode(line: string): string {
+  return line.replace(/\/\/.*$/, "").replace(/"(?:[^"\\]|\\.)*"/g, '""');
+}
+
+/** Levenshtein distance (for "did you mean" suggestions). */
+function lev(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)
+    dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return dp[m][n];
+}
+
 server.registerTool("validate_code", {
   title: "Validate a ThemeKit screen",
-  description: "Full check: anti-patterns + raw-SwiftUI components that have ThemeKit equivalents + unknown component/modifier detection (vs the real API) + a PASS/FAIL verdict.",
+  description: "Full check: anti-patterns (string/comment-aware) + raw-SwiftUI components that have ThemeKit equivalents + unknown/hallucinated component detection (vs the real catalog, with a did-you-mean) + multi-line brace/paren/bracket balance + a PASS/FAIL verdict.",
   inputSchema: { swift: z.string() },
 }, async ({ swift }) => {
   const lines = swift.split("\n");
+  const masked = lines.map(maskCode);
   const issues: string[] = [];
-  lines.forEach((line, i) => { for (const r of [...LINT_RULES, ...PREFER_RULES]) if (r.re.test(line)) issues.push(`L${i + 1}: ${r.msg}\n    ${line.trim()}`); });
+  // Anti-patterns (run on masked lines so strings/comments don't false-positive).
+  masked.forEach((line, i) => { for (const r of [...LINT_RULES, ...PREFER_RULES]) if (r.re.test(line)) issues.push(`L${i + 1}: ${r.msg}\n    ${lines[i].trim()}`); });
+
+  // Multi-line awareness: brace / paren / bracket balance across the whole snippet.
+  const masktext = masked.join("\n");
+  const balance: string[] = [];
+  for (const [open, close, label] of [["{", "}", "braces"], ["(", ")", "parens"], ["[", "]", "brackets"]] as const) {
+    const diff = masktext.split(open).length - masktext.split(close).length;
+    if (diff !== 0) balance.push(`Unbalanced ${label}: ${Math.abs(diff)} ${diff > 0 ? `unclosed '${open}'` : `extra '${close}'`}.`);
+  }
+
+  // Known ThemeKit components actually used.
   const names = new Set(data.components.map((c) => c.name));
-  const used = [...new Set((swift.match(/\b[A-Z]\w+(?=\s*[({.])/g) || []).filter((n) => names.has(n)))];
-  // modifiers used that look ThemeKit-ish but aren't real
-  const realMods = new Set(data.modifiers.map((m) => m.replace(/\(.*/, "")));
-  const head = issues.length ? `✗ FAIL — ${issues.length} issue(s):` : "✓ PASS — no ThemeKit issues found.";
-  const usedLine = used.length ? `\n\nThemeKit components used (${used.length}): ${used.join(", ")}` : "\n\n⚠️ No ThemeKit components detected.";
-  return text(`${head}${issues.length ? "\n\n" + issues.join("\n\n") : ""}${usedLine}`);
+  const calls = [...new Set((masktext.match(/\b[A-Z]\w+(?=\s*\()/g) || []))];
+  const used = calls.filter((n) => names.has(n));
+
+  // Unknown PascalCase calls that are neither ThemeKit nor known SwiftUI/ThemeKit types → likely hallucinated.
+  const unknown = calls.filter((n) => !names.has(n) && !SWIFTUI_BUILTINS.has(n) && !THEMEKIT_TYPES.has(n));
+  const unknownReport = unknown.map((n) => {
+    const near = [...names].map((c) => [c, lev(n.toLowerCase(), c.toLowerCase())] as const).sort((a, b) => a[1] - b[1])[0];
+    const hint = near && near[1] <= 3 ? `  (did you mean ${near[0]}?)` : "  (verify it exists — search_components)";
+    return `- ${n}${hint}`;
+  });
+
+  // FAIL on anti-patterns, unbalanced delimiters, or unknown components (hallucinated APIs).
+  const failCount = issues.length + balance.length + unknown.length;
+  const head = failCount ? `✗ FAIL — ${failCount} issue(s):` : "✓ PASS — no ThemeKit issues found.";
+  const parts = [head];
+  if (issues.length) parts.push("\n" + issues.join("\n\n"));
+  if (balance.length) parts.push("\nStructure:\n" + balance.map((b) => `- ${b}`).join("\n"));
+  if (unknown.length) parts.push(`\n⚠️ Unknown components (not in the ThemeKit catalog or known SwiftUI types):\n${unknownReport.join("\n")}`);
+  parts.push(used.length ? `\nThemeKit components used (${used.length}): ${used.join(", ")}` : "\n⚠️ No ThemeKit components detected.");
+  return text(parts.join("\n"));
+});
+
+// Components that are interactive (should carry an accessibility id / label).
+const INTERACTIVE = /\b(PrimaryButton|SecondaryButton|ThemeButton|ShareButton|ButtonGroup|TextInput|MultiLineTextInput|InputNumber|OTPInput|SearchBar|Select|MultiSelect|Autocomplete|Checkbox|RadioButton|RadioGroup|Slider|RangeSlider|ThemeToggle|SegmentedControl|QuantityStepper|Chip|FAB|DateField)\s*\(/;
+
+server.registerTool("a11y_audit", {
+  title: "Accessibility audit",
+  description: "Audits a ThemeKit SwiftUI snippet for accessibility gaps: interactive components missing `.a11yID(_:)`, images/icons without an accessibility label, hardcoded colors (which break Dynamic Color / contrast guarantees), and any hex pairs whose WCAG contrast you should verify. Returns a PASS/WARN verdict with line numbers and fixes.",
+  inputSchema: { swift: z.string() },
+}, async ({ swift }) => {
+  const lines = swift.split("\n");
+  const findings: string[] = [];
+  lines.forEach((line, i) => {
+    const ln = i + 1;
+    if (INTERACTIVE.test(line) && !/\.a11yID\(/.test(line)) {
+      // Allow a multi-line chain: only flag if the next 2 lines also lack a11yID.
+      const window = lines.slice(i, i + 3).join(" ");
+      if (!/\.a11yID\(/.test(window)) findings.push(`L${ln}: interactive control without .a11yID(_:) — add an identifier for UI tests & VoiceOver.\n    ${line.trim()}`);
+    }
+    if (/\b(Icon|RemoteImage|AnimatedImage|Image)\s*\(/.test(line) && !/accessibilityLabel|\.a11yID\(|decorative/.test(lines.slice(i, i + 3).join(" "))) {
+      findings.push(`L${ln}: image/icon without an accessibility label — add .accessibilityLabel(_:) or mark it decorative.\n    ${line.trim()}`);
+    }
+    const hex = line.match(/Color\(hex:\s*"?#?([0-9a-fA-F]{6})"?\)/);
+    if (hex) findings.push(`L${ln}: hardcoded color #${hex[1]} — use a theme token so contrast tracks the active theme.\n    ${line.trim()}`);
+  });
+  // If two hardcoded hexes appear, compute their contrast as a hint.
+  const hexes = [...swift.matchAll(/#([0-9a-fA-F]{6})\b/g)].map((m) => `#${m[1]}`);
+  let contrastNote = "";
+  if (hexes.length >= 2) {
+    const r = contrastRatio(hexes[0], hexes[1]);
+    const g = wcagGrade(r);
+    contrastNote = `\n\nContrast hint: ${hexes[0]} vs ${hexes[1]} = ${r.toFixed(2)}:1 (${g.level}). Prefer tokens; check get_design_tokens category=contrast.`;
+  }
+  const head = findings.length ? `⚠️ WARN — ${findings.length} accessibility issue(s):` : "✓ PASS — no obvious accessibility gaps. Verify color contrast with get_design_tokens category=contrast.";
+  return text(`${head}${findings.length ? "\n\n" + findings.join("\n\n") : ""}${contrastNote}`);
 });
 
 const SCAFFOLDS: Record<string, string> = {
@@ -403,16 +548,45 @@ server.registerTool("scaffold_screen", {
   inputSchema: { kind: z.enum(["form", "list", "detail", "settings"]) },
 }, async ({ kind }) => text("```swift\n" + SCAFFOLDS[kind] + "\n```"));
 
+server.registerTool("compose_screen", {
+  title: "Compose a screen from components",
+  description: "Builds a token-bound SwiftUI screen from an ordered list of ThemeKit component names. Each name is verified against the real catalog (unknown ones are flagged, never silently dropped) and rendered from its synthesized usage snippet, wrapped in a token-spaced layout. Use this instead of scaffold_screen when you know exactly which components you want.",
+  inputSchema: {
+    components: z.array(z.string()).min(1).describe('Ordered component names, e.g. ["Title","TextInput","PrimaryButton"]'),
+    title: z.string().optional().describe("Optional screen title rendered as a Title atom"),
+    layout: z.enum(["vstack", "scroll", "card"]).optional().describe("vstack (default) / scroll / card-wrapped"),
+    spacing: z.enum(["sm", "md", "lg"]).optional().describe("Theme.SpacingKey between items (default md)"),
+  },
+}, async ({ components, title, layout, spacing }) => {
+  const sp = spacing ?? "md";
+  const indent = "    ";
+  const body: string[] = [];
+  const unknown: string[] = [];
+  if (title) body.push(`Title("${title.replace(/"/g, "'")}")`);
+  for (const name of components) {
+    const c = find(name);
+    if (!c) { unknown.push(name); body.push(`// ⚠️ unknown component "${name}" — not in the ThemeKit catalog`); continue; }
+    body.push(c.usage);
+  }
+  const inner = body.map((l) => indent + indent + l).join("\n");
+  const stack = `${indent}VStack(alignment: .leading, spacing: Theme.SpacingKey.${sp}.value) {\n${inner}\n${indent}}`;
+  let composed: string;
+  if (layout === "scroll") composed = `ScrollView {\n${stack}\n${indent}.padding(Theme.SpacingKey.${sp}.value)\n}\n.background(theme.background(.bgElevatorPrimary))`;
+  else if (layout === "card") composed = `Card {\n${stack}\n}`;
+  else composed = stack.replace(/^ {4}/, "").replace(/\n {4}/g, "\n");
+  const note = unknown.length ? `\n\n⚠️ Unknown components (verify with search_components / list_components): ${unknown.join(", ")}` : "";
+  return text("```swift\n" + composed + "\n```" + "\n\nEvery color resolves from the theme; verify any init you customized with get_component_api, then validate_code." + note);
+});
+
 server.registerTool("migrate_snippet", {
-  title: "Migrate SwiftUI → ThemeKit", description: "Rewrite plain SwiftUI toward ThemeKit (tokens + components), with notes.",
+  title: "Migrate SwiftUI → ThemeKit", description: "Rewrite plain SwiftUI toward ThemeKit (tokens + components) using the config-driven rule set in migrate-rules.json, with notes.",
   inputSchema: { swift: z.string() },
 }, async ({ swift }) => {
   let out = swift; const notes: string[] = [];
-  const sub = (re: RegExp, to: string, note: string) => { if (re.test(out)) { out = out.replace(re, to); notes.push(note); } };
-  sub(/\.foregroundColor\(\.(?:blue|accentColor)\)/g, ".foregroundStyle(theme.text(.textHero))", "system accent → theme.text(.textHero)");
-  sub(/Color\.blue/g, "theme.foreground(.fgHero)", "Color.blue → theme.foreground(.fgHero)");
-  sub(/\.cornerRadius\(\s*\d+\s*\)/g, ".cornerRadius(Theme.RadiusRole.box.value)", "hardcoded radius → RadiusRole.box");
-  sub(/\bToggle\(("[^"]*",\s*)?isOn:\s*(\$\w+)\)/g, "ThemeToggle(isOn: $2)", "Toggle → ThemeToggle");
+  for (const rule of MIGRATE_RULES) {
+    const re = new RegExp(rule.find, rule.flags ?? "g");
+    if (re.test(out)) { out = out.replace(new RegExp(rule.find, rule.flags ?? "g"), rule.replace); notes.push(rule.note); }
+  }
   return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (none automatic; run validate_code)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput; check param names with get_component_api.`);
 });
 
@@ -420,18 +594,23 @@ server.registerTool("migrate_snippet", {
 
 server.registerTool("figma_to_swiftui", {
   title: "Figma → SwiftUI (ThemeKit)",
-  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review). Set dryRun for the plan only. Needs FIGMA_TOKEN in the env.",
+  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review) plus a WCAG accessibility audit of the design. Set dryRun for the plan only, or a11yOnly to return just the accessibility audit. Needs FIGMA_TOKEN in the env.",
   inputSchema: {
     fileKey: z.string().describe("Figma file key (from the file URL)"),
     nodeId: z.string().describe("Node id, e.g. 1:23 (from 'Copy link to selection')"),
     dryRun: z.boolean().optional().describe("Return only the mapping plan + report, no code"),
+    a11yOnly: z.boolean().optional().describe("Return only the WCAG accessibility audit of the Figma design (no code, no mapping)"),
   },
-}, async ({ fileKey, nodeId, dryRun }) => {
+}, async ({ fileKey, nodeId, dryRun, a11yOnly }) => {
   const token = process.env.FIGMA_TOKEN;
   if (!token) return text("FIGMA_TOKEN is not set. Add it to the MCP server's env (see the README) and retry.");
   let node;
   try { node = await fetchFigmaNode(fileKey, nodeId, token); }
   catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
+  if (a11yOnly) {
+    const findings = auditA11y(node);
+    return text(`# Accessibility audit — Figma design (WCAG 2.1)\n\n${formatA11y(findings)}\n\nThis audits the design's real colors, font sizes and dimensions before any code is generated.`);
+  }
   const mapping = loadMapping(join(here, "..", "figma-mapping.json"));
   const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
   const { code, report } = generate(node, mapping, data.tokens, apis);

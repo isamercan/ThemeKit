@@ -28,18 +28,22 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 ### Act — generation
 | Tool | What it does |
 |---|---|
-| `validate_code(swift)` | Anti-patterns + raw-SwiftUI-with-equivalents + a PASS/FAIL verdict |
+| `validate_code(swift)` | Anti-patterns (string/comment-aware) + raw-SwiftUI-with-equivalents + **unknown/hallucinated component detection** (with a did-you-mean) + **brace/paren/bracket balance** + a PASS/FAIL verdict |
 | `lint_snippet(swift)` | Flags hardcoded colors / radius / fonts / padding |
+| `a11y_audit(swift)` | Accessibility audit — interactive controls missing `.a11yID`, images/icons without a label, hardcoded colors, + a WCAG contrast hint |
 | `scaffold_screen(kind)` | A starter form / list / detail / settings screen |
-| `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit |
+| `compose_screen(components, …)` | Builds a token-bound screen from an **ordered, catalog-verified** component list (vstack / scroll / card) |
+| `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit — **config-driven** via `migrate-rules.json` |
 | `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
-| **`figma_to_swiftui(fileKey, nodeId, dryRun?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven), emits **verified-API** code + a mapping report. Needs `FIGMA_TOKEN` |
+| **`figma_to_swiftui(fileKey, nodeId, dryRun?, a11yOnly?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN` |
 
 ### Themes
 | Tool | What it returns |
 |---|---|
 | `list_themes` · `theme_colors(id)` · `theme_snippet(id?)` · `generate_theme(...)` | Preset ids / hexes / apply code / a custom `ThemeConfig` |
+| `diff_theme(a, b)` | Per-channel (primary / secondary / accent / base) **CIE76 ΔE** between two presets |
 | `theme_preview(id)` | A **PNG swatch card** (renders inline) |
+| `get_design_tokens(category: "contrast")` | A **WCAG** text-on-surface contrast report (AA / AAA grading) |
 
 Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
 and prompts (`themekit-screen`, `migrate-to-themekit`).

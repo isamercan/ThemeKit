@@ -13,7 +13,11 @@ export interface FigmaNode {
   itemSpacing?: number;
   paddingLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number;
   componentId?: string;
+  componentProperties?: Record<string, { type?: string; value: string | boolean }>;
   style?: { fontSize?: number; fontWeight?: number; lineHeightPx?: number };
+  opacity?: number;
+  visible?: boolean;
+  absoluteBoundingBox?: { x: number; y: number; width: number; height: number } | null;
   children?: FigmaNode[];
 }
 
