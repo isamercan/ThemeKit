@@ -81,7 +81,7 @@
 - `ThemeController(name:, label:)` — Molecule.
 - `ThemeToggle(isOn:, isLoading:, onSystemImage:, offSystemImage:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.a11yID()`
 - `ToggleGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.a11yID()`
-- `TreeSelect(id:, title, systemImage:, children:)` — Hierarchical (nested) select with expand/collapse and multi-selection.
+- `TreeSelect(id:, title, systemImage:, children:)` — Hierarchical (nested) select with expand/collapse and multi-selection. · modifiers: `.placeholder()`, `.cascade()`, `.searchable()`, `.loading()`, `.nodeEnabled()`
 
 ## Organisms (41)
 
@@ -131,6 +131,6 @@
 
 Set styling/variants/flags AFTER the init, SwiftUI-style:
 
-`.a11yID()` `.alertCount()` `.allowHalf()` `.arrows()` `.autoplay()` `.axis()` `.backButton()` `.badge()` `.badgeColor()` `.badgeShape()` `.barHeight()` `.clearable()` `.color()` `.colors()` `.components()` `.debounce()` `.density()` `.divider()` `.dots()` `.editable()` `.exists()` `.expands()` `.fade()` `.fullWidth()` `.gradient()` `.hasInfo()` `.highlighted()` `.icon()` `.indicator()` `.infoMessages()` `.infos()` `.inputs()` `.interactive()` `.jumper()` `.leadingImage()` `.leadingSelection()` `.loading()` `.locale()` `.loop()` `.marks()` `.maxResults()` `.maxTags()` `.maxValue()` `.meta()` `.multilineTitle()` `.muteToggle()` `.muted()` `.number()` `.onChangeEnd()` `.onInfo()` `.onRate()` `.onReviewTap()` `.onSearch()` `.onValueChange()` `.placeholder()` `.progressLabel()` `.range()` `.rating()` `.searchable()` `.selected()` `.sentiment()` `.shape()` `.showTotal()` `.showsValueTooltip()` `.simple()` `.size()` `.starSize()` `.steps()` `.style()` `.subtitle()` `.successSegment()` `.suggestionEnabled()` `.symbol()` `.tapToToggle()` `.titleSize()` `.trailing()` `.trailingIcon()` `.truncateSubtitle()` `.valueFormat()` `.valueLabel()` `.variant()` `.window()`
+`.a11yID()` `.alertCount()` `.allowHalf()` `.arrows()` `.autoplay()` `.axis()` `.backButton()` `.badge()` `.badgeColor()` `.badgeShape()` `.barHeight()` `.cascade()` `.clearable()` `.color()` `.colors()` `.components()` `.debounce()` `.density()` `.divider()` `.dots()` `.editable()` `.exists()` `.expands()` `.fade()` `.fullWidth()` `.gradient()` `.hasInfo()` `.highlighted()` `.icon()` `.indicator()` `.infoMessages()` `.infos()` `.inputs()` `.interactive()` `.jumper()` `.leadingImage()` `.leadingSelection()` `.loading()` `.locale()` `.loop()` `.marks()` `.maxResults()` `.maxTags()` `.maxValue()` `.meta()` `.multilineTitle()` `.muteToggle()` `.muted()` `.nodeEnabled()` `.number()` `.onChangeEnd()` `.onInfo()` `.onRate()` `.onReviewTap()` `.onSearch()` `.onValueChange()` `.placeholder()` `.progressLabel()` `.range()` `.rating()` `.searchable()` `.selected()` `.sentiment()` `.shape()` `.showTotal()` `.showsValueTooltip()` `.simple()` `.size()` `.starSize()` `.steps()` `.style()` `.subtitle()` `.successSegment()` `.suggestionEnabled()` `.symbol()` `.tapToToggle()` `.titleSize()` `.trailing()` `.trailingIcon()` `.truncateSubtitle()` `.valueFormat()` `.valueLabel()` `.variant()` `.window()`
 
 Plus the native cross-cuts every control honors: `.disabled(_:)`, `.controlSize(_:)`, `.a11yID(_:)`.

@@ -21,39 +21,31 @@ public struct TreeNode: Identifiable {
 public struct TreeSelect: View {
     @Environment(\.theme) private var theme
 
-    private let label: String?
+    // Appearance/state/config — mutated only through the modifiers below (R2).
+    private var label: String?
+    private var placeholder: String = String(themeKit: "Select")
+    private var cascade: Bool = false
+    private var searchable: Bool = false
+    private var isLoading: Bool = false
+    private var isNodeEnabled: ((TreeNode) -> Bool)?
+
     private let nodes: [TreeNode]
     @Binding private var selection: Set<String>
-    private let placeholder: String
-    private let cascade: Bool
-    private let searchable: Bool
-    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isLoading: Bool
-    private let isNodeEnabled: ((TreeNode) -> Bool)?
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)` (R3)
 
     @State private var open = false
     @State private var expanded: Set<String>
     @State private var searchText = ""
 
     public init(
-        label: String? = nil,
+        _ label: String? = nil,
         nodes: [TreeNode],
         selection: Binding<Set<String>>,
-        placeholder: String = String(themeKit: "Select"),
-        cascade: Bool = false,
-        searchable: Bool = false,
-        initiallyExpanded: Set<String> = [],
-        isLoading: Bool = false,
-        isNodeEnabled: ((TreeNode) -> Bool)? = nil
-    ) {
+        initiallyExpanded: Set<String> = []   // seeds the @State `expanded`, must stay in init
+    ) {   // R1
         self.label = label
         self.nodes = nodes
         self._selection = selection
-        self.placeholder = placeholder
-        self.cascade = cascade
-        self.searchable = searchable
-        self.isLoading = isLoading
-        self.isNodeEnabled = isNodeEnabled
         self._expanded = State(initialValue: initiallyExpanded)
     }
 
@@ -258,6 +250,31 @@ public struct TreeSelect: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension TreeSelect {
+    /// Placeholder shown in the field when nothing is selected.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Parent ↔ child cascade selection with tri-state (indeterminate) parents.
+    func cascade(_ on: Bool = true) -> Self { copy { $0.cascade = on } }
+
+    /// Show an inline search field that filters the visible nodes.
+    func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
+
+    /// Swap the node list for a loading row while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Per-node enabled predicate — disabled nodes can't be toggled.
+    func nodeEnabled(_ predicate: ((TreeNode) -> Bool)?) -> Self { copy { $0.isNodeEnabled = predicate } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var picks: Set<String> = ["ist"]
@@ -272,7 +289,9 @@ public struct TreeSelect: View {
             ]),
         ]
         var body: some View {
-            TreeSelect(label: "Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"]).padding()
+            TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"])
+                .cascade().searchable()
+                .padding()
         }
     }
     return Demo()

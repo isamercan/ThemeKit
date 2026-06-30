@@ -42,6 +42,14 @@ component-by-component.
   Migration:
   `DateField(label: "Check-in", date: $d, style: .long, allowClear: true, leadingSystemImage: "calendar")`
   → `DateField("Check-in", date: $d).style(.long).clearable().icon("calendar")`.
+- **`TreeSelect` init reduced to `TreeSelect(_ label:nodes:selection:initiallyExpanded:)`.**
+  The 5 config parameters moved to modifiers: `placeholder:`→`.placeholder(_:)`,
+  `cascade:`→`.cascade(_ on:)`, `searchable:`→`.searchable(_ on:)`,
+  `isLoading:`→`.loading(_ on:)`, `isNodeEnabled:`→`.nodeEnabled(_:)`.
+  (`nodes`/`selection`/`initiallyExpanded` stay in init — required data, binding,
+  and `@State` seed.) Migration:
+  `TreeSelect(label: "Cities", nodes: tree, selection: $set, cascade: true, searchable: true)`
+  → `TreeSelect("Cities", nodes: tree, selection: $set).cascade().searchable()`.
 
 ## [0.2.0] - 2026-06-28
 

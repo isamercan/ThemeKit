@@ -216,7 +216,7 @@ final class ScreenshotGenerator: XCTestCase {
         // offscreen snapshot, so it's shown live in the Demo app instead.
         shot("MultiSelect", MultiSelect(label: "Cities", options: ["Istanbul", "Ankara", "Izmir"],
                                         selection: .constant(Set(["Istanbul", "Ankara"]))) { $0 }.frame(width: 300))
-        shot("TreeSelect", TreeSelect(label: "Cities",
+        shot("TreeSelect", TreeSelect("Cities",
                                       nodes: [TreeNode(id: "tr", "Turkey", systemImage: "flag",
                                                        children: [TreeNode(id: "ist", "Istanbul"), TreeNode(id: "ank", "Ankara")])],
                                       selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))

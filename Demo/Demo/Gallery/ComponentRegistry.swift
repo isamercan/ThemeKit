@@ -117,7 +117,7 @@ enum ComponentRegistry {
         .knob("SegmentedControl", .molecules, demo: SegmentedControlDemo(), usage: #"SegmentedControl([SegmentItem("List", systemImage: "list.bullet")], selection: $i)"#),
         .knob("Select", .molecules, demo: SelectDemo(), usage: #"Select("City", options: items, selection: $city, searchable: true, isLoading: loading) { $0 }"#),
         .knob("MultiSelect", .molecules, demo: MultiSelectDemo(), usage: #"MultiSelect(label: "Cities", options: items, selection: $set, isOptionEnabled: { $0.inStock }) { $0 }.loading(loading)"#),
-        .knob("TreeSelect", .molecules, demo: TreeSelectDemo(), usage: #"TreeSelect(label: "Cities", nodes: tree, selection: $set, initiallyExpanded: ["tr"])"#),
+        .knob("TreeSelect", .molecules, demo: TreeSelectDemo(), usage: #"TreeSelect("Cities", nodes: tree, selection: $set, initiallyExpanded: ["tr"]).cascade().searchable()"#),
         .knob("SelectBox", .molecules, demo: SelectBoxDemo(), usage: #"SelectBox(label: "Country", options: items, selection: $sel) { $0 }"#),
         .knob("Slider", .molecules, demo: SliderDemo(), usage: #"Slider(value: $v, in: 0...8).marks([0: "0", 8: "Max"]).showsValueTooltip()"#),
         .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput("Email", text: $t, keyboardType: .emailAddress, textContentType: .emailAddress, submitLabel: .next)"##),

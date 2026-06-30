@@ -1517,9 +1517,9 @@ struct TreeSelectDemo: View {
     ]
     var body: some View {
         ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)"), ("loading", "\(loading)")]) {
-            TreeSelect(label: "Cities", nodes: tree, selection: $picks,
-                       cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"],
-                       isLoading: loading, isNodeEnabled: disableIzmir ? { $0.id != "izm" } : nil)
+            TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr", "de"])
+                .cascade(cascade).searchable(searchable)
+                .loading(loading).nodeEnabled(disableIzmir ? { $0.id != "izm" } : nil)
                 .id("\(cascade)\(searchable)\(loading)\(disableIzmir)")
         } knobs: {
             Toggle("Cascade (parent ↔ child + indeterminate)", isOn: $cascade)
