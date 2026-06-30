@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`InputLabel` init reduced to `InputLabel(_ text:)`.** The label text stays in
+  init; the 3 appearance/state parameters moved to modifiers: `isRequired:`→
+  `.required(_:)` (trailing asterisk), `hasInfo:`→`.hasInfo(_:)` (info glyph),
+  `hasError:`→`.hasError(_:)` (error-color treatment). Migration:
+  `InputLabel("Email", isRequired: true, hasInfo: true)`
+  → `InputLabel("Email").required().hasInfo()`.
 - **`Chip` init reduced to `Chip(_ title:isSelected:)`.** The title and the
   `isSelected` binding stay in init; the 2 appearance parameters moved to
   modifiers: `size:`→`.size(_:)`, `selectionStyle:`→`.chipStyle(_:)` (renamed to

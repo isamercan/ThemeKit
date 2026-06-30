@@ -11,16 +11,15 @@ import SwiftUI
 public struct InputLabel: View {
     @Environment(\.theme) private var theme
 
-    private let text: String
-    private let isRequired: Bool
-    private let hasInfo: Bool
-    private let hasError: Bool
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var isRequired = false
+    private var hasInfo = false
+    private var hasError = false
 
-    public init(_ text: String, isRequired: Bool = false, hasInfo: Bool = false, hasError: Bool = false) {
+    private let text: String
+
+    public init(_ text: String) {   // R1
         self.text = text
-        self.isRequired = isRequired
-        self.hasInfo = hasInfo
-        self.hasError = hasError
     }
 
     public var body: some View {
@@ -38,11 +37,30 @@ public struct InputLabel: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension InputLabel {
+    /// Append a required asterisk after the label text.
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
+    /// Show a trailing info glyph.
+    func hasInfo(_ on: Bool = true) -> Self { copy { $0.hasInfo = on } }
+
+    /// Render the label in the error color.
+    func hasError(_ on: Bool = true) -> Self { copy { $0.hasError = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 8) {
         InputLabel("Email")
-        InputLabel("Password", isRequired: true, hasInfo: true)
-        InputLabel("Invalid", hasError: true)
+        InputLabel("Password").required().hasInfo()
+        InputLabel("Invalid").hasError()
     }
     .padding()
 }

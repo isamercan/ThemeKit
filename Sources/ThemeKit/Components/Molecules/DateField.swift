@@ -68,7 +68,7 @@ public struct DateField: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            if let label { InputLabel(label, hasError: hasError) }
+            if let label { InputLabel(label).hasError(hasError) }
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if let leadingSystemImage {

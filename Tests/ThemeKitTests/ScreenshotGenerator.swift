@@ -109,7 +109,7 @@ final class ScreenshotGenerator: XCTestCase {
             Icon(systemName: "checkmark.seal.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgSuccess))
         })
         shot("Indicator", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot())
-        shot("InputLabel", InputLabel("Email", isRequired: true, hasInfo: true))
+        shot("InputLabel", InputLabel("Email").required().hasInfo())
         shot("Kbd", HStack(spacing: 6) { Kbd("⌘"); Kbd("K") })
         shot("ProgressBar", ProgressBar(value: 0.6, showPercentage: true).frame(width: 240))
         shot("RadialProgress", RadialProgress(0.66).size(96).showsLabel())

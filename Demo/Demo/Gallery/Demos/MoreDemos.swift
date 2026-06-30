@@ -57,7 +57,7 @@ struct InputLabelDemo: View {
 
     var body: some View {
         ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("hasError", "\(error)")]) {
-            InputLabel(text, isRequired: required, hasInfo: info, hasError: error)
+            InputLabel(text).required(required).hasInfo(info).hasError(error)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Toggle("Required", isOn: $required)

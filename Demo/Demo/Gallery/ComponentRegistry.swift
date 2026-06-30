@@ -46,7 +46,7 @@ enum ComponentRegistry {
         .knob("BorderBeam", .atoms, demo: BorderBeamDemo(), usage: #"card.borderBeam(cornerRadius: 16, lineWidth: 2)"#),
         .knob("Divider", .atoms, demo: DividerDemo(), usage: #"DividerView("OR").dashed().titleAlign(.center)"#),
         .knob("Icon", .atoms, demo: IconDemo(), usage: #"Icon(systemName: "star.fill", size: .md, color: theme.foreground(.fgHero))"#),
-        .knob("InputLabel", .atoms, demo: InputLabelDemo(), usage: #"InputLabel("Email", isRequired: true, hasInfo: true)"#),
+        .knob("InputLabel", .atoms, demo: InputLabelDemo(), usage: #"InputLabel("Email").required().hasInfo()"#),
         .knob("ProgressBar", .atoms, demo: ProgressBarDemo(), usage: #"ProgressBar(value: 0.4, showPercentage: true)"#),
         .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).showsLabel()"#),
         .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9").cornerRadius(12)   // .gif/.apng animate natively"#),
