@@ -54,8 +54,10 @@ CATEGORIES = [("Atoms", "Atoms"), ("Molecules", "Molecules"), ("Organisms", "Org
 
 # `public struct Name: View` / `public struct Name<...>: View`
 STRUCT_RE = re.compile(r"^public struct (\w+)(?:<[^>]*>)?\s*:\s*View\b", re.M)
-# self-returning chainable modifiers: `func name(params) -> Self`
-MODIFIER_RE = re.compile(r"\bfunc (\w+)\s*\(([^;{]*?)\)\s*->\s*Self\b", re.S)
+# self-returning chainable modifiers: `func name(params) -> Self`.
+# Capture any access keyword before `func` so private/internal helpers (e.g. the
+# copy-on-write `copy(_:)`) can be filtered out — only the public surface is documented.
+MODIFIER_RE = re.compile(r"\b(private|fileprivate|internal|public)?\s*func (\w+)\s*\(([^;{]*?)\)\s*->\s*Self\b", re.S)
 INIT_RE = re.compile(r"public init\(\s*(.*?)\)\s*\{", re.S)
 
 
@@ -112,10 +114,15 @@ def doc_above(lines, idx) -> str:
 def parse_modifiers(swift, lines):
     found = {}
     for m in MODIFIER_RE.finditer(swift):
-        name = m.group(1)
+        access = m.group(1)
+        # Skip non-public helpers (a `public extension`'s members are public when
+        # unannotated; an explicit `private`/`fileprivate`/`internal` is not API).
+        if access in ("private", "fileprivate", "internal"):
+            continue
+        name = m.group(2)
         if name in found:
             continue
-        params = re.sub(r"\s+", " ", m.group(2)).strip()
+        params = re.sub(r"\s+", " ", m.group(3)).strip()
         ln = swift.count("\n", 0, m.start())
         found[name] = {"name": name, "signature": f"{name}({params})", "doc": doc_above(lines, ln)}
     return found

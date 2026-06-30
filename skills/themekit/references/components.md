@@ -45,7 +45,7 @@
 - `OutlineButton`
 - `GhostButton`
 - `LinkButton`
-- `ThemeButton(title) { action }` · modifiers: `.variant() .color() .size() .shape() .fullWidth() .loading() .icon(leading:trailing:) .a11yID()`
+- `ThemeButton(title, action:)` · modifiers: `.variant()`, `.color()`, `.size()`, `.shape()`, `.fullWidth()`, `.loading()`, `.icon()`, `.a11yID()`
 - `CalendarView(selection:)` — Molecule.
 - `Checkbox(label, isChecked:, customSize:, type:, isIndeterminate:, alignment: …)` — Figma "Control Items" → Checkboxes. · modifiers: `.a11yID()`
 - `CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)` — Molecule. · modifiers: `.a11yID()`
@@ -55,7 +55,7 @@
 - `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
 - `ChipGroup` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
 - `ColorField(label, selection:, supportsOpacity:)` — Molecule.
-- `DateField(_ label:, date:)` — Molecule. · modifiers: `.placeholder() .range() .style() .locale() .components() .infoMessages() .clearable() .icon() .a11yID()`
+- `DateField(label, date:)` — Molecule. · modifiers: `.placeholder()`, `.range()`, `.style()`, `.locale()`, `.components()`, `.infoMessages()`, `.clearable()`, `.icon()`, `.a11yID()`
 - `Fieldset(title, helper:, @ViewBuilder:)` — Molecule.
 - `FileInput(label:, fileName:, buttonTitle:, placeholder:, infoMessages:, onPick:)` — Molecule.
 - `FilterGroup(title:, options:, selection:, label:)` — Molecule.
@@ -107,7 +107,7 @@
 - `ImageCollage(urls, height:, spacing:, cornerRadius:, onTap:)` — A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+) and a "+N" overlay on the last visible tile.
 - `InfoBanner(message, type:, title:, links:)` — Improved, token-bound rewrite of the reference InfoMessage.
 - `KeyValueTable(label, value:, style:)` — Organism.
-- `ListRow(total:, each:, unit:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view.
+- `ListRow(total:, each:, unit:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view. · modifiers: `.subtitle()`, `.number()`, `.size()`, `.icon()`, `.leadingImage()`, `.leadingSelection()`, `.alertCount()`, `.badge()`, `.meta()`, `.infos()`, `.selected()`, `.multilineTitle()`, `.trailing()`, `.onInfo()`
 - `ListSectionHeader` — A non-interactive section-header row inside a list (Reference menu `.secondary`).
 - `ListView(items, header:, footer:, bordered:, loading:, split: …)` — Ant-style List container: optional header/footer, bordered surface, row dividers (split), and a loading (skeleton) state.
 - `MenuCard(title:, subtitle:, systemImage:, action:)` — Organism.
@@ -131,6 +131,6 @@
 
 Set styling/variants/flags AFTER the init, SwiftUI-style:
 
-`.a11yID()` `.allowHalf()` `.arrows()` `.autoplay()` `.axis()` `.backButton()` `.badgeColor()` `.badgeShape()` `.barHeight()` `.clearable()` `.colors()` `.debounce()` `.density()` `.divider()` `.dots()` `.editable()` `.exists()` `.expands()` `.fade()` `.gradient()` `.hasInfo()` `.highlighted()` `.icon()` `.indicator()` `.inputs()` `.interactive()` `.jumper()` `.loading()` `.loop()` `.marks()` `.maxResults()` `.maxTags()` `.maxValue()` `.muteToggle()` `.muted()` `.number()` `.onChangeEnd()` `.onRate()` `.onReviewTap()` `.onSearch()` `.onValueChange()` `.progressLabel()` `.rating()` `.searchable()` `.sentiment()` `.showTotal()` `.showsValueTooltip()` `.simple()` `.starSize()` `.steps()` `.subtitle()` `.successSegment()` `.suggestionEnabled()` `.symbol()` `.tapToToggle()` `.titleSize()` `.trailingIcon()` `.truncateSubtitle()` `.valueFormat()` `.valueLabel()` `.window()`
+`.a11yID()` `.alertCount()` `.allowHalf()` `.arrows()` `.autoplay()` `.axis()` `.backButton()` `.badge()` `.badgeColor()` `.badgeShape()` `.barHeight()` `.clearable()` `.color()` `.colors()` `.components()` `.debounce()` `.density()` `.divider()` `.dots()` `.editable()` `.exists()` `.expands()` `.fade()` `.fullWidth()` `.gradient()` `.hasInfo()` `.highlighted()` `.icon()` `.indicator()` `.infoMessages()` `.infos()` `.inputs()` `.interactive()` `.jumper()` `.leadingImage()` `.leadingSelection()` `.loading()` `.locale()` `.loop()` `.marks()` `.maxResults()` `.maxTags()` `.maxValue()` `.meta()` `.multilineTitle()` `.muteToggle()` `.muted()` `.number()` `.onChangeEnd()` `.onInfo()` `.onRate()` `.onReviewTap()` `.onSearch()` `.onValueChange()` `.placeholder()` `.progressLabel()` `.range()` `.rating()` `.searchable()` `.selected()` `.sentiment()` `.shape()` `.showTotal()` `.showsValueTooltip()` `.simple()` `.size()` `.starSize()` `.steps()` `.style()` `.subtitle()` `.successSegment()` `.suggestionEnabled()` `.symbol()` `.tapToToggle()` `.titleSize()` `.trailing()` `.trailingIcon()` `.truncateSubtitle()` `.valueFormat()` `.valueLabel()` `.variant()` `.window()`
 
 Plus the native cross-cuts every control honors: `.disabled(_:)`, `.controlSize(_:)`, `.a11yID(_:)`.
