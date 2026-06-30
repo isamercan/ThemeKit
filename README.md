@@ -585,7 +585,7 @@ flagged — never silently dropped.
 ```text
 Card {
     VStack(spacing: Theme.SpacingKey.md.value) {
-        Badge("Sale", style: .error)
+        Badge("Sale").badgeStyle(.error)
         PrimaryButton("Continue") { }
         // ⚠️ unmapped: Mystery Widget (INSTANCE)
     }

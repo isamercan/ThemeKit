@@ -29,7 +29,7 @@ catalog, read [`references/themes.md`](references/themes.md).
 3. **Inject it once at the root:** `.environment(Theme.shared)`.
 4. **Set styling with chainable modifiers, not extra init args.** Required
    content/bindings/actions go in `init`; variants, sizes, flags, colors and
-   callbacks are modifiers — e.g. `Badge("New", style: .info).badgeShape(.rounded)`.
+   callbacks are modifiers — e.g. `Badge("New").badgeStyle(.info).badgeShape(.rounded)`.
 5. **Sizes use the native modifier:** `.controlSize(.small)` (not a `size:` arg).
    **Disabled state is native:** `.disabled(_:)` (not an `isEnabled:` arg).
 
@@ -84,7 +84,7 @@ The configurable ones take a `SemanticColor` + `FillVariant`, so brand/accent
 recolor for free:
 
 ```swift
-Badge("Sale", style: .error, variant: .solid)
+Badge("Sale").badgeStyle(.error).variant(.solid)
 Chip("Pool", isSelected: $on).icon("drop.fill")
 ThemeButton("Save") { save() }.color(.accent).variant(.solid)
 TextInput("Email", text: $email, leadingSystemImage: "envelope")
@@ -143,8 +143,8 @@ Card(title: "Sign up") {
 ## Anti-patterns (don't)
 
 - ❌ `.foregroundStyle(.blue)` / `Color(hex:)` in app UI → ✅ a theme token.
-- ❌ `Badge("x", size: .small)` → ✅ `Badge("x").controlSize(.small)` (or the
-  component's own size init where it has one — check `references/components.md`).
+- ❌ `Badge("x", size: .small)` → ✅ `Badge("x").size(.small)` (size/variant/style
+  are modifiers now — check `references/components.md` for each component's set).
 - ❌ `SomeControl(isEnabled: false)` → ✅ `SomeControl().disabled(true)`.
 - ❌ Re-implementing a Card/Sheet/Toast → ✅ use the existing component.
 - ❌ Hardcoded corner radius `cornerRadius: 12` → ✅ `Theme.RadiusRole.box.value`.

@@ -540,7 +540,7 @@ server.registerTool("a11y_audit", {
 const SCAFFOLDS: Record<string, string> = {
   form: `Card(title: "Sign up") {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    TextInput("Email", text: $email, leadingSystemImage: "envelope").a11yID("email")\n    TextInput("Password", text: $pw, isSecure: true).a11yID("pw")\n    Checkbox("Accept terms", isChecked: $agree)\n    PrimaryButton("Create account", block: true) { submit() }.disabled(!agree)\n  }\n}`,
   list: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.sm.value) {\n    ForEach(items) { item in Card { ListRow(title: item.title, subtitle: item.subtitle) } }\n  }.padding(Theme.SpacingKey.md.value)\n}.background(theme.background(.bgElevatorPrimary))`,
-  detail: `ScrollView {\n  VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {\n    Title("Detail")\n    HStack { Badge("Info", style: .info); Rating(value: 4.5) }\n    PrimaryButton("Continue", block: true) {}\n  }.padding(Theme.SpacingKey.lg.value)\n}`,
+  detail: `ScrollView {\n  VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {\n    Title("Detail")\n    HStack { Badge("Info").badgeStyle(.info); Rating(value: 4.5) }\n    PrimaryButton("Continue", block: true) {}\n  }.padding(Theme.SpacingKey.lg.value)\n}`,
   settings: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    Card(title: "Preferences") { ToggleGroup { ThemeToggle(isOn: $notify) } }\n    Card(title: "Theme") { ThemePicker(selection: $active) }\n  }.padding(Theme.SpacingKey.md.value)\n}`,
 };
 server.registerTool("scaffold_screen", {
