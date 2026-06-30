@@ -150,7 +150,7 @@ enum ComponentRegistry {
                 Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
             }
         },
-        .knob("Timeline", .organisms, demo: TimelineDemo(), usage: #"Timeline([.init(title: "Placed", state: .done, color: .success)], pending: "Awaiting…")"#),
+        .knob("Timeline", .organisms, demo: TimelineDemo(), usage: #"Timeline([.init(title: "Placed", state: .done, color: .success)]).pending("Awaiting…")"#),
         .knob("Coupon", .organisms, demo: CouponDemo(), usage: #"Coupon(code: "UXMUQ", style: .outlined, onCopy: { })"#),
         .knob("EmptyState", .organisms, demo: EmptyStateDemo(), usage: #"EmptyState("Empty").icon("tray").message("…").primaryAction("Retry") { }"#),
         .knob("Feedback", .organisms, demo: FeedbackDemo(), usage: #"@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter\nfeedback.toast("Saved", kind: .success)              // stacks\nfeedback.toast("Deleted", action: ToastAction("Undo") { }, duration: nil)\nawait feedback.toastTask(loading: "Saving…", success: "Saved") { try await save() }\n// install once: .feedbackHost(maxVisibleToasts: 3, toastPosition: .bottom)"#),

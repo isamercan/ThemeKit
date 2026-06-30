@@ -863,8 +863,9 @@ struct TimelineDemo: View {
                 failed
                     ? .init(title: "Error", time: "09:45", description: horizontal ? nil : "Try your card again.", state: .error)
                     : .init(title: "On the way", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
-            ], axis: horizontal ? .horizontal : .vertical, mode: mode, reverse: reverse,
-               pending: (!horizontal && pending) ? "Waiting for courier…" : nil)
+            ])
+            .axis(horizontal ? .horizontal : .vertical).mode(mode).reversed(reverse)
+            .pending((!horizontal && pending) ? "Waiting for courier…" : nil)
         } knobs: {
             Stepper("Active: \(Int(step))", value: $step, in: 0...3)
             Toggle("Horizontal", isOn: $horizontal)

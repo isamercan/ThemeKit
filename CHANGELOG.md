@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Timeline` init reduced to `Timeline(_ items:)`.** The 4 layout/state
+  parameters moved to modifiers: `axis:`→`.axis(_:)`, `mode:`→`.mode(_:)`,
+  `reverse:`→`.reversed(_ on:)`, `pending:`→`.pending(_:)`. Migration:
+  `Timeline(items, axis: .horizontal, mode: .alternate, reverse: true, pending: "Awaiting…")`
+  → `Timeline(items).axis(.horizontal).mode(.alternate).reversed().pending("Awaiting…")`.
+  (`Timeline.Item` is unchanged.)
 - **`PromoBanner` init reduced to `PromoBanner(_ title:action:)`.** The 4 other
   parameters moved to modifiers: `subtitle:`→`.subtitle(_:)`,
   `systemImage:`→`.icon(_:)`, `ctaTitle:`→`.ctaTitle(_:)` (renders only when

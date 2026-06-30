@@ -295,7 +295,7 @@ final class ScreenshotGenerator: XCTestCase {
                                                  TabItem("Location")], selection: .constant(1)).frame(width: 340))
         shot("Timeline", Timeline([.init(title: "Order received", time: "09:24", systemImage: "cart", state: .done, color: .success),
                                    .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .active),
-                                   .init(title: "On the way", state: .todo)], pending: "Waiting for courier…").frame(width: 320))
+                                   .init(title: "On the way", state: .todo)]).pending("Waiting for courier…").frame(width: 320))
         shot("Upload", Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
                               files: [.init(name: "room-1.jpg", status: .done),
                                       .init(name: "room-2.jpg", status: .uploading(0.6))], maxCount: 3,
