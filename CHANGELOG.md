@@ -20,6 +20,15 @@ component-by-component.
   `onClose:`→`.onClose(_:)`. Migration:
   `AlertToast("Saved", type: .success, onClose: { })`
   → `AlertToast("Saved").variant(.success).onClose { }`.
+- **`Avatar` init reduced to `Avatar(_ content:)`.** Both inits (size-tier and
+  numeric `dimension:`) removed. The config params moved to modifiers:
+  `size:`→`.size(_:)`, `dimension:`→`.dimension(_:)`,
+  `background:`→`.fillColor(_:)` (renamed to avoid clashing with SwiftUI's
+  `.background`), `shape:`→`.shape(_:)`,
+  `presence:`/`presencePulse:`→`.presence(_ kind:pulse:)` (grouped). Migration:
+  `Avatar(.initials("AB"), size: .lg, background: .dark, shape: .square)`
+  → `Avatar(.initials("AB")).size(.lg).fillColor(.dark).shape(.square)`.
+  (`AvatarGroup` is unchanged.)
 - **`ThemeButton` init reduced to `ThemeButton(_ title:action:)`.** All
   appearance/state parameters moved to modifiers:
   `color:` → `.color(_:)`, `variant:` → `.variant(_:)`, `size:` → `.size(_:)`,

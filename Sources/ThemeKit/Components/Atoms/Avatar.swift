@@ -50,46 +50,16 @@ public struct Avatar: View {
     @Environment(\.theme) private var theme
 
     private let content: AvatarContent
-    private let size: AvatarSize
-    private let customDimension: CGFloat?
-    private let background: AvatarBackground
-    private let shape: AvatarShape
-    private let presence: StatusKind?
-    private let presencePulse: Bool
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var size: AvatarSize = .md
+    private var customDimension: CGFloat?
+    private var background: AvatarBackground = .blue
+    private var shape: AvatarShape = .circle
+    private var presence: StatusKind?
+    private var presencePulse: Bool = false
 
-    public init(
-        _ content: AvatarContent,
-        size: AvatarSize = .md,
-        background: AvatarBackground = .blue,
-        shape: AvatarShape = .circle,
-        presence: StatusKind? = nil,
-        presencePulse: Bool = false
-    ) {
+    public init(_ content: AvatarContent) {   // R1 — content only
         self.content = content
-        self.size = size
-        self.customDimension = nil
-        self.background = background
-        self.shape = shape
-        self.presence = presence
-        self.presencePulse = presencePulse
-    }
-
-    /// Arbitrary point-size avatar (Ant numeric `size`), overriding the enum tiers.
-    public init(
-        _ content: AvatarContent,
-        dimension: CGFloat,
-        background: AvatarBackground = .blue,
-        shape: AvatarShape = .circle,
-        presence: StatusKind? = nil,
-        presencePulse: Bool = false
-    ) {
-        self.content = content
-        self.size = .md
-        self.customDimension = dimension
-        self.background = background
-        self.shape = shape
-        self.presence = presence
-        self.presencePulse = presencePulse
     }
 
     private var dim: CGFloat { customDimension ?? size.dimension }
@@ -148,6 +118,34 @@ public struct Avatar: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Avatar {
+    /// Size tier: xs / sm / md / lg (Figma 24/32/40/48).
+    func size(_ s: AvatarSize) -> Self { copy { $0.size = s } }
+
+    /// Arbitrary point-size avatar (Ant numeric `size`), overriding the size tier.
+    func dimension(_ points: CGFloat) -> Self { copy { $0.customDimension = points } }
+
+    /// Surface fill behind the icon/initials (renamed from `background:` to avoid
+    /// clashing with SwiftUI's `.background`, R5).
+    func fillColor(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
+
+    /// Circle (default) or rounded square.
+    func shape(_ s: AvatarShape) -> Self { copy { $0.shape = s } }
+
+    /// Corner presence dot (online / away / busy …); `nil` hides it.
+    func presence(_ kind: StatusKind?, pulse: Bool = false) -> Self {
+        copy { $0.presence = kind; $0.presencePulse = pulse }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 /// Overlapping stack of avatars with a "+N" overflow bubble. (Ant Avatar.Group.)
 public struct AvatarGroup: View {
     @Environment(\.theme) private var theme
@@ -169,11 +167,11 @@ public struct AvatarGroup: View {
     public var body: some View {
         HStack(spacing: -size.dimension * 0.35) {
             ForEach(Array(avatars.prefix(max).enumerated()), id: \.offset) { _, content in
-                Avatar(content, size: size, background: background)
+                Avatar(content).size(size).fillColor(background)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
             if overflow > 0 {
-                Avatar(.initials("+\(overflow)"), size: size, background: .dark)
+                Avatar(.initials("+\(overflow)")).size(size).fillColor(.dark)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
         }
@@ -184,8 +182,8 @@ public struct AvatarGroup: View {
     VStack(alignment: .leading, spacing: 16) {
         HStack(spacing: 12) {
             Avatar(.icon("person.fill"))
-            Avatar(.initials("AB"), background: .dark, shape: .square)
-            Avatar(.icon("building.2.fill"), shape: .square)
+            Avatar(.initials("AB")).fillColor(.dark).shape(.square)
+            Avatar(.icon("building.2.fill")).shape(.square)
         }
         AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], max: 4)
     }
@@ -195,8 +193,8 @@ public struct AvatarGroup: View {
 #Preview("States") {
     PreviewMatrix("Avatar") {
         PreviewCase("Icon")     { Avatar(.icon("person.fill")) }
-        PreviewCase("Initials") { Avatar(.initials("AB"), background: .dark, shape: .square) }
-        PreviewCase("Building") { Avatar(.icon("building.2.fill"), shape: .square) }
+        PreviewCase("Initials") { Avatar(.initials("AB")).fillColor(.dark).shape(.square) }
+        PreviewCase("Building") { Avatar(.icon("building.2.fill")).shape(.square) }
         PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")], max: 3) }
     }
 }

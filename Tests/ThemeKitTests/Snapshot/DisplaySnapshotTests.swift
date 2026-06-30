@@ -21,10 +21,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testAvatar_contentAndSizes() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                Avatar(.initials("AB"), size: .sm)
-                Avatar(.initials("CD"), size: .md)
-                Avatar(.icon("person.fill"), size: .lg)
-                Avatar(.icon("person.fill"), size: .lg, background: .dark, shape: .square)
+                Avatar(.initials("AB")).size(.sm)
+                Avatar(.initials("CD")).size(.md)
+                Avatar(.icon("person.fill")).size(.lg)
+                Avatar(.icon("person.fill")).size(.lg).fillColor(.dark).shape(.square)
             }
         )
     }

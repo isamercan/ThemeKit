@@ -26,3 +26,5 @@ API breakage: constructor Checkbox.init(_:isChecked:customSize:type:isIndetermin
 API breakage: constructor MultiLineTextInput.init(_:text:placeholder:characterLimit:errorText:infoMessages:minHeight:) has been removed
 API breakage: constructor ProgressIndicator.init(variant:current:total:size:videoProgress:stepText:cornerRadius:) has been removed
 API breakage: constructor AlertToast.init(_:message:type:systemImage:isLoading:action:onClose:) has been removed
+API breakage: constructor Avatar.init(_:size:background:shape:presence:presencePulse:) has been removed
+API breakage: constructor Avatar.init(_:dimension:background:shape:presence:presencePulse:) has been removed

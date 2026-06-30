@@ -58,7 +58,7 @@ public struct ChatBubble: View {
     @ViewBuilder
     private var avatar: some View {
         if let avatarSystemImage {
-            Avatar(.icon(avatarSystemImage), size: .sm, background: side == .incoming ? .blue : .dark)
+            Avatar(.icon(avatarSystemImage)).size(.sm).fillColor(side == .incoming ? .blue : .dark)
         }
     }
 }

@@ -88,9 +88,9 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func atoms() {
         shot("Avatar", HStack(spacing: 12) {
-            Avatar(.initials("CD"), size: .lg, presence: .online)
-            Avatar(.initials("AB"), size: .md)
-            Avatar(.icon("person.fill"), size: .md)
+            Avatar(.initials("CD")).size(.lg).presence(.online)
+            Avatar(.initials("AB")).size(.md)
+            Avatar(.icon("person.fill")).size(.md)
         })
         shot("Badge", HStack(spacing: 8) {
             Badge("Success", style: .success)

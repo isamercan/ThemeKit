@@ -31,9 +31,9 @@ struct AvatarDemo: View {
             if group {
                 AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], size: size, max: 4)
             } else if numeric > 0 {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), dimension: numeric, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             } else {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), size: size, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             }
         } knobs: {
             Picker("Presence", selection: $presenceIdx) {
