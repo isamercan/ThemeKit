@@ -1,12 +1,11 @@
 - [[Home]]
-- [[Kurulum|Installation]]
-- [[SSS|FAQ]]
-- [[Sorun Giderme|Troubleshooting]]
+- [[Installation]]
+- [[FAQ]]
+- [[Troubleshooting]]
 - [[Versions and Releases|Versions-and-Releases]]
 - [[Roadmap]]
 - [[Contributing]]
 
 ---
 
-📖 DocC docs: build locally
-(`preview-documentation`)
+📖 [DocC docs](https://isamercan.github.io/ThemeKit/documentation/themekit)

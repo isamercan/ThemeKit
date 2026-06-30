@@ -1,3 +1,3 @@
 [Repo](https://github.com/isamercan/ThemeKit) ·
-DocC docs: build locally (`preview-documentation`) ·
+[Docs](https://isamercan.github.io/ThemeKit/documentation/themekit) ·
 MIT License
