@@ -337,13 +337,13 @@ struct InputNumberDemo: View {
     var body: some View {
         ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
             if priceMode {
-                InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "$",
-                            hint: "Type or step by 50", large: large)
+                InputNumber("Max price", value: $value, range: 0...10000).step(50).unit("$")
+                    .hint("Type or step by 50").large(large)
                     .editable(editable)
             } else {
-                InputNumber(label: "Guests", value: $value, range: 1...9, unit: "guests",
-                            hint: showError ? nil : "Type a number or use ± ",
-                            errorText: showError ? "Too many" : nil, large: large)
+                InputNumber("Guests", value: $value, range: 1...9).unit("guests")
+                    .hint(showError ? nil : "Type a number or use ± ")
+                    .errorText(showError ? "Too many" : nil).large(large)
                     .editable(editable)
             }
         } knobs: {

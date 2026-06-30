@@ -37,7 +37,7 @@ struct HotelSearchView: View {
                                 DateField("Check-out", date: $checkOut)
                                     .style(.custom("EEE, d MMM")).clearable().icon("calendar")
                             }
-                            InputNumber(label: "Guests", value: $guests, range: 1...9, large: true)
+                            InputNumber("Guests", value: $guests, range: 1...9).large()
                         }
                     }
 

@@ -59,6 +59,14 @@ component-by-component.
   SwiftUI's `.accessibilityLabel`). Migration:
   `RadialProgress(value: 0.7, size: 80, lineWidth: 8, dashboard: true)`
   → `RadialProgress(0.7).size(80).lineWidth(8).dashboard()`.
+- **`InputNumber` init reduced to `InputNumber(_ label:value:range:)`.** The 5
+  remaining init parameters moved to modifiers: `step:`→`.step(_:)`,
+  `unit:`→`.unit(_:)`, `hint:`→`.hint(_:)`, `errorText:`→`.errorText(_:)`,
+  `large:`→`.large(_ on:)`. (`.editable/.hasInfo/.onValueChange/.a11yID` were
+  already modifiers; they now route through the shared copy-on-write helper.)
+  Migration:
+  `InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "$")`
+  → `InputNumber("Max price", value: $n, range: 0...10000).step(50).unit("$")`.
 
 ## [0.2.0] - 2026-06-28
 
