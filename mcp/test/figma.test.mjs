@@ -17,9 +17,9 @@ test("maps a button instance to the real PrimaryButton API", () => {
   assert.match(code, /PrimaryButton\("Continue"\)\s*\{\s*\}/);
 });
 
-test("maps Badge/Error → Badge(style: .error)", () => {
+test("maps Badge/Error → Badge(...).badgeStyle(.error)", () => {
   const { code } = generate(node, mapping, data.tokens, apis);
-  assert.match(code, /Badge\("Sale", style: \.error\)/);
+  assert.match(code, /Badge\("Sale"\)\.badgeStyle\(\.error\)/);
 });
 
 test("wraps the frame in a Card", () => {

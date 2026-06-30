@@ -126,12 +126,23 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
         const val = src === "{text}" ? `"${textOf(node).replace(/"/g, "'")}"` : src === "{label}" ? `"${node.name}"` : src;
         args.push(label === "_" ? val : `${label}: ${val}`);
       }
+      const styleMods: string[] = [];
       if (match.produce.styleFromNameSegment != null) {
         const seg = node.name.split("/")[match.produce.styleFromNameSegment]?.toLowerCase();
-        if (seg) args.push(`style: .${seg}`);
+        if (seg) {
+          if (match.produce.styleModifier) {
+            // Refactored API: the style axis is a chainable modifier, not an init arg.
+            styleMods.push(`.${match.produce.styleModifier}(.${seg})`);
+          } else if (!api || api.params.some((p) => p.label === "style")) {
+            args.push(`style: .${seg}`);
+          } else {
+            report.needsReview.push(`${node.name}: ${match.component} has no "style" init param — set the style via its modifier.`);
+          }
+        }
       }
       let call = `${match.component}(${args.join(", ")})`;
       if (match.produce.trailingClosure) call += ` { }`;
+      call += styleMods.join("");
       call += stateModifiers(node, match.produce, report).join("");
       // Raw SwiftUI Text (heuristic) — snap its fill to a token color instead of leaving it bare.
       if (match.component === "Text") call += textColorMod(node);

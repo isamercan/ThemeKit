@@ -6,6 +6,21 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-06-30
+
+Fixes stale catalog data after the library's modifier-based refactor.
+
+### Fixed
+- **Regenerated `data/themekit.json`** from the post-refactor symbol graph (117
+  components, 164 modifiers). The previous data still described the old
+  initializer-heavy APIs (e.g. `ThemeButton(color:variant:size:…)`,
+  `Badge(style:…)`) that the refactor removed — the MCP would have generated code
+  against deleted initializers.
+- **Figma codegen no longer emits a removed `style:` init arg.** A new mapping
+  option `styleModifier` (e.g. `"badgeStyle"`) routes the style axis to the
+  chainable modifier (`Badge("Sale").badgeStyle(.error)`), matching the refactored
+  API; the old `style:` init path is kept only when the component still declares it.
+
 ## [2.4.0] - 2026-06-30
 
 Accessibility moves to the design source: `figma_to_swiftui` now runs a WCAG 2.1

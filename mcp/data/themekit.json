@@ -113,51 +113,46 @@
       "name": "AlertToast",
       "category": "Organisms",
       "doc": "Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner).",
-      "init": "init(_ title: String, message: String? = nil, type: AlertToastType = .info, systemImage: String? = nil, isLoading: Bool = false, action: ToastAction? = nil, onClose: (() -> Void)? = nil)",
+      "init": "init(_ title: String)",
       "params": [
         {
           "label": "_",
           "name": "title",
           "type": "String"
-        },
-        {
-          "label": "message",
-          "name": "message",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "type",
-          "name": "type",
-          "type": "AlertToastType",
-          "default": ".info"
-        },
-        {
-          "label": "systemImage",
-          "name": "systemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "isLoading",
-          "name": "isLoading",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "action",
-          "name": "action",
-          "type": "ToastAction?",
-          "default": "nil"
-        },
-        {
-          "label": "onClose",
-          "name": "onClose",
-          "type": "(() -> Void)?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "action(_:)",
+          "signature": ".action(_ action: ToastAction?) -> AlertToast",
+          "doc": "Inline tappable action (e.g."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemName: String?) -> AlertToast",
+          "doc": "Override the leading status glyph (otherwise derived from the variant)."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> AlertToast",
+          "doc": "Swap the leading icon for an activity spinner while `on`."
+        },
+        {
+          "name": "message(_:)",
+          "signature": ".message(_ text: String?) -> AlertToast",
+          "doc": "Secondary line under the title."
+        },
+        {
+          "name": "onClose(_:)",
+          "signature": ".onClose(_ handler: (() -> Void)?) -> AlertToast",
+          "doc": "Trailing dismiss button; the handler is invoked on tap."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ v: AlertToastType) -> AlertToast",
+          "doc": "Status treatment: success / warning / danger / info (drives fill + icon)."
+        }
+      ],
       "usage": "AlertToast(\"title\")"
     },
     {
@@ -191,7 +186,7 @@
       "name": "Autocomplete",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })",
+      "init": "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Search\", onSelect: @escaping (String) -> Void = { _ in })",
       "params": [
         {
           "label": "label",
@@ -208,12 +203,12 @@
           "label": "suggest",
           "name": "suggest",
           "type": "@escaping nonisolated(nonsending) (String) async -> [String], placeholder: String",
-          "default": "\"Ara\", onSelect: @escaping (String) -> Void = { _ in }"
+          "default": "\"Search\", onSelect: @escaping (String) -> Void = { _ in }"
         }
       ],
       "inits": [
-        "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })",
-        "init(label: String? = nil, text: Binding<String>, suggestions: [String], placeholder: String = \"Ara\", onSelect: @escaping (String) -> Void = { _ in })"
+        "init(label: String? = nil, text: Binding<String>, suggest: @escaping nonisolated(nonsending) (String) async -> [String], placeholder: String = \"Search\", onSelect: @escaping (String) -> Void = { _ in })",
+        "init(label: String? = nil, text: Binding<String>, suggestions: [String], placeholder: String = \"Search\", onSelect: @escaping (String) -> Void = { _ in })"
       ],
       "modifiers": [
         {
@@ -248,49 +243,41 @@
       "name": "Avatar",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(_ content: AvatarContent, size: AvatarSize = .md, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)",
+      "init": "init(_ content: AvatarContent)",
       "params": [
         {
           "label": "_",
           "name": "content",
           "type": "AvatarContent"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "AvatarSize",
-          "default": ".md"
-        },
-        {
-          "label": "background",
-          "name": "background",
-          "type": "AvatarBackground",
-          "default": ".blue"
-        },
-        {
-          "label": "shape",
-          "name": "shape",
-          "type": "AvatarShape",
-          "default": ".circle"
-        },
-        {
-          "label": "presence",
-          "name": "presence",
-          "type": "StatusKind?",
-          "default": "nil"
-        },
-        {
-          "label": "presencePulse",
-          "name": "presencePulse",
-          "type": "Bool",
-          "default": "false"
         }
       ],
-      "inits": [
-        "init(_ content: AvatarContent, size: AvatarSize = .md, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)",
-        "init(_ content: AvatarContent, dimension: CGFloat, background: AvatarBackground = .blue, shape: AvatarShape = .circle, presence: StatusKind? = nil, presencePulse: Bool = false)"
+      "modifiers": [
+        {
+          "name": "dimension(_:)",
+          "signature": ".dimension(_ points: CGFloat) -> Avatar",
+          "doc": "Arbitrary point-size avatar (Ant numeric `size`), overriding the size tier."
+        },
+        {
+          "name": "fillColor(_:)",
+          "signature": ".fillColor(_ b: AvatarBackground) -> Avatar",
+          "doc": "Surface fill behind the icon/initials (renamed from `background:` to avoid clashing with SwiftUI's `.background`, R5)."
+        },
+        {
+          "name": "presence(_:pulse:)",
+          "signature": ".presence(_ kind: StatusKind?, pulse: Bool = false) -> Avatar",
+          "doc": "Corner presence dot (online / away / busy …); `nil` hides it."
+        },
+        {
+          "name": "shape(_:)",
+          "signature": ".shape(_ s: AvatarShape) -> Avatar",
+          "doc": "Circle (default) or rounded square."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: AvatarSize) -> Avatar",
+          "doc": "Size tier: xs / sm / md / lg (Figma 24/32/40/48)."
+        }
       ],
-      "modifiers": [],
       "usage": "Avatar(<AvatarContent>)"
     },
     {
@@ -330,36 +317,12 @@
       "name": "Badge",
       "category": "Atoms",
       "doc": "Improved, token-bound rewrite of the reference BadgeView.",
-      "init": "init(_ text: String, style: BadgeStyle = .neutral, variant: FillVariant = .soft, size: BadgeSize = .medium, leadingSystemImage: String? = nil, action: (() -> Void)? = nil)",
+      "init": "init(_ text: String, action: (() -> Void)? = nil)",
       "params": [
         {
           "label": "_",
           "name": "text",
           "type": "String"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "BadgeStyle",
-          "default": ".neutral"
-        },
-        {
-          "label": "variant",
-          "name": "variant",
-          "type": "FillVariant",
-          "default": ".soft"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "BadgeSize",
-          "default": ".medium"
-        },
-        {
-          "label": "leadingSystemImage",
-          "name": "leadingSystemImage",
-          "type": "String?",
-          "default": "nil"
         },
         {
           "label": "action",
@@ -380,6 +343,11 @@
           "doc": "Pill (default) or rounded-rectangle outline."
         },
         {
+          "name": "badgeStyle(_:)",
+          "signature": ".badgeStyle(_ s: BadgeStyle) -> Badge",
+          "doc": "Semantic style (system + brand variants) driving fill/foreground/border (renamed from the bare `style:` to avoid the generic clash + match `BadgeStyle`)."
+        },
+        {
           "name": "gradient(_:)",
           "signature": ".gradient(_ colors: [Color]?) -> Badge",
           "doc": "Fills the badge with a horizontal gradient instead of the style background."
@@ -390,9 +358,24 @@
           "doc": "Lifts the badge off the surface with a subtle drop shadow."
         },
         {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemName: String?) -> Badge",
+          "doc": "Leading SF Symbol before the text."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: BadgeSize) -> Badge",
+          "doc": "Size tier: small / medium / large / xlarge."
+        },
+        {
           "name": "trailingIcon(_:)",
           "signature": ".trailingIcon(_ systemName: String?) -> Badge",
           "doc": "A trailing SF Symbol after the text (e.g."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ v: FillVariant) -> Badge",
+          "doc": "Fill treatment: soft / solid / outline / ghost."
         }
       ],
       "usage": "Badge(\"text\")"
@@ -497,45 +480,41 @@
       "name": "Callout",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(_ text: String, type: CalloutType = .info, style: CalloutStyle = .plain, showIcon: Bool = true, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onClose: (() -> Void)? = nil)",
+      "init": "init(_ text: String)",
       "params": [
         {
           "label": "_",
           "name": "text",
           "type": "String"
-        },
-        {
-          "label": "type",
-          "name": "type",
-          "type": "CalloutType",
-          "default": ".info"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "CalloutStyle",
-          "default": ".plain"
-        },
-        {
-          "label": "showIcon",
-          "name": "showIcon",
-          "type": "Bool",
-          "default": "true"
-        },
-        {
-          "label": "actionTitle",
-          "name": "actionTitle",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "onAction",
-          "name": "onAction",
-          "type": "(() -> Void)?",
-          "default": "nil, onClose: (() -> Void)? = nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "action(_:onAction:)",
+          "signature": ".action(_ title: String, onAction: @escaping () -> Void) -> Callout",
+          "doc": "Trailing inline action button (title + handler)."
+        },
+        {
+          "name": "calloutStyle(_:)",
+          "signature": ".calloutStyle(_ s: CalloutStyle) -> Callout",
+          "doc": "Surface treatment: plain (transparent) or soft (light tinted surface)."
+        },
+        {
+          "name": "onClose(_:)",
+          "signature": ".onClose(_ action: (() -> Void)?) -> Callout",
+          "doc": "Trailing dismiss (×) button handler."
+        },
+        {
+          "name": "showsIcon(_:)",
+          "signature": ".showsIcon(_ on: Bool = true) -> Callout",
+          "doc": "Show or hide the leading status icon."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ t: CalloutType) -> Callout",
+          "doc": "Semantic status: neutral / info / success / warning / error (drives accent + icon)."
+        }
+      ],
       "usage": "Callout(\"text\")"
     },
     {
@@ -665,18 +644,12 @@
       "name": "ChatBubble",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(_ text: String, side: ChatSide = .incoming, author: String? = nil, time: String? = nil, avatarSystemImage: String? = nil)",
+      "init": "init(_ text: String, author: String? = nil, time: String? = nil)",
       "params": [
         {
           "label": "_",
           "name": "text",
           "type": "String"
-        },
-        {
-          "label": "side",
-          "name": "side",
-          "type": "ChatSide",
-          "default": ".incoming"
         },
         {
           "label": "author",
@@ -689,22 +662,27 @@
           "name": "time",
           "type": "String?",
           "default": "nil"
-        },
-        {
-          "label": "avatarSystemImage",
-          "name": "avatarSystemImage",
-          "type": "String?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> ChatBubble",
+          "doc": "Leading/trailing avatar SF Symbol (positioned by `side`)."
+        },
+        {
+          "name": "side(_:)",
+          "signature": ".side(_ s: ChatSide) -> ChatBubble",
+          "doc": "Conversation side: incoming (leading) / outgoing (trailing)."
+        }
+      ],
       "usage": "ChatBubble(\"text\")"
     },
     {
       "name": "Checkbox",
       "category": "Molecules",
       "doc": "Figma \"Control Items\" → Checkboxes.",
-      "init": "init(_ label: String? = nil, isChecked: Binding<Bool>, customSize: CGFloat? = nil, type: CheckboxType = .plain, isIndeterminate: Bool = false, alignment: VerticalAlignment = .center, infoMessages: [InfoMessage] = [])",
+      "init": "init(_ label: String? = nil, isChecked: Binding<Bool>, infoMessages: [InfoMessage] = [])",
       "params": [
         {
           "label": "_",
@@ -718,30 +696,6 @@
           "type": "Binding<Bool>"
         },
         {
-          "label": "customSize",
-          "name": "customSize",
-          "type": "CGFloat?",
-          "default": "nil"
-        },
-        {
-          "label": "type",
-          "name": "type",
-          "type": "CheckboxType",
-          "default": ".plain"
-        },
-        {
-          "label": "isIndeterminate",
-          "name": "isIndeterminate",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "alignment",
-          "name": "alignment",
-          "type": "VerticalAlignment",
-          "default": ".center"
-        },
-        {
           "label": "infoMessages",
           "name": "infoMessages",
           "type": "[InfoMessage]",
@@ -753,6 +707,26 @@
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> Checkbox",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "alignment(_:)",
+          "signature": ".alignment(_ a: VerticalAlignment) -> Checkbox",
+          "doc": "Vertical alignment of the box against a multi-line label."
+        },
+        {
+          "name": "customSize(_:)",
+          "signature": ".customSize(_ side: CGFloat?) -> Checkbox",
+          "doc": "Overrides the box side length, bypassing the native `.controlSize` metric."
+        },
+        {
+          "name": "indeterminate(_:)",
+          "signature": ".indeterminate(_ on: Bool = true) -> Checkbox",
+          "doc": "Renders the indeterminate (mixed) state instead of a checkmark."
+        },
+        {
+          "name": "type(_:)",
+          "signature": ".type(_ t: CheckboxType) -> Checkbox",
+          "doc": "Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`."
         }
       ],
       "usage": "Checkbox($isChecked)"
@@ -761,7 +735,7 @@
       "name": "CheckboxCard",
       "category": "Organisms",
       "doc": "",
-      "init": "init(_ title: String, description: String? = nil, isChecked: Bool, isEnabled: Bool = true, action: @escaping () -> Void)",
+      "init": "init(_ title: String, description: String? = nil, isChecked: Bool, action: @escaping () -> Void)",
       "params": [
         {
           "label": "_",
@@ -778,12 +752,6 @@
           "label": "isChecked",
           "name": "isChecked",
           "type": "Bool"
-        },
-        {
-          "label": "isEnabled",
-          "name": "isEnabled",
-          "type": "Bool",
-          "default": "true"
         },
         {
           "label": "action",
@@ -848,7 +816,7 @@
       "name": "Chip",
       "category": "Atoms",
       "doc": "Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix.",
-      "init": "init(_ title: String, isSelected: Binding<Bool>, size: ChipSize = .small, selectionStyle: ChipSelectionStyle = .tonal)",
+      "init": "init(_ title: String, isSelected: Binding<Bool>)",
       "params": [
         {
           "label": "_",
@@ -859,21 +827,14 @@
           "label": "isSelected",
           "name": "isSelected",
           "type": "Binding<Bool>"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "ChipSize",
-          "default": ".small"
-        },
-        {
-          "label": "selectionStyle",
-          "name": "selectionStyle",
-          "type": "ChipSelectionStyle",
-          "default": ".tonal"
         }
       ],
       "modifiers": [
+        {
+          "name": "chipStyle(_:)",
+          "signature": ".chipStyle(_ s: ChipSelectionStyle) -> Chip",
+          "doc": "How a selected chip is filled: tonal / solid."
+        },
         {
           "name": "exists(_:)",
           "signature": ".exists(_ on: Bool = true) -> Chip",
@@ -898,6 +859,11 @@
           "name": "rating(_:)",
           "signature": ".rating(_ value: Double?) -> Chip",
           "doc": "A leading star + numeric rating before the title."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: ChipSize) -> Chip",
+          "doc": "Control size: small / large."
         }
       ],
       "usage": "Chip(\"title\", $isSelected)"
@@ -1075,7 +1041,7 @@
       "name": "Coupon",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(code: String, label: String = \"Kupon Kodu:\", style: CouponStyle = .outlined, onCopy: @escaping () -> Void = {})",
+      "init": "init(code: String, label: String = \"Kupon Kodu:\", onCopy: @escaping () -> Void = {})",
       "params": [
         {
           "label": "code",
@@ -1089,19 +1055,19 @@
           "default": "\"Kupon Kodu:\""
         },
         {
-          "label": "style",
-          "name": "style",
-          "type": "CouponStyle",
-          "default": ".outlined"
-        },
-        {
           "label": "onCopy",
           "name": "onCopy",
           "type": "@escaping () -> Void",
           "default": "{}"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "couponStyle(_:)",
+          "signature": ".couponStyle(_ s: CouponStyle) -> Coupon",
+          "doc": "Visual treatment: filled / outlined (dashed) / plain."
+        }
+      ],
       "usage": "Coupon(code: \"code\")"
     },
     {
@@ -1158,10 +1124,10 @@
       "name": "DateField",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(label: String? = nil, date: Binding<Date?>, placeholder: String = String(themeKit: \"Select a date\"), range: ClosedRange<Date>? = nil, style: DateFieldStyle = .abbreviated, locale: Locale? = nil, components: DateFieldComponents = .date, infoMessages: [InfoMessage] = [], allowClear: Bool = false, leadingSystemImage: String? = nil)",
+      "init": "init(_ label: String? = nil, date: Binding<Date?>)",
       "params": [
         {
-          "label": "label",
+          "label": "_",
           "name": "label",
           "type": "String?",
           "default": "nil"
@@ -1170,61 +1136,53 @@
           "label": "date",
           "name": "date",
           "type": "Binding<Date?>"
-        },
-        {
-          "label": "placeholder",
-          "name": "placeholder",
-          "type": "String",
-          "default": "String(themeKit: \"Select a date\")"
-        },
-        {
-          "label": "range",
-          "name": "range",
-          "type": "ClosedRange<Date>?",
-          "default": "nil"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "DateFieldStyle",
-          "default": ".abbreviated"
-        },
-        {
-          "label": "locale",
-          "name": "locale",
-          "type": "Locale?",
-          "default": "nil"
-        },
-        {
-          "label": "components",
-          "name": "components",
-          "type": "DateFieldComponents",
-          "default": ".date"
-        },
-        {
-          "label": "infoMessages",
-          "name": "infoMessages",
-          "type": "[InfoMessage]",
-          "default": "[]"
-        },
-        {
-          "label": "allowClear",
-          "name": "allowClear",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "leadingSystemImage",
-          "name": "leadingSystemImage",
-          "type": "String?",
-          "default": "nil"
         }
       ],
       "modifiers": [
         {
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> DateField",
-          "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+          "doc": "Stable accessibility identifier, forwarded to the kit's a11y infrastructure."
+        },
+        {
+          "name": "clearable(_:)",
+          "signature": ".clearable(_ on: Bool = true) -> DateField",
+          "doc": "Show a trailing clear button when a date is set."
+        },
+        {
+          "name": "components(_:)",
+          "signature": ".components(_ components: DateFieldComponents) -> DateField",
+          "doc": "Which components the field shows and the picker edits (date / dateAndTime / time)."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> DateField",
+          "doc": "Leading SF Symbol shown inside the field."
+        },
+        {
+          "name": "infoMessages(_:)",
+          "signature": ".infoMessages(_ messages: [InfoMessage]) -> DateField",
+          "doc": "Validation / info messages rendered under the field (drives the border state)."
+        },
+        {
+          "name": "locale(_:)",
+          "signature": ".locale(_ locale: Locale?) -> DateField",
+          "doc": "Override the formatting locale (defaults to the environment locale)."
+        },
+        {
+          "name": "placeholder(_:)",
+          "signature": ".placeholder(_ text: String) -> DateField",
+          "doc": "Placeholder shown while no date is selected."
+        },
+        {
+          "name": "range(_:)",
+          "signature": ".range(_ range: ClosedRange<Date>?) -> DateField",
+          "doc": "Restrict the picker to a selectable date range."
+        },
+        {
+          "name": "style(_:)",
+          "signature": ".style(_ style: DateFieldStyle) -> DateField",
+          "doc": "How the chosen date renders in the field (numeric / abbreviated / long / full / relative / custom)."
         }
       ],
       "usage": "DateField($date)"
@@ -1254,91 +1212,100 @@
       "name": "DividerView",
       "category": "Atoms",
       "doc": "A theme-driven divider: horizontal / vertical, solid / dashed, with an optional inline text label (left / center / right).",
-      "init": "init(size: DividerViewSize = .small, axis: DividerAxis = .horizontal, dashed: Bool = false, title: String? = nil, titleAlign: DividerTextAlign = .center)",
+      "init": "init(_ title: String? = nil)",
       "params": [
         {
-          "label": "size",
-          "name": "size",
-          "type": "DividerViewSize",
-          "default": ".small"
-        },
-        {
-          "label": "axis",
-          "name": "axis",
-          "type": "DividerAxis",
-          "default": ".horizontal"
-        },
-        {
-          "label": "dashed",
-          "name": "dashed",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "title",
+          "label": "_",
           "name": "title",
           "type": "String?",
           "default": "nil"
-        },
-        {
-          "label": "titleAlign",
-          "name": "titleAlign",
-          "type": "DividerTextAlign",
-          "default": ".center"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "axis(_:)",
+          "signature": ".axis(_ a: DividerAxis) -> DividerView",
+          "doc": "Orientation: horizontal (default) or vertical."
+        },
+        {
+          "name": "dashed(_:)",
+          "signature": ".dashed(_ on: Bool = true) -> DividerView",
+          "doc": "Render the line as a dashed stroke."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: DividerViewSize) -> DividerView",
+          "doc": "Thickness tier of the (non-titled, non-dashed) divider: small / medium / large."
+        },
+        {
+          "name": "titleAlign(_:)",
+          "signature": ".titleAlign(_ a: DividerTextAlign) -> DividerView",
+          "doc": "Inline title placement: leading / center / trailing."
+        }
+      ],
       "usage": "DividerView()"
     },
     {
       "name": "EmptyState",
       "category": "Organisms",
       "doc": "Improved, token-bound rewrite of the reference EmptyCardView.",
-      "init": "init(image: Image, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
+      "init": "init(_ title: String? = nil)",
       "params": [
         {
-          "label": "image",
-          "name": "image",
-          "type": "Image"
-        },
-        {
-          "label": "imageMaxHeight",
-          "name": "imageMaxHeight",
-          "type": "CGFloat",
-          "default": "160"
-        },
-        {
-          "label": "title",
+          "label": "_",
           "name": "title",
           "type": "String?",
           "default": "nil"
-        },
-        {
-          "label": "message",
-          "name": "message",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "buttonTitle",
-          "name": "buttonTitle",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "action",
-          "name": "action",
-          "type": "(() -> Void)?",
-          "default": "nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil"
         }
       ],
       "inits": [
-        "init(image: Image, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
-        "init(animatedURL: URL?, imageMaxHeight: CGFloat = 160, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)",
-        "init(systemImage: String = \"tray\", iconForeground: Color? = nil, iconBackground: Color? = nil, iconCircleSize: CGFloat = 88, title: String? = nil, message: String? = nil, buttonTitle: String? = nil, action: (() -> Void)? = nil, secondaryTitle: String? = nil, onSecondary: (() -> Void)? = nil)"
+        "init(_ title: String? = nil)",
+        "init(image: Image, title: String? = nil)",
+        "init(animatedURL: URL?, title: String? = nil)"
       ],
-      "modifiers": [],
-      "usage": "EmptyState(image: <Image>)"
+      "modifiers": [
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String) -> EmptyState",
+          "doc": "Leading SF Symbol shown in the faded circle (symbol-media only)."
+        },
+        {
+          "name": "iconBackground(_:)",
+          "signature": ".iconBackground(_ c: Color?) -> EmptyState",
+          "doc": "Override the icon circle fill (defaults to the `.bgElevatorTertiary` token, R4)."
+        },
+        {
+          "name": "iconCircleSize(_:)",
+          "signature": ".iconCircleSize(_ size: CGFloat) -> EmptyState",
+          "doc": "Diameter of the icon circle."
+        },
+        {
+          "name": "iconForeground(_:)",
+          "signature": ".iconForeground(_ c: Color?) -> EmptyState",
+          "doc": "Override the icon glyph color (defaults to the `.fgHero` token, R4)."
+        },
+        {
+          "name": "imageMaxHeight(_:)",
+          "signature": ".imageMaxHeight(_ h: CGFloat) -> EmptyState",
+          "doc": "Max height of the custom/animated illustration."
+        },
+        {
+          "name": "message(_:)",
+          "signature": ".message(_ s: String?) -> EmptyState",
+          "doc": "Secondary message under the title."
+        },
+        {
+          "name": "primaryAction(_:action:)",
+          "signature": ".primaryAction(_ title: String?, action: (() -> Void)?) -> EmptyState",
+          "doc": "Primary call-to-action button (title + handler)."
+        },
+        {
+          "name": "secondaryAction(_:action:)",
+          "signature": ".secondaryAction(_ title: String?, action: (() -> Void)?) -> EmptyState",
+          "doc": "Secondary call-to-action button (title + handler)."
+        }
+      ],
+      "usage": "EmptyState()"
     },
     {
       "name": "Fieldset",
@@ -1370,47 +1337,48 @@
       "name": "FileInput",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(label: String? = nil, fileName: String? = nil, buttonTitle: String = \"Choose file\", placeholder: String = \"No file chosen\", infoMessages: [InfoMessage] = [], onPick: @escaping () -> Void, onClear: (() -> Void)? = nil)",
+      "init": "init(_ label: String? = nil, onPick: @escaping () -> Void)",
       "params": [
         {
-          "label": "label",
+          "label": "_",
           "name": "label",
           "type": "String?",
           "default": "nil"
         },
         {
-          "label": "fileName",
-          "name": "fileName",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "buttonTitle",
-          "name": "buttonTitle",
-          "type": "String",
-          "default": "\"Choose file\""
-        },
-        {
-          "label": "placeholder",
-          "name": "placeholder",
-          "type": "String",
-          "default": "\"No file chosen\""
-        },
-        {
-          "label": "infoMessages",
-          "name": "infoMessages",
-          "type": "[InfoMessage]",
-          "default": "[]"
-        },
-        {
           "label": "onPick",
           "name": "onPick",
-          "type": "@escaping () -> Void, onClear: (() -> Void)?",
-          "default": "nil"
+          "type": "@escaping () -> Void"
         }
       ],
-      "modifiers": [],
-      "usage": "FileInput()"
+      "modifiers": [
+        {
+          "name": "buttonTitle(_:)",
+          "signature": ".buttonTitle(_ title: String) -> FileInput",
+          "doc": "Title of the \"choose file\" segment."
+        },
+        {
+          "name": "fileName(_:)",
+          "signature": ".fileName(_ name: String?) -> FileInput",
+          "doc": "The selected file's display name (the bound value shown beside the button)."
+        },
+        {
+          "name": "infoMessages(_:)",
+          "signature": ".infoMessages(_ messages: [InfoMessage]) -> FileInput",
+          "doc": "Validation / hint messages displayed below the field."
+        },
+        {
+          "name": "onClear(_:)",
+          "signature": ".onClear(_ action: (() -> Void)?) -> FileInput",
+          "doc": "Trailing clear button handler (shown only when a file is selected)."
+        },
+        {
+          "name": "placeholder(_:)",
+          "signature": ".placeholder(_ text: String) -> FileInput",
+          "doc": "Placeholder shown when no file is chosen."
+        }
+      ],
+      "usage": "FileInput(onPick: { })"
     },
     {
       "name": "FilterChip",
@@ -1480,7 +1448,7 @@
       "name": "FloatingActionButton",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(systemImage: String = \"plus\", actions: [FABAction] = [], shape: FABShape = .circle, color: SemanticColor = .primary, badge: Int? = nil, action: @escaping () -> Void = {})",
+      "init": "init(systemImage: String = \"plus\", actions: [FABAction] = [], action: @escaping () -> Void = {})",
       "params": [
         {
           "label": "systemImage",
@@ -1495,31 +1463,29 @@
           "default": "[]"
         },
         {
-          "label": "shape",
-          "name": "shape",
-          "type": "FABShape",
-          "default": ".circle"
-        },
-        {
-          "label": "color",
-          "name": "color",
-          "type": "SemanticColor",
-          "default": ".primary"
-        },
-        {
-          "label": "badge",
-          "name": "badge",
-          "type": "Int?",
-          "default": "nil"
-        },
-        {
           "label": "action",
           "name": "action",
           "type": "@escaping () -> Void",
           "default": "{}"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "badge(_:)",
+          "signature": ".badge(_ count: Int?) -> FloatingActionButton",
+          "doc": "Count bubble on the main button (hidden when 0 or nil)."
+        },
+        {
+          "name": "color(_:)",
+          "signature": ".color(_ c: SemanticColor) -> FloatingActionButton",
+          "doc": "Semantic color token driving the main button's fill (R4)."
+        },
+        {
+          "name": "shape(_:)",
+          "signature": ".shape(_ s: FABShape) -> FloatingActionButton",
+          "doc": "Corner treatment of the main button: circle / square."
+        }
+      ],
       "usage": "FloatingActionButton()"
     },
     {
@@ -1579,7 +1545,7 @@
       "name": "GaugeView",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(value: Double, in range: ClosedRange<Double> = 0...1, label: String? = nil, style: GaugeView.Style = .circular, showsValue: Bool = true)",
+      "init": "init(value: Double, in range: ClosedRange<Double> = 0...1, label: String? = nil)",
       "params": [
         {
           "label": "value",
@@ -1597,21 +1563,20 @@
           "name": "label",
           "type": "String?",
           "default": "nil"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "GaugeView.Style",
-          "default": ".circular"
-        },
-        {
-          "label": "showsValue",
-          "name": "showsValue",
-          "type": "Bool",
-          "default": "true"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "gaugeStyle(_:)",
+          "signature": ".gaugeStyle(_ s: GaugeView.Style) -> GaugeView",
+          "doc": "Gauge rendering: circular (default) or linear."
+        },
+        {
+          "name": "showsValue(_:)",
+          "signature": ".showsValue(_ on: Bool = true) -> GaugeView",
+          "doc": "Toggle the inline percentage value readout."
+        }
+      ],
       "usage": "GaugeView(value: 1)"
     },
     {
@@ -1757,7 +1722,7 @@
       "name": "ImageChip",
       "category": "Molecules",
       "doc": "A selectable remote-image tile with a selection border.",
-      "init": "init(isSelected: Binding<Bool>, url: URL?, size: ImageChipSize = .medium, isEnabled: Bool = true)",
+      "init": "init(isSelected: Binding<Bool>, url: URL?)",
       "params": [
         {
           "label": "isSelected",
@@ -1768,51 +1733,27 @@
           "label": "url",
           "name": "url",
           "type": "URL?"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "ImageChipSize",
-          "default": ".medium"
-        },
-        {
-          "label": "isEnabled",
-          "name": "isEnabled",
-          "type": "Bool",
-          "default": "true"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: ImageChipSize) -> ImageChip",
+          "doc": "Tile size: small / medium / large."
+        }
+      ],
       "usage": "ImageChip($isSelected, url: <URL>)"
     },
     {
       "name": "ImageCollage",
       "category": "Organisms",
       "doc": "A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+) and a \"+N\" overlay on the last visible tile.",
-      "init": "init(_ urls: [URL], height: CGFloat = 220, spacing: CGFloat = 4, cornerRadius: CGFloat = 12, onTap: ((Int) -> Void)? = nil)",
+      "init": "init(_ urls: [URL], onTap: ((Int) -> Void)? = nil)",
       "params": [
         {
           "label": "_",
           "name": "urls",
           "type": "[URL]"
-        },
-        {
-          "label": "height",
-          "name": "height",
-          "type": "CGFloat",
-          "default": "220"
-        },
-        {
-          "label": "spacing",
-          "name": "spacing",
-          "type": "CGFloat",
-          "default": "4"
-        },
-        {
-          "label": "cornerRadius",
-          "name": "cornerRadius",
-          "type": "CGFloat",
-          "default": "12"
         },
         {
           "label": "onTap",
@@ -1821,25 +1762,35 @@
           "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "cornerRadius(_:)",
+          "signature": ".cornerRadius(_ r: CGFloat) -> ImageCollage",
+          "doc": "Tile corner radius."
+        },
+        {
+          "name": "height(_:)",
+          "signature": ".height(_ h: CGFloat) -> ImageCollage",
+          "doc": "Overall collage height."
+        },
+        {
+          "name": "spacing(_:)",
+          "signature": ".spacing(_ s: CGFloat) -> ImageCollage",
+          "doc": "Gap between tiles."
+        }
+      ],
       "usage": "ImageCollage(<[URL]>)"
     },
     {
       "name": "InfoBanner",
       "category": "Organisms",
       "doc": "Improved, token-bound rewrite of the reference InfoMessage.",
-      "init": "init(_ message: String, type: InfoBannerType = .info, title: String? = nil, links: [(substring: String, action: () -> Void)] = [], showIcon: Bool = true, banner: Bool = false, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil)",
+      "init": "init(_ message: String, title: String? = nil, links: [(substring: String, action: () -> Void)] = [])",
       "params": [
         {
           "label": "_",
           "name": "message",
           "type": "String"
-        },
-        {
-          "label": "type",
-          "name": "type",
-          "type": "InfoBannerType",
-          "default": ".info"
         },
         {
           "label": "title",
@@ -1851,10 +1802,36 @@
           "label": "links",
           "name": "links",
           "type": "[(substring: String, action: () -> Void)]",
-          "default": "[], showIcon: Bool = true, banner: Bool = false, actionTitle: String? = nil, onAction: (() -> Void)? = nil, onDismiss: (() -> Void)? = nil"
+          "default": "[]"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "action(_:onAction:)",
+          "signature": ".action(_ title: String?, onAction: (() -> Void)? = nil) -> InfoBanner",
+          "doc": "Trailing inline action button: its label + handler."
+        },
+        {
+          "name": "fullWidth(_:)",
+          "signature": ".fullWidth(_ on: Bool = true) -> InfoBanner",
+          "doc": "Edge-to-edge banner treatment: stretch to full width and drop the rounded corners / border (Ant Alert `banner`)."
+        },
+        {
+          "name": "onDismiss(_:)",
+          "signature": ".onDismiss(_ handler: (() -> Void)?) -> InfoBanner",
+          "doc": "Trailing dismiss (×) button handler."
+        },
+        {
+          "name": "showsIcon(_:)",
+          "signature": ".showsIcon(_ on: Bool = true) -> InfoBanner",
+          "doc": "Show or hide the type's leading icon."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ t: InfoBannerType) -> InfoBanner",
+          "doc": "Semantic type: neutral / info / success / warning / error — drives the surface, accent, border and leading icon."
+        }
+      ],
       "usage": "InfoBanner(\"message\")"
     },
     {
@@ -1897,43 +1874,41 @@
       "name": "InputLabel",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(_ text: String, isRequired: Bool = false, hasInfo: Bool = false, hasError: Bool = false)",
+      "init": "init(_ text: String)",
       "params": [
         {
           "label": "_",
           "name": "text",
           "type": "String"
-        },
-        {
-          "label": "isRequired",
-          "name": "isRequired",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "hasInfo",
-          "name": "hasInfo",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "hasError",
-          "name": "hasError",
-          "type": "Bool",
-          "default": "false"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "hasError(_:)",
+          "signature": ".hasError(_ on: Bool = true) -> InputLabel",
+          "doc": "Render the label in the error color."
+        },
+        {
+          "name": "hasInfo(_:)",
+          "signature": ".hasInfo(_ on: Bool = true) -> InputLabel",
+          "doc": "Show a trailing info glyph."
+        },
+        {
+          "name": "required(_:)",
+          "signature": ".required(_ on: Bool = true) -> InputLabel",
+          "doc": "Append a required asterisk after the label text."
+        }
+      ],
       "usage": "InputLabel(\"text\")"
     },
     {
       "name": "InputNumber",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...99, step: Int = 1, unit: String? = nil, hint: String? = nil, errorText: String? = nil, large: Bool = false)",
+      "init": "init(_ label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...99)",
       "params": [
         {
-          "label": "label",
+          "label": "_",
           "name": "label",
           "type": "String?",
           "default": "nil"
@@ -1948,36 +1923,6 @@
           "name": "range",
           "type": "ClosedRange<Int>",
           "default": "0...99"
-        },
-        {
-          "label": "step",
-          "name": "step",
-          "type": "Int",
-          "default": "1"
-        },
-        {
-          "label": "unit",
-          "name": "unit",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "hint",
-          "name": "hint",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "errorText",
-          "name": "errorText",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "large",
-          "name": "large",
-          "type": "Bool",
-          "default": "false"
         }
       ],
       "modifiers": [
@@ -1992,14 +1937,39 @@
           "doc": "Whether the value can be typed (default true); `false` shows it read-only with steppers still active."
         },
         {
+          "name": "errorText(_:)",
+          "signature": ".errorText(_ text: String?) -> InputNumber",
+          "doc": "Error text + error styling; takes precedence over `hint`."
+        },
+        {
           "name": "hasInfo(_:)",
           "signature": ".hasInfo(_ on: Bool = true) -> InputNumber",
           "doc": "Shows an info-circle glyph next to the label."
         },
         {
+          "name": "hint(_:)",
+          "signature": ".hint(_ text: String?) -> InputNumber",
+          "doc": "Helper text shown under the field (hidden while an error is present)."
+        },
+        {
+          "name": "large(_:)",
+          "signature": ".large(_ on: Bool = true) -> InputNumber",
+          "doc": "Use the larger (48pt) field height."
+        },
+        {
           "name": "onValueChange(_:)",
           "signature": ".onValueChange(_ action: ((Int) -> Void)?) -> InputNumber",
           "doc": "Fires with the clamped value whenever it changes (stepper / type / commit)."
+        },
+        {
+          "name": "step(_:)",
+          "signature": ".step(_ s: Int) -> InputNumber",
+          "doc": "Increment/decrement applied by the − / + steppers."
+        },
+        {
+          "name": "unit(_:)",
+          "signature": ".unit(_ u: String?) -> InputNumber",
+          "doc": "Trailing unit suffix labelling the value (e.g."
         }
       ],
       "usage": "InputNumber($value)"
@@ -2103,7 +2073,7 @@
       "name": "ListRow",
       "category": "Organisms",
       "doc": "A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view.",
-      "init": "init(_ title: String, subtitle: String? = nil, number: Int? = nil, size: ListRowSize = .regular, leadingSystemImage: String? = nil, leadingImageURL: URL? = nil, leadingSelection: Binding<Bool>? = nil, alertCount: Int? = nil, badge: String? = nil, meta: ListRowMeta? = nil, infos: [ListRowInfo] = [], isSelected: Bool = false, multilineTitle: Bool = false, infoAction: (() -> Void)? = nil, trailing: ListRowTrailing = .chevron, action: (() -> Void)? = nil)",
+      "init": "init(_ title: String, action: (() -> Void)? = nil)",
       "params": [
         {
           "label": "_",
@@ -2111,85 +2081,84 @@
           "type": "String"
         },
         {
-          "label": "subtitle",
-          "name": "subtitle",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "number",
-          "name": "number",
-          "type": "Int?",
-          "default": "nil"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "ListRowSize",
-          "default": ".regular"
-        },
-        {
-          "label": "leadingSystemImage",
-          "name": "leadingSystemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "leadingImageURL",
-          "name": "leadingImageURL",
-          "type": "URL?",
-          "default": "nil"
-        },
-        {
-          "label": "leadingSelection",
-          "name": "leadingSelection",
-          "type": "Binding<Bool>?",
-          "default": "nil"
-        },
-        {
-          "label": "alertCount",
-          "name": "alertCount",
-          "type": "Int?",
-          "default": "nil"
-        },
-        {
-          "label": "badge",
-          "name": "badge",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "meta",
-          "name": "meta",
-          "type": "ListRowMeta?",
-          "default": "nil"
-        },
-        {
-          "label": "infos",
-          "name": "infos",
-          "type": "[ListRowInfo]",
-          "default": "[]"
-        },
-        {
-          "label": "isSelected",
-          "name": "isSelected",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "multilineTitle",
-          "name": "multilineTitle",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "infoAction",
-          "name": "infoAction",
+          "label": "action",
+          "name": "action",
           "type": "(() -> Void)?",
-          "default": "nil, trailing: ListRowTrailing = .chevron, action: (() -> Void)? = nil"
+          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "alertCount(_:)",
+          "signature": ".alertCount(_ n: Int?) -> ListRow",
+          "doc": "Red count bubble on the leading icon."
+        },
+        {
+          "name": "badge(_:)",
+          "signature": ".badge(_ text: String?) -> ListRow",
+          "doc": "Inline badge next to the title."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> ListRow",
+          "doc": "Leading SF Symbol (in a circular chip)."
+        },
+        {
+          "name": "infos(_:)",
+          "signature": ".infos(_ list: [ListRowInfo]) -> ListRow",
+          "doc": "Bulleted info lines under the title."
+        },
+        {
+          "name": "leadingImage(_:)",
+          "signature": ".leadingImage(_ url: URL?) -> ListRow",
+          "doc": "Leading remote thumbnail."
+        },
+        {
+          "name": "leadingSelection(_:)",
+          "signature": ".leadingSelection(_ selection: Binding<Bool>?) -> ListRow",
+          "doc": "Leading radio selector bound to `selection`."
+        },
+        {
+          "name": "meta(_:)",
+          "signature": ".meta(_ m: ListRowMeta?) -> ListRow",
+          "doc": "Per-row meta line (rating / sentiment / comment count)."
+        },
+        {
+          "name": "multilineTitle(_:)",
+          "signature": ".multilineTitle(_ on: Bool = true) -> ListRow",
+          "doc": "Allow the title/subtitle to wrap instead of truncating."
+        },
+        {
+          "name": "number(_:)",
+          "signature": ".number(_ n: Int?) -> ListRow",
+          "doc": "Leading two-digit ordinal badge."
+        },
+        {
+          "name": "onInfo(_:)",
+          "signature": ".onInfo(_ action: (() -> Void)?) -> ListRow",
+          "doc": "Trailing info button with its own action."
+        },
+        {
+          "name": "selected(_:)",
+          "signature": ".selected(_ on: Bool = true) -> ListRow",
+          "doc": "Active/selected background treatment."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: ListRowSize) -> ListRow",
+          "doc": "Title weight/size tier: small / regular / bold."
+        },
+        {
+          "name": "subtitle(_:)",
+          "signature": ".subtitle(_ s: String?) -> ListRow",
+          "doc": "Secondary line under the title."
+        },
+        {
+          "name": "trailing(_:)",
+          "signature": ".trailing(_ t: ListRowTrailing) -> ListRow",
+          "doc": "Trailing accessory: chevron / value / toggle / checkmark / checkbox / button / price / status."
+        }
+      ],
       "usage": "ListRow(\"title\")"
     },
     {
@@ -2282,7 +2251,7 @@
       "name": "MultiLineTextInput",
       "category": "Molecules",
       "doc": "Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state.",
-      "init": "init(_ label: String, text: Binding<String>, placeholder: String = \"\", characterLimit: Int? = nil, errorText: String? = nil, infoMessages: [InfoMessage] = [], minHeight: CGFloat = 120)",
+      "init": "init(_ label: String, text: Binding<String>)",
       "params": [
         {
           "label": "_",
@@ -2293,36 +2262,6 @@
           "label": "text",
           "name": "text",
           "type": "Binding<String>"
-        },
-        {
-          "label": "placeholder",
-          "name": "placeholder",
-          "type": "String",
-          "default": "\"\""
-        },
-        {
-          "label": "characterLimit",
-          "name": "characterLimit",
-          "type": "Int?",
-          "default": "nil"
-        },
-        {
-          "label": "errorText",
-          "name": "errorText",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "infoMessages",
-          "name": "infoMessages",
-          "type": "[InfoMessage]",
-          "default": "[]"
-        },
-        {
-          "label": "minHeight",
-          "name": "minHeight",
-          "type": "CGFloat",
-          "default": "120"
         }
       ],
       "modifiers": [
@@ -2330,6 +2269,31 @@
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> MultiLineTextInput",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "characterLimit(_:)",
+          "signature": ".characterLimit(_ limit: Int?) -> MultiLineTextInput",
+          "doc": "Caps the input length and shows a `count/limit` counter."
+        },
+        {
+          "name": "errorText(_:)",
+          "signature": ".errorText(_ text: String?) -> MultiLineTextInput",
+          "doc": "Convenience error message appended as an `.error` `InfoMessage`."
+        },
+        {
+          "name": "infoMessages(_:)",
+          "signature": ".infoMessages(_ messages: [InfoMessage]) -> MultiLineTextInput",
+          "doc": "Validation / hint messages rendered beneath the editor."
+        },
+        {
+          "name": "minHeight(_:)",
+          "signature": ".minHeight(_ height: CGFloat) -> MultiLineTextInput",
+          "doc": "Minimum editor height (defaults to 120, R4)."
+        },
+        {
+          "name": "placeholder(_:)",
+          "signature": ".placeholder(_ text: String) -> MultiLineTextInput",
+          "doc": "Placeholder shown while the editor is empty."
         }
       ],
       "usage": "MultiLineTextInput(\"label\", $text)"
@@ -2477,7 +2441,7 @@
       "name": "OTPInput",
       "category": "Molecules",
       "doc": "Improved, token-bound rewrite of the reference OTPInputView.",
-      "init": "init(code: Binding<String>, digitCount: Int = 6, isSecure: Bool = false, errorText: String? = nil, infoMessages: [InfoMessage] = [], onComplete: ((String) -> Void)? = nil, resendInterval: TimeInterval? = nil, onResend: (() -> Void)? = nil)",
+      "init": "init(code: Binding<String>, onComplete: ((String) -> Void)? = nil)",
       "params": [
         {
           "label": "code",
@@ -2485,34 +2449,10 @@
           "type": "Binding<String>"
         },
         {
-          "label": "digitCount",
-          "name": "digitCount",
-          "type": "Int",
-          "default": "6"
-        },
-        {
-          "label": "isSecure",
-          "name": "isSecure",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "errorText",
-          "name": "errorText",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "infoMessages",
-          "name": "infoMessages",
-          "type": "[InfoMessage]",
-          "default": "[]"
-        },
-        {
           "label": "onComplete",
           "name": "onComplete",
           "type": "((String) -> Void)?",
-          "default": "nil, resendInterval: TimeInterval? = nil, onResend: (() -> Void)? = nil"
+          "default": "nil"
         }
       ],
       "modifiers": [
@@ -2520,6 +2460,31 @@
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> OTPInput",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "digitCount(_:)",
+          "signature": ".digitCount(_ n: Int) -> OTPInput",
+          "doc": "Number of digit boxes (default 6)."
+        },
+        {
+          "name": "errorText(_:)",
+          "signature": ".errorText(_ text: String?) -> OTPInput",
+          "doc": "Inline error line (appended to `infoMessages` as `.error`, driving the error state)."
+        },
+        {
+          "name": "infoMessages(_:)",
+          "signature": ".infoMessages(_ messages: [InfoMessage]) -> OTPInput",
+          "doc": "Validation / hint messages displayed below the boxes."
+        },
+        {
+          "name": "resend(interval:onResend:)",
+          "signature": ".resend(interval: TimeInterval, onResend: @escaping () -> Void) -> OTPInput",
+          "doc": "Adds a countdown + \"resend code\" row."
+        },
+        {
+          "name": "secure(_:)",
+          "signature": ".secure(_ on: Bool = true) -> OTPInput",
+          "doc": "Mask the entered digits (password-style dots) instead of showing them."
         }
       ],
       "usage": "OTPInput($code)"
@@ -2862,7 +2827,7 @@
       "name": "ProgressIndicator",
       "category": "Molecules",
       "doc": "Segmented position/progress indicator (Reference ProgressIndicator parity).",
-      "init": "init(variant: ProgressIndicatorVariant = .carousel, current: Int, total: Int, size: ProgressIndicatorSize = .medium, videoProgress: Double = 1, stepText: ProgressStepText = .none, cornerRadius: Bool = true)",
+      "init": "init(variant: ProgressIndicatorVariant = .carousel, current: Int, total: Int)",
       "params": [
         {
           "label": "variant",
@@ -2879,69 +2844,42 @@
           "label": "total",
           "name": "total",
           "type": "Int"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "ProgressIndicatorSize",
-          "default": ".medium"
-        },
-        {
-          "label": "videoProgress",
-          "name": "videoProgress",
-          "type": "Double",
-          "default": "1"
-        },
-        {
-          "label": "stepText",
-          "name": "stepText",
-          "type": "ProgressStepText",
-          "default": ".none"
-        },
-        {
-          "label": "cornerRadius",
-          "name": "cornerRadius",
-          "type": "Bool",
-          "default": "true"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "cornerRadius(_:)",
+          "signature": ".cornerRadius(_ on: Bool = true) -> ProgressIndicator",
+          "doc": "Rounds the segment ends into a capsule (default `true`); `false` for square ends."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: ProgressIndicatorSize) -> ProgressIndicator",
+          "doc": "Bar thickness: large / medium / small / xsmall."
+        },
+        {
+          "name": "stepText(_:)",
+          "signature": ".stepText(_ t: ProgressStepText) -> ProgressIndicator",
+          "doc": "Step-count caption format: `.none`, `.slash` (\"3 / 10\"), or `.padded` (\"01 | 05\")."
+        },
+        {
+          "name": "videoProgress(_:)",
+          "signature": ".videoProgress(_ value: Double) -> ProgressIndicator",
+          "doc": "Fill fraction (0…1) of the active segment in the `.video` variant."
+        }
+      ],
       "usage": "ProgressIndicator(current: 1, total: 1)"
     },
     {
       "name": "PromoBanner",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(title: String, subtitle: String? = nil, systemImage: String? = nil, ctaTitle: String? = nil, tint: PromoBannerTint = .blue, action: (() -> Void)? = nil)",
+      "init": "init(_ title: String, action: (() -> Void)? = nil)",
       "params": [
         {
-          "label": "title",
+          "label": "_",
           "name": "title",
           "type": "String"
-        },
-        {
-          "label": "subtitle",
-          "name": "subtitle",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "systemImage",
-          "name": "systemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "ctaTitle",
-          "name": "ctaTitle",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "tint",
-          "name": "tint",
-          "type": "PromoBannerTint",
-          "default": ".blue"
         },
         {
           "label": "action",
@@ -2950,8 +2888,29 @@
           "default": "nil"
         }
       ],
-      "modifiers": [],
-      "usage": "PromoBanner(title: \"title\")"
+      "modifiers": [
+        {
+          "name": "color(_:)",
+          "signature": ".color(_ tint: PromoBannerTint) -> PromoBanner",
+          "doc": "Banner tint treatment: blue / dark / turquoise (R4 token-bound)."
+        },
+        {
+          "name": "ctaTitle(_:)",
+          "signature": ".ctaTitle(_ title: String?) -> PromoBanner",
+          "doc": "Trailing call-to-action button title (renders only when paired with the init `action`)."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> PromoBanner",
+          "doc": "Leading SF Symbol visual."
+        },
+        {
+          "name": "subtitle(_:)",
+          "signature": ".subtitle(_ s: String?) -> PromoBanner",
+          "doc": "Secondary line under the title."
+        }
+      ],
+      "usage": "PromoBanner(\"title\")"
     },
     {
       "name": "QuantityStepper",
@@ -2990,98 +2949,69 @@
       "name": "RadialProgress",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(value: Double, size: CGFloat = 64, lineWidth: CGFloat = 6, showLabel: Bool = true, status: ProgressStatus = .normal, dashboard: Bool = false, tint: Color? = nil, accessibilityLabel: String? = nil)",
+      "init": "init(_ value: Double)",
       "params": [
         {
-          "label": "value",
+          "label": "_",
           "name": "value",
           "type": "Double"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "CGFloat",
-          "default": "64"
-        },
-        {
-          "label": "lineWidth",
-          "name": "lineWidth",
-          "type": "CGFloat",
-          "default": "6"
-        },
-        {
-          "label": "showLabel",
-          "name": "showLabel",
-          "type": "Bool",
-          "default": "true"
-        },
-        {
-          "label": "status",
-          "name": "status",
-          "type": "ProgressStatus",
-          "default": ".normal"
-        },
-        {
-          "label": "dashboard",
-          "name": "dashboard",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "tint",
-          "name": "tint",
-          "type": "Color?",
-          "default": "nil"
-        },
-        {
-          "label": "accessibilityLabel",
-          "name": "accessibilityLabel",
-          "type": "String?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
-      "usage": "RadialProgress(value: 1)"
+      "modifiers": [
+        {
+          "name": "a11yLabel(_:)",
+          "signature": ".a11yLabel(_ text: String?) -> RadialProgress",
+          "doc": "Spoken VoiceOver label for the ring (the value is announced separately)."
+        },
+        {
+          "name": "dashboard(_:)",
+          "signature": ".dashboard(_ on: Bool = true) -> RadialProgress",
+          "doc": "Dashboard (gapped) ring variant."
+        },
+        {
+          "name": "lineWidth(_:)",
+          "signature": ".lineWidth(_ w: CGFloat) -> RadialProgress",
+          "doc": "Stroke width of the ring."
+        },
+        {
+          "name": "ringColor(_:)",
+          "signature": ".ringColor(_ c: Color?) -> RadialProgress",
+          "doc": "Override the ring fill color (otherwise derived from `status`)."
+        },
+        {
+          "name": "showsLabel(_:)",
+          "signature": ".showsLabel(_ on: Bool = true) -> RadialProgress",
+          "doc": "Show or hide the center label (percentage / success-fail glyph)."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: CGFloat) -> RadialProgress",
+          "doc": "Diameter of the ring, in points."
+        },
+        {
+          "name": "status(_:)",
+          "signature": ".status(_ s: ProgressStatus) -> RadialProgress",
+          "doc": "Semantic status driving the fill color and success/exception glyphs."
+        }
+      ],
+      "usage": "RadialProgress(1)"
     },
     {
       "name": "RadioButton",
       "category": "Molecules",
       "doc": "Figma \"Control Items\" → Radioboxes.",
-      "init": "init<V>(tag: V, selection: Binding<V?>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, infoMessages: [InfoMessage] = []) where V : Hashable",
+      "init": "init(_ label: String? = nil, isSelected: Binding<Bool>, infoMessages: [InfoMessage] = [])",
       "params": [
         {
-          "label": "tag",
-          "name": "tag",
-          "type": "V"
-        },
-        {
-          "label": "selection",
-          "name": "selection",
-          "type": "Binding<V?>"
-        },
-        {
-          "label": "type",
-          "name": "type",
-          "type": "RadioButtonType",
-          "default": ".select"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "RadioButtonStyle",
-          "default": ".plain"
-        },
-        {
-          "label": "padding",
-          "name": "padding",
-          "type": "RadioButtonPadding",
-          "default": ".small"
-        },
-        {
-          "label": "backgroundColor",
-          "name": "backgroundColor",
-          "type": "Color?",
+          "label": "_",
+          "name": "label",
+          "type": "String?",
           "default": "nil"
+        },
+        {
+          "label": "isSelected",
+          "name": "isSelected",
+          "type": "Binding<Bool>"
         },
         {
           "label": "infoMessages",
@@ -3091,17 +3021,42 @@
         }
       ],
       "inits": [
-        "init<V>(tag: V, selection: Binding<V?>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, infoMessages: [InfoMessage] = []) where V : Hashable",
-        "init(_ label: String? = nil, isSelected: Binding<Bool>, type: RadioButtonType = .select, style: RadioButtonStyle = .plain, padding: RadioButtonPadding = .small, backgroundColor: Color? = nil, verticalAlignment: VerticalAlignment = .center, infoMessages: [InfoMessage] = [])"
+        "init(_ label: String? = nil, isSelected: Binding<Bool>, infoMessages: [InfoMessage] = [])",
+        "init<V>(tag: V, selection: Binding<V?>, infoMessages: [InfoMessage] = []) where V : Hashable"
       ],
       "modifiers": [
         {
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> RadioButton",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "alignment(_:)",
+          "signature": ".alignment(_ a: VerticalAlignment) -> RadioButton",
+          "doc": "Vertical alignment of the radio against a multi-line label."
+        },
+        {
+          "name": "fillColor(_:)",
+          "signature": ".fillColor(_ c: Color?) -> RadioButton",
+          "doc": "Override the selected-fill color (defaults to the `.bgHero` token, R4)."
+        },
+        {
+          "name": "gap(_:)",
+          "signature": ".gap(_ p: RadioButtonPadding) -> RadioButton",
+          "doc": "Gap between the radio and its label: small / medium / large."
+        },
+        {
+          "name": "radioStyle(_:)",
+          "signature": ".radioStyle(_ s: RadioButtonStyle) -> RadioButton",
+          "doc": "Indicator rendering of a `.check` radio: `.plain` glyph or `.inner` dot."
+        },
+        {
+          "name": "type(_:)",
+          "signature": ".type(_ t: RadioButtonType) -> RadioButton",
+          "doc": "Selected-state indicator: `.select` (one-way dot) or `.check` (togglable checkmark)."
         }
       ],
-      "usage": "RadioButton(tag: <V>, $selection)"
+      "usage": "RadioButton($isSelected)"
     },
     {
       "name": "RadioButtonGroup",
@@ -3145,7 +3100,7 @@
       "name": "RadioCard",
       "category": "Organisms",
       "doc": "Organisms.",
-      "init": "init(_ title: String, description: String? = nil, isSelected: Bool, isEnabled: Bool = true, action: @escaping () -> Void)",
+      "init": "init(_ title: String, description: String? = nil, isSelected: Bool, action: @escaping () -> Void)",
       "params": [
         {
           "label": "_",
@@ -3162,12 +3117,6 @@
           "label": "isSelected",
           "name": "isSelected",
           "type": "Bool"
-        },
-        {
-          "label": "isEnabled",
-          "name": "isEnabled",
-          "type": "Bool",
-          "default": "true"
         },
         {
           "label": "action",
@@ -3379,44 +3328,41 @@
       "name": "RemoteImage",
       "category": "Atoms",
       "doc": "Async remote image on native `AsyncImage` (no Kingfisher dependency): URL + aspect ratio (number or \"16:9\" string) + shimmer placeholder + failure state.",
-      "init": "init(_ url: URL?, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
+      "init": "init(_ url: URL?)",
       "params": [
         {
           "label": "_",
           "name": "url",
           "type": "URL?"
-        },
-        {
-          "label": "aspectRatio",
-          "name": "aspectRatio",
-          "type": "CGFloat?",
-          "default": "nil"
-        },
-        {
-          "label": "contentMode",
-          "name": "contentMode",
-          "type": "ContentMode",
-          "default": ".fill"
-        },
-        {
-          "label": "cornerRadius",
-          "name": "cornerRadius",
-          "type": "CGFloat",
-          "default": "0"
-        },
-        {
-          "label": "circle",
-          "name": "circle",
-          "type": "Bool",
-          "default": "false"
         }
       ],
       "inits": [
-        "init(_ url: URL?, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
-        "init(_ url: URL?, ratio: String, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)",
-        "init(_ url: URL?, ratio: RemoteImageRatio, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false)"
+        "init(_ url: URL?)",
+        "init(_ url: URL?, ratio: String)",
+        "init(_ url: URL?, ratio: RemoteImageRatio)"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "circle(_:)",
+          "signature": ".circle(_ on: Bool = true) -> RemoteImage",
+          "doc": "Clip to a circle instead of a rounded rectangle."
+        },
+        {
+          "name": "contentMode(_:)",
+          "signature": ".contentMode(_ m: ContentMode) -> RemoteImage",
+          "doc": "How the image fills its ratio box: fill (default) or fit."
+        },
+        {
+          "name": "cornerRadius(_:)",
+          "signature": ".cornerRadius(_ r: CGFloat) -> RemoteImage",
+          "doc": "Corner radius of the clip shape (ignored when `.circle()`)."
+        },
+        {
+          "name": "ratio(_:)",
+          "signature": ".ratio(_ r: CGFloat?) -> RemoteImage",
+          "doc": "Numeric aspect ratio (width / height)."
+        }
+      ],
       "usage": "RemoteImage(<URL>)"
     },
     {
@@ -3487,33 +3433,31 @@
       "name": "RollingNumber",
       "category": "Atoms",
       "doc": "Odometer / slot-machine number — each digit column rolls vertically to its new value when `value` changes (reference `RollingText`).",
-      "init": "init(_ value: Int, size: CGFloat = 28, weight: Font.Weight = .bold, color: Color? = nil)",
+      "init": "init(_ value: Int)",
       "params": [
         {
           "label": "_",
           "name": "value",
           "type": "Int"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "CGFloat",
-          "default": "28"
-        },
-        {
-          "label": "weight",
-          "name": "weight",
-          "type": "Font.Weight",
-          "default": ".bold"
-        },
-        {
-          "label": "color",
-          "name": "color",
-          "type": "Color?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "color(_:)",
+          "signature": ".color(_ c: Color?) -> RollingNumber",
+          "doc": "Override the digit color (defaults to `textPrimary`)."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: CGFloat) -> RollingNumber",
+          "doc": "Digit point size."
+        },
+        {
+          "name": "weight(_:)",
+          "signature": ".weight(_ w: Font.Weight) -> RollingNumber",
+          "doc": "Font weight of the rolling digits."
+        }
+      ],
       "usage": "RollingNumber(1)"
     },
     {
@@ -3652,7 +3596,7 @@
       "name": "SegmentedControl",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(_ items: [SegmentItem], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)",
+      "init": "init(_ items: [SegmentItem], selection: Binding<Int>)",
       "params": [
         {
           "label": "_",
@@ -3663,29 +3607,27 @@
           "label": "selection",
           "name": "selection",
           "type": "Binding<Int>"
-        },
-        {
-          "label": "block",
-          "name": "block",
-          "type": "Bool",
-          "default": "true"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "SegmentedSize",
-          "default": ".medium"
         }
       ],
       "inits": [
-        "init(_ items: [SegmentItem], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)",
-        "init(_ items: [String], selection: Binding<Int>, block: Bool = true, size: SegmentedSize = .medium)"
+        "init(_ items: [SegmentItem], selection: Binding<Int>)",
+        "init(_ items: [String], selection: Binding<Int>)"
       ],
       "modifiers": [
         {
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> SegmentedControl",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "fullWidth(_:)",
+          "signature": ".fullWidth(_ on: Bool = true) -> SegmentedControl",
+          "doc": "Stretch each segment to fill the available width (Ant Segmented `block`)."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: SegmentedSize) -> SegmentedControl",
+          "doc": "Vertical sizing of the segments: small / medium / large."
         }
       ],
       "usage": "SegmentedControl(<[SegmentItem]>, $selection)"
@@ -3694,7 +3636,7 @@
       "name": "SegmentedTabBar",
       "category": "Organisms",
       "doc": "Tab bar with a selection binding and an animated underline.",
-      "init": "init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
+      "init": "init(_ items: [TabItem], selection: Binding<Int>, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
       "params": [
         {
           "label": "_",
@@ -3707,18 +3649,6 @@
           "type": "Binding<Int>"
         },
         {
-          "label": "scrollable",
-          "name": "scrollable",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "SegmentedTabBarStyle",
-          "default": ".underline"
-        },
-        {
           "label": "onClose",
           "name": "onClose",
           "type": "((Int) -> Void)?",
@@ -3726,14 +3656,24 @@
         }
       ],
       "inits": [
-        "init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
-        "init(_ items: [String], selection: Binding<Int>, scrollable: Bool = false, style: SegmentedTabBarStyle = .underline, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)"
+        "init(_ items: [TabItem], selection: Binding<Int>, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)",
+        "init(_ items: [String], selection: Binding<Int>, onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil)"
       ],
       "modifiers": [
         {
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> SegmentedTabBar",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "scrollable(_:)",
+          "signature": ".scrollable(_ on: Bool = true) -> SegmentedTabBar",
+          "doc": "Let the bar scroll horizontally instead of distributing tabs evenly."
+        },
+        {
+          "name": "tabStyle(_:)",
+          "signature": ".tabStyle(_ s: SegmentedTabBarStyle) -> SegmentedTabBar",
+          "doc": "Visual treatment: underline / card."
         }
       ],
       "usage": "SegmentedTabBar(<[TabItem]>, $selection)"
@@ -4009,7 +3949,7 @@
       "name": "Stat",
       "category": "Molecules",
       "doc": "Molecule.",
-      "init": "init(title: String, value: String, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)",
+      "init": "init(title: String, value: String)",
       "params": [
         {
           "label": "title",
@@ -4020,56 +3960,51 @@
           "label": "value",
           "name": "value",
           "type": "String"
-        },
-        {
-          "label": "prefix",
-          "name": "prefix",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "suffix",
-          "name": "suffix",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "isLoading",
-          "name": "isLoading",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "description",
-          "name": "description",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "systemImage",
-          "name": "systemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "trend",
-          "name": "trend",
-          "type": "StatTrend?",
-          "default": "nil"
         }
       ],
       "inits": [
-        "init(title: String, value: String, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)",
-        "init(title: String, value: Int, prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false, description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil)"
+        "init(title: String, value: String)",
+        "init(title: String, value: Int)"
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "description(_:)",
+          "signature": ".description(_ s: String?) -> Stat",
+          "doc": "Secondary caption line beside the trend."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> Stat",
+          "doc": "Leading figure SF Symbol."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> Stat",
+          "doc": "Swap the value for a skeleton placeholder while `on`."
+        },
+        {
+          "name": "prefix(_:)",
+          "signature": ".prefix(_ s: String?) -> Stat",
+          "doc": "Unit/symbol shown before the value (e.g."
+        },
+        {
+          "name": "suffix(_:)",
+          "signature": ".suffix(_ s: String?) -> Stat",
+          "doc": "Unit/symbol shown after the value."
+        },
+        {
+          "name": "trend(_:)",
+          "signature": ".trend(_ t: StatTrend?) -> Stat",
+          "doc": "Trend badge (arrow + delta) in success/error color."
+        }
+      ],
       "usage": "Stat(title: \"title\", value: \"value\")"
     },
     {
       "name": "StatusDot",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(_ kind: StatusKind, size: CGFloat = 10, label: String? = nil, pulse: Bool = false)",
+      "init": "init(_ kind: StatusKind, label: String? = nil)",
       "params": [
         {
           "label": "_",
@@ -4077,25 +4012,24 @@
           "type": "StatusKind"
         },
         {
-          "label": "size",
-          "name": "size",
-          "type": "CGFloat",
-          "default": "10"
-        },
-        {
           "label": "label",
           "name": "label",
           "type": "String?",
           "default": "nil"
-        },
-        {
-          "label": "pulse",
-          "name": "pulse",
-          "type": "Bool",
-          "default": "false"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "pulse(_:)",
+          "signature": ".pulse(_ on: Bool = true) -> StatusDot",
+          "doc": "Animate an expanding pulse ring around the dot."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: CGFloat) -> StatusDot",
+          "doc": "Dot diameter."
+        }
+      ],
       "usage": "StatusDot(<StatusKind>)"
     },
     {
@@ -4122,30 +4056,12 @@
       "name": "Steps",
       "category": "Molecules",
       "doc": "A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate.",
-      "init": "init(_ steps: [Steps.Step], axis: Axis = .horizontal, small: Bool = false, progressDot: Bool = false, onSelect: ((Int) -> Void)? = nil)",
+      "init": "init(_ steps: [Steps.Step], onSelect: ((Int) -> Void)? = nil)",
       "params": [
         {
           "label": "_",
           "name": "steps",
           "type": "[Steps.Step]"
-        },
-        {
-          "label": "axis",
-          "name": "axis",
-          "type": "Axis",
-          "default": ".horizontal"
-        },
-        {
-          "label": "small",
-          "name": "small",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "progressDot",
-          "name": "progressDot",
-          "type": "Bool",
-          "default": "false"
         },
         {
           "label": "onSelect",
@@ -4154,41 +4070,35 @@
           "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "axis(_:)",
+          "signature": ".axis(_ a: Axis) -> Steps",
+          "doc": "Layout orientation: horizontal / vertical."
+        },
+        {
+          "name": "progressDot(_:)",
+          "signature": ".progressDot(_ on: Bool = true) -> Steps",
+          "doc": "Render minimal progress dots instead of numbered markers (Ant `progressDot`)."
+        },
+        {
+          "name": "small(_:)",
+          "signature": ".small(_ on: Bool = true) -> Steps",
+          "doc": "Compact markers and labels."
+        }
+      ],
       "usage": "Steps(<[Steps.Step]>)"
     },
     {
       "name": "Swap",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(isOn: Binding<Bool>, on onSystemImage: String, off offSystemImage: String, size: CGFloat = 24, rotate: Bool = true)",
+      "init": "init(isOn: Binding<Bool>)",
       "params": [
         {
           "label": "isOn",
           "name": "isOn",
           "type": "Binding<Bool>"
-        },
-        {
-          "label": "on",
-          "name": "onSystemImage",
-          "type": "String"
-        },
-        {
-          "label": "off",
-          "name": "offSystemImage",
-          "type": "String"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "CGFloat",
-          "default": "24"
-        },
-        {
-          "label": "rotate",
-          "name": "rotate",
-          "type": "Bool",
-          "default": "true"
         }
       ],
       "modifiers": [
@@ -4196,38 +4106,35 @@
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> Swap",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "rotate(_:)",
+          "signature": ".rotate(_ on: Bool = true) -> Swap",
+          "doc": "Toggle the rotate-in/out transition between the two glyphs."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: CGFloat) -> Swap",
+          "doc": "Glyph point size."
+        },
+        {
+          "name": "symbols(on:off:)",
+          "signature": ".symbols(on onSystemImage: String, off offSystemImage: String) -> Swap",
+          "doc": "The two SF Symbols swapped between: `on` (shown when toggled on) and `off`."
         }
       ],
-      "usage": "Swap($isOn, on: \"onSystemImage\", off: \"offSystemImage\")"
+      "usage": "Swap($isOn)"
     },
     {
       "name": "Tag",
       "category": "Atoms",
       "doc": "Atom.",
-      "init": "init(_ text: String, leadingSystemImage: String? = nil, style: BadgeStyle? = nil, variant: FillVariant = .soft, onRemove: (() -> Void)? = nil)",
+      "init": "init(_ text: String, onRemove: (() -> Void)? = nil)",
       "params": [
         {
           "label": "_",
           "name": "text",
           "type": "String"
-        },
-        {
-          "label": "leadingSystemImage",
-          "name": "leadingSystemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "style",
-          "name": "style",
-          "type": "BadgeStyle?",
-          "default": "nil"
-        },
-        {
-          "label": "variant",
-          "name": "variant",
-          "type": "FillVariant",
-          "default": ".soft"
         },
         {
           "label": "onRemove",
@@ -4236,7 +4143,23 @@
           "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> Tag",
+          "doc": "Leading SF Symbol."
+        },
+        {
+          "name": "tagStyle(_:)",
+          "signature": ".tagStyle(_ s: BadgeStyle?) -> Tag",
+          "doc": "Semantic color treatment (Ant Tag colors)."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ v: FillVariant) -> Tag",
+          "doc": "Fill variant: soft / solid / outline / ghost."
+        }
+      ],
       "usage": "Tag(\"text\")"
     },
     {
@@ -4326,7 +4249,7 @@
       "name": "ThemeButton",
       "category": "Molecules",
       "doc": "",
-      "init": "init(_ title: String? = nil, systemImage: String? = nil, iconPosition: ButtonIconPosition = .leading, color: SemanticColor = .primary, variant: ButtonVariant = .solid, size: ButtonSize = .medium, shape: ButtonShape = .rounded, block: Bool = false, accessibilityID: String? = nil, isEnabled: Binding<Bool> = .constant(true), isLoading: Binding<Bool> = .constant(false), action: @escaping () -> Void)",
+      "init": "init(_ title: String? = nil, action: @escaping () -> Void)",
       "params": [
         {
           "label": "_",
@@ -4335,72 +4258,53 @@
           "default": "nil"
         },
         {
-          "label": "systemImage",
-          "name": "systemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "iconPosition",
-          "name": "iconPosition",
-          "type": "ButtonIconPosition",
-          "default": ".leading"
-        },
-        {
-          "label": "color",
-          "name": "color",
-          "type": "SemanticColor",
-          "default": ".primary"
-        },
-        {
-          "label": "variant",
-          "name": "variant",
-          "type": "ButtonVariant",
-          "default": ".solid"
-        },
-        {
-          "label": "size",
-          "name": "size",
-          "type": "ButtonSize",
-          "default": ".medium"
-        },
-        {
-          "label": "shape",
-          "name": "shape",
-          "type": "ButtonShape",
-          "default": ".rounded"
-        },
-        {
-          "label": "block",
-          "name": "block",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "accessibilityID",
-          "name": "accessibilityID",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "isEnabled",
-          "name": "isEnabled",
-          "type": "Binding<Bool>",
-          "default": ".constant(true)"
-        },
-        {
-          "label": "isLoading",
-          "name": "isLoading",
-          "type": "Binding<Bool>",
-          "default": ".constant(false)"
-        },
-        {
           "label": "action",
           "name": "action",
           "type": "@escaping () -> Void"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> ThemeButton",
+          "doc": "Stable accessibility identifier, forwarded to the kit's a11y infrastructure."
+        },
+        {
+          "name": "color(_:)",
+          "signature": ".color(_ c: SemanticColor) -> ThemeButton",
+          "doc": "Semantic color token driving the fill/accent ladder (R4)."
+        },
+        {
+          "name": "fullWidth(_:)",
+          "signature": ".fullWidth(_ on: Bool = true) -> ThemeButton",
+          "doc": "Stretch to the available width."
+        },
+        {
+          "name": "icon(leading:trailing:)",
+          "signature": ".icon(leading: String? = nil, trailing: String? = nil) -> ThemeButton",
+          "doc": "Leading and/or trailing SF Symbol."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> ThemeButton",
+          "doc": "Swap the label for a spinner and block taps while `on`."
+        },
+        {
+          "name": "shape(_:)",
+          "signature": ".shape(_ s: ButtonShape) -> ThemeButton",
+          "doc": "Corner treatment: rounded / pill / circle / square (circle & square are icon-only)."
+        },
+        {
+          "name": "size(_:)",
+          "signature": ".size(_ s: ButtonSize) -> ThemeButton",
+          "doc": "Control size: xxsmall … large."
+        },
+        {
+          "name": "variant(_:)",
+          "signature": ".variant(_ v: ButtonVariant) -> ThemeButton",
+          "doc": "Visual treatment: solid / soft / outline / ghost / link."
+        }
+      ],
       "usage": "ThemeButton(action: { })"
     },
     {
@@ -4454,30 +4358,12 @@
       "name": "ThemeToggle",
       "category": "Molecules",
       "doc": "Figma \"Control Items\" → Switch Toggles.",
-      "init": "init(isOn: Binding<Bool>, isLoading: Bool = false, onSystemImage: String? = nil, offSystemImage: String? = nil)",
+      "init": "init(isOn: Binding<Bool>)",
       "params": [
         {
           "label": "isOn",
           "name": "isOn",
           "type": "Binding<Bool>"
-        },
-        {
-          "label": "isLoading",
-          "name": "isLoading",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "onSystemImage",
-          "name": "onSystemImage",
-          "type": "String?",
-          "default": "nil"
-        },
-        {
-          "label": "offSystemImage",
-          "name": "offSystemImage",
-          "type": "String?",
-          "default": "nil"
         }
       ],
       "modifiers": [
@@ -4485,6 +4371,16 @@
           "name": "a11yID(_:)",
           "signature": ".a11yID(_ id: String?) -> ThemeToggle",
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> ThemeToggle",
+          "doc": "Swap the knob for a spinner and block interaction while `on`."
+        },
+        {
+          "name": "symbols(on:off:)",
+          "signature": ".symbols(on: String? = nil, off: String? = nil) -> ThemeToggle",
+          "doc": "Optional SF Symbols shown inside the knob for the on / off states."
         }
       ],
       "usage": "ThemeToggle($isOn)"
@@ -4493,39 +4389,36 @@
       "name": "Timeline",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(_ items: [Timeline.Item], axis: Axis = .vertical, mode: TimelineMode = .left, reverse: Bool = false, pending: String? = nil)",
+      "init": "init(_ items: [Timeline.Item])",
       "params": [
         {
           "label": "_",
           "name": "items",
           "type": "[Timeline.Item]"
-        },
-        {
-          "label": "axis",
-          "name": "axis",
-          "type": "Axis",
-          "default": ".vertical"
-        },
-        {
-          "label": "mode",
-          "name": "mode",
-          "type": "TimelineMode",
-          "default": ".left"
-        },
-        {
-          "label": "reverse",
-          "name": "reverse",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "pending",
-          "name": "pending",
-          "type": "String?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "axis(_:)",
+          "signature": ".axis(_ a: Axis) -> Timeline",
+          "doc": "Rail orientation: vertical (default) or horizontal."
+        },
+        {
+          "name": "mode(_:)",
+          "signature": ".mode(_ m: TimelineMode) -> Timeline",
+          "doc": "Content placement around the rail: left / right / alternate (vertical only)."
+        },
+        {
+          "name": "pending(_:)",
+          "signature": ".pending(_ text: String?) -> Timeline",
+          "doc": "Trailing loading (\"pending\") node with its label."
+        },
+        {
+          "name": "reversed(_:)",
+          "signature": ".reversed(_ on: Bool = true) -> Timeline",
+          "doc": "Flip the item order."
+        }
+      ],
       "usage": "Timeline(<[Timeline.Item]>)"
     },
     {
@@ -4609,10 +4502,10 @@
       "name": "TreeSelect",
       "category": "Molecules",
       "doc": "Hierarchical (nested) select with expand/collapse and multi-selection.",
-      "init": "init(label: String? = nil, nodes: [TreeNode], selection: Binding<Set<String>>, placeholder: String = String(themeKit: \"Select\"), cascade: Bool = false, searchable: Bool = false, initiallyExpanded: Set<String> = [], isLoading: Bool = false, isNodeEnabled: ((TreeNode) -> Bool)? = nil)",
+      "init": "init(_ label: String? = nil, nodes: [TreeNode], selection: Binding<Set<String>>, initiallyExpanded: Set<String> = [])",
       "params": [
         {
-          "label": "label",
+          "label": "_",
           "name": "label",
           "type": "String?",
           "default": "nil"
@@ -4628,50 +4521,46 @@
           "type": "Binding<Set<String>>"
         },
         {
-          "label": "placeholder",
-          "name": "placeholder",
-          "type": "String",
-          "default": "String(themeKit: \"Select\")"
-        },
-        {
-          "label": "cascade",
-          "name": "cascade",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "searchable",
-          "name": "searchable",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
           "label": "initiallyExpanded",
           "name": "initiallyExpanded",
           "type": "Set<String>",
           "default": "[]"
-        },
-        {
-          "label": "isLoading",
-          "name": "isLoading",
-          "type": "Bool",
-          "default": "false"
-        },
-        {
-          "label": "isNodeEnabled",
-          "name": "isNodeEnabled",
-          "type": "((TreeNode) -> Bool)?",
-          "default": "nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "cascade(_:)",
+          "signature": ".cascade(_ on: Bool = true) -> TreeSelect",
+          "doc": "Parent ↔ child cascade selection with tri-state (indeterminate) parents."
+        },
+        {
+          "name": "loading(_:)",
+          "signature": ".loading(_ on: Bool = true) -> TreeSelect",
+          "doc": "Swap the node list for a loading row while `on`."
+        },
+        {
+          "name": "nodeEnabled(_:)",
+          "signature": ".nodeEnabled(_ predicate: ((TreeNode) -> Bool)?) -> TreeSelect",
+          "doc": "Per-node enabled predicate — disabled nodes can't be toggled."
+        },
+        {
+          "name": "placeholder(_:)",
+          "signature": ".placeholder(_ text: String) -> TreeSelect",
+          "doc": "Placeholder shown in the field when nothing is selected."
+        },
+        {
+          "name": "searchable(_:)",
+          "signature": ".searchable(_ on: Bool = true) -> TreeSelect",
+          "doc": "Show an inline search field that filters the visible nodes."
+        }
+      ],
       "usage": "TreeSelect(nodes: <[TreeNode]>, $selection)"
     },
     {
       "name": "Upload",
       "category": "Organisms",
       "doc": "Organism.",
-      "init": "init(prompt: String = String(themeKit: \"Add a photo from your device or take one with the camera.\"), buttonTitle: String = String(themeKit: \"Upload Photo\"), files: [UploadFile] = [], maxCount: Int? = nil, onPick: @escaping () -> Void = {}, onRemove: @escaping (UploadFile) -> Void = { _ in }, onRetry: ((UploadFile) -> Void)? = nil)",
+      "init": "init(prompt: String = String(themeKit: \"Add a photo from your device or take one with the camera.\"), files: [UploadFile] = [], onPick: @escaping () -> Void = {}, onRemove: @escaping (UploadFile) -> Void = { _ in }, onRetry: ((UploadFile) -> Void)? = nil)",
       "params": [
         {
           "label": "prompt",
@@ -4680,22 +4569,10 @@
           "default": "String(themeKit: \"Add a photo from your device or take one with the camera.\")"
         },
         {
-          "label": "buttonTitle",
-          "name": "buttonTitle",
-          "type": "String",
-          "default": "String(themeKit: \"Upload Photo\")"
-        },
-        {
           "label": "files",
           "name": "files",
           "type": "[UploadFile]",
           "default": "[]"
-        },
-        {
-          "label": "maxCount",
-          "name": "maxCount",
-          "type": "Int?",
-          "default": "nil"
         },
         {
           "label": "onPick",
@@ -4704,7 +4581,18 @@
           "default": "{}, onRemove: @escaping (UploadFile) -> Void = { _ in }, onRetry: ((UploadFile) -> Void)? = nil"
         }
       ],
-      "modifiers": [],
+      "modifiers": [
+        {
+          "name": "buttonTitle(_:)",
+          "signature": ".buttonTitle(_ title: String) -> Upload",
+          "doc": "Title of the file-picker button."
+        },
+        {
+          "name": "maxCount(_:)",
+          "signature": ".maxCount(_ count: Int?) -> Upload",
+          "doc": "Cap the number of files; once reached the picker is disabled and a count is shown."
+        }
+      ],
       "usage": "Upload()"
     },
     {
@@ -4802,66 +4690,168 @@
   ],
   "modifiers": [
     "a11yID(_:)",
+    "a11yLabel(_:)",
+    "action(_:)",
+    "action(_:onAction:)",
+    "alertCount(_:)",
+    "alignment(_:)",
     "allowHalf(_:)",
     "arrows(_:)",
     "autoplay(_:)",
+    "axis(_:)",
     "axis(_:height:)",
     "backButton(_:action:)",
+    "badge(_:)",
     "badgeColor(_:)",
     "badgeShape(_:)",
+    "badgeStyle(_:)",
     "barHeight(_:)",
+    "buttonTitle(_:)",
+    "calloutStyle(_:)",
+    "cascade(_:)",
+    "characterLimit(_:)",
+    "chipStyle(_:)",
+    "circle(_:)",
     "clearable(_:)",
+    "color(_:)",
     "colors(fill:track:)",
+    "components(_:)",
+    "contentMode(_:)",
+    "cornerRadius(_:)",
+    "couponStyle(_:)",
+    "ctaTitle(_:)",
+    "customSize(_:)",
+    "dashboard(_:)",
+    "dashed(_:)",
     "debounce(_:)",
     "density(_:)",
+    "description(_:)",
+    "digitCount(_:)",
+    "dimension(_:)",
     "divider(_:)",
     "dots(_:position:)",
     "editable(_:)",
+    "errorText(_:)",
     "exists(_:)",
     "expands(_:)",
     "fade(_:)",
+    "fileName(_:)",
+    "fillColor(_:)",
+    "fullWidth(_:)",
+    "gap(_:)",
+    "gaugeStyle(_:)",
     "gradient(_:)",
+    "hasError(_:)",
     "hasInfo(_:)",
+    "height(_:)",
     "highlighted(_:)",
+    "hint(_:)",
     "icon(_:)",
+    "icon(leading:trailing:)",
+    "iconBackground(_:)",
+    "iconCircleSize(_:)",
+    "iconForeground(_:)",
+    "imageMaxHeight(_:)",
+    "indeterminate(_:)",
     "indicator(_:)",
+    "infoMessages(_:)",
+    "infos(_:)",
     "inputs(_:titles:)",
     "interactive(_:)",
     "jumper(_:title:)",
+    "large(_:)",
+    "leadingImage(_:)",
+    "leadingSelection(_:)",
+    "lineWidth(_:)",
     "loading(_:)",
+    "locale(_:)",
     "loop(_:)",
     "marks(_:)",
+    "maxCount(_:)",
     "maxResults(_:)",
     "maxTags(_:)",
     "maxValue(_:)",
+    "message(_:)",
+    "meta(_:)",
+    "minHeight(_:)",
+    "mode(_:)",
+    "multilineTitle(_:)",
     "muteToggle(_:)",
     "muted(_:)",
+    "nodeEnabled(_:)",
     "number(_:)",
     "onChangeEnd(_:)",
+    "onClear(_:)",
+    "onClose(_:)",
+    "onDismiss(_:)",
+    "onInfo(_:)",
     "onRate(_:)",
     "onReviewTap(_:)",
     "onSearch(_:)",
     "onValueChange(_:)",
+    "pending(_:)",
+    "placeholder(_:)",
+    "prefix(_:)",
+    "presence(_:pulse:)",
+    "primaryAction(_:action:)",
+    "progressDot(_:)",
     "progressLabel(_:)",
+    "pulse(_:)",
+    "radioStyle(_:)",
+    "range(_:)",
     "rating(_:)",
+    "ratio(_:)",
+    "required(_:)",
+    "resend(interval:onResend:)",
+    "reversed(_:)",
+    "ringColor(_:)",
+    "rotate(_:)",
+    "scrollable(_:)",
     "searchable(_:)",
+    "secondaryAction(_:action:)",
+    "secure(_:)",
+    "selected(_:)",
     "sentiment(_:)",
+    "shape(_:)",
     "showTotal(_:)",
+    "showsIcon(_:)",
+    "showsLabel(_:)",
+    "showsValue(_:)",
     "showsValueTooltip(_:)",
+    "side(_:)",
     "simple(_:)",
+    "size(_:)",
+    "small(_:)",
+    "spacing(_:)",
     "starSize(_:)",
+    "status(_:)",
+    "step(_:)",
+    "stepText(_:)",
     "steps(_:)",
+    "style(_:)",
     "subtitle(_:)",
     "successSegment(_:)",
+    "suffix(_:)",
     "suggestionEnabled(_:)",
     "symbol(_:)",
+    "symbols(on:off:)",
+    "tabStyle(_:)",
+    "tagStyle(_:)",
     "tapToToggle(_:)",
+    "titleAlign(_:)",
     "titleSize(_:)",
+    "trailing(_:)",
     "trailingIcon(_:)",
     "trailingIcon(_:action:)",
+    "trend(_:)",
     "truncateSubtitle(_:)",
+    "type(_:)",
+    "unit(_:)",
     "valueFormat(_:)",
     "valueLabel(_:)",
+    "variant(_:)",
+    "videoProgress(_:)",
+    "weight(_:)",
     "window(sibling:boundary:)"
   ],
   "enums": {
@@ -5040,10 +5030,6 @@
       "pill",
       "circle",
       "square"
-    ],
-    "ButtonIconPosition": [
-      "leading",
-      "trailing"
     ],
     "CheckboxType": [
       "plain",
@@ -5483,6 +5469,42 @@
       "pink700",
       "pink800",
       "pink900"
+    ],
+    "DesignSpec.Source": [
+      "bundled(resource:)",
+      "file(_:)",
+      "remote(_:)",
+      "pasted"
+    ],
+    "DesignParseResult.Confidence": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "DesignParseResult.Method": [
+      "heuristic",
+      "resolver(_:)"
+    ],
+    "DesignParseResult.Field": [
+      "primary",
+      "base",
+      "secondary",
+      "accent",
+      "tint",
+      "dark",
+      "font",
+      "radiusScale",
+      "spacingScale",
+      "fontScale",
+      "shadowScale"
+    ],
+    "DesignSpecError": [
+      "notFound",
+      "unreadable",
+      "insecureURL",
+      "tooLarge(_:)",
+      "badResponse(_:)",
+      "notText"
     ],
     "Motion": [
       "instant",
