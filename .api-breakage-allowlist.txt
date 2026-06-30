@@ -51,3 +51,4 @@ API breakage: constructor Upload.init(prompt:buttonTitle:files:maxCount:onPick:o
 API breakage: constructor Chip.init(_:isSelected:size:selectionStyle:) has been removed
 API breakage: constructor InputLabel.init(_:isRequired:hasInfo:hasError:) has been removed
 API breakage: constructor RollingNumber.init(_:size:weight:color:) has been removed
+API breakage: constructor StatusDot.init(_:size:label:pulse:) has been removed

@@ -947,7 +947,7 @@ struct StatusDotDemo: View {
     @State private var pulse = true
     var body: some View {
         ComponentStage("Status", inspector: [("kind", "\(kind)")]) {
-            StatusDot(kind, size: 14, label: "Status", pulse: pulse)
+            StatusDot(kind, label: "Status").size(14).pulse(pulse)
         } knobs: {
             Picker("Kind", selection: $kind) {
                 Text("Online").tag(StatusKind.online); Text("Busy").tag(StatusKind.busy); Text("Away").tag(StatusKind.away); Text("Offline").tag(StatusKind.offline)

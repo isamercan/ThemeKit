@@ -54,7 +54,7 @@ enum ComponentRegistry {
         .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284).size(40)   // odometer digit roll"#),
         .knob("Indicator", .atoms, demo: IndicatorDemo(), usage: #"icon.indicatorDot()   // or .indicator { Badge("3") }"#),
         .static("Kbd", .atoms, usage: #"Kbd("⌘")  Kbd("K")"#) { HStack(spacing: 6) { Kbd("⌘"); Kbd("K"); Text("then").font(.caption).foregroundStyle(.secondary); Kbd("esc") } },
-        .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online", pulse: true)"#),
+        .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online").pulse()"#),
         .knob("Swap", .atoms, demo: SwapDemo(), usage: #"Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal")"#),
         .knob("TextLink", .atoms, demo: TextLinkDemo(), usage: #"TextLink("Forgot password?", underline: true) { }"#),
         .knob("Rating", .atoms, demo: RatingDemo(), usage: #"Rating(value: 4.5).allowHalf().onRate { value = $0 }"#),

@@ -94,7 +94,7 @@ public struct Avatar: View {
             ZStack {
                 Circle().fill(theme.background(.bgWhite))
                     .frame(width: dot + ring * 2, height: dot + ring * 2)
-                StatusDot(presence, size: dot, pulse: presencePulse)
+                StatusDot(presence).size(dot).pulse(presencePulse)
             }
             .offset(x: shape == .circle ? -dim * 0.15 : -dim * 0.02,
                     y: shape == .circle ? -dim * 0.15 : -dim * 0.02)

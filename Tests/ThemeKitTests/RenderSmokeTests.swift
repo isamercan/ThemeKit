@@ -30,7 +30,7 @@ final class RenderSmokeTests: XCTestCase {
         Theme.shared.loadTheme(named: "defaultTheme")
         renders(Spinner(), "Spinner")
         renders(ProgressBar(value: 0.5, showPercentage: true), "ProgressBar")
-        renders(StatusDot(.online, label: "Online", pulse: true), "StatusDot")
+        renders(StatusDot(.online, label: "Online").pulse(), "StatusDot")
         renders(Badge("New"), "Badge")
         renders(Skeleton(width: 120, height: 16), "Skeleton")
         renders(Rating(value: 4.3, layout: .rateNumberText), "Rating")

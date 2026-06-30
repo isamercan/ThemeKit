@@ -13,6 +13,11 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`StatusDot` init reduced to `StatusDot(_ kind:label:)`.** The status kind and
+  the (content) label stay in init; the 2 appearance/state parameters moved to
+  modifiers: `size:`→`.size(_:)`, `pulse:`→`.pulse(_:)`. Migration:
+  `StatusDot(.online, size: 14, label: "Online", pulse: true)`
+  → `StatusDot(.online, label: "Online").size(14).pulse()`.
 - **`RollingNumber` init reduced to `RollingNumber(_ value:)`.** The value stays
   in init; the 3 appearance parameters moved to modifiers: `size:`→`.size(_:)`,
   `weight:`→`.weight(_:)`, `color:`→`.color(_:)`. Migration:

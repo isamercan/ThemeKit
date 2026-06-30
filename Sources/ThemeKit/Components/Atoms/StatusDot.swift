@@ -37,19 +37,19 @@ public enum StatusKind {
 public struct StatusDot: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var size: CGFloat = 10
+    private var pulse = false
+
     private let kind: StatusKind
-    private let size: CGFloat
     private let label: String?
-    private let pulse: Bool
 
     @State private var animating = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    public init(_ kind: StatusKind, size: CGFloat = 10, label: String? = nil, pulse: Bool = false) {
+    public init(_ kind: StatusKind, label: String? = nil) {   // R1
         self.kind = kind
-        self.size = size
         self.label = label
-        self.pulse = pulse
     }
 
     /// The pulse ring only animates when motion is allowed.
@@ -78,9 +78,25 @@ public struct StatusDot: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension StatusDot {
+    /// Dot diameter.
+    func size(_ s: CGFloat) -> Self { copy { $0.size = s } }
+
+    /// Animate an expanding pulse ring around the dot.
+    func pulse(_ on: Bool = true) -> Self { copy { $0.pulse = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
-        StatusDot(.online, label: "Online", pulse: true)
+        StatusDot(.online, label: "Online").pulse()
         StatusDot(.busy, label: "Busy")
         StatusDot(.away, label: "Away")
         StatusDot(.offline, label: "Offline")
