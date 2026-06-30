@@ -128,7 +128,7 @@ enum ComponentRegistry {
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
         .knob("AccordionGroup", .organisms, demo: AccordionGroupDemo(), usage: #"AccordionGroup(faqs, mode: .single) { $0.q } content: { Text($0.a) }"#),
-        .knob("AlertToast", .organisms, demo: AlertToastDemo(), usage: #"AlertToast("Saved", type: .success, onClose: { })"#),
+        .knob("AlertToast", .organisms, demo: AlertToastDemo(), usage: #"AlertToast("Saved").variant(.success).onClose { }"#),
         .knob("BlogCard", .organisms, demo: BlogCardDemo(), usage: #"BlogCard(title: "…", excerpt: "…", onReadMore: { }) { mediaView }"#),
         .knob("BottomSheet", .organisms, demo: BottomSheetDemo(), usage: #"// install once: .sheetHost()\n@Environment(SheetPresenter.self) var sheet: SheetPresenter\nsheet.present(detents: [.height(280), .large]) { FilterView() }\n// or declarative: someView.bottomSheet(isPresented: $open, detents: [.medium]) { … }"#),
         .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message", type: .success, style: .plain)"#),

@@ -76,7 +76,7 @@ struct AlertToastDemo: View {
 
     var body: some View {
         ComponentStage("AlertToast", inspector: [("type", "\(type)")]) {
-            AlertToast("Saved successfully", message: message ? "Your changes were stored." : nil, type: type, onClose: closable ? { flash("AlertToast closed") } : nil)
+            AlertToast("Saved successfully").message(message ? "Your changes were stored." : nil).variant(type).onClose(closable ? { flash("AlertToast closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Success").tag(AlertToastType.success); Text("Warning").tag(AlertToastType.warning); Text("Danger").tag(AlertToastType.danger); Text("Info").tag(AlertToastType.info)

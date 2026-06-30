@@ -250,7 +250,7 @@ final class ScreenshotGenerator: XCTestCase {
             Text("You can request a refund within 14 days of purchase.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 340))
-        shot("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.", type: .success).frame(width: 340))
+        shot("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.").variant(.success).frame(width: 340))
         shot("Callout", VStack(alignment: .leading, spacing: 10) {
             Callout("Saved successfully.", type: .success)
             Callout("Please review your details.", type: .warning, style: .soft)

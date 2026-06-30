@@ -299,9 +299,13 @@ private struct FeedbackToastRow: View {
     @State private var offset: CGFloat = 0
 
     var body: some View {
-        AlertToast(item.title, message: item.message, type: item.kind.toastType,
-                   systemImage: item.systemImage, isLoading: item.isLoading,
-                   action: item.action, onClose: onDismiss)
+        AlertToast(item.title)
+            .message(item.message)
+            .variant(item.kind.toastType)
+            .icon(item.systemImage)
+            .loading(item.isLoading)
+            .action(item.action)
+            .onClose(onDismiss)
             .themeShadow(.elevated)
             .offset(y: offset)
             .opacity(dragOpacity)

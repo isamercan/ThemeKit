@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`AlertToast` init reduced to `AlertToast(_ title:)`.** The 6 other
+  parameters moved to modifiers: `message:`→`.message(_:)`,
+  `type:`→`.variant(_:)`, `systemImage:`→`.icon(_:)`,
+  `isLoading:`→`.loading(_ on:)`, `action:`→`.action(_:)`,
+  `onClose:`→`.onClose(_:)`. Migration:
+  `AlertToast("Saved", type: .success, onClose: { })`
+  → `AlertToast("Saved").variant(.success).onClose { }`.
 - **`ThemeButton` init reduced to `ThemeButton(_ title:action:)`.** All
   appearance/state parameters moved to modifiers:
   `color:` → `.color(_:)`, `variant:` → `.variant(_:)`, `size:` → `.size(_:)`,

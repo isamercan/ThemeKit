@@ -68,8 +68,8 @@ final class GifGenerator: XCTestCase {
                         message: "This action cannot be undone.", confirmTitle: "Delete",
                         cancelTitle: "Cancel", edge: .top, onConfirm: {}))
 
-        gif("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.",
-                                     type: .success, onClose: {}).frame(width: 360).padding(.vertical, 12))
+        gif("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.")
+                                     .variant(.success).onClose {}.frame(width: 360).padding(.vertical, 12))
 
         gif("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
             .tooltip("Helpful tip", isPresented: .constant(true), edge: .bottom)
