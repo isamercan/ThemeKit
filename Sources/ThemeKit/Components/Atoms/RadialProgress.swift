@@ -12,36 +12,22 @@ public struct RadialProgress: View {
     @Environment(\.theme) private var theme
 
     private let value: Double
-    private let size: CGFloat
-    private let lineWidth: CGFloat
-    private let showLabel: Bool
-    private let status: ProgressStatus
-    private let dashboard: Bool
-    private let tint: Color?
-    private let accessibilityLabelText: String?
+
+    // Appearance/state/config — mutated only through the modifiers below (R2).
+    private var size: CGFloat = 64
+    private var lineWidth: CGFloat = 6
+    private var showLabel: Bool = true
+    private var status: ProgressStatus = .normal
+    private var dashboard: Bool = false
+    private var tint: Color?
+    private var accessibilityLabelText: String?
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(
-        value: Double,
-        size: CGFloat = 64,
-        lineWidth: CGFloat = 6,
-        showLabel: Bool = true,
-        status: ProgressStatus = .normal,
-        dashboard: Bool = false,
-        tint: Color? = nil,
-        accessibilityLabel: String? = nil
-    ) {
+    public init(_ value: Double) {   // R1
         self.value = min(max(value, 0), 1)
-        self.size = size
-        self.lineWidth = lineWidth
-        self.showLabel = showLabel
-        self.status = status
-        self.dashboard = dashboard
-        self.tint = tint
-        self.accessibilityLabelText = accessibilityLabel
     }
 
     /// Percentage rounded mid-range, but capped at 99% until the value is
@@ -85,12 +71,43 @@ public struct RadialProgress: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RadialProgress {
+    /// Diameter of the ring, in points.
+    func size(_ s: CGFloat) -> Self { copy { $0.size = s } }
+
+    /// Stroke width of the ring.
+    func lineWidth(_ w: CGFloat) -> Self { copy { $0.lineWidth = w } }
+
+    /// Show or hide the center label (percentage / success-fail glyph).
+    func showsLabel(_ on: Bool = true) -> Self { copy { $0.showLabel = on } }
+
+    /// Semantic status driving the fill color and success/exception glyphs.
+    func status(_ s: ProgressStatus) -> Self { copy { $0.status = s } }
+
+    /// Dashboard (gapped) ring variant.
+    func dashboard(_ on: Bool = true) -> Self { copy { $0.dashboard = on } }
+
+    /// Override the ring fill color (otherwise derived from `status`).
+    func ringColor(_ c: Color?) -> Self { copy { $0.tint = c } }
+
+    /// Spoken VoiceOver label for the ring (the value is announced separately).
+    func a11yLabel(_ text: String?) -> Self { copy { $0.accessibilityLabelText = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     HStack(spacing: 20) {
-        RadialProgress(value: 0.25)
-        RadialProgress(value: 0.7, size: 80, lineWidth: 8, dashboard: true)
-        RadialProgress(value: 1.0, status: .success)
-        RadialProgress(value: 0.4, status: .exception)
+        RadialProgress(0.25)
+        RadialProgress(0.7).size(80).lineWidth(8).dashboard()
+        RadialProgress(1.0).status(.success)
+        RadialProgress(0.4).status(.exception)
     }
     .padding()
 }

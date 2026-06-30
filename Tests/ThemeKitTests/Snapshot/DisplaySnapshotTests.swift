@@ -106,9 +106,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testRadialProgress() {
         assertComponentSnapshot(
             HStack(spacing: 16) {
-                RadialProgress(value: 0.25)
-                RadialProgress(value: 0.7, dashboard: true)
-                RadialProgress(value: 1.0, status: .success)
+                RadialProgress(0.25)
+                RadialProgress(0.7).dashboard()
+                RadialProgress(1.0).status(.success)
             }
         )
     }

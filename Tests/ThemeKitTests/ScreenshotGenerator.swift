@@ -112,7 +112,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("InputLabel", InputLabel("Email", isRequired: true, hasInfo: true))
         shot("Kbd", HStack(spacing: 6) { Kbd("⌘"); Kbd("K") })
         shot("ProgressBar", ProgressBar(value: 0.6, showPercentage: true).frame(width: 240))
-        shot("RadialProgress", RadialProgress(value: 0.66, size: 96, showLabel: true))
+        shot("RadialProgress", RadialProgress(0.66).size(96).showsLabel())
         shot("Rating", Rating(value: 4.3, countLabel: "(128)"))
         shot("RollingNumber", RollingNumber(1284, size: 40))
         shot("ScoreBadge", ScoreBadge(9.0))
@@ -389,7 +389,7 @@ final class ScreenshotGenerator: XCTestCase {
                     sub("Native SwiftUI design system")
                     Badge("v0.2.0 · iOS 17+", style: .info, leadingSystemImage: "swift")
                     HStack(spacing: 12) {
-                        RadialProgress(value: 0.72, size: 52, showLabel: false)
+                        RadialProgress(0.72).size(52).showsLabel(false)
                         ProgressBar(value: 0.62).frame(width: 130)
                     }.padding(.top, 6)
                 }

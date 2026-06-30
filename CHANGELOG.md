@@ -50,6 +50,15 @@ component-by-component.
   and `@State` seed.) Migration:
   `TreeSelect(label: "Cities", nodes: tree, selection: $set, cascade: true, searchable: true)`
   → `TreeSelect("Cities", nodes: tree, selection: $set).cascade().searchable()`.
+- **`RadialProgress` init reduced to `RadialProgress(_ value:)`.** The 7
+  appearance parameters moved to modifiers: `size:`→`.size(_:)`,
+  `lineWidth:`→`.lineWidth(_:)`, `showLabel:`→`.showsLabel(_ on:)`,
+  `status:`→`.status(_:)`, `dashboard:`→`.dashboard(_ on:)`,
+  `tint:`→`.ringColor(_:)` (renamed to avoid clashing with SwiftUI's `.tint`),
+  `accessibilityLabel:`→`.a11yLabel(_:)` (renamed to avoid clashing with
+  SwiftUI's `.accessibilityLabel`). Migration:
+  `RadialProgress(value: 0.7, size: 80, lineWidth: 8, dashboard: true)`
+  → `RadialProgress(0.7).size(80).lineWidth(8).dashboard()`.
 
 ## [0.2.0] - 2026-06-28
 

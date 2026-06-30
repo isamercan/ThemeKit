@@ -14,3 +14,4 @@ API breakage: enum ButtonIconPosition has been removed
 API breakage: constructor ListRow.init(_:subtitle:number:size:leadingSystemImage:leadingImageURL:leadingSelection:alertCount:badge:meta:infos:isSelected:multilineTitle:infoAction:trailing:action:) has been removed
 API breakage: constructor DateField.init(label:date:placeholder:range:style:locale:components:infoMessages:allowClear:leadingSystemImage:) has been removed
 API breakage: constructor TreeSelect.init(label:nodes:selection:placeholder:cascade:searchable:initiallyExpanded:isLoading:isNodeEnabled:) has been removed
+API breakage: constructor RadialProgress.init(value:size:lineWidth:showLabel:status:dashboard:tint:accessibilityLabel:) has been removed

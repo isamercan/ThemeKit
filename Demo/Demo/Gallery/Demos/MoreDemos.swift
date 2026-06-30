@@ -725,7 +725,7 @@ struct RadialProgressDemo: View {
     private var status: ProgressStatus { statusIdx == 1 ? .success : statusIdx == 2 ? .exception : .normal }
     var body: some View {
         ComponentStage("RadialProgress", inspector: [("value", String(format: "%.2f", value)), ("dashboard", "\(dashboard)")]) {
-            RadialProgress(value: value, size: 96, lineWidth: 8, showLabel: label, status: status, dashboard: dashboard)
+            RadialProgress(value).size(96).lineWidth(8).showsLabel(label).status(status).dashboard(dashboard)
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value) }
             Picker("Status", selection: $statusIdx) { Text("Normal").tag(0); Text("Success").tag(1); Text("Exception").tag(2) }.pickerStyle(.segmented)
