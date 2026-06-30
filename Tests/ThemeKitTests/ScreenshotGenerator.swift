@@ -114,7 +114,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("ProgressBar", ProgressBar(value: 0.6, showPercentage: true).frame(width: 240))
         shot("RadialProgress", RadialProgress(0.66).size(96).showsLabel())
         shot("Rating", Rating(value: 4.3, countLabel: "(128)"))
-        shot("RollingNumber", RollingNumber(1284, size: 40))
+        shot("RollingNumber", RollingNumber(1284).size(40))
         shot("ScoreBadge", ScoreBadge(9.0))
         shot("Skeleton", HStack(spacing: 12) {
             Skeleton(.circle, width: 44, height: 44)

@@ -10,18 +10,17 @@ import SwiftUI
 /// new value when `value` changes (reference `RollingText`). Good for prices,
 /// counters, live stats.
 public struct RollingNumber: View {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var size: CGFloat = 28
+    private var weight: Font.Weight = .bold
+    private var color: Color?
+
     private let value: Int
-    private let size: CGFloat
-    private let weight: Font.Weight
-    private let color: Color?
 
     @Environment(\.theme) private var theme
 
-    public init(_ value: Int, size: CGFloat = 28, weight: Font.Weight = .bold, color: Color? = nil) {
+    public init(_ value: Int) {   // R1
         self.value = value
-        self.size = size
-        self.weight = weight
-        self.color = color
     }
 
     private var digits: [Int] { String(abs(value)).compactMap(\.wholeNumberValue) }
@@ -33,6 +32,25 @@ public struct RollingNumber: View {
                 DigitColumn(digit: digit, size: size, weight: weight, color: color)
             }
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RollingNumber {
+    /// Digit point size.
+    func size(_ s: CGFloat) -> Self { copy { $0.size = s } }
+
+    /// Font weight of the rolling digits.
+    func weight(_ w: Font.Weight) -> Self { copy { $0.weight = w } }
+
+    /// Override the digit color (defaults to `textPrimary`).
+    func color(_ c: Color?) -> Self { copy { $0.color = c } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -74,7 +92,7 @@ private extension Text {
         @State var n = 1234
         var body: some View {
             VStack(spacing: 20) {
-                RollingNumber(n, size: 40)
+                RollingNumber(n).size(40)
                 Button("Roll") { n = Int.random(in: 100...99999) }
             }
             .padding()

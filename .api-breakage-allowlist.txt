@@ -50,3 +50,4 @@ API breakage: constructor CheckboxCard.init(_:description:isChecked:isEnabled:ac
 API breakage: constructor Upload.init(prompt:buttonTitle:files:maxCount:onPick:onRemove:onRetry:) has been removed
 API breakage: constructor Chip.init(_:isSelected:size:selectionStyle:) has been removed
 API breakage: constructor InputLabel.init(_:isRequired:hasInfo:hasError:) has been removed
+API breakage: constructor RollingNumber.init(_:size:weight:color:) has been removed

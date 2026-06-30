@@ -109,7 +109,7 @@ public struct Stat: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             case .number(let number):
-                RollingNumber(number, size: 28, weight: .semibold, color: theme.text(.textPrimary))
+                RollingNumber(number).size(28).weight(.semibold).color(theme.text(.textPrimary))
             }
         }
     }

@@ -13,6 +13,11 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`RollingNumber` init reduced to `RollingNumber(_ value:)`.** The value stays
+  in init; the 3 appearance parameters moved to modifiers: `size:`→`.size(_:)`,
+  `weight:`→`.weight(_:)`, `color:`→`.color(_:)`. Migration:
+  `RollingNumber(1284, size: 40, weight: .semibold, color: c)`
+  → `RollingNumber(1284).size(40).weight(.semibold).color(c)`.
 - **`InputLabel` init reduced to `InputLabel(_ text:)`.** The label text stays in
   init; the 3 appearance/state parameters moved to modifiers: `isRequired:`→
   `.required(_:)` (trailing asterisk), `hasInfo:`→`.hasInfo(_:)` (info glyph),

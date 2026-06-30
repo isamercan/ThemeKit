@@ -51,7 +51,7 @@ enum ComponentRegistry {
         .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).showsLabel()"#),
         .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9").cornerRadius(12)   // .gif/.apng animate natively"#),
         .static("AnimatedImage", .atoms, usage: #"AnimatedImage(gifURL)   // GIF/APNG via ImageIO — no dependency"#) { AnimatedImage(URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")).frame(width: 180, height: 180).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)) },
-        .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284, size: 40)   // odometer digit roll"#),
+        .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284).size(40)   // odometer digit roll"#),
         .knob("Indicator", .atoms, demo: IndicatorDemo(), usage: #"icon.indicatorDot()   // or .indicator { Badge("3") }"#),
         .static("Kbd", .atoms, usage: #"Kbd("⌘")  Kbd("K")"#) { HStack(spacing: 6) { Kbd("⌘"); Kbd("K"); Text("then").font(.caption).foregroundStyle(.secondary); Kbd("esc") } },
         .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online", pulse: true)"#),

@@ -1775,7 +1775,7 @@ struct RollingNumberDemo: View {
     var body: some View {
         ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
             VStack(spacing: 16) {
-                RollingNumber(value, size: size, color: Theme.shared.text(.textHero))
+                RollingNumber(value).size(size).color(Theme.shared.text(.textHero))
                 ThemeButton("Roll") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }.icon(leading: "dice")
             }
         } knobs: {
