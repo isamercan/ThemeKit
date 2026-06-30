@@ -99,7 +99,7 @@
 - `DataTable(title, align:, sortKey:)` — Organism.
 - `Diff(aspectRatio:, @ViewBuilder:)` — Organism.
 - `EmptyState(title)` — Improved, token-bound rewrite of the reference EmptyCardView. · modifiers: `.icon()`, `.message()`, `.imageMaxHeight()`, `.iconForeground()`, `.iconBackground()`, `.iconCircleSize()`, `.primaryAction()`, `.secondaryAction()`
-- `FloatingActionButton(systemImage:, label:, action:)` — Organism.
+- `FloatingActionButton(systemImage:, label:, action:)` — Organism. · modifiers: `.shape()`, `.color()`, `.badge()`
 - `Footer(title, action:)` — Organism.
 - `Gallery(items, columns:, aspect:, @ViewBuilder:)` — Organism.
 - `Hero(title:, subtitle:, ctaTitle:, dark:, action:)` — Organism.

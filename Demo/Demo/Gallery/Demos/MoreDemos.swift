@@ -1011,7 +1011,8 @@ struct FABDemo: View {
                 .init(systemImage: "camera", label: "Photo", action: { flash("FAB: Photo") }),
                 .init(systemImage: "doc", label: "Document", action: { flash("FAB: Document") }),
                 .init(systemImage: "link", label: "Link", action: { flash("FAB: Link") }),
-            ] : [], shape: square ? .square : .circle, color: color, badge: badge ? 3 : nil, action: { flash("FAB tapped") })
+            ] : [], action: { flash("FAB tapped") })
+            .shape(square ? .square : .circle).color(color).badge(badge ? 3 : nil)
             .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomTrailing)
         } knobs: {
             Toggle("Speed dial", isOn: $speedDial)

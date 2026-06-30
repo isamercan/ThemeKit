@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`FloatingActionButton` init reduced to
+  `FloatingActionButton(systemImage:actions:action:)`.** The content glyph, the
+  speed-dial `actions:` data array and the primary `action:` (no-speed-dial mode)
+  stay in init; the 3 appearance params moved to modifiers:
+  `shape:`→`.shape(_:)`, `color:`→`.color(_:)`, `badge:`→`.badge(_:)`. Migration:
+  `FloatingActionButton(systemImage: "bell.fill", shape: .square, color: .error, badge: 3, action: { open() })`
+  → `FloatingActionButton(systemImage: "bell.fill", action: { open() }).shape(.square).color(.error).badge(3)`.
+  (`FABAction` is unchanged.)
 - **`Callout` init reduced to `Callout(_ text:)`.** The 6 other parameters moved
   to modifiers: `type:`→`.variant(_:)`, `style:`→`.calloutStyle(_:)` (renamed to
   avoid the generic `style` clash + match `CalloutStyle`),
