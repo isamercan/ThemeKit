@@ -29,20 +29,31 @@ public enum CheckboxType: Equatable {
 }
 
 /// Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
-/// states checked / disabled / indeterminate. Colors from theme tokens.
+/// states checked / disabled / indeterminate. Colors from theme tokens. Per the
+/// modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only
+/// its label, the `isChecked` binding and the `infoMessages` validation data; every
+/// appearance axis is a chainable, order-free modifier. Size is native
+/// (`@Environment(\.controlSize)`); `disabled` is native (`@Environment(\.isEnabled)`, R3).
+///
+///     Checkbox("I accept the terms", isChecked: $on)
+///         .type(.inner).indeterminate(mixed).alignment(.top)
+///         .controlSize(.small)            // native size
+///         .disabled(!editable)            // native — R3
 public struct Checkbox: View {
     @Environment(\.theme) private var theme
 
     @Binding private var isChecked: Bool
     private let label: String?
-    @Environment(\.controlSize) private var controlSize
-    private let customSize: CGFloat?
-    private let type: CheckboxType
-    private let isIndeterminate: Bool
-    private let alignment: VerticalAlignment
     private let infoMessages: [InfoMessage]
+    @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled
-    private var accessibilityID: String? = nil
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var customSize: CGFloat?
+    private var type: CheckboxType = .plain
+    private var isIndeterminate: Bool = false
+    private var alignment: VerticalAlignment = .center
+    private var accessibilityID: String?
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -51,18 +62,10 @@ public struct Checkbox: View {
     public init(
         _ label: String? = nil,
         isChecked: Binding<Bool>,
-        customSize: CGFloat? = nil,
-        type: CheckboxType = .plain,
-        isIndeterminate: Bool = false,
-        alignment: VerticalAlignment = .center,
         infoMessages: [InfoMessage] = []
-    ) {
+    ) {   // R1 — content + binding + required validation data
         self.label = label
         self._isChecked = isChecked
-        self.customSize = customSize
-        self.type = type
-        self.isIndeterminate = isIndeterminate
-        self.alignment = alignment
         self.infoMessages = infoMessages
     }
 
@@ -155,19 +158,39 @@ public struct Checkbox: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Checkbox {
+    /// Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`.
+    func type(_ t: CheckboxType) -> Self { copy { $0.type = t } }
+
+    /// Renders the indeterminate (mixed) state instead of a checkmark.
+    func indeterminate(_ on: Bool = true) -> Self { copy { $0.isIndeterminate = on } }
+
+    /// Vertical alignment of the box against a multi-line label.
+    func alignment(_ a: VerticalAlignment) -> Self { copy { $0.alignment = a } }
+
+    /// Overrides the box side length, bypassing the native `.controlSize` metric.
+    func customSize(_ side: CGFloat?) -> Self { copy { $0.customSize = side } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
         Checkbox(isChecked: .constant(false))
         Checkbox(isChecked: .constant(true))
-        Checkbox(isChecked: .constant(true), isIndeterminate: true)
+        Checkbox(isChecked: .constant(true)).indeterminate()
         Checkbox(isChecked: .constant(true)).controlSize(.small)
         Checkbox(isChecked: .constant(true)).disabled(true)
     }
     .padding()
-}
-
-public extension Checkbox {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

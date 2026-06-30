@@ -79,6 +79,15 @@ component-by-component.
   `style:`/`padding:`/`backgroundColor:` parameters too. Migration:
   `RadioButton("Remember me", isSelected: $on, type: .check, style: .inner, padding: .medium)`
   → `RadioButton("Remember me", isSelected: $on).type(.check).radioStyle(.inner).gap(.medium)`.
+- **`Checkbox` init reduced to `Checkbox(_ label:isChecked:infoMessages:)`.** The
+  4 appearance parameters moved to modifiers: `customSize:`→`.customSize(_:)`,
+  `type:`→`.type(_:)`, `isIndeterminate:`→`.indeterminate(_ on:)`,
+  `alignment:`→`.alignment(_:)`. (`label`/`isChecked`/`infoMessages` stay in init —
+  content, binding, and required validation data; size already native
+  `.controlSize(_:)`, `disabled` already native, and `.a11yID(_:)` already a
+  modifier — now rerouted through the shared `copy(_:)` helper.) Migration:
+  `Checkbox("Accept", isChecked: $on, type: .inner, isIndeterminate: mixed)`
+  → `Checkbox("Accept", isChecked: $on).type(.inner).indeterminate(mixed)`.
 - **`Stat` init reduced to `Stat(title:value:)`** (both the `String` and `Int`
   value overloads). The 6 other parameters moved to modifiers:
   `prefix:`→`.prefix(_:)`, `suffix:`→`.suffix(_:)`, `isLoading:`→`.loading(_ on:)`,

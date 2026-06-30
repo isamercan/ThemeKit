@@ -68,7 +68,7 @@ public struct CheckboxGroup<Option: Hashable>: View {
             if let selectAllTitle {
                 Button(action: toggleAll) {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Checkbox(isChecked: .constant(allSelected), isIndeterminate: someSelected)
+                        Checkbox(isChecked: .constant(allSelected)).indeterminate(someSelected)
                         Text(selectAllTitle)
                             .textStyle(.labelBase600)
                             .foregroundStyle(theme.text(.textPrimary))

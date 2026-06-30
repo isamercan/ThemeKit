@@ -167,7 +167,7 @@ public struct TreeSelect: View {
             Button { toggleSelect(node) } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     let state = checkState(node)
-                    Checkbox(isChecked: .constant(state == .on), isIndeterminate: state == .partial)
+                    Checkbox(isChecked: .constant(state == .on)).indeterminate(state == .partial)
                         .controlSize(.small)
                         .allowsHitTesting(false)
                     if let icon = node.systemImage {

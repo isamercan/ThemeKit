@@ -92,9 +92,11 @@ struct CheckboxDemo: View {
     var body: some View {
         ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
             Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked,
-                     customSize: big ? 32 : nil, type: type,
-                     isIndeterminate: indeterminate, alignment: .top,
                      infoMessages: messages)
+                    .customSize(big ? 32 : nil)
+                    .type(type)
+                    .indeterminate(indeterminate)
+                    .alignment(.top)
                     .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {
