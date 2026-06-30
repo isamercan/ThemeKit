@@ -147,17 +147,19 @@ public extension RadioButton {
     init<V: Hashable>(
         tag: V,
         selection: Binding<V?>,
-        type: RadioButtonType = .select,
         infoMessages: [InfoMessage] = []
     ) {
+        // The deselect branch only ever fires for `.check` radios (a `.select`
+        // radio's tap sets `isSelected = true`, never false), so clearing to
+        // `nil` is correct for both — and, crucially, it does NOT capture `type`,
+        // so the `.type(.check)` modifier governs behavior correctly (R1).
         self.init(
             isSelected: Binding(
                 get: { selection.wrappedValue == tag },
-                set: { newValue in selection.wrappedValue = newValue ? tag : (type == .check ? nil : tag) }
+                set: { newValue in selection.wrappedValue = newValue ? tag : nil }
             ),
             infoMessages: infoMessages
         )
-        self.type = type
     }
 }
 
