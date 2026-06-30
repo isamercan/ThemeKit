@@ -314,10 +314,12 @@ struct SegmentedControlDemo: View {
                 SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
                                   SegmentItem("Grid", systemImage: "square.grid.2x2"),
                                   SegmentItem("Map", systemImage: "map", isEnabled: false)],
-                                 selection: $selection, block: block, size: size)
+                                 selection: $selection)
+                    .fullWidth(block).size(size)
                     .disabled(!enabled)
             } else {
-                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection, block: block, size: size)
+                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection)
+                    .fullWidth(block).size(size)
                     .disabled(!enabled)
             }
         } knobs: {

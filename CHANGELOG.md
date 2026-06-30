@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`SegmentedControl` init reduced to `SegmentedControl(_:selection:)`.** Both
+  overloads (`[SegmentItem]` and `[String]`) keep only their items data + the
+  `selection` binding; the 2 appearance parameters moved to modifiers:
+  `block:`→`.fullWidth(_ on: Bool = true)` (default `true`, preserving the old
+  default), `size:`→`.size(_:)`. The per-item `SegmentItem.isEnabled` remains
+  item data. Migration:
+  `SegmentedControl(items, selection: $i, block: false, size: .large)`
+  → `SegmentedControl(items, selection: $i).fullWidth(false).size(.large)`.
 - **`Coupon` init reduced to `Coupon(code:label:onCopy:)`.** The code, the label
   copy and the `onCopy` callback stay in init; the 1 appearance parameter moved to
   a modifier: `style:`→`.couponStyle(_:)` (renamed to avoid the generic `style`

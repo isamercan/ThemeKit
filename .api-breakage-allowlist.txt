@@ -54,3 +54,4 @@ API breakage: constructor RollingNumber.init(_:size:weight:color:) has been remo
 API breakage: constructor StatusDot.init(_:size:label:pulse:) has been removed
 API breakage: constructor ImageChip.init(isSelected:url:size:isEnabled:) has been removed
 API breakage: constructor Coupon.init(code:label:style:onCopy:) has been removed
+API breakage: constructor SegmentedControl.init(_:selection:block:size:) has been removed

@@ -71,7 +71,7 @@
 - `RadioButtonGroup` — A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.
 - `RangeSlider(lowerValue:, upperValue:, in:, step:)` — Improved, token-bound rewrite of the reference RangeSliderView — a self-contained dual-thumb slider over a numeric range (decoupled from the reference's text-field wiring). · modifiers: `.a11yID()`, `.marks()`, `.inputs()`, `.onChangeEnd()`, `.valueLabel()`
 - `SearchBar(text:, placeholder:, suggestions:, recent:, onSearch:)` — A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks. · modifiers: `.a11yID()`, `.backButton()`, `.trailingIcon()`, `.debounce()`, `.maxResults()`
-- `SegmentedControl(title, systemImage:, isEnabled:)` — Molecule. · modifiers: `.a11yID()`
+- `SegmentedControl(title, systemImage:, isEnabled:)` — Molecule. · modifiers: `.fullWidth()`, `.size()`, `.a11yID()`
 - `Select(title, options)` — A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `searchable` is on. · modifiers: `.a11yID()`
 - `SelectBox(label:, options:, selection:, placeholder:, hint:, errorText: …)` — Molecule. · modifiers: `.a11yID()`
 - `Slider(value:, in:, step:, label:)` — Molecule. · modifiers: `.a11yID()`, `.marks()`, `.axis()`, `.showsValueTooltip()`, `.onChangeEnd()`
