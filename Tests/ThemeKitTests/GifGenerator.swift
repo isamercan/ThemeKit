@@ -61,7 +61,7 @@ final class GifGenerator: XCTestCase {
 
         gif("Popconfirm", VStack {
             Spacer()
-            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) {}
+            ThemeButton("Delete") {}.icon(leading: "trash").color(.error).variant(.soft)
         }
             .frame(width: 320, height: 240)
             .popconfirm(isPresented: .constant(true), title: "Delete this item?",

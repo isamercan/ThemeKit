@@ -175,9 +175,9 @@ final class ScreenshotGenerator: XCTestCase {
             OutlineButton("More") {}
         })
         shot("ThemeButton", HStack(spacing: 10) {
-            ThemeButton("Solid", color: .primary) {}
-            ThemeButton("Soft", color: .success, variant: .soft) {}
-            ThemeButton("Pill", color: .error, variant: .outline, shape: .pill) {}
+            ThemeButton("Solid") {}.color(.primary)
+            ThemeButton("Soft") {}.color(.success).variant(.soft)
+            ThemeButton("Pill") {}.color(.error).variant(.outline).shape(.pill)
         })
         shot("Checkbox", VStack(alignment: .leading, spacing: 10) {
             Checkbox("Accept the terms", isChecked: .constant(true))

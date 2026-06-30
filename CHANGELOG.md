@@ -5,6 +5,27 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [Unreleased]
+
+The modifier-based component refactor (COMPONENT_REFACTOR_RULES R1–R7): bloated
+inits collapse to `content + action`; every appearance/state axis becomes a
+chainable, order-free modifier from a shared vocabulary. Rolling out
+component-by-component.
+
+### ⚠️ Breaking
+- **`ThemeButton` init reduced to `ThemeButton(_ title:action:)`.** All
+  appearance/state parameters moved to modifiers:
+  `color:` → `.color(_:)`, `variant:` → `.variant(_:)`, `size:` → `.size(_:)`,
+  `shape:` → `.shape(_:)`, `block:` → `.fullWidth(_:)`,
+  `isLoading: Binding<Bool>` → `.loading(_ on:)`,
+  `systemImage:`/`iconPosition:` → `.icon(leading:trailing:)`,
+  `accessibilityID:` → `.a11yID(_:)`, and
+  `isEnabled: Binding<Bool>` → native `.disabled(_:)` (R3). The
+  `ButtonIconPosition` enum is removed (encode position via `.icon`'s
+  `leading:`/`trailing:` slots). Migration:
+  `ThemeButton("Save", color: .accent, variant: .soft, block: true) { save() }`
+  → `ThemeButton("Save") { save() }.color(.accent).variant(.soft).fullWidth()`.
+
 ## [0.2.0] - 2026-06-28
 
 The theming release: per-subtree theming, a full singleton→environment migration, the

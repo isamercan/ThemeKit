@@ -66,9 +66,9 @@ struct ThemesView: View {
                 // keeps each label on one line and wraps to the next row when they
                 // don't fit, instead of squeezing the text onto two lines.
                 ButtonGroup(.horizontal) {
-                    ThemeButton("Primary", color: .primary, variant: .solid) {}
-                    ThemeButton("Secondary", color: .secondary, variant: .solid) {}
-                    ThemeButton("Accent", color: .accent, variant: .solid) {}
+                    ThemeButton("Primary") {}.color(.primary).variant(.solid)
+                    ThemeButton("Secondary") {}.color(.secondary).variant(.solid)
+                    ThemeButton("Accent") {}.color(.accent).variant(.solid)
                 }
                 ButtonGroup(.horizontal) {
                     PrimaryButton("Continue") {}

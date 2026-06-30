@@ -86,7 +86,7 @@ recolor for free:
 ```swift
 Badge("Sale", style: .error, variant: .solid)
 Chip("Pool", isSelected: $on).icon("drop.fill")
-ThemeButton("Save", color: .accent, variant: .solid) { save() }
+ThemeButton("Save") { save() }.color(.accent).variant(.solid)
 TextInput("Email", text: $email, leadingSystemImage: "envelope")
     .a11yID("login.email")
 Select("Country", options: countries, selection: $country) { $0.name }

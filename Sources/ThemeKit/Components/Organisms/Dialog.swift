@@ -50,7 +50,8 @@ struct DialogCard: View {
 
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 if let primaryColor {
-                    ThemeButton(primaryTitle, color: primaryColor, block: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
+                    ThemeButton(primaryTitle, action: onPrimary)
+                        .color(primaryColor).fullWidth().loading(isPrimaryLoading)
                 } else {
                     PrimaryButton(primaryTitle, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 }

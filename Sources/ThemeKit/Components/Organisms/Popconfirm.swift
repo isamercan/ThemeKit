@@ -56,10 +56,11 @@ private struct PopconfirmModifier: ViewModifier {
             }
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Spacer(minLength: 0)
-                ThemeButton(cancelTitle, variant: .outline, size: .small, isEnabled: .constant(!loading)) {
+                ThemeButton(cancelTitle) {
                     isPresented = false; onCancel?()
                 }
-                ThemeButton(confirmTitle, color: confirmKind.semanticColor, size: .small, isLoading: $loading) {
+                .variant(.outline).size(.small).disabled(loading)
+                ThemeButton(confirmTitle) {
                     Task {
                         loading = true
                         await onConfirm()
@@ -67,6 +68,7 @@ private struct PopconfirmModifier: ViewModifier {
                         isPresented = false
                     }
                 }
+                .color(confirmKind.semanticColor).size(.small).loading(loading)
             }
         }
         .padding(Theme.SpacingKey.md.value)
@@ -119,7 +121,7 @@ public extension View {
     struct Demo: View {
         @State var show = true
         var body: some View {
-            ThemeButton("Delete", color: .error, variant: .soft) { show.toggle() }
+            ThemeButton("Delete") { show.toggle() }.color(.error).variant(.soft)
                 .popconfirm(isPresented: $show, title: "Delete this item?", message: "This can't be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel") {}
                 .padding(80)

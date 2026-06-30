@@ -45,7 +45,7 @@
 - `OutlineButton`
 - `GhostButton`
 - `LinkButton`
-- `ThemeButton(title, systemImage:, iconPosition:, color:, variant:, size: …)`
+- `ThemeButton(title) { action }` · modifiers: `.variant() .color() .size() .shape() .fullWidth() .loading() .icon(leading:trailing:) .a11yID()`
 - `CalendarView(selection:)` — Molecule.
 - `Checkbox(label, isChecked:, customSize:, type:, isIndeterminate:, alignment: …)` — Figma "Control Items" → Checkboxes. · modifiers: `.a11yID()`
 - `CheckboxGroup(title:, options:, selection:, infoMessages:, selectAllTitle:, isOptionEnabled:)` — Molecule. · modifiers: `.a11yID()`

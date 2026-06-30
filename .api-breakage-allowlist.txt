@@ -7,3 +7,7 @@
 #
 # Example:
 #   API breakage: func ThemeButton.init(title:) has been removed
+
+# --- Modifier refactor (R1–R7): ThemeButton init → content+action, rest via modifiers ---
+API breakage: constructor ThemeButton.init(_:systemImage:iconPosition:color:variant:size:shape:block:accessibilityID:isEnabled:isLoading:action:) has been removed
+API breakage: enum ButtonIconPosition has been removed

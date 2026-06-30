@@ -357,17 +357,19 @@ public extension View {
                 ThemeButton("Stack ×3") {
                     for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: .success) }
                 }
-                ThemeButton("Undo (sticky + action)", variant: .outline) {
+                ThemeButton("Undo (sticky + action)") {
                     feedback.toast("Message deleted", kind: .info,
                                    action: ToastAction("Undo") {}, duration: nil)
                 }
-                ThemeButton("Async task", variant: .outline) {
+                .variant(.outline)
+                ThemeButton("Async task") {
                     Task {
                         await feedback.toastTask(loading: "Saving…", success: "Saved") {
                             try await Task.sleep(nanoseconds: 600_000_000)
                         }
                     }
                 }
+                .variant(.outline)
             }
             .padding()
         }

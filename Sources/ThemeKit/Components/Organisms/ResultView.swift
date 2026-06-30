@@ -102,7 +102,7 @@ public struct ResultView: View {
                         OutlineButton(secondaryTitle, action: onSecondary)
                     }
                     if let primaryTitle, let onPrimary {
-                        ThemeButton(primaryTitle, color: status.color, action: onPrimary)
+                        ThemeButton(primaryTitle, action: onPrimary).color(status.color)
                     }
                 }
                 .padding(.top, Theme.SpacingKey.xs.value)

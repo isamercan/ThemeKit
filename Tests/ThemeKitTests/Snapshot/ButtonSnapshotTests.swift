@@ -21,11 +21,11 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_variants() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                ThemeButton("Solid", variant: .solid) {}
-                ThemeButton("Soft", variant: .soft) {}
-                ThemeButton("Outline", variant: .outline) {}
-                ThemeButton("Ghost", variant: .ghost) {}
-                ThemeButton("Link", variant: .link) {}
+                ThemeButton("Solid") {}.variant(.solid)
+                ThemeButton("Soft") {}.variant(.soft)
+                ThemeButton("Outline") {}.variant(.outline)
+                ThemeButton("Ghost") {}.variant(.ghost)
+                ThemeButton("Link") {}.variant(.link)
             }
         )
     }
@@ -35,10 +35,10 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_semanticColors() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                ThemeButton("Primary", color: .primary) {}
-                ThemeButton("Success", color: .success) {}
-                ThemeButton("Warning", color: .warning) {}
-                ThemeButton("Error", color: .error) {}
+                ThemeButton("Primary") {}.color(.primary)
+                ThemeButton("Success") {}.color(.success)
+                ThemeButton("Warning") {}.color(.warning)
+                ThemeButton("Error") {}.color(.error)
             }
         )
     }
@@ -48,10 +48,10 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_sizes() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                ThemeButton("XSmall", size: .xsmall) {}
-                ThemeButton("Small", size: .small) {}
-                ThemeButton("Medium", size: .medium) {}
-                ThemeButton("Large", size: .large) {}
+                ThemeButton("XSmall") {}.size(.xsmall)
+                ThemeButton("Small") {}.size(.small)
+                ThemeButton("Medium") {}.size(.medium)
+                ThemeButton("Large") {}.size(.large)
             }
         )
     }
@@ -61,9 +61,9 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_shapesAndIcon() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                ThemeButton("Pill", shape: .pill) {}
-                ThemeButton(systemImage: "heart.fill", shape: .circle) {}
-                ThemeButton(systemImage: "square.and.arrow.up", shape: .square) {}
+                ThemeButton("Pill") {}.shape(.pill)
+                ThemeButton { }.icon(leading: "heart.fill").shape(.circle)
+                ThemeButton { }.icon(leading: "square.and.arrow.up").shape(.square)
             }
         )
     }
@@ -73,9 +73,9 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_states() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                ThemeButton("Loading", isLoading: .constant(true)) {}
-                ThemeButton("Disabled", isEnabled: .constant(false)) {}
-                ThemeButton("With icon", systemImage: "checkmark") {}
+                ThemeButton("Loading") {}.loading()
+                ThemeButton("Disabled") {}.disabled(true)
+                ThemeButton("With icon") {}.icon(leading: "checkmark")
             }
         )
     }
@@ -83,7 +83,7 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     // MARK: Block (full-width)
 
     func testThemeButton_block() {
-        assertComponentSnapshot(ThemeButton("Continue", block: true) {})
+        assertComponentSnapshot(ThemeButton("Continue") {}.fullWidth())
     }
 
     // MARK: Presets
@@ -105,9 +105,9 @@ final class ButtonSnapshotTests: SnapshotTestCase {
     func testThemeButton_variants_darkMode() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                ThemeButton("Solid", variant: .solid) {}
-                ThemeButton("Soft", variant: .soft) {}
-                ThemeButton("Outline", variant: .outline) {}
+                ThemeButton("Solid") {}.variant(.solid)
+                ThemeButton("Soft") {}.variant(.soft)
+                ThemeButton("Outline") {}.variant(.outline)
             },
             colorScheme: .dark
         )
@@ -117,7 +117,7 @@ final class ButtonSnapshotTests: SnapshotTestCase {
 
     func testThemeButton_largeText() {
         assertComponentSnapshot(
-            ThemeButton("Book now", systemImage: "calendar") {},
+            ThemeButton("Book now") {}.icon(leading: "calendar"),
             contentSize: .accessibilityExtraExtraExtraLarge
         )
     }

@@ -1134,7 +1134,7 @@ struct BottomSheetDemo: View {
                         }
                     }
                 }
-                ThemeButton("Declarative sheet", variant: .outline) { showDeclarative = true }
+                ThemeButton("Declarative sheet") { showDeclarative = true }.variant(.outline)
             }
             .bottomSheet(isPresented: $showDeclarative, detents: [.medium]) {
                 Text("Declarative .bottomSheet with a [.medium] detent.").textStyle(.bodyBase400)
@@ -1229,11 +1229,11 @@ struct ThemeButtonDemo: View {
         ComponentStage("ThemeButton", inspector: [
             ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
         ]) {
-            ThemeButton(iconOnly ? nil : "Button",
-                         systemImage: (icon || iconOnly) ? "star.fill" : nil,
-                         iconPosition: trailingIcon ? .trailing : .leading,
-                         color: color, variant: variant, size: size, shape: shape,
-                         block: block && !iconOnly, isLoading: $loading) { flash("ThemeButton tapped") }
+            ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
+                .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
+                      trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
+                .color(color).variant(variant).size(size).shape(shape)
+                .fullWidth(block && !iconOnly).loading(loading)
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
             Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -1317,22 +1317,25 @@ struct FeedbackDemo: View {
     var body: some View {
         ComponentStage("Feedback", inspector: [("level", "global"), ("last action", last)]) {
             VStack(spacing: 12) {
-                ThemeButton("Show toast", color: kind.semanticColor, block: true) {
+                ThemeButton("Show toast") {
                     feedback.toast("\(kind.rawValue.capitalized) message",
                                    message: "This is a \(kind.rawValue) notification.", kind: kind)
                     last = "toast: \(kind.rawValue)"
                 }
-                ThemeButton("Stack (3 toast)", color: kind.semanticColor, variant: .soft, block: true) {
+                .color(kind.semanticColor).fullWidth()
+                ThemeButton("Stack (3 toast)") {
                     for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: kind) }
                     last = "stack: 3"
                 }
-                ThemeButton("Undo (action + sticky)", variant: .outline, block: true) {
+                .color(kind.semanticColor).variant(.soft).fullWidth()
+                ThemeButton("Undo (action + sticky)") {
                     feedback.toast("Message deleted", kind: .info,
                                    action: ToastAction("Undo") { feedback.toast("Undone", kind: .success) },
                                    duration: nil)
                     last = "undo toast"
                 }
-                ThemeButton("Async task (task)", variant: .outline, block: true) {
+                .variant(.outline).fullWidth()
+                ThemeButton("Async task (task)") {
                     Task {
                         await feedback.toastTask(loading: "Saving…", success: "Saved") {
                             try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -1340,18 +1343,21 @@ struct FeedbackDemo: View {
                     }
                     last = "async task"
                 }
-                ThemeButton("Show notification (notification)", color: kind.semanticColor, variant: .soft, block: true) {
+                .variant(.outline).fullWidth()
+                ThemeButton("Show notification (notification)") {
                     feedback.notify("\(kind.rawValue.capitalized)", message: "A notification from the top.", kind: kind)
                     last = "notify: \(kind.rawValue)"
                 }
-                ThemeButton("Loading (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
+                .color(kind.semanticColor).variant(.soft).fullWidth()
+                ThemeButton("Loading (loading)") {
                     feedback.loading("Saving…")
                     last = "loading"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                         feedback.dismissLoading(); feedback.toast("Saved", kind: .success)
                     }
                 }
-                ThemeButton("Ask for confirmation (confirm)", color: .error, variant: .outline, block: true) {
+                .icon(leading: "arrow.clockwise").variant(.outline).fullWidth()
+                ThemeButton("Ask for confirmation (confirm)") {
                     feedback.confirm(
                         title: "Cancel reservation?",
                         message: "This action cannot be undone.",
@@ -1360,6 +1366,7 @@ struct FeedbackDemo: View {
                         secondaryTitle: "Cancel", onSecondary: { last = "dismissed"; flash("Dismissed") }
                     )
                 }
+                .color(.error).variant(.outline).fullWidth()
             }
         } knobs: {
             Picker("Kind", selection: $kind) {
@@ -1469,7 +1476,8 @@ struct PopconfirmDemo: View {
     @State private var last = "—"
     var body: some View {
         ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("edge", "\(edge)"), ("last", last)]) {
-            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
+            ThemeButton("Delete") { show.toggle() }
+                .icon(leading: "trash").color(.error).variant(.soft)
                 .popconfirm(isPresented: $show, title: "Delete this item?", message: "This action cannot be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel", edge: edge,
                             onConfirm: {
@@ -1530,7 +1538,7 @@ struct TourDemo: View {
                     tourIcon("heart", "fav")
                     tourIcon("person.crop.circle", "profile")
                 }
-                ThemeButton("Start tour", systemImage: "play.fill", block: true) { tour.start(); flash("Tour started") }
+                ThemeButton("Start tour") { tour.start(); flash("Tour started") }.icon(leading: "play.fill").fullWidth()
             }
             .tourHost(tour, steps: [
                 TourStep("search", title: "Search", message: "Search for hotels here."),
@@ -1603,11 +1611,12 @@ struct FormDemo: View {
                 if done {
                     InfoBanner("Your account has been created.", type: .success)
                 }
-                ThemeButton("Sign up", block: true, accessibilityID: "form.submit") {
+                ThemeButton("Sign up") {
                     let firstInvalid = form.validateAll(values)
                     submitted = true
                     done = firstInvalid == nil
                 }
+                .fullWidth().a11yID("form.submit")
             }
         } knobs: {
             Text("Empty submit → email/password + RadioGroup + Checkbox all show errors; focus jumps to the first invalid text field.").font(.caption).foregroundStyle(.secondary)
@@ -1755,7 +1764,7 @@ struct RollingNumberDemo: View {
         ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
             VStack(spacing: 16) {
                 RollingNumber(value, size: size, color: Theme.shared.text(.textHero))
-                ThemeButton("Roll", systemImage: "dice") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }
+                ThemeButton("Roll") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }.icon(leading: "dice")
             }
         } knobs: {
             HStack { Text("Size"); SwiftUI.Slider(value: $size, in: 24...64, step: 4) }
