@@ -88,6 +88,14 @@ component-by-component.
   modifier — now rerouted through the shared `copy(_:)` helper.) Migration:
   `Checkbox("Accept", isChecked: $on, type: .inner, isIndeterminate: mixed)`
   → `Checkbox("Accept", isChecked: $on).type(.inner).indeterminate(mixed)`.
+- **`MultiLineTextInput` init reduced to `MultiLineTextInput(_ label:text:)`.** The
+  5 config parameters moved to modifiers: `placeholder:`→`.placeholder(_:)`,
+  `characterLimit:`→`.characterLimit(_:)`, `errorText:`→`.errorText(_:)`,
+  `infoMessages:`→`.infoMessages(_:)`, `minHeight:`→`.minHeight(_:)`.
+  (`label`/`text` stay in init — content and binding; `disabled` already native,
+  and `.a11yID(_:)` already a modifier.) Migration:
+  `MultiLineTextInput("Notes", text: $t, placeholder: "…", characterLimit: 200)`
+  → `MultiLineTextInput("Notes", text: $t).placeholder("…").characterLimit(200)`.
 - **`Stat` init reduced to `Stat(title:value:)`** (both the `String` and `Int`
   value overloads). The 6 other parameters moved to modifiers:
   `prefix:`→`.prefix(_:)`, `suffix:`→`.suffix(_:)`, `isLoading:`→`.loading(_ on:)`,

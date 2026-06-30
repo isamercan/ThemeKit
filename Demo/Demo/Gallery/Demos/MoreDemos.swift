@@ -249,8 +249,10 @@ struct MultiLineDemo: View {
     @State private var error = false
     var body: some View {
         ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
-            MultiLineTextInput("Notes", text: $text, placeholder: "Write something…",
-                               characterLimit: limit ? 200 : nil, errorText: error ? "Required" : nil)
+            MultiLineTextInput("Notes", text: $text)
+                .placeholder("Write something…")
+                .characterLimit(limit ? 200 : nil)
+                .errorText(error ? "Required" : nil)
         } knobs: {
             Toggle("Character limit", isOn: $limit)
             Toggle("Error state", isOn: $error)
