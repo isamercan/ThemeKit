@@ -13,22 +13,15 @@ public struct ImageCollage: View {
     @Environment(\.theme) private var theme
 
     private let urls: [URL]
-    private let height: CGFloat
-    private let spacing: CGFloat
-    private let cornerRadius: CGFloat
     private let onTap: ((Int) -> Void)?
 
-    public init(
-        _ urls: [URL],
-        height: CGFloat = 220,
-        spacing: CGFloat = 4,
-        cornerRadius: CGFloat = 12,
-        onTap: ((Int) -> Void)? = nil
-    ) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var height: CGFloat = 220
+    private var spacing: CGFloat = 4
+    private var cornerRadius: CGFloat = 12
+
+    public init(_ urls: [URL], onTap: ((Int) -> Void)? = nil) {   // R1
         self.urls = urls
-        self.height = height
-        self.spacing = spacing
-        self.cornerRadius = cornerRadius
         self.onTap = onTap
     }
 
@@ -80,11 +73,30 @@ public struct ImageCollage: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ImageCollage {
+    /// Overall collage height.
+    func height(_ h: CGFloat) -> Self { copy { $0.height = h } }
+
+    /// Gap between tiles.
+    func spacing(_ s: CGFloat) -> Self { copy { $0.spacing = s } }
+
+    /// Tile corner radius.
+    func cornerRadius(_ r: CGFloat) -> Self { copy { $0.cornerRadius = r } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     let urls = (1...6).compactMap { URL(string: "https://picsum.photos/seed/collage\($0)/400/300") }
     return VStack(spacing: 16) {
-        ImageCollage(Array(urls.prefix(3)), height: 180)
-        ImageCollage(urls, height: 220)
+        ImageCollage(Array(urls.prefix(3))).height(180)
+        ImageCollage(urls).height(220)
     }
     .padding()
 }

@@ -1717,7 +1717,7 @@ struct ImageCollageDemo: View {
     }
     var body: some View {
         ComponentStage("ImageCollage", inspector: [("images", "\(Int(count))")]) {
-            ImageCollage(urls, height: 220, onTap: { flash("ImageCollage: image \($0 + 1)") })
+            ImageCollage(urls, onTap: { flash("ImageCollage: image \($0 + 1)") }).height(220)
         } knobs: {
             HStack { Text("Images"); SwiftUI.Slider(value: $count, in: 1...8, step: 1) }
             Text("Layouts adapt: 1 · 2 · 3 · 4+ with a +N overlay on the last tile.").font(.caption).foregroundStyle(.secondary)

@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`ImageCollage` init reduced to `ImageCollage(_ urls:onTap:)`.** The image URLs
+  and the per-tile tap callback stay in init; the 3 layout/appearance parameters
+  moved to modifiers: `height:`→`.height(_:)`, `spacing:`→`.spacing(_:)`,
+  `cornerRadius:`→`.cornerRadius(_:)`. Migration:
+  `ImageCollage(urls, height: 220, cornerRadius: 8) { open($0) }`
+  → `ImageCollage(urls) { open($0) }.height(220).cornerRadius(8)`.
 - **`ChatBubble` init reduced to `ChatBubble(_ text:author:time:)`.** The message
   text, author and timestamp (all content) stay in init; the 2 appearance
   parameters moved to modifiers: `side:`→`.side(_:)`,
