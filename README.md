@@ -605,6 +605,14 @@ Use the themekit MCP. Convert this Figma node to ThemeKit SwiftUI:
 https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
 ```
 
+Or name the tool explicitly so the agent picks it directly (handy when several MCP
+servers are configured):
+
+```text
+Connect the themekit MCP and call design_to_code with this url:
+https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
+```
+
 Point it at a **single screen/frame** — it treats a Figma component `INSTANCE` as an
 opaque leaf and won't expand a board of nested instances (see [`mcp/README.md`](mcp/README.md#how-to-trigger-it-from-chat)).
 
