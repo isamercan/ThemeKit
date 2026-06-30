@@ -1,6 +1,6 @@
 {
   "name": "@isamercan/themekit-mcp",
-  "version": "2.2.0",
+  "version": "2.4.0",
   "description": "MCP server for the ThemeKit SwiftUI design system \u2014 components, modifiers, tokens and theme presets on demand.",
   "type": "module",
   "bin": {
@@ -9,7 +9,9 @@
   "files": [
     "dist",
     "data/themekit.json",
-    "figma-mapping.json"
+    "figma-mapping.json",
+    "migrate-rules.json",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc",

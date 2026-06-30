@@ -1,0 +1,26 @@
+{
+  "id": "2:1",
+  "name": "States",
+  "type": "FRAME",
+  "layoutMode": "VERTICAL",
+  "itemSpacing": 16,
+  "children": [
+    {
+      "id": "2:2",
+      "name": "Button/Primary",
+      "type": "INSTANCE",
+      "componentProperties": {
+        "State#1:0": { "type": "VARIANT", "value": "Disabled" },
+        "Size#1:1": { "type": "VARIANT", "value": "Large" }
+      },
+      "children": [{ "id": "2:3", "name": "title", "type": "TEXT", "characters": "Save" }]
+    },
+    {
+      "id": "2:4",
+      "name": "Caption",
+      "type": "TEXT",
+      "characters": "Hello",
+      "fills": [{ "type": "SOLID", "color": { "r": 0.7059, "g": 0.5451, "b": 0.9176, "a": 1 } }]
+    }
+  ]
+}

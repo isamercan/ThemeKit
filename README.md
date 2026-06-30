@@ -36,7 +36,7 @@ import ThemeKit
 - 🪄 **Design Mode** — point ThemeKit at a free-form `design.md` (or a bundled style
   — Linear, Notion, iOS, Brutalist, Pastel) and it re-skins **every** component to
   match, via an offline heuristic parser (+ an optional LLM path).
-- 🤖 **AI-native** — a 19-tool **MCP server**, a Claude Code **Agent skill**, and an
+- 🤖 **AI-native** — a 23-tool **MCP server**, a Claude Code **Agent skill**, and an
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
   shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
@@ -566,7 +566,7 @@ source (`make skill`) feeds three surfaces, so they can't drift from the code:
 
 | Surface | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | 19 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `render_preview`, `theme_preview`, `scaffold_screen`, `figma_to_swiftui`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **MCP server** ([`mcp/`](mcp/)) | 23 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `figma_to_swiftui`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
 | **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
