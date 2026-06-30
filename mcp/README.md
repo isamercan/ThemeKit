@@ -35,7 +35,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `compose_screen(components, …)` | Builds a token-bound screen from an **ordered, catalog-verified** component list (vstack / scroll / card) |
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit — **config-driven** via `migrate-rules.json` |
 | `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
-| **`figma_to_swiftui(fileKey, nodeId, dryRun?, a11yOnly?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN` |
+| **`design_to_code(url \| fileKey+nodeId, dryRun?, a11yOnly?, expandInstances?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. Pass a Figma **`url`** directly (it parses `fileKey` + `nodeId`), or give them explicitly. `expandInstances: true` walks into unmapped component instances (forms, headers). `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN`. _(Alias: **`figma_to_swiftui`** — same tool, kept for backward compatibility.)_ |
 
 ### Themes
 | Tool | What it returns |
@@ -50,7 +50,7 @@ and prompts (`themekit-screen`, `migrate-to-themekit`).
 
 ## Figma → SwiftUI
 
-`figma_to_swiftui` turns a Figma node into ThemeKit SwiftUI:
+**`design_to_code`** (alias: `figma_to_swiftui`) turns a Figma node into ThemeKit SwiftUI:
 
 1. **Fetch** the node subtree via the Figma REST API (`FIGMA_TOKEN`).
 2. **Token match** — fills → nearest color token (CIE76 ΔE), padding/`itemSpacing`
@@ -64,6 +64,77 @@ and prompts (`themekit-screen`, `migrate-to-themekit`).
 It's **config-driven** — edit `figma-mapping.json` to add/override rules. Set the
 token: `export FIGMA_TOKEN=figd_…`. (Complements an official Figma MCP — this one is
 the mapping/codegen layer and fetches node data itself.)
+
+### How to trigger it (from chat)
+
+Easiest: pass the Figma link straight to the tool's **`url`** parameter — it parses
+the `fileKey` and `nodeId` for you (including the `node-id` dash→colon fix):
+
+```jsonc
+design_to_code({ "url": "https://www.figma.com/design/<FILE_KEY>/App?node-id=25795-9030" })
+```
+
+So just paste a Figma link and ask your agent to convert it:
+
+```
+Use the themekit MCP. Convert this Figma node to ThemeKit SwiftUI:
+https://www.figma.com/design/MX2ACwPhpSO9gyRImA7Dnc/App?node-id=25795-9030
+```
+
+You can still pass an explicit **`fileKey`** + **`nodeId`** instead of `url`. The URL
+anatomy, if you want to extract them yourself:
+
+```
+https://www.figma.com/design/<FILE_KEY>/<title>?node-id=<NODE_ID>
+                              ^^^^^^^^^^                  ^^^^^^^
+                              fileKey                     nodeId
+```
+
+> ⚠️ In the URL the `node-id` uses a **dash** (`25795-9030`); the API expects a
+> **colon** (`25795:9030`). Passing `url` handles this automatically; if you pass
+> `nodeId` yourself, convert `-` → `:`.
+
+Grab the most reliable link with **right-click ▸ Copy link to selection** in Figma.
+Add `dryRun: true` for just the mapping plan, or `a11yOnly: true` for just the
+accessibility audit.
+
+#### Telling the agent which MCP to use
+
+With several MCP servers configured, name the one you want so the agent picks the
+right tool. The server is registered as **`themekit`** (the name in your
+`.mcp.json` / `mcp.json`), and the tool is **`design_to_code`** (alias:
+`figma_to_swiftui`) — mention either:
+
+```
+# By server name
+Use the themekit MCP to convert this Figma screen to ThemeKit SwiftUI:
+https://www.figma.com/design/<FILE_KEY>/App?node-id=25795-9030
+
+# By tool name (most explicit)
+Call the themekit design_to_code tool with this url:
+https://www.figma.com/design/<FILE_KEY>/App?node-id=25795-9030
+
+# Plan first, then generate
+Use themekit · design_to_code with dryRun: true on this url, show me the
+mapping report, then run it for real if 80%+ of nodes map.
+```
+
+> If you renamed the server in your config (say `"design-system"` instead of
+> `"themekit"`), use **that** name in the prompt — the agent matches the server key
+> you configured, not the npm package name.
+
+Verify what's available before asking: `/mcp` lists configured servers and their
+status, and `/tools` lists every tool the agent can call (you'll see
+`design_to_code` and its `figma_to_swiftui` alias under the `themekit` server once
+it's loaded).
+
+> **Pick a single screen, not a board.** By default the tool walks `FRAME`/`GROUP`
+> subtrees but treats a Figma **component `INSTANCE` as an opaque leaf** (its
+> internals are reported as `// ⚠️ unmapped`). Point it at one concrete screen/frame;
+> a board of nested instances yields empty scaffolding. Pass **`expandInstances: true`**
+> to recurse into unmapped instances too (forms/headers/nav bars built from
+> instances) — you get much more of the screen, at the cost of more raw SwiftUI to
+> review. The accessibility audit always inspects inside instances.
 
 ## Install
 

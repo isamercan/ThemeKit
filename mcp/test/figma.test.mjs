@@ -3,8 +3,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { generate } from "../dist/figma/codegen.js";
+import { generate, spacingValueExpr } from "../dist/figma/codegen.js";
 import { loadMapping } from "../dist/figma/mapping.js";
+import { parseFigmaUrl } from "../dist/figma/client.js";
 
 const read = (rel) => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf8"));
 const data = read("../data/themekit.json");
@@ -36,4 +37,45 @@ test("flags the unmapped node — never silently dropped", () => {
   const { code, report } = generate(node, mapping, data.tokens, apis);
   assert.ok(report.unmapped.some((u) => /Mystery Widget/.test(u)));
   assert.match(code, /⚠️ unmapped: Mystery Widget/);
+});
+
+test("parseFigmaUrl: /design/ URL — dash node-id normalised to colon", () => {
+  const { fileKey, nodeId } = parseFigmaUrl(
+    "https://www.figma.com/design/MX2ACwPhpSO9gyRImA7Dnc/App--All-Screens?node-id=25795-9030&m=dev",
+  );
+  assert.equal(fileKey, "MX2ACwPhpSO9gyRImA7Dnc");
+  assert.equal(nodeId, "25795:9030");
+});
+
+test("parseFigmaUrl: legacy /file/ URL with encoded colon node-id", () => {
+  const { fileKey, nodeId } = parseFigmaUrl("https://www.figma.com/file/ABC123/My-File?node-id=1%3A23");
+  assert.equal(fileKey, "ABC123");
+  assert.equal(nodeId, "1:23");
+});
+
+test("parseFigmaUrl: throws on a non-Figma / malformed URL", () => {
+  assert.throws(() => parseFigmaUrl("https://example.com/foo"), /fileKey/);
+  assert.throws(() => parseFigmaUrl("https://www.figma.com/design/KEY/Title"), /node-id/);
+  assert.throws(() => parseFigmaUrl("not a url"), /valid Figma URL/);
+});
+
+test("spacingValueExpr: maps token names to the real SpacingKey cases (not a naive strip)", () => {
+  assert.equal(spacingValueExpr("sp-md"), "Theme.SpacingKey.md.value");
+  assert.equal(spacingValueExpr("sp-4xl"), "Theme.SpacingKey.xl4.value");      // not .4xl (invalid Swift)
+  assert.equal(spacingValueExpr("spacing-none"), "Theme.SpacingKey.none.value"); // not .spacing-none
+});
+
+const instance = read("./fixtures/figma-instance.json");
+
+test("expandInstances off (default): an unmapped INSTANCE stays an opaque leaf", () => {
+  const { code } = generate(instance, mapping, data.tokens, apis);
+  assert.match(code, /⚠️ unmapped: Login Form \(INSTANCE\)/);
+  assert.doesNotMatch(code, /Giriş Yap/); // children are not walked
+});
+
+test("expandInstances on: recurses into the INSTANCE and emits valid spacing", () => {
+  const { code } = generate(instance, mapping, data.tokens, apis, { expandInstances: true });
+  assert.match(code, /Text\("Giriş Yap"\)/);              // child surfaced
+  assert.match(code, /Theme\.SpacingKey\.xl4\.value/);    // sp-4xl → xl4 (compiles)
+  assert.doesNotMatch(code, /SpacingKey\.4xl/);           // never the invalid form
 });

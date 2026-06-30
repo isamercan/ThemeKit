@@ -30,13 +30,13 @@ import ThemeKit
 
 ## Features
 
-- 🎨 **Figma → SwiftUI** — the MCP's `figma_to_swiftui` turns a Figma node into
+- 🎨 **Figma → SwiftUI** — the MCP's `design_to_code` (alias `figma_to_swiftui`) turns a Figma node into
   token-matched, verified-API ThemeKit code with a mapping report (see the
   **Advanced — Figma → SwiftUI & MCP** section).
 - 🪄 **Design Mode** — point ThemeKit at a free-form `design.md` (or a bundled style
   — Linear, Notion, iOS, Brutalist, Pastel) and it re-skins **every** component to
   match, via an offline heuristic parser (+ an optional LLM path).
-- 🤖 **AI-native** — a 23-tool **MCP server**, a Claude Code **Agent skill**, and an
+- 🤖 **AI-native** — a 24-tool **MCP server**, a Claude Code **Agent skill**, and an
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
   shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
@@ -566,7 +566,7 @@ source (`make skill`) feeds three surfaces, so they can't drift from the code:
 
 | Surface | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | 23 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `figma_to_swiftui`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **MCP server** ([`mcp/`](mcp/)) | 24 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `design_to_code` (alias `figma_to_swiftui`)… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
 | **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
@@ -576,7 +576,7 @@ or `llms.txt`.
 
 ### Figma → SwiftUI
 
-The star tool, `figma_to_swiftui`, turns a Figma node into ThemeKit SwiftUI with
+The star tool, `design_to_code` (alias `figma_to_swiftui`), turns a Figma node into ThemeKit SwiftUI with
 **verified** APIs instead of guesses: it snaps fills / spacing / radius to design
 tokens, maps nodes to components (config-driven via `figma-mapping.json`, then
 heuristics), and returns the code plus a mapping report. Unmapped nodes are
@@ -596,6 +596,17 @@ Card {
 Set `FIGMA_TOKEN` in the MCP server's env — it's **optional**, only this tool needs
 it; every other tool works without it. See [`mcp/README.md`](mcp/README.md) for the
 full tool list and the `figma-mapping.json` schema.
+
+**Triggering it** — paste a Figma link and ask the agent; it pulls `fileKey` +
+`nodeId` straight from the URL (the URL's `node-id=25795-9030` becomes `25795:9030`):
+
+```text
+Use the themekit MCP. Convert this Figma node to ThemeKit SwiftUI:
+https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
+```
+
+Point it at a **single screen/frame** — it treats a Figma component `INSTANCE` as an
+opaque leaf and won't expand a board of nested instances (see [`mcp/README.md`](mcp/README.md#how-to-trigger-it-from-chat)).
 
 ## Documentation
 

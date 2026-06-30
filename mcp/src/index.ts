@@ -14,7 +14,7 @@ import { PNG } from "pngjs";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { fetchFigmaNode } from "./figma/client.js";
+import { fetchFigmaNode, parseFigmaUrl } from "./figma/client.js";
 import { loadMapping } from "./figma/mapping.js";
 import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
@@ -592,18 +592,29 @@ server.registerTool("migrate_snippet", {
 
 // ── Figma → SwiftUI (the star) ─────────────────────────────────────────────
 
-server.registerTool("figma_to_swiftui", {
+const designToCodeConfig = {
   title: "Figma → SwiftUI (ThemeKit)",
-  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review) plus a WCAG accessibility audit of the design. Set dryRun for the plan only, or a11yOnly to return just the accessibility audit. Needs FIGMA_TOKEN in the env.",
+  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review) plus a WCAG accessibility audit of the design. Pass a Figma `url` directly (recommended), or an explicit `fileKey` + `nodeId`. Set dryRun for the plan only, or a11yOnly to return just the accessibility audit. Needs FIGMA_TOKEN in the env.",
   inputSchema: {
-    fileKey: z.string().describe("Figma file key (from the file URL)"),
-    nodeId: z.string().describe("Node id, e.g. 1:23 (from 'Copy link to selection')"),
+    url: z.string().optional().describe("Figma file/design URL (e.g. https://www.figma.com/design/<key>/App?node-id=25795-9030). Parsed into fileKey + nodeId; overrides them if both are also given."),
+    fileKey: z.string().optional().describe("Figma file key (from the file URL). Optional if `url` is given."),
+    nodeId: z.string().optional().describe("Node id, e.g. 1:23 (from 'Copy link to selection'). Optional if `url` is given."),
     dryRun: z.boolean().optional().describe("Return only the mapping plan + report, no code"),
     a11yOnly: z.boolean().optional().describe("Return only the WCAG accessibility audit of the Figma design (no code, no mapping)"),
+    expandInstances: z.boolean().optional().describe("Walk into unmapped Figma component INSTANCEs (forms, headers, nav bars) instead of emitting an opaque leaf. Use for screens built from nested instances; default false."),
   },
-}, async ({ fileKey, nodeId, dryRun, a11yOnly }) => {
+};
+
+const runDesignToCode = async ({ url, fileKey, nodeId, dryRun, a11yOnly, expandInstances }: {
+  url?: string; fileKey?: string; nodeId?: string; dryRun?: boolean; a11yOnly?: boolean; expandInstances?: boolean;
+}) => {
   const token = process.env.FIGMA_TOKEN;
   if (!token) return text("FIGMA_TOKEN is not set. Add it to the MCP server's env (see the README) and retry.");
+  if (url) {
+    try { ({ fileKey, nodeId } = parseFigmaUrl(url)); }
+    catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); }
+  }
+  if (!fileKey || !nodeId) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`.");
   let node;
   try { node = await fetchFigmaNode(fileKey, nodeId, token); }
   catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
@@ -613,10 +624,19 @@ server.registerTool("figma_to_swiftui", {
   }
   const mapping = loadMapping(join(here, "..", "figma-mapping.json"));
   const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
-  const { code, report } = generate(node, mapping, data.tokens, apis);
+  const { code, report } = generate(node, mapping, data.tokens, apis, { expandInstances });
   if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}`);
   return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}\n\nReview the ⚠️ items; verify any param with get_component_api, then validate_code the result.`);
-});
+};
+
+// Primary, readable name; `figma_to_swiftui` is kept as a backward-compatible alias
+// so existing prompts and automations keep working.
+server.registerTool("design_to_code",
+  { ...designToCodeConfig, title: "Design → Code (Figma → ThemeKit SwiftUI)" },
+  runDesignToCode);
+server.registerTool("figma_to_swiftui",
+  { ...designToCodeConfig, title: "Figma → SwiftUI (ThemeKit) — alias of design_to_code" },
+  runDesignToCode);
 
 // ── Resources & prompts ────────────────────────────────────────────────────
 

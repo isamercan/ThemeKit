@@ -7,6 +7,9 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
+# Kiro CLI MCP config — contains the FIGMA_TOKEN secret, keep local only
+.kiro/settings/mcp.json
+
 # Xcode / SwiftPM build output (Demo app)
 Demo/build/
 Demo/.build/

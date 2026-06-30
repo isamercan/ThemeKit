@@ -6,6 +6,33 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **`design_to_code` tool** — a more readable, design-tool-agnostic name for the
+  Figma→SwiftUI generator. **`figma_to_swiftui` is kept as a backward-compatible
+  alias** (identical behavior), so existing prompts and automations keep working.
+- **`figma_to_swiftui` `expandInstances` option.** When `true`, an unmapped Figma
+  component `INSTANCE` that has children is walked into (like a FRAME/GROUP) instead
+  of being emitted as an opaque `// ⚠️ unmapped` leaf — so a screen built from nested
+  instances (forms, headers, nav bars) actually converts. Default `false` preserves
+  the previous opaque-leaf behavior.
+
+### Fixed
+- **Spacing token → `SpacingKey` case emission.** `sp-4xl` now emits
+  `Theme.SpacingKey.xl4.value` (was the non-compiling `.4xl`) and `spacing-none`
+  emits `.none` (was `.spacing-none`); other keys unchanged. The codegen used a naive
+  `sp-` prefix strip — now a correct lookup.
+
+## [2.5.0] - 2026-06-30
+
+### Added
+- **`figma_to_swiftui` now accepts a Figma `url` directly.** Pass the design link as
+  `url` and the tool parses the `fileKey` + `nodeId` itself (handles both `/design/`
+  and legacy `/file/` links and normalises the URL's dash `node-id` → colon, e.g.
+  `25795-9030` → `25795:9030`). `fileKey` + `nodeId` are still accepted explicitly
+  and are now optional when `url` is given.
+
 ## [2.4.1] - 2026-06-30
 
 Fixes stale catalog data after the library's modifier-based refactor.

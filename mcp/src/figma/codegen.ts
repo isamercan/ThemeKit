@@ -14,6 +14,18 @@ export interface GenResult { code: string; report: Report; }
 
 const pad = (d: number) => "    ".repeat(d);
 
+/**
+ * Figma-snapped spacing token name → the `Theme.SpacingKey` Swift case.
+ * Not a plain prefix strip: `spacing-none` → `none` and `sp-4xl` → `xl4`.
+ */
+const SPACING_CASE: Record<string, string> = {
+  "spacing-none": "none", "sp-xs": "xs", "sp-sm": "sm", "sp-md": "md",
+  "sp-base": "base", "sp-lg": "lg", "sp-xl": "xl", "sp-4xl": "xl4",
+};
+export function spacingValueExpr(token: string): string {
+  return `Theme.SpacingKey.${SPACING_CASE[token] ?? token.replace(/^sp-/, "")}.value`;
+}
+
 function textOf(node: FigmaNode): string {
   if (node.characters) return node.characters;
   const t = (node.children ?? []).find((c) => c.type === "TEXT");
@@ -71,7 +83,17 @@ function stateModifiers(node: FigmaNode, produce: ProduceRule, report: Report): 
   return mods;
 }
 
-export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[], apis: Map<string, ComponentAPI>): GenResult {
+export interface GenOptions {
+  /**
+   * When true, an unmapped Figma component `INSTANCE` that has children is walked
+   * into (like a FRAME/GROUP) instead of being emitted as an opaque `// ⚠️ unmapped`
+   * leaf. Lets a screen built from nested instances (forms, headers, nav bars)
+   * actually convert. Default false — preserves the opaque-leaf behavior.
+   */
+  expandInstances?: boolean;
+}
+
+export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[], apis: Map<string, ComponentAPI>, opts: GenOptions = {}): GenResult {
   const report: Report = { nodes: 0, matched: 0, unmapped: [], tokenSnaps: [], needsReview: [], lowConfidence: [], a11y: [] };
 
   // Snap this node's visual values; record matches / needs-review.
@@ -111,7 +133,7 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
         const sp = spacingToken(node);
         const stack = node.layoutMode === "HORIZONTAL" ? "HStack" : "VStack";
         const children = (node.children ?? []).map((c) => gen(c, d + 2)).join("\n");
-        return `${tag}${pad(d)}Card {\n${pad(d + 1)}${stack}(${sp ? `spacing: Theme.SpacingKey.${sp.replace(/^sp-/, "")}.value` : ""}) {\n${children}\n${pad(d + 1)}}\n${pad(d)}}`;
+        return `${tag}${pad(d)}Card {\n${pad(d + 1)}${stack}(${sp ? `spacing: ${spacingValueExpr(sp)}` : ""}) {\n${children}\n${pad(d + 1)}}\n${pad(d)}}`;
       }
 
       // Leaf component — build the init from the rule, verified against the real API.
@@ -155,12 +177,12 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       const note = color ? `   // text color snapped to token` : `   // ⚠️ unmapped TEXT — use a Text token style`;
       return `${pad(d)}Text("${textOf(node).replace(/"/g, "'")}")${color}${note}`;
     }
-    if ((node.type === "FRAME" || node.type === "GROUP") && node.children?.length) {
+    if ((node.type === "FRAME" || node.type === "GROUP" || (opts.expandInstances && node.type === "INSTANCE")) && node.children?.length) {
       report.unmapped.push(`${node.name} (${node.type})`);
       const sp = spacingToken(node);
       const stack = node.layoutMode === "HORIZONTAL" ? "HStack" : "VStack";
       const children = node.children.map((c) => gen(c, d + 1)).join("\n");
-      return `${pad(d)}// ⚠️ unmapped: ${node.name}\n${pad(d)}${stack}(${sp ? `spacing: Theme.SpacingKey.${sp.replace(/^sp-/, "")}.value` : ""}) {\n${children}\n${pad(d)}}`;
+      return `${pad(d)}// ⚠️ unmapped: ${node.name}\n${pad(d)}${stack}(${sp ? `spacing: ${spacingValueExpr(sp)}` : ""}) {\n${children}\n${pad(d)}}`;
     }
     report.unmapped.push(`${node.name} (${node.type})`);
     return `${pad(d)}// ⚠️ unmapped: ${node.name} (${node.type})`;
