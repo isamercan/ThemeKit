@@ -12,28 +12,22 @@ import SwiftUI
 public struct ThemeToggle: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var isLoading = false
+    private var onSystemImage: String?
+    private var offSystemImage: String?
+    private var accessibilityID: String? = nil
+
     @Binding private var isOn: Bool
     @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isLoading: Bool
-    private let onSystemImage: String?
-    private let offSystemImage: String?
-    private var accessibilityID: String? = nil
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(
-        isOn: Binding<Bool>,
-        isLoading: Bool = false,
-        onSystemImage: String? = nil,
-        offSystemImage: String? = nil
-    ) {
+    public init(isOn: Binding<Bool>) {   // R1
         self._isOn = isOn
-        self.isLoading = isLoading
-        self.onSystemImage = onSystemImage
-        self.offSystemImage = offSystemImage
     }
 
     private var isCompact: Bool { controlSize == .mini || controlSize == .small }
@@ -91,15 +85,31 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true))
         ThemeToggle(isOn: .constant(false))
         ThemeToggle(isOn: .constant(true)).controlSize(.small)
-        ThemeToggle(isOn: .constant(true), onSystemImage: "checkmark", offSystemImage: "xmark")
-        ThemeToggle(isOn: .constant(true), isLoading: true)
+        ThemeToggle(isOn: .constant(true)).symbols(on: "checkmark", off: "xmark")
+        ThemeToggle(isOn: .constant(true)).loading()
         ThemeToggle(isOn: .constant(true)).disabled(true)
     }
     .padding()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension ThemeToggle {
+    /// Swap the knob for a spinner and block interaction while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Optional SF Symbols shown inside the knob for the on / off states.
+    func symbols(on: String? = nil, off: String? = nil) -> Self {
+        copy { $0.onSystemImage = on; $0.offSystemImage = off }
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

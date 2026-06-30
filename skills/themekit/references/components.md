@@ -79,7 +79,7 @@
 - `Steps(title, description:, systemImage:, state:, percent:)` — A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate. · modifiers: `.axis()`, `.small()`, `.progressDot()`
 - `TextInput(label:, placeholder:, leadingSystemImage:, suffixSystemImage:, addonBefore:, addonAfter: …)` — Single floating-label text field. · modifiers: `.a11yID()`
 - `ThemeController(name:, label:)` — Molecule.
-- `ThemeToggle(isOn:, isLoading:, onSystemImage:, offSystemImage:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.a11yID()`
+- `ThemeToggle(isOn:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.loading()`, `.symbols()`, `.a11yID()`
 - `ToggleGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.a11yID()`
 - `TreeSelect(id:, title, systemImage:, children:)` — Hierarchical (nested) select with expand/collapse and multi-selection. · modifiers: `.placeholder()`, `.cascade()`, `.searchable()`, `.loading()`, `.nodeEnabled()`
 

@@ -121,7 +121,7 @@ enum ComponentRegistry {
         .knob("SelectBox", .molecules, demo: SelectBoxDemo(), usage: #"SelectBox(label: "Country", options: items, selection: $sel) { $0 }"#),
         .knob("Slider", .molecules, demo: SliderDemo(), usage: #"Slider(value: $v, in: 0...8).marks([0: "0", 8: "Max"]).showsValueTooltip()"#),
         .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput("Email", text: $t, keyboardType: .emailAddress, textContentType: .emailAddress, submitLabel: .next)"##),
-        .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on, isLoading: false, onSystemImage: "checkmark")"#),
+        .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
 

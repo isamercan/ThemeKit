@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`ThemeToggle` init reduced to `ThemeToggle(isOn:)`.** Only the `isOn` binding
+  stays in init; the 3 appearance/state parameters moved to modifiers:
+  `isLoading:`→`.loading(_ on: Bool = true)`, and the paired
+  `onSystemImage:`/`offSystemImage:` knob glyphs→`.symbols(on:off:)`. Migration:
+  `ThemeToggle(isOn: $on, isLoading: true, onSystemImage: "checkmark", offSystemImage: "xmark")`
+  → `ThemeToggle(isOn: $on).loading().symbols(on: "checkmark", off: "xmark")`.
 - **`SegmentedControl` init reduced to `SegmentedControl(_:selection:)`.** Both
   overloads (`[SegmentItem]` and `[String]`) keep only their items data + the
   `selection` binding; the 2 appearance parameters moved to modifiers:

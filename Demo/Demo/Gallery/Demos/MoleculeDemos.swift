@@ -148,8 +148,9 @@ struct ToggleDemo: View {
 
     var body: some View {
         ComponentStage("ThemeToggle", inspector: [("isOn", "\(on)"), ("isLoading", "\(loading)"), ("isEnabled", "\(enabled)")]) {
-            ThemeToggle(isOn: $on, isLoading: loading,
-                        onSystemImage: icons ? "checkmark" : nil, offSystemImage: icons ? "xmark" : nil)
+            ThemeToggle(isOn: $on)
+                .loading(loading)
+                .symbols(on: icons ? "checkmark" : nil, off: icons ? "xmark" : nil)
                 .controlSize(small ? .small : .regular)
                 .disabled(!enabled)
         } knobs: {
