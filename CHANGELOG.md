@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`SegmentedTabBar` init reduced to `SegmentedTabBar(_ items:selection:onClose:onAdd:)`.**
+  Both overloads (`[TabItem]` and `[String]`) keep the items data, the `selection`
+  binding and the optional close/add callbacks in init; the 2 appearance
+  parameters moved to modifiers: `scrollable:`→`.scrollable(_ on:)`,
+  `style:`→`.tabStyle(_:)` (renamed to avoid the generic `style` clash + match
+  `BadgeStyle`). The per-item `TabItem.isEnabled` is unchanged. Migration:
+  `SegmentedTabBar(tabs, selection: $i, scrollable: true, style: .card)`
+  → `SegmentedTabBar(tabs, selection: $i).scrollable().tabStyle(.card)`.
 - **`ImageCollage` init reduced to `ImageCollage(_ urls:onTap:)`.** The image URLs
   and the per-tile tap callback stay in init; the 3 layout/appearance parameters
   moved to modifiers: `height:`→`.height(_:)`, `spacing:`→`.spacing(_:)`,
