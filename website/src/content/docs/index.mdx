@@ -9,7 +9,7 @@ hero:
     light: ../../assets/banner.png
   actions:
     - text: Get Started
-      link: /guides/getting-started/
+      link: guides/getting-started/
       icon: right-arrow
       variant: primary
     - text: View on GitHub
@@ -19,6 +19,12 @@ hero:
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+
+export const base = import.meta.env.BASE_URL;
+
+<p class="tk-author">
+  Created &amp; maintained by <a href="https://github.com/isamercan" target="_blank" rel="noopener">@isamercan</a>
+</p>
 
 <CardGrid stagger>
 	<Card title="Design tokens" icon="setting">
@@ -37,3 +43,19 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 		[DocC reference](/ThemeKit/api/documentation/themekit/).
 	</Card>
 </CardGrid>
+
+## One library, every theme
+
+The same components, re-skinned by swapping a single theme. Cupcake stays cream,
+dracula slate, cyberpunk yellow — brand color follows the theme while semantic
+colors stay consistent.
+
+<div class="tk-shots">
+  <img src={`${base}showcase/app-themes.png`} alt="The same screens rendered under multiple themes" loading="lazy" />
+  <img src={`${base}showcase/app-components.png`} alt="The ThemeKit component catalog in the demo app" loading="lazy" />
+  <img src={`${base}showcase/app-theme-generator.png`} alt="The on-device theme generator deriving a full palette from one accent color" loading="lazy" />
+  <img src={`${base}showcase/app-hotel-detail.png`} alt="A hotel detail screen built entirely from ThemeKit components" loading="lazy" />
+</div>
+
+Browse all **95 components** in the [gallery](components/), or jump straight to
+[Getting Started](guides/getting-started/).

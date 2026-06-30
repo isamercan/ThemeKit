@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/@isamercan/themekit-mcp?label=mcp%20%C2%B7%20npm&color=cb3837)](https://www.npmjs.com/package/@isamercan/themekit-mcp)
 
-**[Docs](https://isamercan.github.io/ThemeKit/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
+**[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
   <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
@@ -618,7 +618,7 @@ opaque leaf and won't expand a board of nested instances (see [`mcp/README.md`](
 
 ## Documentation
 
-📖 **Live docs: [isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/documentation/themekit)** — the DocC catalog, published from `main` on every push.
+📖 **Live docs: [isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/)** — the documentation site (guides, component gallery, theming, MCP & DESIGN.md), published from `main` on every push. The full **DocC API reference** lives at [`/api/documentation/themekit`](https://isamercan.github.io/ThemeKit/api/documentation/themekit).
 📚 **[Wiki](https://github.com/isamercan/ThemeKit/wiki)** — installation, FAQ, troubleshooting, versioning, and contributing guides.
 
 A DocC catalog ships with the package

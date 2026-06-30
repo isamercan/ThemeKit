@@ -8,4 +8,4 @@
 
 ---
 
-📖 [DocC docs](https://isamercan.github.io/ThemeKit/documentation/themekit)
+📖 [DocC docs](https://isamercan.github.io/ThemeKit/api/documentation/themekit)
