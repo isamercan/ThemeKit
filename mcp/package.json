@@ -1,7 +1,7 @@
 {
   "name": "@isamercan/themekit-mcp",
-  "version": "2.4.0",
-  "description": "MCP server for the ThemeKit SwiftUI design system \u2014 components, modifiers, tokens and theme presets on demand.",
+  "version": "2.4.1",
+  "description": "MCP server for the ThemeKit SwiftUI design system — components, modifiers, tokens and theme presets on demand.",
   "type": "module",
   "bin": {
     "themekit-mcp": "dist/index.js"

@@ -28,7 +28,7 @@
     {
       "match": { "namePattern": "^Badge", "type": "INSTANCE" },
       "produce": { "component": "Badge", "confidence": 0.9,
-                   "argsFrom": { "_": "{text}" }, "styleFromNameSegment": 1 }
+                   "argsFrom": { "_": "{text}" }, "styleFromNameSegment": 1, "styleModifier": "badgeStyle" }
     },
     {
       "match": { "namePattern": "^Chip", "type": "INSTANCE" },

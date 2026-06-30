@@ -21,10 +21,11 @@ test("Badge API is precise (from the symbol graph, not regex)", () => {
   const byLabel = Object.fromEntries(badge.params.map((p) => [p.label === "_" ? p.name : p.label, p]));
   assert.equal(byLabel.text.type, "String");
   assert.equal(byLabel.text.default, undefined, "text is required");
-  assert.equal(byLabel.style.type, "BadgeStyle");
-  assert.equal(byLabel.style.default, ".neutral");
-  assert.equal(byLabel.variant.default, ".soft");
-  assert.ok(badge.modifiers.some((m) => m.name.startsWith("badgeShape")));
+  // Post modifier-refactor (R1): init is content + action only; style/variant/size
+  // moved to chainable modifiers.
+  assert.ok(!byLabel.style, "style is no longer an init param (now a modifier)");
+  assert.ok(badge.modifiers.some((m) => m.name.startsWith("badgeStyle")), "has .badgeStyle modifier");
+  assert.ok(badge.modifiers.some((m) => m.name.startsWith("variant")), "has .variant modifier");
 });
 
 test("enums carry their cases", () => {

@@ -8,6 +8,7 @@ export interface ProduceRule {
   argsFrom?: Record<string, string>;     // initLabel → "{text}" | "$text" | literal
   trailingClosure?: string;              // e.g. "action"
   styleFromNameSegment?: number;         // "Badge/Error" segment 1 → style: .error
+  styleModifier?: string;                // emit the style as a modifier (e.g. "badgeStyle") instead of an init arg
   container?: boolean;                   // wraps children
   modifiers?: ModifierRule[];            // state-driven chainable modifiers
 }
