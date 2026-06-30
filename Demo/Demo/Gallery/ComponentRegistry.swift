@@ -94,7 +94,7 @@ enum ComponentRegistry {
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber("Max price", value: $n, range: 0...10000).step(50).unit("$")"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text).characterLimit(200)"#),
-        .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code, digitCount: 6, isSecure: true,\n         onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })"#),
+        .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code) { verify($0) }\n         .digitCount(6).secure().resend(interval: 30) { resend() }"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")], maxItems: 4)"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
         .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField("Check-in", date: $date).style(.custom("EEE, d MMM")).clearable()"##),

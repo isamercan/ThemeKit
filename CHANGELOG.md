@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`OTPInput` init reduced to `OTPInput(code:onComplete:)`.** The 6 other
+  parameters moved to modifiers: `digitCount:`→`.digitCount(_:)`,
+  `isSecure:`→`.secure(_ on:)`, `errorText:`→`.errorText(_:)`,
+  `infoMessages:`→`.infoMessages(_:)`, and `resendInterval:`/`onResend:`→
+  `.resend(interval:onResend:)` (grouped). Migration:
+  `OTPInput(code: $code, digitCount: 6, isSecure: true, onComplete: { verify($0) }, resendInterval: 30, onResend: { resend() })`
+  → `OTPInput(code: $code) { verify($0) }.digitCount(6).secure().resend(interval: 30) { resend() }`.
 - **`FileInput` init reduced to `FileInput(_ label:onPick:)`.** The 5 other
   parameters moved to modifiers: `fileName:`→`.fileName(_:)` (the bound display
   value), `buttonTitle:`→`.buttonTitle(_:)`, `placeholder:`→`.placeholder(_:)`,

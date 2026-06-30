@@ -223,7 +223,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("Istanbul"),
                                           suggestions: ["Istanbul", "Izmir"]).frame(width: 300), hosted: true)
         shot("SearchBar", SearchBar(text: .constant("Istanbul")).frame(width: 320), hosted: true)
-        shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
+        shot("OTPInput", OTPInput(code: .constant("1234")).digitCount(6).frame(width: 300))
         shot("InputNumber", InputNumber("Max price", value: .constant(250), range: 0...1000).step(50).unit("$").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
                                         in: 0...1000, step: 50).marks([0, 500, 1000]).frame(width: 320))

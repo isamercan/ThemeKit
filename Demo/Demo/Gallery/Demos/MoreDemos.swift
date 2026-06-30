@@ -269,15 +269,13 @@ struct OTPDemo: View {
     @State private var lastComplete = "—"
     var body: some View {
         ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("completed", lastComplete)]) {
-            OTPInput(
-                code: $code,
-                digitCount: six ? 6 : 4,
-                isSecure: secure,
-                errorText: error ? "Invalid code" : nil,
-                onComplete: { lastComplete = $0 },
-                resendInterval: resend ? 30 : nil,
-                onResend: resend ? { lastComplete = "resent" } : nil
-            )
+            {
+                let base = OTPInput(code: $code, onComplete: { lastComplete = $0 })
+                    .digitCount(six ? 6 : 4)
+                    .secure(secure)
+                    .errorText(error ? "Invalid code" : nil)
+                return resend ? base.resend(interval: 30, onResend: { lastComplete = "resent" }) : base
+            }()
         } knobs: {
             Toggle("6 digits", isOn: $six)
             Toggle("Secure entry", isOn: $secure)

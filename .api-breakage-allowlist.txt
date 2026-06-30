@@ -30,3 +30,4 @@ API breakage: constructor Avatar.init(_:size:background:shape:presence:presenceP
 API breakage: constructor Avatar.init(_:dimension:background:shape:presence:presencePulse:) has been removed
 API breakage: constructor Badge.init(_:style:variant:size:leadingSystemImage:action:) has been removed
 API breakage: constructor FileInput.init(label:fileName:buttonTitle:placeholder:infoMessages:onPick:onClear:) has been removed
+API breakage: constructor OTPInput.init(code:digitCount:isSecure:errorText:infoMessages:onComplete:resendInterval:onResend:) has been removed
