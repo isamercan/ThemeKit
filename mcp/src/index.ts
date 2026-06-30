@@ -239,6 +239,56 @@ server.registerTool("generate_theme", {
   return text(`Theme.shared.apply(ThemeConfig(${a.join(", ")}))`);
 });
 
+server.registerTool("design_md_to_themeconfig", {
+  title: "design.md → ThemeConfig",
+  description:
+    "Turn a free-form design.md into a ThemeKit ThemeConfig. You (the client) read the markdown and infer each value; this tool validates/normalizes them (clamps tint, lowercases hex, whitelists the font) and emits both the `Theme.shared.apply(ThemeConfig(...))` snippet and a matching theme.json block for `ThemeConfig(jsonData:)`. Every component re-skins to the result.",
+  inputSchema: {
+    primaryHex: z.string().describe("6-digit RRGGBB derived from the doc's brand/primary color"),
+    baseHex: z.string().optional().describe("Surface / background (daisyUI base-100)"),
+    secondaryHex: z.string().optional(),
+    accentHex: z.string().optional(),
+    tint: z.number().min(0).max(0.25).optional().describe("How strongly the accent bleeds into neutrals"),
+    dark: z.boolean().optional(),
+    font: z.enum(["Montserrat", "System", "SystemRounded", "SystemSerif", "SystemMono"]).optional(),
+    fontScale: z.number().optional(),
+    radiusScale: z.number().optional().describe("≈1.0; <1 sharper corners, >1 rounder"),
+    spacingScale: z.number().optional().describe("≈1.0; <1 compact, >1 airy"),
+    shadowScale: z.number().optional().describe("0 flat … >1 elevated"),
+    notes: z.string().optional().describe("What in the doc drove each choice (echoed for confirmation)"),
+  },
+}, async (a) => {
+  const hex = (h?: string) => (h ? h.replace(/^#/, "").toLowerCase() : undefined);
+  const isHex6 = (h?: string) => !!h && /^[0-9a-f]{6}$/.test(h);
+  const primary = hex(a.primaryHex);
+  if (!isHex6(primary)) return text(`Invalid primaryHex "${a.primaryHex}" — expected 6-digit RRGGBB.`);
+
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+  const cfg: Record<string, string | number | boolean> = { primaryHex: primary! };
+  const base = hex(a.baseHex); if (isHex6(base)) cfg.baseHex = base!;
+  const sec = hex(a.secondaryHex); if (isHex6(sec)) cfg.secondaryHex = sec!;
+  const acc = hex(a.accentHex); if (isHex6(acc)) cfg.accentHex = acc!;
+  if (a.tint !== undefined) cfg.tint = clamp(a.tint, 0, 0.25);
+  if (a.dark !== undefined) cfg.dark = a.dark;
+  if (a.font) cfg.font = a.font;
+  if (a.fontScale !== undefined) cfg.fontScale = a.fontScale;
+  if (a.radiusScale !== undefined) cfg.radiusScale = a.radiusScale;
+  if (a.spacingScale !== undefined) cfg.spacingScale = a.spacingScale;
+  if (a.shadowScale !== undefined) cfg.shadowScale = a.shadowScale;
+
+  const args = Object.entries(cfg)
+    .map(([k, v]) => (typeof v === "string" ? `${k}: "${v}"` : `${k}: ${v}`))
+    .join(", ");
+  const lines = [
+    a.notes ? `// ${a.notes}` : undefined,
+    `Theme.shared.apply(ThemeConfig(${args}))`,
+    ``,
+    `// or ship it as theme.json and apply with ThemeConfig(jsonData:):`,
+    JSON.stringify(cfg, null, 2),
+  ].filter(Boolean) as string[];
+  return text(lines.join("\n"));
+});
+
 // ── Theme preview image (pngjs) ────────────────────────────────────────────
 
 function hexToRgb(h: string): [number, number, number] {

@@ -33,6 +33,9 @@ import ThemeKit
 - 🎨 **Figma → SwiftUI** — the MCP's `figma_to_swiftui` turns a Figma node into
   token-matched, verified-API ThemeKit code with a mapping report (see the
   **Advanced — Figma → SwiftUI & MCP** section).
+- 🪄 **Design Mode** — point ThemeKit at a free-form `design.md` (or a bundled style
+  — Linear, Notion, iOS, Brutalist, Pastel) and it re-skins **every** component to
+  match, via an offline heuristic parser (+ an optional LLM path).
 - 🤖 **AI-native** — a 19-tool **MCP server**, a Claude Code **Agent skill**, and an
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /

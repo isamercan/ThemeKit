@@ -11,7 +11,7 @@ const data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.json"), 
 test("catalog is populated", () => {
   assert.ok(data.components.length >= 110, `expected ≥110 components, got ${data.components.length}`);
   assert.ok(data.modifiers.length >= 50);
-  assert.ok(data.themes.length === 32);
+  assert.ok(data.themes.length >= 33, `expected ≥33 theme presets, got ${data.themes.length}`);
 });
 
 test("Badge API is precise (from the symbol graph, not regex)", () => {

@@ -22,6 +22,10 @@ struct ContentView: View {
                 .tabItem { Label("Themes", systemImage: "swatchpalette") }
                 .tag(1)
 
+            DesignModeView()
+                .tabItem { Label("Design", systemImage: "wand.and.stars") }
+                .tag(6)
+
             ThemeGalleryView()
                 .tabItem { Label("Colors", systemImage: "paintpalette") }
                 .tag(2)
