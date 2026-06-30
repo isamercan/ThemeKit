@@ -65,7 +65,7 @@ struct DesignPreviewSheet: View {
                 HStack {
                     Text("Live preview").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                     Spacer()
-                    Badge("New", style: .info)
+                    Badge("New").badgeStyle(.info)
                 }
                 Text("Every component re-skins to the imported look.")
                     .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))

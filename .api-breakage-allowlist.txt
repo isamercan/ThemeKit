@@ -28,3 +28,4 @@ API breakage: constructor ProgressIndicator.init(variant:current:total:size:vide
 API breakage: constructor AlertToast.init(_:message:type:systemImage:isLoading:action:onClose:) has been removed
 API breakage: constructor Avatar.init(_:size:background:shape:presence:presencePulse:) has been removed
 API breakage: constructor Avatar.init(_:dimension:background:shape:presence:presencePulse:) has been removed
+API breakage: constructor Badge.init(_:style:variant:size:leadingSystemImage:action:) has been removed

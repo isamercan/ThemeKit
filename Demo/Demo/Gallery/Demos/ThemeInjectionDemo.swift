@@ -58,7 +58,7 @@ struct ThemeInjectionDemo: View {
             Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
                 .frame(height: 150)
             HStack(spacing: 8) {
-                Badge("Info", style: .info, leadingSystemImage: "bell.fill")
+                Badge("Info").badgeStyle(.info).icon("bell.fill")
                 Tag("Filter", onRemove: {})
             }
             InfoBanner("Subtree-themed banner", type: .success)

@@ -95,9 +95,9 @@ struct BadgeDemo: View {
         ComponentStage("Badge", inspector: [
             ("style", style.rawValue), ("size", "\(size)"), ("highlighted", "\(highlighted)"), ("taps", "\(tapped)"),
         ]) {
-            Badge(text, style: style, variant: variant, size: size,
-                  leadingSystemImage: icon ? "star.fill" : nil,
-                  action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
+            Badge(text, action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
+                .badgeStyle(style).variant(variant).size(size)
+                .icon(icon ? "star.fill" : nil)
                 .badgeShape(pill ? .pill : .rounded)
                 .badgeColor(gradient ? Theme.shared.foreground(.fgSecondary) : nil)
                 .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)

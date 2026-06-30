@@ -55,9 +55,9 @@ struct ThemesView: View {
         Card {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Badge("Primary", style: .info, variant: .solid)
-                    Badge("Success", style: .success)
-                    Badge("Error", style: .error)
+                    Badge("Primary").badgeStyle(.info).variant(.solid)
+                    Badge("Success").badgeStyle(.success)
+                    Badge("Error").badgeStyle(.error)
                 }
                 Text("The quick brown fox jumps over the lazy dog.")
                     .textStyle(.bodyBase400)

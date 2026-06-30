@@ -52,7 +52,7 @@ struct HotelSearchView: View {
                     Button { path.append(.favorites) } label: {
                         Image(systemName: favorites.count > 0 ? "heart.fill" : "heart")
                             .foregroundStyle(favorites.count > 0 ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textPrimary))
-                            .indicator { if favorites.count > 0 { Badge("\(favorites.count)", style: .error, size: .small) } }
+                            .indicator { if favorites.count > 0 { Badge("\(favorites.count)").badgeStyle(.error).size(.small) } }
                     }
                 }
             }

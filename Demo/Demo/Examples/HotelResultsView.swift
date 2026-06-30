@@ -107,7 +107,7 @@ struct HotelCard: View {
                         .frame(maxWidth: .infinity)
                         .clipped()
                     if let discount = hotel.discount {
-                        Badge("\(discount)% off", style: .error, size: .small).padding(10)
+                        Badge("\(discount)% off").badgeStyle(.error).size(.small).padding(10)
                     }
                 }
 

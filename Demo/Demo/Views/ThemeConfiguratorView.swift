@@ -117,7 +117,7 @@ struct ThemeConfiguratorView: View {
                     HStack {
                         Text("Title").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                         Spacer()
-                        Badge("New", style: .info)
+                        Badge("New").badgeStyle(.info)
                     }
                     Text("The theme regenerates live — primary, secondary, accent, surfaces, all of it.")
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))

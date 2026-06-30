@@ -183,7 +183,7 @@ public struct ListRow: View {
                     .foregroundStyle(theme.text(.textPrimary))
                     .lineLimit(multilineTitle ? nil : 1)
                 if let badge {
-                    Badge(badge, style: .info, variant: .soft, size: .small)
+                    Badge(badge).badgeStyle(.info).variant(.soft).size(.small)
                 }
             }
             if let subtitle {

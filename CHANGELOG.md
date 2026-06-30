@@ -20,6 +20,15 @@ component-by-component.
   `onClose:`→`.onClose(_:)`. Migration:
   `AlertToast("Saved", type: .success, onClose: { })`
   → `AlertToast("Saved").variant(.success).onClose { }`.
+- **`Badge` init reduced to `Badge(_ text:action:)`.** The 4 remaining
+  appearance params moved to modifiers: `style:`→`.badgeStyle(_:)` (renamed to
+  avoid the generic `style` clash + match `BadgeStyle`),
+  `variant:`→`.variant(_:)`, `size:`→`.size(_:)`,
+  `leadingSystemImage:`→`.icon(_:)`. The pre-existing modifiers
+  (`.badgeShape/.trailingIcon/.badgeColor/.gradient/.highlighted`) were rerouted
+  through the shared `copy(_:)` helper (R2). Migration:
+  `Badge("Sold out", style: .error, variant: .solid, leadingSystemImage: "xmark")`
+  → `Badge("Sold out").badgeStyle(.error).variant(.solid).icon("xmark")`.
 - **`Avatar` init reduced to `Avatar(_ content:)`.** Both inits (size-tier and
   numeric `dimension:`) removed. The config params moved to modifiers:
   `size:`→`.size(_:)`, `dimension:`→`.dimension(_:)`,

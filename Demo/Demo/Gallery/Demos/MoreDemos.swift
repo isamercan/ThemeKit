@@ -749,7 +749,7 @@ struct IndicatorDemo: View {
                 if kind == .dot {
                     Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot(position: position)
                 } else {
-                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3", style: .error, size: .small) }
+                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
                 }
             }
         } knobs: {

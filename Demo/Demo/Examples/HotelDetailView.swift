@@ -24,7 +24,7 @@ struct HotelDetailView: View {
                     .frame(maxWidth: .infinity)
                     .overlay(alignment: .bottomLeading) {
                         if hotel.discount != nil {
-                            Badge("Deal", style: .error, leadingSystemImage: "flame.fill").padding()
+                            Badge("Deal").badgeStyle(.error).icon("flame.fill").padding()
                         }
                     }
 

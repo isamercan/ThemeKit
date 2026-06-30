@@ -34,9 +34,9 @@ final class ThemePresetRenderProof: XCTestCase {
 
         @ViewBuilder func sample() -> some View {
             HStack(spacing: 6) {
-                Badge("Primary", style: .info, variant: .solid)
-                Badge("New", style: .success)
-                Badge("Sale", style: .error)
+                Badge("Primary").badgeStyle(.info).variant(.solid)
+                Badge("New").badgeStyle(.success)
+                Badge("Sale").badgeStyle(.error)
             }
             ProgressBar(value: 0.68, showPercentage: true)
             Rating(value: 4.5).starSize(15)

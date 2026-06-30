@@ -64,7 +64,7 @@ private struct IndicatorDot: View {
         Icon(systemName: "bell", size: .lg, color: theme.text(.textPrimary))
             .indicatorDot()
         Icon(systemName: "envelope", size: .lg, color: theme.text(.textPrimary))
-            .indicator { Badge("3", style: .error, size: .small) }
+            .indicator { Badge("3").badgeStyle(.error).size(.small) }
     }
     .padding()
 }

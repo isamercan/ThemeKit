@@ -93,9 +93,9 @@ final class ScreenshotGenerator: XCTestCase {
             Avatar(.icon("person.fill")).size(.md)
         })
         shot("Badge", HStack(spacing: 8) {
-            Badge("Success", style: .success)
-            Badge("Info", style: .info, leadingSystemImage: "star.fill")
-            Badge("Error", style: .error, variant: .solid)
+            Badge("Success").badgeStyle(.success)
+            Badge("Info").badgeStyle(.info).icon("star.fill")
+            Badge("Error").badgeStyle(.error).variant(.solid)
         })
         shot("Chip", HStack(spacing: 8) {
             Chip("Selected", isSelected: .constant(true))
@@ -388,7 +388,7 @@ final class ScreenshotGenerator: XCTestCase {
                 VStack(spacing: 10) {
                     Text("ThemeKit").font(.system(size: 50, weight: .black)).foregroundStyle(t.text(.textPrimary))
                     sub("Native SwiftUI design system")
-                    Badge("v0.2.0 · iOS 17+", style: .info, leadingSystemImage: "swift")
+                    Badge("v0.2.0 · iOS 17+").badgeStyle(.info).icon("swift")
                     HStack(spacing: 12) {
                         RadialProgress(0.72).size(52).showsLabel(false)
                         ProgressBar(value: 0.62).frame(width: 130)
@@ -451,7 +451,7 @@ final class ScreenshotGenerator: XCTestCase {
             Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
                 .frame(height: 128)
             HStack(spacing: 6) {
-                Badge("Info", style: .info, leadingSystemImage: "bell.fill")
+                Badge("Info").badgeStyle(.info).icon("bell.fill")
                 Tag("Filter", onRemove: {})
             }
             InfoBanner("Subtree-themed", type: .success)
