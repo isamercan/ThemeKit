@@ -45,6 +45,19 @@ jobs:
             --hosting-base-path ThemeKit \
             --output-path ./docs-out
 
+      # DocC's static-hosting root doesn't auto-open the module, so the bare site
+      # root would land on a blank shell. Redirect it straight to the docs.
+      - name: Redirect site root → documentation
+        run: |
+          cat > ./docs-out/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>ThemeKit</title>
+          <meta http-equiv="refresh" content="0; url=./documentation/themekit/">
+          <link rel="canonical" href="./documentation/themekit/">
+          <p>Redirecting to the <a href="./documentation/themekit/">ThemeKit documentation</a>…</p>
+          HTML
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
