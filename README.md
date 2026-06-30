@@ -65,7 +65,7 @@ the repository URL, or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.1.0"),
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.3.0"),
 ],
 targets: [
     .target(
@@ -594,6 +594,7 @@ full tool list and the `figma-mapping.json` schema.
 ## Documentation
 
 📖 **Live docs: [isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/documentation/themekit)** — the DocC catalog, published from `main` on every push.
+📚 **[Wiki](https://github.com/isamercan/ThemeKit/wiki)** — installation, FAQ, troubleshooting, versioning, and contributing guides.
 
 A DocC catalog ships with the package
 (`Sources/ThemeKit/Documentation.docc`). Build it locally in Xcode via
@@ -639,9 +640,13 @@ validation, localization, accessibility mapping, and component render smoke test
 - **Per-subtree `\.theme` migration** — pilot components (`Card`, `Tag`) read
   `\.theme` today; the rest are moving over incrementally so any subtree can be
   re-themed without touching `Theme.shared`.
-- **Public release** — the MCP server (`@isamercan/themekit-mcp`) and the Claude
-  Code plugin ship to npm / the plugin marketplace once the repo goes public.
+- **API stabilization toward `1.0`** — the public API is still in `0.x`; a minor
+  release may include breaking changes until then (see the [Versions & Releases](https://github.com/isamercan/ThemeKit/wiki/Versions-and-Releases) wiki).
 <!-- Add upcoming components, platforms, or API milestones here. -->
+
+> **Shipped:** the package is public (MIT), the MCP server is on npm
+> (`@isamercan/themekit-mcp`), the Claude Code plugin is installable
+> (`/plugin marketplace add isamercan/ThemeKit`), and the DocC docs are live.
 
 ## Contributing
 
