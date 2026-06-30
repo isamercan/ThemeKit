@@ -1070,10 +1070,12 @@ struct DateFieldDemo: View {
 
     var body: some View {
         ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
-            DateField(label: "Date", date: $date, style: style,
-                      components: withTime ? .dateAndTime : .date,
-                      infoMessages: messages, allowClear: clearable,
-                      leadingSystemImage: "calendar")
+            DateField("Date", date: $date)
+                    .style(style)
+                    .components(withTime ? .dateAndTime : .date)
+                    .infoMessages(messages)
+                    .clearable(clearable)
+                    .icon("calendar")
                     .a11yID("demoDate")
                     .disabled(!enabled)
         } knobs: {

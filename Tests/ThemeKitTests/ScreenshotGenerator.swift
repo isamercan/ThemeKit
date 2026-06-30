@@ -209,7 +209,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Fieldset", Fieldset("Contact details", helper: "We never share your info.") {
             TextInput("Email", text: .constant("user@example.com"))
         }.frame(width: 320), hosted: true)
-        shot("DateField", DateField(label: "Check-in", date: .constant(nil)).frame(width: 280))
+        shot("DateField", DateField("Check-in", date: .constant(nil)).frame(width: 280))
         shot("Select", Select("City", options: ["Istanbul", "Ankara", "Izmir"],
                               selection: .constant(Optional("Istanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
         // SelectBox is a native SwiftUI Menu — its label doesn't draw into an

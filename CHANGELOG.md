@@ -33,6 +33,15 @@ component-by-component.
   `badge:`→`.badge(_:)`, `meta:`→`.meta(_:)`, `infos:`→`.infos(_:)`,
   `isSelected:`→`.selected(_:)`, `multilineTitle:`→`.multilineTitle(_:)`,
   `infoAction:`→`.onInfo(_:)`, `trailing:`→`.trailing(_:)`.
+- **`DateField` init reduced to `DateField(_ label:date:)`.** The 8 other
+  parameters moved to modifiers: `placeholder:`→`.placeholder(_:)`,
+  `range:`→`.range(_:)`, `style:`→`.style(_:)`, `locale:`→`.locale(_:)`,
+  `components:`→`.components(_:)`, `infoMessages:`→`.infoMessages(_:)`,
+  `allowClear:`→`.clearable(_ on:)`, `leadingSystemImage:`→`.icon(_:)`.
+  (`accessibilityID:`→`.a11yID(_:)` and native `.disabled(_:)` already applied.)
+  Migration:
+  `DateField(label: "Check-in", date: $d, style: .long, allowClear: true, leadingSystemImage: "calendar")`
+  → `DateField("Check-in", date: $d).style(.long).clearable().icon("calendar")`.
 
 ## [0.2.0] - 2026-06-28
 

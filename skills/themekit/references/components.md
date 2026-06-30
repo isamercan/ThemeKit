@@ -55,7 +55,7 @@
 - `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
 - `ChipGroup` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
 - `ColorField(label, selection:, supportsOpacity:)` — Molecule.
-- `DateField(label:, date:, placeholder:, range:, style:, locale: …)` — Molecule. · modifiers: `.a11yID()`
+- `DateField(_ label:, date:)` — Molecule. · modifiers: `.placeholder() .range() .style() .locale() .components() .infoMessages() .clearable() .icon() .a11yID()`
 - `Fieldset(title, helper:, @ViewBuilder:)` — Molecule.
 - `FileInput(label:, fileName:, buttonTitle:, placeholder:, infoMessages:, onPick:)` — Molecule.
 - `FilterGroup(title:, options:, selection:, label:)` — Molecule.
