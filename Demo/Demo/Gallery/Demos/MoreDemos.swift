@@ -817,7 +817,9 @@ struct StepsDemo: View {
     }
     var body: some View {
         ComponentStage("Steps", inspector: [("active", "\(active)"), ("progressDot", "\(progressDot)")]) {
-            Steps(steps, axis: vertical ? .vertical : .horizontal, progressDot: progressDot) { active = $0; flash("Step \($0 + 1) selected") }
+            Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
+                .axis(vertical ? .vertical : .horizontal)
+                .progressDot(progressDot)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)

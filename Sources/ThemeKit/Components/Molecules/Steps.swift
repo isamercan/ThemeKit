@@ -38,16 +38,15 @@ public struct Steps: View {
     }
 
     private let steps: [Step]
-    private let axis: Axis
-    private let small: Bool
-    private let progressDot: Bool
     private let onSelect: ((Int) -> Void)?
 
-    public init(_ steps: [Step], axis: Axis = .horizontal, small: Bool = false, progressDot: Bool = false, onSelect: ((Int) -> Void)? = nil) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var axis: Axis = .horizontal
+    private var small = false
+    private var progressDot = false
+
+    public init(_ steps: [Step], onSelect: ((Int) -> Void)? = nil) {   // R1
         self.steps = steps
-        self.axis = axis
-        self.small = small
-        self.progressDot = progressDot
         self.onSelect = onSelect
     }
 
@@ -180,10 +179,29 @@ public struct Steps: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Steps {
+    /// Layout orientation: horizontal / vertical.
+    func axis(_ a: Axis) -> Self { copy { $0.axis = a } }
+
+    /// Compact markers and labels.
+    func small(_ on: Bool = true) -> Self { copy { $0.small = on } }
+
+    /// Render minimal progress dots instead of numbered markers (Ant `progressDot`).
+    func progressDot(_ on: Bool = true) -> Self { copy { $0.progressDot = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 40) {
         Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])
-        Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)], axis: .vertical)
+        Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)]).axis(.vertical)
     }
     .padding()
 }

@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Steps` init reduced to `Steps(_ steps:onSelect:)`.** The steps data array and
+  the tap-to-navigate callback stay in init; the 3 appearance/layout parameters
+  moved to modifiers: `axis:`→`.axis(_:)`, `small:`→`.small(_ on:)`,
+  `progressDot:`→`.progressDot(_ on:)`. (`Steps.Step` is unchanged.) Migration:
+  `Steps(steps, axis: .vertical, progressDot: true) { active = $0 }`
+  → `Steps(steps) { active = $0 }.axis(.vertical).progressDot()`.
 - **`Tag` init reduced to `Tag(_ text:onRemove:)`.** The text and the optional
   removal callback stay in init; the 3 appearance parameters moved to modifiers:
   `leadingSystemImage:`→`.icon(_:)`, `style:`→`.tagStyle(_:)` (renamed to avoid the
