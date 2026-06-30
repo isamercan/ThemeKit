@@ -96,6 +96,13 @@ component-by-component.
   and `.a11yID(_:)` already a modifier.) Migration:
   `MultiLineTextInput("Notes", text: $t, placeholder: "…", characterLimit: 200)`
   → `MultiLineTextInput("Notes", text: $t).placeholder("…").characterLimit(200)`.
+- **`ProgressIndicator` init reduced to `ProgressIndicator(variant:current:total:)`.**
+  The 4 appearance parameters moved to modifiers: `size:`→`.size(_:)`,
+  `videoProgress:`→`.videoProgress(_:)`, `stepText:`→`.stepText(_:)`,
+  `cornerRadius:`→`.cornerRadius(_ on:)`. (`variant`/`current`/`total` stay in init —
+  the core kind plus required data.) Migration:
+  `ProgressIndicator(variant: .video, current: 3, total: 5, videoProgress: 0.5, stepText: .slash)`
+  → `ProgressIndicator(variant: .video, current: 3, total: 5).videoProgress(0.5).stepText(.slash)`.
 - **`Stat` init reduced to `Stat(title:value:)`** (both the `String` and `Int`
   value overloads). The 6 other parameters moved to modifiers:
   `prefix:`→`.prefix(_:)`, `suffix:`→`.suffix(_:)`, `isLoading:`→`.loading(_ on:)`,

@@ -24,3 +24,4 @@ API breakage: constructor EmptyState.init(image:imageMaxHeight:title:message:but
 API breakage: constructor EmptyState.init(animatedURL:imageMaxHeight:title:message:buttonTitle:action:secondaryTitle:onSecondary:) has been removed
 API breakage: constructor Checkbox.init(_:isChecked:customSize:type:isIndeterminate:alignment:infoMessages:) has been removed
 API breakage: constructor MultiLineTextInput.init(_:text:placeholder:characterLimit:errorText:infoMessages:minHeight:) has been removed
+API breakage: constructor ProgressIndicator.init(variant:current:total:size:videoProgress:stepText:cornerRadius:) has been removed

@@ -103,7 +103,7 @@ enum ComponentRegistry {
         .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput(label: "Passport", fileName: name) { pick() }"#),
         .knob("FilterGroup", .molecules, demo: FilterGroupDemo(), usage: #"FilterGroup(options: items, selection: $sel) { $0 }"#),
         .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip(isSelected: $on, text: "Suit", price: "$899", rating: 4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
-        .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8, stepText: .slash)"#),
+        .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8).stepText(.slash)"#),
         .knob("ThemeController", .molecules, demo: ThemeControllerDemo(), usage: #"ThemeController(options: [.init(name: "oceanTheme", label: "Ocean")], selectedName: $name)"#),
         .knob("Pagination", .molecules, demo: PaginationDemo(), usage: #"Pagination(current: $page, total: 50).window(sibling: 2).jumper()"#),
         .knob("Stat", .molecules, demo: StatDemo(), usage: #"Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))"#),

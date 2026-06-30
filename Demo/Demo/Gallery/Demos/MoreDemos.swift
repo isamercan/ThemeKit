@@ -1907,9 +1907,9 @@ struct ProgressIndicatorDemo: View {
 
     var body: some View {
         ComponentStage("ProgressIndicator", inspector: [("variant", variant.rawValue), ("step", "\(Int(current))/8")]) {
-            ProgressIndicator(variant: v, current: Int(current), total: 8,
-                              videoProgress: videoProgress,
-                              stepText: stepText ? (padded ? .padded : .slash) : .none)
+            ProgressIndicator(variant: v, current: Int(current), total: 8)
+                .videoProgress(videoProgress)
+                .stepText(stepText ? (padded ? .padded : .slash) : .none)
         } knobs: {
             Picker("Variant", selection: $variant) { ForEach(Variant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
             HStack { Text("Current"); SwiftUI.Slider(value: $current, in: 0...8, step: 1) }
