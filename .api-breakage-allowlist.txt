@@ -45,3 +45,5 @@ API breakage: constructor Steps.init(_:axis:small:progressDot:onSelect:) has bee
 API breakage: constructor ChatBubble.init(_:side:author:time:avatarSystemImage:) has been removed
 API breakage: constructor ImageCollage.init(_:height:spacing:cornerRadius:onTap:) has been removed
 API breakage: constructor SegmentedTabBar.init(_:selection:scrollable:style:onClose:onAdd:) has been removed
+API breakage: constructor RadioCard.init(_:description:isSelected:isEnabled:action:) has been removed
+API breakage: constructor CheckboxCard.init(_:description:isChecked:isEnabled:action:) has been removed

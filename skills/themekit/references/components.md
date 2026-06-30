@@ -119,7 +119,7 @@
 - `RatingSummary(score:, label:, reviewCount:, onReviews:)` — Organism.
 - `ResultView(status, title:, message:, primaryTitle:, onPrimary:)` — Ant-style "Result" template: a full-page status view for the outcome of an operation (success / info / warning / error) or an exception page (404 / 403 / 500), with up to two actions.
 - `SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.scrollable()`, `.tabStyle()`, `.a11yID()`
-- `RadioCard(title, description:, isSelected:, isEnabled:, action:)` — Organisms.
+- `RadioCard(title, description:, isSelected:, action:)` — Organisms.
 - `CheckboxCard`
 - `ThemePicker(selection:, themes:, onSelect:)` — A grid of `ThemePreset` preview cards.
 - `Timeline(title:, time:, description:, systemImage:, state:, color:)` — Organism. · modifiers: `.axis()`, `.mode()`, `.reversed()`, `.pending()`

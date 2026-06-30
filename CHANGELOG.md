@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`RadioCard` / `CheckboxCard` drop their `isEnabled:` init parameter (R3).**
+  The disabled state is now native: `@Environment(\.isEnabled)` + the standard
+  `.disabled(_:)` modifier (which cascades to the card's button). Inits are now
+  `RadioCard(_ title:description:isSelected:action:)` and
+  `CheckboxCard(_ title:description:isChecked:action:)`. Migration:
+  `RadioCard("Express", isSelected: x, isEnabled: y) { … }`
+  → `RadioCard("Express", isSelected: x) { … }.disabled(!y)`.
 - **`SegmentedTabBar` init reduced to `SegmentedTabBar(_ items:selection:onClose:onAdd:)`.**
   Both overloads (`[TabItem]` and `[String]`) keep the items data, the `selection`
   binding and the optional close/add callbacks in init; the 2 appearance
