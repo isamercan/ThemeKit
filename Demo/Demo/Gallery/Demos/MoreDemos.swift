@@ -890,9 +890,9 @@ struct ChatBubbleDemo: View {
     var body: some View {
         ComponentStage("ChatBubble", inspector: [("side", outgoing ? "outgoing" : "incoming")]) {
             ChatBubble("Hello! Your reservation is confirmed.",
-                       side: outgoing ? .outgoing : .incoming,
-                       author: meta ? "Support" : nil, time: meta ? "09:24" : nil,
-                       avatarSystemImage: avatar ? "person.fill" : nil)
+                       author: meta ? "Support" : nil, time: meta ? "09:24" : nil)
+                .side(outgoing ? .outgoing : .incoming)
+                .icon(avatar ? "person.fill" : nil)
         } knobs: {
             Toggle("Outgoing", isOn: $outgoing)
             Toggle("Avatar", isOn: $avatar)

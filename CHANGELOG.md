@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`ChatBubble` init reduced to `ChatBubble(_ text:author:time:)`.** The message
+  text, author and timestamp (all content) stay in init; the 2 appearance
+  parameters moved to modifiers: `side:`→`.side(_:)`,
+  `avatarSystemImage:`→`.icon(_:)`. Migration:
+  `ChatBubble("Hi!", side: .outgoing, time: "09:24", avatarSystemImage: "person.fill")`
+  → `ChatBubble("Hi!", time: "09:24").side(.outgoing).icon("person.fill")`.
 - **`Steps` init reduced to `Steps(_ steps:onSelect:)`.** The steps data array and
   the tap-to-navigate callback stay in init; the 3 appearance/layout parameters
   moved to modifiers: `axis:`→`.axis(_:)`, `small:`→`.small(_ on:)`,

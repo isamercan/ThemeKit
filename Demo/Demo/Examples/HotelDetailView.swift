@@ -70,8 +70,8 @@ struct HotelDetailView: View {
                     }
 
                     Text("Reviews").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-                    ChatBubble("It was a wonderful stay, the view was amazing!", side: .incoming, author: "Emma", time: "2 days ago", avatarSystemImage: "person.fill")
-                    ChatBubble("The staff were very attentive, I highly recommend it.", side: .incoming, author: "James", time: "1 week ago", avatarSystemImage: "person.fill")
+                    ChatBubble("It was a wonderful stay, the view was amazing!", author: "Emma", time: "2 days ago").side(.incoming).icon("person.fill")
+                    ChatBubble("The staff were very attentive, I highly recommend it.", author: "James", time: "1 week ago").side(.incoming).icon("person.fill")
                 }
                 .padding()
             }

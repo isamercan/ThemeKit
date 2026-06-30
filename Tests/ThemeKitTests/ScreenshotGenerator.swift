@@ -261,8 +261,8 @@ final class ScreenshotGenerator: XCTestCase {
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 320))
         shot("ChatBubble", VStack(alignment: .leading, spacing: 8) {
-            ChatBubble("Hi! Your reservation is confirmed.", side: .incoming, author: "Support", time: "09:24")
-            ChatBubble("Thanks!", side: .outgoing, time: "09:25")
+            ChatBubble("Hi! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming)
+            ChatBubble("Thanks!", time: "09:25").side(.outgoing)
         }.frame(width: 320))
         shot("Counter", Counter(days: 2, hours: 8, minutes: 45))
         shot("Coupon", Coupon(code: "UXMUQ", style: .outlined).frame(width: 300))

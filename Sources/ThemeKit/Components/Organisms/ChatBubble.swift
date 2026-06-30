@@ -16,17 +16,17 @@ public struct ChatBubble: View {
     @Environment(\.theme) private var theme
 
     private let text: String
-    private let side: ChatSide
     private let author: String?
     private let time: String?
-    private let avatarSystemImage: String?
 
-    public init(_ text: String, side: ChatSide = .incoming, author: String? = nil, time: String? = nil, avatarSystemImage: String? = nil) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var side: ChatSide = .incoming
+    private var avatarSystemImage: String?
+
+    public init(_ text: String, author: String? = nil, time: String? = nil) {   // R1
         self.text = text
-        self.side = side
         self.author = author
         self.time = time
-        self.avatarSystemImage = avatarSystemImage
     }
 
     public var body: some View {
@@ -63,10 +63,26 @@ public struct ChatBubble: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ChatBubble {
+    /// Conversation side: incoming (leading) / outgoing (trailing).
+    func side(_ s: ChatSide) -> Self { copy { $0.side = s } }
+
+    /// Leading/trailing avatar SF Symbol (positioned by `side`).
+    func icon(_ systemImage: String?) -> Self { copy { $0.avatarSystemImage = systemImage } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 12) {
-        ChatBubble("Hello! Your reservation is confirmed.", side: .incoming, author: "Support", time: "09:24", avatarSystemImage: "person.fill")
-        ChatBubble("Thanks, great!", side: .outgoing, time: "09:25", avatarSystemImage: "person.fill")
+        ChatBubble("Hello! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming).icon("person.fill")
+        ChatBubble("Thanks, great!", time: "09:25").side(.outgoing).icon("person.fill")
     }
     .padding()
 }
