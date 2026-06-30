@@ -6,6 +6,14 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-06-30
+
+### Changed
+- **Catalog refreshed to 119 components** — regenerated `data/themekit.json` from the
+  symbol graph to include the new **`TimeField`** (Molecule) and **`Sidebar`**
+  (Organism) with their full init params + modifiers, so `get_component_api`,
+  `list_components`, `search_components` and `design_to_code` know about them.
+
 ## [2.6.0] - 2026-06-30
 
 ### Added
