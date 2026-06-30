@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`InfoBanner` init reduced to `InfoBanner(_:title:links:)`.** The `message`
+  content, the optional `title`, and the inline-`links` data stay in init; the 6
+  appearance/state/callback parameters moved to modifiers: `type:`→`.variant(_:)`,
+  `showIcon:`→`.showsIcon(_ on: Bool = true)`, `banner:`→`.fullWidth(_ on: Bool = true)`,
+  the `actionTitle:`/`onAction:` pair→`.action(_:onAction:)`, `onDismiss:`→`.onDismiss(_:)`.
+  Migration:
+  `InfoBanner("Saved", type: .success, banner: true, onDismiss: { … })`
+  → `InfoBanner("Saved").variant(.success).fullWidth().onDismiss { … }`.
 - **`ThemeToggle` init reduced to `ThemeToggle(isOn:)`.** Only the `isOn` binding
   stays in init; the 3 appearance/state parameters moved to modifiers:
   `isLoading:`→`.loading(_ on: Bool = true)`, and the paired

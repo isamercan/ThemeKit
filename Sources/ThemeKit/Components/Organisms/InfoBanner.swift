@@ -55,36 +55,26 @@ public enum InfoBannerType {
 public struct InfoBanner: View {
     @Environment(\.theme) private var theme
 
-    private let type: InfoBannerType
-    private let title: String?
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var type: InfoBannerType = .info
+    private var showIcon = true
+    private var banner = false
+    private var actionTitle: String?
+    private var onAction: (() -> Void)?
+    private var onDismiss: (() -> Void)?
+
     private let message: String
+    private let title: String?
     private let links: [(substring: String, action: () -> Void)]
-    private let showIcon: Bool
-    private let banner: Bool
-    private let actionTitle: String?
-    private let onAction: (() -> Void)?
-    private let onDismiss: (() -> Void)?
 
     public init(
         _ message: String,
-        type: InfoBannerType = .info,
         title: String? = nil,
-        links: [(substring: String, action: () -> Void)] = [],
-        showIcon: Bool = true,
-        banner: Bool = false,
-        actionTitle: String? = nil,
-        onAction: (() -> Void)? = nil,
-        onDismiss: (() -> Void)? = nil
-    ) {
-        self.type = type
-        self.title = title
+        links: [(substring: String, action: () -> Void)] = []
+    ) {   // R1 — content + content/data
         self.message = message
+        self.title = title
         self.links = links
-        self.showIcon = showIcon
-        self.banner = banner
-        self.actionTitle = actionTitle
-        self.onAction = onAction
-        self.onDismiss = onDismiss
     }
 
     private var radius: CGFloat { banner ? 0 : Theme.RadiusKey.md.value }
@@ -137,11 +127,40 @@ public struct InfoBanner: View {
 
 #Preview {
     VStack(spacing: 12) {
-        InfoBanner("This is an informational message.", type: .info, title: "Heads up")
-        InfoBanner("Your changes were saved.", type: .success)
-        InfoBanner("Please double-check this field.", type: .warning)
-        InfoBanner("Something went wrong.", type: .error, onDismiss: {})
-        InfoBanner("A neutral note.", type: .neutral)
+        InfoBanner("This is an informational message.", title: "Heads up").variant(.info)
+        InfoBanner("Your changes were saved.").variant(.success)
+        InfoBanner("Please double-check this field.").variant(.warning)
+        InfoBanner("Something went wrong.").variant(.error).onDismiss {}
+        InfoBanner("A neutral note.").variant(.neutral)
     }
     .padding()
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension InfoBanner {
+    /// Semantic type: neutral / info / success / warning / error — drives the
+    /// surface, accent, border and leading icon.
+    func variant(_ t: InfoBannerType) -> Self { copy { $0.type = t } }
+
+    /// Show or hide the type's leading icon.
+    func showsIcon(_ on: Bool = true) -> Self { copy { $0.showIcon = on } }
+
+    /// Edge-to-edge banner treatment: stretch to full width and drop the
+    /// rounded corners / border (Ant Alert `banner`).
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.banner = on } }
+
+    /// Trailing inline action button: its label + handler.
+    func action(_ title: String?, onAction: (() -> Void)? = nil) -> Self {
+        copy { $0.actionTitle = title; $0.onAction = onAction }
+    }
+
+    /// Trailing dismiss (×) button handler.
+    func onDismiss(_ handler: (() -> Void)?) -> Self { copy { $0.onDismiss = handler } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

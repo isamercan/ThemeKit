@@ -131,12 +131,12 @@ struct ThemeConfiguratorView: View {
                         Chip("Empty", isSelected: .constant(false))
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Info", type: .info)
-                        InfoBanner("Success", type: .success)
+                        InfoBanner("Info").variant(.info)
+                        InfoBanner("Success").variant(.success)
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Warning", type: .warning)
-                        InfoBanner("Error", type: .error)
+                        InfoBanner("Warning").variant(.warning)
+                        InfoBanner("Error").variant(.error)
                     }
                     ladder("Primary", .primary)
                     ladder("Secondary", .secondary)

@@ -109,10 +109,12 @@ struct InfoBannerDemo: View {
 
     var body: some View {
         ComponentStage("InfoBanner", inspector: [("type", "\(type)"), ("linkTaps", "\(tapped)")]) {
-            InfoBanner(message, type: type, title: title ? "Heads up" : nil, links: links,
-                       showIcon: showIcon, banner: banner,
-                       actionTitle: action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil,
-                       onDismiss: dismissable ? { flash("InfoBanner closed") } : nil)
+            InfoBanner(message, title: title ? "Heads up" : nil, links: links)
+                .variant(type)
+                .showsIcon(showIcon)
+                .fullWidth(banner)
+                .action(action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil)
+                .onDismiss(dismissable ? { flash("InfoBanner closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Neutral").tag(InfoBannerType.neutral); Text("Info").tag(InfoBannerType.info); Text("Success").tag(InfoBannerType.success); Text("Warning").tag(InfoBannerType.warning); Text("Error").tag(InfoBannerType.error)

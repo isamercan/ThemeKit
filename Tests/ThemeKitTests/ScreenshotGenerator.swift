@@ -272,7 +272,7 @@ final class ScreenshotGenerator: XCTestCase {
                                       .primaryAction("Clear filters") {}
                                       .secondaryAction("Learn more") {}.frame(width: 320))
         shot("InfoBanner", InfoBanner("Your reservation is confirmed. Go to the ticket page for details.",
-                                      type: .info, title: "Heads up").frame(width: 340))
+                                      title: "Heads up").variant(.info).frame(width: 340))
         shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Active", style: .success),
                                                    .init("Old price", value: "$5,000", style: .strikethrough),
                                                    .init("Total", value: "$4,250")],
@@ -455,7 +455,7 @@ final class ScreenshotGenerator: XCTestCase {
                 Badge("Info").badgeStyle(.info).icon("bell.fill")
                 Tag("Filter", onRemove: {})
             }
-            InfoBanner("Subtree-themed", type: .success)
+            InfoBanner("Subtree-themed").variant(.success)
             Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
             PrimaryButton("Continue", block: true) {}
         }

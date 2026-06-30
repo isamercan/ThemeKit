@@ -1621,7 +1621,7 @@ struct FormDemo: View {
                     .a11yID("form.terms")
                 }
                 if done {
-                    InfoBanner("Your account has been created.", type: .success)
+                    InfoBanner("Your account has been created.").variant(.success)
                 }
                 ThemeButton("Sign up") {
                     let firstInvalid = form.validateAll(values)

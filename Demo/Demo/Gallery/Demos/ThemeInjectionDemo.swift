@@ -61,7 +61,7 @@ struct ThemeInjectionDemo: View {
                 Badge("Info").badgeStyle(.info).icon("bell.fill")
                 Tag("Filter", onRemove: {})
             }
-            InfoBanner("Subtree-themed banner", type: .success)
+            InfoBanner("Subtree-themed banner").variant(.success)
             Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
             PrimaryButton("Continue", block: true) {}
         }

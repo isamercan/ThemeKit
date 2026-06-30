@@ -75,8 +75,8 @@ struct DesignPreviewSheet: View {
                     OutlineButton("Outline") {}
                 }
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    InfoBanner("Info", type: .info)
-                    InfoBanner("Success", type: .success)
+                    InfoBanner("Info").variant(.info)
+                    InfoBanner("Success").variant(.success)
                 }
             }
         }

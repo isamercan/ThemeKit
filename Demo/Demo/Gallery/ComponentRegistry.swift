@@ -156,7 +156,7 @@ enum ComponentRegistry {
         .knob("Feedback", .organisms, demo: FeedbackDemo(), usage: #"@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter\nfeedback.toast("Saved", kind: .success)              // stacks\nfeedback.toast("Deleted", action: ToastAction("Undo") { }, duration: nil)\nawait feedback.toastTask(loading: "Saving…", success: "Saved") { try await save() }\n// install once: .feedbackHost(maxVisibleToasts: 3, toastPosition: .bottom)"#),
         .knob("Gallery", .organisms, demo: GalleryDemo(), usage: #"Gallery(items, columns: 2, aspect: .square) { item in mediaView }"#),
         .knob("ImageCollage", .organisms, demo: ImageCollageDemo(), usage: #"ImageCollage(urls) { index in open(index) }.height(220)   // 1·2·3·4+ layouts + "+N""#),
-        .knob("InfoBanner", .organisms, demo: InfoBannerDemo(), usage: #"InfoBanner("Message", type: .info, links: [("link", action)])"#),
+        .knob("InfoBanner", .organisms, demo: InfoBannerDemo(), usage: #"InfoBanner("Message", links: [("link", action)]).variant(.info)"#),
         .knob("ListRow", .organisms, demo: ListRowDemo(), usage: #"ListRow("Account", action: { }).subtitle("…").trailing(.chevron)"#),
         .knob("List", .organisms, demo: ListDemo(), usage: #"ListView(items, header: "Settings", footer: "3 items", bordered: true) { ListRow($0.title) }"#),
         .knob("MenuCard", .organisms, demo: MenuCardDemo(), usage: #"MenuCard(items: [.init(title: "Reservations", systemImage: "calendar")])"#),
