@@ -120,9 +120,10 @@ struct RadioButtonDemo: View {
 
     var body: some View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
-            RadioButton(inlineLabel ? "Remember me" : nil, isSelected: $selected,
-                        type: check ? .check : .select,
-                        style: inner ? .inner : .plain, padding: .medium)
+            RadioButton(inlineLabel ? "Remember me" : nil, isSelected: $selected)
+                    .type(check ? .check : .select)
+                    .radioStyle(inner ? .inner : .plain)
+                    .gap(.medium)
                     .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {

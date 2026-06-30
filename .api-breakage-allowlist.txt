@@ -16,3 +16,5 @@ API breakage: constructor DateField.init(label:date:placeholder:range:style:loca
 API breakage: constructor TreeSelect.init(label:nodes:selection:placeholder:cascade:searchable:initiallyExpanded:isLoading:isNodeEnabled:) has been removed
 API breakage: constructor RadialProgress.init(value:size:lineWidth:showLabel:status:dashboard:tint:accessibilityLabel:) has been removed
 API breakage: constructor InputNumber.init(label:value:range:step:unit:hint:errorText:large:) has been removed
+API breakage: constructor RadioButton.init(_:isSelected:type:style:padding:backgroundColor:verticalAlignment:infoMessages:) has been removed
+API breakage: constructor RadioButton.init(tag:selection:type:style:padding:backgroundColor:infoMessages:) has been removed

@@ -35,21 +35,32 @@ public enum RadioButtonPadding {
 }
 
 /// Figma "Control Items" → Radioboxes. Sizes Small (20) / Medium (24);
-/// states selected / disabled. Colors from theme tokens.
+/// states selected / disabled. Colors from theme tokens. Per the modifier-based
+/// architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only its label,
+/// the `isSelected` binding and the `infoMessages` validation data; every
+/// appearance axis is a chainable, order-free modifier. Size is native
+/// (`@Environment(\.controlSize)`); `disabled` is native (`@Environment(\.isEnabled)`, R3).
+///
+///     RadioButton("Remember me", isSelected: $on)
+///         .type(.check).radioStyle(.inner).gap(.medium)
+///         .controlSize(.small)            // native size
+///         .disabled(!editable)            // native — R3
 public struct RadioButton: View {
     @Environment(\.theme) private var theme
 
     @Binding private var isSelected: Bool
     private let label: String?
-    @Environment(\.controlSize) private var controlSize
-    private let type: RadioButtonType
-    private let style: RadioButtonStyle
-    private let padding: RadioButtonPadding
-    private let backgroundColor: Color?
-    private let verticalAlignment: VerticalAlignment
     private let infoMessages: [InfoMessage]
+    @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled
-    private var accessibilityID: String? = nil
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var type: RadioButtonType = .select
+    private var style: RadioButtonStyle = .plain
+    private var gap: RadioButtonPadding = .small
+    private var backgroundColor: Color?
+    private var verticalAlignment: VerticalAlignment = .center
+    private var accessibilityID: String?
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -58,20 +69,10 @@ public struct RadioButton: View {
     public init(
         _ label: String? = nil,
         isSelected: Binding<Bool>,
-        type: RadioButtonType = .select,
-        style: RadioButtonStyle = .plain,
-        padding: RadioButtonPadding = .small,
-        backgroundColor: Color? = nil,
-        verticalAlignment: VerticalAlignment = .center,
         infoMessages: [InfoMessage] = []
-    ) {
+    ) {   // R1 — content + binding + required validation data
         self.label = label
         self._isSelected = isSelected
-        self.type = type
-        self.style = style
-        self.padding = padding
-        self.backgroundColor = backgroundColor
-        self.verticalAlignment = verticalAlignment
         self.infoMessages = infoMessages
     }
 
@@ -84,7 +85,7 @@ public struct RadioButton: View {
             Button {
                 if type == .check { isSelected.toggle() } else { isSelected = true }
             } label: {
-                HStack(alignment: verticalAlignment, spacing: padding.value) {
+                HStack(alignment: verticalAlignment, spacing: gap.value) {
                     Circle()
                         .fill(filled ? fillColor : .clear)
                         .overlay(Circle().strokeBorder(stroke, lineWidth: 1.5))
@@ -147,9 +148,6 @@ public extension RadioButton {
         tag: V,
         selection: Binding<V?>,
         type: RadioButtonType = .select,
-        style: RadioButtonStyle = .plain,
-        padding: RadioButtonPadding = .small,
-        backgroundColor: Color? = nil,
         infoMessages: [InfoMessage] = []
     ) {
         self.init(
@@ -157,12 +155,38 @@ public extension RadioButton {
                 get: { selection.wrappedValue == tag },
                 set: { newValue in selection.wrappedValue = newValue ? tag : (type == .check ? nil : tag) }
             ),
-            type: type,
-            style: style,
-            padding: padding,
-            backgroundColor: backgroundColor,
             infoMessages: infoMessages
         )
+        self.type = type
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RadioButton {
+    /// Selected-state indicator: `.select` (one-way dot) or `.check` (togglable checkmark).
+    func type(_ t: RadioButtonType) -> Self { copy { $0.type = t } }
+
+    /// Indicator rendering of a `.check` radio: `.plain` glyph or `.inner` dot.
+    func radioStyle(_ s: RadioButtonStyle) -> Self { copy { $0.style = s } }
+
+    /// Gap between the radio and its label: small / medium / large.
+    func gap(_ p: RadioButtonPadding) -> Self { copy { $0.gap = p } }
+
+    /// Override the selected-fill color (defaults to the `.bgHero` token, R4).
+    func fillColor(_ c: Color?) -> Self { copy { $0.backgroundColor = c } }
+
+    /// Vertical alignment of the radio against a multi-line label.
+    func alignment(_ a: VerticalAlignment) -> Self { copy { $0.verticalAlignment = a } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -172,12 +196,7 @@ public extension RadioButton {
         RadioButton(isSelected: .constant(true))
         RadioButton(isSelected: .constant(true)).controlSize(.small)
         RadioButton(isSelected: .constant(true)).disabled(true)
+        RadioButton("Remember me", isSelected: .constant(true)).type(.check).radioStyle(.inner).gap(.medium)
     }
     .padding()
-}
-
-public extension RadioButton {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

@@ -67,6 +67,18 @@ component-by-component.
   Migration:
   `InputNumber(label: "Max price", value: $n, range: 0...10000, step: 50, unit: "$")`
   → `InputNumber("Max price", value: $n, range: 0...10000).step(50).unit("$")`.
+- **`RadioButton` init reduced to `RadioButton(_ label:isSelected:infoMessages:)`.**
+  The 5 appearance parameters moved to modifiers: `type:`→`.type(_:)`,
+  `style:`→`.radioStyle(_:)`, `padding:`→`.gap(_:)` (renamed to avoid clashing
+  with SwiftUI's `.padding`; it's the radio↔label gap),
+  `backgroundColor:`→`.fillColor(_:)` (renamed to avoid clashing with SwiftUI's
+  `.background`), `verticalAlignment:`→`.alignment(_:)`. (`label`/`isSelected`/
+  `infoMessages` stay in init — content, binding, and required validation data;
+  size already native `.controlSize(_:)`, `disabled` already native, and
+  `.a11yID(_:)` already a modifier.) The `tag:`-based convenience init dropped its
+  `style:`/`padding:`/`backgroundColor:` parameters too. Migration:
+  `RadioButton("Remember me", isSelected: $on, type: .check, style: .inner, padding: .medium)`
+  → `RadioButton("Remember me", isSelected: $on).type(.check).radioStyle(.inner).gap(.medium)`.
 
 ## [0.2.0] - 2026-06-28
 
