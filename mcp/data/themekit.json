@@ -3832,6 +3832,51 @@
       "usage": "ShareButton(item: \"item\")"
     },
     {
+      "name": "Sidebar",
+      "category": "Organisms",
+      "doc": "Organism.",
+      "init": "init(sections: [Sidebar.Section], selection: Binding<String?>)",
+      "params": [
+        {
+          "label": "sections",
+          "name": "sections",
+          "type": "[Sidebar.Section]"
+        },
+        {
+          "label": "selection",
+          "name": "selection",
+          "type": "Binding<String?>"
+        }
+      ],
+      "inits": [
+        "init(sections: [Sidebar.Section], selection: Binding<String?>)",
+        "init(items: [Sidebar.Item], selection: Binding<String?>)"
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> Sidebar",
+          "doc": "Stable accessibility identifier for the sidebar container."
+        },
+        {
+          "name": "footer(_:)",
+          "signature": ".footer(@ViewBuilder _ content: () -> some View) -> Sidebar",
+          "doc": "A custom view pinned to the bottom of the sidebar (settings, sign-out…)."
+        },
+        {
+          "name": "header(_:)",
+          "signature": ".header(@ViewBuilder _ content: () -> some View) -> Sidebar",
+          "doc": "A custom view pinned above the navigation list (brand mark, profile…)."
+        },
+        {
+          "name": "width(_:)",
+          "signature": ".width(_ width: CGFloat?) -> Sidebar",
+          "doc": "Fixed sidebar width (defaults to flexible / parent-driven)."
+        }
+      ],
+      "usage": "Sidebar(sections: <[Sidebar.Section]>, $selection)"
+    },
+    {
       "name": "Skeleton",
       "category": "Atoms",
       "doc": "A standalone skeleton block of an arbitrary shape and size.",
@@ -4386,6 +4431,73 @@
       "usage": "ThemeToggle($isOn)"
     },
     {
+      "name": "TimeField",
+      "category": "Molecules",
+      "doc": "Molecule.",
+      "init": "init(_ label: String? = nil, time: Binding<Date?>)",
+      "params": [
+        {
+          "label": "_",
+          "name": "label",
+          "type": "String?",
+          "default": "nil"
+        },
+        {
+          "label": "time",
+          "name": "time",
+          "type": "Binding<Date?>"
+        }
+      ],
+      "modifiers": [
+        {
+          "name": "a11yID(_:)",
+          "signature": ".a11yID(_ id: String?) -> TimeField",
+          "doc": "Stable accessibility identifier, forwarded to the kit's a11y infrastructure."
+        },
+        {
+          "name": "clearable(_:)",
+          "signature": ".clearable(_ on: Bool = true) -> TimeField",
+          "doc": "Show a trailing clear button when a time is set."
+        },
+        {
+          "name": "hourCycle(_:)",
+          "signature": ".hourCycle(_ cycle: TimeFieldHourCycle) -> TimeField",
+          "doc": "Force the displayed hour cycle (12 / 24-hour) or follow the locale (default)."
+        },
+        {
+          "name": "icon(_:)",
+          "signature": ".icon(_ systemImage: String?) -> TimeField",
+          "doc": "Leading SF Symbol shown inside the field (defaults to `clock`; pass `nil` to hide)."
+        },
+        {
+          "name": "infoMessages(_:)",
+          "signature": ".infoMessages(_ messages: [InfoMessage]) -> TimeField",
+          "doc": "Validation / info messages rendered under the field (drives the border state)."
+        },
+        {
+          "name": "locale(_:)",
+          "signature": ".locale(_ locale: Locale?) -> TimeField",
+          "doc": "Override the formatting locale (defaults to the environment locale)."
+        },
+        {
+          "name": "minuteInterval(_:)",
+          "signature": ".minuteInterval(_ minutes: Int) -> TimeField",
+          "doc": "Snap the selected minute to the nearest multiple of `minutes` (e.g."
+        },
+        {
+          "name": "placeholder(_:)",
+          "signature": ".placeholder(_ text: String) -> TimeField",
+          "doc": "Placeholder shown while no time is selected."
+        },
+        {
+          "name": "range(_:)",
+          "signature": ".range(_ range: ClosedRange<Date>?) -> TimeField",
+          "doc": "Restrict the picker to a selectable time range."
+        }
+      ],
+      "usage": "TimeField($time)"
+    },
+    {
       "name": "Timeline",
       "category": "Organisms",
       "doc": "Organism.",
@@ -4737,15 +4849,18 @@
     "fade(_:)",
     "fileName(_:)",
     "fillColor(_:)",
+    "footer(_:)",
     "fullWidth(_:)",
     "gap(_:)",
     "gaugeStyle(_:)",
     "gradient(_:)",
     "hasError(_:)",
     "hasInfo(_:)",
+    "header(_:)",
     "height(_:)",
     "highlighted(_:)",
     "hint(_:)",
+    "hourCycle(_:)",
     "icon(_:)",
     "icon(leading:trailing:)",
     "iconBackground(_:)",
@@ -4774,6 +4889,7 @@
     "message(_:)",
     "meta(_:)",
     "minHeight(_:)",
+    "minuteInterval(_:)",
     "mode(_:)",
     "multilineTitle(_:)",
     "muteToggle(_:)",
@@ -4852,6 +4968,7 @@
     "variant(_:)",
     "videoProgress(_:)",
     "weight(_:)",
+    "width(_:)",
     "window(sibling:boundary:)"
   ],
   "enums": {
@@ -5147,6 +5264,11 @@
     "TextInputCountStyle": [
       "count",
       "remaining"
+    ],
+    "TimeFieldHourCycle": [
+      "locale",
+      "h12",
+      "h24"
     ],
     "TooltipEdge": [
       "top",

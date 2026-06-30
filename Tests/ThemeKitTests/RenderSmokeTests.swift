@@ -36,6 +36,11 @@ final class RenderSmokeTests: XCTestCase {
         renders(Rating(value: 4.3, layout: .rateNumberText), "Rating")
         renders(ThemeButton("Tap") {}, "ThemeButton")
         renders(Callout("Heads up").variant(.warning), "Callout")
+        renders(TimeField("Time", time: .constant(.now)).hourCycle(.h24).minuteInterval(15), "TimeField")
+        renders(Sidebar(items: [
+            .init(tag: "home", "Home", systemImage: "house"),
+            .init(tag: "fav", "Favorites", systemImage: "heart", badge: 2),
+        ], selection: .constant("home")).width(200), "Sidebar")
     }
 
     // Components must also render under a runtime-generated theme + dark mode.

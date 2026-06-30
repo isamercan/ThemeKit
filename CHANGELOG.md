@@ -5,12 +5,22 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
-## [Unreleased]
+## [0.4.0] - 2026-06-30
 
 The modifier-based component refactor (COMPONENT_REFACTOR_RULES R1–R7): bloated
 inits collapse to `content + action`; every appearance/state axis becomes a
 chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
+
+### Added
+- **`TimeField`** — a dedicated time-of-day field: 12/24-hour `hourCycle`,
+  `minuteInterval` snapping, optional `range`, clearable, leading icon, validation
+  messages. The time-first companion to `DateField` (which also does time via
+  `.components(.time)`).
+- **`Sidebar`** — a token-bound vertical navigation organism: titled sections,
+  per-item SF Symbol + badge, accent-tinted selection, and `header`/`footer`
+  slots. Complements the bottom `NavigationBar` for macOS / iPad / regular-width
+  layouts.
 
 ### ⚠️ Breaking
 - **`InfoBanner` init reduced to `InfoBanner(_:title:links:)`.** The `message`
