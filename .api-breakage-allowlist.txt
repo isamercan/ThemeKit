@@ -18,3 +18,4 @@ API breakage: constructor RadialProgress.init(value:size:lineWidth:showLabel:sta
 API breakage: constructor InputNumber.init(label:value:range:step:unit:hint:errorText:large:) has been removed
 API breakage: constructor RadioButton.init(_:isSelected:type:style:padding:backgroundColor:verticalAlignment:infoMessages:) has been removed
 API breakage: constructor RadioButton.init(tag:selection:type:style:padding:backgroundColor:infoMessages:) has been removed
+API breakage: constructor Stat.init(title:value:prefix:suffix:isLoading:description:systemImage:trend:) has been removed

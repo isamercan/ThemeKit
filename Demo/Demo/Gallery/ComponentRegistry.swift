@@ -106,7 +106,7 @@ enum ComponentRegistry {
         .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8, stepText: .slash)"#),
         .knob("ThemeController", .molecules, demo: ThemeControllerDemo(), usage: #"ThemeController(options: [.init(name: "oceanTheme", label: "Ocean")], selectedName: $name)"#),
         .knob("Pagination", .molecules, demo: PaginationDemo(), usage: #"Pagination(current: $page, total: 50).window(sibling: 2).jumper()"#),
-        .knob("Stat", .molecules, demo: StatDemo(), usage: #"Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))"#),
+        .knob("Stat", .molecules, demo: StatDemo(), usage: #"Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))"#),
         .knob("Steps", .molecules, demo: StepsDemo(), usage: #"Steps([.init("Cart", description: "2 items", state: .done), .init("Pay", state: .error)]) { active = $0 }"#),
         .knob("QuantityStepper", .molecules, demo: QuantityStepperDemo(), usage: #"QuantityStepper(value: $qty, range: 0...10)"#),
         .knob("Micro-motion", .molecules, demo: MicroMotionDemo(), usage: #"View().microAnimations(false)   // theme-wide at root, or per-component"#),

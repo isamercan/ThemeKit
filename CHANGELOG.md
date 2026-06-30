@@ -79,6 +79,13 @@ component-by-component.
   `style:`/`padding:`/`backgroundColor:` parameters too. Migration:
   `RadioButton("Remember me", isSelected: $on, type: .check, style: .inner, padding: .medium)`
   → `RadioButton("Remember me", isSelected: $on).type(.check).radioStyle(.inner).gap(.medium)`.
+- **`Stat` init reduced to `Stat(title:value:)`** (both the `String` and `Int`
+  value overloads). The 6 other parameters moved to modifiers:
+  `prefix:`→`.prefix(_:)`, `suffix:`→`.suffix(_:)`, `isLoading:`→`.loading(_ on:)`,
+  `description:`→`.description(_:)`, `systemImage:`→`.icon(_:)`,
+  `trend:`→`.trend(_:)`. (`.statStyle(_:)` layout is unchanged.) Migration:
+  `Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))`
+  → `Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))`.
 
 ## [0.2.0] - 2026-06-28
 

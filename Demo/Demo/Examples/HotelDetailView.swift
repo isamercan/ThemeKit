@@ -40,9 +40,9 @@ struct HotelDetailView: View {
 
                     Card {
                         HStack {
-                            Stat(title: "Per night", value: hotel.pricePerNight.priceText, systemImage: "tag")
+                            Stat(title: "Per night", value: hotel.pricePerNight.priceText).icon("tag")
                             Spacer()
-                            Stat(title: "Reviews", value: "\(hotel.reviewCount)", systemImage: "text.bubble")
+                            Stat(title: "Reviews", value: "\(hotel.reviewCount)").icon("text.bubble")
                         }
                     }
 

@@ -195,8 +195,8 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("SegmentedControl", SegmentedControl(["Daily", "Weekly", "Monthly"], selection: .constant(1)).frame(width: 300))
         shot("QuantityStepper", QuantityStepper(value: .constant(2), range: 0...10))
-        shot("Stat", Stat(title: "Total bookings", value: "1,284", suffix: "$",
-                          description: "this month", systemImage: "ticket", trend: .up("+12%")).frame(width: 280))
+        shot("Stat", Stat(title: "Total bookings", value: "1,284")
+                          .suffix("$").description("this month").icon("ticket").trend(.up("+12%")).frame(width: 280))
         shot("Steps", Steps([.init("Cart", description: "2 items", systemImage: "cart", state: .done),
                              .init("Payment", description: "Card", state: .active),
                              .init("Done", state: .todo)]).frame(width: 360))
@@ -454,7 +454,7 @@ final class ScreenshotGenerator: XCTestCase {
                 Tag("Filter", onRemove: {})
             }
             InfoBanner("Subtree-themed", type: .success)
-            Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
+            Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
             PrimaryButton("Continue", block: true) {}
         }
 

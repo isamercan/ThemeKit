@@ -769,11 +769,13 @@ struct StatDemo: View {
     private var statTrend: StatTrend? { trend == .up ? .up("+12%") : trend == .down ? .down("-3%") : nil }
     @ViewBuilder private var statView: some View {
         if animated {
-            Stat(title: "Total bookings", value: count, suffix: "$", isLoading: loading,
-                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+            Stat(title: "Total bookings", value: count)
+                .suffix("$").loading(loading).description("this month")
+                .icon(figure ? "ticket" : nil).trend(statTrend)
         } else {
-            Stat(title: "Total bookings", value: "1,284", suffix: "$", isLoading: loading,
-                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+            Stat(title: "Total bookings", value: "1,284")
+                .suffix("$").loading(loading).description("this month")
+                .icon(figure ? "ticket" : nil).trend(statTrend)
         }
     }
     var body: some View {

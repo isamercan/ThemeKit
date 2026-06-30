@@ -118,9 +118,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testStat() {
         assertComponentSnapshot(
             VStack(spacing: 12) {
-                Stat(title: "Total bookings", value: "1,284", description: "this month",
-                     systemImage: "ticket", trend: .up("+12%"))
-                Stat(title: "Cancellations", value: "32", trend: .down("-3%"))
+                Stat(title: "Total bookings", value: "1,284").description("this month")
+                    .icon("ticket").trend(.up("+12%"))
+                Stat(title: "Cancellations", value: "32").trend(.down("-3%"))
             },
             width: 320
         )

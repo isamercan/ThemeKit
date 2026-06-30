@@ -62,7 +62,7 @@ struct ThemeInjectionDemo: View {
                 Tag("Filter", onRemove: {})
             }
             InfoBanner("Subtree-themed banner", type: .success)
-            Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
+            Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
             PrimaryButton("Continue", block: true) {}
         }
     }
