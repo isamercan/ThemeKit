@@ -296,10 +296,11 @@ final class ScreenshotGenerator: XCTestCase {
         shot("Timeline", Timeline([.init(title: "Order received", time: "09:24", systemImage: "cart", state: .done, color: .success),
                                    .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .active),
                                    .init(title: "On the way", state: .todo)]).pending("Waiting for courier…").frame(width: 320))
-        shot("Upload", Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
+        shot("Upload", Upload(prompt: "You can upload up to 3 photos.",
                               files: [.init(name: "room-1.jpg", status: .done),
-                                      .init(name: "room-2.jpg", status: .uploading(0.6))], maxCount: 3,
-                              onPick: {}, onRemove: { _ in }).frame(width: 320))
+                                      .init(name: "room-2.jpg", status: .uploading(0.6))],
+                              onPick: {}, onRemove: { _ in })
+                            .buttonTitle("Add photo").maxCount(3).frame(width: 320))
         shot("PromoBanner", PromoBanner("Early booking", action: {})
                                         .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore").frame(width: 340))
         let rowTitles = ["My account", "Notifications", "Language", "Payment"]

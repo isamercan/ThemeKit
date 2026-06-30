@@ -672,10 +672,11 @@ struct UploadDemo: View {
         ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)"), ("picked", "\(picked.count)/3")]) {
             VStack(spacing: 20) {
                 UploadList(controller: uploads) { start(fail: false) }
-                Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
-                       files: picked, maxCount: 3,
+                Upload(prompt: "You can upload up to 3 photos.",
+                       files: picked,
                        onPick: { picked.append(.init(name: "img-\(picked.count + 1).jpg", status: .done)) },
                        onRemove: { file in picked.removeAll { $0.id == file.id } })
+                    .buttonTitle("Add photo").maxCount(3)
             }
         } knobs: {
             Button("Simulate upload") { start(fail: false) }

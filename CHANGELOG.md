@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Upload` init reduced to `Upload(prompt:files:onPick:onRemove:onRetry:)`.**
+  The prompt copy, the files data array and the pick/remove/retry callbacks stay
+  in init; the 2 config parameters moved to modifiers: `buttonTitle:`→
+  `.buttonTitle(_:)`, `maxCount:`→`.maxCount(_:)`. (`UploadList` is unchanged.)
+  Migration:
+  `Upload(prompt: p, buttonTitle: "Add photo", files: f, maxCount: 3, onPick: …, onRemove: …)`
+  → `Upload(prompt: p, files: f, onPick: …, onRemove: …).buttonTitle("Add photo").maxCount(3)`.
 - **`RadioCard` / `CheckboxCard` drop their `isEnabled:` init parameter (R3).**
   The disabled state is now native: `@Environment(\.isEnabled)` + the standard
   `.disabled(_:)` modifier (which cascades to the card's button). Inits are now
