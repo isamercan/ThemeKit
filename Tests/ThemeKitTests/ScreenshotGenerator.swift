@@ -266,10 +266,11 @@ final class ScreenshotGenerator: XCTestCase {
         }.frame(width: 320))
         shot("Counter", Counter(days: 2, hours: 8, minutes: 45))
         shot("Coupon", Coupon(code: "UXMUQ", style: .outlined).frame(width: 300))
-        shot("EmptyState", EmptyState(systemImage: "magnifyingglass", title: "No results found",
-                                      message: "Try adjusting your search or filters.",
-                                      buttonTitle: "Clear filters", action: {},
-                                      secondaryTitle: "Learn more", onSecondary: {}).frame(width: 320))
+        shot("EmptyState", EmptyState("No results found")
+                                      .icon("magnifyingglass")
+                                      .message("Try adjusting your search or filters.")
+                                      .primaryAction("Clear filters") {}
+                                      .secondaryAction("Learn more") {}.frame(width: 320))
         shot("InfoBanner", InfoBanner("Your reservation is confirmed. Go to the ticket page for details.",
                                       type: .info, title: "Heads up").frame(width: 340))
         shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Active", style: .success),

@@ -86,6 +86,16 @@ component-by-component.
   `trend:`→`.trend(_:)`. (`.statStyle(_:)` layout is unchanged.) Migration:
   `Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))`
   → `Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))`.
+- **`EmptyState` inits reduced to the media + `title`.** The three inits now key
+  on the media variant — `EmptyState(_ title:)` (SF Symbol), `EmptyState(image:title:)`,
+  `EmptyState(animatedURL:title:)` — and the other parameters moved to modifiers:
+  `systemImage:`→`.icon(_:)`, `message:`→`.message(_:)`,
+  `imageMaxHeight:`→`.imageMaxHeight(_:)`, `iconForeground:`→`.iconForeground(_:)`,
+  `iconBackground:`→`.iconBackground(_:)`, `iconCircleSize:`→`.iconCircleSize(_:)`,
+  `buttonTitle:`/`action:`→`.primaryAction(_ title:action:)`,
+  `secondaryTitle:`/`onSecondary:`→`.secondaryAction(_ title:action:)`. Migration:
+  `EmptyState(systemImage: "tray", title: "Empty", message: "…", buttonTitle: "Retry", action: { })`
+  → `EmptyState("Empty").icon("tray").message("…").primaryAction("Retry") { }`.
 
 ## [0.2.0] - 2026-06-28
 

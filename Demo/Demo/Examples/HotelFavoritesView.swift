@@ -19,11 +19,10 @@ struct HotelFavoritesView: View {
     var body: some View {
         Group {
             if saved.isEmpty {
-                EmptyState(systemImage: "heart",
-                           title: "No favorites yet",
-                           message: "Tap the heart on hotels you like to save them here.",
-                           buttonTitle: "Browse hotels",
-                           action: { if path.last == .favorites { path.removeLast() } })
+                EmptyState("No favorites yet")
+                    .icon("heart")
+                    .message("Tap the heart on hotels you like to save them here.")
+                    .primaryAction("Browse hotels") { if path.last == .favorites { path.removeLast() } }
                     .padding()
                     .frame(maxHeight: .infinity)
             } else {

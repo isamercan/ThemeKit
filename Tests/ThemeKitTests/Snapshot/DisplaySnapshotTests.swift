@@ -67,13 +67,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
 
     func testEmptyState() {
         assertComponentSnapshot(
-            EmptyState(
-                systemImage: "magnifyingglass",
-                title: "No results",
-                message: "Try adjusting your filters or search for something else.",
-                buttonTitle: "Clear filters",
-                action: {}
-            ),
+            EmptyState("No results")
+                .icon("magnifyingglass")
+                .message("Try adjusting your filters or search for something else.")
+                .primaryAction("Clear filters") {},
             width: 360
         )
     }

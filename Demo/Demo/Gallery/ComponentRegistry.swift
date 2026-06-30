@@ -152,7 +152,7 @@ enum ComponentRegistry {
         },
         .knob("Timeline", .organisms, demo: TimelineDemo(), usage: #"Timeline([.init(title: "Placed", state: .done, color: .success)], pending: "Awaiting…")"#),
         .knob("Coupon", .organisms, demo: CouponDemo(), usage: #"Coupon(code: "UXMUQ", style: .outlined, onCopy: { })"#),
-        .knob("EmptyState", .organisms, demo: EmptyStateDemo(), usage: #"EmptyState(systemImage: "tray", title: "Empty", message: "…", buttonTitle: "Retry", action: { })"#),
+        .knob("EmptyState", .organisms, demo: EmptyStateDemo(), usage: #"EmptyState("Empty").icon("tray").message("…").primaryAction("Retry") { }"#),
         .knob("Feedback", .organisms, demo: FeedbackDemo(), usage: #"@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter\nfeedback.toast("Saved", kind: .success)              // stacks\nfeedback.toast("Deleted", action: ToastAction("Undo") { }, duration: nil)\nawait feedback.toastTask(loading: "Saving…", success: "Saved") { try await save() }\n// install once: .feedbackHost(maxVisibleToasts: 3, toastPosition: .bottom)"#),
         .knob("Gallery", .organisms, demo: GalleryDemo(), usage: #"Gallery(items, columns: 2, aspect: .square) { item in mediaView }"#),
         .knob("ImageCollage", .organisms, demo: ImageCollageDemo(), usage: #"ImageCollage(urls, height: 220) { index in open(index) }   // 1·2·3·4+ layouts + "+N""#),

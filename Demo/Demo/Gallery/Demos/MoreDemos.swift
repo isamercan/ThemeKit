@@ -468,22 +468,24 @@ struct EmptyStateDemo: View {
     var body: some View {
         ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol")]) {
             if animated {
-                EmptyState(animatedURL: gifURL, imageMaxHeight: 140,
-                           title: "Loading", message: "Preparing content…",
-                           buttonTitle: hasButton ? "Refresh" : nil, action: hasButton ? { flash("EmptyState: Refresh") } : nil)
+                EmptyState(animatedURL: gifURL, title: "Loading")
+                    .imageMaxHeight(140)
+                    .message("Preparing content…")
+                    .primaryAction(hasButton ? "Refresh" : nil, action: hasButton ? { flash("EmptyState: Refresh") } : nil)
             } else if customImage {
-                EmptyState(image: Image(systemName: "sailboat.fill"), imageMaxHeight: 120,
-                           title: "Your cart is empty", message: "You haven't added anything yet.",
-                           buttonTitle: hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
+                EmptyState(image: Image(systemName: "sailboat.fill"), title: "Your cart is empty")
+                    .imageMaxHeight(120)
+                    .message("You haven't added anything yet.")
+                    .primaryAction(hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
             } else {
-                EmptyState(systemImage: "magnifyingglass",
-                           iconForeground: tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil,
-                           iconBackground: tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil,
-                           iconCircleSize: tintIcon ? 104 : 88,
-                           title: "No results found",
-                           message: "Try adjusting your search or filters.",
-                           buttonTitle: hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil,
-                           secondaryTitle: secondary ? "Learn more" : nil, onSecondary: secondary ? { flash("EmptyState: Learn more") } : nil)
+                EmptyState("No results found")
+                    .icon("magnifyingglass")
+                    .iconForeground(tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil)
+                    .iconBackground(tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil)
+                    .iconCircleSize(tintIcon ? 104 : 88)
+                    .message("Try adjusting your search or filters.")
+                    .primaryAction(hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
+                    .secondaryAction(secondary ? "Learn more" : nil, action: secondary ? { flash("EmptyState: Learn more") } : nil)
             }
         } knobs: {
             Toggle("Animated illustration (GIF, native)", isOn: $animated)

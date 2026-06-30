@@ -19,3 +19,6 @@ API breakage: constructor InputNumber.init(label:value:range:step:unit:hint:erro
 API breakage: constructor RadioButton.init(_:isSelected:type:style:padding:backgroundColor:verticalAlignment:infoMessages:) has been removed
 API breakage: constructor RadioButton.init(tag:selection:type:style:padding:backgroundColor:infoMessages:) has been removed
 API breakage: constructor Stat.init(title:value:prefix:suffix:isLoading:description:systemImage:trend:) has been removed
+API breakage: constructor EmptyState.init(systemImage:iconForeground:iconBackground:iconCircleSize:title:message:buttonTitle:action:secondaryTitle:onSecondary:) has been removed
+API breakage: constructor EmptyState.init(image:imageMaxHeight:title:message:buttonTitle:action:secondaryTitle:onSecondary:) has been removed
+API breakage: constructor EmptyState.init(animatedURL:imageMaxHeight:title:message:buttonTitle:action:secondaryTitle:onSecondary:) has been removed
