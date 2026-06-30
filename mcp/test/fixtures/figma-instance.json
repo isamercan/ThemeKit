@@ -5,6 +5,7 @@
   "layoutMode": "VERTICAL",
   "itemSpacing": 64,
   "children": [
-    { "id": "1:2", "name": "Heading", "type": "TEXT", "characters": "Giriş Yap" }
+    { "id": "1:2", "name": "Heading", "type": "TEXT", "characters": "Giriş Yap" },
+    { "id": "1:3", "name": "scribble", "type": "TEXT", "characters": "scribble" }
   ]
 }

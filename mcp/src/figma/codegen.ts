@@ -31,6 +31,20 @@ function textOf(node: FigmaNode): string {
   const t = (node.children ?? []).find((c) => c.type === "TEXT");
   return t?.characters ?? node.name;
 }
+
+/**
+ * Design-system scaffolding text that should not become real SwiftUI `Text` —
+ * e.g. an icon "scribble" placeholder, or generic component slot labels. Skipped
+ * by the codegen so the output isn't polluted with placeholder copy.
+ */
+const PLACEHOLDER_TEXT = new Set([
+  "scribble", "action button", "input label", "supporting text title",
+  "placeholder", "label", "text", "title",
+]);
+function isPlaceholderText(node: FigmaNode): boolean {
+  return node.type === "TEXT" && PLACEHOLDER_TEXT.has((node.characters ?? "").trim().toLowerCase());
+}
+
 function firstFill(node: FigmaNode) {
   return (node.fills ?? []).find((f) => f.visible !== false && f.type === "SOLID" && f.color);
 }
@@ -91,6 +105,12 @@ export interface GenOptions {
    * actually convert. Default false — preserves the opaque-leaf behavior.
    */
   expandInstances?: boolean;
+  /**
+   * Max indentation depth to which `expandInstances` will recurse into nested
+   * component instances, guarding against runaway output on deeply-nested boards.
+   * Default 8. Beyond it, an instance falls back to an opaque `// ⚠️ unmapped` leaf.
+   */
+  instanceMaxDepth?: number;
 }
 
 export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[], apis: Map<string, ComponentAPI>, opts: GenOptions = {}): GenResult {
@@ -120,6 +140,9 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
   }
 
   function gen(node: FigmaNode, d: number): string {
+    // Skip design-system placeholder text (e.g. "scribble") so it never becomes
+    // real copy. Returns "" — callers filter empty children before joining.
+    if (isPlaceholderText(node)) return "";
     report.nodes++;
     snapColor(node);
     const match = matchComponent(node, mapping);
@@ -132,7 +155,7 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       if (match.produce.container) {
         const sp = spacingToken(node);
         const stack = node.layoutMode === "HORIZONTAL" ? "HStack" : "VStack";
-        const children = (node.children ?? []).map((c) => gen(c, d + 2)).join("\n");
+        const children = (node.children ?? []).map((c) => gen(c, d + 2)).filter(Boolean).join("\n");
         return `${tag}${pad(d)}Card {\n${pad(d + 1)}${stack}(${sp ? `spacing: ${spacingValueExpr(sp)}` : ""}) {\n${children}\n${pad(d + 1)}}\n${pad(d)}}`;
       }
 
@@ -177,11 +200,12 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       const note = color ? `   // text color snapped to token` : `   // ⚠️ unmapped TEXT — use a Text token style`;
       return `${pad(d)}Text("${textOf(node).replace(/"/g, "'")}")${color}${note}`;
     }
-    if ((node.type === "FRAME" || node.type === "GROUP" || (opts.expandInstances && node.type === "INSTANCE")) && node.children?.length) {
+    const canExpandInstance = !!opts.expandInstances && node.type === "INSTANCE" && d < (opts.instanceMaxDepth ?? 8);
+    if ((node.type === "FRAME" || node.type === "GROUP" || canExpandInstance) && node.children?.length) {
       report.unmapped.push(`${node.name} (${node.type})`);
       const sp = spacingToken(node);
       const stack = node.layoutMode === "HORIZONTAL" ? "HStack" : "VStack";
-      const children = node.children.map((c) => gen(c, d + 1)).join("\n");
+      const children = node.children.map((c) => gen(c, d + 1)).filter(Boolean).join("\n");
       return `${pad(d)}// ⚠️ unmapped: ${node.name}\n${pad(d)}${stack}(${sp ? `spacing: ${spacingValueExpr(sp)}` : ""}) {\n${children}\n${pad(d)}}`;
     }
     report.unmapped.push(`${node.name} (${node.type})`);

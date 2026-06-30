@@ -6,7 +6,7 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.6.0] - 2026-06-30
 
 ### Added
 - **`design_to_code` tool** — a more readable, design-tool-agnostic name for the
@@ -16,13 +16,23 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
   component `INSTANCE` that has children is walked into (like a FRAME/GROUP) instead
   of being emitted as an opaque `// ⚠️ unmapped` leaf — so a screen built from nested
   instances (forms, headers, nav bars) actually converts. Default `false` preserves
-  the previous opaque-leaf behavior.
+  the previous opaque-leaf behavior. Recursion is capped by `instanceMaxDepth`
+  (default 8) to guard against runaway output.
+- **Auto-validation.** `design_to_code` now runs `validate_code` on its own generated
+  output and appends the PASS/FAIL verdict under an `## Auto-validation` section.
+- **More `figma-mapping.json` rules** — common control instances now map out of the
+  box: `Checkbox` → `Checkbox`, `Radio`/`RadioButton` → `RadioButton`,
+  `Toggle`/`Switch` → `ThemeToggle`, and `Divider`/`Divider Container` → `DividerView`.
+- **Direct Figma `url` input** — pass the design link as `url` and the tool parses the
+  `fileKey` + `nodeId` itself (handles both `/design/` and legacy `/file/` links and
+  normalises the URL's dash `node-id` → colon). `fileKey` + `nodeId` stay accepted.
 
 ### Fixed
+- **Placeholder noise** — design-system scaffolding text (`scribble`, `Action Button`,
+  `Input Label`, …) is no longer emitted as real SwiftUI `Text`.
 - **Spacing token → `SpacingKey` case emission.** `sp-4xl` now emits
   `Theme.SpacingKey.xl4.value` (was the non-compiling `.4xl`) and `spacing-none`
-  emits `.none` (was `.spacing-none`); other keys unchanged. The codegen used a naive
-  `sp-` prefix strip — now a correct lookup.
+  emits `.none` (was `.spacing-none`); other keys unchanged.
 
 ## [2.5.0] - 2026-06-30
 

@@ -463,7 +463,10 @@ server.registerTool("validate_code", {
   title: "Validate a ThemeKit screen",
   description: "Full check: anti-patterns (string/comment-aware) + raw-SwiftUI components that have ThemeKit equivalents + unknown/hallucinated component detection (vs the real catalog, with a did-you-mean) + multi-line brace/paren/bracket balance + a PASS/FAIL verdict.",
   inputSchema: { swift: z.string() },
-}, async ({ swift }) => {
+}, async ({ swift }) => text(lintVerdict(swift)));
+
+/** Core of validate_code: returns the formatted PASS/FAIL verdict for a snippet. */
+function lintVerdict(swift: string): string {
   const lines = swift.split("\n");
   const masked = lines.map(maskCode);
   const issues: string[] = [];
@@ -499,8 +502,8 @@ server.registerTool("validate_code", {
   if (balance.length) parts.push("\nStructure:\n" + balance.map((b) => `- ${b}`).join("\n"));
   if (unknown.length) parts.push(`\n⚠️ Unknown components (not in the ThemeKit catalog or known SwiftUI types):\n${unknownReport.join("\n")}`);
   parts.push(used.length ? `\nThemeKit components used (${used.length}): ${used.join(", ")}` : "\n⚠️ No ThemeKit components detected.");
-  return text(parts.join("\n"));
-});
+  return parts.join("\n");
+}
 
 // Components that are interactive (should carry an accessibility id / label).
 const INTERACTIVE = /\b(PrimaryButton|SecondaryButton|ThemeButton|ShareButton|ButtonGroup|TextInput|MultiLineTextInput|InputNumber|OTPInput|SearchBar|Select|MultiSelect|Autocomplete|Checkbox|RadioButton|RadioGroup|Slider|RangeSlider|ThemeToggle|SegmentedControl|QuantityStepper|Chip|FAB|DateField)\s*\(/;
@@ -626,7 +629,8 @@ const runDesignToCode = async ({ url, fileKey, nodeId, dryRun, a11yOnly, expandI
   const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
   const { code, report } = generate(node, mapping, data.tokens, apis, { expandInstances });
   if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}`);
-  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}\n\nReview the ⚠️ items; verify any param with get_component_api, then validate_code the result.`);
+  const verdict = lintVerdict(code);
+  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}\n\n## Auto-validation (validate_code)\n${verdict}\n\nReview the ⚠️ items and verify any param with get_component_api.`);
 };
 
 // Primary, readable name; `figma_to_swiftui` is kept as a backward-compatible alias

@@ -36,6 +36,28 @@
                    "argsFrom": { "_": "{text}", "isSelected": ".constant(false)" } }
     },
     {
+      "//": "Common control instances → their ThemeKit component (bindings stubbed with .constant; wire real state on review).",
+      "match": { "namePattern": "^Checkbox", "type": "INSTANCE" },
+      "produce": { "component": "Checkbox", "confidence": 0.8,
+                   "argsFrom": { "isChecked": ".constant(false)" } }
+    },
+    {
+      "match": { "namePattern": "^(Radio|RadioButton)", "type": "INSTANCE" },
+      "produce": { "component": "RadioButton", "confidence": 0.8,
+                   "argsFrom": { "isSelected": ".constant(false)" } }
+    },
+    {
+      "match": { "namePattern": "^(Toggle|Switch)", "type": "INSTANCE" },
+      "produce": { "component": "ThemeToggle", "confidence": 0.8,
+                   "argsFrom": { "isOn": ".constant(false)" } }
+    },
+    {
+      "//": "Matches both a `Divider` instance and a `Divider Container` frame — emits the labelled DividerView (e.g. \"veya\"/\"or\").",
+      "match": { "namePattern": "^Divider" },
+      "produce": { "component": "DividerView", "confidence": 0.75,
+                   "argsFrom": { "_": "{text}" } }
+    },
+    {
       "match": { "namePattern": "^(Card|Surface)", "type": "FRAME" },
       "produce": { "component": "Card", "confidence": 0.8, "container": true }
     },
