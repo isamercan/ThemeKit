@@ -34,6 +34,8 @@ private struct CountBubble: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
+        // `count` is an Int badge value, not a collection — `isEmpty` doesn't apply.
+        // swiftlint:disable:next empty_count
         if count > 0 || showZero {
             Text(count > overflowCount ? "\(overflowCount)+" : "\(count)")
                 .font(.system(size: 11, weight: .bold))
