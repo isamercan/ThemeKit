@@ -1190,10 +1190,10 @@ struct FileInputDemo: View {
     }
     var body: some View {
         ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil"), ("error", "\(error)")]) {
-            FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil,
-                      infoMessages: messages,
-                      onPick: { picked = true; flash("FileInput: file selected") },
-                      onClear: clearable ? { picked = false; flash("FileInput: cleared") } : nil)
+            FileInput("Passport", onPick: { picked = true; flash("FileInput: file selected") })
+                .fileName(picked ? "passport-scan.jpg" : nil)
+                .infoMessages(messages)
+                .onClear(clearable ? { picked = false; flash("FileInput: cleared") } : nil)
         } knobs: {
             Toggle("File chosen", isOn: $picked)
             Toggle("Validation error", isOn: $error)

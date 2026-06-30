@@ -100,7 +100,7 @@ enum ComponentRegistry {
         .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField("Check-in", date: $date).style(.custom("EEE, d MMM")).clearable()"##),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact", helper: "…") { inputs }"#),
         .knob("Form", .molecules, demo: FormDemo(), usage: ##"@State var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
-        .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput(label: "Passport", fileName: name) { pick() }"#),
+        .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput("Passport") { pick() }.fileName(name)"#),
         .knob("FilterGroup", .molecules, demo: FilterGroupDemo(), usage: #"FilterGroup(options: items, selection: $sel) { $0 }"#),
         .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip(isSelected: $on, text: "Suit", price: "$899", rating: 4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
         .knob("ProgressIndicator", .molecules, demo: ProgressIndicatorDemo(), usage: #"ProgressIndicator(variant: .carousel, current: 2, total: 8).stepText(.slash)"#),

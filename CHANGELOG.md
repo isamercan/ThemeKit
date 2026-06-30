@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`FileInput` init reduced to `FileInput(_ label:onPick:)`.** The 5 other
+  parameters moved to modifiers: `fileName:`→`.fileName(_:)` (the bound display
+  value), `buttonTitle:`→`.buttonTitle(_:)`, `placeholder:`→`.placeholder(_:)`,
+  `infoMessages:`→`.infoMessages(_:)`, `onClear:`→`.onClear(_:)`. Migration:
+  `FileInput(label: "Passport", fileName: name, onPick: { pick() }, onClear: { clear() })`
+  → `FileInput("Passport") { pick() }.fileName(name).onClear { clear() }`.
 - **`AlertToast` init reduced to `AlertToast(_ title:)`.** The 6 other
   parameters moved to modifiers: `message:`→`.message(_:)`,
   `type:`→`.variant(_:)`, `systemImage:`→`.icon(_:)`,

@@ -204,7 +204,7 @@ final class ScreenshotGenerator: XCTestCase {
                                        .marks([0: "0", 4: "4", 8: "8"]).frame(width: 300))
         shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul")]).frame(width: 320))
         shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
-        shot("FileInput", FileInput(label: "Passport", fileName: "passport-scan.jpg", onPick: {}, onClear: {}).frame(width: 320))
+        shot("FileInput", FileInput("Passport", onPick: {}).fileName("passport-scan.jpg").onClear({}).frame(width: 320))
         shot("Pagination", Pagination(current: .constant(4), total: 50).frame(width: 360))
         shot("Fieldset", Fieldset("Contact details", helper: "We never share your info.") {
             TextInput("Email", text: .constant("user@example.com"))

@@ -11,31 +11,21 @@ import SwiftUI
 public struct FileInput: View {
     @Environment(\.theme) private var theme
 
-    private let label: String?
-    private let fileName: String?
-    private let buttonTitle: String
-    private let placeholder: String
-    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let infoMessages: [InfoMessage]
-    private let onPick: () -> Void
-    private let onClear: (() -> Void)?
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
 
-    public init(
-        label: String? = nil,
-        fileName: String? = nil,
-        buttonTitle: String = "Choose file",
-        placeholder: String = "No file chosen",
-        infoMessages: [InfoMessage] = [],
-        onPick: @escaping () -> Void,
-        onClear: (() -> Void)? = nil
-    ) {
+    // Appearance/content/state — mutated only through the modifiers below (R2).
+    private var fileName: String?
+    private var buttonTitle: String = "Choose file"
+    private var placeholder: String = "No file chosen"
+    private var infoMessages: [InfoMessage] = []
+    private var onClear: (() -> Void)?
+
+    private let label: String?
+    private let onPick: () -> Void
+
+    public init(_ label: String? = nil, onPick: @escaping () -> Void) {   // R1
         self.label = label
-        self.fileName = fileName
-        self.buttonTitle = buttonTitle
-        self.placeholder = placeholder
-        self.infoMessages = infoMessages
         self.onPick = onPick
-        self.onClear = onClear
     }
 
     private var fieldBorder: Color {
@@ -93,10 +83,35 @@ public struct FileInput: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension FileInput {
+    /// The selected file's display name (the bound value shown beside the button).
+    func fileName(_ name: String?) -> Self { copy { $0.fileName = name } }
+
+    /// Title of the "choose file" segment.
+    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitle = title } }
+
+    /// Placeholder shown when no file is chosen.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Validation / hint messages displayed below the field.
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Trailing clear button handler (shown only when a file is selected).
+    func onClear(_ action: (() -> Void)?) -> Self { copy { $0.onClear = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 16) {
-        FileInput(label: "Passport", onPick: {})
-        FileInput(label: "Photo", fileName: "passport-scan.jpg", onPick: {})
+        FileInput("Passport", onPick: {})
+        FileInput("Photo", onPick: {}).fileName("passport-scan.jpg")
     }
     .padding()
 }
