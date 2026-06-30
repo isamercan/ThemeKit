@@ -37,3 +37,5 @@ API breakage: constructor PromoBanner.init(title:subtitle:systemImage:ctaTitle:t
 API breakage: constructor Timeline.init(_:axis:mode:reverse:pending:) has been removed
 API breakage: constructor DividerView.init(size:axis:dashed:title:titleAlign:) has been removed
 API breakage: constructor GaugeView.init(value:in:label:style:showsValue:) has been removed
+API breakage: constructor RemoteImage.init(_:aspectRatio:contentMode:cornerRadius:circle:) has been removed
+API breakage: constructor RemoteImage.init(_:ratio:contentMode:cornerRadius:circle:) has been removed

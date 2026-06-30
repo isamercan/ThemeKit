@@ -42,7 +42,7 @@ public struct ImageChip: View {
 
     public var body: some View {
         let s = size.size
-        RemoteImage(url, aspectRatio: s.width / s.height, cornerRadius: Theme.RadiusKey.sm.value)
+        RemoteImage(url).ratio(s.width / s.height).cornerRadius(Theme.RadiusKey.sm.value)
             .frame(width: s.width, height: s.height)
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -92,7 +92,7 @@ public struct CompactChip: View {
             }
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let imageURL {
-                    RemoteImage(imageURL, contentMode: .fit).frame(height: 16)
+                    RemoteImage(imageURL).contentMode(.fit).frame(height: 16)
                 }
                 Text(price).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
             }

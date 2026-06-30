@@ -1688,13 +1688,13 @@ struct RemoteImageDemo: View {
         ComponentStage("RemoteImage", inspector: [("mode", gif ? "gif" : circle ? "circle" : ratioStr)]) {
             VStack(spacing: 16) {
                 if gif {
-                    RemoteImage(gifURL, ratio: "1:1", cornerRadius: 16)
+                    RemoteImage(gifURL, ratio: "1:1").cornerRadius(16)
                         .frame(width: 180, height: 180)
                 } else if circle {
-                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), aspectRatio: 1, circle: true)
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600")).ratio(1).circle()
                         .frame(width: 140, height: 140)
                 } else {
-                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), ratio: ratioStr, cornerRadius: 16)
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), ratio: ratioStr).cornerRadius(16)
                         .frame(maxWidth: .infinity)
                         .frame(height: 180)
                 }

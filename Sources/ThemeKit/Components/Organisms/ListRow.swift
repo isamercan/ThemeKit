@@ -147,7 +147,7 @@ public struct ListRow: View {
         if let leadingSelection {
             RadioButton(isSelected: leadingSelection)
         } else if let leadingImageURL {
-            RemoteImage(leadingImageURL, aspectRatio: 1, cornerRadius: Theme.RadiusKey.sm.value)
+            RemoteImage(leadingImageURL).ratio(1).cornerRadius(Theme.RadiusKey.sm.value)
                 .frame(width: 48, height: 48)
         } else if let number {
             Text(String(format: "%02d", number))

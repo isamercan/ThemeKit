@@ -49,7 +49,7 @@ enum ComponentRegistry {
         .knob("InputLabel", .atoms, demo: InputLabelDemo(), usage: #"InputLabel("Email", isRequired: true, hasInfo: true)"#),
         .knob("ProgressBar", .atoms, demo: ProgressBarDemo(), usage: #"ProgressBar(value: 0.4, showPercentage: true)"#),
         .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).showsLabel()"#),
-        .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9", cornerRadius: 12)   // .gif/.apng animate natively"#),
+        .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9").cornerRadius(12)   // .gif/.apng animate natively"#),
         .static("AnimatedImage", .atoms, usage: #"AnimatedImage(gifURL)   // GIF/APNG via ImageIO — no dependency"#) { AnimatedImage(URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")).frame(width: 180, height: 180).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)) },
         .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284, size: 40)   // odometer digit roll"#),
         .knob("Indicator", .atoms, demo: IndicatorDemo(), usage: #"icon.indicatorDot()   // or .indicator { Badge("3") }"#),

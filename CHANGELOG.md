@@ -13,6 +13,18 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`RemoteImage` init reduced to `RemoteImage(_ url:)`.** The two data overloads
+  `RemoteImage(_ url:, ratio: String)` and `RemoteImage(_ url:, ratio:
+  RemoteImageRatio)` are preserved (they carry a genuine aspect-ratio source); the
+  4 appearance parameters moved to modifiers: `aspectRatio:`→`.ratio(_:)` (renamed
+  to avoid clashing with SwiftUI's native `.aspectRatio`), `contentMode:`→
+  `.contentMode(_:)`, `cornerRadius:`→`.cornerRadius(_:)`, `circle:`→`.circle(_
+  on:)`. Migration:
+  `RemoteImage(url, aspectRatio: 1, cornerRadius: 8, circle: true)`
+  → `RemoteImage(url).ratio(1).cornerRadius(8).circle()`;
+  `RemoteImage(url, ratio: "16:9", cornerRadius: 12)`
+  → `RemoteImage(url, ratio: "16:9").cornerRadius(12)`;
+  `RemoteImage(url, contentMode: .fit)` → `RemoteImage(url).contentMode(.fit)`.
 - **`GaugeView` init reduced to `GaugeView(value:in:label:)`.** The value, its
   range and the optional caption stay in init; the 2 appearance/state parameters
   moved to modifiers: `style:`→`.gaugeStyle(_:)` (renamed to avoid the generic

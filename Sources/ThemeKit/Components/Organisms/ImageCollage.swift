@@ -58,7 +58,7 @@ public struct ImageCollage: View {
 
     private func tile(_ index: Int, overlayExtra: Int = 0) -> some View {
         ZStack {
-            RemoteImage(urls[index], contentMode: .fill, cornerRadius: cornerRadius)
+            RemoteImage(urls[index]).contentMode(.fill).cornerRadius(cornerRadius)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             if overlayExtra > 0 {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
