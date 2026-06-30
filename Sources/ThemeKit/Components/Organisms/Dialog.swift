@@ -50,7 +50,8 @@ struct DialogCard: View {
 
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 if let primaryColor {
-                    ThemeButton(primaryTitle, color: primaryColor, block: true, isLoading: .constant(isPrimaryLoading), action: onPrimary)
+                    ThemeButton(primaryTitle, action: onPrimary)
+                        .color(primaryColor).fullWidth().loading(isPrimaryLoading)
                 } else {
                     PrimaryButton(primaryTitle, isLoading: .constant(isPrimaryLoading), action: onPrimary)
                 }
@@ -214,7 +215,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                         }
                         .frame(maxHeight: maxContentHeight)
 
-                        DividerView(size: .small)
+                        DividerView().size(.small)
 
                         footer()
                             .padding(Theme.SpacingKey.lg.value)

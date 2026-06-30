@@ -31,9 +31,9 @@ struct AvatarDemo: View {
             if group {
                 AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], size: size, max: 4)
             } else if numeric > 0 {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), dimension: numeric, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             } else {
-                Avatar(initials ? .initials("AB") : .icon("person.fill"), size: size, background: background, shape: square ? .square : .circle, presence: presence, presencePulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             }
         } knobs: {
             Picker("Presence", selection: $presenceIdx) {
@@ -95,9 +95,9 @@ struct BadgeDemo: View {
         ComponentStage("Badge", inspector: [
             ("style", style.rawValue), ("size", "\(size)"), ("highlighted", "\(highlighted)"), ("taps", "\(tapped)"),
         ]) {
-            Badge(text, style: style, variant: variant, size: size,
-                  leadingSystemImage: icon ? "star.fill" : nil,
-                  action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
+            Badge(text, action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
+                .badgeStyle(style).variant(variant).size(size)
+                .icon(icon ? "star.fill" : nil)
                 .badgeShape(pill ? .pill : .rounded)
                 .badgeColor(gradient ? Theme.shared.foreground(.fgSecondary) : nil)
                 .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)
@@ -132,8 +132,9 @@ struct ChipDemo: View {
         ComponentStage("Chip", inspector: [
             ("isSelected", "\(selected)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
         ]) {
-            Chip(exists ? "Recommended" : "Sold out", isSelected: $selected, size: large ? .large : .small,
-                 selectionStyle: solid ? .solid : .tonal)
+            Chip(exists ? "Recommended" : "Sold out", isSelected: $selected)
+                    .size(large ? .large : .small)
+                    .chipStyle(solid ? .solid : .tonal)
                     .rating(rating ? 4.6 : nil)
                     .exists(exists)
                     .expands(expands)
@@ -236,9 +237,10 @@ struct TagDemo: View {
 
     var body: some View {
         ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
-            Tag(text, leadingSystemImage: icon ? "mappin" : nil,
-                style: styles[styleIdx].1, variant: variant,
-                onRemove: removable ? { flash("Tag removed") } : nil)
+            Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
+                .icon(icon ? "mappin" : nil)
+                .tagStyle(styles[styleIdx].1)
+                .variant(variant)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $styleIdx) {

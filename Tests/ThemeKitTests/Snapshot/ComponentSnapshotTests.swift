@@ -28,24 +28,24 @@ final class ComponentSnapshotTests: SnapshotTestCase {
     func testBadge_semanticStyles() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                Badge("Info", style: .info)
-                Badge("Success", style: .success)
-                Badge("Warning", style: .warning)
-                Badge("Error", style: .error)
+                Badge("Info").badgeStyle(.info)
+                Badge("Success").badgeStyle(.success)
+                Badge("Warning").badgeStyle(.warning)
+                Badge("Error").badgeStyle(.error)
             }
         )
     }
 
     func testBadge_withIcon_solidVariant() {
         assertComponentSnapshot(
-            Badge("Sold out", style: .error, variant: .solid, leadingSystemImage: "xmark.circle.fill")
+            Badge("Sold out").badgeStyle(.error).variant(.solid).icon("xmark.circle.fill")
         )
     }
 
     // MARK: Tag
 
     func testTag_withLeadingIcon() {
-        assertComponentSnapshot(Tag("Istanbul", leadingSystemImage: "mappin"))
+        assertComponentSnapshot(Tag("Istanbul").icon("mappin"))
     }
 
     // MARK: ScoreBadge
@@ -89,8 +89,8 @@ final class ComponentSnapshotTests: SnapshotTestCase {
     func testBadge_darkMode() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                Badge("Info", style: .info)
-                Badge("Success", style: .success)
+                Badge("Info").badgeStyle(.info)
+                Badge("Success").badgeStyle(.success)
             },
             colorScheme: .dark
         )
@@ -100,7 +100,7 @@ final class ComponentSnapshotTests: SnapshotTestCase {
 
     func testBadge_accessibilityExtraExtraExtraLarge() {
         assertComponentSnapshot(
-            Badge("Success", style: .success),
+            Badge("Success").badgeStyle(.success),
             contentSize: .accessibilityExtraExtraExtraLarge
         )
     }
@@ -110,9 +110,9 @@ final class ComponentSnapshotTests: SnapshotTestCase {
     func testBadgeRow_rightToLeft() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                Badge("Info", style: .info)
+                Badge("Info").badgeStyle(.info)
                 ScoreBadge(9.2)
-                Tag("Istanbul", leadingSystemImage: "mappin")
+                Tag("Istanbul").icon("mappin")
             },
             layoutDirection: .rightToLeft
         )

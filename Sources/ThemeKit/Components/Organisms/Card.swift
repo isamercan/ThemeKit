@@ -90,7 +90,7 @@ public struct Card<Content: View>: View {
         VStack(alignment: .leading, spacing: 0) {
             if hasHeader {
                 header
-                DividerView(size: .small)
+                DividerView().size(.small)
             }
             Group {
                 if isLoading { loadingPlaceholder } else { content() }

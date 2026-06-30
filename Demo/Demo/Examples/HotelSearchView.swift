@@ -25,19 +25,19 @@ struct HotelSearchView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Title("Find your stay", subtitle: "2M+ hotels worldwide")
 
-                    PromoBanner(title: "Early booking", subtitle: "Up to 30% off summer stays",
-                                systemImage: "sun.max.fill", ctaTitle: "Explore", action: {})
+                    PromoBanner("Early booking", action: {})
+                        .subtitle("Up to 30% off summer stays").icon("sun.max.fill").ctaTitle("Explore")
 
                     Card {
                         VStack(spacing: 14) {
                             SearchBar(text: $destination, placeholder: "Where are you going?")
                             HStack(spacing: 12) {
-                                DateField(label: "Check-in", date: $checkIn, style: .custom("EEE, d MMM"),
-                                          allowClear: true, leadingSystemImage: "calendar")
-                                DateField(label: "Check-out", date: $checkOut, style: .custom("EEE, d MMM"),
-                                          allowClear: true, leadingSystemImage: "calendar")
+                                DateField("Check-in", date: $checkIn)
+                                    .style(.custom("EEE, d MMM")).clearable().icon("calendar")
+                                DateField("Check-out", date: $checkOut)
+                                    .style(.custom("EEE, d MMM")).clearable().icon("calendar")
                             }
-                            InputNumber(label: "Guests", value: $guests, range: 1...9, large: true)
+                            InputNumber("Guests", value: $guests, range: 1...9).large()
                         }
                     }
 
@@ -52,7 +52,7 @@ struct HotelSearchView: View {
                     Button { path.append(.favorites) } label: {
                         Image(systemName: favorites.count > 0 ? "heart.fill" : "heart")
                             .foregroundStyle(favorites.count > 0 ? Theme.shared.foreground(.systemcolorsFgError) : Theme.shared.text(.textPrimary))
-                            .indicator { if favorites.count > 0 { Badge("\(favorites.count)", style: .error, size: .small) } }
+                            .indicator { if favorites.count > 0 { Badge("\(favorites.count)").badgeStyle(.error).size(.small) } }
                     }
                 }
             }

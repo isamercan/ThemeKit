@@ -29,26 +29,24 @@ public struct Upload: View {
     @Environment(\.theme) private var theme
 
     private let prompt: String
-    private let buttonTitle: String
     private let files: [UploadFile]
-    private let maxCount: Int?
     private let onPick: () -> Void
     private let onRemove: (UploadFile) -> Void
     private let onRetry: ((UploadFile) -> Void)?
 
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var buttonTitle: String = String(themeKit: "Upload Photo")
+    private var maxCount: Int? = nil
+
     public init(
         prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
-        buttonTitle: String = String(themeKit: "Upload Photo"),
         files: [UploadFile] = [],
-        maxCount: Int? = nil,
         onPick: @escaping () -> Void = {},
         onRemove: @escaping (UploadFile) -> Void = { _ in },
         onRetry: ((UploadFile) -> Void)? = nil
-    ) {
+    ) {   // R1
         self.prompt = prompt
-        self.buttonTitle = buttonTitle
         self.files = files
-        self.maxCount = maxCount
         self.onPick = onPick
         self.onRemove = onRemove
         self.onRetry = onRetry
@@ -73,7 +71,7 @@ public struct Upload: View {
                 VStack(spacing: 0) {
                     ForEach(files) { file in
                         row(for: file)
-                        if file.id != files.last?.id { DividerView(size: .small) }
+                        if file.id != files.last?.id { DividerView().size(.small) }
                     }
                 }
             }
@@ -118,15 +116,32 @@ public struct Upload: View {
         case .uploading(let progress):
             ProgressBar(value: progress).barHeight(4)
         case .done:
-            Callout(String(themeKit: "Uploaded"), type: .success)
+            Callout(String(themeKit: "Uploaded")).variant(.success)
         case .failed(let reason):
-            Callout(reason, type: .error)
+            Callout(reason).variant(.error)
         }
     }
 
     private func nameColor(for status: UploadStatus) -> Color {
         if case .failed = status { return theme.foreground(.systemcolorsFgError) }
         return theme.text(.textPrimary)
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Upload {
+    /// Title of the file-picker button.
+    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitle = title } }
+
+    /// Cap the number of files; once reached the picker is disabled and a count
+    /// is shown. `nil` (default) means no limit.
+    func maxCount(_ count: Int?) -> Self { copy { $0.maxCount = count } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -215,12 +230,12 @@ public struct UploadList: View {
     public var body: some View {
         Upload(
             prompt: prompt,
-            buttonTitle: buttonTitle,
             files: controller.files,
             onPick: onPick,
             onRemove: { controller.remove($0.id) },
             onRetry: { file in Task { await controller.retry(file.id) } }
         )
+        .buttonTitle(buttonTitle)
     }
 }
 

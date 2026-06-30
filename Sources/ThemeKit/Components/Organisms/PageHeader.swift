@@ -68,7 +68,7 @@ public struct PageHeader: View {
                         .textStyle(.headingSm)
                         .foregroundStyle(theme.text(.textPrimary))
                     ForEach(tags) { tag in
-                        ThemeKit.Tag(tag.text, style: tag.style)
+                        ThemeKit.Tag(tag.text).tagStyle(tag.style)
                     }
                 }
                 if let subtitle {

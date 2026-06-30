@@ -25,7 +25,7 @@ private struct ButtonDockBar<DockContent: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DividerView(size: .small)
+            DividerView().size(.small)
             content
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .padding(.top, Theme.SpacingKey.sm.value)

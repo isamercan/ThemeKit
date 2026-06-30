@@ -51,11 +51,14 @@ struct CalloutDemo: View {
             if dismissed {
                 Button("Reset") { dismissed = false }.buttonStyle(.plain).foregroundStyle(Theme.shared.foreground(.fgHero))
             } else {
-                Callout("Lorem ipsum placeholder text.", type: type, style: soft ? .soft : .plain,
-                        showIcon: showIcon,
-                        actionTitle: action ? "Undo" : nil,
-                        onAction: action ? { flash("Callout action") } : nil,
-                        onClose: closable ? { dismissed = true } : nil)
+                {
+                    let base = Callout("Lorem ipsum placeholder text.")
+                        .variant(type)
+                        .calloutStyle(soft ? .soft : .plain)
+                        .showsIcon(showIcon)
+                        .onClose(closable ? { dismissed = true } : nil)
+                    return action ? base.action("Undo") { flash("Callout action") } : base
+                }()
             }
         } knobs: {
             Picker("Type", selection: $type) {
@@ -76,7 +79,7 @@ struct AlertToastDemo: View {
 
     var body: some View {
         ComponentStage("AlertToast", inspector: [("type", "\(type)")]) {
-            AlertToast("Saved successfully", message: message ? "Your changes were stored." : nil, type: type, onClose: closable ? { flash("AlertToast closed") } : nil)
+            AlertToast("Saved successfully").message(message ? "Your changes were stored." : nil).variant(type).onClose(closable ? { flash("AlertToast closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Success").tag(AlertToastType.success); Text("Warning").tag(AlertToastType.warning); Text("Danger").tag(AlertToastType.danger); Text("Info").tag(AlertToastType.info)
@@ -106,10 +109,12 @@ struct InfoBannerDemo: View {
 
     var body: some View {
         ComponentStage("InfoBanner", inspector: [("type", "\(type)"), ("linkTaps", "\(tapped)")]) {
-            InfoBanner(message, type: type, title: title ? "Heads up" : nil, links: links,
-                       showIcon: showIcon, banner: banner,
-                       actionTitle: action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil,
-                       onDismiss: dismissable ? { flash("InfoBanner closed") } : nil)
+            InfoBanner(message, title: title ? "Heads up" : nil, links: links)
+                .variant(type)
+                .showsIcon(showIcon)
+                .fullWidth(banner)
+                .action(action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil)
+                .onDismiss(dismissable ? { flash("InfoBanner closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
                 Text("Neutral").tag(InfoBannerType.neutral); Text("Info").tag(InfoBannerType.info); Text("Success").tag(InfoBannerType.success); Text("Warning").tag(InfoBannerType.warning); Text("Error").tag(InfoBannerType.error)
@@ -146,7 +151,7 @@ struct CouponDemo: View {
 
     var body: some View {
         ComponentStage("Coupon", inspector: [("style", "\(style)")]) {
-            Coupon(code: code, style: style)
+            Coupon(code: code).couponStyle(style)
         } knobs: {
             TextField("Code", text: $code).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $style) {
@@ -162,8 +167,8 @@ struct PromoBannerDemo: View {
 
     var body: some View {
         ComponentStage("PromoBanner", inspector: [("tint", "\(tint)")]) {
-            PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
-                        systemImage: "sun.max.fill", ctaTitle: cta ? "Explore" : nil, tint: tint, action: cta ? { flash("PromoBanner CTA") } : nil)
+            PromoBanner("Early booking", action: cta ? { flash("PromoBanner CTA") } : nil)
+                .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle(cta ? "Explore" : nil).color(tint)
         } knobs: {
             Picker("Tint", selection: $tint) {
                 Text("Blue").tag(PromoBannerTint.blue); Text("Dark").tag(PromoBannerTint.dark); Text("Turquoise").tag(PromoBannerTint.turquoise)
@@ -200,7 +205,7 @@ struct SegmentedTabBarDemo: View {
     var body: some View {
         ComponentStage("SegmentedTabBar", inspector: [("selection", "\(selection)"), ("style", card ? "card" : "underline")]) {
             if card {
-                SegmentedTabBar(cardTabs.map { TabItem($0) }, selection: $selection, style: .card,
+                SegmentedTabBar(cardTabs.map { TabItem($0) }, selection: $selection,
                                 onClose: editable ? { idx in
                                     cardTabs.remove(at: idx)
                                     if selection >= cardTabs.count { selection = max(0, cardTabs.count - 1) }
@@ -210,6 +215,7 @@ struct SegmentedTabBarDemo: View {
                                     cardTabs.append("Tab \(nextTab)"); nextTab += 1; selection = cardTabs.count - 1
                                     flash("Tab added")
                                 } : nil)
+                    .tabStyle(.card)
             } else if captions && !scrollable {
                 SegmentedTabBar([TabItem("Economy", caption: "$2,450", systemImage: "airplane"),
                                  TabItem("Business", caption: "$6,900", trailingSystemImage: "star.fill"),
@@ -219,7 +225,7 @@ struct SegmentedTabBarDemo: View {
                                  TabItem("Reviews", badge: "12"),
                                  TabItem("Archived", isEnabled: false)], selection: $selection)
             } else {
-                SegmentedTabBar(scrollable ? ["All", "Flights", "Hotels", "Cars", "Tours"] : ["Overview", "Details", "Reviews"], selection: $selection, scrollable: scrollable)
+                SegmentedTabBar(scrollable ? ["All", "Flights", "Hotels", "Cars", "Tours"] : ["Overview", "Details", "Reviews"], selection: $selection).scrollable(scrollable)
             }
         } knobs: {
             Toggle("Card style", isOn: $card)

@@ -53,7 +53,7 @@ final class FormControlSnapshotTests: SnapshotTestCase {
             VStack(alignment: .leading, spacing: 8) {
                 Checkbox("Checked", isChecked: .constant(true))
                 Checkbox("Unchecked", isChecked: .constant(false))
-                Checkbox("Indeterminate", isChecked: .constant(false), isIndeterminate: true)
+                Checkbox("Indeterminate", isChecked: .constant(false)).indeterminate()
                 Checkbox("Disabled", isChecked: .constant(true)).disabled(true)
             }
         )

@@ -110,32 +110,20 @@ public struct Badge: View {
     @Environment(\.theme) private var theme
 
     private let text: String
-    private let style: BadgeStyle
-    private let variant: FillVariant
-    private let size: BadgeSize
-    private let leadingSystemImage: String?
     private let action: (() -> Void)?
-    // Long-tail styling — rarely set, so configured via chainable modifiers
-    // rather than the init (keeps the common call site to `Badge("x", style:)`).
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var style: BadgeStyle = .neutral
+    private var variant: FillVariant = .soft
+    private var size: BadgeSize = .medium
+    private var leadingSystemImage: String?
     private var shape: BadgeShape = .pill
-    private var trailingSystemImage: String? = nil
-    private var textColor: Color? = nil
-    private var gradient: [Color]? = nil
+    private var trailingSystemImage: String?
+    private var textColor: Color?
+    private var gradient: [Color]?
     private var highlighted: Bool = false
 
-    public init(
-        _ text: String,
-        style: BadgeStyle = .neutral,
-        variant: FillVariant = .soft,
-        size: BadgeSize = .medium,
-        leadingSystemImage: String? = nil,
-        action: (() -> Void)? = nil
-    ) {
+    public init(_ text: String, action: (() -> Void)? = nil) {   // R1 — content + action
         self.text = text
-        self.style = style
-        self.variant = variant
-        self.size = size
-        self.leadingSystemImage = leadingSystemImage
         self.action = action
     }
 
@@ -198,17 +186,34 @@ public struct Badge: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension Badge {
+    /// Semantic style (system + brand variants) driving fill/foreground/border
+    /// (renamed from the bare `style:` to avoid the generic clash + match `BadgeStyle`).
+    func badgeStyle(_ s: BadgeStyle) -> Self { copy { $0.style = s } }
+    /// Fill treatment: soft / solid / outline / ghost.
+    func variant(_ v: FillVariant) -> Self { copy { $0.variant = v } }
+    /// Size tier: small / medium / large / xlarge.
+    func size(_ s: BadgeSize) -> Self { copy { $0.size = s } }
+    /// Leading SF Symbol before the text.
+    func icon(_ systemName: String?) -> Self { copy { $0.leadingSystemImage = systemName } }
     /// Pill (default) or rounded-rectangle outline.
-    func badgeShape(_ shape: BadgeShape) -> Self { var copy = self; copy.shape = shape; return copy }
+    func badgeShape(_ shape: BadgeShape) -> Self { copy { $0.shape = shape } }
     /// A trailing SF Symbol after the text (e.g. a dismiss chevron).
-    func trailingIcon(_ systemName: String?) -> Self { var copy = self; copy.trailingSystemImage = systemName; return copy }
+    func trailingIcon(_ systemName: String?) -> Self { copy { $0.trailingSystemImage = systemName } }
     /// Overrides the text/foreground color (otherwise derived from style + variant).
-    func badgeColor(_ color: Color?) -> Self { var copy = self; copy.textColor = color; return copy }
+    func badgeColor(_ color: Color?) -> Self { copy { $0.textColor = color } }
     /// Fills the badge with a horizontal gradient instead of the style background.
-    func gradient(_ colors: [Color]?) -> Self { var copy = self; copy.gradient = colors; return copy }
+    func gradient(_ colors: [Color]?) -> Self { copy { $0.gradient = colors } }
     /// Lifts the badge off the surface with a subtle drop shadow.
-    func highlighted(_ on: Bool = true) -> Self { var copy = self; copy.highlighted = on; return copy }
+    func highlighted(_ on: Bool = true) -> Self { copy { $0.highlighted = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
 
 private struct BadgeHighlight: ViewModifier {
@@ -225,13 +230,13 @@ private struct BadgeHighlight: ViewModifier {
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
         ForEach(BadgeStyle.allCases, id: \.self) { style in
-            Badge(style.rawValue.capitalized, style: style, leadingSystemImage: "star.fill")
+            Badge(style.rawValue.capitalized).badgeStyle(style).icon("star.fill")
         }
         HStack {
-            Badge("Small", style: .info, size: .small)
-            Badge("Medium", style: .info, size: .medium)
-            Badge("Large", style: .info, size: .large)
-            Badge("Rounded", style: .success).badgeShape(.rounded)
+            Badge("Small").badgeStyle(.info).size(.small)
+            Badge("Medium").badgeStyle(.info).size(.medium)
+            Badge("Large").badgeStyle(.info).size(.large)
+            Badge("Rounded").badgeStyle(.success).badgeShape(.rounded)
         }
     }
     .padding()

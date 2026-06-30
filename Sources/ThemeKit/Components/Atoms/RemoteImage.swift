@@ -33,30 +33,29 @@ public enum RemoteImageRatio {
 public struct RemoteImage: View {
     @Environment(\.theme) private var theme
 
-    private let url: URL?
-    private let aspectRatio: CGFloat?
-    private let contentMode: ContentMode
-    private let cornerRadius: CGFloat
-    private let circle: Bool
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var aspectRatio: CGFloat?
+    private var contentMode: ContentMode = .fill
+    private var cornerRadius: CGFloat = 0
+    private var circle: Bool = false
 
-    public init(_ url: URL?, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false) {
+    private let url: URL?
+
+    public init(_ url: URL?) {   // R1
         self.url = url
-        self.aspectRatio = aspectRatio
-        self.contentMode = contentMode
-        self.cornerRadius = cornerRadius
-        self.circle = circle
     }
 
-    /// Aspect ratio from an API string like "16:9" / "5:7".
-    public init(_ url: URL?, ratio: String, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false) {
+    /// Aspect ratio from an API string like "16:9" / "5:7" (genuine data overload).
+    public init(_ url: URL?, ratio: String) {
+        self.init(url)
         let parts = ratio.split(separator: ":").compactMap { Double($0) }
-        let r: CGFloat? = (parts.count == 2 && parts[1] != 0) ? CGFloat(parts[0] / parts[1]) : nil
-        self.init(url, aspectRatio: r, contentMode: contentMode, cornerRadius: cornerRadius, circle: circle)
+        if parts.count == 2, parts[1] != 0 { self.aspectRatio = CGFloat(parts[0] / parts[1]) }
     }
 
     /// A named aspect-ratio constant (square / productImage / 4:5 / 5:4 / 16:9 / custom).
-    public init(_ url: URL?, ratio: RemoteImageRatio, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0, circle: Bool = false) {
-        self.init(url, aspectRatio: ratio.value, contentMode: contentMode, cornerRadius: cornerRadius, circle: circle)
+    public init(_ url: URL?, ratio: RemoteImageRatio) {
+        self.init(url)
+        self.aspectRatio = ratio.value
     }
 
     private var clip: AnyShape {
@@ -105,6 +104,30 @@ public struct RemoteImage: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RemoteImage {
+    /// Numeric aspect ratio (width / height). Renamed from `aspectRatio:` to avoid
+    /// clashing with SwiftUI's native `.aspectRatio(_:contentMode:)`. The String /
+    /// `RemoteImageRatio` init overloads remain the data-driven entry points.
+    func ratio(_ r: CGFloat?) -> Self { copy { $0.aspectRatio = r } }
+
+    /// How the image fills its ratio box: fill (default) or fit.
+    func contentMode(_ m: ContentMode) -> Self { copy { $0.contentMode = m } }
+
+    /// Corner radius of the clip shape (ignored when `.circle()`).
+    func cornerRadius(_ r: CGFloat) -> Self { copy { $0.cornerRadius = r } }
+
+    /// Clip to a circle instead of a rounded rectangle.
+    func circle(_ on: Bool = true) -> Self { copy { $0.circle = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 private struct RatioModifier: ViewModifier {
     let ratio: CGFloat?
     let contentMode: ContentMode
@@ -119,9 +142,9 @@ private struct RatioModifier: ViewModifier {
 
 #Preview {
     VStack(spacing: 16) {
-        RemoteImage(URL(string: "https://picsum.photos/400/225"), ratio: "16:9", cornerRadius: 12)
+        RemoteImage(URL(string: "https://picsum.photos/400/225"), ratio: "16:9").cornerRadius(12)
             .frame(height: 160)
-        RemoteImage(nil, aspectRatio: 1, cornerRadius: 12).frame(width: 80, height: 80)  // placeholder
+        RemoteImage(nil).ratio(1).cornerRadius(12).frame(width: 80, height: 80)  // placeholder
     }
     .padding()
 }

@@ -11,40 +11,35 @@ import SwiftUI
 public struct OTPInput: View {
     @Environment(\.theme) private var theme
 
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+
+    // Appearance/content/state — mutated only through the modifiers below (R2).
+    private var digitCount: Int = 6
+    private var isSecure = false
+    private var errorText: String?
+    private var infoMessages: [InfoMessage] = []
+    private var accessibilityID: String?
+    private var resendInterval: TimeInterval?
+    private var onResend: (() -> Void)?
+
     @Binding private var code: String
-    private let digitCount: Int
-    private let messages: [InfoMessage]
-    private var accessibilityID: String? = nil
-    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isSecure: Bool
     private let onComplete: ((String) -> Void)?
-    private let resendInterval: TimeInterval?
-    private let onResend: (() -> Void)?
 
     @FocusState private var isFocused: Bool
     @State private var lastFired = ""
     @State private var secondsLeft = 0
     @State private var resendID = 0
 
-    public init(
-        code: Binding<String>,
-        digitCount: Int = 6,
-        isSecure: Bool = false,
-        errorText: String? = nil,
-        infoMessages: [InfoMessage] = [],
-        onComplete: ((String) -> Void)? = nil,
-        resendInterval: TimeInterval? = nil,
-        onResend: (() -> Void)? = nil
-    ) {
+    public init(code: Binding<String>, onComplete: ((String) -> Void)? = nil) {   // R1
         self._code = code
-        self.digitCount = digitCount
-        self.isSecure = isSecure
+        self.onComplete = onComplete
+    }
+
+    /// Validation/hint lines: `infoMessages` plus the optional `errorText` (appended as `.error`).
+    private var messages: [InfoMessage] {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
-        self.messages = messages
-        self.onComplete = onComplete
-        self.resendInterval = resendInterval
-        self.onResend = onResend
+        return messages
     }
 
     private var hasError: Bool { messages.dominantKind == .error }
@@ -230,10 +225,10 @@ private struct OTPDigitBox: View {
         @State var lastComplete = "—"
         var body: some View {
             VStack(spacing: 24) {
-                OTPInput(code: $code, onComplete: { lastComplete = $0 }, resendInterval: 30, onResend: {})
+                OTPInput(code: $code, onComplete: { lastComplete = $0 }).resend(interval: 30, onResend: {})
                 Text("Completed: \(lastComplete)").textStyle(.bodySm400)
-                OTPInput(code: .constant("4321"), digitCount: 4, isSecure: true)
-                OTPInput(code: .constant("12"), digitCount: 4, errorText: "Invalid code")
+                OTPInput(code: .constant("4321")).digitCount(4).secure()
+                OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code")
             }
             .padding()
         }
@@ -241,8 +236,33 @@ private struct OTPDigitBox: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension OTPInput {
+    /// Number of digit boxes (default 6).
+    func digitCount(_ n: Int) -> Self { copy { $0.digitCount = n } }
+
+    /// Mask the entered digits (password-style dots) instead of showing them.
+    func secure(_ on: Bool = true) -> Self { copy { $0.isSecure = on } }
+
+    /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Validation / hint messages displayed below the boxes.
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Adds a countdown + "resend code" row. `interval` seconds before re-enabling.
+    func resend(interval: TimeInterval, onResend: @escaping () -> Void) -> Self {
+        copy { $0.resendInterval = interval; $0.onResend = onResend }
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

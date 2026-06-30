@@ -49,7 +49,7 @@ struct SignInView: View {
             TextInput("Email", text: $email, placeholder: "you@example.com",
                       leadingSystemImage: "envelope")
 
-            Badge("Beta", style: .info)
+            Badge("Beta").badgeStyle(.info)
 
             PrimaryButton("Continue", block: true) {
                 // handle sign-in

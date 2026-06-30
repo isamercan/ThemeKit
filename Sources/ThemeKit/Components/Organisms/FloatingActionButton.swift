@@ -25,11 +25,13 @@ public enum FABShape { case circle, square }
 public struct FloatingActionButton: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var shape: FABShape = .circle
+    private var color: SemanticColor = .primary
+    private var badge: Int?
+
     private let systemImage: String
     private let actions: [FABAction]
-    private let shape: FABShape
-    private let color: SemanticColor
-    private let badge: Int?
     private let action: () -> Void
 
     @State private var expanded = false
@@ -37,16 +39,10 @@ public struct FloatingActionButton: View {
     public init(
         systemImage: String = "plus",
         actions: [FABAction] = [],
-        shape: FABShape = .circle,
-        color: SemanticColor = .primary,
-        badge: Int? = nil,
         action: @escaping () -> Void = {}
-    ) {
+    ) {   // R1 — content + speed-dial data + primary action
         self.systemImage = systemImage
         self.actions = actions
-        self.shape = shape
-        self.color = color
-        self.badge = badge
         self.action = action
     }
 
@@ -103,6 +99,25 @@ public struct FloatingActionButton: View {
                 .themeShadow(.soft)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension FloatingActionButton {
+    /// Corner treatment of the main button: circle / square.
+    func shape(_ s: FABShape) -> Self { copy { $0.shape = s } }
+
+    /// Semantic color token driving the main button's fill (R4).
+    func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
+
+    /// Count bubble on the main button (hidden when 0 or nil).
+    func badge(_ count: Int?) -> Self { copy { $0.badge = count } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

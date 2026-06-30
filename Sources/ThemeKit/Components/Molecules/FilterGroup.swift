@@ -42,8 +42,8 @@ public struct FilterGroup<Option: Hashable>: View {
                     }
                     ForEach(options, id: \.self) { option in
                         Chip(label(option),
-                             isSelected: Binding(get: { selection == option }, set: { isOn in selection = isOn ? option : nil }),
-                             selectionStyle: .solid)
+                             isSelected: Binding(get: { selection == option }, set: { isOn in selection = isOn ? option : nil }))
+                            .chipStyle(.solid)
                     }
                 }
             }

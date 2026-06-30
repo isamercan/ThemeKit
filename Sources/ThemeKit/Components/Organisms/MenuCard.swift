@@ -33,10 +33,10 @@ public struct MenuCard: View {
         Card(padding: 0) {
             VStack(spacing: 0) {
                 ForEach(items) { item in
-                    ListRow(item.title, subtitle: item.subtitle, leadingSystemImage: item.systemImage, action: item.action)
+                    ListRow(item.title, action: item.action).subtitle(item.subtitle).icon(item.systemImage)
                         .padding(.horizontal, Theme.SpacingKey.md.value)
                     if item.id != items.last?.id {
-                        DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value)
+                        DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value)
                     }
                 }
             }

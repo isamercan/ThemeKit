@@ -36,18 +36,16 @@ public struct Timeline: View {
         }
     }
 
-    private let items: [Item]
-    private let pending: String?
-    private let axis: Axis
-    private let mode: TimelineMode
-    private let reverse: Bool
+    // Layout/state — mutated only through the modifiers below (R2).
+    private var pending: String?
+    private var axis: Axis = .vertical
+    private var mode: TimelineMode = .left
+    private var reverse = false
 
-    public init(_ items: [Item], axis: Axis = .vertical, mode: TimelineMode = .left, reverse: Bool = false, pending: String? = nil) {
+    private let items: [Item]
+
+    public init(_ items: [Item]) {   // R1 — required DATA array only
         self.items = items
-        self.axis = axis
-        self.mode = mode
-        self.reverse = reverse
-        self.pending = pending
     }
 
     private enum DisplayRow {
@@ -212,6 +210,28 @@ public struct Timeline: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Timeline {
+    /// Rail orientation: vertical (default) or horizontal.
+    func axis(_ a: Axis) -> Self { copy { $0.axis = a } }
+
+    /// Content placement around the rail: left / right / alternate (vertical only).
+    func mode(_ m: TimelineMode) -> Self { copy { $0.mode = m } }
+
+    /// Flip the item order.
+    func reversed(_ on: Bool = true) -> Self { copy { $0.reverse = on } }
+
+    /// Trailing loading ("pending") node with its label.
+    func pending(_ text: String?) -> Self { copy { $0.pending = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     ScrollView {
         VStack(spacing: 40) {
@@ -219,13 +239,13 @@ public struct Timeline: View {
                 .init(title: "Order placed", time: "09:24", description: "We received your order.", systemImage: "cart", state: .done),
                 .init(title: "Payment failed", time: "09:30", description: "Retry your card.", state: .error),
                 .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .done, color: .success),
-            ], pending: "Awaiting courier…")
+            ]).pending("Awaiting courier…")
 
             Timeline([
                 .init(title: "Departure", time: "08:00", description: "Istanbul (IST)", systemImage: "airplane.departure", state: .done),
                 .init(title: "Layover", time: "12:30", description: "Munich (MUC)", systemImage: "clock", state: .active),
                 .init(title: "Arrival", time: "16:45", description: "Barcelona (BCN)", systemImage: "airplane.arrival", state: .todo),
-            ], mode: .alternate)
+            ]).mode(.alternate)
         }
         .padding()
     }

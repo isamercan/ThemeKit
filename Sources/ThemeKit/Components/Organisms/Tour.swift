@@ -114,11 +114,13 @@ private struct TourHostModifier: ViewModifier {
                     .textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                 Spacer()
                 if controller.index > 0 {
-                    ThemeButton(String(themeKit: "Back"), variant: .outline, size: .small) { controller.prev() }
+                    ThemeButton(String(themeKit: "Back")) { controller.prev() }
+                        .variant(.outline).size(.small)
                 }
-                ThemeButton(controller.index == steps.count - 1 ? String(themeKit: "Done") : String(themeKit: "Next"), size: .small) {
+                ThemeButton(controller.index == steps.count - 1 ? String(themeKit: "Done") : String(themeKit: "Next")) {
                     controller.next(count: steps.count)
                 }
+                .size(.small)
             }
         }
         .padding(Theme.SpacingKey.md.value)

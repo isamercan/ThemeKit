@@ -88,33 +88,33 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func atoms() {
         shot("Avatar", HStack(spacing: 12) {
-            Avatar(.initials("CD"), size: .lg, presence: .online)
-            Avatar(.initials("AB"), size: .md)
-            Avatar(.icon("person.fill"), size: .md)
+            Avatar(.initials("CD")).size(.lg).presence(.online)
+            Avatar(.initials("AB")).size(.md)
+            Avatar(.icon("person.fill")).size(.md)
         })
         shot("Badge", HStack(spacing: 8) {
-            Badge("Success", style: .success)
-            Badge("Info", style: .info, leadingSystemImage: "star.fill")
-            Badge("Error", style: .error, variant: .solid)
+            Badge("Success").badgeStyle(.success)
+            Badge("Info").badgeStyle(.info).icon("star.fill")
+            Badge("Error").badgeStyle(.error).variant(.solid)
         })
         shot("Chip", HStack(spacing: 8) {
             Chip("Selected", isSelected: .constant(true))
             Chip("Unselected", isSelected: .constant(false))
         })
         shot("CountBadge", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).countBadge(5))
-        shot("Divider", DividerView(dashed: true, title: "OR", titleAlign: .center).frame(width: 240))
+        shot("Divider", DividerView("OR").dashed().titleAlign(.center).frame(width: 240))
         shot("Icon", HStack(spacing: 14) {
             Icon(systemName: "star.fill", size: .xl, color: Theme.shared.foreground(.fgHero))
             Icon(systemName: "heart.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgError))
             Icon(systemName: "checkmark.seal.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgSuccess))
         })
         shot("Indicator", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot())
-        shot("InputLabel", InputLabel("Email", isRequired: true, hasInfo: true))
+        shot("InputLabel", InputLabel("Email").required().hasInfo())
         shot("Kbd", HStack(spacing: 6) { Kbd("⌘"); Kbd("K") })
         shot("ProgressBar", ProgressBar(value: 0.6, showPercentage: true).frame(width: 240))
-        shot("RadialProgress", RadialProgress(value: 0.66, size: 96, showLabel: true))
+        shot("RadialProgress", RadialProgress(0.66).size(96).showsLabel())
         shot("Rating", Rating(value: 4.3, countLabel: "(128)"))
-        shot("RollingNumber", RollingNumber(1284, size: 40))
+        shot("RollingNumber", RollingNumber(1284).size(40))
         shot("ScoreBadge", ScoreBadge(9.0))
         shot("Skeleton", HStack(spacing: 12) {
             Skeleton(.circle, width: 44, height: 44)
@@ -129,11 +129,11 @@ final class ScreenshotGenerator: XCTestCase {
             StatusDot(.away, label: "Away")
             StatusDot(.busy, label: "Busy")
         })
-        shot("Swap", Swap(isOn: .constant(true), on: "xmark", off: "line.3.horizontal"))
+        shot("Swap", Swap(isOn: .constant(true)).symbols(on: "xmark", off: "line.3.horizontal"))
         shot("Tag", HStack(spacing: 8) {
-            Tag("Success", style: .success)
-            Tag("Error", style: .error, variant: .solid)
-            Tag("Info", style: .info, variant: .outline)
+            Tag("Success").tagStyle(.success)
+            Tag("Error").tagStyle(.error).variant(.solid)
+            Tag("Info").tagStyle(.info).variant(.outline)
         })
         shot("TextLink", TextLink("Forgot password?", underline: true) {})
         shot("Title", Title("Section title", subtitle: "Supporting subtitle", actionTitle: "See all") {}.frame(width: 320))
@@ -161,7 +161,7 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("Gauge", HStack(spacing: 24) {
             GaugeView(value: 0.72, label: "CPU")
-            GaugeView(value: 0.4, label: "Disk", style: .linear).frame(width: 140)
+            GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).frame(width: 140)
         }, hosted: true)
         shot("ShareButton", ShareButton(item: "https://github.com/isamercan/ThemeKit"), hosted: true)
     }
@@ -175,9 +175,9 @@ final class ScreenshotGenerator: XCTestCase {
             OutlineButton("More") {}
         })
         shot("ThemeButton", HStack(spacing: 10) {
-            ThemeButton("Solid", color: .primary) {}
-            ThemeButton("Soft", color: .success, variant: .soft) {}
-            ThemeButton("Pill", color: .error, variant: .outline, shape: .pill) {}
+            ThemeButton("Solid") {}.color(.primary)
+            ThemeButton("Soft") {}.color(.success).variant(.soft)
+            ThemeButton("Pill") {}.color(.error).variant(.outline).shape(.pill)
         })
         shot("Checkbox", VStack(alignment: .leading, spacing: 10) {
             Checkbox("Accept the terms", isChecked: .constant(true))
@@ -195,8 +195,8 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("SegmentedControl", SegmentedControl(["Daily", "Weekly", "Monthly"], selection: .constant(1)).frame(width: 300))
         shot("QuantityStepper", QuantityStepper(value: .constant(2), range: 0...10))
-        shot("Stat", Stat(title: "Total bookings", value: "1,284", suffix: "$",
-                          description: "this month", systemImage: "ticket", trend: .up("+12%")).frame(width: 280))
+        shot("Stat", Stat(title: "Total bookings", value: "1,284")
+                          .suffix("$").description("this month").icon("ticket").trend(.up("+12%")).frame(width: 280))
         shot("Steps", Steps([.init("Cart", description: "2 items", systemImage: "cart", state: .done),
                              .init("Payment", description: "Card", state: .active),
                              .init("Done", state: .todo)]).frame(width: 360))
@@ -204,27 +204,27 @@ final class ScreenshotGenerator: XCTestCase {
                                        .marks([0: "0", 4: "4", 8: "8"]).frame(width: 300))
         shot("Breadcrumbs", Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul")]).frame(width: 320))
         shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
-        shot("FileInput", FileInput(label: "Passport", fileName: "passport-scan.jpg", onPick: {}, onClear: {}).frame(width: 320))
+        shot("FileInput", FileInput("Passport", onPick: {}).fileName("passport-scan.jpg").onClear({}).frame(width: 320))
         shot("Pagination", Pagination(current: .constant(4), total: 50).frame(width: 360))
         shot("Fieldset", Fieldset("Contact details", helper: "We never share your info.") {
             TextInput("Email", text: .constant("user@example.com"))
         }.frame(width: 320), hosted: true)
-        shot("DateField", DateField(label: "Check-in", date: .constant(nil)).frame(width: 280))
+        shot("DateField", DateField("Check-in", date: .constant(nil)).frame(width: 280))
         shot("Select", Select("City", options: ["Istanbul", "Ankara", "Izmir"],
                               selection: .constant(Optional("Istanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
         // SelectBox is a native SwiftUI Menu — its label doesn't draw into an
         // offscreen snapshot, so it's shown live in the Demo app instead.
         shot("MultiSelect", MultiSelect(label: "Cities", options: ["Istanbul", "Ankara", "Izmir"],
                                         selection: .constant(Set(["Istanbul", "Ankara"]))) { $0 }.frame(width: 300))
-        shot("TreeSelect", TreeSelect(label: "Cities",
+        shot("TreeSelect", TreeSelect("Cities",
                                       nodes: [TreeNode(id: "tr", "Turkey", systemImage: "flag",
                                                        children: [TreeNode(id: "ist", "Istanbul"), TreeNode(id: "ank", "Ankara")])],
                                       selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))
         shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("Istanbul"),
                                           suggestions: ["Istanbul", "Izmir"]).frame(width: 300), hosted: true)
         shot("SearchBar", SearchBar(text: .constant("Istanbul")).frame(width: 320), hosted: true)
-        shot("OTPInput", OTPInput(code: .constant("1234"), digitCount: 6).frame(width: 300))
-        shot("InputNumber", InputNumber(label: "Max price", value: .constant(250), range: 0...1000, step: 50, unit: "$").frame(width: 280), hosted: true)
+        shot("OTPInput", OTPInput(code: .constant("1234")).digitCount(6).frame(width: 300))
+        shot("InputNumber", InputNumber("Max price", value: .constant(250), range: 0...1000).step(50).unit("$").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
                                         in: 0...1000, step: 50).marks([0, 500, 1000]).frame(width: 320))
         shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("It was a wonderful stay, I would definitely recommend it.")).frame(width: 300), hosted: true)
@@ -250,36 +250,37 @@ final class ScreenshotGenerator: XCTestCase {
             Text("You can request a refund within 14 days of purchase.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 340))
-        shot("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.", type: .success).frame(width: 340))
+        shot("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.").variant(.success).frame(width: 340))
         shot("Callout", VStack(alignment: .leading, spacing: 10) {
-            Callout("Saved successfully.", type: .success)
-            Callout("Please review your details.", type: .warning, style: .soft)
-            Callout("Something went wrong.", type: .error, style: .soft)
+            Callout("Saved successfully.").variant(.success)
+            Callout("Please review your details.").variant(.warning).calloutStyle(.soft)
+            Callout("Something went wrong.").variant(.error).calloutStyle(.soft)
         }.frame(width: 320))
         shot("Card", Card(elevation: .soft, title: "Reservation", subtitle: "2 nights · 2 guests", extraTitle: "Details", onExtra: {}) {
             Text("Hilton London — Deluxe room, breakfast included.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
         }.frame(width: 320))
         shot("ChatBubble", VStack(alignment: .leading, spacing: 8) {
-            ChatBubble("Hi! Your reservation is confirmed.", side: .incoming, author: "Support", time: "09:24")
-            ChatBubble("Thanks!", side: .outgoing, time: "09:25")
+            ChatBubble("Hi! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming)
+            ChatBubble("Thanks!", time: "09:25").side(.outgoing)
         }.frame(width: 320))
         shot("Counter", Counter(days: 2, hours: 8, minutes: 45))
-        shot("Coupon", Coupon(code: "UXMUQ", style: .outlined).frame(width: 300))
-        shot("EmptyState", EmptyState(systemImage: "magnifyingglass", title: "No results found",
-                                      message: "Try adjusting your search or filters.",
-                                      buttonTitle: "Clear filters", action: {},
-                                      secondaryTitle: "Learn more", onSecondary: {}).frame(width: 320))
+        shot("Coupon", Coupon(code: "UXMUQ").couponStyle(.outlined).frame(width: 300))
+        shot("EmptyState", EmptyState("No results found")
+                                      .icon("magnifyingglass")
+                                      .message("Try adjusting your search or filters.")
+                                      .primaryAction("Clear filters") {}
+                                      .secondaryAction("Learn more") {}.frame(width: 320))
         shot("InfoBanner", InfoBanner("Your reservation is confirmed. Go to the ticket page for details.",
-                                      type: .info, title: "Heads up").frame(width: 340))
+                                      title: "Heads up").variant(.info).frame(width: 340))
         shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Active", style: .success),
                                                    .init("Old price", value: "$5,000", style: .strikethrough),
                                                    .init("Total", value: "$4,250")],
                                             title: "Reservation summary", bordered: true).frame(width: 320))
         shot("ListRow", VStack(spacing: 0) {
-            ListRow("My account", subtitle: "Profile and security", leadingSystemImage: "person.circle", action: {})
-            DividerView(size: .small)
-            ListRow("Notifications", subtitle: "Email and push", leadingSystemImage: "bell", action: {})
+            ListRow("My account", action: {}).subtitle("Profile and security").icon("person.circle")
+            DividerView().size(.small)
+            ListRow("Notifications", action: {}).subtitle("Email and push").icon("bell")
         }.frame(width: 320))
         shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip",
                                                   message: "24 days until your Hilton London reservation.",
@@ -294,16 +295,17 @@ final class ScreenshotGenerator: XCTestCase {
                                                  TabItem("Location")], selection: .constant(1)).frame(width: 340))
         shot("Timeline", Timeline([.init(title: "Order received", time: "09:24", systemImage: "cart", state: .done, color: .success),
                                    .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .active),
-                                   .init(title: "On the way", state: .todo)], pending: "Waiting for courier…").frame(width: 320))
-        shot("Upload", Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
+                                   .init(title: "On the way", state: .todo)]).pending("Waiting for courier…").frame(width: 320))
+        shot("Upload", Upload(prompt: "You can upload up to 3 photos.",
                               files: [.init(name: "room-1.jpg", status: .done),
-                                      .init(name: "room-2.jpg", status: .uploading(0.6))], maxCount: 3,
-                              onPick: {}, onRemove: { _ in }).frame(width: 320))
-        shot("PromoBanner", PromoBanner(title: "Early booking", subtitle: "Save up to 30% on summer",
-                                        systemImage: "sun.max.fill", ctaTitle: "Explore", action: {}).frame(width: 340))
+                                      .init(name: "room-2.jpg", status: .uploading(0.6))],
+                              onPick: {}, onRemove: { _ in })
+                            .buttonTitle("Add photo").maxCount(3).frame(width: 320))
+        shot("PromoBanner", PromoBanner("Early booking", action: {})
+                                        .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore").frame(width: 340))
         let rowTitles = ["My account", "Notifications", "Language", "Payment"]
         shot("ListView", ListView(tiles, header: "Settings", footer: "\(tiles.count) items", bordered: true) { tile in
-            ListRow(rowTitles[tile.id], subtitle: "Details", leadingSystemImage: "gearshape", action: {})
+            ListRow(rowTitles[tile.id], action: {}).subtitle("Details").icon("gearshape")
         }.frame(width: 320))
         shot("MenuCard", MenuCard(items: [
             .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
@@ -387,9 +389,9 @@ final class ScreenshotGenerator: XCTestCase {
                 VStack(spacing: 10) {
                     Text("ThemeKit").font(.system(size: 50, weight: .black)).foregroundStyle(t.text(.textPrimary))
                     sub("Native SwiftUI design system")
-                    Badge("v0.2.0 · iOS 17+", style: .info, leadingSystemImage: "swift")
+                    Badge("v0.2.0 · iOS 17+").badgeStyle(.info).icon("swift")
                     HStack(spacing: 12) {
-                        RadialProgress(value: 0.72, size: 52, showLabel: false)
+                        RadialProgress(0.72).size(52).showsLabel(false)
                         ProgressBar(value: 0.62).frame(width: 130)
                     }.padding(.top, 6)
                 }
@@ -450,11 +452,11 @@ final class ScreenshotGenerator: XCTestCase {
             Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
                 .frame(height: 128)
             HStack(spacing: 6) {
-                Badge("Info", style: .info, leadingSystemImage: "bell.fill")
+                Badge("Info").badgeStyle(.info).icon("bell.fill")
                 Tag("Filter", onRemove: {})
             }
-            InfoBanner("Subtree-themed", type: .success)
-            Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%"))
+            InfoBanner("Subtree-themed").variant(.success)
+            Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
             PrimaryButton("Continue", block: true) {}
         }
 

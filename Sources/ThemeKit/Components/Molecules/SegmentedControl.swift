@@ -33,38 +33,27 @@ public enum SegmentedSize {
 public struct SegmentedControl: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var isFullWidth = true
+    private var size: SegmentedSize = .medium
+    private var accessibilityID: String? = nil
+
     private let items: [SegmentItem]
     @Binding private var selection: Int
-    private let block: Bool
-    private let size: SegmentedSize
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private var accessibilityID: String? = nil
 
     @Namespace private var pill
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(
-        _ items: [SegmentItem],
-        selection: Binding<Int>,
-        block: Bool = true,
-        size: SegmentedSize = .medium
-    ) {
+    public init(_ items: [SegmentItem], selection: Binding<Int>) {   // R1
         self.items = items
         self._selection = selection
-        self.block = block
-        self.size = size
     }
 
-    public init(
-        _ items: [String],
-        selection: Binding<Int>,
-        block: Bool = true,
-        size: SegmentedSize = .medium
-    ) {
-        self.init(items.map { SegmentItem($0) }, selection: selection,
-                  block: block, size: size)
+    public init(_ items: [String], selection: Binding<Int>) {   // R1
+        self.init(items.map { SegmentItem($0) }, selection: selection)
     }
 
     public var body: some View {
@@ -81,7 +70,7 @@ public struct SegmentedControl: View {
                         Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
                     }
                     .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
-                    .frame(maxWidth: block ? .infinity : nil)
+                    .frame(maxWidth: isFullWidth ? .infinity : nil)
                     .padding(.vertical, size.verticalPadding)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .background {
@@ -128,8 +117,22 @@ public struct SegmentedControl: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension SegmentedControl {
+    /// Stretch each segment to fill the available width (Ant Segmented `block`).
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.isFullWidth = on } }
+
+    /// Vertical sizing of the segments: small / medium / large.
+    func size(_ s: SegmentedSize) -> Self { copy { $0.size = s } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

@@ -155,7 +155,7 @@ public struct Autocomplete: View {
                     .buttonStyle(.plain)
                     .disabled(!enabled)
                     .opacity(enabled ? 1 : 0.4)
-                    if suggestion != results.last { DividerView(size: .small).padding(.leading, Theme.SpacingKey.md.value) }
+                    if suggestion != results.last { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             }
         }

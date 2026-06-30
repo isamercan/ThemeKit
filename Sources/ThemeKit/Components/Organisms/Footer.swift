@@ -48,7 +48,7 @@ public struct Footer: View {
                 }
             }
             if let note {
-                DividerView(size: .small)
+                DividerView().size(.small)
                 Text(note)
                     .textStyle(.bodySm400)
                     .foregroundStyle(theme.text(.textTertiary))

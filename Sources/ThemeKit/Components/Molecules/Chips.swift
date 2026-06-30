@@ -27,22 +27,22 @@ public enum ImageChipSize {
 /// A selectable remote-image tile with a selection border. (Reference ImageChip.)
 public struct ImageChip: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var size: ImageChipSize = .medium
 
     @Binding private var isSelected: Bool
     private let url: URL?
-    private let size: ImageChipSize
-    private let isEnabled: Bool
 
-    public init(isSelected: Binding<Bool>, url: URL?, size: ImageChipSize = .medium, isEnabled: Bool = true) {
+    public init(isSelected: Binding<Bool>, url: URL?) {   // R1
         self._isSelected = isSelected
         self.url = url
-        self.size = size
-        self.isEnabled = isEnabled
     }
 
     public var body: some View {
         let s = size.size
-        RemoteImage(url, aspectRatio: s.width / s.height, cornerRadius: Theme.RadiusKey.sm.value)
+        RemoteImage(url).ratio(s.width / s.height).cornerRadius(Theme.RadiusKey.sm.value)
             .frame(width: s.width, height: s.height)
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -52,6 +52,19 @@ public struct ImageChip: View {
             .opacity(isEnabled ? 1 : 0.5)
             .contentShape(Rectangle())
             .onTapGesture { if isEnabled { isSelected.toggle() } }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ImageChip {
+    /// Tile size: small / medium / large.
+    func size(_ s: ImageChipSize) -> Self { copy { $0.size = s } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -92,7 +105,7 @@ public struct CompactChip: View {
             }
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let imageURL {
-                    RemoteImage(imageURL, contentMode: .fit).frame(height: 16)
+                    RemoteImage(imageURL).contentMode(.fit).frame(height: 16)
                 }
                 Text(price).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
             }
@@ -286,8 +299,8 @@ public struct ChipGroup<Option: Hashable>: View {
                              isSelected: Binding(
                                 get: { selection.contains(option) },
                                 set: { isOn in if isOn { selection.insert(option) } else { selection.remove(option) } }
-                             ),
-                             selectionStyle: selectionStyle)
+                             ))
+                            .chipStyle(selectionStyle)
                     }
                 }
             }

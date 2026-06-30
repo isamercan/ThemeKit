@@ -83,7 +83,7 @@ public struct KeyValueTable: View {
                 }
                 .padding(.vertical, Theme.SpacingKey.sm.value)
                 .padding(.horizontal, bordered ? Theme.SpacingKey.md.value : 0)
-                if row.id != rows.last?.id { DividerView(size: .small) }
+                if row.id != rows.last?.id { DividerView().size(.small) }
             }
         }
     }

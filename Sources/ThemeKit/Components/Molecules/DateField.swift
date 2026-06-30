@@ -29,45 +29,28 @@ public enum DateFieldComponents {
 /// custom pattern), a `locale`, and which `components` (date / time) to show.
 public struct DateField: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
 
     private let label: String?
     @Binding private var date: Date?
-    private let placeholder: String
-    private let range: ClosedRange<Date>?
-    private let style: DateFieldStyle
-    private let explicitLocale: Locale?
-    private let components: DateFieldComponents
-    private let infoMessages: [InfoMessage]
-    private let allowClear: Bool
-    @Environment(\.isEnabled) private var isEnabled
-    private let leadingSystemImage: String?
-    private var accessibilityID: String? = nil
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var placeholder: String = String(themeKit: "Select a date")
+    private var range: ClosedRange<Date>?
+    private var style: DateFieldStyle = .abbreviated
+    private var explicitLocale: Locale?
+    private var components: DateFieldComponents = .date
+    private var infoMessages: [InfoMessage] = []
+    private var allowClear = false
+    private var leadingSystemImage: String?
+    private var accessibilityID: String?
 
     @Environment(\.locale) private var environmentLocale
     @State private var showPicker = false
 
-    public init(
-        label: String? = nil,
-        date: Binding<Date?>,
-        placeholder: String = String(themeKit: "Select a date"),
-        range: ClosedRange<Date>? = nil,
-        style: DateFieldStyle = .abbreviated,
-        locale: Locale? = nil,
-        components: DateFieldComponents = .date,
-        infoMessages: [InfoMessage] = [],
-        allowClear: Bool = false,
-        leadingSystemImage: String? = nil
-    ) {
+    public init(_ label: String? = nil, date: Binding<Date?>) {   // R1
         self.label = label
         self._date = date
-        self.placeholder = placeholder
-        self.range = range
-        self.style = style
-        self.explicitLocale = locale
-        self.components = components
-        self.infoMessages = infoMessages
-        self.allowClear = allowClear
-        self.leadingSystemImage = leadingSystemImage
     }
 
     // MARK: - Derived state
@@ -85,7 +68,7 @@ public struct DateField: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            if let label { InputLabel(label, hasError: hasError) }
+            if let label { InputLabel(label).hasError(hasError) }
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if let leadingSystemImage {
@@ -229,6 +212,43 @@ public struct DateField: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension DateField {
+    /// Placeholder shown while no date is selected.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Restrict the picker to a selectable date range.
+    func range(_ range: ClosedRange<Date>?) -> Self { copy { $0.range = range } }
+
+    /// How the chosen date renders in the field (numeric / abbreviated / long / full / relative / custom).
+    func style(_ style: DateFieldStyle) -> Self { copy { $0.style = style } }
+
+    /// Override the formatting locale (defaults to the environment locale).
+    func locale(_ locale: Locale?) -> Self { copy { $0.explicitLocale = locale } }
+
+    /// Which components the field shows and the picker edits (date / dateAndTime / time).
+    func components(_ components: DateFieldComponents) -> Self { copy { $0.components = components } }
+
+    /// Validation / info messages rendered under the field (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Show a trailing clear button when a date is set.
+    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Leading SF Symbol shown inside the field.
+    func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var checkIn: Date? = .now
@@ -236,23 +256,17 @@ public struct DateField: View {
         var body: some View {
             VStack(spacing: 16) {
                 // Weekday-style display + clear + leading icon.
-                DateField(label: "Check-in", date: $checkIn, style: .custom("EEE, d MMM"),
-                          allowClear: true, leadingSystemImage: "calendar")
+                DateField("Check-in", date: $checkIn)
+                    .style(.custom("EEE, d MMM")).clearable().icon("calendar")
                 // Date + time, with a validation error.
-                DateField(label: "Meeting", date: $meeting, style: .long, components: .dateAndTime,
-                          infoMessages: meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [],
-                          allowClear: true)
+                DateField("Meeting", date: $meeting)
+                    .style(.long).components(.dateAndTime).clearable()
+                    .infoMessages(meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
                 // Disabled.
-                DateField(label: "Locked", date: .constant(.now)).disabled(true)
+                DateField("Locked", date: .constant(.now)).disabled(true)
             }
             .padding()
         }
     }
     return Demo()
-}
-
-public extension DateField {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

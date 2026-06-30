@@ -15,15 +15,16 @@ public enum CouponStyle {
 public struct Coupon: View {
     @Environment(\.theme) private var theme
 
+    // Appearance — mutated only through the modifiers below (R2).
+    private var style: CouponStyle = .outlined
+
     private let code: String
     private let label: String
-    private let style: CouponStyle
     private let onCopy: () -> Void
 
-    public init(code: String, label: String = "Kupon Kodu:", style: CouponStyle = .outlined, onCopy: @escaping () -> Void = {}) {
+    public init(code: String, label: String = "Kupon Kodu:", onCopy: @escaping () -> Void = {}) {   // R1
         self.code = code
         self.label = label
-        self.style = style
         self.onCopy = onCopy
     }
 
@@ -69,11 +70,24 @@ public struct Coupon: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Coupon {
+    /// Visual treatment: filled / outlined (dashed) / plain.
+    func couponStyle(_ s: CouponStyle) -> Self { copy { $0.style = s } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
-        Coupon(code: "UXMUQ", style: .filled)
-        Coupon(code: "UXMUQ", style: .outlined)
-        Coupon(code: "UXMUQ", style: .plain)
+        Coupon(code: "UXMUQ").couponStyle(.filled)
+        Coupon(code: "UXMUQ").couponStyle(.outlined)
+        Coupon(code: "UXMUQ").couponStyle(.plain)
     }
     .padding()
 }

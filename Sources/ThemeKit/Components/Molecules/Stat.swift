@@ -28,7 +28,13 @@ public enum StatTrend {
 }
 
 /// Molecule. A single statistic block: title, value, optional description,
-/// figure icon and trend. (daisyUI "Stat".)
+/// figure icon and trend. (daisyUI "Stat".) Per the modifier-based architecture
+/// (COMPONENT_REFACTOR_RULES R1–R7) the init takes only its `title` + `value`;
+/// every other axis (prefix/suffix, description, figure icon, trend, loading) is
+/// a chainable, order-free modifier.
+///
+///     Stat(title: "Bookings", value: 1284)
+///         .suffix("$").icon("ticket").trend(.up("+12%")).loading(refreshing)
 public struct Stat: View {
     @Environment(\.theme) private var theme
 
@@ -36,46 +42,26 @@ public struct Stat: View {
 
     private let title: String
     private let value: Value
-    private let prefix: String?
-    private let suffix: String?
-    private let isLoading: Bool
-    private let description: String?
-    private let systemImage: String?
-    private let trend: StatTrend?
+
+    // Appearance/content — mutated only through the modifiers below (R2).
+    private var prefix: String?
+    private var suffix: String?
+    private var isLoading = false
+    private var description: String?
+    private var systemImage: String?
+    private var trend: StatTrend?
 
     @Environment(\.statStyle) private var statStyle
 
-    public init(
-        title: String, value: String,
-        prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false,
-        description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil
-    ) {
-        self.init(title: title, value: .text(value), prefix: prefix, suffix: suffix,
-                  isLoading: isLoading, description: description, systemImage: systemImage, trend: trend)
+    public init(title: String, value: String) {   // R1 — content only
+        self.title = title
+        self.value = .text(value)
     }
 
     /// Numeric value that animates (count-up / roll) on change, via `RollingNumber`.
-    public init(
-        title: String, value: Int,
-        prefix: String? = nil, suffix: String? = nil, isLoading: Bool = false,
-        description: String? = nil, systemImage: String? = nil, trend: StatTrend? = nil
-    ) {
-        self.init(title: title, value: .number(value), prefix: prefix, suffix: suffix,
-                  isLoading: isLoading, description: description, systemImage: systemImage, trend: trend)
-    }
-
-    private init(
-        title: String, value: Value, prefix: String?, suffix: String?,
-        isLoading: Bool, description: String?, systemImage: String?, trend: StatTrend?
-    ) {
+    public init(title: String, value: Int) {   // R1 — content only
         self.title = title
-        self.value = value
-        self.prefix = prefix
-        self.suffix = suffix
-        self.isLoading = isLoading
-        self.description = description
-        self.systemImage = systemImage
-        self.trend = trend
+        self.value = .number(value)
     }
 
     public var body: some View {
@@ -123,7 +109,7 @@ public struct Stat: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             case .number(let number):
-                RollingNumber(number, size: 28, weight: .semibold, color: theme.text(.textPrimary))
+                RollingNumber(number).size(28).weight(.semibold).color(theme.text(.textPrimary))
             }
         }
     }
@@ -145,19 +131,47 @@ public struct Stat: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Stat {
+    /// Unit/symbol shown before the value (e.g. a currency sign).
+    func prefix(_ s: String?) -> Self { copy { $0.prefix = s } }
+
+    /// Unit/symbol shown after the value.
+    func suffix(_ s: String?) -> Self { copy { $0.suffix = s } }
+
+    /// Swap the value for a skeleton placeholder while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Secondary caption line beside the trend.
+    func description(_ s: String?) -> Self { copy { $0.description = s } }
+
+    /// Leading figure SF Symbol.
+    func icon(_ systemImage: String?) -> Self { copy { $0.systemImage = systemImage } }
+
+    /// Trend badge (arrow + delta) in success/error color.
+    func trend(_ t: StatTrend?) -> Self { copy { $0.trend = t } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 16) {
-        Stat(title: "Total bookings", value: "1,284", description: "this month", systemImage: "ticket", trend: .up("+12%"))
-        Stat(title: "Cancellations", value: "32", trend: .down("-3%"))
+        Stat(title: "Total bookings", value: "1,284").description("this month").icon("ticket").trend(.up("+12%"))
+        Stat(title: "Cancellations", value: "32").trend(.down("-3%"))
     }
     .padding()
 }
 
 #Preview("States") {
     PreviewMatrix("Stat") {
-        PreviewCase("Default")  { Stat(title: "Bookings", value: "1,284", systemImage: "ticket", trend: .up("+12%")) }
-        PreviewCase("Loading")  { Stat(title: "Bookings", value: "0", isLoading: true) }
-        PreviewCase("Down")     { Stat(title: "Cancellations", value: "32", trend: .down("-3%")) }
-        PreviewCase("Centered") { Stat(title: "Revenue", value: "$48,210", systemImage: "creditcard").statStyle(.centered) }
+        PreviewCase("Default")  { Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%")) }
+        PreviewCase("Loading")  { Stat(title: "Bookings", value: "0").loading() }
+        PreviewCase("Down")     { Stat(title: "Cancellations", value: "32").trend(.down("-3%")) }
+        PreviewCase("Centered") { Stat(title: "Revenue", value: "$48,210").icon("creditcard").statStyle(.centered) }
     }
 }

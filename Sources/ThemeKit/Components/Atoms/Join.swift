@@ -48,7 +48,7 @@ public struct Join<Content: View>: View {
                 .textStyle(.labelBase600)
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .frame(height: 40)
-            DividerView(axis: .vertical)
+            DividerView().axis(.vertical)
         }
     }
     .padding()

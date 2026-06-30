@@ -114,7 +114,7 @@ public struct Accordion<Content: View>: View {
             }
 
             if showDivider {
-                DividerView(size: .small)
+                DividerView().size(.small)
             }
         }
     }

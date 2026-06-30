@@ -21,9 +21,9 @@ struct DividerDemo: View {
     var body: some View {
         ComponentStage("Divider", inspector: [("dashed", "\(dashed)"), ("text", withText ? "OR" : "—")]) {
             VStack(spacing: 24) {
-                DividerView(dashed: dashed, title: withText ? "OR" : nil, titleAlign: alignment)
+                DividerView(withText ? "OR" : nil).dashed(dashed).titleAlign(alignment)
                 HStack(spacing: 16) {
-                    Text("A"); DividerView(axis: .vertical, dashed: dashed); Text("B"); DividerView(axis: .vertical); Text("C")
+                    Text("A"); DividerView().axis(.vertical).dashed(dashed); Text("B"); DividerView().axis(.vertical); Text("C")
                 }
                 .frame(height: 24)
             }
@@ -57,7 +57,7 @@ struct InputLabelDemo: View {
 
     var body: some View {
         ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("hasError", "\(error)")]) {
-            InputLabel(text, isRequired: required, hasInfo: info, hasError: error)
+            InputLabel(text).required(required).hasInfo(info).hasError(error)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Toggle("Required", isOn: $required)
@@ -249,8 +249,10 @@ struct MultiLineDemo: View {
     @State private var error = false
     var body: some View {
         ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
-            MultiLineTextInput("Notes", text: $text, placeholder: "Write something…",
-                               characterLimit: limit ? 200 : nil, errorText: error ? "Required" : nil)
+            MultiLineTextInput("Notes", text: $text)
+                .placeholder("Write something…")
+                .characterLimit(limit ? 200 : nil)
+                .errorText(error ? "Required" : nil)
         } knobs: {
             Toggle("Character limit", isOn: $limit)
             Toggle("Error state", isOn: $error)
@@ -267,15 +269,13 @@ struct OTPDemo: View {
     @State private var lastComplete = "—"
     var body: some View {
         ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("completed", lastComplete)]) {
-            OTPInput(
-                code: $code,
-                digitCount: six ? 6 : 4,
-                isSecure: secure,
-                errorText: error ? "Invalid code" : nil,
-                onComplete: { lastComplete = $0 },
-                resendInterval: resend ? 30 : nil,
-                onResend: resend ? { lastComplete = "resent" } : nil
-            )
+            {
+                let base = OTPInput(code: $code, onComplete: { lastComplete = $0 })
+                    .digitCount(six ? 6 : 4)
+                    .secure(secure)
+                    .errorText(error ? "Invalid code" : nil)
+                return resend ? base.resend(interval: 30, onResend: { lastComplete = "resent" }) : base
+            }()
         } knobs: {
             Toggle("6 digits", isOn: $six)
             Toggle("Secure entry", isOn: $secure)
@@ -468,22 +468,24 @@ struct EmptyStateDemo: View {
     var body: some View {
         ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol")]) {
             if animated {
-                EmptyState(animatedURL: gifURL, imageMaxHeight: 140,
-                           title: "Loading", message: "Preparing content…",
-                           buttonTitle: hasButton ? "Refresh" : nil, action: hasButton ? { flash("EmptyState: Refresh") } : nil)
+                EmptyState(animatedURL: gifURL, title: "Loading")
+                    .imageMaxHeight(140)
+                    .message("Preparing content…")
+                    .primaryAction(hasButton ? "Refresh" : nil, action: hasButton ? { flash("EmptyState: Refresh") } : nil)
             } else if customImage {
-                EmptyState(image: Image(systemName: "sailboat.fill"), imageMaxHeight: 120,
-                           title: "Your cart is empty", message: "You haven't added anything yet.",
-                           buttonTitle: hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
+                EmptyState(image: Image(systemName: "sailboat.fill"), title: "Your cart is empty")
+                    .imageMaxHeight(120)
+                    .message("You haven't added anything yet.")
+                    .primaryAction(hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
             } else {
-                EmptyState(systemImage: "magnifyingglass",
-                           iconForeground: tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil,
-                           iconBackground: tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil,
-                           iconCircleSize: tintIcon ? 104 : 88,
-                           title: "No results found",
-                           message: "Try adjusting your search or filters.",
-                           buttonTitle: hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil,
-                           secondaryTitle: secondary ? "Learn more" : nil, onSecondary: secondary ? { flash("EmptyState: Learn more") } : nil)
+                EmptyState("No results found")
+                    .icon("magnifyingglass")
+                    .iconForeground(tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil)
+                    .iconBackground(tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil)
+                    .iconCircleSize(tintIcon ? 104 : 88)
+                    .message("Try adjusting your search or filters.")
+                    .primaryAction(hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
+                    .secondaryAction(secondary ? "Learn more" : nil, action: secondary ? { flash("EmptyState: Learn more") } : nil)
             }
         } knobs: {
             Toggle("Animated illustration (GIF, native)", isOn: $animated)
@@ -535,16 +537,17 @@ struct ListRowDemo: View {
         ComponentStage("ListRow", inspector: [("trailing", kind.rawValue), ("leading", lead.rawValue)]) {
             VStack(spacing: 0) {
                 ListSectionHeader("Accommodation")
-                ListRow("Grand Hotel Istanbul", subtitle: subtitle ? "Sea view · Breakfast included" : nil,
-                        number: lead == .number ? 1 : nil,
-                        leadingSystemImage: lead == .icon ? "building.2" : nil,
-                        leadingImageURL: lead == .image ? imageURL : nil,
-                        leadingSelection: lead == .radio ? $picked : nil,
-                        alertCount: alert ? 3 : nil,
-                        meta: meta, infos: infos, isSelected: selected,
-                        multilineTitle: moreInfo,
-                        infoAction: kind == .price ? { flash("ListRow: price info") } : nil,
-                        trailing: trailing, action: { flash("ListRow tapped") })
+                ListRow("Grand Hotel Istanbul", action: { flash("ListRow tapped") })
+                    .subtitle(subtitle ? "Sea view · Breakfast included" : nil)
+                    .number(lead == .number ? 1 : nil)
+                    .icon(lead == .icon ? "building.2" : nil)
+                    .leadingImage(lead == .image ? imageURL : nil)
+                    .leadingSelection(lead == .radio ? $picked : nil)
+                    .alertCount(alert ? 3 : nil)
+                    .meta(meta).infos(infos).selected(selected)
+                    .multilineTitle(moreInfo)
+                    .onInfo(kind == .price ? { flash("ListRow: price info") } : nil)
+                    .trailing(trailing)
             }
         } knobs: {
             Picker("Trailing", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
@@ -669,10 +672,11 @@ struct UploadDemo: View {
         ComponentStage("Upload", inspector: [("files", "\(uploads.files.count)"), ("picked", "\(picked.count)/3")]) {
             VStack(spacing: 20) {
                 UploadList(controller: uploads) { start(fail: false) }
-                Upload(prompt: "You can upload up to 3 photos.", buttonTitle: "Add photo",
-                       files: picked, maxCount: 3,
+                Upload(prompt: "You can upload up to 3 photos.",
+                       files: picked,
                        onPick: { picked.append(.init(name: "img-\(picked.count + 1).jpg", status: .done)) },
                        onRemove: { file in picked.removeAll { $0.id == file.id } })
+                    .buttonTitle("Add photo").maxCount(3)
             }
         } knobs: {
             Button("Simulate upload") { start(fail: false) }
@@ -724,7 +728,7 @@ struct RadialProgressDemo: View {
     private var status: ProgressStatus { statusIdx == 1 ? .success : statusIdx == 2 ? .exception : .normal }
     var body: some View {
         ComponentStage("RadialProgress", inspector: [("value", String(format: "%.2f", value)), ("dashboard", "\(dashboard)")]) {
-            RadialProgress(value: value, size: 96, lineWidth: 8, showLabel: label, status: status, dashboard: dashboard)
+            RadialProgress(value).size(96).lineWidth(8).showsLabel(label).status(status).dashboard(dashboard)
         } knobs: {
             HStack { Text("Value"); SwiftUI.Slider(value: $value) }
             Picker("Status", selection: $statusIdx) { Text("Normal").tag(0); Text("Success").tag(1); Text("Exception").tag(2) }.pickerStyle(.segmented)
@@ -744,7 +748,7 @@ struct IndicatorDemo: View {
                 if kind == .dot {
                     Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot(position: position)
                 } else {
-                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3", style: .error, size: .small) }
+                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
                 }
             }
         } knobs: {
@@ -768,11 +772,13 @@ struct StatDemo: View {
     private var statTrend: StatTrend? { trend == .up ? .up("+12%") : trend == .down ? .down("-3%") : nil }
     @ViewBuilder private var statView: some View {
         if animated {
-            Stat(title: "Total bookings", value: count, suffix: "$", isLoading: loading,
-                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+            Stat(title: "Total bookings", value: count)
+                .suffix("$").loading(loading).description("this month")
+                .icon(figure ? "ticket" : nil).trend(statTrend)
         } else {
-            Stat(title: "Total bookings", value: "1,284", suffix: "$", isLoading: loading,
-                 description: "this month", systemImage: figure ? "ticket" : nil, trend: statTrend)
+            Stat(title: "Total bookings", value: "1,284")
+                .suffix("$").loading(loading).description("this month")
+                .icon(figure ? "ticket" : nil).trend(statTrend)
         }
     }
     var body: some View {
@@ -812,7 +818,9 @@ struct StepsDemo: View {
     }
     var body: some View {
         ComponentStage("Steps", inspector: [("active", "\(active)"), ("progressDot", "\(progressDot)")]) {
-            Steps(steps, axis: vertical ? .vertical : .horizontal, progressDot: progressDot) { active = $0; flash("Step \($0 + 1) selected") }
+            Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
+                .axis(vertical ? .vertical : .horizontal)
+                .progressDot(progressDot)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
@@ -858,8 +866,9 @@ struct TimelineDemo: View {
                 failed
                     ? .init(title: "Error", time: "09:45", description: horizontal ? nil : "Try your card again.", state: .error)
                     : .init(title: "On the way", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
-            ], axis: horizontal ? .horizontal : .vertical, mode: mode, reverse: reverse,
-               pending: (!horizontal && pending) ? "Waiting for courier…" : nil)
+            ])
+            .axis(horizontal ? .horizontal : .vertical).mode(mode).reversed(reverse)
+            .pending((!horizontal && pending) ? "Waiting for courier…" : nil)
         } knobs: {
             Stepper("Active: \(Int(step))", value: $step, in: 0...3)
             Toggle("Horizontal", isOn: $horizontal)
@@ -882,9 +891,9 @@ struct ChatBubbleDemo: View {
     var body: some View {
         ComponentStage("ChatBubble", inspector: [("side", outgoing ? "outgoing" : "incoming")]) {
             ChatBubble("Hello! Your reservation is confirmed.",
-                       side: outgoing ? .outgoing : .incoming,
-                       author: meta ? "Support" : nil, time: meta ? "09:24" : nil,
-                       avatarSystemImage: avatar ? "person.fill" : nil)
+                       author: meta ? "Support" : nil, time: meta ? "09:24" : nil)
+                .side(outgoing ? .outgoing : .incoming)
+                .icon(avatar ? "person.fill" : nil)
         } knobs: {
             Toggle("Outgoing", isOn: $outgoing)
             Toggle("Avatar", isOn: $avatar)
@@ -904,8 +913,8 @@ struct DrawerDemo: View {
                 .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", leadingSystemImage: "person.circle", action: { open = false; flash("Drawer: Account") })
-                        ListRow("Settings", leadingSystemImage: "gearshape", action: { open = false; flash("Drawer: Settings") })
+                        ListRow("Account", action: { open = false; flash("Drawer: Account") }).icon("person.circle")
+                        ListRow("Settings", action: { open = false; flash("Drawer: Settings") }).icon("gearshape")
                         Spacer()
                     }
                     .padding()
@@ -918,8 +927,8 @@ struct DrawerDemo: View {
                 drawer.present(edge: trailing ? .trailing : .leading) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", leadingSystemImage: "person.circle", action: { drawer.dismiss(); flash("Drawer: Account") })
-                        ListRow("Settings", leadingSystemImage: "gearshape", action: { drawer.dismiss(); flash("Drawer: Settings") })
+                        ListRow("Account", action: { drawer.dismiss(); flash("Drawer: Account") }).icon("person.circle")
+                        ListRow("Settings", action: { drawer.dismiss(); flash("Drawer: Settings") }).icon("gearshape")
                         Spacer()
                     }
                     .padding()
@@ -938,7 +947,7 @@ struct StatusDotDemo: View {
     @State private var pulse = true
     var body: some View {
         ComponentStage("Status", inspector: [("kind", "\(kind)")]) {
-            StatusDot(kind, size: 14, label: "Status", pulse: pulse)
+            StatusDot(kind, label: "Status").size(14).pulse(pulse)
         } knobs: {
             Picker("Kind", selection: $kind) {
                 Text("Online").tag(StatusKind.online); Text("Busy").tag(StatusKind.busy); Text("Away").tag(StatusKind.away); Text("Offline").tag(StatusKind.offline)
@@ -955,8 +964,8 @@ struct SwapDemo: View {
     var body: some View {
         ComponentStage("Swap", inspector: [("isOn", "\(on)")]) {
             Group {
-                if pair == .menu { Swap(isOn: $on, on: "xmark", off: "line.3.horizontal", size: 32) }
-                else { Swap(isOn: $on, on: "moon.fill", off: "sun.max.fill", size: 32) }
+                if pair == .menu { Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal").size(32) }
+                else { Swap(isOn: $on).symbols(on: "moon.fill", off: "sun.max.fill").size(32) }
             }
         } knobs: {
             Picker("Icons", selection: $pair) { Text("Menu / Close").tag(Pair.menu); Text("Sun / Moon").tag(Pair.theme) }.pickerStyle(.segmented)
@@ -1006,7 +1015,8 @@ struct FABDemo: View {
                 .init(systemImage: "camera", label: "Photo", action: { flash("FAB: Photo") }),
                 .init(systemImage: "doc", label: "Document", action: { flash("FAB: Document") }),
                 .init(systemImage: "link", label: "Link", action: { flash("FAB: Link") }),
-            ] : [], shape: square ? .square : .circle, color: color, badge: badge ? 3 : nil, action: { flash("FAB tapped") })
+            ] : [], action: { flash("FAB tapped") })
+            .shape(square ? .square : .circle).color(color).badge(badge ? 3 : nil)
             .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomTrailing)
         } knobs: {
             Toggle("Speed dial", isOn: $speedDial)
@@ -1069,10 +1079,12 @@ struct DateFieldDemo: View {
 
     var body: some View {
         ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
-            DateField(label: "Date", date: $date, style: style,
-                      components: withTime ? .dateAndTime : .date,
-                      infoMessages: messages, allowClear: clearable,
-                      leadingSystemImage: "calendar")
+            DateField("Date", date: $date)
+                    .style(style)
+                    .components(withTime ? .dateAndTime : .date)
+                    .infoMessages(messages)
+                    .clearable(clearable)
+                    .icon("calendar")
                     .a11yID("demoDate")
                     .disabled(!enabled)
         } knobs: {
@@ -1134,7 +1146,7 @@ struct BottomSheetDemo: View {
                         }
                     }
                 }
-                ThemeButton("Declarative sheet", variant: .outline) { showDeclarative = true }
+                ThemeButton("Declarative sheet") { showDeclarative = true }.variant(.outline)
             }
             .bottomSheet(isPresented: $showDeclarative, detents: [.medium]) {
                 Text("Declarative .bottomSheet with a [.medium] detent.").textStyle(.bodyBase400)
@@ -1181,10 +1193,10 @@ struct FileInputDemo: View {
     }
     var body: some View {
         ComponentStage("FileInput", inspector: [("fileName", picked ? "passport-scan.jpg" : "nil"), ("error", "\(error)")]) {
-            FileInput(label: "Passport", fileName: picked ? "passport-scan.jpg" : nil,
-                      infoMessages: messages,
-                      onPick: { picked = true; flash("FileInput: file selected") },
-                      onClear: clearable ? { picked = false; flash("FileInput: cleared") } : nil)
+            FileInput("Passport", onPick: { picked = true; flash("FileInput: file selected") })
+                .fileName(picked ? "passport-scan.jpg" : nil)
+                .infoMessages(messages)
+                .onClear(clearable ? { picked = false; flash("FileInput: cleared") } : nil)
         } knobs: {
             Toggle("File chosen", isOn: $picked)
             Toggle("Validation error", isOn: $error)
@@ -1229,11 +1241,11 @@ struct ThemeButtonDemo: View {
         ComponentStage("ThemeButton", inspector: [
             ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
         ]) {
-            ThemeButton(iconOnly ? nil : "Button",
-                         systemImage: (icon || iconOnly) ? "star.fill" : nil,
-                         iconPosition: trailingIcon ? .trailing : .leading,
-                         color: color, variant: variant, size: size, shape: shape,
-                         block: block && !iconOnly, isLoading: $loading) { flash("ThemeButton tapped") }
+            ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
+                .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
+                      trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
+                .color(color).variant(variant).size(size).shape(shape)
+                .fullWidth(block && !iconOnly).loading(loading)
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
             Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -1317,22 +1329,25 @@ struct FeedbackDemo: View {
     var body: some View {
         ComponentStage("Feedback", inspector: [("level", "global"), ("last action", last)]) {
             VStack(spacing: 12) {
-                ThemeButton("Show toast", color: kind.semanticColor, block: true) {
+                ThemeButton("Show toast") {
                     feedback.toast("\(kind.rawValue.capitalized) message",
                                    message: "This is a \(kind.rawValue) notification.", kind: kind)
                     last = "toast: \(kind.rawValue)"
                 }
-                ThemeButton("Stack (3 toast)", color: kind.semanticColor, variant: .soft, block: true) {
+                .color(kind.semanticColor).fullWidth()
+                ThemeButton("Stack (3 toast)") {
                     for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: kind) }
                     last = "stack: 3"
                 }
-                ThemeButton("Undo (action + sticky)", variant: .outline, block: true) {
+                .color(kind.semanticColor).variant(.soft).fullWidth()
+                ThemeButton("Undo (action + sticky)") {
                     feedback.toast("Message deleted", kind: .info,
                                    action: ToastAction("Undo") { feedback.toast("Undone", kind: .success) },
                                    duration: nil)
                     last = "undo toast"
                 }
-                ThemeButton("Async task (task)", variant: .outline, block: true) {
+                .variant(.outline).fullWidth()
+                ThemeButton("Async task (task)") {
                     Task {
                         await feedback.toastTask(loading: "Saving…", success: "Saved") {
                             try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -1340,18 +1355,21 @@ struct FeedbackDemo: View {
                     }
                     last = "async task"
                 }
-                ThemeButton("Show notification (notification)", color: kind.semanticColor, variant: .soft, block: true) {
+                .variant(.outline).fullWidth()
+                ThemeButton("Show notification (notification)") {
                     feedback.notify("\(kind.rawValue.capitalized)", message: "A notification from the top.", kind: kind)
                     last = "notify: \(kind.rawValue)"
                 }
-                ThemeButton("Loading (loading)", systemImage: "arrow.clockwise", variant: .outline, block: true) {
+                .color(kind.semanticColor).variant(.soft).fullWidth()
+                ThemeButton("Loading (loading)") {
                     feedback.loading("Saving…")
                     last = "loading"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                         feedback.dismissLoading(); feedback.toast("Saved", kind: .success)
                     }
                 }
-                ThemeButton("Ask for confirmation (confirm)", color: .error, variant: .outline, block: true) {
+                .icon(leading: "arrow.clockwise").variant(.outline).fullWidth()
+                ThemeButton("Ask for confirmation (confirm)") {
                     feedback.confirm(
                         title: "Cancel reservation?",
                         message: "This action cannot be undone.",
@@ -1360,6 +1378,7 @@ struct FeedbackDemo: View {
                         secondaryTitle: "Cancel", onSecondary: { last = "dismissed"; flash("Dismissed") }
                     )
                 }
+                .color(.error).variant(.outline).fullWidth()
             }
         } knobs: {
             Picker("Kind", selection: $kind) {
@@ -1469,7 +1488,8 @@ struct PopconfirmDemo: View {
     @State private var last = "—"
     var body: some View {
         ComponentStage("Popconfirm", inspector: [("isPresented", "\(show)"), ("edge", "\(edge)"), ("last", last)]) {
-            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) { show.toggle() }
+            ThemeButton("Delete") { show.toggle() }
+                .icon(leading: "trash").color(.error).variant(.soft)
                 .popconfirm(isPresented: $show, title: "Delete this item?", message: "This action cannot be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel", edge: edge,
                             onConfirm: {
@@ -1506,9 +1526,9 @@ struct TreeSelectDemo: View {
     ]
     var body: some View {
         ComponentStage("TreeSelect", inspector: [("selected", "\(picks.count)"), ("cascade", "\(cascade)"), ("loading", "\(loading)")]) {
-            TreeSelect(label: "Cities", nodes: tree, selection: $picks,
-                       cascade: cascade, searchable: searchable, initiallyExpanded: ["tr", "de"],
-                       isLoading: loading, isNodeEnabled: disableIzmir ? { $0.id != "izm" } : nil)
+            TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr", "de"])
+                .cascade(cascade).searchable(searchable)
+                .loading(loading).nodeEnabled(disableIzmir ? { $0.id != "izm" } : nil)
                 .id("\(cascade)\(searchable)\(loading)\(disableIzmir)")
         } knobs: {
             Toggle("Cascade (parent ↔ child + indeterminate)", isOn: $cascade)
@@ -1530,7 +1550,7 @@ struct TourDemo: View {
                     tourIcon("heart", "fav")
                     tourIcon("person.crop.circle", "profile")
                 }
-                ThemeButton("Start tour", systemImage: "play.fill", block: true) { tour.start(); flash("Tour started") }
+                ThemeButton("Start tour") { tour.start(); flash("Tour started") }.icon(leading: "play.fill").fullWidth()
             }
             .tourHost(tour, steps: [
                 TourStep("search", title: "Search", message: "Search for hotels here."),
@@ -1601,13 +1621,14 @@ struct FormDemo: View {
                     .a11yID("form.terms")
                 }
                 if done {
-                    InfoBanner("Your account has been created.", type: .success)
+                    InfoBanner("Your account has been created.").variant(.success)
                 }
-                ThemeButton("Sign up", block: true, accessibilityID: "form.submit") {
+                ThemeButton("Sign up") {
                     let firstInvalid = form.validateAll(values)
                     submitted = true
                     done = firstInvalid == nil
                 }
+                .fullWidth().a11yID("form.submit")
             }
         } knobs: {
             Text("Empty submit → email/password + RadioGroup + Checkbox all show errors; focus jumps to the first invalid text field.").font(.caption).foregroundStyle(.secondary)
@@ -1646,7 +1667,7 @@ struct ListDemo: View {
         ComponentStage("List", inspector: [("count", "\(empty ? 0 : rows.count)"), ("bordered", "\(bordered)"), ("empty", "\(empty)")]) {
             ListView(empty ? [] : rows, header: withHeader ? "Settings" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) items" : nil,
                      bordered: bordered, loading: loading, split: split, emptyText: "No settings yet") { row in
-                ListRow(row.title, subtitle: row.subtitle, leadingSystemImage: row.icon, action: { flash("List: \(row.title)") })
+                ListRow(row.title, action: { flash("List: \(row.title)") }).subtitle(row.subtitle).icon(row.icon)
             }
         } knobs: {
             Toggle("Header + footer", isOn: $withHeader)
@@ -1670,13 +1691,13 @@ struct RemoteImageDemo: View {
         ComponentStage("RemoteImage", inspector: [("mode", gif ? "gif" : circle ? "circle" : ratioStr)]) {
             VStack(spacing: 16) {
                 if gif {
-                    RemoteImage(gifURL, ratio: "1:1", cornerRadius: 16)
+                    RemoteImage(gifURL, ratio: "1:1").cornerRadius(16)
                         .frame(width: 180, height: 180)
                 } else if circle {
-                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), aspectRatio: 1, circle: true)
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600")).ratio(1).circle()
                         .frame(width: 140, height: 140)
                 } else {
-                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), ratio: ratioStr, cornerRadius: 16)
+                    RemoteImage(URL(string: "https://picsum.photos/seed/gucomp/600/600"), ratio: ratioStr).cornerRadius(16)
                         .frame(maxWidth: .infinity)
                         .frame(height: 180)
                 }
@@ -1697,7 +1718,7 @@ struct ImageCollageDemo: View {
     }
     var body: some View {
         ComponentStage("ImageCollage", inspector: [("images", "\(Int(count))")]) {
-            ImageCollage(urls, height: 220, onTap: { flash("ImageCollage: image \($0 + 1)") })
+            ImageCollage(urls, onTap: { flash("ImageCollage: image \($0 + 1)") }).height(220)
         } knobs: {
             HStack { Text("Images"); SwiftUI.Slider(value: $count, in: 1...8, step: 1) }
             Text("Layouts adapt: 1 · 2 · 3 · 4+ with a +N overlay on the last tile.").font(.caption).foregroundStyle(.secondary)
@@ -1754,8 +1775,8 @@ struct RollingNumberDemo: View {
     var body: some View {
         ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
             VStack(spacing: 16) {
-                RollingNumber(value, size: size, color: Theme.shared.text(.textHero))
-                ThemeButton("Roll", systemImage: "dice") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }
+                RollingNumber(value).size(size).color(Theme.shared.text(.textHero))
+                ThemeButton("Roll") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }.icon(leading: "dice")
             }
         } knobs: {
             HStack { Text("Size"); SwiftUI.Slider(value: $size, in: 24...64, step: 4) }
@@ -1817,8 +1838,8 @@ struct ChipsDemo: View {
                               rating: 4.8, showFree: true, systemImage: "wind")
                 case .image:
                     HStack(spacing: 12) {
-                        ImageChip(isSelected: $a, url: imageURL, size: .medium)
-                        ImageChip(isSelected: $b, url: imageURL, size: .medium)
+                        ImageChip(isSelected: $a, url: imageURL).size(.medium)
+                        ImageChip(isSelected: $b, url: imageURL).size(.medium)
                     }
                 case .filter:
                     HStack(spacing: 8) {
@@ -1889,9 +1910,9 @@ struct ProgressIndicatorDemo: View {
 
     var body: some View {
         ComponentStage("ProgressIndicator", inspector: [("variant", variant.rawValue), ("step", "\(Int(current))/8")]) {
-            ProgressIndicator(variant: v, current: Int(current), total: 8,
-                              videoProgress: videoProgress,
-                              stepText: stepText ? (padded ? .padded : .slash) : .none)
+            ProgressIndicator(variant: v, current: Int(current), total: 8)
+                .videoProgress(videoProgress)
+                .stepText(stepText ? (padded ? .padded : .slash) : .none)
         } knobs: {
             Picker("Variant", selection: $variant) { ForEach(Variant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
             HStack { Text("Current"); SwiftUI.Slider(value: $current, in: 0...8, step: 1) }
@@ -1917,7 +1938,7 @@ struct MicroMotionDemo: View {
                 SegmentedControl(["Day", "Week", "Month"], selection: $sel)
                 ThemeToggle(isOn: $on)
 
-                DividerView(size: .small)
+                DividerView().size(.small)
                 Text("Per-component override — this button is always off:")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 SecondaryButton("Static (.microAnimations(false))") { flash("Tap") }

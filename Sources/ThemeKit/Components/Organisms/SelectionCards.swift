@@ -12,7 +12,6 @@ private struct SelectionCard<Control: View>: View {
     let title: String
     let description: String?
     let isSelected: Bool
-    let isEnabled: Bool
     let action: () -> Void
     let control: () -> Control
 
@@ -44,7 +43,6 @@ private struct SelectionCard<Control: View>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(!isEnabled)
     }
 }
 
@@ -54,19 +52,17 @@ public struct RadioCard: View {
     private let title: String
     private let description: String?
     private let isSelected: Bool
-    private let isEnabled: Bool
     private let action: () -> Void
 
-    public init(_ title: String, description: String? = nil, isSelected: Bool, isEnabled: Bool = true, action: @escaping () -> Void) {
+    public init(_ title: String, description: String? = nil, isSelected: Bool, action: @escaping () -> Void) {   // R1
         self.title = title
         self.description = description
         self.isSelected = isSelected
-        self.isEnabled = isEnabled
         self.action = action
     }
 
     public var body: some View {
-        SelectionCard(title: title, description: description, isSelected: isSelected, isEnabled: isEnabled, action: action) {
+        SelectionCard(title: title, description: description, isSelected: isSelected, action: action) {
             RadioButton(isSelected: .constant(isSelected))
         }
     }
@@ -76,19 +72,17 @@ public struct CheckboxCard: View {
     private let title: String
     private let description: String?
     private let isChecked: Bool
-    private let isEnabled: Bool
     private let action: () -> Void
 
-    public init(_ title: String, description: String? = nil, isChecked: Bool, isEnabled: Bool = true, action: @escaping () -> Void) {
+    public init(_ title: String, description: String? = nil, isChecked: Bool, action: @escaping () -> Void) {   // R1
         self.title = title
         self.description = description
         self.isChecked = isChecked
-        self.isEnabled = isEnabled
         self.action = action
     }
 
     public var body: some View {
-        SelectionCard(title: title, description: description, isSelected: isChecked, isEnabled: isEnabled, action: action) {
+        SelectionCard(title: title, description: description, isSelected: isChecked, action: action) {
             Checkbox(isChecked: .constant(isChecked))
         }
     }

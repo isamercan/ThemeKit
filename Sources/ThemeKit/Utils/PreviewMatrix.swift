@@ -44,7 +44,7 @@ public enum PreviewCaseBuilder {
 ///     PreviewMatrix("Tag", dynamicType: true) {
 ///         PreviewCase("Default")   { Tag("React") }
 ///         PreviewCase("Removable") { Tag("Filter", onRemove: {}) }
-///         PreviewCase("Semantic")  { Tag("Error", style: .error, variant: .solid) }
+///         PreviewCase("Semantic")  { Tag("Error").tagStyle(.error).variant(.solid) }
 ///         PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
 ///     }
 /// }
@@ -135,8 +135,8 @@ public struct PreviewMatrix: View {
 
 #Preview("PreviewMatrix demo") {
     PreviewMatrix("Badge", dynamicType: true) {
-        PreviewCase("Default") { Badge("Info", style: .info) }
-        PreviewCase("With icon") { Badge("Star", style: .success, leadingSystemImage: "star.fill") }
-        PreviewCase("Long text") { Badge("a-rather-long-badge-label", style: .warning) }
+        PreviewCase("Default") { Badge("Info").badgeStyle(.info) }
+        PreviewCase("With icon") { Badge("Star").badgeStyle(.success).icon("star.fill") }
+        PreviewCase("Long text") { Badge("a-rather-long-badge-label").badgeStyle(.warning) }
     }
 }

@@ -8,39 +8,44 @@ import SwiftUI
 
 /// Improved, token-bound rewrite of the reference MultiLineInput — a bordered
 /// TextEditor with header label, placeholder, character counter and error state.
+/// Per the modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init
+/// takes only its label and the `text` binding; every other axis is a chainable,
+/// order-free modifier. `disabled` is native (`@Environment(\.isEnabled)`, R3).
+///
+///     MultiLineTextInput("Notes", text: $text)
+///         .placeholder("Write something…").characterLimit(200)
+///         .errorText(invalid ? "Required" : nil)
+///         .disabled(!editable)            // native — R3
 public struct MultiLineTextInput: View {
     @Environment(\.theme) private var theme
 
     @Binding private var text: String
     private let label: String
-    private let placeholder: String
-    private let characterLimit: Int?
-    private let messages: [InfoMessage]
-    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
-    private let minHeight: CGFloat
+
+    // Appearance / validation — mutated only through the modifiers below (R2).
+    private var placeholder: String = ""
+    private var characterLimit: Int?
+    private var errorText: String?
+    private var infoMessages: [InfoMessage] = []
+    private var minHeight: CGFloat = 120
+    private var accessibilityID: String?
 
     @FocusState private var isFocused: Bool
 
     public init(
         _ label: String,
-        text: Binding<String>,
-        placeholder: String = "",
-        characterLimit: Int? = nil,
-        errorText: String? = nil,
-        infoMessages: [InfoMessage] = [],
-        minHeight: CGFloat = 120
-    ) {
+        text: Binding<String>
+    ) {   // R1 — content + binding
         self.label = label
         self._text = text
-        self.placeholder = placeholder
-        self.characterLimit = characterLimit
-        var messages = infoMessages
-        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
-        self.messages = messages
-        self.minHeight = minHeight
     }
 
+    private var messages: [InfoMessage] {
+        var messages = infoMessages
+        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        return messages
+    }
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
@@ -123,19 +128,43 @@ public struct MultiLineTextInput: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension MultiLineTextInput {
+    /// Placeholder shown while the editor is empty.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Caps the input length and shows a `count/limit` counter.
+    func characterLimit(_ limit: Int?) -> Self { copy { $0.characterLimit = limit } }
+
+    /// Convenience error message appended as an `.error` `InfoMessage`.
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Validation / hint messages rendered beneath the editor.
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Minimum editor height (defaults to 120, R4).
+    func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeight = height } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var text = ""
         var body: some View {
-            MultiLineTextInput("Notes", text: $text, placeholder: "Write something…", characterLimit: 200)
+            MultiLineTextInput("Notes", text: $text)
+                .placeholder("Write something…").characterLimit(200)
                 .padding()
         }
     }
     return Demo()
-}
-
-public extension MultiLineTextInput {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

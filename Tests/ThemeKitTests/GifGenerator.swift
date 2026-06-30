@@ -53,23 +53,23 @@ final class GifGenerator: XCTestCase {
             .drawer(isPresented: .constant(true), edge: .leading) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Menu").textStyle(.headingSm).padding(.bottom, 4)
-                    ListRow("My account", leadingSystemImage: "person.circle", action: {})
-                    ListRow("Reservations", leadingSystemImage: "calendar", action: {})
-                    ListRow("Settings", leadingSystemImage: "gearshape", action: {})
+                    ListRow("My account", action: {}).icon("person.circle")
+                    ListRow("Reservations", action: {}).icon("calendar")
+                    ListRow("Settings", action: {}).icon("gearshape")
                 }.padding()
             })
 
         gif("Popconfirm", VStack {
             Spacer()
-            ThemeButton("Delete", systemImage: "trash", color: .error, variant: .soft) {}
+            ThemeButton("Delete") {}.icon(leading: "trash").color(.error).variant(.soft)
         }
             .frame(width: 320, height: 240)
             .popconfirm(isPresented: .constant(true), title: "Delete this item?",
                         message: "This action cannot be undone.", confirmTitle: "Delete",
                         cancelTitle: "Cancel", edge: .top, onConfirm: {}))
 
-        gif("AlertToast", AlertToast("Saved successfully", message: "Your changes were stored.",
-                                     type: .success, onClose: {}).frame(width: 360).padding(.vertical, 12))
+        gif("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.")
+                                     .variant(.success).onClose {}.frame(width: 360).padding(.vertical, 12))
 
         gif("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
             .tooltip("Helpful tip", isPresented: .constant(true), edge: .bottom)

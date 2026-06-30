@@ -30,10 +30,12 @@ public struct SegmentedTabBar: View {
 
     private let items: [TabItem]
     @Binding private var selection: Int
-    private let scrollable: Bool
-    private let style: SegmentedTabBarStyle
     private let onClose: ((Int) -> Void)?
     private let onAdd: (() -> Void)?
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var scrollable: Bool = false
+    private var style: SegmentedTabBarStyle = .underline
     private var accessibilityID: String? = nil
 
     @Namespace private var underline
@@ -41,24 +43,18 @@ public struct SegmentedTabBar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(_ items: [TabItem], selection: Binding<Int>, scrollable: Bool = false,
-                style: SegmentedTabBarStyle = .underline,
-                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {
+    public init(_ items: [TabItem], selection: Binding<Int>,
+                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {   // R1
         self.items = items
         self._selection = selection
-        self.scrollable = scrollable
-        self.style = style
         self.onClose = onClose
         self.onAdd = onAdd
     }
 
-    public init(_ items: [String], selection: Binding<Int>, scrollable: Bool = false,
-                style: SegmentedTabBarStyle = .underline,
-                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {
+    public init(_ items: [String], selection: Binding<Int>,
+                onClose: ((Int) -> Void)? = nil, onAdd: (() -> Void)? = nil) {   // R1
         self.items = items.map { TabItem($0) }
         self._selection = selection
-        self.scrollable = scrollable
-        self.style = style
         self.onClose = onClose
         self.onAdd = onAdd
     }
@@ -200,7 +196,7 @@ public struct SegmentedTabBar: View {
                 SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
                                  TabItem("Reviews", badge: "12"),
                                  TabItem("Archived", isEnabled: false)], selection: $sel)
-                SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel, scrollable: true)
+                SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
             }
             .padding()
         }
@@ -208,8 +204,22 @@ public struct SegmentedTabBar: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension SegmentedTabBar {
+    /// Let the bar scroll horizontally instead of distributing tabs evenly.
+    func scrollable(_ on: Bool = true) -> Self { copy { $0.scrollable = on } }
+
+    /// Visual treatment: underline / card.
+    func tabStyle(_ s: SegmentedTabBarStyle) -> Self { copy { $0.style = s } }
+
     /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

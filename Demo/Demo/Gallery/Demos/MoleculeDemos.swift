@@ -92,9 +92,11 @@ struct CheckboxDemo: View {
     var body: some View {
         ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
             Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked,
-                     customSize: big ? 32 : nil, type: type,
-                     isIndeterminate: indeterminate, alignment: .top,
                      infoMessages: messages)
+                    .customSize(big ? 32 : nil)
+                    .type(type)
+                    .indeterminate(indeterminate)
+                    .alignment(.top)
                     .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {
@@ -120,9 +122,10 @@ struct RadioButtonDemo: View {
 
     var body: some View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
-            RadioButton(inlineLabel ? "Remember me" : nil, isSelected: $selected,
-                        type: check ? .check : .select,
-                        style: inner ? .inner : .plain, padding: .medium)
+            RadioButton(inlineLabel ? "Remember me" : nil, isSelected: $selected)
+                    .type(check ? .check : .select)
+                    .radioStyle(inner ? .inner : .plain)
+                    .gap(.medium)
                     .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
         } knobs: {
@@ -145,8 +148,9 @@ struct ToggleDemo: View {
 
     var body: some View {
         ComponentStage("ThemeToggle", inspector: [("isOn", "\(on)"), ("isLoading", "\(loading)"), ("isEnabled", "\(enabled)")]) {
-            ThemeToggle(isOn: $on, isLoading: loading,
-                        onSystemImage: icons ? "checkmark" : nil, offSystemImage: icons ? "xmark" : nil)
+            ThemeToggle(isOn: $on)
+                .loading(loading)
+                .symbols(on: icons ? "checkmark" : nil, off: icons ? "xmark" : nil)
                 .controlSize(small ? .small : .regular)
                 .disabled(!enabled)
         } knobs: {
@@ -311,10 +315,12 @@ struct SegmentedControlDemo: View {
                 SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
                                   SegmentItem("Grid", systemImage: "square.grid.2x2"),
                                   SegmentItem("Map", systemImage: "map", isEnabled: false)],
-                                 selection: $selection, block: block, size: size)
+                                 selection: $selection)
+                    .fullWidth(block).size(size)
                     .disabled(!enabled)
             } else {
-                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection, block: block, size: size)
+                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection)
+                    .fullWidth(block).size(size)
                     .disabled(!enabled)
             }
         } knobs: {
@@ -337,13 +343,13 @@ struct InputNumberDemo: View {
     var body: some View {
         ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
             if priceMode {
-                InputNumber(label: "Max price", value: $value, range: 0...10000, step: 50, unit: "$",
-                            hint: "Type or step by 50", large: large)
+                InputNumber("Max price", value: $value, range: 0...10000).step(50).unit("$")
+                    .hint("Type or step by 50").large(large)
                     .editable(editable)
             } else {
-                InputNumber(label: "Guests", value: $value, range: 1...9, unit: "guests",
-                            hint: showError ? nil : "Type a number or use ± ",
-                            errorText: showError ? "Too many" : nil, large: large)
+                InputNumber("Guests", value: $value, range: 1...9).unit("guests")
+                    .hint(showError ? nil : "Type a number or use ± ")
+                    .errorText(showError ? "Too many" : nil).large(large)
                     .editable(editable)
             }
         } knobs: {

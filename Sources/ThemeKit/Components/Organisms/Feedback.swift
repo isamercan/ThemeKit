@@ -299,9 +299,13 @@ private struct FeedbackToastRow: View {
     @State private var offset: CGFloat = 0
 
     var body: some View {
-        AlertToast(item.title, message: item.message, type: item.kind.toastType,
-                   systemImage: item.systemImage, isLoading: item.isLoading,
-                   action: item.action, onClose: onDismiss)
+        AlertToast(item.title)
+            .message(item.message)
+            .variant(item.kind.toastType)
+            .icon(item.systemImage)
+            .loading(item.isLoading)
+            .action(item.action)
+            .onClose(onDismiss)
             .themeShadow(.elevated)
             .offset(y: offset)
             .opacity(dragOpacity)
@@ -357,17 +361,19 @@ public extension View {
                 ThemeButton("Stack ×3") {
                     for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: .success) }
                 }
-                ThemeButton("Undo (sticky + action)", variant: .outline) {
+                ThemeButton("Undo (sticky + action)") {
                     feedback.toast("Message deleted", kind: .info,
                                    action: ToastAction("Undo") {}, duration: nil)
                 }
-                ThemeButton("Async task", variant: .outline) {
+                .variant(.outline)
+                ThemeButton("Async task") {
                     Task {
                         await feedback.toastTask(loading: "Saving…", success: "Saved") {
                             try await Task.sleep(nanoseconds: 600_000_000)
                         }
                     }
                 }
+                .variant(.outline)
             }
             .padding()
         }

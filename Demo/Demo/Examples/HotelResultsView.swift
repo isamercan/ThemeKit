@@ -107,7 +107,7 @@ struct HotelCard: View {
                         .frame(maxWidth: .infinity)
                         .clipped()
                     if let discount = hotel.discount {
-                        Badge("\(discount)% off", style: .error, size: .small).padding(10)
+                        Badge("\(discount)% off").badgeStyle(.error).size(.small).padding(10)
                     }
                 }
 
@@ -122,7 +122,7 @@ struct HotelCard: View {
                     RatingSummary(score: hotel.score, label: hotel.scoreLabel, reviewCount: hotel.reviewCount)
                     HStack(spacing: 6) {
                         ForEach(hotel.amenities.prefix(3), id: \.self) { a in
-                            Tag(Amenity.label(a), leadingSystemImage: Amenity.icon(a))
+                            Tag(Amenity.label(a)).icon(Amenity.icon(a))
                         }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -133,7 +133,7 @@ struct HotelCard: View {
                         Text("/ night").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         Spacer()
                         if hotel.freeCancellation {
-                            Callout("Free cancellation", type: .success)
+                            Callout("Free cancellation").variant(.success)
                         }
                     }
                     .padding(.top, 2)

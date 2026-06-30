@@ -4,8 +4,16 @@
 //  Created by İsa Mercan on 23.06.2026.
 //
 //  Fully configurable button (daisyUI-style): semantic color × variant × size ×
-//  shape × block × icon × loading × disabled. The named PrimaryButton /
-//  SecondaryButton / … remain as ergonomic presets.
+//  shape × full-width × icon × loading × disabled. Per the modifier-based
+//  architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only its
+//  content + action; every appearance/state axis is a chainable, order-free
+//  modifier. `disabled` is native (`@Environment(\.isEnabled)`, R3). The named
+//  PrimaryButton / SecondaryButton / … remain as ergonomic presets.
+//
+//      ThemeButton("Book") { book() }
+//          .variant(.soft).color(.success).size(.large)
+//          .icon(leading: "calendar").fullWidth().loading(isBooking)
+//          .disabled(!formValid)            // native — R3
 //
 
 import SwiftUI
@@ -18,22 +26,22 @@ public enum ButtonShape: String, CaseIterable {
     case rounded, pill, circle, square
 }
 
-public enum ButtonIconPosition { case leading, trailing }
-
 public struct ThemeButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var color: SemanticColor = .primary
+    private var variant: ButtonVariant = .solid
+    private var size: ButtonSize = .medium
+    private var shape: ButtonShape = .rounded
+    private var isFullWidth = false
+    private var isLoading = false
+    private var leadingSystemImage: String?
+    private var trailingSystemImage: String?
+    private var accessibilityID: String?
 
     private let title: String?
-    private let systemImage: String?
-    private let iconPosition: ButtonIconPosition
-    private let color: SemanticColor
-    private let variant: ButtonVariant
-    private let size: ButtonSize
-    private let shape: ButtonShape
-    private let block: Bool
-    private let accessibilityID: String?
-    @Binding private var isEnabled: Bool
-    @Binding private var isLoading: Bool
     private let action: () -> Void
 
     /// Scales the button's footprint with Dynamic Type, in lock-step with its
@@ -41,31 +49,8 @@ public struct ThemeButton: View {
     /// preserved and large-text labels never clip. 1.0 at the default text size.
     @ScaledMetric(relativeTo: .body) private var typeScale: CGFloat = 1
 
-    public init(
-        _ title: String? = nil,
-        systemImage: String? = nil,
-        iconPosition: ButtonIconPosition = .leading,
-        color: SemanticColor = .primary,
-        variant: ButtonVariant = .solid,
-        size: ButtonSize = .medium,
-        shape: ButtonShape = .rounded,
-        block: Bool = false,
-        accessibilityID: String? = nil,
-        isEnabled: Binding<Bool> = .constant(true),
-        isLoading: Binding<Bool> = .constant(false),
-        action: @escaping () -> Void
-    ) {
+    public init(_ title: String? = nil, action: @escaping () -> Void) {   // R1
         self.title = title
-        self.systemImage = systemImage
-        self.iconPosition = iconPosition
-        self.color = color
-        self.variant = variant
-        self.size = size
-        self.shape = shape
-        self.block = block
-        self.accessibilityID = accessibilityID
-        self._isEnabled = isEnabled
-        self._isLoading = isLoading
         self.action = action
     }
 
@@ -87,7 +72,7 @@ public struct ThemeButton: View {
                     maxWidth: isIconOnly ? size.height * typeScale : nil,
                     minHeight: size.height * typeScale
                 )
-                .frame(maxWidth: block && !isIconOnly ? .infinity : nil)
+                .frame(maxWidth: isFullWidth && !isIconOnly ? .infinity : nil)
                 .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
                 .foregroundStyle(foreground)
                 .contentShape(Rectangle())
@@ -108,19 +93,25 @@ public struct ThemeButton: View {
     private var content: some View {
         if isLoading {
             ProgressView().tint(foreground)
+        } else if isIconOnly {
+            // Icon-only: render the single provided glyph (leading takes
+            // precedence), no label.
+            if let glyph = leadingSystemImage ?? trailingSystemImage {
+                Image(systemName: glyph).font(.system(size: size.fontSize, weight: .semibold))
+            }
         } else {
             HStack(spacing: Theme.SpacingKey.xs.value) {
-                if let systemImage, iconPosition == .leading {
-                    Image(systemName: systemImage).font(.system(size: size.fontSize, weight: .semibold))
+                if let leadingSystemImage {
+                    Image(systemName: leadingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
                 }
-                if let title, !isIconOnly {
+                if let title {
                     Text(title)
                         .textStyle(size.textStyle)
                         .underline(variant == .link)
                         .lineLimit(1)              // a single-word label never wraps; a ButtonGroup flows instead
                 }
-                if let systemImage, iconPosition == .trailing, !isIconOnly {
-                    Image(systemName: systemImage).font(.system(size: size.fontSize, weight: .semibold))
+                if let trailingSystemImage {
+                    Image(systemName: trailingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
                 }
             }
         }
@@ -161,6 +152,43 @@ public struct ThemeButton: View {
         case .square: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         case .pill, .circle: return AnyShape(Capsule())
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ThemeButton {
+    /// Visual treatment: solid / soft / outline / ghost / link.
+    func variant(_ v: ButtonVariant) -> Self { copy { $0.variant = v } }
+
+    /// Semantic color token driving the fill/accent ladder (R4).
+    func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
+
+    /// Control size: xxsmall … large.
+    func size(_ s: ButtonSize) -> Self { copy { $0.size = s } }
+
+    /// Corner treatment: rounded / pill / circle / square (circle & square are icon-only).
+    func shape(_ s: ButtonShape) -> Self { copy { $0.shape = s } }
+
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.isFullWidth = on } }
+
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Leading and/or trailing SF Symbol. On a circle/square button the leading
+    /// glyph (or the trailing one if no leading) becomes the icon.
+    func icon(leading: String? = nil, trailing: String? = nil) -> Self {
+        copy { $0.leadingSystemImage = leading; $0.trailingSystemImage = trailing }
+    }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -267,19 +295,19 @@ extension ButtonSize {
         VStack(spacing: 12) {
             ForEach(SemanticColor.allCases, id: \.self) { c in
                 HStack {
-                    ThemeButton("Solid", color: c, variant: .solid, size: .small) {}
-                    ThemeButton("Soft", color: c, variant: .soft, size: .small) {}
-                    ThemeButton("Outline", color: c, variant: .outline, size: .small) {}
+                    ThemeButton("Solid") {}.color(c).variant(.solid).size(.small)
+                    ThemeButton("Soft") {}.color(c).variant(.soft).size(.small)
+                    ThemeButton("Outline") {}.color(c).variant(.outline).size(.small)
                 }
             }
             HStack {
-                ThemeButton(systemImage: "heart", color: .error, shape: .circle) {}
-                ThemeButton(systemImage: "plus", color: .primary, shape: .square) {}
-                ThemeButton("Pill", color: .success, shape: .pill) {}
-                ThemeButton("Link", variant: .link) {}
+                ThemeButton { }.icon(leading: "heart").color(.error).shape(.circle)
+                ThemeButton { }.icon(leading: "plus").color(.primary).shape(.square)
+                ThemeButton("Pill") {}.color(.success).shape(.pill)
+                ThemeButton("Link") {}.variant(.link)
             }
-            ThemeButton("Block button", color: .primary, block: true) {}
-            ThemeButton("Loading", color: .primary, block: true, isLoading: .constant(true)) {}
+            ThemeButton("Block button") {}.color(.primary).fullWidth()
+            ThemeButton("Loading") {}.color(.primary).fullWidth().loading()
         }
         .padding()
     }

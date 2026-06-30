@@ -24,7 +24,7 @@ struct HotelDetailView: View {
                     .frame(maxWidth: .infinity)
                     .overlay(alignment: .bottomLeading) {
                         if hotel.discount != nil {
-                            Badge("Deal", style: .error, leadingSystemImage: "flame.fill").padding()
+                            Badge("Deal").badgeStyle(.error).icon("flame.fill").padding()
                         }
                     }
 
@@ -34,15 +34,15 @@ struct HotelDetailView: View {
 
                     HStack(spacing: 8) {
                         ForEach(hotel.amenities, id: \.self) { a in
-                            Tag(Amenity.label(a), leadingSystemImage: Amenity.icon(a))
+                            Tag(Amenity.label(a)).icon(Amenity.icon(a))
                         }
                     }
 
                     Card {
                         HStack {
-                            Stat(title: "Per night", value: hotel.pricePerNight.priceText, systemImage: "tag")
+                            Stat(title: "Per night", value: hotel.pricePerNight.priceText).icon("tag")
                             Spacer()
-                            Stat(title: "Reviews", value: "\(hotel.reviewCount)", systemImage: "text.bubble")
+                            Stat(title: "Reviews", value: "\(hotel.reviewCount)").icon("text.bubble")
                         }
                     }
 
@@ -70,8 +70,8 @@ struct HotelDetailView: View {
                     }
 
                     Text("Reviews").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-                    ChatBubble("It was a wonderful stay, the view was amazing!", side: .incoming, author: "Emma", time: "2 days ago", avatarSystemImage: "person.fill")
-                    ChatBubble("The staff were very attentive, I highly recommend it.", side: .incoming, author: "James", time: "1 week ago", avatarSystemImage: "person.fill")
+                    ChatBubble("It was a wonderful stay, the view was amazing!", author: "Emma", time: "2 days ago").side(.incoming).icon("person.fill")
+                    ChatBubble("The staff were very attentive, I highly recommend it.", author: "James", time: "1 week ago").side(.incoming).icon("person.fill")
                 }
                 .padding()
             }

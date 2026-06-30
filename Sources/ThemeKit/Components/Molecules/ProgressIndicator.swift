@@ -27,34 +27,34 @@ public enum ProgressStepText { case none, slash, padded }
 /// `.carousel` = one segment per page (filled up to the current one); `.video` =
 /// the active segment fills by `videoProgress`; `.progress` = a single
 /// continuous bar. Optional "3 / 10" or "01 | 05" step text. Distinct from the
-/// dot-style `StepIndicator` and the value-driven `ProgressBar`.
+/// dot-style `StepIndicator` and the value-driven `ProgressBar`. Per the
+/// modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only
+/// the `variant` (core kind) plus the required `current`/`total` data; every other
+/// axis is a chainable, order-free modifier.
+///
+///     ProgressIndicator(variant: .video, current: 3, total: 5)
+///         .videoProgress(0.5).stepText(.slash).size(.large)
 public struct ProgressIndicator: View {
     @Environment(\.theme) private var theme
 
     private let variant: ProgressIndicatorVariant
     private let current: Int   // 1-based active step
     private let total: Int
-    private let size: ProgressIndicatorSize
-    private let videoProgress: Double
-    private let stepText: ProgressStepText
-    private let cornerRadius: Bool
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var size: ProgressIndicatorSize = .medium
+    private var videoProgress: Double = 1
+    private var stepText: ProgressStepText = .none
+    private var cornerRadius: Bool = true
 
     public init(
         variant: ProgressIndicatorVariant = .carousel,
         current: Int,
-        total: Int,
-        size: ProgressIndicatorSize = .medium,
-        videoProgress: Double = 1,
-        stepText: ProgressStepText = .none,
-        cornerRadius: Bool = true
-    ) {
+        total: Int
+    ) {   // R1 — core kind + required data
         self.variant = variant
-        self.current = max(0, min(current, total))
         self.total = max(total, 1)
-        self.size = size
-        self.videoProgress = min(max(videoProgress, 0), 1)
-        self.stepText = stepText
-        self.cornerRadius = cornerRadius
+        self.current = max(0, min(current, max(total, 1)))
     }
 
     public var body: some View {
@@ -86,7 +86,7 @@ public struct ProgressIndicator: View {
 
     private func fillFor(_ index: Int) -> Double {
         if index < current { return 1 }
-        if index == current { return variant == .video ? videoProgress : 1 }
+        if index == current { return variant == .video ? min(max(videoProgress, 0), 1) : 1 }
         return 0
     }
 
@@ -116,12 +116,34 @@ public struct ProgressIndicator: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ProgressIndicator {
+    /// Bar thickness: large / medium / small / xsmall.
+    func size(_ s: ProgressIndicatorSize) -> Self { copy { $0.size = s } }
+
+    /// Fill fraction (0…1) of the active segment in the `.video` variant.
+    func videoProgress(_ value: Double) -> Self { copy { $0.videoProgress = value } }
+
+    /// Step-count caption format: `.none`, `.slash` ("3 / 10"), or `.padded` ("01 | 05").
+    func stepText(_ t: ProgressStepText) -> Self { copy { $0.stepText = t } }
+
+    /// Rounds the segment ends into a capsule (default `true`); `false` for square ends.
+    func cornerRadius(_ on: Bool = true) -> Self { copy { $0.cornerRadius = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 28) {
-        ProgressIndicator(variant: .carousel, current: 2, total: 5, stepText: .slash)
-        ProgressIndicator(variant: .video, current: 3, total: 5, videoProgress: 0.5, stepText: .padded)
-        ProgressIndicator(variant: .progress, current: 7, total: 10, size: .large, stepText: .slash)
-        ProgressIndicator(variant: .carousel, current: 1, total: 4, size: .xsmall)
+        ProgressIndicator(variant: .carousel, current: 2, total: 5).stepText(.slash)
+        ProgressIndicator(variant: .video, current: 3, total: 5).videoProgress(0.5).stepText(.padded)
+        ProgressIndicator(variant: .progress, current: 7, total: 10).size(.large).stepText(.slash)
+        ProgressIndicator(variant: .carousel, current: 1, total: 4).size(.xsmall)
     }
     .padding()
 }

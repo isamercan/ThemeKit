@@ -23,7 +23,7 @@ private struct ToastModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
             if isPresented {
-                AlertToast(title, message: message, type: type, onClose: { isPresented = false })
+                AlertToast(title).message(message).variant(type).onClose { isPresented = false }
                     .padding(Theme.SpacingKey.md.value)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .task {

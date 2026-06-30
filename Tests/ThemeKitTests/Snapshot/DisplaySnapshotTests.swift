@@ -21,10 +21,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testAvatar_contentAndSizes() {
         assertComponentSnapshot(
             HStack(spacing: 8) {
-                Avatar(.initials("AB"), size: .sm)
-                Avatar(.initials("CD"), size: .md)
-                Avatar(.icon("person.fill"), size: .lg)
-                Avatar(.icon("person.fill"), size: .lg, background: .dark, shape: .square)
+                Avatar(.initials("AB")).size(.sm)
+                Avatar(.initials("CD")).size(.md)
+                Avatar(.icon("person.fill")).size(.lg)
+                Avatar(.icon("person.fill")).size(.lg).fillColor(.dark).shape(.square)
             }
         )
     }
@@ -55,10 +55,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testCallout_types() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 8) {
-                Callout("Informational note", type: .info)
-                Callout("Saved successfully", type: .success)
-                Callout("Double-check this", type: .warning)
-                Callout("Something went wrong", type: .error)
+                Callout("Informational note").variant(.info)
+                Callout("Saved successfully").variant(.success)
+                Callout("Double-check this").variant(.warning)
+                Callout("Something went wrong").variant(.error)
             }
         )
     }
@@ -67,13 +67,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
 
     func testEmptyState() {
         assertComponentSnapshot(
-            EmptyState(
-                systemImage: "magnifyingglass",
-                title: "No results",
-                message: "Try adjusting your filters or search for something else.",
-                buttonTitle: "Clear filters",
-                action: {}
-            ),
+            EmptyState("No results")
+                .icon("magnifyingglass")
+                .message("Try adjusting your filters or search for something else.")
+                .primaryAction("Clear filters") {},
             width: 360
         )
     }
@@ -106,9 +103,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testRadialProgress() {
         assertComponentSnapshot(
             HStack(spacing: 16) {
-                RadialProgress(value: 0.25)
-                RadialProgress(value: 0.7, dashboard: true)
-                RadialProgress(value: 1.0, status: .success)
+                RadialProgress(0.25)
+                RadialProgress(0.7).dashboard()
+                RadialProgress(1.0).status(.success)
             }
         )
     }
@@ -118,9 +115,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testStat() {
         assertComponentSnapshot(
             VStack(spacing: 12) {
-                Stat(title: "Total bookings", value: "1,284", description: "this month",
-                     systemImage: "ticket", trend: .up("+12%"))
-                Stat(title: "Cancellations", value: "32", trend: .down("-3%"))
+                Stat(title: "Total bookings", value: "1,284").description("this month")
+                    .icon("ticket").trend(.up("+12%"))
+                Stat(title: "Cancellations", value: "32").trend(.down("-3%"))
             },
             width: 320
         )

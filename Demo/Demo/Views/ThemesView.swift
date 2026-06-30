@@ -55,9 +55,9 @@ struct ThemesView: View {
         Card {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Badge("Primary", style: .info, variant: .solid)
-                    Badge("Success", style: .success)
-                    Badge("Error", style: .error)
+                    Badge("Primary").badgeStyle(.info).variant(.solid)
+                    Badge("Success").badgeStyle(.success)
+                    Badge("Error").badgeStyle(.error)
                 }
                 Text("The quick brown fox jumps over the lazy dog.")
                     .textStyle(.bodyBase400)
@@ -66,9 +66,9 @@ struct ThemesView: View {
                 // keeps each label on one line and wraps to the next row when they
                 // don't fit, instead of squeezing the text onto two lines.
                 ButtonGroup(.horizontal) {
-                    ThemeButton("Primary", color: .primary, variant: .solid) {}
-                    ThemeButton("Secondary", color: .secondary, variant: .solid) {}
-                    ThemeButton("Accent", color: .accent, variant: .solid) {}
+                    ThemeButton("Primary") {}.color(.primary).variant(.solid)
+                    ThemeButton("Secondary") {}.color(.secondary).variant(.solid)
+                    ThemeButton("Accent") {}.color(.accent).variant(.solid)
                 }
                 ButtonGroup(.horizontal) {
                     PrimaryButton("Continue") {}

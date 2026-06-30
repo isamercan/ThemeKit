@@ -54,29 +54,16 @@ public struct AlertToast: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let message: String?
-    private let type: AlertToastType
-    private let systemImage: String?
-    private let isLoading: Bool
-    private let action: ToastAction?
-    private let onClose: (() -> Void)?
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var message: String?
+    private var type: AlertToastType = .info
+    private var systemImage: String?
+    private var isLoading: Bool = false
+    private var action: ToastAction?
+    private var onClose: (() -> Void)?
 
-    public init(
-        _ title: String,
-        message: String? = nil,
-        type: AlertToastType = .info,
-        systemImage: String? = nil,
-        isLoading: Bool = false,
-        action: ToastAction? = nil,
-        onClose: (() -> Void)? = nil
-    ) {
+    public init(_ title: String) {   // R1 — content only
         self.title = title
-        self.message = message
-        self.type = type
-        self.systemImage = systemImage
-        self.isLoading = isLoading
-        self.action = action
-        self.onClose = onClose
     }
 
     public var body: some View {
@@ -118,14 +105,42 @@ public struct AlertToast: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension AlertToast {
+    /// Secondary line under the title.
+    func message(_ text: String?) -> Self { copy { $0.message = text } }
+
+    /// Status treatment: success / warning / danger / info (drives fill + icon).
+    func variant(_ v: AlertToastType) -> Self { copy { $0.type = v } }
+
+    /// Override the leading status glyph (otherwise derived from the variant).
+    func icon(_ systemName: String?) -> Self { copy { $0.systemImage = systemName } }
+
+    /// Swap the leading icon for an activity spinner while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Inline tappable action (e.g. "Undo"), rendered before the close button.
+    func action(_ action: ToastAction?) -> Self { copy { $0.action = action } }
+
+    /// Trailing dismiss button; the handler is invoked on tap.
+    func onClose(_ handler: (() -> Void)?) -> Self { copy { $0.onClose = handler } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 12) {
-        AlertToast("Saved successfully", type: .success, onClose: {})
-        AlertToast("Check your input", message: "One field needs attention.", type: .warning)
-        AlertToast("Something went wrong", type: .danger, onClose: {})
-        AlertToast("New update available", type: .info)
-        AlertToast("Message deleted", type: .info, action: ToastAction("Undo") {}, onClose: {})
-        AlertToast("Uploading…", type: .info, isLoading: true)
+        AlertToast("Saved successfully").variant(.success).onClose {}
+        AlertToast("Check your input").message("One field needs attention.").variant(.warning)
+        AlertToast("Something went wrong").variant(.danger).onClose {}
+        AlertToast("New update available").variant(.info)
+        AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {}
+        AlertToast("Uploading…").variant(.info).loading()
     }
     .padding()
 }

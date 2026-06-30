@@ -15,46 +15,39 @@ import SwiftUI
 public struct InputNumber: View {
     @Environment(\.theme) private var theme
 
-    private let label: String?
     @Binding private var value: Int
     private let range: ClosedRange<Int>
-    private let step: Int
-    private let unit: String?
-    private let hint: String?
-    private let errorText: String?
-    private var accessibilityID: String? = nil
-    @Environment(\.isEnabled) private var isEnabled
-    private let height: CGFloat
-    // Opt-in behaviour — set via chainable modifiers.
+
+    // Appearance/state/config — mutated only through the modifiers below (R2).
+    private var label: String?
+    private var step: Int = 1
+    private var unit: String?
+    private var hint: String?
+    private var errorText: String?
+    private var accessibilityID: String?
+    private var large: Bool = false
     private var editable: Bool = true
     private var hasInfo: Bool = false
-    private var onChange: ((Int) -> Void)? = nil
+    private var onChange: ((Int) -> Void)?
+
+    @Environment(\.isEnabled) private var isEnabled
 
     @FocusState private var isFocused: Bool
     @State private var textValue: String
 
     public init(
-        label: String? = nil,
+        _ label: String? = nil,
         value: Binding<Int>,
-        range: ClosedRange<Int> = 0...99,
-        step: Int = 1,
-        unit: String? = nil,
-        hint: String? = nil,
-        errorText: String? = nil,
-        large: Bool = false
-    ) {
+        range: ClosedRange<Int> = 0...99
+    ) {   // R1
         self.label = label
         self._value = value
         self.range = range
-        self.step = step
-        self.unit = unit
-        self.hint = hint
-        self.errorText = errorText
-        self.height = large ? 48 : 40
         self._textValue = State(initialValue: String(value.wrappedValue))
     }
 
     private var hasError: Bool { errorText != nil }
+    private var height: CGFloat { large ? 48 : 40 }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -208,9 +201,9 @@ private extension View {
         @State var price = 500
         var body: some View {
             VStack(spacing: 16) {
-                InputNumber(label: "Adults", value: $a, range: 1...9, unit: "guest", hint: "Type or step.", large: true)
-                InputNumber(label: "Children", value: $b, errorText: "Too many")
-                InputNumber(label: "Max price", value: $price, range: 0...10000, step: 50, unit: "$")
+                InputNumber("Adults", value: $a, range: 1...9).unit("guest").hint("Type or step.").large()
+                InputNumber("Children", value: $b).errorText("Too many")
+                InputNumber("Max price", value: $price, range: 0...10000).step(50).unit("$")
             }
             .padding()
         }
@@ -218,16 +211,41 @@ private extension View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension InputNumber {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    /// Increment/decrement applied by the − / + steppers.
+    func step(_ s: Int) -> Self { copy { $0.step = s } }
+
+    /// Trailing unit suffix labelling the value (e.g. "guest", "$").
+    func unit(_ u: String?) -> Self { copy { $0.unit = u } }
+
+    /// Helper text shown under the field (hidden while an error is present).
+    func hint(_ text: String?) -> Self { copy { $0.hint = text } }
+
+    /// Error text + error styling; takes precedence over `hint`.
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Use the larger (48pt) field height.
+    func large(_ on: Bool = true) -> Self { copy { $0.large = on } }
 
     /// Whether the value can be typed (default true); `false` shows it read-only
     /// with steppers still active.
-    func editable(_ on: Bool = true) -> Self { var copy = self; copy.editable = on; return copy }
+    func editable(_ on: Bool = true) -> Self { copy { $0.editable = on } }
+
     /// Shows an info-circle glyph next to the label.
-    func hasInfo(_ on: Bool = true) -> Self { var copy = self; copy.hasInfo = on; return copy }
+    func hasInfo(_ on: Bool = true) -> Self { copy { $0.hasInfo = on } }
+
     /// Fires with the clamped value whenever it changes (stepper / type / commit).
-    func onValueChange(_ action: ((Int) -> Void)?) -> Self { var copy = self; copy.onChange = action; return copy }
+    func onValueChange(_ action: ((Int) -> Void)?) -> Self { copy { $0.onChange = action } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

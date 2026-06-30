@@ -81,56 +81,27 @@ public struct ListRowInfo: Identifiable {
 public struct ListRow: View {
     @Environment(\.theme) private var theme
 
+    // Appearance/content/state — mutated only through the modifiers below (R2).
+    private var subtitle: String?
+    private var number: Int?
+    private var size: ListRowSize = .regular
+    private var leadingSystemImage: String?
+    private var leadingImageURL: URL?
+    private var leadingSelection: Binding<Bool>?
+    private var alertCount: Int?
+    private var badge: String?
+    private var meta: ListRowMeta?
+    private var infos: [ListRowInfo] = []
+    private var isSelected = false
+    private var multilineTitle = false
+    private var infoAction: (() -> Void)?
+    private var trailing: ListRowTrailing = .chevron
+
     private let title: String
-    private let subtitle: String?
-    private let number: Int?
-    private let size: ListRowSize
-    private let leadingSystemImage: String?
-    private let leadingImageURL: URL?
-    private let leadingSelection: Binding<Bool>?
-    private let alertCount: Int?
-    private let badge: String?
-    private let meta: ListRowMeta?
-    private let infos: [ListRowInfo]
-    private let isSelected: Bool
-    private let multilineTitle: Bool
-    private let infoAction: (() -> Void)?
-    private let trailing: ListRowTrailing
     private let action: (() -> Void)?
 
-    public init(
-        _ title: String,
-        subtitle: String? = nil,
-        number: Int? = nil,
-        size: ListRowSize = .regular,
-        leadingSystemImage: String? = nil,
-        leadingImageURL: URL? = nil,
-        leadingSelection: Binding<Bool>? = nil,
-        alertCount: Int? = nil,
-        badge: String? = nil,
-        meta: ListRowMeta? = nil,
-        infos: [ListRowInfo] = [],
-        isSelected: Bool = false,
-        multilineTitle: Bool = false,
-        infoAction: (() -> Void)? = nil,
-        trailing: ListRowTrailing = .chevron,
-        action: (() -> Void)? = nil
-    ) {
+    public init(_ title: String, action: (() -> Void)? = nil) {   // R1
         self.title = title
-        self.subtitle = subtitle
-        self.number = number
-        self.size = size
-        self.leadingSystemImage = leadingSystemImage
-        self.leadingImageURL = leadingImageURL
-        self.leadingSelection = leadingSelection
-        self.alertCount = alertCount
-        self.badge = badge
-        self.meta = meta
-        self.infos = infos
-        self.isSelected = isSelected
-        self.multilineTitle = multilineTitle
-        self.infoAction = infoAction
-        self.trailing = trailing
         self.action = action
     }
 
@@ -176,7 +147,7 @@ public struct ListRow: View {
         if let leadingSelection {
             RadioButton(isSelected: leadingSelection)
         } else if let leadingImageURL {
-            RemoteImage(leadingImageURL, aspectRatio: 1, cornerRadius: Theme.RadiusKey.sm.value)
+            RemoteImage(leadingImageURL).ratio(1).cornerRadius(Theme.RadiusKey.sm.value)
                 .frame(width: 48, height: 48)
         } else if let number {
             Text(String(format: "%02d", number))
@@ -212,7 +183,7 @@ public struct ListRow: View {
                     .foregroundStyle(theme.text(.textPrimary))
                     .lineLimit(multilineTitle ? nil : 1)
                 if let badge {
-                    Badge(badge, style: .info, variant: .soft, size: .small)
+                    Badge(badge).badgeStyle(.info).variant(.soft).size(.small)
                 }
             }
             if let subtitle {
@@ -335,6 +306,58 @@ public struct ListRow: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ListRow {
+    /// Secondary line under the title.
+    func subtitle(_ s: String?) -> Self { copy { $0.subtitle = s } }
+
+    /// Leading two-digit ordinal badge.
+    func number(_ n: Int?) -> Self { copy { $0.number = n } }
+
+    /// Title weight/size tier: small / regular / bold.
+    func size(_ s: ListRowSize) -> Self { copy { $0.size = s } }
+
+    /// Leading SF Symbol (in a circular chip).
+    func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }
+
+    /// Leading remote thumbnail.
+    func leadingImage(_ url: URL?) -> Self { copy { $0.leadingImageURL = url } }
+
+    /// Leading radio selector bound to `selection`.
+    func leadingSelection(_ selection: Binding<Bool>?) -> Self { copy { $0.leadingSelection = selection } }
+
+    /// Red count bubble on the leading icon.
+    func alertCount(_ n: Int?) -> Self { copy { $0.alertCount = n } }
+
+    /// Inline badge next to the title.
+    func badge(_ text: String?) -> Self { copy { $0.badge = text } }
+
+    /// Per-row meta line (rating / sentiment / comment count).
+    func meta(_ m: ListRowMeta?) -> Self { copy { $0.meta = m } }
+
+    /// Bulleted info lines under the title.
+    func infos(_ list: [ListRowInfo]) -> Self { copy { $0.infos = list } }
+
+    /// Active/selected background treatment.
+    func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
+
+    /// Allow the title/subtitle to wrap instead of truncating.
+    func multilineTitle(_ on: Bool = true) -> Self { copy { $0.multilineTitle = on } }
+
+    /// Trailing accessory: chevron / value / toggle / checkmark / checkbox / button / price / status.
+    func trailing(_ t: ListRowTrailing) -> Self { copy { $0.trailing = t } }
+
+    /// Trailing info button with its own action.
+    func onInfo(_ action: (() -> Void)?) -> Self { copy { $0.infoAction = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 /// A non-interactive section-header row inside a list (Reference menu `.secondary`).
 public struct ListSectionHeader: View {
     @Environment(\.theme) private var theme
@@ -359,21 +382,22 @@ public struct ListSectionHeader: View {
         var body: some View {
             ScrollView {
                 VStack(spacing: 0) {
-                    ListRow("Account", subtitle: "Profile & security", leadingSystemImage: "person.circle", action: {})
-                    DividerView(size: .small)
-                    ListRow("Notifications", trailing: .toggle($push))
-                    DividerView(size: .small)
-                    ListRow("Accept terms", leadingSystemImage: "doc.text", trailing: .checkbox($agree))
-                    DividerView(size: .small)
-                    ListRow("Premium plan", subtitle: "Billed monthly", number: 1, isSelected: plan,
-                            trailing: .price(.init(total: "$14,400", each: "$1,200", unit: "/ month")), action: { plan.toggle() })
-                    DividerView(size: .small)
-                    ListRow("Grand Hotel", subtitle: "Istanbul · Sea view",
-                            leadingSystemImage: "building.2",
-                            meta: ListRowMeta(rating: 8.4, sentiment: "Excellent", commentLabel: "1,284 reviews"),
-                            trailing: .status("Available", systemImage: "checkmark.seal.fill"), action: {})
-                    DividerView(size: .small)
-                    ListRow("Update payment", trailing: .button("Edit", action: {}))
+                    ListRow("Account", action: {}).subtitle("Profile & security").icon("person.circle")
+                    DividerView().size(.small)
+                    ListRow("Notifications").trailing(.toggle($push))
+                    DividerView().size(.small)
+                    ListRow("Accept terms").icon("doc.text").trailing(.checkbox($agree))
+                    DividerView().size(.small)
+                    ListRow("Premium plan", action: { plan.toggle() })
+                        .subtitle("Billed monthly").number(1).selected(plan)
+                        .trailing(.price(.init(total: "$14,400", each: "$1,200", unit: "/ month")))
+                    DividerView().size(.small)
+                    ListRow("Grand Hotel", action: {})
+                        .subtitle("Istanbul · Sea view").icon("building.2")
+                        .meta(ListRowMeta(rating: 8.4, sentiment: "Excellent", commentLabel: "1,284 reviews"))
+                        .trailing(.status("Available", systemImage: "checkmark.seal.fill"))
+                    DividerView().size(.small)
+                    ListRow("Update payment").trailing(.button("Edit", action: {}))
                 }
                 .padding()
             }

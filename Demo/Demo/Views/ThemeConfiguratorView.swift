@@ -117,7 +117,7 @@ struct ThemeConfiguratorView: View {
                     HStack {
                         Text("Title").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                         Spacer()
-                        Badge("New", style: .info)
+                        Badge("New").badgeStyle(.info)
                     }
                     Text("The theme regenerates live — primary, secondary, accent, surfaces, all of it.")
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
@@ -127,16 +127,16 @@ struct ThemeConfiguratorView: View {
                         OutlineButton("Outline") {}
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Chip("Selected", isSelected: $chipOn, selectionStyle: .solid)
+                        Chip("Selected", isSelected: $chipOn).chipStyle(.solid)
                         Chip("Empty", isSelected: .constant(false))
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Info", type: .info)
-                        InfoBanner("Success", type: .success)
+                        InfoBanner("Info").variant(.info)
+                        InfoBanner("Success").variant(.success)
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        InfoBanner("Warning", type: .warning)
-                        InfoBanner("Error", type: .error)
+                        InfoBanner("Warning").variant(.warning)
+                        InfoBanner("Error").variant(.error)
                     }
                     ladder("Primary", .primary)
                     ladder("Secondary", .secondary)
