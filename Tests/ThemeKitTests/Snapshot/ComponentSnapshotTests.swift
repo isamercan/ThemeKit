@@ -45,7 +45,7 @@ final class ComponentSnapshotTests: SnapshotTestCase {
     // MARK: Tag
 
     func testTag_withLeadingIcon() {
-        assertComponentSnapshot(Tag("Istanbul", leadingSystemImage: "mappin"))
+        assertComponentSnapshot(Tag("Istanbul").icon("mappin"))
     }
 
     // MARK: ScoreBadge
@@ -112,7 +112,7 @@ final class ComponentSnapshotTests: SnapshotTestCase {
             HStack(spacing: 8) {
                 Badge("Info").badgeStyle(.info)
                 ScoreBadge(9.2)
-                Tag("Istanbul", leadingSystemImage: "mappin")
+                Tag("Istanbul").icon("mappin")
             },
             layoutDirection: .rightToLeft
         )

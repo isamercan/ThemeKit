@@ -34,7 +34,7 @@ struct HotelDetailView: View {
 
                     HStack(spacing: 8) {
                         ForEach(hotel.amenities, id: \.self) { a in
-                            Tag(Amenity.label(a), leadingSystemImage: Amenity.icon(a))
+                            Tag(Amenity.label(a)).icon(Amenity.icon(a))
                         }
                     }
 

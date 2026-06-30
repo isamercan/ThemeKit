@@ -8,29 +8,22 @@ import SwiftUI
 
 /// Atom. A compact label, optionally removable. Distinct from Badge (status) and
 /// Chip (selectable): Tag represents an applied keyword/filter.
-/// An optional semantic `style` + `variant` colors the tag (Ant Tag colors),
-/// reusing Badge's `BadgeStyle` / `FillVariant`. With no `style` it keeps the
+/// An optional semantic `.tagStyle` + `.variant` colors the tag (Ant Tag colors),
+/// reusing Badge's `BadgeStyle` / `FillVariant`. With no style it keeps the
 /// original neutral keyword look.
 public struct Tag: View {
     private let text: String
-    private let leadingSystemImage: String?
-    private let style: BadgeStyle?
-    private let variant: FillVariant
     private let onRemove: (() -> Void)?
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var leadingSystemImage: String?
+    private var style: BadgeStyle?
+    private var variant: FillVariant = .soft
 
     @Environment(\.theme) private var theme
 
-    public init(
-        _ text: String,
-        leadingSystemImage: String? = nil,
-        style: BadgeStyle? = nil,
-        variant: FillVariant = .soft,
-        onRemove: (() -> Void)? = nil
-    ) {
+    public init(_ text: String, onRemove: (() -> Void)? = nil) {   // R1
         self.text = text
-        self.leadingSystemImage = leadingSystemImage
-        self.style = style
-        self.variant = variant
         self.onRemove = onRemove
     }
 
@@ -79,18 +72,37 @@ public struct Tag: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Tag {
+    /// Leading SF Symbol.
+    func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }
+
+    /// Semantic color treatment (Ant Tag colors). `nil` keeps the neutral keyword look.
+    func tagStyle(_ s: BadgeStyle?) -> Self { copy { $0.style = s } }
+
+    /// Fill variant: soft / solid / outline / ghost.
+    func variant(_ v: FillVariant) -> Self { copy { $0.variant = v } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 12) {
         HStack {
             Tag("Istanbul", onRemove: {})
-            Tag("Beach", leadingSystemImage: "beach.umbrella")
+            Tag("Beach").icon("beach.umbrella")
             Tag("5 stars")
         }
         HStack {
-            Tag("Success", style: .success)
-            Tag("Warning", style: .warning)
-            Tag("Error", style: .error, variant: .solid)
-            Tag("Info", style: .info, variant: .outline)
+            Tag("Success").tagStyle(.success)
+            Tag("Warning").tagStyle(.warning)
+            Tag("Error").tagStyle(.error).variant(.solid)
+            Tag("Info").tagStyle(.info).variant(.outline)
         }
     }
     .padding()
@@ -100,8 +112,8 @@ public struct Tag: View {
     PreviewMatrix("Tag", dynamicType: true) {
         PreviewCase("Default")   { Tag("React") }
         PreviewCase("Removable") { Tag("Filter", onRemove: {}) }
-        PreviewCase("With icon") { Tag("Beach", leadingSystemImage: "beach.umbrella") }
-        PreviewCase("Semantic")  { Tag("Error", style: .error, variant: .solid) }
+        PreviewCase("With icon") { Tag("Beach").icon("beach.umbrella") }
+        PreviewCase("Semantic")  { Tag("Error").tagStyle(.error).variant(.solid) }
         PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
     }
 }

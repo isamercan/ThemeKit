@@ -40,3 +40,4 @@ API breakage: constructor GaugeView.init(value:in:label:style:showsValue:) has b
 API breakage: constructor RemoteImage.init(_:aspectRatio:contentMode:cornerRadius:circle:) has been removed
 API breakage: constructor RemoteImage.init(_:ratio:contentMode:cornerRadius:circle:) has been removed
 API breakage: constructor Swap.init(isOn:on:off:size:rotate:) has been removed
+API breakage: constructor Tag.init(_:leadingSystemImage:style:variant:onRemove:) has been removed

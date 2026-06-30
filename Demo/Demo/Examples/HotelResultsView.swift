@@ -122,7 +122,7 @@ struct HotelCard: View {
                     RatingSummary(score: hotel.score, label: hotel.scoreLabel, reviewCount: hotel.reviewCount)
                     HStack(spacing: 6) {
                         ForEach(hotel.amenities.prefix(3), id: \.self) { a in
-                            Tag(Amenity.label(a), leadingSystemImage: Amenity.icon(a))
+                            Tag(Amenity.label(a)).icon(Amenity.icon(a))
                         }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {

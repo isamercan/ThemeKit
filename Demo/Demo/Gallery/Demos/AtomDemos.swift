@@ -236,9 +236,10 @@ struct TagDemo: View {
 
     var body: some View {
         ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
-            Tag(text, leadingSystemImage: icon ? "mappin" : nil,
-                style: styles[styleIdx].1, variant: variant,
-                onRemove: removable ? { flash("Tag removed") } : nil)
+            Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
+                .icon(icon ? "mappin" : nil)
+                .tagStyle(styles[styleIdx].1)
+                .variant(variant)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $styleIdx) {

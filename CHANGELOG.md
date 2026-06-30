@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Tag` init reduced to `Tag(_ text:onRemove:)`.** The text and the optional
+  removal callback stay in init; the 3 appearance parameters moved to modifiers:
+  `leadingSystemImage:`→`.icon(_:)`, `style:`→`.tagStyle(_:)` (renamed to avoid the
+  generic `style` clash + match `BadgeStyle`), `variant:`→`.variant(_:)`. Migration:
+  `Tag("Sold out", leadingSystemImage: "xmark", style: .error, variant: .solid, onRemove: { })`
+  → `Tag("Sold out", onRemove: { }).icon("xmark").tagStyle(.error).variant(.solid)`.
 - **`Swap` init reduced to `Swap(isOn:)`.** The `isOn` binding stays in init; the
   two glyphs and the appearance/state parameters moved to modifiers:
   `on:`/`off:`→`.symbols(on:off:)` (grouped), `size:`→`.size(_:)`,

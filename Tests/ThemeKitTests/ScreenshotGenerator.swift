@@ -131,9 +131,9 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("Swap", Swap(isOn: .constant(true)).symbols(on: "xmark", off: "line.3.horizontal"))
         shot("Tag", HStack(spacing: 8) {
-            Tag("Success", style: .success)
-            Tag("Error", style: .error, variant: .solid)
-            Tag("Info", style: .info, variant: .outline)
+            Tag("Success").tagStyle(.success)
+            Tag("Error").tagStyle(.error).variant(.solid)
+            Tag("Info").tagStyle(.info).variant(.outline)
         })
         shot("TextLink", TextLink("Forgot password?", underline: true) {})
         shot("Title", Title("Section title", subtitle: "Supporting subtitle", actionTitle: "See all") {}.frame(width: 320))
