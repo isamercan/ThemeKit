@@ -1,5 +1,24 @@
 # Versions & Releases
 
+## Two products, two tag namespaces
+
+This repo ships **two independently-versioned products**, so their git tags use
+distinct namespaces — and they must not collide, because **SwiftPM resolves
+versions from SemVer git tags** (`vX.Y.Z`):
+
+| Product | Where | Tag format | Example |
+|---|---|---|---|
+| **ThemeKit** (Swift package) | repo root | `vX.Y.Z` | `v0.3.0` |
+| **@isamercan/themekit-mcp** (npm) | [`mcp/`](https://github.com/isamercan/ThemeKit/tree/main/mcp) | `mcp-vX.Y.Z` | `mcp-v2.6.0` |
+
+> ⚠️ **Never tag an MCP release as `vX.Y.Z`** — SwiftPM would pick it up as a
+> ThemeKit Swift-package version (e.g. a `v2.6.0` tag would make SwiftPM think the
+> Swift package jumped to 2.6.0). The `mcp-` prefix is **not** valid SemVer, so
+> SwiftPM ignores it, and the prefix also separates the two on the Releases page.
+
+The two version numbers are unrelated: ThemeKit is in `0.x`; the MCP server has its
+own line (currently `2.x`).
+
 ## Semantic Versioning
 
 The package follows [SemVer](https://semver.org): `MAJOR.MINOR.PATCH`.
@@ -29,11 +48,20 @@ an upcoming release before it's final. SPM treats these as pre-release versions.
 
 ## How releases are cut
 
+**ThemeKit (Swift package):**
+
 1. Changes land on `main` via PR (CI must be green).
 2. `scripts/check-api.sh` reports whether the public API changed — this drives
    the MAJOR vs MINOR decision (see `docs/API-STABILITY.md`).
-3. A maintainer tags the release: `git tag -a vX.Y.Z -m "…" && git push --tags`.
+3. A maintainer tags the release: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
 4. A matching **GitHub Release** is published with notes.
+
+**themekit-mcp (npm package, `mcp/`):**
+
+1. Bump `mcp/package.json` and finalize `mcp/CHANGELOG.md`.
+2. Publish: `cd mcp && npm publish --access public`.
+3. Tag with the **`mcp-` prefix**: `git tag -a mcp-vX.Y.Z -m "…" && git push origin mcp-vX.Y.Z`.
+4. Publish a **GitHub Release** on that tag (`gh release create mcp-vX.Y.Z …`).
 
 ## Following releases
 

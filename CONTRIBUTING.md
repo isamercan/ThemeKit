@@ -25,6 +25,10 @@ make skill         # regenerate the MCP data, the Agent skill, and llms.txt
 - **Generated files stay generated.** Colors come from `tools/gen_tokens.py`
   (`python3 tools/gen_tokens.py .`); the MCP data / skill / llms.txt come from
   `make skill`. Don't hand-edit the generated outputs.
+- **Release tags are namespaced per product.** The Swift package uses `vX.Y.Z`
+  (e.g. `v0.3.0`); the npm MCP server (`mcp/`) uses **`mcp-vX.Y.Z`** (e.g.
+  `mcp-v2.6.0`). Never tag an MCP release as `vX.Y.Z` — SwiftPM would resolve it as
+  a ThemeKit version. See the [Versions & Releases](https://github.com/isamercan/ThemeKit/wiki/Versions-and-Releases) wiki.
 
 ## Pull requests
 
