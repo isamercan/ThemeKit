@@ -127,7 +127,7 @@ struct ThemeConfiguratorView: View {
                         OutlineButton("Outline") {}
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Chip("Selected", isSelected: $chipOn, selectionStyle: .solid)
+                        Chip("Selected", isSelected: $chipOn).chipStyle(.solid)
                         Chip("Empty", isSelected: .constant(false))
                     }
                     HStack(spacing: Theme.SpacingKey.sm.value) {

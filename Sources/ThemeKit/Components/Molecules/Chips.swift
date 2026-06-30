@@ -286,8 +286,8 @@ public struct ChipGroup<Option: Hashable>: View {
                              isSelected: Binding(
                                 get: { selection.contains(option) },
                                 set: { isOn in if isOn { selection.insert(option) } else { selection.remove(option) } }
-                             ),
-                             selectionStyle: selectionStyle)
+                             ))
+                            .chipStyle(selectionStyle)
                     }
                 }
             }

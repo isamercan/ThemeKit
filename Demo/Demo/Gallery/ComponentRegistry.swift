@@ -40,7 +40,7 @@ enum ComponentRegistry {
         // MARK: Atoms
         .knob("Avatar", .atoms, demo: AvatarDemo(), usage: #"Avatar(.initials("AB")).size(.md).presence(.online)"#),
         .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label").badgeStyle(.info).icon("star.fill")"#),
-        .knob("Chip", .atoms, demo: ChipDemo(), usage: #"Chip("Recommended", isSelected: $selected, selectionStyle: .tonal)"#),
+        .knob("Chip", .atoms, demo: ChipDemo(), usage: #"Chip("Recommended", isSelected: $selected).chipStyle(.tonal)"#),
         .knob("Color Palette", .atoms, demo: ColorLadderDemo(), usage: #"SemanticColor.primary.shade(.s500)   // base · .bg .hover .active .strong"#),
         .knob("CountBadge", .atoms, demo: CountBadgeDemo(), usage: ##"icon.countBadge(5)   //  .dotBadge() · Ribbon("New") { card }"##),
         .knob("BorderBeam", .atoms, demo: BorderBeamDemo(), usage: #"card.borderBeam(cornerRadius: 16, lineWidth: 2)"#),

@@ -13,6 +13,14 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Chip` init reduced to `Chip(_ title:isSelected:)`.** The title and the
+  `isSelected` binding stay in init; the 2 appearance parameters moved to
+  modifiers: `size:`→`.size(_:)`, `selectionStyle:`→`.chipStyle(_:)` (renamed to
+  avoid the generic `selectionStyle` clash + match `BadgeStyle`). The existing
+  `.icon/.rating/.exists/.interactive/.expands` modifiers now route through the
+  shared copy-on-write helper. Migration:
+  `Chip("Recommended", isSelected: $on, size: .large, selectionStyle: .solid)`
+  → `Chip("Recommended", isSelected: $on).size(.large).chipStyle(.solid)`.
 - **`Upload` init reduced to `Upload(prompt:files:onPick:onRemove:onRetry:)`.**
   The prompt copy, the files data array and the pick/remove/retry callbacks stay
   in init; the 2 config parameters moved to modifiers: `buttonTitle:`→

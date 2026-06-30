@@ -132,8 +132,9 @@ struct ChipDemo: View {
         ComponentStage("Chip", inspector: [
             ("isSelected", "\(selected)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
         ]) {
-            Chip(exists ? "Recommended" : "Sold out", isSelected: $selected, size: large ? .large : .small,
-                 selectionStyle: solid ? .solid : .tonal)
+            Chip(exists ? "Recommended" : "Sold out", isSelected: $selected)
+                    .size(large ? .large : .small)
+                    .chipStyle(solid ? .solid : .tonal)
                     .rating(rating ? 4.6 : nil)
                     .exists(exists)
                     .expands(expands)
