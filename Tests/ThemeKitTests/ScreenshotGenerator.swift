@@ -265,7 +265,7 @@ final class ScreenshotGenerator: XCTestCase {
             ChatBubble("Thanks!", time: "09:25").side(.outgoing)
         }.frame(width: 320))
         shot("Counter", Counter(days: 2, hours: 8, minutes: 45))
-        shot("Coupon", Coupon(code: "UXMUQ", style: .outlined).frame(width: 300))
+        shot("Coupon", Coupon(code: "UXMUQ").couponStyle(.outlined).frame(width: 300))
         shot("EmptyState", EmptyState("No results found")
                                       .icon("magnifyingglass")
                                       .message("Try adjusting your search or filters.")

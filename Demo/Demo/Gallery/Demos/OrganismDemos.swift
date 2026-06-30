@@ -149,7 +149,7 @@ struct CouponDemo: View {
 
     var body: some View {
         ComponentStage("Coupon", inspector: [("style", "\(style)")]) {
-            Coupon(code: code, style: style)
+            Coupon(code: code).couponStyle(style)
         } knobs: {
             TextField("Code", text: $code).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $style) {

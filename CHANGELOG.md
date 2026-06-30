@@ -13,6 +13,12 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Coupon` init reduced to `Coupon(code:label:onCopy:)`.** The code, the label
+  copy and the `onCopy` callback stay in init; the 1 appearance parameter moved to
+  a modifier: `style:`→`.couponStyle(_:)` (renamed to avoid the generic `style`
+  clash + match `BadgeStyle`). Migration:
+  `Coupon(code: "UXMUQ", style: .filled, onCopy: { … })`
+  → `Coupon(code: "UXMUQ", onCopy: { … }).couponStyle(.filled)`.
 - **`ImageChip` (the `Chips` family chip) init reduced to
   `ImageChip(isSelected:url:)`.** The `isSelected` binding and the `url` data stay
   in init; `size:`→`.size(_:)`. The component-level `isEnabled:` parameter is
