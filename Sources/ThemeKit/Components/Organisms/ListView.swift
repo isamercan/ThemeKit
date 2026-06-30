@@ -126,7 +126,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                 Row(title: "Language", subtitle: "English")]
     return VStack(spacing: 24) {
         ListView(rows, header: "Settings", footer: "3 items") { row in
-            ListRow(row.title, subtitle: row.subtitle, action: {})
+            ListRow(row.title, action: {}).subtitle(row.subtitle)
         }
         ListView(rows, header: "Loading", loading: true) { _ in EmptyView() }
     }

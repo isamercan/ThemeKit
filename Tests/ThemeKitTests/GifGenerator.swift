@@ -53,9 +53,9 @@ final class GifGenerator: XCTestCase {
             .drawer(isPresented: .constant(true), edge: .leading) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Menu").textStyle(.headingSm).padding(.bottom, 4)
-                    ListRow("My account", leadingSystemImage: "person.circle", action: {})
-                    ListRow("Reservations", leadingSystemImage: "calendar", action: {})
-                    ListRow("Settings", leadingSystemImage: "gearshape", action: {})
+                    ListRow("My account", action: {}).icon("person.circle")
+                    ListRow("Reservations", action: {}).icon("calendar")
+                    ListRow("Settings", action: {}).icon("gearshape")
                 }.padding()
             })
 

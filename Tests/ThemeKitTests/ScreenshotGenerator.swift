@@ -277,9 +277,9 @@ final class ScreenshotGenerator: XCTestCase {
                                                    .init("Total", value: "$4,250")],
                                             title: "Reservation summary", bordered: true).frame(width: 320))
         shot("ListRow", VStack(spacing: 0) {
-            ListRow("My account", subtitle: "Profile and security", leadingSystemImage: "person.circle", action: {})
+            ListRow("My account", action: {}).subtitle("Profile and security").icon("person.circle")
             DividerView(size: .small)
-            ListRow("Notifications", subtitle: "Email and push", leadingSystemImage: "bell", action: {})
+            ListRow("Notifications", action: {}).subtitle("Email and push").icon("bell")
         }.frame(width: 320))
         shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip",
                                                   message: "24 days until your Hilton London reservation.",
@@ -303,7 +303,7 @@ final class ScreenshotGenerator: XCTestCase {
                                         systemImage: "sun.max.fill", ctaTitle: "Explore", action: {}).frame(width: 340))
         let rowTitles = ["My account", "Notifications", "Language", "Payment"]
         shot("ListView", ListView(tiles, header: "Settings", footer: "\(tiles.count) items", bordered: true) { tile in
-            ListRow(rowTitles[tile.id], subtitle: "Details", leadingSystemImage: "gearshape", action: {})
+            ListRow(rowTitles[tile.id], action: {}).subtitle("Details").icon("gearshape")
         }.frame(width: 320))
         shot("MenuCard", MenuCard(items: [
             .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),

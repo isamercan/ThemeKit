@@ -184,8 +184,8 @@ public extension View {
             .drawer(isPresented: $open) {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Menu").textStyle(.headingSm)
-                    ListRow("Account", leadingSystemImage: "person.circle", action: {})
-                    ListRow("Settings", leadingSystemImage: "gearshape", action: {})
+                    ListRow("Account", action: {}).icon("person.circle")
+                    ListRow("Settings", action: {}).icon("gearshape")
                     Spacer()
                 }
                 .padding()

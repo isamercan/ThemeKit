@@ -25,6 +25,14 @@ component-by-component.
   `leading:`/`trailing:` slots). Migration:
   `ThemeButton("Save", color: .accent, variant: .soft, block: true) { save() }`
   → `ThemeButton("Save") { save() }.color(.accent).variant(.soft).fullWidth()`.
+- **`ListRow` init reduced to `ListRow(_ title:action:)`.** The 12 other
+  parameters moved to modifiers: `subtitle:`→`.subtitle(_:)`,
+  `number:`→`.number(_:)`, `size:`→`.size(_:)`,
+  `leadingSystemImage:`→`.icon(_:)`, `leadingImageURL:`→`.leadingImage(_:)`,
+  `leadingSelection:`→`.leadingSelection(_:)`, `alertCount:`→`.alertCount(_:)`,
+  `badge:`→`.badge(_:)`, `meta:`→`.meta(_:)`, `infos:`→`.infos(_:)`,
+  `isSelected:`→`.selected(_:)`, `multilineTitle:`→`.multilineTitle(_:)`,
+  `infoAction:`→`.onInfo(_:)`, `trailing:`→`.trailing(_:)`.
 
 ## [0.2.0] - 2026-06-28
 

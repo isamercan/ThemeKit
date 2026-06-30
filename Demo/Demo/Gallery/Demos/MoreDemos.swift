@@ -535,16 +535,17 @@ struct ListRowDemo: View {
         ComponentStage("ListRow", inspector: [("trailing", kind.rawValue), ("leading", lead.rawValue)]) {
             VStack(spacing: 0) {
                 ListSectionHeader("Accommodation")
-                ListRow("Grand Hotel Istanbul", subtitle: subtitle ? "Sea view · Breakfast included" : nil,
-                        number: lead == .number ? 1 : nil,
-                        leadingSystemImage: lead == .icon ? "building.2" : nil,
-                        leadingImageURL: lead == .image ? imageURL : nil,
-                        leadingSelection: lead == .radio ? $picked : nil,
-                        alertCount: alert ? 3 : nil,
-                        meta: meta, infos: infos, isSelected: selected,
-                        multilineTitle: moreInfo,
-                        infoAction: kind == .price ? { flash("ListRow: price info") } : nil,
-                        trailing: trailing, action: { flash("ListRow tapped") })
+                ListRow("Grand Hotel Istanbul", action: { flash("ListRow tapped") })
+                    .subtitle(subtitle ? "Sea view · Breakfast included" : nil)
+                    .number(lead == .number ? 1 : nil)
+                    .icon(lead == .icon ? "building.2" : nil)
+                    .leadingImage(lead == .image ? imageURL : nil)
+                    .leadingSelection(lead == .radio ? $picked : nil)
+                    .alertCount(alert ? 3 : nil)
+                    .meta(meta).infos(infos).selected(selected)
+                    .multilineTitle(moreInfo)
+                    .onInfo(kind == .price ? { flash("ListRow: price info") } : nil)
+                    .trailing(trailing)
             }
         } knobs: {
             Picker("Trailing", selection: $kind) { ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
@@ -904,8 +905,8 @@ struct DrawerDemo: View {
                 .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", leadingSystemImage: "person.circle", action: { open = false; flash("Drawer: Account") })
-                        ListRow("Settings", leadingSystemImage: "gearshape", action: { open = false; flash("Drawer: Settings") })
+                        ListRow("Account", action: { open = false; flash("Drawer: Account") }).icon("person.circle")
+                        ListRow("Settings", action: { open = false; flash("Drawer: Settings") }).icon("gearshape")
                         Spacer()
                     }
                     .padding()
@@ -918,8 +919,8 @@ struct DrawerDemo: View {
                 drawer.present(edge: trailing ? .trailing : .leading) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", leadingSystemImage: "person.circle", action: { drawer.dismiss(); flash("Drawer: Account") })
-                        ListRow("Settings", leadingSystemImage: "gearshape", action: { drawer.dismiss(); flash("Drawer: Settings") })
+                        ListRow("Account", action: { drawer.dismiss(); flash("Drawer: Account") }).icon("person.circle")
+                        ListRow("Settings", action: { drawer.dismiss(); flash("Drawer: Settings") }).icon("gearshape")
                         Spacer()
                     }
                     .padding()
@@ -1655,7 +1656,7 @@ struct ListDemo: View {
         ComponentStage("List", inspector: [("count", "\(empty ? 0 : rows.count)"), ("bordered", "\(bordered)"), ("empty", "\(empty)")]) {
             ListView(empty ? [] : rows, header: withHeader ? "Settings" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) items" : nil,
                      bordered: bordered, loading: loading, split: split, emptyText: "No settings yet") { row in
-                ListRow(row.title, subtitle: row.subtitle, leadingSystemImage: row.icon, action: { flash("List: \(row.title)") })
+                ListRow(row.title, action: { flash("List: \(row.title)") }).subtitle(row.subtitle).icon(row.icon)
             }
         } knobs: {
             Toggle("Header + footer", isOn: $withHeader)

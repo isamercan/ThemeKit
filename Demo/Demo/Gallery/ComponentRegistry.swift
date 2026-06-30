@@ -157,7 +157,7 @@ enum ComponentRegistry {
         .knob("Gallery", .organisms, demo: GalleryDemo(), usage: #"Gallery(items, columns: 2, aspect: .square) { item in mediaView }"#),
         .knob("ImageCollage", .organisms, demo: ImageCollageDemo(), usage: #"ImageCollage(urls, height: 220) { index in open(index) }   // 1·2·3·4+ layouts + "+N""#),
         .knob("InfoBanner", .organisms, demo: InfoBannerDemo(), usage: #"InfoBanner("Message", type: .info, links: [("link", action)])"#),
-        .knob("ListRow", .organisms, demo: ListRowDemo(), usage: #"ListRow("Account", subtitle: "…", trailing: .chevron, action: { })"#),
+        .knob("ListRow", .organisms, demo: ListRowDemo(), usage: #"ListRow("Account", action: { }).subtitle("…").trailing(.chevron)"#),
         .knob("List", .organisms, demo: ListDemo(), usage: #"ListView(items, header: "Settings", footer: "3 items", bordered: true) { ListRow($0.title) }"#),
         .knob("MenuCard", .organisms, demo: MenuCardDemo(), usage: #"MenuCard(items: [.init(title: "Reservations", systemImage: "calendar")])"#),
         .knob("NavigationBar", .organisms, demo: NavigationBarDemo(), usage: #"NavigationBar(items: [.init(systemImage: "house")], selection: $tab)"#),
