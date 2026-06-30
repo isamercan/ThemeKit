@@ -12,18 +12,16 @@ public struct Swap: View {
     @Environment(\.theme) private var theme
 
     @Binding private var isOn: Bool
-    private let onSystemImage: String
-    private let offSystemImage: String
-    private let size: CGFloat
-    private let rotate: Bool
+
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var onSystemImage: String = "xmark"
+    private var offSystemImage: String = "line.3.horizontal"
+    private var size: CGFloat = 24
+    private var rotate: Bool = true
     private var accessibilityID: String? = nil
 
-    public init(isOn: Binding<Bool>, on onSystemImage: String, off offSystemImage: String, size: CGFloat = 24, rotate: Bool = true) {
+    public init(isOn: Binding<Bool>) {   // R1
         self._isOn = isOn
-        self.onSystemImage = onSystemImage
-        self.offSystemImage = offSystemImage
-        self.size = size
-        self.rotate = rotate
     }
 
     public var body: some View {
@@ -59,8 +57,8 @@ public struct Swap: View {
         @State private var b = true
         var body: some View {
             HStack(spacing: 32) {
-                Swap(isOn: $a, on: "xmark", off: "line.3.horizontal")
-                Swap(isOn: $b, on: "moon.fill", off: "sun.max.fill")
+                Swap(isOn: $a).symbols(on: "xmark", off: "line.3.horizontal")
+                Swap(isOn: $b).symbols(on: "moon.fill", off: "sun.max.fill")
             }
             .padding()
         }
@@ -68,8 +66,27 @@ public struct Swap: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension Swap {
+    /// The two SF Symbols swapped between: `on` (shown when toggled on) and `off`.
+    func symbols(on onSystemImage: String, off offSystemImage: String) -> Self {
+        copy { $0.onSystemImage = onSystemImage; $0.offSystemImage = offSystemImage }
+    }
+
+    /// Glyph point size.
+    func size(_ s: CGFloat) -> Self { copy { $0.size = s } }
+
+    /// Toggle the rotate-in/out transition between the two glyphs.
+    func rotate(_ on: Bool = true) -> Self { copy { $0.rotate = on } }
+
     /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

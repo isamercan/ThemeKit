@@ -129,7 +129,7 @@ final class ScreenshotGenerator: XCTestCase {
             StatusDot(.away, label: "Away")
             StatusDot(.busy, label: "Busy")
         })
-        shot("Swap", Swap(isOn: .constant(true), on: "xmark", off: "line.3.horizontal"))
+        shot("Swap", Swap(isOn: .constant(true)).symbols(on: "xmark", off: "line.3.horizontal"))
         shot("Tag", HStack(spacing: 8) {
             Tag("Success", style: .success)
             Tag("Error", style: .error, variant: .solid)

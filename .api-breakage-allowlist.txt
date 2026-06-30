@@ -39,3 +39,4 @@ API breakage: constructor DividerView.init(size:axis:dashed:title:titleAlign:) h
 API breakage: constructor GaugeView.init(value:in:label:style:showsValue:) has been removed
 API breakage: constructor RemoteImage.init(_:aspectRatio:contentMode:cornerRadius:circle:) has been removed
 API breakage: constructor RemoteImage.init(_:ratio:contentMode:cornerRadius:circle:) has been removed
+API breakage: constructor Swap.init(isOn:on:off:size:rotate:) has been removed

@@ -961,8 +961,8 @@ struct SwapDemo: View {
     var body: some View {
         ComponentStage("Swap", inspector: [("isOn", "\(on)")]) {
             Group {
-                if pair == .menu { Swap(isOn: $on, on: "xmark", off: "line.3.horizontal", size: 32) }
-                else { Swap(isOn: $on, on: "moon.fill", off: "sun.max.fill", size: 32) }
+                if pair == .menu { Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal").size(32) }
+                else { Swap(isOn: $on).symbols(on: "moon.fill", off: "sun.max.fill").size(32) }
             }
         } knobs: {
             Picker("Icons", selection: $pair) { Text("Menu / Close").tag(Pair.menu); Text("Sun / Moon").tag(Pair.theme) }.pickerStyle(.segmented)

@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`Swap` init reduced to `Swap(isOn:)`.** The `isOn` binding stays in init; the
+  two glyphs and the appearance/state parameters moved to modifiers:
+  `on:`/`off:`→`.symbols(on:off:)` (grouped), `size:`→`.size(_:)`,
+  `rotate:`→`.rotate(_ on:)`. (`.a11yID(_:)` is unchanged — now routed through the
+  shared copy-on-write helper.) Migration:
+  `Swap(isOn: $on, on: "xmark", off: "line.3.horizontal", size: 32)`
+  → `Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal").size(32)`.
 - **`RemoteImage` init reduced to `RemoteImage(_ url:)`.** The two data overloads
   `RemoteImage(_ url:, ratio: String)` and `RemoteImage(_ url:, ratio:
   RemoteImageRatio)` are preserved (they carry a genuine aspect-ratio source); the
