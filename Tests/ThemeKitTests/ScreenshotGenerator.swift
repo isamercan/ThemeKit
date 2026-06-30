@@ -161,7 +161,7 @@ final class ScreenshotGenerator: XCTestCase {
         })
         shot("Gauge", HStack(spacing: 24) {
             GaugeView(value: 0.72, label: "CPU")
-            GaugeView(value: 0.4, label: "Disk", style: .linear).frame(width: 140)
+            GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).frame(width: 140)
         }, hosted: true)
         shot("ShareButton", ShareButton(item: "https://github.com/isamercan/ThemeKit"), hosted: true)
     }

@@ -75,8 +75,8 @@ enum ComponentRegistry {
         .static("TextRotate", .atoms, usage: #"TextRotate(["faster.", "themed.", "accessible."], interval: 2)"#) {
             HStack(spacing: 4) { Text("Build").textStyle(.headingSm); TextRotate(["faster.", "themed.", "accessible."]) }
         },
-        .static("Gauge", .atoms, usage: #"GaugeView(value: 0.72, label: "CPU", style: .circular)"#) {
-            HStack(spacing: 24) { GaugeView(value: 0.72, label: "CPU"); GaugeView(value: 0.4, label: "Disk", style: .linear).frame(width: 140) }
+        .static("Gauge", .atoms, usage: #"GaugeView(value: 0.72, label: "CPU").gaugeStyle(.circular)"#) {
+            HStack(spacing: 24) { GaugeView(value: 0.72, label: "CPU"); GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).frame(width: 140) }
         },
         .static("ShareButton", .atoms, usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#) {
             ShareButton(item: "https://github.com/isamercan/ThemeKit")

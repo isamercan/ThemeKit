@@ -13,6 +13,13 @@ chainable, order-free modifier from a shared vocabulary. Rolling out
 component-by-component.
 
 ### ⚠️ Breaking
+- **`GaugeView` init reduced to `GaugeView(value:in:label:)`.** The value, its
+  range and the optional caption stay in init; the 2 appearance/state parameters
+  moved to modifiers: `style:`→`.gaugeStyle(_:)` (renamed to avoid the generic
+  `style` clash + match `GaugeView.Style`), `showsValue:`→`.showsValue(_ on:)`.
+  Migration:
+  `GaugeView(value: 0.4, label: "Disk", style: .linear, showsValue: false)`
+  → `GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).showsValue(false)`.
 - **`DividerView` init reduced to `DividerView(_ title:)`.** The optional inline
   title stays in init; the 4 appearance/state parameters moved to modifiers:
   `size:`→`.size(_:)`, `axis:`→`.axis(_:)`, `dashed:`→`.dashed(_ on:)`,

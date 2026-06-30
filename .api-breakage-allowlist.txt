@@ -36,3 +36,4 @@ API breakage: constructor FloatingActionButton.init(systemImage:actions:shape:co
 API breakage: constructor PromoBanner.init(title:subtitle:systemImage:ctaTitle:tint:action:) has been removed
 API breakage: constructor Timeline.init(_:axis:mode:reverse:pending:) has been removed
 API breakage: constructor DividerView.init(size:axis:dashed:title:titleAlign:) has been removed
+API breakage: constructor GaugeView.init(value:in:label:style:showsValue:) has been removed

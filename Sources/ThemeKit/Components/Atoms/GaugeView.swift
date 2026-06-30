@@ -13,24 +13,18 @@ public struct GaugeView: View {
 
     @Environment(\.theme) private var theme
 
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var style: Style = .circular
+    private var showsValue: Bool = true
+
     private let value: Double
     private let range: ClosedRange<Double>
     private let label: String?
-    private let style: Style
-    private let showsValue: Bool
 
-    public init(
-        value: Double,
-        in range: ClosedRange<Double> = 0...1,
-        label: String? = nil,
-        style: Style = .circular,
-        showsValue: Bool = true
-    ) {
+    public init(value: Double, in range: ClosedRange<Double> = 0...1, label: String? = nil) {   // R1
         self.value = value
         self.range = range
         self.label = label
-        self.style = style
-        self.showsValue = showsValue
     }
 
     public var body: some View {
@@ -55,10 +49,26 @@ public struct GaugeView: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension GaugeView {
+    /// Gauge rendering: circular (default) or linear.
+    func gaugeStyle(_ s: Style) -> Self { copy { $0.style = s } }
+
+    /// Toggle the inline percentage value readout.
+    func showsValue(_ on: Bool = true) -> Self { copy { $0.showsValue = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     HStack(spacing: 24) {
         GaugeView(value: 0.72, label: "CPU")
-        GaugeView(value: 0.4, label: "Storage", style: .linear).frame(width: 160)
+        GaugeView(value: 0.4, label: "Storage").gaugeStyle(.linear).frame(width: 160)
     }
     .padding()
 }
