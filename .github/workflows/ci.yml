@@ -81,6 +81,33 @@ jobs:
             -quiet
 
   # ---------------------------------------------------------------------------
+  # ThemeKit MCP server (mcp/) — pure Node/TS, so it runs on Linux (1× minutes),
+  # no Xcode/Swift needed. `npm test` = `tsc` (typecheck + build) then the
+  # node:test suites (datagen output, figma codegen, WCAG/contrast, config rules)
+  # against the committed mcp/data/themekit.json + fixtures.
+  # ---------------------------------------------------------------------------
+  mcp:
+    name: MCP server (Node/TS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+      - name: Install
+        working-directory: mcp
+        run: npm ci
+      - name: Typecheck + test
+        working-directory: mcp
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee mcp-test.log
+          PASSED=$(grep -oE 'pass [0-9]+' mcp-test.log | tail -1 || echo 'tests run')
+          echo "### ✅ MCP (Node/TS) — $PASSED" >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
   # Style gate on Linux (1× minutes) via the official SwiftLint image — no Xcode
   # needed. Non-strict: error-level violations block; warnings are annotations.
   # ---------------------------------------------------------------------------

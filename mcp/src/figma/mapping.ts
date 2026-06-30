@@ -9,6 +9,17 @@ export interface ProduceRule {
   trailingClosure?: string;              // e.g. "action"
   styleFromNameSegment?: number;         // "Badge/Error" segment 1 → style: .error
   container?: boolean;                   // wraps children
+  modifiers?: ModifierRule[];            // state-driven chainable modifiers
+}
+
+/** A chainable modifier emitted when a Figma state/property is detected on the node. */
+export interface ModifierRule {
+  /** Modifier emitted, e.g. ".disabled(true)" or ".controlSize(.small)". */
+  emit: string;
+  /** Emit when the node name matches this (case-insensitive) regex, e.g. "disabled|inactive". */
+  whenName?: string;
+  /** Emit when a Figma boolean/variant component-property matches (name=value), e.g. "State=Disabled". */
+  whenProp?: string;
 }
 export interface MappingRule {
   match: { namePattern?: string; type?: string; componentKey?: string };

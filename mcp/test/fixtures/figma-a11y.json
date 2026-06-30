@@ -1,0 +1,47 @@
+{
+  "id": "3:1",
+  "name": "Screen",
+  "type": "FRAME",
+  "layoutMode": "VERTICAL",
+  "fills": [{ "type": "SOLID", "visible": true, "opacity": 1, "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }],
+  "absoluteBoundingBox": { "x": 0, "y": 0, "width": 320, "height": 480 },
+  "children": [
+    {
+      "id": "3:2",
+      "name": "Faint label",
+      "type": "TEXT",
+      "characters": "Low contrast text",
+      "style": { "fontSize": 16, "fontWeight": 400 },
+      "fills": [{ "type": "SOLID", "color": { "r": 0.737, "g": 0.773, "b": 0.824, "a": 1 } }]
+    },
+    {
+      "id": "3:3",
+      "name": "Button/Tiny",
+      "type": "INSTANCE",
+      "absoluteBoundingBox": { "x": 0, "y": 0, "width": 30, "height": 30 },
+      "children": [
+        {
+          "id": "3:4",
+          "name": "title",
+          "type": "TEXT",
+          "characters": "Go",
+          "style": { "fontSize": 15, "fontWeight": 600 },
+          "fills": [{ "type": "SOLID", "color": { "r": 0.055, "g": 0.071, "b": 0.098, "a": 1 } }]
+        }
+      ]
+    },
+    {
+      "id": "3:5",
+      "name": "Icon/star",
+      "type": "VECTOR"
+    },
+    {
+      "id": "3:6",
+      "name": "Tiny print",
+      "type": "TEXT",
+      "characters": "9pt legal",
+      "style": { "fontSize": 9, "fontWeight": 400 },
+      "fills": [{ "type": "SOLID", "color": { "r": 0.055, "g": 0.071, "b": 0.098, "a": 1 } }]
+    }
+  ]
+}

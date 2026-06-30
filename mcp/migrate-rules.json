@@ -1,0 +1,51 @@
+{
+  "//": "Config-driven SwiftUI → ThemeKit rewrite rules used by the migrate_snippet tool. Each rule is a regex find/replace with a human note. Tried top-to-bottom; all matching rules apply. `flags` defaults to \"g\". Edit/extend here — nothing is hardcoded in the server.",
+  "version": 1,
+  "rules": [
+    {
+      "find": "\\.foregroundColor\\(\\.(?:blue|accentColor)\\)",
+      "replace": ".foregroundStyle(theme.text(.textHero))",
+      "note": "system accent → theme.text(.textHero)"
+    },
+    {
+      "find": "\\.foregroundColor\\(\\.(?:secondary|gray|grey)\\)",
+      "replace": ".foregroundStyle(theme.text(.textSecondary))",
+      "note": "secondary/gray text → theme.text(.textSecondary)"
+    },
+    {
+      "find": "Color\\.blue",
+      "replace": "theme.foreground(.fgHero)",
+      "note": "Color.blue → theme.foreground(.fgHero)"
+    },
+    {
+      "find": "\\.background\\(Color\\.white\\)",
+      "replace": ".background(theme.background(.bgWhite))",
+      "note": "Color.white background → theme.background(.bgWhite)"
+    },
+    {
+      "find": "\\.cornerRadius\\(\\s*\\d+(?:\\.\\d+)?\\s*\\)",
+      "replace": ".cornerRadius(Theme.RadiusRole.box.value)",
+      "note": "hardcoded radius → RadiusRole.box"
+    },
+    {
+      "find": "\\.padding\\(\\s*\\d+(?:\\.\\d+)?\\s*\\)",
+      "replace": ".padding(Theme.SpacingKey.md.value)",
+      "note": "hardcoded padding → Theme.SpacingKey.md.value"
+    },
+    {
+      "find": "\\.font\\(\\.system\\([^)]*\\)\\)",
+      "replace": ".textStyle(.bodyBase400)",
+      "note": "raw system font → .textStyle(.bodyBase400)"
+    },
+    {
+      "find": "\\bToggle\\((?:\"[^\"]*\",\\s*)?isOn:\\s*(\\$\\w+)\\)",
+      "replace": "ThemeToggle(isOn: $1)",
+      "note": "Toggle → ThemeToggle"
+    },
+    {
+      "find": "\\bDivider\\(\\s*\\)",
+      "replace": "DividerView()",
+      "note": "Divider → DividerView"
+    }
+  ]
+}

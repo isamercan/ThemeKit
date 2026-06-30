@@ -14,7 +14,11 @@
       "//": "Figma node → ThemeKit component. `match` is ANDed; `produce.argsFrom` pulls init args from the node.",
       "match": { "namePattern": "^(Button|Btn)/Primary", "type": "INSTANCE" },
       "produce": { "component": "PrimaryButton", "confidence": 0.95,
-                   "argsFrom": { "_": "{text}" }, "trailingClosure": "action" }
+                   "argsFrom": { "_": "{text}" }, "trailingClosure": "action",
+                   "modifiers": [
+                     { "emit": ".disabled(true)", "whenProp": "State=Disabled" },
+                     { "emit": ".controlSize(.large)", "whenProp": "Size=Large" }
+                   ] }
     },
     {
       "match": { "namePattern": "^(Button|Btn)/Secondary", "type": "INSTANCE" },
