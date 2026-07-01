@@ -262,10 +262,10 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Mask.png" width="240" alt="Mask"><br><sub><b>Mask</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/TextRotate.png" width="177" alt="TextRotate"><br><sub><b>TextRotate</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Gauge.png" width="240" alt="Gauge"><br><sub><b>Gauge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Gauge.png" width="127" alt="Gauge"><br><sub><b>Gauge</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ShareButton.png" width="146" alt="ShareButton"><br><sub><b>ShareButton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ShareButton.png" width="70" alt="ShareButton"><br><sub><b>ShareButton</b></sub></td>
 </tr>
 </table>
 
@@ -295,30 +295,30 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Slider.png" width="240" alt="Slider"><br><sub><b>Slider</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Breadcrumbs.png" width="240" alt="Breadcrumbs"><br><sub><b>Breadcrumbs</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/TextInput.png" width="240" alt="TextInput"><br><sub><b>TextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TextInput.png" width="166" alt="TextInput"><br><sub><b>TextInput</b></sub></td>
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/FileInput.png" width="240" alt="FileInput"><br><sub><b>FileInput</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Pagination.png" width="240" alt="Pagination"><br><sub><b>Pagination</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Fieldset.png" width="240" alt="Fieldset"><br><sub><b>Fieldset</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Fieldset.png" width="176" alt="Fieldset"><br><sub><b>Fieldset</b></sub></td>
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/DateField.png" width="240" alt="DateField"><br><sub><b>DateField</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Select.png" width="240" alt="Select"><br><sub><b>Select</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Select.png" width="156" alt="Select"><br><sub><b>Select</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/MultiSelect.png" width="240" alt="MultiSelect"><br><sub><b>MultiSelect</b></sub></td>
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/TreeSelect.png" width="240" alt="TreeSelect"><br><sub><b>TreeSelect</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/Autocomplete.png" width="240" alt="Autocomplete"><br><sub><b>Autocomplete</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/SearchBar.png" width="240" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Autocomplete.png" width="166" alt="Autocomplete"><br><sub><b>Autocomplete</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SearchBar.png" width="176" alt="SearchBar"><br><sub><b>SearchBar</b></sub></td>
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/OTPInput.png" width="240" alt="OTPInput"><br><sub><b>OTPInput</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/InputNumber.png" width="240" alt="InputNumber"><br><sub><b>InputNumber</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InputNumber.png" width="156" alt="InputNumber"><br><sub><b>InputNumber</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/RangeSlider.png" width="240" alt="RangeSlider"><br><sub><b>RangeSlider</b></sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="Screenshots/MultiLineTextInput.png" width="240" alt="MultiLineTextInput"><br><sub><b>MultiLineTextInput</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MultiLineTextInput.png" width="166" alt="MultiLineTextInput"><br><sub><b>MultiLineTextInput</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Tooltip.png" width="60" alt="Tooltip"><br><sub><b>Tooltip</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Chips.png" width="132" alt="Chips"><br><sub><b>Chips</b></sub></td>
 </tr>
@@ -329,7 +329,7 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"><br><sub><b>Calendar</b></sub></td>
-<td align="center" valign="top" width="33%"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"><br><sub><b>ColorField</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ColorField.png" width="156" alt="ColorField"><br><sub><b>ColorField</b></sub></td>
 </tr>
 </table>
 
