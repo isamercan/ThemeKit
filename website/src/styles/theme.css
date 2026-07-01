@@ -25,6 +25,20 @@
   width: auto;
 }
 
+/* The hero banner is a wide (≈1.9:1) marketing image; Starlight's default puts it
+   in the narrow 4fr column so it reads small. Give it the larger share and let it
+   fill the column. */
+@media (min-width: 50rem) {
+  .hero {
+    grid-template-columns: 4fr 6fr;
+  }
+}
+.hero > img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
 /* Component gallery cards (used on the Components page). */
 .tk-gallery {
   display: grid;
