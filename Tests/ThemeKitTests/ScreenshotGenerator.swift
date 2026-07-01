@@ -486,9 +486,13 @@ final class ScreenshotGenerator: XCTestCase {
     private func shot(_ name: String, _ view: some View, hosted: Bool = false, inGallery: Bool = true) {
         // The backdrop reads the active theme's surface, so loading the dark theme
         // (in `testGenerateAll`) makes both component + backdrop dark.
+        // Force English locale so date/number-bearing components (CalendarView,
+        // DateField…) render English month/day names regardless of the host's
+        // system language — the project ships English-only screenshots.
         let decorated = view.padding(16)
             .background(Theme.shared.background(.bgWhite))
             .environment(\.colorScheme, scheme)
+            .environment(\.locale, Locale(identifier: "en_US"))
         let cg = hosted ? hostedCGImage(decorated) : imageRendererCGImage(decorated)
         guard let cg else { XCTFail("\(name): no image"); return }
         let fileName = scheme == .dark ? "\(name)-dark" : name

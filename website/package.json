@@ -5,8 +5,11 @@
   "private": true,
   "description": "Documentation website for ThemeKit (Starlight + Astro).",
   "scripts": {
+    "sync-screenshots": "node scripts/sync-screenshots.mjs",
+    "predev": "node scripts/sync-screenshots.mjs",
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "node scripts/sync-screenshots.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

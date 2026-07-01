@@ -1,0 +1,66 @@
+---
+// Renders the component screenshot gallery from the build-time manifest produced
+// by scripts/sync-screenshots.mjs. Light/dark images swap with the site theme.
+import components from '../data/components.json';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const img = (file: string) => `${base}/screenshots/${file}`;
+const anchor = (name: string) => name.toLowerCase();
+---
+
+<p class="tk-gallery-count">{components.length} components</p>
+
+<div class="tk-gallery">
+  {
+    components.map((c) => (
+      <a id={anchor(c.name)} href={`#${anchor(c.name)}`} title={c.name}>
+        <img
+          src={img(`${c.name}.png`)}
+          data-light={img(`${c.name}.png`)}
+          data-dark={c.hasDark ? img(`${c.name}-dark.png`) : img(`${c.name}.png`)}
+          alt={`${c.name} component`}
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="tk-label">
+          {c.name}
+          {c.hasGif && <span class="tk-anim">GIF</span>}
+        </span>
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .tk-gallery-count {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    margin-bottom: 0.5rem;
+  }
+  .tk-anim {
+    margin-left: 0.4rem;
+    font-size: 0.7em;
+    font-weight: 700;
+    color: var(--sl-color-accent);
+    border: 1px solid var(--sl-color-accent);
+    border-radius: 0.3rem;
+    padding: 0 0.3rem;
+    vertical-align: middle;
+  }
+</style>
+
+<script>
+  // Swap each gallery image to its dark variant when the site is in dark mode.
+  function syncGalleryTheme() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    document.querySelectorAll<HTMLImageElement>('.tk-gallery img').forEach((el) => {
+      const next = dark ? el.dataset.dark : el.dataset.light;
+      if (next && el.getAttribute('src') !== next) el.setAttribute('src', next);
+    });
+  }
+  syncGalleryTheme();
+  new MutationObserver(syncGalleryTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>

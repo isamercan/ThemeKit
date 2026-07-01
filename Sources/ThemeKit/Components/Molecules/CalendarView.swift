@@ -10,11 +10,19 @@ import SwiftUI
 /// (daisyUI "Calendar"; complements DateField which presents a popover.)
 public struct CalendarView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     @Binding private var selection: Date?
     @State private var displayed: Date
 
-    private let calendar = Calendar.current
+    /// Tracks the environment locale so month titles, weekday symbols, and the
+    /// first day of the week follow the app's language (and mirror correctly for
+    /// RTL). Defaults to the system locale, so existing call sites are unchanged.
+    private var calendar: Calendar {
+        var c = Calendar.current
+        c.locale = locale
+        return c
+    }
 
     public init(selection: Binding<Date?>) {
         self._selection = selection
@@ -36,7 +44,7 @@ public struct CalendarView: View {
         HStack {
             navButton("chevron.left", months: -1)
             Spacer()
-            Text(displayed.formatted(.dateTime.month(.wide).year()))
+            Text(displayed.formatted(.dateTime.month(.wide).year().locale(locale)))
                 .textStyle(.labelMd700)
                 .foregroundStyle(theme.text(.textPrimary))
             Spacer()

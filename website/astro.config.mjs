@@ -16,9 +16,8 @@ export default defineConfig({
         'A themeable SwiftUI component library — 80+ accessible components, design tokens, light/dark, and RTL.',
       tagline: 'Themeable SwiftUI components, built to ship.',
       logo: {
-        light: './src/assets/banner.png',
-        dark: './src/assets/banner-dark.png',
-        replacesTitle: true,
+        src: './src/assets/logo.svg',
+        replacesTitle: false,
       },
       favicon: '/favicon.svg',
       social: [
@@ -32,6 +31,9 @@ export default defineConfig({
         baseUrl: 'https://github.com/isamercan/ThemeKit/edit/main/website/',
       },
       customCss: ['./src/styles/theme.css'],
+      components: {
+        Footer: './src/components/Footer.astro',
+      },
       sidebar: [
         {
           label: 'Start Here',
@@ -52,6 +54,13 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Design with AI',
+          items: [
+            { label: 'MCP Server', link: '/ai/mcp/', badge: { text: 'AI', variant: 'tip' } },
+            { label: 'DESIGN.md', link: '/ai/design-md/', badge: { text: 'AI', variant: 'tip' } },
+          ],
+        },
+        {
           label: 'Components',
           items: [{ label: 'Gallery', link: '/components/' }],
         },
@@ -67,8 +76,8 @@ export default defineConfig({
           items: [
             {
               label: 'DocC Reference ↗',
-              link: '/ThemeKit/api/documentation/themekit/',
-              attrs: { target: '_blank' },
+              link: '/api/documentation/themekit/',
+              attrs: { target: '_blank', rel: 'noopener' },
               badge: { text: 'Swift', variant: 'note' },
             },
           ],

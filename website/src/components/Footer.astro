@@ -1,0 +1,13 @@
+---
+// Wraps Starlight's default footer (prev/next nav, edit link, last-updated) and
+// appends a site-wide author credit.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default {...Astro.props} />
+
+<div class="tk-footer-credit">
+  Built by <a href="https://github.com/isamercan" target="_blank" rel="noopener">@isamercan</a>
+  · <a href="https://github.com/isamercan/ThemeKit/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+  · <a href="https://github.com/isamercan/ThemeKit" target="_blank" rel="noopener">Source</a>
+</div>

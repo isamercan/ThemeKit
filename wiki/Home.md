@@ -7,7 +7,7 @@ accessibility (Dynamic Type, VoiceOver, RTL) — all with no third-party
 dependencies in the core.
 
 📖 **Full DocC documentation** is published at
-**[isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/documentation/themekit)**,
+**[isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/api/documentation/themekit)**,
 or build it locally:
 
 ```bash
@@ -31,8 +31,8 @@ ContentView().themeKit()
 - **[[Installation]]** — add the package to your project.
 - **[[FAQ]]** — common questions.
 - **[[Troubleshooting]]** — fixes for typical issues.
-- **API reference** → the [live DocC docs](https://isamercan.github.io/ThemeKit/documentation/themekit)
+- **API reference** → the [live DocC docs](https://isamercan.github.io/ThemeKit/api/documentation/themekit)
 
 The detailed, styled DocC docs live at
-[isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/documentation/themekit).
+[isamercan.github.io/ThemeKit](https://isamercan.github.io/ThemeKit/api/documentation/themekit).
 This wiki holds the light, fast-changing helper pages.

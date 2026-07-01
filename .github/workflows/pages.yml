@@ -1,13 +1,17 @@
 name: Pages
 
-# Builds the DocC documentation and publishes it to GitHub Pages on every push to
-# main. Public repo → free macOS runner minutes. The manual artifact build in
-# docs.yml stays for local/offline use.
+# Builds the documentation site and publishes it to GitHub Pages on every push to
+# main. The site is a hybrid:
+#   /ThemeKit/        → Starlight (Astro) docs site  (website/)
+#   /ThemeKit/api/    → Swift DocC API reference     (generated from Sources/)
+# Public repo → free macOS runner minutes. The manual artifact build in docs.yml
+# stays for local/offline use.
 on:
   push:
     branches: [main]
     paths:
       - 'Sources/**'
+      - 'website/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -22,7 +26,7 @@ concurrency:
 
 jobs:
   build-deploy:
-    name: Build DocC + deploy to Pages
+    name: Build site (Starlight + DocC) + deploy to Pages
     runs-on: macos-15
     environment:
       name: github-pages
@@ -35,33 +39,50 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # Project Pages serve under /<repo>/ — the base path must match or assets 404.
-      - name: Build DocC (static hosting)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      # Starlight site → website/dist. The prebuild hook (sync-screenshots.mjs)
+      # copies component screenshots from Screenshots/ into the build.
+      - name: Build Starlight site
+        working-directory: website
+        run: |
+          npm ci
+          npm run build
+
+      # DocC API reference → served under /ThemeKit/api/. The base path must match
+      # or assets 404. Output is nested inside the Starlight build so a single
+      # artifact carries both.
+      - name: Build DocC (static hosting) into /api
         run: |
           swift package --disable-sandbox \
             generate-documentation \
             --target ThemeKit \
             --transform-for-static-hosting \
-            --hosting-base-path ThemeKit \
-            --output-path ./docs-out
+            --hosting-base-path ThemeKit/api \
+            --output-path ./website/dist/api
 
-      # DocC's static-hosting root doesn't auto-open the module, so the bare site
-      # root would land on a blank shell. Redirect it straight to the docs.
-      - name: Redirect site root → documentation
+      # DocC's static-hosting root doesn't auto-open the module, so /api/ would land
+      # on a blank shell. Redirect it straight to the docs.
+      - name: Redirect /api root → documentation
         run: |
-          cat > ./docs-out/index.html <<'HTML'
+          cat > ./website/dist/api/index.html <<'HTML'
           <!doctype html>
           <meta charset="utf-8">
-          <title>ThemeKit</title>
+          <title>ThemeKit API Reference</title>
           <meta http-equiv="refresh" content="0; url=./documentation/themekit/">
           <link rel="canonical" href="./documentation/themekit/">
-          <p>Redirecting to the <a href="./documentation/themekit/">ThemeKit documentation</a>…</p>
+          <p>Redirecting to the <a href="./documentation/themekit/">ThemeKit API reference</a>…</p>
           HTML
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs-out
+          path: ./website/dist
 
       - name: Deploy to GitHub Pages
         id: deploy
