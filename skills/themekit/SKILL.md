@@ -52,7 +52,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
             Text("Hello").foregroundStyle(theme.text(.textPrimary))
-            PrimaryButton("Continue", block: true) { /* … */ }
+            PrimaryButton("Continue") { /* … */ }.fullWidth()
         }
         .padding(Theme.SpacingKey.lg.value)
         .background(theme.background(.bgElevatorPrimary))
@@ -87,13 +87,13 @@ recolor for free:
 Badge("Sale").badgeStyle(.error).variant(.solid)
 Chip("Pool", isSelected: $on).icon("drop.fill")
 ThemeButton("Save") { save() }.color(.accent).variant(.solid)
-TextInput("Email", text: $email, leadingSystemImage: "envelope")
+TextInput("Email", text: $email).icon(leading: "envelope")
     .a11yID("login.email")
 Select("Country", options: countries, selection: $country) { $0.name }
 Checkbox("I agree", isChecked: $agree).controlSize(.small)
 Card(title: "Booking") { /* content */ }
 Rating(value: 4.5).allowHalf().onRate { rating = $0 }
-ProgressBar(value: 0.6, showPercentage: true).gradient()
+ProgressBar(value: 0.6).showsPercentage().gradient()
 ```
 
 ## Theming
@@ -130,10 +130,10 @@ ThemePicker(selection: $active)             // tappable grid of all 33 themes
 @Environment(\.theme) private var theme
 Card(title: "Sign up") {
     VStack(spacing: Theme.SpacingKey.md.value) {
-        TextInput("Email", text: $email, leadingSystemImage: "envelope").a11yID("email")
+        TextInput("Email", text: $email).icon(leading: "envelope").a11yID("email")
         TextInput("Password", text: $pw, isSecure: true).a11yID("pw")
         Checkbox("Accept terms", isChecked: $terms)
-        PrimaryButton("Create account", block: true) { submit() }.disabled(!terms)
+        PrimaryButton("Create account") { submit() }.fullWidth().disabled(!terms)
     }
 }
 ```
