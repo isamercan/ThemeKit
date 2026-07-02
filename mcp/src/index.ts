@@ -39,6 +39,12 @@ const find = (name: string) => data.components.find((c) => c.name.toLowerCase() 
 /** Exact catalog names — guards synonym/candidate lists against drift from the generated data. */
 const CATALOG = new Set(data.components.map((c) => c.name));
 
+// Figma → ThemeKit mapping: the bundled defaults, overlaid by an optional
+// user-owned file (THEMEKIT_MAPPING) so users add their own componentAliases /
+// componentRules from their project without editing inside node_modules.
+const MAPPING_PATH = join(here, "..", "figma-mapping.json");
+const USER_MAPPING = process.env.THEMEKIT_MAPPING;
+
 // Single source of truth for the version — read package.json, never hardcode.
 const pkg = JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8")) as { version?: string };
 const server = new McpServer({ name: "themekit", version: pkg.version ?? "0.0.0" });
@@ -163,12 +169,8 @@ const SYNONYMS: Record<string, string[]> = {
   step: ["Steps", "StepIndicator", "QuantityStepper"], divider: ["DividerView"],
 };
 
-server.registerTool("search_components", {
-  title: "Search components by intent",
-  description: "Find components for a need, e.g. 'a selectable filter list' or 'date picker'. Keyword + synonym scoring.",
-  inputSchema: { intent: z.string() },
-}, async ({ intent }) => {
-  const words = intent.toLowerCase().split(/\W+/).filter(Boolean);
+/** Keyword + synonym scoring of the catalog for a set of words. Shared by search_components and suggest_figma_mapping. */
+function scoreCatalog(words: string[]): [string, number][] {
   const score = new Map<string, number>();
   const bump = (name: string, by: number) => score.set(name, (score.get(name) ?? 0) + by);
   for (const w of words) {
@@ -180,7 +182,25 @@ server.registerTool("search_components", {
       if (c.doc.toLowerCase().includes(w)) bump(c.name, 1);
     }
   }
-  const ranked = [...score.entries()].filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  return [...score.entries()].filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]);
+}
+
+/** Split a component name into scoreable words: camelCase + ACRONYM boundaries, e.g. "MARKAADITextField" → [markaadi, text, field]. */
+function tokenizeName(name: string): string[] {
+  return name
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((s) => s.toLowerCase());
+}
+
+server.registerTool("search_components", {
+  title: "Search components by intent",
+  description: "Find components for a need, e.g. 'a selectable filter list' or 'date picker'. Keyword + synonym scoring.",
+  inputSchema: { intent: z.string() },
+}, async ({ intent }) => {
+  const ranked = scoreCatalog(intent.toLowerCase().split(/\W+/).filter(Boolean)).slice(0, 10);
   if (!ranked.length) return text(`No components matched "${intent}". Try list_components.`);
   return text(ranked.flatMap(([n, s]) => {
     const c = find(n);
@@ -644,7 +664,7 @@ const runDesignToCode = async ({ url, fileKey, nodeId, dryRun, a11yOnly, expandI
     const findings = auditA11y(node);
     return text(`# Accessibility audit — Figma design (WCAG 2.1)\n\n${formatA11y(findings)}\n\nThis audits the design's real colors, font sizes and dimensions before any code is generated.`);
   }
-  const mapping = loadMapping(join(here, "..", "figma-mapping.json"));
+  const mapping = loadMapping(MAPPING_PATH, USER_MAPPING);
   const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
   const { code, report } = generate(node, mapping, data.tokens, apis, { expandInstances });
   // Icons/images the design uses → temporary PNG export URLs (the images API renders them).
@@ -725,6 +745,83 @@ server.registerTool("import_figma_variables", {
   }
 });
 
+// ── Suggest a Figma-kit → ThemeKit mapping (drafts componentAliases) ────────
+interface Suggestion { figma: string; component: string | null; confidence: number; alternatives: string[]; componentKey?: string; }
+
+/** Suggest a ThemeKit component for a Figma component name (brand prefix stripped, camelCase-tokenized). */
+function suggestForName(figmaName: string, prefixes: string[]): Suggestion {
+  let base = figmaName.split("/")[0];
+  for (const p of prefixes) if (p) base = base.replace(new RegExp("^" + p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "");
+  const ranked = scoreCatalog(tokenizeName(base));
+  if (!ranked.length) return { figma: figmaName, component: null, confidence: 0, alternatives: [] };
+  const [topName, topScore] = ranked[0];
+  // Exact stripped-name hit is near-certain; otherwise scale by score.
+  const exact = CATALOG.has(topName) && tokenizeName(base).join("") === topName.toLowerCase();
+  const confidence = exact ? 0.98 : topScore >= 6 ? 0.95 : topScore >= 5 ? 0.9 : topScore >= 3 ? 0.75 : 0.55;
+  return { figma: figmaName, component: topName, confidence, alternatives: ranked.slice(1, 3).map(([n]) => n) };
+}
+
+/** Collect distinct component instances (first name segment → componentId) from a Figma subtree. */
+function collectInstances(node: { type: string; name: string; componentId?: string; children?: unknown[] }, acc: Map<string, string | undefined>): void {
+  if (node.type === "INSTANCE") { const key = node.name.split("/")[0]; if (!acc.has(key)) acc.set(key, node.componentId); }
+  for (const c of (node.children ?? []) as typeof node[]) collectInstances(c, acc);
+}
+
+server.registerTool("suggest_figma_mapping", {
+  title: "Suggest a Figma-kit → ThemeKit mapping",
+  description:
+    "Drafts a `componentAliases` block for the Figma → ThemeKit mapping. Give a list of Figma component `names` (offline), or a Figma `url` / `fileKey`+`nodeId` to walk a kit's component instances (needs FIGMA_TOKEN). It strips the brand prefix, tokenizes the name, and scores it against the real ThemeKit catalog — so `MARKAADITextField` → `TextInput`. Returns ready-to-paste JSON (put it in your own file and point THEMEKIT_MAPPING at it) plus confidence + alternatives; low-confidence and no-match names are flagged, never guessed silently.",
+  inputSchema: {
+    names: z.array(z.string()).optional().describe('Figma component names, e.g. ["MARKAADITextField","MARKAADIButton"]'),
+    url: z.string().optional().describe("A Figma file/kit URL — walks its component instances (needs FIGMA_TOKEN)."),
+    fileKey: z.string().optional(),
+    nodeId: z.string().optional(),
+    brandPrefix: z.union([z.string(), z.array(z.string())]).optional().describe('Prefix(es) to strip, e.g. "MARKAADI" or ["Acme","ACME"]'),
+  },
+}, async ({ names, url, fileKey, nodeId, brandPrefix }) => {
+  const prefixes = Array.isArray(brandPrefix) ? brandPrefix : brandPrefix ? [brandPrefix] : [];
+  let targets: { name: string; componentKey?: string }[] = [];
+
+  if (names?.length) {
+    targets = names.map((n) => ({ name: n }));
+  } else if (url || (fileKey && nodeId)) {
+    const token = process.env.FIGMA_TOKEN;
+    if (!token) return text("Walking a Figma kit needs FIGMA_TOKEN. Or pass `names` to work offline.");
+    if (url) { try { ({ fileKey, nodeId } = parseFigmaUrl(url)); } catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); } }
+    if (!fileKey || !nodeId) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`, or `names`.");
+    let node;
+    try { node = await fetchFigmaNode(fileKey, nodeId, token); }
+    catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
+    const acc = new Map<string, string | undefined>();
+    collectInstances(node, acc);
+    targets = [...acc.entries()].map(([name, componentKey]) => ({ name, componentKey }));
+    if (!targets.length) return text("No component instances found under that node. Point it at a UI-kit page/frame of component instances.");
+  } else {
+    return text("Give `names` (offline), or a Figma `url` / `fileKey`+`nodeId` to walk a kit.");
+  }
+
+  // Don't re-suggest names the current mapping already covers.
+  const mapping = loadMapping(MAPPING_PATH, USER_MAPPING);
+  const known = new Set(Object.keys(mapping.componentAliases).map((k) => k.toLowerCase()));
+
+  const suggestions = targets.map((t) => ({ ...suggestForName(t.name, prefixes), componentKey: t.componentKey }));
+  const aliases: Record<string, string> = {};
+  const lines: string[] = [];
+  for (const s of suggestions) {
+    if (known.has(s.figma.toLowerCase())) { lines.push(`- ${s.figma}: already mapped → ${mapping.componentAliases[s.figma] ?? "(rule)"}`); continue; }
+    if (!s.component || s.confidence < 0.55) { lines.push(`- ${s.figma}: no confident match — set it manually (search_components "${s.figma}")`); continue; }
+    aliases[s.figma] = s.component;
+    const alt = s.alternatives.length ? `  alt: ${s.alternatives.join(", ")}` : "";
+    const key = s.componentKey ? `  [key ${s.componentKey}]` : "";
+    lines.push(`- ${s.figma} → ${s.component}  (${Math.round(s.confidence * 100)}%)${alt}${key}`);
+  }
+
+  const block = Object.keys(aliases).length
+    ? `\n\nPaste into your mapping file (then set THEMEKIT_MAPPING to it):\n\`\`\`json\n${JSON.stringify({ componentAliases: aliases }, null, 2)}\n\`\`\``
+    : "\n\n(No new confident aliases to add.)";
+  return text(`# Suggested Figma → ThemeKit aliases (${Object.keys(aliases).length}/${targets.length})\n${lines.join("\n")}${block}\n\nReview each — the generator fills required init args from the ThemeKit API. Prefer keying by componentKey (a rule) for names that get renamed in Figma.`);
+});
+
 // ── Resources & prompts ────────────────────────────────────────────────────
 
 server.registerResource("guide", "themekit://guide",
@@ -738,6 +835,29 @@ server.registerResource("component", new ResourceTemplate("themekit://component/
   async (uri, { name }) => {
     const c = find(String(name));
     const body = c ? [`# ${c.name}`, c.doc, `Init: ${c.init}`, ...c.modifiers.map((m) => `.${m.signature.replace(/^\./, "")} — ${m.doc}`)].join("\n") : `Unknown: ${name}`;
+    return { contents: [{ uri: uri.href, text: body }] };
+  });
+// The active Figma → ThemeKit mapping (bundled + any THEMEKIT_MAPPING override),
+// so an LLM can read which Figma component maps to which ThemeKit component.
+server.registerResource("figma-mapping", "themekit://figma-mapping",
+  { title: "Figma → ThemeKit mapping", description: "Active componentAliases + componentRules + heuristics", mimeType: "text/markdown" },
+  async (uri) => {
+    const m = loadMapping(MAPPING_PATH, USER_MAPPING);
+    const aliases = Object.entries(m.componentAliases);
+    const rules = m.componentRules.map((r) => `- ${r.match.componentKey ? `key ${r.match.componentKey}` : r.match.namePattern ?? "?"}${r.match.type ? ` (${r.match.type})` : ""} → ${r.produce.component}`);
+    const body = [
+      "# Figma → ThemeKit mapping (active)",
+      USER_MAPPING ? `Includes your override: ${USER_MAPPING}` : "Bundled defaults only (set THEMEKIT_MAPPING to add your own).",
+      "",
+      `## componentAliases (${aliases.length})`,
+      aliases.length ? aliases.map(([k, v]) => `- ${k} → ${v}`).join("\n") : "- (none yet — run suggest_figma_mapping to draft some)",
+      "",
+      `## componentRules (${rules.length})`,
+      rules.join("\n") || "- (none)",
+      "",
+      "## heuristics (fallback when nothing matches)",
+      Object.entries(m.heuristics).map(([k, v]) => `- ${k}: ${v}`).join("\n"),
+    ].join("\n");
     return { contents: [{ uri: uri.href, text: body }] };
   });
 

@@ -126,6 +126,10 @@
     }
   ],
 
+  "componentAliases": {
+    "//": "THE EASY PATH. Your Figma component name → a ThemeKit component, one line each. The generator fills the ThemeKit component's required init args from its verified API, so you don't write params. Matches by exact name, first '/'-segment, or prefix (case-insensitive). Example — uncomment to try: \"MyBrandTextField\": \"TextInput\". For custom arg sources, style segments or containers, write a full componentRules entry above. Tip: run the `suggest_figma_mapping` tool to draft this block from your Figma kit."
+  },
+
   "heuristics": {
     "//": "Used only when no rule matches. Override by adding a componentRule above.",
     "autolayoutSingleTextFill": "PrimaryButton",

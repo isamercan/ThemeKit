@@ -29,6 +29,14 @@ export interface MappingRule {
 export interface Mapping {
   tolerances: { colorDeltaE: number; spacingSnapPx: number; radiusSnapPx: number };
   componentRules: MappingRule[];
+  /**
+   * The easy path: a Figma component name → a ThemeKit component. One line, no
+   * params — the codegen fills the component's required init args from its
+   * verified API (e.g. `"MARKAADITextField": "TextInput"` → `TextInput("…", text: $text)`).
+   * For anything beyond the defaults (custom arg sources, style segments,
+   * containers), write a full `componentRules` entry instead.
+   */
+  componentAliases: Record<string, string>;
   heuristics: Record<string, string>;
   tokenAliases: { color?: Record<string, string>; text?: Record<string, string> };
 }
@@ -36,22 +44,65 @@ export interface Mapping {
 const DEFAULT: Mapping = {
   tolerances: { colorDeltaE: 10, spacingSnapPx: 2, radiusSnapPx: 2 },
   componentRules: [],
+  componentAliases: {},
   heuristics: { frameContainer: "Card", textOnly: "Text", autolayoutSingleTextFill: "PrimaryButton", imageFill: "RemoteImage" },
   tokenAliases: {},
 };
 
-export function loadMapping(path: string): Mapping {
-  if (!existsSync(path)) return DEFAULT;
-  const raw = JSON.parse(readFileSync(path, "utf8")) as Partial<Mapping> & Record<string, unknown>;
+interface RawMapping {
+  tolerances?: Partial<Mapping["tolerances"]>;
+  componentRules?: MappingRule[];
+  componentAliases?: Record<string, string>;
+  heuristics?: Record<string, string>;
+  tokenAliases?: Mapping["tokenAliases"];
+}
+
+function readRaw(path: string): RawMapping {
+  if (!existsSync(path)) return {};
+  try { return JSON.parse(readFileSync(path, "utf8")) as RawMapping; } catch { return {}; }
+}
+
+/** Normalize a (possibly-merged) raw object into a Mapping, applying defaults + filtering. */
+function parseMapping(raw: RawMapping): Mapping {
+  const aliases: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw.componentAliases ?? {})) if (typeof v === "string" && !k.startsWith("//")) aliases[k] = v;
   return {
     tolerances: { ...DEFAULT.tolerances, ...(raw.tolerances ?? {}) },
     componentRules: (raw.componentRules ?? []).filter((r): r is MappingRule => !!r?.match && !!r?.produce),
+    componentAliases: aliases,
     heuristics: { ...DEFAULT.heuristics, ...(raw.heuristics ?? {}) },
     tokenAliases: raw.tokenAliases ?? {},
   };
 }
 
-export interface Match { component: string; confidence: number; produce: ProduceRule; via: "rule" | "heuristic"; }
+/**
+ * Load the mapping from the bundled `figma-mapping.json`, then overlay an
+ * optional **user-owned** file (path from `THEMEKIT_MAPPING`) so a user can add
+ * their own `componentAliases` / `componentRules` from their project without
+ * editing inside `node_modules`. The user file wins: their rules are tried first
+ * and their aliases override. The override can be partial — just the keys it sets.
+ */
+export function loadMapping(path: string, overridePath?: string): Mapping {
+  const base = readRaw(path);
+  const over = overridePath ? readRaw(overridePath) : {};
+  return parseMapping({
+    tolerances: { ...base.tolerances, ...over.tolerances },
+    componentRules: [...(over.componentRules ?? []), ...(base.componentRules ?? [])], // user rules first
+    componentAliases: { ...base.componentAliases, ...over.componentAliases },
+    heuristics: { ...base.heuristics, ...over.heuristics },
+    tokenAliases: { color: { ...base.tokenAliases?.color, ...over.tokenAliases?.color }, text: { ...base.tokenAliases?.text, ...over.tokenAliases?.text } },
+  });
+}
+
+export interface Match { component: string; confidence: number; produce: ProduceRule; via: "rule" | "alias" | "heuristic"; }
+
+const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+/** A Figma node name matches an alias key by exact, first-segment, or prefix (case/punct-insensitive). */
+function matchesAlias(nodeName: string, key: string): boolean {
+  const n = clean(nodeName), k = clean(key);
+  if (!k) return false;
+  return n === k || clean(nodeName.split("/")[0]) === k || n.startsWith(k);
+}
 
 /** First matching config rule, else a heuristic, else null (→ raw fallback). */
 export function matchComponent(node: FigmaNode, m: Mapping): Match | null {
@@ -62,6 +113,11 @@ export function matchComponent(node: FigmaNode, m: Mapping): Match | null {
     if (namePattern && !new RegExp(namePattern, "i").test(node.name)) continue;
     if (componentKey && node.componentId !== componentKey) continue;
     return { component: rule.produce.component, confidence: rule.produce.confidence ?? 0.8, produce: rule.produce, via: "rule" };
+  }
+  // componentAliases — the one-line shorthand. No argsFrom: the codegen fills the
+  // component's required init args from its verified API. Explicit rules win over these.
+  for (const [key, component] of Object.entries(m.componentAliases)) {
+    if (matchesAlias(node.name, key)) return { component, confidence: 0.9, produce: { component }, via: "alias" };
   }
   // Heuristics
   const hasFill = (node.fills ?? []).some((f) => f.visible !== false && f.type === "SOLID");
