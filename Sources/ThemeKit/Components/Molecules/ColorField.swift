@@ -13,12 +13,13 @@ public struct ColorField: View {
 
     private let label: String
     @Binding private var selection: Color
-    private let supportsOpacity: Bool
 
-    public init(_ label: String, selection: Binding<Color>, supportsOpacity: Bool = true) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var supportsOpacity: Bool = true
+
+    public init(_ label: String, selection: Binding<Color>) {   // R1 — content + binding
         self.label = label
         self._selection = selection
-        self.supportsOpacity = supportsOpacity
     }
 
     public var body: some View {
@@ -38,6 +39,19 @@ public struct ColorField: View {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                 .stroke(theme.border(.borderPrimary), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ColorField {
+    /// Whether the color well lets the user adjust opacity (defaults to true).
+    func supportsOpacity(_ on: Bool = true) -> Self { copy { $0.supportsOpacity = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

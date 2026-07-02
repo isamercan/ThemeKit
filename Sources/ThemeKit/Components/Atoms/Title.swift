@@ -12,23 +12,15 @@ public struct Title: View {
     @Environment(\.theme) private var theme
 
     private let text: String
-    private let subtitle: String?
-    private let eyebrow: String?
-    private let actionTitle: String?
-    private let action: (() -> Void)?
 
-    public init(
-        _ text: String,
-        subtitle: String? = nil,
-        eyebrow: String? = nil,
-        actionTitle: String? = nil,
-        action: (() -> Void)? = nil
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var subtitle: String? = nil
+    private var eyebrow: String? = nil
+    private var actionTitle: String? = nil
+    private var action: (() -> Void)? = nil
+
+    public init(_ text: String) {   // R1
         self.text = text
-        self.subtitle = subtitle
-        self.eyebrow = eyebrow
-        self.actionTitle = actionTitle
-        self.action = action
     }
 
     public var body: some View {
@@ -59,10 +51,31 @@ public struct Title: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Title {
+    /// Secondary line rendered under the title.
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
+
+    /// Uppercased kicker rendered above the title.
+    func eyebrow(_ text: String?) -> Self { copy { $0.eyebrow = text } }
+
+    /// Trailing action link (e.g. "See all") and its tap handler.
+    func action(_ title: String?, action: (() -> Void)? = nil) -> Self {
+        copy { $0.actionTitle = title; $0.action = action }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 24) {
-        Title("Popular destinations", subtitle: "Where travellers go", actionTitle: "See all", action: {})
-        Title("Deals", eyebrow: "Limited time")
+        Title("Popular destinations").subtitle("Where travellers go").action("See all", action: {})
+        Title("Deals").eyebrow("Limited time")
     }
     .padding()
 }

@@ -14,15 +14,14 @@ public struct InlineText: View {
 
     private let text: String
     private let links: [(substring: String, action: () -> Void)]
-    private let baseColor: Color?
-    private let style: TextStyle
 
-    public init(_ text: String, links: [(substring: String, action: () -> Void)] = [],
-                baseColor: Color? = nil, style: TextStyle = .bodySm400) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var baseColor: Color? = nil
+    private var style: TextStyle = .bodySm400
+
+    public init(_ text: String, links: [(substring: String, action: () -> Void)] = []) {   // R1
         self.text = text
         self.links = links
-        self.baseColor = baseColor
-        self.style = style
     }
 
     public var body: some View {
@@ -48,6 +47,23 @@ public struct InlineText: View {
             }
         }
         return string
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension InlineText {
+    /// Base text color (defaults to the theme's secondary text color).
+    func color(_ color: Color?) -> Self { copy { $0.baseColor = color } }
+
+    /// Typography token for the body text. Named `inlineStyle` so it doesn't
+    /// shadow the kit-wide `.textStyle(_:)` view modifier.
+    func inlineStyle(_ style: TextStyle) -> Self { copy { $0.style = style } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

@@ -71,13 +71,14 @@ public struct RadioCard: View {
 
 public struct CheckboxCard: View {
     private let title: String
-    private let description: String?
     private let isChecked: Bool
     private let action: () -> Void
 
-    public init(_ title: String, description: String? = nil, isChecked: Bool, action: @escaping () -> Void) {   // R1
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var description: String? = nil
+
+    public init(_ title: String, isChecked: Bool, action: @escaping () -> Void) {   // R1
         self.title = title
-        self.description = description
         self.isChecked = isChecked
         self.action = action
     }
@@ -89,15 +90,42 @@ public struct CheckboxCard: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RadioCard {
+    /// Secondary description line under the title.
+    func description(_ text: String?) -> Self { copy { $0.description = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension CheckboxCard {
+    /// Secondary description line under the title.
+    func description(_ text: String?) -> Self { copy { $0.description = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var radio = "std"
         @State var bag = true
         var body: some View {
             VStack(spacing: 12) {
-                RadioCard("Standard", description: "Free delivery in 3–5 days", isSelected: radio == "std") { radio = "std" }
-                RadioCard("Express", description: "Next-day delivery", isSelected: radio == "exp") { radio = "exp" }
-                CheckboxCard("Add checked bag", description: "+$250", isChecked: bag) { bag.toggle() }
+                RadioCard("Standard", isSelected: radio == "std") { radio = "std" }
+                    .description("Free delivery in 3–5 days")
+                RadioCard("Express", isSelected: radio == "exp") { radio = "exp" }
+                    .description("Next-day delivery")
+                CheckboxCard("Add checked bag", isChecked: bag) { bag.toggle() }
+                    .description("+$250")
             }
             .padding()
         }

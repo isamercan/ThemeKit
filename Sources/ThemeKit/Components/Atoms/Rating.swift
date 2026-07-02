@@ -23,11 +23,10 @@ public struct Rating: View {
     @Environment(\.theme) private var theme
 
     private let value: Double
-    private let layout: RatingLayout
-    private let countLabel: String?
     @Environment(\.isEnabled) private var isEnabled
-    // Long-tail config — set via chainable modifiers, keeping the common call
-    // site to `Rating(value:layout:countLabel:)`.
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var layout: RatingLayout = .stars
+    private var countLabel: String? = nil
     private var maxValue: Int = 5
     private var size: CGFloat = 16
     private var allowHalf: Bool = false
@@ -39,14 +38,8 @@ public struct Rating: View {
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    public init(
-        value: Double,
-        layout: RatingLayout = .stars,
-        countLabel: String? = nil
-    ) {
+    public init(value: Double) {   // R1
         self.value = value
-        self.layout = layout
-        self.countLabel = countLabel
     }
 
     private var interactive: Bool { onRate != nil && isEnabled }
@@ -226,20 +219,30 @@ public struct Rating: View {
 }
 
 public extension Rating {
+    /// Rating presentation: stars / numberRate / rateNumberText (default .stars).
+    func layout(_ l: RatingLayout) -> Self { copy { $0.layout = l } }
+    /// Review count label shown next to the rating (e.g. "(128)"); `nil` hides it.
+    func countLabel(_ text: String?) -> Self { copy { $0.countLabel = text } }
     /// Number of glyphs / the score denominator (default 5).
-    func maxValue(_ max: Int) -> Self { var copy = self; copy.maxValue = max; return copy }
+    func maxValue(_ max: Int) -> Self { copy { $0.maxValue = max } }
     /// Glyph point size (default 16).
-    func starSize(_ points: CGFloat) -> Self { var copy = self; copy.size = points; return copy }
+    func starSize(_ points: CGFloat) -> Self { copy { $0.size = points } }
     /// Enables half-step interaction (and half-star tap targets).
-    func allowHalf(_ on: Bool = true) -> Self { var copy = self; copy.allowHalf = on; return copy }
+    func allowHalf(_ on: Bool = true) -> Self { copy { $0.allowHalf = on } }
     /// Overrides the SF Symbol used for the glyph (default "star").
-    func symbol(_ systemImage: String) -> Self { var copy = self; copy.systemImage = systemImage; return copy }
+    func symbol(_ systemImage: String) -> Self { copy { $0.systemImage = systemImage } }
     /// Sentiment word for the `.rateNumberText` layout (otherwise score-derived).
-    func sentiment(_ text: String?) -> Self { var copy = self; copy.sentiment = text; return copy }
+    func sentiment(_ text: String?) -> Self { copy { $0.sentiment = text } }
     /// Makes the rating interactive: the closure receives the newly tapped value.
-    func onRate(_ action: ((Double) -> Void)?) -> Self { var copy = self; copy.onRate = action; return copy }
+    func onRate(_ action: ((Double) -> Void)?) -> Self { copy { $0.onRate = action } }
     /// Makes the review count label a tappable link.
-    func onReviewTap(_ action: (() -> Void)?) -> Self { var copy = self; copy.onReviewTap = action; return copy }
+    func onReviewTap(_ action: (() -> Void)?) -> Self { copy { $0.onReviewTap = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
 
 #Preview {
@@ -247,8 +250,8 @@ public extension Rating {
         @State var v = 3.5
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
-                Rating(value: 4.3, countLabel: "(128)")                                  // continuous fill
-                Rating(value: 4.3, layout: .numberRate, countLabel: "1,284 reviews").onReviewTap {}  // numeric + tappable review
+                Rating(value: 4.3).countLabel("(128)")                                   // continuous fill
+                Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {}  // numeric + tappable review
                 Rating(value: v).allowHalf().onRate { v = $0 }                            // interactive
                 Rating(value: 3).symbol("heart")
             }

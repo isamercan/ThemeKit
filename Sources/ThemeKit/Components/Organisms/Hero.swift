@@ -12,31 +12,25 @@ public struct Hero<Background: View>: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let subtitle: String?
-    private let ctaTitle: String?
-    private let dark: Bool
-    private let action: (() -> Void)?
-    private let background: () -> Background
+    // Takes the resolved `dark` flag so the default `HeroSurface` (set via the
+    // `where Background == HeroSurface` init below) tracks the `.dark()` modifier;
+    // custom backgrounds ignore it.
+    private let background: (_ dark: Bool) -> Background
 
-    public init(
-        title: String,
-        subtitle: String? = nil,
-        ctaTitle: String? = nil,
-        dark: Bool = false,
-        action: (() -> Void)? = nil,
-        @ViewBuilder background: @escaping () -> Background
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var subtitle: String?
+    private var ctaTitle: String?
+    private var dark = false
+    private var action: (() -> Void)?
+
+    public init(title: String, @ViewBuilder background: @escaping () -> Background) {   // R1
         self.title = title
-        self.subtitle = subtitle
-        self.ctaTitle = ctaTitle
-        self.dark = dark
-        self.action = action
-        self.background = background
+        self.background = { _ in background() }
     }
 
     public var body: some View {
         ZStack {
-            background()
+            background(dark)
             if dark {
                 theme.background(.bgTertiary).opacity(0.45)
             }
@@ -79,17 +73,42 @@ public struct HeroSurface: View {
 }
 
 public extension Hero where Background == HeroSurface {
-    init(title: String, subtitle: String? = nil, ctaTitle: String? = nil, dark: Bool = false, action: (() -> Void)? = nil) {
-        self.init(title: title, subtitle: subtitle, ctaTitle: ctaTitle, dark: dark, action: action) {
-            HeroSurface(dark: dark)
-        }
+    init(title: String) {   // R1 — default themed surface
+        self.title = title
+        self.background = { HeroSurface(dark: $0) }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Hero {
+    /// Supporting text under the title.
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
+
+    /// Call-to-action button — renders when both title and action are set.
+    func cta(_ title: String?, action: (() -> Void)? = nil) -> Self {
+        copy { $0.ctaTitle = title; $0.action = action }
+    }
+
+    /// Dark treatment: scrim overlay + inverted text (also darkens the default surface).
+    func dark(_ on: Bool = true) -> Self { copy { $0.dark = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
 #Preview {
     VStack(spacing: 16) {
-        Hero(title: "Discover Istanbul", subtitle: "Hand-picked stays at the best prices.", ctaTitle: "Explore", action: {})
-        Hero(title: "Summer Sale", subtitle: "Up to 30% off", ctaTitle: "Shop now", dark: true, action: {})
+        Hero(title: "Discover Istanbul")
+            .subtitle("Hand-picked stays at the best prices.")
+            .cta("Explore", action: {})
+        Hero(title: "Summer Sale")
+            .subtitle("Up to 30% off")
+            .cta("Shop now", action: {})
+            .dark()
     }
     .padding()
 }

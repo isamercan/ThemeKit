@@ -55,28 +55,17 @@ public struct ResultView: View {
 
     private let status: ResultStatus
     private let title: String
-    private let message: String?
-    private let primaryTitle: String?
-    private let onPrimary: (() -> Void)?
-    private let secondaryTitle: String?
-    private let onSecondary: (() -> Void)?
 
-    public init(
-        _ status: ResultStatus,
-        title: String,
-        message: String? = nil,
-        primaryTitle: String? = nil,
-        onPrimary: (() -> Void)? = nil,
-        secondaryTitle: String? = nil,
-        onSecondary: (() -> Void)? = nil
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var message: String?
+    private var primaryTitle: String?
+    private var onPrimary: (() -> Void)?
+    private var secondaryTitle: String?
+    private var onSecondary: (() -> Void)?
+
+    public init(_ status: ResultStatus, title: String) {   // R1
         self.status = status
         self.title = title
-        self.message = message
-        self.primaryTitle = primaryTitle
-        self.onPrimary = onPrimary
-        self.secondaryTitle = secondaryTitle
-        self.onSecondary = onSecondary
     }
 
     public var body: some View {
@@ -133,16 +122,39 @@ public struct ResultView: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ResultView {
+    /// Supporting text under the title.
+    func message(_ text: String?) -> Self { copy { $0.message = text } }
+
+    /// Primary (status-tinted) action button — renders when both title and action are set.
+    func primaryAction(_ title: String?, action: (() -> Void)? = nil) -> Self {
+        copy { $0.primaryTitle = title; $0.onPrimary = action }
+    }
+
+    /// Secondary (outline) action button — renders when both title and action are set.
+    func secondaryAction(_ title: String?, action: (() -> Void)? = nil) -> Self {
+        copy { $0.secondaryTitle = title; $0.onSecondary = action }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     ScrollView {
         VStack(spacing: 40) {
-            ResultView(.success, title: "Reservation confirmed",
-                       message: "A confirmation email has been sent.",
-                       primaryTitle: "Details", onPrimary: {},
-                       secondaryTitle: "Home", onSecondary: {})
-            ResultView(.notFound, title: "Page not found",
-                       message: "The page you're looking for may have been moved or deleted.",
-                       primaryTitle: "Back to home", onPrimary: {})
+            ResultView(.success, title: "Reservation confirmed")
+                .message("A confirmation email has been sent.")
+                .primaryAction("Details", action: {})
+                .secondaryAction("Home", action: {})
+            ResultView(.notFound, title: "Page not found")
+                .message("The page you're looking for may have been moved or deleted.")
+                .primaryAction("Back to home", action: {})
         }
         .padding()
     }

@@ -176,6 +176,25 @@ public struct AvatarGroup: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension AvatarGroup {
+    /// Size tier for every avatar in the group: xs / sm / md / lg.
+    func size(_ s: AvatarSize) -> Self { copy { $0.size = s } }
+
+    /// How many avatars show before collapsing into the "+N" bubble (default 4, floored at 1).
+    func maxVisible(_ count: Int) -> Self { copy { $0.max = Swift.max(count, 1) } }
+
+    /// Surface fill behind the avatars' icon/initials (matches Avatar's `.fillColor`, R5).
+    func fillColor(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 16) {
         HStack(spacing: 12) {
@@ -183,7 +202,7 @@ public struct AvatarGroup: View {
             Avatar(.initials("AB")).fillColor(.dark).shape(.square)
             Avatar(.icon("building.2.fill")).shape(.square)
         }
-        AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], max: 4)
+        AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).maxVisible(4)
     }
     .padding()
 }
@@ -193,6 +212,6 @@ public struct AvatarGroup: View {
         PreviewCase("Icon")     { Avatar(.icon("person.fill")) }
         PreviewCase("Initials") { Avatar(.initials("AB")).fillColor(.dark).shape(.square) }
         PreviewCase("Building") { Avatar(.icon("building.2.fill")).shape(.square) }
-        PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")], max: 3) }
+        PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")]).maxVisible(3) }
     }
 }

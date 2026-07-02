@@ -63,12 +63,12 @@ private struct DotBadge: View {
 /// A corner ribbon wrapping any content (Ant `Badge.Ribbon`).
 public struct Ribbon<Content: View>: View {
     private let text: String
-    private let color: SemanticColor
     private let content: Content
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var color: SemanticColor = .primary
 
-    public init(_ text: String, color: SemanticColor = .primary, @ViewBuilder content: () -> Content) {
+    public init(_ text: String, @ViewBuilder content: () -> Content) {   // R1 — content only
         self.text = text
-        self.color = color
         self.content = content()
     }
 
@@ -87,15 +87,29 @@ public struct Ribbon<Content: View>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Ribbon {
+    /// Semantic color of the ribbon (default .primary).
+    func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     @Previewable @Environment(\.theme) var theme
     HStack(spacing: 32) {
         Image(systemName: "bell.fill").font(.title).countBadge(5)
         Image(systemName: "envelope.fill").font(.title).countBadge(128)
         Image(systemName: "cart.fill").font(.title).dotBadge(color: .success)
-        Ribbon("New", color: .error) {
+        Ribbon("New") {
             RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
         }
+        .color(.error)
     }
     .padding(40)
 }

@@ -11,14 +11,15 @@ import SwiftUI
 public struct Diff<Before: View, After: View>: View {
     @Environment(\.theme) private var theme
 
-    private let aspectRatio: CGFloat
     private let before: () -> Before
     private let after: () -> After
 
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var aspectRatio: CGFloat = 16.0 / 9.0
+
     @State private var fraction: CGFloat = 0.5
 
-    public init(aspectRatio: CGFloat = 16.0 / 9.0, @ViewBuilder before: @escaping () -> Before, @ViewBuilder after: @escaping () -> After) {
-        self.aspectRatio = aspectRatio
+    public init(@ViewBuilder before: @escaping () -> Before, @ViewBuilder after: @escaping () -> After) {   // R1
         self.before = before
         self.after = after
     }
@@ -54,6 +55,20 @@ public struct Diff<Before: View, After: View>: View {
         }
         .aspectRatio(aspectRatio, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Diff {
+    /// Aspect ratio of the comparison stage (default 16:9). Named `aspect` so it
+    /// doesn't shadow SwiftUI's `.aspectRatio(_:contentMode:)`.
+    func aspect(_ ratio: CGFloat) -> Self { copy { $0.aspectRatio = ratio } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

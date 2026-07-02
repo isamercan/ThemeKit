@@ -12,25 +12,16 @@ public struct BlogCard<Media: View>: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let excerpt: String?
-    private let readMoreTitle: String
-    private let compact: Bool
-    private let onReadMore: () -> Void
     private let media: () -> Media
 
-    public init(
-        title: String,
-        excerpt: String? = nil,
-        readMoreTitle: String = String(themeKit: "Read more"),
-        compact: Bool = false,
-        onReadMore: @escaping () -> Void = {},
-        @ViewBuilder media: @escaping () -> Media
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var excerpt: String?
+    private var readMoreTitle = String(themeKit: "Read more")
+    private var compact = false
+    private var onReadMore: () -> Void = {}
+
+    public init(title: String, @ViewBuilder media: @escaping () -> Media) {   // R1
         self.title = title
-        self.excerpt = excerpt
-        self.readMoreTitle = readMoreTitle
-        self.compact = compact
-        self.onReadMore = onReadMore
         self.media = media
     }
 
@@ -85,17 +76,40 @@ public struct BlogCard<Media: View>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension BlogCard {
+    /// Excerpt paragraph under the title (regular layout only).
+    func excerpt(_ text: String?) -> Self { copy { $0.excerpt = text } }
+
+    /// Read-more link title and tap action.
+    func readMore(_ title: String = String(themeKit: "Read more"), action: @escaping () -> Void = {}) -> Self {
+        copy { $0.readMoreTitle = title; $0.onReadMore = action }
+    }
+
+    /// Compact (media-left) variant.
+    func compact(_ on: Bool = true) -> Self { copy { $0.compact = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     @Previewable @Environment(\.theme) var theme
     VStack(spacing: 20) {
-        BlogCard(title: "How About Exploring Cappadocia on Your Own?",
-                 excerpt: "To some a miracle of nature, to others a fairyland…",
-                 onReadMore: {}) {
+        BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
             theme.background(.bgTertiary)
         }
-        BlogCard(title: "How About Exploring Cappadocia on Your Own?", compact: true, onReadMore: {}) {
+        .excerpt("To some a miracle of nature, to others a fairyland…")
+        .readMore(action: {})
+        BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
             theme.background(.bgTertiary)
         }
+        .compact()
+        .readMore(action: {})
     }
     .padding()
 }

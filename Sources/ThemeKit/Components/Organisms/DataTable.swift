@@ -70,32 +70,22 @@ public struct DataTable<Row: Identifiable>: View {
 
     private let columns: [Column]
     private let rows: [Row]
-    private let striped: Bool
     private let selection: Binding<Set<Row.ID>>?
-    private let pageSize: Int?
-    private let isLoading: Bool
-    private let onRowTap: ((Row) -> Void)?
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var striped = true
+    private var pageSize: Int?
+    private var isLoading = false
+    private var onRowTap: ((Row) -> Void)?
 
     @State private var sortColumn: Int?
     @State private var sortAscending = true
     @State private var currentPage = 1
 
-    public init(
-        columns: [Column],
-        rows: [Row],
-        striped: Bool = true,
-        selection: Binding<Set<Row.ID>>? = nil,
-        pageSize: Int? = nil,
-        isLoading: Bool = false,
-        onRowTap: ((Row) -> Void)? = nil
-    ) {
+    public init(columns: [Column], rows: [Row], selection: Binding<Set<Row.ID>>? = nil) {   // R1
         self.columns = columns
         self.rows = rows
-        self.striped = striped
         self.selection = selection
-        self.pageSize = pageSize
-        self.isLoading = isLoading
-        self.onRowTap = onRowTap
     }
 
     private var displayRows: [Row] {
@@ -261,6 +251,28 @@ public struct DataTable<Row: Identifiable>: View {
         let clamped = min(max(page, 1), pageCount(rowCount: rowCount, pageSize: size))
         let start = (clamped - 1) * size
         return start..<min(start + size, rowCount)
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension DataTable {
+    /// Zebra striping on alternate rows (on by default; pass `false` to disable).
+    func striped(_ on: Bool = true) -> Self { copy { $0.striped = on } }
+
+    /// Paginate rows at `size` per page (nil turns paging off).
+    func pageSize(_ size: Int?) -> Self { copy { $0.pageSize = size } }
+
+    /// Replace rows with a loading placeholder while content loads.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Callback invoked when a row is tapped (also makes rows interactive).
+    func onRowTap(_ action: ((Row) -> Void)?) -> Self { copy { $0.onRowTap = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
