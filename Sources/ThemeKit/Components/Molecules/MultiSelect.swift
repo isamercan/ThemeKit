@@ -17,36 +17,31 @@ public struct MultiSelect<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Set<Option>
     private let optionTitle: (Option) -> String
-    private let placeholder: String
-    private let infoMessages: [InfoMessage]
-    private var accessibilityID: String? = nil
-    @Environment(\.isEnabled) private var isEnabled
-    private let isOptionEnabled: ((Option) -> Bool)?
-    // Behaviour flags — set via chainable modifiers (search + clear are on by
-    // default, matching a tag picker).
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    // Search + clear are on by default, matching a tag picker.
+    private var placeholder: String = String(themeKit: "Select")
+    private var infoMessages: [InfoMessage] = []
+    private var isOptionEnabled: ((Option) -> Bool)? = nil
     private var searchable: Bool = true
     private var allowClear: Bool = true
     private var maxTagCount: Int? = nil
     private var isLoading: Bool = false
+    private var accessibilityID: String? = nil
+    @Environment(\.isEnabled) private var isEnabled
 
     @State private var open = false
     @State private var query = ""
 
-    public init(
-        label: String? = nil,
+    public init(   // R1
+        _ label: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        placeholder: String = String(themeKit: "Select"),
-        infoMessages: [InfoMessage] = [],
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
         self.options = options
         self._selection = selection
-        self.placeholder = placeholder
-        self.infoMessages = infoMessages
-        self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
     }
 
@@ -200,29 +195,49 @@ public struct MultiSelect<Option: Hashable>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension MultiSelect {
+    /// Placeholder shown while nothing is selected.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Validation / info messages rendered under the field (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Whether the dropdown shows a search field (default true).
+    func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
+
+    /// Whether a clear-all button is offered (default true).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
+    func maxTags(_ count: Int?) -> Self { copy { $0.maxTagCount = count } }
+
+    /// Shows a loading spinner in place of the chevron (async option fetch).
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var picks: Set<String> = ["Istanbul"]
         let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
         var body: some View {
-            MultiSelect(label: "Cities", options: cities, selection: $picks) { $0 }
+            MultiSelect("Cities", options: cities, selection: $picks) { $0 }
                 .padding()
         }
     }
     return Demo()
-}
-
-public extension MultiSelect {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
-
-    /// Whether the dropdown shows a search field (default true).
-    func searchable(_ on: Bool = true) -> Self { var copy = self; copy.searchable = on; return copy }
-    /// Whether a clear-all button is offered (default true).
-    func clearable(_ on: Bool = true) -> Self { var copy = self; copy.allowClear = on; return copy }
-    /// Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
-    func maxTags(_ count: Int?) -> Self { var copy = self; copy.maxTagCount = count; return copy }
-    /// Shows a loading spinner in place of the chevron (async option fetch).
-    func loading(_ on: Bool = true) -> Self { var copy = self; copy.isLoading = on; return copy }
 }

@@ -15,21 +15,21 @@ public struct ToggleGroup<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Set<Option>
     private let label: (Option) -> String
-    private let description: (Option) -> String?
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var description: (Option) -> String? = { _ in nil }
     private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        label: @escaping (Option) -> String,
-        description: @escaping (Option) -> String? = { _ in nil }
-    ) {
+        label: @escaping (Option) -> String
+    ) {   // R1 — content + data + binding + required label closure
         self.title = title
         self.options = options
         self._selection = selection
         self.label = label
-        self.description = description
     }
 
     public var body: some View {
@@ -72,17 +72,28 @@ public struct ToggleGroup<Option: Hashable>: View {
                 title: "Notifications",
                 options: ["push", "email", "sms"],
                 selection: $sel,
-                label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 },
-                description: { _ in "Lorem ipsum supporting text." }
+                label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 }
             )
+            .optionDescription { _ in "Lorem ipsum supporting text." }
             .padding()
         }
     }
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension ToggleGroup {
+    /// Supporting text rendered under each row's label (return nil for none).
+    func optionDescription(_ description: @escaping (Option) -> String?) -> Self { copy { $0.description = description } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

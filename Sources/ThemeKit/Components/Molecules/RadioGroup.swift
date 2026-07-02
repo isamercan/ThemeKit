@@ -178,8 +178,43 @@ public struct RadioButtonGroup<Option: Hashable>: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension RadioGroup {
+    /// Validation / info messages rendered under the group (drives the title color).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension RadioButtonGroup {
+    /// Fill style of the group: `.solid` or `.outline`.
+    func groupStyle(_ style: RadioGroupButtonStyle) -> Self { copy { $0.style = style } }
+
+    /// Expands the group to fill the available width, sharing it across segments.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

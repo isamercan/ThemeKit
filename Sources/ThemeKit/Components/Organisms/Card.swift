@@ -14,37 +14,23 @@ public enum CardElevation {
 /// optional header (title / subtitle + a trailing `extra` action, divided from
 /// the body) and an `isLoading` skeleton bring it toward Ant Card.
 public struct Card<Content: View>: View {
-    private let elevation: CardElevation
-    private let padding: CGFloat
     private let title: String?
-    private let subtitle: String?
-    private let extraTitle: String?
-    private let onExtra: (() -> Void)?
-    private let isLoading: Bool
     private let action: (() -> Void)?
     private let content: () -> Content
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var elevation: CardElevation = .soft
+    private var padding: CGFloat = 16
+    private var subtitle: String?
+    private var extraTitle: String?
+    private var onExtra: (() -> Void)?
+    private var isLoading = false
 
     @Environment(\.theme) private var theme
     @Environment(\.cardStyle) private var cardStyle
 
-    public init(
-        elevation: CardElevation = .soft,
-        padding: CGFloat = 16,
-        title: String? = nil,
-        subtitle: String? = nil,
-        extraTitle: String? = nil,
-        onExtra: (() -> Void)? = nil,
-        isLoading: Bool = false,
-        action: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping () -> Content
-    ) {
-        self.elevation = elevation
-        self.padding = padding
+    public init(_ title: String? = nil, action: (() -> Void)? = nil, @ViewBuilder content: @escaping () -> Content) {   // R1
         self.title = title
-        self.subtitle = subtitle
-        self.extraTitle = extraTitle
-        self.onExtra = onExtra
-        self.isLoading = isLoading
         self.action = action
         self.content = content
     }
@@ -111,6 +97,33 @@ public struct Card<Content: View>: View {
         } else {
             surface
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Card {
+    /// Secondary line under the title in the card header.
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
+
+    /// Surface elevation: none / soft / elevated.
+    func elevation(_ elevation: CardElevation) -> Self { copy { $0.elevation = elevation } }
+
+    /// Inner content padding (named so it doesn't shadow the native `.padding`).
+    func contentPadding(_ padding: CGFloat) -> Self { copy { $0.padding = padding } }
+
+    /// Trailing header action (Ant `extra`) — renders when both title and action are set.
+    func extraAction(_ title: String?, action: (() -> Void)? = nil) -> Self {
+        copy { $0.extraTitle = title; $0.onExtra = action }
+    }
+
+    /// Replace the body with a skeleton placeholder while content loads.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
