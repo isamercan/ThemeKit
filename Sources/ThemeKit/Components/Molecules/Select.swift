@@ -116,10 +116,11 @@ public struct Select<Option: Hashable>: View {
             }
             Spacer(minLength: 0)
             if isLoading {
-                Spinner(size: IconSize.sm.value, lineWidth: 2)
+                Spinner().size(IconSize.sm.value).lineWidth(2)
             } else {
-                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm,
-                     color: showsClear ? .clear : theme.text(.textTertiary))
+                Icon(systemName: open ? "chevron.up" : "chevron.down")
+                    .size(.sm)
+                    .color(showsClear ? .clear : theme.text(.textTertiary))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -142,7 +143,7 @@ public struct Select<Option: Hashable>: View {
     private var clearButton: some View {
         if showsClear {
             Button { selection = nil } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .padding(.trailing, Theme.SpacingKey.md.value)
@@ -185,7 +186,7 @@ public struct Select<Option: Hashable>: View {
     @ViewBuilder
     private func panelMessage(spinner: Bool, _ text: String) -> some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            if spinner { Spinner(size: IconSize.sm.value, lineWidth: 2) }
+            if spinner { Spinner().size(IconSize.sm.value).lineWidth(2) }
             Text(text).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             Spacer()
         }
@@ -196,7 +197,7 @@ public struct Select<Option: Hashable>: View {
     private var panel: some View {
         VStack(spacing: 0) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
                 TextField("Search", text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -223,7 +224,7 @@ public struct Select<Option: Hashable>: View {
                                     Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
                                     Spacer()
                                     if selection == option {
-                                        Icon(systemName: "checkmark", size: .sm, color: theme.foreground(.fgHero))
+                                        Icon(systemName: "checkmark").size(.sm).color(theme.foreground(.fgHero))
                                     }
                                 }
                                 .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)

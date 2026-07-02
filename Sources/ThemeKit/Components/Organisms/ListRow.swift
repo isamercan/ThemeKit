@@ -115,7 +115,7 @@ public struct ListRow: View {
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 if let infoAction {
                     Button(action: infoAction) {
-                        Icon(systemName: "info.circle", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "info.circle").size(.sm).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }

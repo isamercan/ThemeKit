@@ -46,7 +46,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                     HStack {
                         Text(title(item)).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                         Spacer()
-                        Icon(systemName: "chevron.down", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
                             .rotationEffect(.degrees(isOpen ? 180 : 0))
                     }
                     .padding(Theme.SpacingKey.md.value)

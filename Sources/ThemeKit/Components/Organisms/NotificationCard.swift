@@ -32,7 +32,7 @@ public struct NotificationCard<Actions: View>: View {
     public var body: some View {
         Card {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: iconName, size: .sm, color: iconColor)
+                Icon(systemName: iconName).size(.sm).color(iconColor)
 
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
                     if let date {
@@ -58,7 +58,7 @@ public struct NotificationCard<Actions: View>: View {
                 Spacer(minLength: 0)
                 if let onClose {
                     Button(action: onClose) {
-                        Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
+                        Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(String(themeKit: "Dismiss"))
@@ -103,8 +103,8 @@ public extension NotificationCard {
     VStack(spacing: 12) {
         NotificationCard(title: "We Have a Suggestion for Your Holiday") {
             ButtonGroup(.horizontal) {
-                SecondaryButton("Sec", size: .small) {}
-                PrimaryButton("Pri", size: .small) {}
+                SecondaryButton("Sec") {}.size(.small)
+                PrimaryButton("Pri") {}.size(.small)
             }
         }
         .message("24 days left until your reservation at Hilton Istanbul.")

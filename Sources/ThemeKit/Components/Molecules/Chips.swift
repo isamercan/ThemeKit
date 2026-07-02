@@ -164,7 +164,7 @@ public struct ChoseChip: View {
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             if let systemImage {
-                Icon(systemName: systemImage, size: .md, color: theme.foreground(.fgHero))
+                Icon(systemName: systemImage).size(.md).color(theme.foreground(.fgHero))
             }
             VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
                 HStack(spacing: Theme.SpacingKey.xs.value) {

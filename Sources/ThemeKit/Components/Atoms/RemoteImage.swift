@@ -73,7 +73,7 @@ public struct RemoteImage: View {
     public var body: some View {
         Group {
             if isAnimated {
-                AnimatedImage(url, contentMode: contentMode)
+                AnimatedImage(url).contentMode(contentMode)
             } else {
                 AsyncImage(url: url, transaction: Transaction(animation: Motion.base.animation)) { phase in
                     switch phase {
@@ -98,7 +98,7 @@ public struct RemoteImage: View {
     private func placeholder(icon: String?) -> some View {
         ZStack {
             theme.background(.bgSecondaryLight)
-            if let icon { Icon(systemName: icon, size: .lg, color: theme.text(.textTertiary)) }
+            if let icon { Icon(systemName: icon).size(.lg).color(theme.text(.textTertiary)) }
         }
         .skeleton(icon == nil)
     }

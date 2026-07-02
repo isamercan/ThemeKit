@@ -160,9 +160,9 @@ public struct DataTable<Row: Identifiable>: View {
                 .textStyle(.labelSm700)
                 .foregroundStyle(theme.text(.textSecondary))
             if column.sortKey != nil {
-                Icon(systemName: sortColumn == index ? (sortAscending ? "chevron.up" : "chevron.down") : "chevron.up.chevron.down",
-                     size: .xs,
-                     color: sortColumn == index ? theme.text(.textPrimary) : theme.text(.textTertiary))
+                Icon(systemName: sortColumn == index ? (sortAscending ? "chevron.up" : "chevron.down") : "chevron.up.chevron.down")
+                    .size(.xs)
+                    .color(sortColumn == index ? theme.text(.textPrimary) : theme.text(.textTertiary))
             }
         }
         .frame(maxWidth: .infinity, alignment: column.align.alignment)
@@ -227,7 +227,7 @@ public struct DataTable<Row: Identifiable>: View {
 
     private var loadingRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Spinner(size: IconSize.sm.value, lineWidth: 2)
+            Spinner().size(IconSize.sm.value).lineWidth(2)
             Text(String(themeKit: "Loading…"))
                 .textStyle(.bodyBase400)
                 .foregroundStyle(theme.text(.textTertiary))

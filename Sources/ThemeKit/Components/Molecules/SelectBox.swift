@@ -65,7 +65,7 @@ public struct SelectBox<Option: Hashable>: View {
                         .textStyle(.bodyBase400)
                         .foregroundStyle(selection == nil ? theme.text(.textTertiary) : theme.text(.textPrimary))
                     Spacer(minLength: 0)
-                    Icon(systemName: "chevron.down", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(48)

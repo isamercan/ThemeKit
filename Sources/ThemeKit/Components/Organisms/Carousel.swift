@@ -172,7 +172,7 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
 
     private func arrow(_ systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(systemName: systemName, size: .sm, color: theme.foreground(.fgSecondary))
+            Icon(systemName: systemName).size(.sm).color(theme.foreground(.fgSecondary))
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
                 .background(theme.background(.bgTertiary).opacity(0.5), in: Circle())

@@ -200,7 +200,7 @@ public struct TextInput: View {
     private var fieldContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             if let leadingSystemImage = model.leadingSystemImage {
-                Icon(systemName: leadingSystemImage, size: .sm, color: iconColor)
+                Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
             }
 
             ZStack(alignment: .leading) {
@@ -326,20 +326,20 @@ public struct TextInput: View {
     private var trailing: some View {
         if model.isSecure {
             Button { reveal.toggle() } label: {
-                Icon(systemName: reveal ? "eye.slash" : "eye", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: reveal ? "eye.slash" : "eye").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.reveal, in: accessibilityID)
             .accessibilityLabel(reveal ? String(themeKit: "Hide password") : String(themeKit: "Show password"))
         } else if showsClear || (!text.isEmpty && isFocused && model.suffixSystemImage == nil) {
             Button { text = "" } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: accessibilityID)
             .accessibilityLabel("Temizle")
         } else if let suffixSystemImage = model.suffixSystemImage {
-            Icon(systemName: suffixSystemImage, size: .sm, color: iconColor)
+            Icon(systemName: suffixSystemImage).size(.sm).color(iconColor)
         }
     }
 

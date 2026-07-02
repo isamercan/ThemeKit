@@ -87,14 +87,14 @@ public struct SearchBar: View {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if showBackButton {
                     Button { onBack?() } label: {
-                        Icon(systemName: "chevron.left", size: .md, color: theme.text(.textPrimary))
+                        Icon(systemName: "chevron.left").size(.md).color(theme.text(.textPrimary))
                             .mirrorsInRTL()
                     }
                     .buttonStyle(.plain)
                 }
 
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
 
                     TextField(placeholder, text: $text)
                         .textStyle(.bodyBase400)
@@ -133,15 +133,15 @@ public struct SearchBar: View {
     @ViewBuilder
     private var trailingControl: some View {
         if isLoading {
-            Spinner(size: IconSize.sm.value, lineWidth: 2)
+            Spinner().size(IconSize.sm.value).lineWidth(2)
         } else if !text.isEmpty {
             Button { text = "" } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
         } else if let trailingSystemImage {
             Button { onTrailing?() } label: {
-                Icon(systemName: trailingSystemImage, size: .sm, color: theme.text(.textPrimary))
+                Icon(systemName: trailingSystemImage).size(.sm).color(theme.text(.textPrimary))
             }
             .buttonStyle(.plain)
         }
@@ -203,7 +203,7 @@ public struct SearchBar: View {
             card {
                 row {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Spinner(size: IconSize.sm.value, lineWidth: 2)
+                        Spinner().size(IconSize.sm.value).lineWidth(2)
                         Text(String(themeKit: "Searching…"))
                             .textStyle(.bodySm400)
                             .foregroundStyle(theme.text(.textTertiary))
@@ -251,7 +251,7 @@ public struct SearchBar: View {
                 row {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
                         if let leadingSystemImage {
-                            Icon(systemName: leadingSystemImage, size: .sm, color: theme.text(.textTertiary))
+                            Icon(systemName: leadingSystemImage).size(.sm).color(theme.text(.textTertiary))
                         }
                         Text(item)
                             .textStyle(.bodyBase400)

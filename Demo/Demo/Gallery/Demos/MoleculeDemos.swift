@@ -35,19 +35,19 @@ struct ButtonDemo: View {
             Group {
                 if asyncMode {
                     switch style {
-                    case .primary: PrimaryButton(title, size: size, block: fullWidth, helperText: helperText, task: work).disabled(!enabled)
-                    case .secondary: SecondaryButton(title, size: size, block: fullWidth, helperText: helperText, task: work).disabled(!enabled)
-                    case .outline: OutlineButton(title, size: size, block: fullWidth, helperText: helperText, task: work).disabled(!enabled)
-                    case .ghost: GhostButton(title, size: size, block: fullWidth, helperText: helperText, task: work).disabled(!enabled)
-                    case .link: LinkButton(title, size: size, action: tapped).disabled(!enabled)
+                    case .primary: PrimaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .secondary: SecondaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .outline: OutlineButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .ghost: GhostButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
                     }
                 } else {
                     switch style {
-                    case .primary: PrimaryButton(title, size: size, block: fullWidth, helperText: helperText, isLoading: $loading, action: tapped).disabled(!enabled)
-                    case .secondary: SecondaryButton(title, size: size, block: fullWidth, helperText: helperText, isLoading: $loading, action: tapped).disabled(!enabled)
-                    case .outline: OutlineButton(title, size: size, block: fullWidth, helperText: helperText, isLoading: $loading, action: tapped).disabled(!enabled)
-                    case .ghost: GhostButton(title, size: size, block: fullWidth, helperText: helperText, isLoading: $loading, action: tapped).disabled(!enabled)
-                    case .link: LinkButton(title, size: size, action: tapped).disabled(!enabled)
+                    case .primary: PrimaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .secondary: SecondaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .outline: OutlineButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .ghost: GhostButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
                     }
                 }
             }

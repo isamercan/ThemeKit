@@ -106,14 +106,14 @@ public struct MultiSelect<Option: Hashable>: View {
                 Spacer(minLength: 0)
                 if allowClear && !selection.isEmpty && isEnabled && !isLoading {
                     Button { selection.removeAll() } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
                 if isLoading {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                 } else {
-                    Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
                 }
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -137,7 +137,7 @@ public struct MultiSelect<Option: Hashable>: View {
         VStack(spacing: 0) {
             if searchable {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
                     TextField("Search", text: $query)
                         .textStyle(.bodyBase400)
                         .tint(theme.foreground(.fgHero))
@@ -148,7 +148,7 @@ public struct MultiSelect<Option: Hashable>: View {
             }
             if isLoading {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                     Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                     Spacer()
                 }

@@ -86,13 +86,13 @@ public struct TreeSelect: View {
 
     private var searchField: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+            Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
             TextField("Search", text: $searchText)
                 .textStyle(.bodyBase400)
                 .foregroundStyle(theme.text(.textPrimary))
             if !searchText.isEmpty {
                 Button { searchText = "" } label: {
-                    Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }
@@ -103,7 +103,7 @@ public struct TreeSelect: View {
 
     private var loadingRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Spinner(size: IconSize.sm.value, lineWidth: 2)
+            Spinner().size(IconSize.sm.value).lineWidth(2)
             Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             Spacer()
         }
@@ -128,7 +128,7 @@ public struct TreeSelect: View {
                     .foregroundStyle(selection.isEmpty ? theme.text(.textTertiary) : theme.text(.textPrimary))
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                Icon(systemName: open ? "chevron.up" : "chevron.down", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(56)
@@ -158,7 +158,7 @@ public struct TreeSelect: View {
                 Color.clear.frame(width: 16, height: 16)
             } else {
                 Button { toggleExpand(node.id) } label: {
-                    Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right", size: .xs, color: theme.text(.textTertiary))
+                    Icon(systemName: expanded.contains(node.id) ? "chevron.down" : "chevron.right").size(.xs).color(theme.text(.textTertiary))
                         .frame(width: 16, height: 16)
                         .mirrorsInRTL()
                 }
@@ -171,7 +171,7 @@ public struct TreeSelect: View {
                         .controlSize(.small)
                         .allowsHitTesting(false)
                     if let icon = node.systemImage {
-                        Icon(systemName: icon, size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: icon).size(.sm).color(theme.text(.textTertiary))
                     }
                     Text(node.title).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
                     Spacer(minLength: 0)

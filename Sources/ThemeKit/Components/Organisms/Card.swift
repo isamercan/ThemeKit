@@ -64,9 +64,9 @@ public struct Card<Content: View>: View {
     @ViewBuilder
     private var loadingPlaceholder: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            Skeleton(.capsule, height: 12).frame(maxWidth: 180)
-            Skeleton(.capsule, height: 12)
-            Skeleton(.capsule, height: 12).frame(maxWidth: 240)
+            Skeleton(.capsule).size(height: 12).frame(maxWidth: 180)
+            Skeleton(.capsule).size(height: 12)
+            Skeleton(.capsule).size(height: 12).frame(maxWidth: 240)
         }
     }
 

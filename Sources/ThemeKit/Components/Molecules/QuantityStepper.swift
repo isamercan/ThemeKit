@@ -52,8 +52,9 @@ public struct QuantityStepper: View {
 
     private func stepButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(systemName: systemName, size: .sm,
-                 color: enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
+            Icon(systemName: systemName)
+                .size(.sm)
+                .color(enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)

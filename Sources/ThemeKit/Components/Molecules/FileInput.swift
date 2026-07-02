@@ -64,7 +64,7 @@ public struct FileInput: View {
 
                 if fileName != nil, let onClear {
                     Button(action: onClear) {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, Theme.SpacingKey.md.value)

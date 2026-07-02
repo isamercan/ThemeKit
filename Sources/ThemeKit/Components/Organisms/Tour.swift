@@ -129,7 +129,7 @@ private struct TourHostModifier: ViewModifier {
         .themeShadow(.elevated)
         .overlay(alignment: .topTrailing) {
             Button { controller.stop() } label: {
-                Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary)).padding(Theme.SpacingKey.sm.value)
+                Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary)).padding(Theme.SpacingKey.sm.value)
             }
             .buttonStyle(.plain)
         }

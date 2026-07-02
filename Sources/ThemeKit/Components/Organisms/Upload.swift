@@ -83,7 +83,7 @@ public struct Upload: View {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
                 .fill(theme.background(.bgElevatorTertiary))
                 .frame(width: 36, height: 36)
-                .overlay(Icon(systemName: "photo", size: .sm, color: theme.foreground(.fgHero)))
+                .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(file.name)
@@ -96,14 +96,14 @@ public struct Upload: View {
 
             if let onRetry, case .failed = file.status {
                 Button { onRetry(file) } label: {
-                    Icon(systemName: "arrow.clockwise", size: .sm, color: theme.foreground(.fgHero))
+                    Icon(systemName: "arrow.clockwise").size(.sm).color(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Retry"))
             }
 
             Button { onRemove(file) } label: {
-                Icon(systemName: "trash", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "trash").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
         }

@@ -29,7 +29,7 @@ struct AvatarDemo: View {
             ("size", numeric > 0 ? "\(Int(numeric))pt" : "\(Int(size.rawValue))"), ("presence", presences[presenceIdx].0),
         ]) {
             if group {
-                AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")], size: size, max: 4)
+                AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).size(size).maxVisible(4)
             } else if numeric > 0 {
                 Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             } else {
@@ -62,9 +62,10 @@ struct CountBadgeDemo: View {
         ComponentStage("CountBadge", inspector: [("count", "\(Int(count))"), ("dot", "\(dot)")]) {
             HStack(spacing: 40) {
                 if ribbon {
-                    Ribbon("New", color: .error) {
+                    Ribbon("New") {
                         RoundedRectangle(cornerRadius: 12).fill(Theme.shared.background(.bgElevatorTertiary)).frame(width: 96, height: 72)
                     }
+                    .color(.error)
                 } else if dot {
                     Image(systemName: "bell.fill").font(.largeTitle).foregroundStyle(Theme.shared.text(.textPrimary)).dotBadge(color: .success)
                 } else {
@@ -164,7 +165,9 @@ struct ProgressBarDemo: View {
     var body: some View {
         ComponentStage("ProgressBar", inspector: [("value", String(format: "%.2f", value)), ("status", "\(status)")]) {
             VStack(spacing: 20) {
-                ProgressBar(value: value, showPercentage: true, status: status)
+                ProgressBar(value: value)
+                    .showsPercentage()
+                    .status(status)
                     .gradient(gradient && !custom)
                     .steps(segmented ? 6 : nil)
                     .colors(fill: custom ? SemanticColor.purple.base : nil,
@@ -195,7 +198,9 @@ struct RatingDemo: View {
 
     var body: some View {
         ComponentStage("Rating", inspector: [("value", String(format: "%.1f", value)), ("layout", "\(layout)"), ("reviewTaps", "\(taps)")]) {
-            Rating(value: value, layout: layout, countLabel: "1,284 reviews")
+            Rating(value: value)
+                .layout(layout)
+                .countLabel("1,284 reviews")
                 .allowHalf(allowHalf)
                 .onRate((interactive && layoutIdx == 0) ? { value = $0; flash("Rating: \(String(format: "%.1f", $0))") } : nil)
                 .onReviewTap(reviewLink ? { taps += 1; flash("Reviews tapped") } : nil)
@@ -216,7 +221,7 @@ struct SpinnerDemo: View {
 
     var body: some View {
         ComponentStage("Spinner", inspector: [("size", "\(Int(size))"), ("lineWidth", "\(Int(width))")]) {
-            Spinner(size: size, lineWidth: width)
+            Spinner().size(size).lineWidth(width)
         } knobs: {
             HStack { Text("Size"); SwiftUI.Slider(value: $size, in: 12...64) }
             HStack { Text("Line"); SwiftUI.Slider(value: $width, in: 1...8) }

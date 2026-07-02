@@ -101,7 +101,7 @@ public struct Stat: View {
     @ViewBuilder
     private var valueView: some View {
         if isLoading {
-            Skeleton(.capsule, width: 96, height: 26)
+            Skeleton(.capsule).size(width: 96, height: 26)
         } else {
             switch value {
             case .text(let string):

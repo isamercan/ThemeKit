@@ -89,7 +89,7 @@ public struct Autocomplete: View {
             if let label { InputLabel(label) }
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
                 TextField(placeholder, text: $text)
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textPrimary))
@@ -99,10 +99,10 @@ public struct Autocomplete: View {
                     .a11y(A11yElement.Field.field, in: accessibilityID)
                     .accessibilityLabel(label ?? placeholder)
                 if isLoading {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                 } else if !text.isEmpty {
                     Button { text = "" } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
@@ -129,7 +129,7 @@ public struct Autocomplete: View {
         VStack(spacing: 0) {
             if isLoading {
                 row { HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                     Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                     Spacer()
                 } }

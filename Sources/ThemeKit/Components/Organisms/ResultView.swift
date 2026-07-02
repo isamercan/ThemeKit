@@ -108,7 +108,7 @@ public struct ResultView: View {
                 .font(.system(size: 72, weight: .heavy, design: .rounded))
                 .foregroundStyle(status.color.base)
                 .overlay(alignment: .bottomTrailing) {
-                    Icon(systemName: status.systemImage, size: .md, color: status.color.base)
+                    Icon(systemName: status.systemImage).size(.md).color(status.color.base)
                         .padding(6)
                         .background(theme.background(.bgWhite), in: Circle())
                         .offset(x: 10, y: 4)
@@ -116,7 +116,7 @@ public struct ResultView: View {
         } else {
             ZStack {
                 Circle().fill(status.color.bg).frame(width: 88, height: 88)
-                Icon(systemName: status.systemImage, size: .xl, color: status.color.base)
+                Icon(systemName: status.systemImage).size(.xl).color(status.color.base)
             }
         }
     }

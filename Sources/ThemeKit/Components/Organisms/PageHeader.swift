@@ -48,7 +48,7 @@ public struct PageHeader: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             if let onBack {
                 Button(action: onBack) {
-                    Icon(systemName: "chevron.left", size: .md, color: theme.text(.textPrimary))
+                    Icon(systemName: "chevron.left").size(.md).color(theme.text(.textPrimary))
                         .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
@@ -74,7 +74,7 @@ public struct PageHeader: View {
 
             ForEach(actions) { action in
                 Button(action: action.handler) {
-                    Icon(systemName: action.systemImage, size: .md, color: theme.text(.textPrimary))
+                    Icon(systemName: action.systemImage).size(.md).color(theme.text(.textPrimary))
                 }
                 .buttonStyle(.plain)
             }

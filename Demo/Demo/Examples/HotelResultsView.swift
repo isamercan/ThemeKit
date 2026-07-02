@@ -99,7 +99,7 @@ struct HotelCard: View {
     let hotel: Hotel
 
     var body: some View {
-        Card(padding: 0) {
+        Card {
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .topLeading) {
                     hotel.color.opacity(0.3)
@@ -119,7 +119,7 @@ struct HotelCard: View {
                         Image(systemName: "mappin").font(.system(size: 11)).foregroundStyle(Theme.shared.text(.textTertiary))
                         Text(hotel.area).textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                     }
-                    RatingSummary(score: hotel.score, label: hotel.scoreLabel, reviewCount: hotel.reviewCount)
+                    RatingSummary(score: hotel.score).label(hotel.scoreLabel).reviews(count: hotel.reviewCount)
                     HStack(spacing: 6) {
                         ForEach(hotel.amenities.prefix(3), id: \.self) { a in
                             Tag(Amenity.label(a)).icon(Amenity.icon(a))
@@ -141,5 +141,6 @@ struct HotelCard: View {
                 .padding()
             }
         }
+        .contentPadding(0)
     }
 }

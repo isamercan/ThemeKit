@@ -33,7 +33,7 @@ struct DialogCard: View {
     var body: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
             if let kind {
-                Icon(systemName: kind.systemImage, size: .xl, color: kind.semanticColor.accent)
+                Icon(systemName: kind.systemImage).size(.xl).color(kind.semanticColor.accent)
             }
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 Text(title)
@@ -53,7 +53,7 @@ struct DialogCard: View {
                     ThemeButton(primaryTitle, action: onPrimary)
                         .color(primaryColor).fullWidth().loading(isPrimaryLoading)
                 } else {
-                    PrimaryButton(primaryTitle, isLoading: .constant(isPrimaryLoading), action: onPrimary)
+                    PrimaryButton(primaryTitle, action: onPrimary).loading(isPrimaryLoading)
                 }
                 if let secondaryTitle, let onSecondary {
                     OutlineButton(secondaryTitle, action: onSecondary).disabled(isPrimaryLoading)
@@ -67,7 +67,7 @@ struct DialogCard: View {
         .overlay(alignment: .topTrailing) {
             if let onClose {
                 Button(action: onClose) {
-                    Icon(systemName: "xmark", size: .sm, color: theme.text(.textTertiary))
+                    Icon(systemName: "xmark").size(.sm).color(theme.text(.textTertiary))
                         .padding(Theme.SpacingKey.md.value)
                 }
                 .buttonStyle(.plain)
@@ -199,7 +199,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                                 Spacer(minLength: Theme.SpacingKey.sm.value)
                                 if closable {
                                     Button(action: close) {
-                                        Icon(systemName: "xmark", size: .sm, color: theme.text(.textTertiary))
+                                        Icon(systemName: "xmark").size(.sm).color(theme.text(.textTertiary))
                                     }
                                     .buttonStyle(.plain)
                                 }

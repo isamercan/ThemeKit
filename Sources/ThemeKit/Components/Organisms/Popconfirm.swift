@@ -46,7 +46,7 @@ private struct PopconfirmModifier: ViewModifier {
     private var card: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "exclamationmark.circle.fill", size: .sm, color: theme.foreground(.systemcolorsFgWarning))
+                Icon(systemName: "exclamationmark.circle.fill").size(.sm).color(theme.foreground(.systemcolorsFgWarning))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     if let message {
