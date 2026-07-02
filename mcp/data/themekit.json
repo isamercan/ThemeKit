@@ -237,7 +237,7 @@
           "doc": "Per-suggestion enable predicate; disabled rows are shown greyed and unselectable."
         }
       ],
-      "usage": "Autocomplete($text)"
+      "usage": "Autocomplete(text: $text)"
     },
     {
       "name": "Avatar",
@@ -474,7 +474,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "CalendarView($selection)"
+      "usage": "CalendarView(selection: $selection)"
     },
     {
       "name": "Callout",
@@ -729,7 +729,7 @@
           "doc": "Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`."
         }
       ],
-      "usage": "Checkbox($isChecked)"
+      "usage": "Checkbox(isChecked: $isChecked)"
     },
     {
       "name": "CheckboxCard",
@@ -810,7 +810,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "CheckboxGroup(options: <[Option]>, $selection)"
+      "usage": "CheckboxGroup(options: <[Option]>, selection: $selection)"
     },
     {
       "name": "Chip",
@@ -866,7 +866,7 @@
           "doc": "Control size: small / large."
         }
       ],
-      "usage": "Chip(\"title\", $isSelected)"
+      "usage": "Chip(\"title\", isSelected: $isSelected)"
     },
     {
       "name": "ChipGroup",
@@ -903,7 +903,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "ChipGroup(options: <[Option]>, $selection, label: \"label\")"
+      "usage": "ChipGroup(options: <[Option]>, selection: $selection, label: \"label\")"
     },
     {
       "name": "ChoseChip",
@@ -953,7 +953,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "ChoseChip($isSelected, title: \"title\")"
+      "usage": "ChoseChip(isSelected: $isSelected, title: \"title\")"
     },
     {
       "name": "ColorField",
@@ -979,7 +979,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "ColorField(\"label\", $selection)"
+      "usage": "ColorField(\"label\", selection: $selection)"
     },
     {
       "name": "CompactChip",
@@ -1016,7 +1016,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "CompactChip($isSelected, text: \"text\", price: \"price\")"
+      "usage": "CompactChip(isSelected: $isSelected, text: \"text\", price: \"price\")"
     },
     {
       "name": "Counter",
@@ -1185,7 +1185,7 @@
           "doc": "How the chosen date renders in the field (numeric / abbreviated / long / full / relative / custom)."
         }
       ],
-      "usage": "DateField($date)"
+      "usage": "DateField(date: $date)"
     },
     {
       "name": "Diff",
@@ -1442,7 +1442,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "FilterGroup(options: <[Option]>, $selection, label: \"label\")"
+      "usage": "FilterGroup(options: <[Option]>, selection: $selection, label: \"label\")"
     },
     {
       "name": "FloatingActionButton",
@@ -1742,7 +1742,7 @@
           "doc": "Tile size: small / medium / large."
         }
       ],
-      "usage": "ImageChip($isSelected, url: <URL>)"
+      "usage": "ImageChip(isSelected: $isSelected, url: <URL>)"
     },
     {
       "name": "ImageCollage",
@@ -1972,7 +1972,7 @@
           "doc": "Trailing unit suffix labelling the value (e.g."
         }
       ],
-      "usage": "InputNumber($value)"
+      "usage": "InputNumber(value: $value)"
     },
     {
       "name": "Join",
@@ -2296,7 +2296,7 @@
           "doc": "Placeholder shown while the editor is empty."
         }
       ],
-      "usage": "MultiLineTextInput(\"label\", $text)"
+      "usage": "MultiLineTextInput(\"label\", text: $text)"
     },
     {
       "name": "MultiSelect",
@@ -2366,7 +2366,7 @@
           "doc": "Whether the dropdown shows a search field (default true)."
         }
       ],
-      "usage": "MultiSelect(options: <[Option]>, $selection)"
+      "usage": "MultiSelect(options: <[Option]>, selection: $selection)"
     },
     {
       "name": "NavigationBar",
@@ -2386,7 +2386,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "NavigationBar(items: <[NavigationBar.Item]>, $selection)"
+      "usage": "NavigationBar(items: <[NavigationBar.Item]>, selection: $selection)"
     },
     {
       "name": "NotificationCard",
@@ -2487,7 +2487,7 @@
           "doc": "Mask the entered digits (password-style dots) instead of showing them."
         }
       ],
-      "usage": "OTPInput($code)"
+      "usage": "OTPInput(code: $code)"
     },
     {
       "name": "OutlineButton",
@@ -2621,7 +2621,7 @@
           "doc": "Window size: `sibling` pages each side of the current page, `boundary` pages pinned at each end (gaps collapse to an ellipsis)."
         }
       ],
-      "usage": "Pagination($current, total: 1)"
+      "usage": "Pagination(current: $current, total: 1)"
     },
     {
       "name": "PagingCarousel",
@@ -2943,7 +2943,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "QuantityStepper($value)"
+      "usage": "QuantityStepper(value: $value)"
     },
     {
       "name": "RadialProgress",
@@ -3056,7 +3056,7 @@
           "doc": "Selected-state indicator: `.select` (one-way dot) or `.check` (togglable checkmark)."
         }
       ],
-      "usage": "RadioButton($isSelected)"
+      "usage": "RadioButton(isSelected: $isSelected)"
     },
     {
       "name": "RadioButtonGroup",
@@ -3094,7 +3094,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "RadioButtonGroup(options: <[Option]>, $selection)"
+      "usage": "RadioButtonGroup(options: <[Option]>, selection: $selection)"
     },
     {
       "name": "RadioCard",
@@ -3169,7 +3169,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "RadioGroup(options: <[Option]>, $selection)"
+      "usage": "RadioGroup(options: <[Option]>, selection: $selection)"
     },
     {
       "name": "RangeSlider",
@@ -3226,7 +3226,7 @@
           "doc": "Formats the value readout shown above each thumb (e.g."
         }
       ],
-      "usage": "RangeSlider($lowerValue, $upperValue, in: 1)"
+      "usage": "RangeSlider(lowerValue: $lowerValue, upperValue: $upperValue, in: 1)"
     },
     {
       "name": "Rating",
@@ -3530,7 +3530,7 @@
           "doc": "A trailing SF Symbol button (shown when the field is empty); the optional action fires on tap (e.g."
         }
       ],
-      "usage": "SearchBar($text)"
+      "usage": "SearchBar(text: $text)"
     },
     {
       "name": "SecondaryButton",
@@ -3630,7 +3630,7 @@
           "doc": "Vertical sizing of the segments: small / medium / large."
         }
       ],
-      "usage": "SegmentedControl(<[SegmentItem]>, $selection)"
+      "usage": "SegmentedControl(<[SegmentItem]>, selection: $selection)"
     },
     {
       "name": "SegmentedTabBar",
@@ -3676,7 +3676,7 @@
           "doc": "Visual treatment: underline / card."
         }
       ],
-      "usage": "SegmentedTabBar(<[TabItem]>, $selection)"
+      "usage": "SegmentedTabBar(<[TabItem]>, selection: $selection)"
     },
     {
       "name": "Select",
@@ -3753,7 +3753,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "Select(\"label\", options: <[Option]>, $selection)"
+      "usage": "Select(\"label\", options: <[Option]>, selection: $selection)"
     },
     {
       "name": "SelectBox",
@@ -3808,7 +3808,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "SelectBox(options: <[Option]>, $selection, optionTitle: \"optionTitle\")"
+      "usage": "SelectBox(options: <[Option]>, selection: $selection, optionTitle: \"optionTitle\")"
     },
     {
       "name": "ShareButton",
@@ -3874,7 +3874,7 @@
           "doc": "Fixed sidebar width (defaults to flexible / parent-driven)."
         }
       ],
-      "usage": "Sidebar(sections: <[Sidebar.Section]>, $selection)"
+      "usage": "Sidebar(sections: <[Sidebar.Section]>, selection: $selection)"
     },
     {
       "name": "Skeleton",
@@ -3960,7 +3960,7 @@
           "doc": "Shows a value tooltip above the thumb while dragging."
         }
       ],
-      "usage": "Slider($value, in: 1)"
+      "usage": "Slider(value: $value, in: 1)"
     },
     {
       "name": "Spinner",
@@ -4168,7 +4168,7 @@
           "doc": "The two SF Symbols swapped between: `on` (shown when toggled on) and `off`."
         }
       ],
-      "usage": "Swap($isOn)"
+      "usage": "Swap(isOn: $isOn)"
     },
     {
       "name": "Tag",
@@ -4241,7 +4241,7 @@
           "doc": "Sets the accessibility-identifier namespace for this field (its sub-elements — label, field, clear, reveal, messages — get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "TextInput(<TextInputModel>, $text)"
+      "usage": "TextInput(<TextInputModel>, text: $text)"
     },
     {
       "name": "TextLink",
@@ -4370,7 +4370,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "ThemeController(options: <[ThemeController.Option]>, $selectedName)"
+      "usage": "ThemeController(options: <[ThemeController.Option]>, selectedName: $selectedName)"
     },
     {
       "name": "ThemePicker",
@@ -4397,7 +4397,7 @@
         }
       ],
       "modifiers": [],
-      "usage": "ThemePicker($selection)"
+      "usage": "ThemePicker(selection: $selection)"
     },
     {
       "name": "ThemeToggle",
@@ -4428,7 +4428,7 @@
           "doc": "Optional SF Symbols shown inside the knob for the on / off states."
         }
       ],
-      "usage": "ThemeToggle($isOn)"
+      "usage": "ThemeToggle(isOn: $isOn)"
     },
     {
       "name": "TimeField",
@@ -4495,7 +4495,7 @@
           "doc": "Restrict the picker to a selectable time range."
         }
       ],
-      "usage": "TimeField($time)"
+      "usage": "TimeField(time: $time)"
     },
     {
       "name": "Timeline",
@@ -4608,7 +4608,7 @@
           "doc": "Sets the accessibility-identifier namespace for this component (its sub-elements get `\"<id>.<element>\"`)."
         }
       ],
-      "usage": "ToggleGroup(options: <[Option]>, $selection)"
+      "usage": "ToggleGroup(options: <[Option]>, selection: $selection)"
     },
     {
       "name": "TreeSelect",
@@ -4666,7 +4666,7 @@
           "doc": "Show an inline search field that filters the visible nodes."
         }
       ],
-      "usage": "TreeSelect(nodes: <[TreeNode]>, $selection)"
+      "usage": "TreeSelect(nodes: <[TreeNode]>, selection: $selection)"
     },
     {
       "name": "Upload",

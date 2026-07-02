@@ -58,7 +58,8 @@ export function matchComponent(node: FigmaNode, m: Mapping): Match | null {
   for (const rule of m.componentRules) {
     const { namePattern, type, componentKey } = rule.match;
     if (type && node.type !== type) continue;
-    if (namePattern && !new RegExp(namePattern).test(node.name)) continue;
+    // Case-insensitive: real layer names are "button/primary" as often as "Button/Primary".
+    if (namePattern && !new RegExp(namePattern, "i").test(node.name)) continue;
     if (componentKey && node.componentId !== componentKey) continue;
     return { component: rule.produce.component, confidence: rule.produce.confidence ?? 0.8, produce: rule.produce, via: "rule" };
   }
@@ -69,7 +70,13 @@ export function matchComponent(node: FigmaNode, m: Mapping): Match | null {
     return { component: m.heuristics.autolayoutSingleTextFill, confidence: 0.5, produce: { component: m.heuristics.autolayoutSingleTextFill, argsFrom: { _: "{text}" }, trailingClosure: "action" }, via: "heuristic" };
   if (node.type === "TEXT")
     return { component: m.heuristics.textOnly, confidence: 0.6, produce: { component: m.heuristics.textOnly, argsFrom: { _: "{text}" } }, via: "heuristic" };
-  if ((node.type === "FRAME" || node.type === "GROUP") && (node.children?.length ?? 0) > 0)
+  // A frame becomes a Card only when it LOOKS like a surface (fill / stroke / shadow).
+  // A bare autolayout frame is layout, not a card — forcing Card on every frame was
+  // the single biggest source of "doesn't look like the design" output.
+  const looksLikeSurface = hasFill
+    || (node.strokes ?? []).some((s) => s.visible !== false)
+    || (node.effects ?? []).some((e) => e.visible !== false && e.type === "DROP_SHADOW");
+  if ((node.type === "FRAME" || node.type === "GROUP") && (node.children?.length ?? 0) > 0 && looksLikeSurface)
     return { component: m.heuristics.frameContainer, confidence: 0.45, produce: { component: m.heuristics.frameContainer, container: true }, via: "heuristic" };
   return null;
 }

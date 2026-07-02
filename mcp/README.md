@@ -35,7 +35,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `compose_screen(components, …)` | Builds a token-bound screen from an **ordered, catalog-verified** component list (vstack / scroll / card) |
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit — **config-driven** via `migrate-rules.json` |
 | `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
-| **`design_to_code(url \| fileKey+nodeId, dryRun?, a11yOnly?, expandInstances?)`** | Fetches a Figma node → ThemeKit SwiftUI: snaps colors/spacing/radius to **tokens**, maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. Pass a Figma **`url`** directly (it parses `fileKey` + `nodeId`), or give them explicitly. `expandInstances: true` walks into unmapped component instances (forms, headers). `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN`. _(Alias: **`figma_to_swiftui`** — same tool, kept for backward compatibility.)_ |
+| **`design_to_code(url \| fileKey+nodeId, dryRun?, a11yOnly?, expandInstances?)`** | Fetches a Figma node → ThemeKit SwiftUI. Snaps colors/spacing/radius/**type** to **tokens** and **emits** them: raw layout stacks carry token-snapped `.padding` / `.background` / `.cornerRadius` / `.themeShadow`, text nodes get `.textStyle(…)`, real **alignment** (`counterAxisAlignItems`, `SPACE_BETWEEN → Spacer()`), **axis-inferred** `VStack`/`HStack`/`ZStack` for absolute layouts, and **icons/images → `Image(…)` + PNG export URLs** from the Figma images API. Maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. Pass a Figma **`url`** directly (it parses `fileKey` + `nodeId`), or give them explicitly. `expandInstances: true` walks into unmapped component instances (forms, headers). `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN`. _(Alias: **`figma_to_swiftui`** — same tool, kept for backward compatibility.)_ |
 
 ### Themes
 | Tool | What it returns |
@@ -53,16 +53,29 @@ and prompts (`themekit-screen`, `migrate-to-themekit`).
 **`design_to_code`** (alias: `figma_to_swiftui`) turns a Figma node into ThemeKit SwiftUI:
 
 1. **Fetch** the node subtree via the Figma REST API (`FIGMA_TOKEN`).
-2. **Token match** — fills → nearest color token (CIE76 ΔE), padding/`itemSpacing`
-   → spacing scale, corner radius → radius token. No match → reported as *needs review*.
-3. **Component match** — `figma-mapping.json` rules first (e.g. `"Button/Primary" → PrimaryButton`,
-   plus built-ins for `Checkbox` / `Radio` / `Toggle` / `Divider` / inputs / badges / chips),
-   then heuristics; unmapped nodes become raw SwiftUI marked `// ⚠️ unmapped`. Design-system
-   placeholder text (`scribble`, `Input Label`, …) is dropped.
-4. **Codegen** with parameter names **verified against the symbol-graph API**.
-5. A **mapping report** (matched / unmapped / token snaps / needs-review) plus an
-   **auto-validation** pass (`validate_code` is run on the generated code and its
-   PASS/FAIL verdict appended); `dryRun: true` returns just the plan.
+2. **Token match _and emit_** — fills → nearest color token (CIE76 ΔE),
+   padding/`itemSpacing` → spacing scale, corner radius → radius token, and text
+   `fontSize`/`fontWeight` → nearest `TextStyle`. These aren't just *reported* —
+   raw SwiftUI carries them as `.padding` / `.background` / `.cornerRadius` /
+   `.themeShadow` / `.textStyle`. No match → reported as *needs review*.
+3. **Layout** — autolayout keeps its axis and `counterAxisAlignItems` alignment,
+   `SPACE_BETWEEN` becomes `Spacer()`; a `GROUP` / `layoutMode: NONE` frame
+   **infers** its axis from child bounding boxes (→ `VStack`/`HStack`, or `ZStack`
+   when children overlap, flagged for review).
+4. **Component match** — `figma-mapping.json` rules first (case-insensitive; e.g.
+   `"Button/Primary" → PrimaryButton`, plus built-ins for `Checkbox` / `Radio` /
+   `Toggle` / `Divider` / inputs / badges / chips / `Tag` / `SearchBar` / `Rating` /
+   `Spinner` / `Progress` / `OTP` / `Stepper` / …), then heuristics — but a frame
+   only becomes a `Card` when it *looks like a surface* (fill / stroke / shadow);
+   a bare frame stays a plain layout stack. Unmapped nodes become raw SwiftUI
+   marked `// ⚠️ unmapped`; placeholder text (`scribble`, `Input Label`, …) is dropped.
+5. **Assets** — vector / image nodes (and all-vector icon frames) emit
+   `Image("slug").accessibilityLabel(…)` and are exported: the tool fetches their
+   **PNG URLs** from the Figma images API into an *Asset export URLs* section.
+6. **Codegen** with parameter names **verified against the symbol-graph API**.
+7. A **mapping report** (matched / unmapped / token snaps / assets / needs-review)
+   plus an **auto-validation** pass (`validate_code` is run on the generated code
+   and its PASS/FAIL verdict appended); `dryRun: true` returns just the plan.
 
 It's **config-driven** — edit `figma-mapping.json` to add/override rules. Set the
 token: `export FIGMA_TOKEN=figd_…`. (Complements an official Figma MCP — this one is
