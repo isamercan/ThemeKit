@@ -20,6 +20,7 @@ import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
 import { auditA11y, formatA11y } from "./figma/a11yAudit.js";
 import { buildVariables, toFigmaRestPayload } from "./figma/variables.js";
+import { importVariables, formatImport } from "./figma/importVariables.js";
 interface Param { label: string; name: string; type: string; default?: string; }
 interface Modifier { name: string; signature: string; doc: string; }
 interface Component { name: string; category: string; doc: string; init: string; params: Param[]; inits?: string[]; modifiers: Modifier[]; usage: string; }
@@ -697,6 +698,31 @@ server.registerTool("export_figma_variables", {
     (model.skipped.length ? `\nSkipped: ${model.skipped.join("; ")}` : "") +
     (format === "figma-rest" ? `\n\nPOST this to https://api.figma.com/v1/files/<FILE_KEY>/variables (header X-Figma-Token).` : "");
   return text(`${summary}\n\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\``);
+});
+
+// ── Figma → Code: import a company's Figma Variables into a theme ───────────
+// Closes the round-trip. Lossless for files this server exported (codeSyntax);
+// heuristic + alias-driven for any other company's Figma Variables file.
+server.registerTool("import_figma_variables", {
+  title: "Import Figma Variables → ThemeConfig",
+  description:
+    "The reverse of export_figma_variables: reads a Figma Variables JSON and resolves the brand seeds (primary/secondary/accent/base) for a chosen mode, then emits a `ThemeConfig(...)` + a `theme.json` — ThemeKit derives the whole palette from the seeds, so a company's Figma file re-skins every component. Accepts the Figma REST `GET /v1/files/:key/variables/local` response (incl. VARIABLE_ALIAS) or this server's own export model. Resolution order: codeSyntax (lossless for our exports) → your `aliases` → a name heuristic; unresolved seeds are reported, never guessed. Multi-mode files: pick `mode`.",
+  inputSchema: {
+    variablesJson: z.string().describe("The Figma Variables JSON — the /variables/local REST response, or an export_figma_variables model."),
+    mode: z.string().optional().describe("Which mode to import (e.g. a preset/theme name, or Light/Dark). Default: the first/default mode."),
+    aliases: z.record(z.string()).optional().describe('Map a variable name to a role, e.g. {"Brand/500":"primary","Surface/100":"base"}'),
+    dark: z.boolean().optional().describe("Force dark; otherwise inferred from the mode name or the base color."),
+  },
+}, async ({ variablesJson, mode, aliases, dark }) => {
+  let input: unknown;
+  try { input = JSON.parse(variablesJson); }
+  catch (e) { return text(`Could not parse variablesJson: ${(e as Error).message}`); }
+  try {
+    const result = importVariables(input as Parameters<typeof importVariables>[0], { mode, aliases, dark });
+    return text(formatImport(result));
+  } catch (e) {
+    return text(`Import failed: ${(e as Error).message}`);
+  }
 });
 
 // ── Resources & prompts ────────────────────────────────────────────────────
