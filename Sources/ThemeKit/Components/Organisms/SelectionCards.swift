@@ -50,13 +50,14 @@ private struct SelectionCard<Control: View>: View {
 /// state raises a hero border + tinted surface. State owned by the caller.
 public struct RadioCard: View {
     private let title: String
-    private let description: String?
     private let isSelected: Bool
     private let action: () -> Void
 
-    public init(_ title: String, description: String? = nil, isSelected: Bool, action: @escaping () -> Void) {   // R1
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var description: String? = nil
+
+    public init(_ title: String, isSelected: Bool, action: @escaping () -> Void) {   // R1
         self.title = title
-        self.description = description
         self.isSelected = isSelected
         self.action = action
     }

@@ -148,9 +148,10 @@ struct CardShadow: ViewModifier {
                     .foregroundStyle(theme.text(.textSecondary))
             }
         }
-        Card(elevation: .elevated) {
+        Card {
             Text("Elevated card").textStyle(.labelMd600)
         }
+        .elevation(.elevated)
     }
     .padding()
     .background(theme.background(.bgElevatorPrimary))

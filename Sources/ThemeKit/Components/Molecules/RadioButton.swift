@@ -36,9 +36,9 @@ public enum RadioButtonPadding {
 
 /// Figma "Control Items" → Radioboxes. Sizes Small (20) / Medium (24);
 /// states selected / disabled. Colors from theme tokens. Per the modifier-based
-/// architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only its label,
-/// the `isSelected` binding and the `infoMessages` validation data; every
-/// appearance axis is a chainable, order-free modifier. Size is native
+/// architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only its label
+/// and the `isSelected` binding; every appearance/validation axis is a
+/// chainable, order-free modifier. Size is native
 /// (`@Environment(\.controlSize)`); `disabled` is native (`@Environment(\.isEnabled)`, R3).
 ///
 ///     RadioButton("Remember me", isSelected: $on)
@@ -50,11 +50,11 @@ public struct RadioButton: View {
 
     @Binding private var isSelected: Bool
     private let label: String?
-    private let infoMessages: [InfoMessage]
     @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled
 
     // Appearance — mutated only through the modifiers below (R2).
+    private var infoMessages: [InfoMessage] = []
     private var type: RadioButtonType = .select
     private var style: RadioButtonStyle = .plain
     private var gap: RadioButtonPadding = .small
@@ -68,12 +68,10 @@ public struct RadioButton: View {
 
     public init(
         _ label: String? = nil,
-        isSelected: Binding<Bool>,
-        infoMessages: [InfoMessage] = []
-    ) {   // R1 — content + binding + required validation data
+        isSelected: Binding<Bool>
+    ) {   // R1 — content + binding
         self.label = label
         self._isSelected = isSelected
-        self.infoMessages = infoMessages
     }
 
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
@@ -146,8 +144,7 @@ public extension RadioButton {
     /// equals `tag`. Mirrors the reference's `RadioButton(tag:selection:)`.
     init<V: Hashable>(
         tag: V,
-        selection: Binding<V?>,
-        infoMessages: [InfoMessage] = []
+        selection: Binding<V?>
     ) {
         // The deselect branch only ever fires for `.check` radios (a `.select`
         // radio's tap sets `isSelected = true`, never false), so clearing to
@@ -157,8 +154,7 @@ public extension RadioButton {
             isSelected: Binding(
                 get: { selection.wrappedValue == tag },
                 set: { newValue in selection.wrappedValue = newValue ? tag : nil }
-            ),
-            infoMessages: infoMessages
+            )
         )
     }
 }
@@ -177,6 +173,9 @@ public extension RadioButton {
 
     /// Override the selected-fill color (defaults to the `.bgHero` token, R4).
     func fillColor(_ c: Color?) -> Self { copy { $0.backgroundColor = c } }
+
+    /// Validation / info messages rendered under the control (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
     /// Vertical alignment of the radio against a multi-line label.
     func alignment(_ a: VerticalAlignment) -> Self { copy { $0.verticalAlignment = a } }

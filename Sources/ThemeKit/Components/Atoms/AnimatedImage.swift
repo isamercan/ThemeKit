@@ -15,8 +15,9 @@ public struct AnimatedImage: View {
     @Environment(\.theme) private var theme
 
     private let url: URL?
-    private let contentMode: ContentMode
-    private let cornerRadius: CGFloat
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var contentMode: ContentMode = .fill
+    private var cornerRadius: CGFloat = 0
 
     @State private var frames: [CGImage] = []
     @State private var cumulative: [Double] = []   // cumulative end-time of each frame
@@ -24,10 +25,8 @@ public struct AnimatedImage: View {
     @State private var start = Date()
     @State private var failed = false
 
-    public init(_ url: URL?, contentMode: ContentMode = .fill, cornerRadius: CGFloat = 0) {
+    public init(_ url: URL?) {   // R1 — content only
         self.url = url
-        self.contentMode = contentMode
-        self.cornerRadius = cornerRadius
     }
 
     public var body: some View {
@@ -52,7 +51,7 @@ public struct AnimatedImage: View {
         } else {
             ZStack {
                 theme.background(.bgSecondaryLight)
-                if failed { Icon(systemName: "photo", size: .lg, color: theme.text(.textTertiary)) }
+                if failed { Icon(systemName: "photo").size(.lg).color(theme.text(.textTertiary)) }
             }
             .skeleton(!failed)
         }
@@ -105,6 +104,22 @@ public struct AnimatedImage: View {
             if let d = png[kCGImagePropertyAPNGDelayTime] as? Double, d > 0 { return d }
         }
         return 0.1
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension AnimatedImage {
+    /// How the frames fill the available space (default .fill).
+    func contentMode(_ mode: ContentMode) -> Self { copy { $0.contentMode = mode } }
+
+    /// Clipping corner radius in points (default 0).
+    func cornerRadius(_ r: CGFloat) -> Self { copy { $0.cornerRadius = r } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

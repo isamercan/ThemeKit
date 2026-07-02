@@ -13,31 +13,18 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     @Environment(\.theme) private var theme
 
     private let items: [Item]
-    private let header: String?
-    private let footer: String?
-    private let bordered: Bool
-    private let loading: Bool
-    private let split: Bool
-    private let emptyText: String?
     private let rowContent: (Item) -> Row
 
-    public init(
-        _ items: [Item],
-        header: String? = nil,
-        footer: String? = nil,
-        bordered: Bool = true,
-        loading: Bool = false,
-        split: Bool = true,
-        emptyText: String? = nil,
-        @ViewBuilder row: @escaping (Item) -> Row
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var header: String?
+    private var footer: String?
+    private var bordered = true
+    private var loading = false
+    private var split = true
+    private var emptyText: String?
+
+    public init(_ items: [Item], @ViewBuilder row: @escaping (Item) -> Row) {   // R1
         self.items = items
-        self.header = header
-        self.footer = footer
-        self.bordered = bordered
-        self.loading = loading
-        self.split = split
-        self.emptyText = emptyText
         self.rowContent = row
     }
 
@@ -119,16 +106,46 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ListView {
+    /// Header text above the rows.
+    func header(_ text: String?) -> Self { copy { $0.header = text } }
+
+    /// Footer text below the rows.
+    func footer(_ text: String?) -> Self { copy { $0.footer = text } }
+
+    /// Draw the bordered card surface around the list.
+    func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+
+    /// Replace rows with skeleton placeholders while content loads.
+    func loading(_ on: Bool = true) -> Self { copy { $0.loading = on } }
+
+    /// Show dividers between rows (and around header/footer).
+    func split(_ on: Bool = true) -> Self { copy { $0.split = on } }
+
+    /// Text shown when there are no items (defaults to "No data").
+    func emptyText(_ text: String?) -> Self { copy { $0.emptyText = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Row: Identifiable { let id = UUID(); let title: String; let subtitle: String }
     let rows = [Row(title: "My Account", subtitle: "Profile & security"),
                 Row(title: "Notifications", subtitle: "Email & push"),
                 Row(title: "Language", subtitle: "English")]
     return VStack(spacing: 24) {
-        ListView(rows, header: "Settings", footer: "3 items") { row in
+        ListView(rows) { row in
             ListRow(row.title, action: {}).subtitle(row.subtitle)
         }
-        ListView(rows, header: "Loading", loading: true) { _ in EmptyView() }
+        .header("Settings").footer("3 items")
+        ListView(rows) { _ in EmptyView() }
+            .header("Loading").loading()
     }
     .padding()
 }

@@ -171,6 +171,9 @@ public extension Checkbox {
     /// Overrides the box side length, bypassing the native `.controlSize` metric.
     func customSize(_ side: CGFloat?) -> Self { copy { $0.customSize = side } }
 
+    /// Validation / info messages rendered under the control (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }

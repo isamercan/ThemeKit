@@ -151,15 +151,13 @@ public struct AvatarGroup: View {
     @Environment(\.theme) private var theme
 
     private let avatars: [AvatarContent]
-    private let size: AvatarSize
-    private let max: Int
-    private let background: AvatarBackground
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: AvatarSize = .md
+    private var max: Int = 4
+    private var background: AvatarBackground = .blue
 
-    public init(_ avatars: [AvatarContent], size: AvatarSize = .md, max: Int = 4, background: AvatarBackground = .blue) {
+    public init(_ avatars: [AvatarContent]) {   // R1 — content only
         self.avatars = avatars
-        self.size = size
-        self.max = Swift.max(max, 1)
-        self.background = background
     }
 
     private var overflow: Int { Swift.max(avatars.count - max, 0) }
