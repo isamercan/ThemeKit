@@ -19,6 +19,7 @@ import { loadMapping } from "./figma/mapping.js";
 import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
 import { auditA11y, formatA11y } from "./figma/a11yAudit.js";
+import { buildVariables, toFigmaRestPayload } from "./figma/variables.js";
 interface Param { label: string; name: string; type: string; default?: string; }
 interface Modifier { name: string; signature: string; doc: string; }
 interface Component { name: string; category: string; doc: string; init: string; params: Param[]; inits?: string[]; modifiers: Modifier[]; usage: string; }
@@ -669,6 +670,34 @@ server.registerTool("design_to_code",
 server.registerTool("figma_to_swiftui",
   { ...designToCodeConfig, title: "Figma → SwiftUI (ThemeKit) — alias of design_to_code" },
   runDesignToCode);
+
+// ── Code → Figma: design tokens as a Figma Variables library ────────────────
+// The reverse of design_to_code. Round-trip-ready: reversible token↔variable
+// names + codeSyntax carry the ThemeKit token, so a future Figma → tokens
+// import can read the design back into a theme.json.
+server.registerTool("export_figma_variables", {
+  title: "Export design tokens as Figma Variables",
+  description:
+    "Turns ThemeKit's design tokens + the 32 theme presets into a Figma Variables library: a **Brand** collection with one MODE per preset (primary/secondary/accent/base — flip themes like the app does), plus **Color** (every resolved color token), **Radius** (scale + box/field/selector roles), **Spacing**, and **Typography** (size/lineHeight/weight) collections. Returns a tool-agnostic model by default, or `format: \"figma-rest\"` for the exact body to POST to the Figma Variables REST API (`/v1/files/:key/variables`). Every variable carries its ThemeKit token in `codeSyntax` so design and code stay in sync (and a future Figma→tokens import can round-trip). Filter with `collections`.",
+  inputSchema: {
+    format: z.enum(["model", "figma-rest"]).optional().describe("model (default, tool-agnostic) or figma-rest (Figma bulk-write POST body)"),
+    collections: z.array(z.string()).optional().describe('Only these collections, e.g. ["Brand","Color"] (default: all five)'),
+  },
+}, async ({ format, collections }) => {
+  let model = buildVariables(data.tokens, data.themes);
+  if (collections?.length) {
+    const want = new Set(collections.map((c) => c.toLowerCase()));
+    model = { ...model, collections: model.collections.filter((c) => want.has(c.name.toLowerCase())) };
+    if (!model.collections.length) return text(`No collection matched ${JSON.stringify(collections)}. Available: Brand, Color, Radius, Spacing, Typography.`);
+  }
+  const payload = format === "figma-rest" ? toFigmaRestPayload(model) : model;
+  const summary =
+    `Figma Variables — ${model.collections.length} collection(s), ${model.meta.variableCount} variables, ${model.meta.presetModes} preset modes.\n` +
+    model.collections.map((c) => `- ${c.name}: ${c.variables.length} vars, ${c.modes.length} mode(s)`).join("\n") +
+    (model.skipped.length ? `\nSkipped: ${model.skipped.join("; ")}` : "") +
+    (format === "figma-rest" ? `\n\nPOST this to https://api.figma.com/v1/files/<FILE_KEY>/variables (header X-Figma-Token).` : "");
+  return text(`${summary}\n\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\``);
+});
 
 // ── Resources & prompts ────────────────────────────────────────────────────
 

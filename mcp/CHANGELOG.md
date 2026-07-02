@@ -6,6 +6,33 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-07-02
+
+### Added — Code → Figma: `export_figma_variables`
+
+The reverse of `design_to_code`. Turns the design tokens + 32 theme presets into
+a **Figma Variables** library so a designer can theme in Figma with the exact
+vocabulary the app uses:
+
+- **Brand** collection — `primary` / `secondary` / `accent` / `base` with **one
+  Figma MODE per theme preset** (`Default`, `Dark`, `Dracula`, …). Switching the
+  mode re-brands the whole file, mirroring `ThemePreset.named(id).apply()`.
+- **Color** — every resolved color token (`foreground/*`, `background/*`,
+  `text/*`, `palette/primary/50`, …) as a `COLOR` variable.
+- **Radius** — the size scale + the `box` / `field` / `selector` roles (`FLOAT`).
+- **Spacing** — the spacing scale (`FLOAT`).
+- **Typography** — `size` / `lineHeight` (`FLOAT`) and `weight` (`STRING`) per style.
+- Returns a tool-agnostic model by default, or `format: "figma-rest"` for the
+  exact `POST /v1/files/:key/variables` body; `collections` filters the output.
+- **Round-trip ready:** the token↔variable name mapping is a pure invertible
+  function and every variable carries its ThemeKit token in `codeSyntax`, so a
+  planned **Figma → tokens importer** can read a designed file back into a
+  `theme.json` without guessing.
+
+From `data/themekit.json` only — no new data, nothing hand-maintained. 277
+variables across 5 collections; 33 preset modes. Adds `test/variables.test.mjs`
+(63/63 tests pass).
+
 ## [2.8.1] - 2026-07-02
 
 ### Fixed
