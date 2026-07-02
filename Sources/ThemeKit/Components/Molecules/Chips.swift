@@ -290,6 +290,22 @@ public struct FilterChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension FilterChip {
+    /// Chip shape: pill (with a soft shadow) or square.
+    func shape(_ shape: FilterChipShape) -> Self { copy { $0.shape = shape } }
+
+    /// Whether to show the trailing close button (default true).
+    func closable(_ on: Bool = true) -> Self { copy { $0.showsClose = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - ChipGroup (multi-select)
 
 /// A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
@@ -299,20 +315,20 @@ public struct ChipGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
-    private let selectionStyle: ChipSelectionStyle
     private let label: (Option) -> String
 
-    public init(
+    // Appearance — mutated only through the modifiers below (R2).
+    private var selectionStyle: ChipSelectionStyle = .tonal
+
+    public init(   // R1
         title: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        selectionStyle: ChipSelectionStyle = .tonal,
         label: @escaping (Option) -> String
     ) {
         self.title = title
         self.options = options
         self._selection = selection
-        self.selectionStyle = selectionStyle
         self.label = label
     }
 
@@ -337,6 +353,19 @@ public struct ChipGroup<Option: Hashable>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ChipGroup {
+    /// Visual style applied to every chip (matches `Chip.chipStyle`).
+    func chipStyle(_ style: ChipSelectionStyle) -> Self { copy { $0.selectionStyle = style } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var a = true; @State var b = false; @State var c = true
@@ -345,14 +374,14 @@ public struct ChipGroup<Option: Hashable>: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        CompactChip(isSelected: $a, text: "Standard Room", price: "$399.90", rating: 4.6)
-                        CompactChip(isSelected: $b, text: "Suite Room", price: "$899.90")
+                        CompactChip("Standard Room", price: "$399.90", isSelected: $a).rating(4.6)
+                        CompactChip("Suite Room", price: "$899.90", isSelected: $b)
                     }
-                    ChoseChip(isSelected: $c, title: "Flexible rate", description: "Free cancellation",
-                              rating: 4.8, showFree: true, systemImage: "wind")
+                    ChoseChip("Flexible rate", isSelected: $c)
+                        .description("Free cancellation").rating(4.8).free().icon("wind")
                     HStack {
                         FilterChip("Istanbul") {}
-                        FilterChip("4+ stars", shape: .square) {}
+                        FilterChip("4+ stars") {}.shape(.square)
                     }
                     ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
                 }
