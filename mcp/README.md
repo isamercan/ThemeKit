@@ -45,10 +45,11 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `theme_preview(id)` | A **PNG swatch card** (renders inline) |
 | `get_design_tokens(category: "contrast")` | A **WCAG** text-on-surface contrast report (AA / AAA grading) |
 
-### Code → Figma
+### Code ⇄ Figma (round-trip)
 | Tool | What it returns |
 |---|---|
-| **`export_figma_variables(format?, collections?)`** | Turns the tokens + 32 presets into a **Figma Variables** library — a **Brand** collection with **one MODE per preset** (flip themes like the app does), plus **Color / Radius / Spacing / Typography** collections. `format: "figma-rest"` gives the exact body to `POST /v1/files/:key/variables`. Every variable carries its ThemeKit token in **`codeSyntax`**, so design ↔ code stay in sync and a **future Figma→tokens import can round-trip**. Filter with `collections`. |
+| **`export_figma_variables(format?, collections?)`** | Tokens + 32 presets → a **Figma Variables** library — a **Brand** collection with **one MODE per preset** (flip themes like the app does), plus **Color / Radius / Spacing / Typography** collections. `format: "figma-rest"` gives the exact body to `POST /v1/files/:key/variables`. Every variable carries its ThemeKit token in **`codeSyntax`**. Filter with `collections`. |
+| **`import_figma_variables(variablesJson, mode?, aliases?, dark?)`** | The reverse: a Figma Variables JSON → a **`ThemeConfig`** + `theme.json`. Resolves the brand seeds (primary/secondary/accent/base) for a `mode`; ThemeKit derives the rest, so a company's file **re-skins every component**. Reads the Figma REST `GET /variables/local` response (incl. `VARIABLE_ALIAS`) or this server's export model. Resolution: **`codeSyntax` (lossless for our exports)** → your `aliases` → a name heuristic; unresolved seeds are reported, never guessed. |
 
 Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
 and prompts (`themekit-screen`, `migrate-to-themekit`).
@@ -69,14 +70,34 @@ other way — the token catalog becomes a themeable Figma Variables library:
 
 Each variable's **`codeSyntax`** stores the originating ThemeKit token, and the
 token↔variable name mapping is a pure, invertible function — so design and code
-share one vocabulary today, and a **Figma → tokens importer** (planned) can read
-a designed file straight back into a `theme.json`.
+share one vocabulary.
 
 ```jsonc
 // tool-agnostic model (default), or the Figma bulk-write body:
 export_figma_variables({ "format": "figma-rest", "collections": ["Brand", "Color"] })
 // → POST it to https://api.figma.com/v1/files/<FILE_KEY>/variables  (X-Figma-Token)
 ```
+
+### …and back: a company's Figma → a ThemeKit theme
+
+**`import_figma_variables`** closes the loop. Pull a file's variables
+(`GET /v1/files/:key/variables/local`) and hand the JSON in; it resolves the
+brand seeds for a chosen `mode` and emits a `ThemeConfig` — ThemeKit derives the
+full palette, so any brand re-skins the whole component set from a few seeds.
+
+- **Files this server exported are lossless** — the `codeSyntax` token pins each
+  seed exactly, no matching needed.
+- **Any other company's file** resolves by variable name, with an `aliases` map
+  for their own naming (`{ "Brand/500": "primary", "Surface/Canvas": "base" }`).
+  Whatever can't be resolved is reported so nothing is silently guessed.
+
+```jsonc
+import_figma_variables({ "variablesJson": "<GET /variables/local response>", "mode": "Dark" })
+// → Theme.shared.apply(ThemeConfig(primaryHex: "605dff", …, dark: true))
+```
+
+So the token catalog is one source of truth in **both** directions: code → Figma
+Variables, and a designed Figma file → a live `ThemeConfig`.
 
 ## Figma → SwiftUI
 

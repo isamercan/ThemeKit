@@ -6,6 +6,29 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-07-02
+
+### Added — Figma → Code: `import_figma_variables` (round-trip complete)
+
+The reverse of `export_figma_variables`, closing the loop: a Figma Variables
+JSON → a **`ThemeConfig`** + `theme.json`. Resolves the four brand seeds
+(primary/secondary/accent/base) for a chosen `mode`; ThemeKit derives the whole
+palette, so **any company's Figma file re-skins every component** from a few seeds.
+
+- Reads the Figma REST `GET /v1/files/:key/variables/local` response — including
+  **`VARIABLE_ALIAS`** indirection (an aliased seed is dereferenced to the
+  primitive it points at, across collections/modes) — **or** this server's own
+  `export_figma_variables` model.
+- **Lossless for files this server exported:** each seed is pinned by its
+  `codeSyntax` token, so no matching is needed and the mode's exact hexes come back.
+- **Foreign files** resolve by variable name, with an `aliases` map for a
+  company's own naming (`{ "Brand/500": "primary" }`); `codeSyntax` always wins
+  over a conflicting name. Anything unresolved is reported — never guessed.
+- Multi-mode files: pick `mode` (e.g. `Light` / `Dark` / a preset name); `dark`
+  is inferred from the mode name or the base color's luminance, or forced.
+
+Adds `test/import.test.mjs` incl. a real export→import round-trip; 70/70 pass.
+
 ## [2.9.0] - 2026-07-02
 
 ### Added — Code → Figma: `export_figma_variables`
