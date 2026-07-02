@@ -136,20 +136,28 @@ public struct Accordion<Content: View>: View {
 }
 
 public extension Accordion {
+    /// Leading SF Symbol shown before the title.
+    func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }
     /// A secondary line under the title.
-    func subtitle(_ text: String?) -> Self { var copy = self; copy.subtitle = text; return copy }
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// A leading two-digit number badge (e.g. a numbered FAQ / step).
-    func number(_ value: Int?) -> Self { var copy = self; copy.number = value; return copy }
+    func number(_ value: Int?) -> Self { copy { $0.number = value } }
     /// Expand/collapse indicator glyph (chevron / plus-minus / custom).
-    func indicator(_ indicator: AccordionIndicator) -> Self { var copy = self; copy.indicator = indicator; return copy }
+    func indicator(_ indicator: AccordionIndicator) -> Self { copy { $0.indicator = indicator } }
     /// Title text size.
-    func titleSize(_ size: AccordionTitleSize) -> Self { var copy = self; copy.titleSize = size; return copy }
+    func titleSize(_ size: AccordionTitleSize) -> Self { copy { $0.titleSize = size } }
     /// Header row vertical padding (default / small / large).
-    func density(_ size: AccordionPaddingSize) -> Self { var copy = self; copy.paddingSize = size; return copy }
+    func density(_ size: AccordionPaddingSize) -> Self { copy { $0.paddingSize = size } }
     /// Clamps the subtitle to one line while collapsed.
-    func truncateSubtitle(_ on: Bool = true) -> Self { var copy = self; copy.truncateSubtitle = on; return copy }
+    func truncateSubtitle(_ on: Bool = true) -> Self { copy { $0.truncateSubtitle = on } }
     /// Whether to draw the bottom divider (default true).
-    func divider(_ on: Bool) -> Self { var copy = self; copy.showDivider = on; return copy }
+    func divider(_ on: Bool) -> Self { copy { $0.showDivider = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
 
 #Preview {
@@ -158,9 +166,10 @@ public extension Accordion {
             Accordion("What is your refund policy?", initiallyExpanded: true) {
                 Text("You can request a refund within 14 days of purchase.")
             }
-            Accordion("How do I contact support?", leadingSystemImage: "questionmark.circle") {
+            Accordion("How do I contact support?") {
                 Text("Email us at support@example.com.")
             }
+            .icon("questionmark.circle")
         }
         .padding()
     }

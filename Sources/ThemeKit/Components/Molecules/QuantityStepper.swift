@@ -17,10 +17,10 @@ public struct QuantityStepper: View {
     private var step: Int = 1
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
-    public init(
+    public init(   // R1
         value: Binding<Int>,
         range: ClosedRange<Int> = 0...99
-    ) {   // R1
+    ) {
         self._value = value
         self.range = range
     }

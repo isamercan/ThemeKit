@@ -15,24 +15,24 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     @Environment(\.theme) private var theme
 
     private let items: [Item]
-    private let mode: AccordionExpandMode
     private let title: (Item) -> String
     private let content: (Item) -> Content
+
+    // Behavior — mutated only through the modifiers below (R2).
+    private var mode: AccordionExpandMode = .single
 
     @State private var expanded: Set<Item.ID> = []
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(
+    public init(   // R1 — `initiallyExpanded` seeds @State, so it stays in the init
         _ items: [Item],
-        mode: AccordionExpandMode = .single,
         initiallyExpanded: Set<Item.ID> = [],
         title: @escaping (Item) -> String,
         @ViewBuilder content: @escaping (Item) -> Content
     ) {
         self.items = items
-        self.mode = mode
         self.title = title
         self.content = content
         self._expanded = State(initialValue: initiallyExpanded)
@@ -79,13 +79,27 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension AccordionGroup {
+    /// Expand behavior: `.single` collapses the others when one opens (default), `.multiple` keeps them open.
+    func mode(_ mode: AccordionExpandMode) -> Self { copy { $0.mode = mode } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct FAQ: Identifiable { let id = UUID(); let q: String; let a: String }
     let faqs = [FAQ(q: "Can I cancel?", a: "Yes, free up to 24 hours before."),
                 FAQ(q: "Payment options?", a: "Credit card and bank transfer.")]
     return VStack(spacing: 24) {
-        AccordionGroup(faqs, mode: .single) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
-        AccordionGroup(faqs, mode: .multiple) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+        AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+        AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+            .mode(.multiple)
     }
     .padding()
 }
