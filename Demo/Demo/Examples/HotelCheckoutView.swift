@@ -39,17 +39,17 @@ struct HotelCheckoutView: View {
 
                 summaryCard
                 Fieldset("Contact details") {
-                    TextInput("Full name", text: $name, placeholder: "Your name")
-                    TextInput("Email", text: $email, placeholder: "you@example.com", leadingSystemImage: "envelope")
+                    TextInput("Full name", text: $name).placeholder("Your name")
+                    TextInput("Email", text: $email).placeholder("you@example.com").icon(leading: "envelope")
                 }
 
                 paymentMethod
                 if method == "card" {
                     Fieldset("Card details") {
-                        TextInput("Card number", text: $cardNumber, placeholder: "0000 0000 0000 0000", leadingSystemImage: "creditcard")
+                        TextInput("Card number", text: $cardNumber).placeholder("0000 0000 0000 0000").icon(leading: "creditcard")
                         HStack(spacing: 12) {
-                            TextInput("Expiry", text: $expiry, placeholder: "MM/YY")
-                            TextInput("CVV", text: $cvv, placeholder: "123", isSecure: true)
+                            TextInput("Expiry", text: $expiry).placeholder("MM/YY")
+                            TextInput("CVV", text: $cvv).placeholder("123").secure()
                         }
                     }
                 }
@@ -69,7 +69,7 @@ struct HotelCheckoutView: View {
                     Text("Total").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                     Text(total.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                 }
-                PrimaryButton("Pay", block: true) { showSuccess = true }.disabled(!acceptTerms)
+                PrimaryButton("Pay") { showSuccess = true }.fullWidth().disabled(!acceptTerms)
             }
             .padding(.bottom, 4)
         }
@@ -85,7 +85,7 @@ struct HotelCheckoutView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(hotel.name).textStyle(.labelMd700).foregroundStyle(Theme.shared.text(.textPrimary))
                 HStack(spacing: 6) {
-                    Icon(systemName: "calendar", size: .sm, color: Theme.shared.text(.textTertiary))
+                    Icon(systemName: "calendar").size(.sm).color(Theme.shared.text(.textTertiary))
                     Text("23 Jun – 26 Jun · \(nights) nights").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
                 if hotel.freeCancellation { Callout("Free cancellation").variant(.success) }
@@ -96,16 +96,16 @@ struct HotelCheckoutView: View {
     private var paymentMethod: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Payment method").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
-            RadioCard("Credit / debit card", description: "Visa, Mastercard, Amex", isSelected: method == "card") { method = "card" }
-            RadioCard("Apple Pay", description: "Pay with one tap", isSelected: method == "applepay") { method = "applepay" }
-            RadioCard("Bank transfer", description: "Pay directly from your bank", isSelected: method == "transfer") { method = "transfer" }
+            RadioCard("Credit / debit card", isSelected: method == "card") { method = "card" }.description("Visa, Mastercard, Amex")
+            RadioCard("Apple Pay", isSelected: method == "applepay") { method = "applepay" }.description("Pay with one tap")
+            RadioCard("Bank transfer", isSelected: method == "transfer") { method = "transfer" }.description("Pay directly from your bank")
         }
     }
 
     private var couponSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .bottom, spacing: 10) {
-                TextInput("Coupon code", text: $coupon, placeholder: "e.g. SUMMER")
+                TextInput("Coupon code", text: $coupon).placeholder("e.g. SUMMER")
                 SecondaryButton("Apply") { couponApplied = !coupon.isEmpty }
             }
             if couponApplied { Callout("Coupon applied · 10% off").variant(.success) }

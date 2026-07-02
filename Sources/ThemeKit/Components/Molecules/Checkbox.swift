@@ -31,8 +31,8 @@ public enum CheckboxType: Equatable {
 /// Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
 /// states checked / disabled / indeterminate. Colors from theme tokens. Per the
 /// modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only
-/// its label, the `isChecked` binding and the `infoMessages` validation data; every
-/// appearance axis is a chainable, order-free modifier. Size is native
+/// its label and the `isChecked` binding; every appearance/validation axis is a
+/// chainable, order-free modifier. Size is native
 /// (`@Environment(\.controlSize)`); `disabled` is native (`@Environment(\.isEnabled)`, R3).
 ///
 ///     Checkbox("I accept the terms", isChecked: $on)
@@ -44,11 +44,11 @@ public struct Checkbox: View {
 
     @Binding private var isChecked: Bool
     private let label: String?
-    private let infoMessages: [InfoMessage]
     @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled
 
     // Appearance — mutated only through the modifiers below (R2).
+    private var infoMessages: [InfoMessage] = []
     private var customSize: CGFloat?
     private var type: CheckboxType = .plain
     private var isIndeterminate: Bool = false
@@ -61,12 +61,10 @@ public struct Checkbox: View {
 
     public init(
         _ label: String? = nil,
-        isChecked: Binding<Bool>,
-        infoMessages: [InfoMessage] = []
-    ) {   // R1 — content + binding + required validation data
+        isChecked: Binding<Bool>
+    ) {   // R1 — content + binding
         self.label = label
         self._isChecked = isChecked
-        self.infoMessages = infoMessages
     }
 
     private var side: CGFloat { customSize ?? controlSize.checkboxSide }
@@ -172,6 +170,9 @@ public extension Checkbox {
 
     /// Overrides the box side length, bypassing the native `.controlSize` metric.
     func customSize(_ side: CGFloat?) -> Self { copy { $0.customSize = side } }
+
+    /// Validation / info messages rendered under the control (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).

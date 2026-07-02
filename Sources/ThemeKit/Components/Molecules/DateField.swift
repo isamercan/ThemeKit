@@ -72,7 +72,7 @@ public struct DateField: View {
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if let leadingSystemImage {
-                    Icon(systemName: leadingSystemImage, size: .sm, color: iconColor)
+                    Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
                 }
                 Text(displayText ?? placeholder)
                     .textStyle(.bodyBase400)
@@ -111,13 +111,13 @@ public struct DateField: View {
     private var trailing: some View {
         if showsClear {
             Button { date = nil } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: accessibilityID)
             .accessibilityLabel(String(themeKit: "Clear"))
         } else {
-            Icon(systemName: components == .time ? "clock" : "calendar", size: .sm, color: iconColor)
+            Icon(systemName: components == .time ? "clock" : "calendar").size(.sm).color(iconColor)
         }
     }
 
@@ -150,7 +150,7 @@ public struct DateField: View {
                 .environment(\.locale, locale)
                 .tint(theme.foreground(.fgHero))
                 .labelsHidden()
-            PrimaryButton("Done", block: true) { showPicker = false }
+            PrimaryButton("Done") { showPicker = false }.fullWidth()
         }
         .padding()
         .frame(minWidth: 320)

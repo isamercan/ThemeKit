@@ -83,7 +83,7 @@ public struct Upload: View {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
                 .fill(theme.background(.bgElevatorTertiary))
                 .frame(width: 36, height: 36)
-                .overlay(Icon(systemName: "photo", size: .sm, color: theme.foreground(.fgHero)))
+                .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(file.name)
@@ -96,14 +96,14 @@ public struct Upload: View {
 
             if let onRetry, case .failed = file.status {
                 Button { onRetry(file) } label: {
-                    Icon(systemName: "arrow.clockwise", size: .sm, color: theme.foreground(.fgHero))
+                    Icon(systemName: "arrow.clockwise").size(.sm).color(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Retry"))
             }
 
             Button { onRemove(file) } label: {
-                Icon(systemName: "trash", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "trash").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
         }
@@ -211,19 +211,14 @@ public final class UploadController {
 /// `Upload` wired to an `UploadController` — renders its files with remove + retry.
 public struct UploadList: View {
     private var controller: UploadController
-    private let prompt: String
-    private let buttonTitle: String
     private let onPick: () -> Void
 
-    public init(
-        controller: UploadController,
-        prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
-        buttonTitle: String = String(themeKit: "Upload Photo"),
-        onPick: @escaping () -> Void = {}
-    ) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var prompt: String = String(themeKit: "Add a photo from your device or take one with the camera.")
+    private var buttonTitle: String = String(themeKit: "Upload Photo")
+
+    public init(controller: UploadController, onPick: @escaping () -> Void = {}) {   // R1
         self.controller = controller
-        self.prompt = prompt
-        self.buttonTitle = buttonTitle
         self.onPick = onPick
     }
 
@@ -236,6 +231,22 @@ public struct UploadList: View {
             onRetry: { file in Task { await controller.retry(file.id) } }
         )
         .buttonTitle(buttonTitle)
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension UploadList {
+    /// Prompt text shown above the picker button.
+    func prompt(_ text: String) -> Self { copy { $0.prompt = text } }
+
+    /// Title of the file-picker button.
+    func buttonTitle(_ text: String) -> Self { copy { $0.buttonTitle = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

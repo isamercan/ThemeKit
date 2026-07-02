@@ -37,13 +37,13 @@ public struct KeyValueTable: View {
     }
 
     private let rows: [Row]
-    private let title: String?
-    private let bordered: Bool
 
-    public init(rows: [Row], title: String? = nil, bordered: Bool = false) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var title: String? = nil
+    private var bordered: Bool = false
+
+    public init(rows: [Row]) {   // R1
         self.rows = rows
-        self.title = title
-        self.bordered = bordered
     }
 
     public var body: some View {
@@ -86,6 +86,22 @@ public struct KeyValueTable: View {
                 if row.id != rows.last?.id { DividerView().size(.small) }
             }
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension KeyValueTable {
+    /// Heading rendered above the table.
+    func title(_ text: String?) -> Self { copy { $0.title = text } }
+
+    /// Wraps the table in a bordered, padded surface.
+    func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

@@ -78,15 +78,15 @@ public struct CompactChip: View {
     @Binding private var isSelected: Bool
     private let text: String
     private let price: String
-    private let imageURL: URL?
-    private let rating: Double?
 
-    public init(isSelected: Binding<Bool>, text: String, price: String, imageURL: URL? = nil, rating: Double? = nil) {
-        self._isSelected = isSelected
+    // Appearance — mutated only through the modifiers below (R2).
+    private var imageURL: URL? = nil
+    private var rating: Double? = nil
+
+    public init(_ text: String, price: String, isSelected: Binding<Bool>) {   // R1
         self.text = text
         self.price = price
-        self.imageURL = imageURL
-        self.rating = rating
+        self._isSelected = isSelected
     }
 
     public var body: some View {
@@ -123,6 +123,22 @@ public struct CompactChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension CompactChip {
+    /// Remote logo image shown next to the price.
+    func imageURL(_ url: URL?) -> Self { copy { $0.imageURL = url } }
+
+    /// Star rating shown before the label (nil hides it).
+    func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - ChoseChip
 
 /// A selectable card: a leading icon, a title with an optional "free" gradient
@@ -132,34 +148,23 @@ public struct ChoseChip: View {
 
     @Binding private var isSelected: Bool
     private let title: String
-    private let description: String?
-    private let rating: Double?
-    private let showFree: Bool
-    private let freeLabel: String
-    private let systemImage: String?
 
-    public init(
-        isSelected: Binding<Bool>,
-        title: String,
-        description: String? = nil,
-        rating: Double? = nil,
-        showFree: Bool = false,
-        freeLabel: String = String(themeKit: "Free"),
-        systemImage: String? = nil
-    ) {
-        self._isSelected = isSelected
+    // Appearance — mutated only through the modifiers below (R2).
+    private var description: String? = nil
+    private var rating: Double? = nil
+    private var showFree: Bool = false
+    private var freeLabel: String = String(themeKit: "Free")
+    private var systemImage: String? = nil
+
+    public init(_ title: String, isSelected: Binding<Bool>) {   // R1
         self.title = title
-        self.description = description
-        self.rating = rating
-        self.showFree = showFree
-        self.freeLabel = freeLabel
-        self.systemImage = systemImage
+        self._isSelected = isSelected
     }
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             if let systemImage {
-                Icon(systemName: systemImage, size: .md, color: theme.foreground(.fgHero))
+                Icon(systemName: systemImage).size(.md).color(theme.foreground(.fgHero))
             }
             VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
@@ -208,6 +213,30 @@ public struct ChoseChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ChoseChip {
+    /// Secondary line shown under the title.
+    func description(_ text: String?) -> Self { copy { $0.description = text } }
+
+    /// Star rating shown before the description (nil hides it).
+    func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+
+    /// Show the gradient "free" badge next to the title (optionally with a custom label).
+    func free(_ on: Bool = true, label: String = String(themeKit: "Free")) -> Self {
+        copy { $0.showFree = on; $0.freeLabel = label }
+    }
+
+    /// Leading SF Symbol shown before the texts.
+    func icon(_ systemImage: String?) -> Self { copy { $0.systemImage = systemImage } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - FilterChip (square / pill)
 
 public enum FilterChipShape { case pill, square }
@@ -218,14 +247,14 @@ public struct FilterChip: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let shape: FilterChipShape
-    private let showsClose: Bool
     private let onDismiss: (() -> Void)?
 
-    public init(_ title: String, shape: FilterChipShape = .pill, showsClose: Bool = true, onDismiss: (() -> Void)? = nil) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var shape: FilterChipShape = .pill
+    private var showsClose: Bool = true
+
+    public init(_ title: String, onDismiss: (() -> Void)? = nil) {   // R1
         self.title = title
-        self.shape = shape
-        self.showsClose = showsClose
         self.onDismiss = onDismiss
     }
 
@@ -261,6 +290,22 @@ public struct FilterChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension FilterChip {
+    /// Chip shape: pill (with a soft shadow) or square.
+    func shape(_ shape: FilterChipShape) -> Self { copy { $0.shape = shape } }
+
+    /// Whether to show the trailing close button (default true).
+    func closable(_ on: Bool = true) -> Self { copy { $0.showsClose = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - ChipGroup (multi-select)
 
 /// A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
@@ -270,20 +315,20 @@ public struct ChipGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
-    private let selectionStyle: ChipSelectionStyle
     private let label: (Option) -> String
 
-    public init(
+    // Appearance — mutated only through the modifiers below (R2).
+    private var selectionStyle: ChipSelectionStyle = .tonal
+
+    public init(   // R1
         title: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        selectionStyle: ChipSelectionStyle = .tonal,
         label: @escaping (Option) -> String
     ) {
         self.title = title
         self.options = options
         self._selection = selection
-        self.selectionStyle = selectionStyle
         self.label = label
     }
 
@@ -308,6 +353,19 @@ public struct ChipGroup<Option: Hashable>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ChipGroup {
+    /// Visual style applied to every chip (matches `Chip.chipStyle`).
+    func chipStyle(_ style: ChipSelectionStyle) -> Self { copy { $0.selectionStyle = style } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var a = true; @State var b = false; @State var c = true
@@ -316,14 +374,14 @@ public struct ChipGroup<Option: Hashable>: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        CompactChip(isSelected: $a, text: "Standard Room", price: "$399.90", rating: 4.6)
-                        CompactChip(isSelected: $b, text: "Suite Room", price: "$899.90")
+                        CompactChip("Standard Room", price: "$399.90", isSelected: $a).rating(4.6)
+                        CompactChip("Suite Room", price: "$899.90", isSelected: $b)
                     }
-                    ChoseChip(isSelected: $c, title: "Flexible rate", description: "Free cancellation",
-                              rating: 4.8, showFree: true, systemImage: "wind")
+                    ChoseChip("Flexible rate", isSelected: $c)
+                        .description("Free cancellation").rating(4.8).free().icon("wind")
                     HStack {
                         FilterChip("Istanbul") {}
-                        FilterChip("4+ stars", shape: .square) {}
+                        FilterChip("4+ stars") {}.shape(.square)
                     }
                     ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
                 }

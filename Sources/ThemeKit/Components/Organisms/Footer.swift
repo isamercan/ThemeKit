@@ -41,7 +41,7 @@ public struct Footer: View {
                             .textStyle(.overline500)
                             .foregroundStyle(theme.text(.textTertiary))
                         ForEach(column.items) { item in
-                            TextLink(item.title, underline: false, action: item.action)
+                            TextLink(item.title, action: item.action).underline(false)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

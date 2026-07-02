@@ -101,29 +101,29 @@ final class ScreenshotGenerator: XCTestCase {
             Chip("Selected", isSelected: .constant(true))
             Chip("Unselected", isSelected: .constant(false))
         })
-        shot("CountBadge", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).countBadge(5))
+        shot("CountBadge", Icon(systemName: "bell").size(.xl).color(Theme.shared.text(.textPrimary)).countBadge(5))
         shot("Divider", DividerView("OR").dashed().titleAlign(.center).frame(width: 240))
         shot("Icon", HStack(spacing: 14) {
-            Icon(systemName: "star.fill", size: .xl, color: Theme.shared.foreground(.fgHero))
-            Icon(systemName: "heart.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgError))
-            Icon(systemName: "checkmark.seal.fill", size: .xl, color: Theme.shared.foreground(.systemcolorsFgSuccess))
+            Icon(systemName: "star.fill").size(.xl).color(Theme.shared.foreground(.fgHero))
+            Icon(systemName: "heart.fill").size(.xl).color(Theme.shared.foreground(.systemcolorsFgError))
+            Icon(systemName: "checkmark.seal.fill").size(.xl).color(Theme.shared.foreground(.systemcolorsFgSuccess))
         })
-        shot("Indicator", Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot())
+        shot("Indicator", Icon(systemName: "bell").size(.xl).color(Theme.shared.text(.textPrimary)).indicatorDot())
         shot("InputLabel", InputLabel("Email").required().hasInfo())
         shot("Kbd", HStack(spacing: 6) { Kbd("⌘"); Kbd("K") })
-        shot("ProgressBar", ProgressBar(value: 0.6, showPercentage: true).frame(width: 240))
+        shot("ProgressBar", ProgressBar(value: 0.6).showsPercentage().frame(width: 240))
         shot("RadialProgress", RadialProgress(0.66).size(96).showsLabel())
-        shot("Rating", Rating(value: 4.3, countLabel: "(128)"))
+        shot("Rating", Rating(value: 4.3).countLabel("(128)"))
         shot("RollingNumber", RollingNumber(1284).size(40))
         shot("ScoreBadge", ScoreBadge(9.0))
         shot("Skeleton", HStack(spacing: 12) {
-            Skeleton(.circle, width: 44, height: 44)
+            Skeleton(.circle).size(width: 44, height: 44)
             VStack(alignment: .leading, spacing: 8) {
-                Skeleton(.capsule, width: 160, height: 12)
-                Skeleton(.capsule, width: 110, height: 12)
+                Skeleton(.capsule).size(width: 160, height: 12)
+                Skeleton(.capsule).size(width: 110, height: 12)
             }
         })
-        shot("Spinner", Spinner(size: 32, lineWidth: 3))
+        shot("Spinner", Spinner().size(32).lineWidth(3))
         shot("StatusDot", HStack(spacing: 16) {
             StatusDot(.online, label: "Online")
             StatusDot(.away, label: "Away")
@@ -135,8 +135,8 @@ final class ScreenshotGenerator: XCTestCase {
             Tag("Error").tagStyle(.error).variant(.solid)
             Tag("Info").tagStyle(.info).variant(.outline)
         })
-        shot("TextLink", TextLink("Forgot password?", underline: true) {})
-        shot("Title", Title("Section title", subtitle: "Supporting subtitle", actionTitle: "See all") {}.frame(width: 320))
+        shot("TextLink", TextLink("Forgot password?") {})
+        shot("Title", Title("Section title").subtitle("Supporting subtitle").action("See all") {}.frame(width: 320))
         shot("InlineText", InlineText("By continuing you accept the Terms and the Privacy Policy.",
                                       links: [("Terms", {}), ("Privacy Policy", {})]).frame(width: 320))
         shot("BorderBeam", RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -170,7 +170,7 @@ final class ScreenshotGenerator: XCTestCase {
 
     private func molecules() {
         shot("Button", HStack(spacing: 10) {
-            PrimaryButton("Continue", block: true) {}
+            PrimaryButton("Continue") {}.fullWidth()
             SecondaryButton("Cancel") {}
             OutlineButton("More") {}
         })
@@ -184,7 +184,7 @@ final class ScreenshotGenerator: XCTestCase {
             Checkbox("Subscribe to updates", isChecked: .constant(false))
         })
         shot("CheckboxGroup", CheckboxGroup(title: "Amenities", options: ["Wifi", "Pool", "Parking"],
-                                            selection: .constant(["Wifi", "Pool"]), selectAllTitle: "Select all") { $0 }.frame(width: 280))
+                                            selection: .constant(["Wifi", "Pool"])) { $0 }.selectAll("Select all").frame(width: 280))
         shot("RadioButton", RadioButton("Remember me", isSelected: .constant(true)))
         shot("RadioGroup", RadioGroup(title: "Class", options: ["Economy", "Business", "First"],
                                       selection: .constant("Business")) { $0 }.frame(width: 240))
@@ -206,32 +206,32 @@ final class ScreenshotGenerator: XCTestCase {
         shot("TextInput", TextInput("Email", text: .constant("user@example.com")).frame(width: 300), hosted: true)
         shot("FileInput", FileInput("Passport", onPick: {}).fileName("passport-scan.jpg").onClear({}).frame(width: 320))
         shot("Pagination", Pagination(current: .constant(4), total: 50).frame(width: 360))
-        shot("Fieldset", Fieldset("Contact details", helper: "We never share your info.") {
+        shot("Fieldset", Fieldset("Contact details") {
             TextInput("Email", text: .constant("user@example.com"))
-        }.frame(width: 320), hosted: true)
+        }.helper("We never share your info.").frame(width: 320), hosted: true)
         shot("DateField", DateField("Check-in", date: .constant(nil)).frame(width: 280))
         shot("Select", Select("City", options: ["Istanbul", "Ankara", "Izmir"],
-                              selection: .constant(Optional("Istanbul")), searchable: true) { $0 }.frame(width: 280), hosted: true)
+                              selection: .constant(Optional("Istanbul"))) { $0 }.searchable().frame(width: 280), hosted: true)
         // SelectBox is a native SwiftUI Menu — its label doesn't draw into an
         // offscreen snapshot, so it's shown live in the Demo app instead.
-        shot("MultiSelect", MultiSelect(label: "Cities", options: ["Istanbul", "Ankara", "Izmir"],
+        shot("MultiSelect", MultiSelect("Cities", options: ["Istanbul", "Ankara", "Izmir"],
                                         selection: .constant(Set(["Istanbul", "Ankara"]))) { $0 }.frame(width: 300))
         shot("TreeSelect", TreeSelect("Cities",
                                       nodes: [TreeNode(id: "tr", "Turkey", systemImage: "flag",
                                                        children: [TreeNode(id: "ist", "Istanbul"), TreeNode(id: "ank", "Ankara")])],
                                       selection: .constant(Set(["ist"])), initiallyExpanded: ["tr"]).frame(width: 300))
-        shot("Autocomplete", Autocomplete(label: "Destination", text: .constant("Istanbul"),
+        shot("Autocomplete", Autocomplete("Destination", text: .constant("Istanbul"),
                                           suggestions: ["Istanbul", "Izmir"]).frame(width: 300), hosted: true)
         shot("SearchBar", SearchBar(text: .constant("Istanbul")).frame(width: 320), hosted: true)
         shot("OTPInput", OTPInput(code: .constant("1234")).digitCount(6).frame(width: 300))
         shot("InputNumber", InputNumber("Max price", value: .constant(250), range: 0...1000).step(50).unit("$").frame(width: 280), hosted: true)
         shot("RangeSlider", RangeSlider(lowerValue: .constant(200), upperValue: .constant(800),
-                                        in: 0...1000, step: 50).marks([0, 500, 1000]).frame(width: 320))
+                                        in: 0...1000).step(50).marks([0, 500, 1000]).frame(width: 320))
         shot("MultiLineTextInput", MultiLineTextInput("Notes", text: .constant("It was a wonderful stay, I would definitely recommend it.")).frame(width: 300), hosted: true)
-        shot("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
+        shot("Tooltip", Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
             .tooltip("Helpful tip", isPresented: .constant(true), edge: .top)
             .padding(.top, 36))
-        shot("Chips", CompactChip(isSelected: .constant(true), text: "Suit", price: "$899", rating: 4.6))
+        shot("Chips", CompactChip("Suit", price: "$899", isSelected: .constant(true)).rating(4.6))
         shot("FilterGroup", FilterGroup(options: ["All", "Hotel", "Villa", "Apartment"],
                                         selection: .constant(Optional("Hotel"))) { $0 }.frame(width: 320))
         shot("ProgressIndicator", ProgressIndicator(variant: .carousel, current: 2, total: 8).frame(width: 240))
@@ -256,10 +256,10 @@ final class ScreenshotGenerator: XCTestCase {
             Callout("Please review your details.").variant(.warning).calloutStyle(.soft)
             Callout("Something went wrong.").variant(.error).calloutStyle(.soft)
         }.frame(width: 320))
-        shot("Card", Card(elevation: .soft, title: "Reservation", subtitle: "2 nights · 2 guests", extraTitle: "Details", onExtra: {}) {
+        shot("Card", Card("Reservation") {
             Text("Hilton London — Deluxe room, breakfast included.")
                 .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
-        }.frame(width: 320))
+        }.subtitle("2 nights · 2 guests").extraAction("Details", action: {}).frame(width: 320))
         shot("ChatBubble", VStack(alignment: .leading, spacing: 8) {
             ChatBubble("Hi! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming)
             ChatBubble("Thanks!", time: "09:25").side(.outgoing)
@@ -275,22 +275,22 @@ final class ScreenshotGenerator: XCTestCase {
                                       title: "Heads up").variant(.info).frame(width: 340))
         shot("KeyValueTable", KeyValueTable(rows: [.init("Status", value: "Active", style: .success),
                                                    .init("Old price", value: "$5,000", style: .strikethrough),
-                                                   .init("Total", value: "$4,250")],
-                                            title: "Reservation summary", bordered: true).frame(width: 320))
+                                                   .init("Total", value: "$4,250")])
+                                            .title("Reservation summary").bordered().frame(width: 320))
         shot("ListRow", VStack(spacing: 0) {
             ListRow("My account", action: {}).subtitle("Profile and security").icon("person.circle")
             DividerView().size(.small)
             ListRow("Notifications", action: {}).subtitle("Email and push").icon("bell")
         }.frame(width: 320))
-        shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip",
-                                                  message: "24 days until your Hilton London reservation.",
-                                                  date: "December 5, 2024", isUnread: true, type: .success).frame(width: 340))
-        shot("PageHeader", PageHeader("Search results", subtitle: "128 hotels",
-                                      tags: [.init("Active", style: .success)], onBack: {}).frame(width: 340))
-        shot("RatingSummary", RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200).frame(width: 300))
-        shot("ResultView", ResultView(.notFound, title: "Page not found",
-                                      message: "The page you're looking for may have moved.",
-                                      primaryTitle: "Home", onPrimary: {}).frame(width: 320))
+        shot("NotificationCard", NotificationCard(title: "We Have a Suggestion for Your Trip")
+                                                  .message("24 days until your Hilton London reservation.")
+                                                  .date("December 5, 2024").unread().variant(.success).frame(width: 340))
+        shot("PageHeader", PageHeader("Search results").subtitle("128 hotels")
+                                      .tags([.init("Active", style: .success)]).onBack({}).frame(width: 340))
+        shot("RatingSummary", RatingSummary(score: 9.0).label("Excellent").reviews(count: 1200).frame(width: 300))
+        shot("ResultView", ResultView(.notFound, title: "Page not found")
+                                      .message("The page you're looking for may have moved.")
+                                      .primaryAction("Home", action: {}).frame(width: 320))
         shot("SegmentedTabBar", SegmentedTabBar([TabItem("Overview"), TabItem("Reviews", badge: "12"),
                                                  TabItem("Location")], selection: .constant(1)).frame(width: 340))
         shot("Timeline", Timeline([.init(title: "Order received", time: "09:24", systemImage: "cart", state: .done, color: .success),
@@ -304,9 +304,9 @@ final class ScreenshotGenerator: XCTestCase {
         shot("PromoBanner", PromoBanner("Early booking", action: {})
                                         .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore").frame(width: 340))
         let rowTitles = ["My account", "Notifications", "Language", "Payment"]
-        shot("ListView", ListView(tiles, header: "Settings", footer: "\(tiles.count) items", bordered: true) { tile in
+        shot("ListView", ListView(tiles) { tile in
             ListRow(rowTitles[tile.id], action: {}).subtitle("Details").icon("gearshape")
-        }.frame(width: 320))
+        }.header("Settings").footer("\(tiles.count) items").bordered().frame(width: 320))
         shot("MenuCard", MenuCard(items: [
             .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
             .init(title: "Payment methods", subtitle: "Cards & wallets", systemImage: "creditcard"),
@@ -316,16 +316,17 @@ final class ScreenshotGenerator: XCTestCase {
             .init(systemImage: "house"), .init(systemImage: "heart"), .init(systemImage: "bag"), .init(systemImage: "person"),
         ], selection: .constant(0)).frame(width: 320))
         shot("FAB", FloatingActionButton(systemImage: "plus") {})
-        shot("Hero", Hero(title: "Early booking", subtitle: "Up to 30% off your summer holiday",
-                          ctaTitle: "Explore", action: {}) { Theme.shared.background(.bgHero) }.frame(width: 340, height: 180))
+        shot("Hero", Hero(title: "Early booking") { Theme.shared.background(.bgHero) }
+                          .subtitle("Up to 30% off your summer holiday")
+                          .cta("Explore", action: {}).frame(width: 340, height: 180))
         shot("SelectionCards", VStack(spacing: 10) {
-            RadioCard("Standard", description: "Free cancellation", isSelected: true) {}
-            RadioCard("Flexible", description: "Change anytime", isSelected: false) {}
+            RadioCard("Standard", isSelected: true) {}.description("Free cancellation")
+            RadioCard("Flexible", isSelected: false) {}.description("Change anytime")
         }.frame(width: 320))
         shot("CardStack", CardStack(tiles) { self.tileView($0) }.frame(width: 300))
         // Carousel / PagingCarousel use a paged TabView, which ImageRenderer can't
         // capture on macOS — see them live in the Demo app.
-        shot("Gallery", Gallery(tiles, columns: 2) { self.tileView($0) }.frame(width: 320))
+        shot("Gallery", Gallery(tiles) { self.tileView($0) }.columns(2).frame(width: 320))
         shot("Footer", Footer(columns: [
             .init("Company", items: [.init("About"), .init("Careers")]),
             .init("Support", items: [.init("Help"), .init("Contact")]),
@@ -408,7 +409,7 @@ final class ScreenshotGenerator: XCTestCase {
                             HStack {
                                 Text(name).textStyle(.bodyBase400).foregroundStyle(on ? t.foreground(.fgSecondary) : t.text(.textPrimary))
                                 Spacer()
-                                if on { Icon(systemName: "checkmark", size: .sm, color: t.foreground(.fgSecondary)) }
+                                if on { Icon(systemName: "checkmark").size(.sm).color(t.foreground(.fgSecondary)) }
                             }
                             .padding(.horizontal, 12).frame(height: 34)
                             .background(on ? t.foreground(.fgHero) : Color.clear)
@@ -449,7 +450,7 @@ final class ScreenshotGenerator: XCTestCase {
         let grape = Theme(); grape.applyGenerated(primaryHex: "#7C3AED")   // generated on-device
 
         @ViewBuilder func sample() -> some View {
-            Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
+            Hero(title: "Stay").subtitle("Find your spot").cta("Book", action: {})
                 .frame(height: 128)
             HStack(spacing: 6) {
                 Badge("Info").badgeStyle(.info).icon("bell.fill")
@@ -457,7 +458,7 @@ final class ScreenshotGenerator: XCTestCase {
             }
             InfoBanner("Subtree-themed").variant(.success)
             Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
-            PrimaryButton("Continue", block: true) {}
+            PrimaryButton("Continue") {}.fullWidth()
         }
 
         func column(_ title: String, _ theme: Theme) -> some View {

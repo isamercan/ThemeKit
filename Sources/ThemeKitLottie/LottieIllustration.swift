@@ -26,30 +26,28 @@ public struct LottieIllustration: View {
     }
 
     private let source: Source
-    private let loop: Bool
+
+    // Playback — mutated only through the modifiers below (R2).
+    private var loop = true
 
     /// A bundled `<name>.json` Lottie animation.
-    public init(_ name: String, bundle: Bundle = .main, loop: Bool = true) {
+    public init(_ name: String, bundle: Bundle = .main) {   // R1
         self.source = .named(name, bundle)
-        self.loop = loop
     }
 
     /// A bundled `<name>.lottie` (dotLottie) animation.
-    public init(dotLottieNamed name: String, bundle: Bundle = .main, loop: Bool = true) {
+    public init(dotLottieNamed name: String, bundle: Bundle = .main) {   // R1
         self.source = .dotLottieNamed(name, bundle)
-        self.loop = loop
     }
 
     /// A remote JSON Lottie animation loaded from `url`.
-    public init(url: URL, loop: Bool = true) {
+    public init(url: URL) {   // R1
         self.source = .url(url)
-        self.loop = loop
     }
 
     /// A remote `.lottie` (dotLottie) animation loaded from `url`.
-    public init(dotLottieURL url: URL, loop: Bool = true) {
+    public init(dotLottieURL url: URL) {   // R1
         self.source = .dotLottieURL(url)
-        self.loop = loop
     }
 
     @ViewBuilder
@@ -79,5 +77,18 @@ public struct LottieIllustration: View {
         } else {
             view.playing()
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension LottieIllustration {
+    /// Loop the animation forever (default); pass `false` to play it once.
+    func loop(_ on: Bool = true) -> Self { copy { $0.loop = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }

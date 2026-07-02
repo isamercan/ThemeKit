@@ -12,12 +12,13 @@ public struct Fieldset<Content: View>: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let helper: String?
     private let content: () -> Content
 
-    public init(_ title: String, helper: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var helper: String?
+
+    public init(_ title: String, @ViewBuilder content: @escaping () -> Content) {   // R1 — content only
         self.title = title
-        self.helper = helper
         self.content = content
     }
 
@@ -40,15 +41,29 @@ public struct Fieldset<Content: View>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Fieldset {
+    /// Helper text rendered under the content (nil hides it).
+    func helper(_ text: String?) -> Self { copy { $0.helper = text } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var name = ""
         @State var subscribe = true
         var body: some View {
-            Fieldset("Contact details", helper: "We'll only use this to confirm your booking.") {
+            Fieldset("Contact details") {
                 TextInput("Full name", text: $name)
                 HStack { Checkbox(isChecked: $subscribe); Text("Subscribe to newsletter").textStyle(.bodyBase400); Spacer() }
             }
+            .helper("We'll only use this to confirm your booking.")
             .padding()
         }
     }

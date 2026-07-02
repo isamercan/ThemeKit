@@ -50,7 +50,7 @@ private struct DefaultStatLayout: View {
     var body: some View {
         HStack(alignment: .center, spacing: Theme.SpacingKey.md.value) {
             if let systemImage = configuration.systemImage {
-                Icon(systemName: systemImage, size: .xl, color: theme.foreground(.fgHero))
+                Icon(systemName: systemImage).size(.xl).color(theme.foreground(.fgHero))
             }
             column(alignment: .leading)
             Spacer(minLength: 0)
@@ -87,7 +87,7 @@ private struct CenteredStatLayout: View {
     var body: some View {
         VStack(spacing: Theme.SpacingKey.xs.value) {
             if let systemImage = configuration.systemImage {
-                Icon(systemName: systemImage, size: .xl, color: theme.foreground(.fgHero))
+                Icon(systemName: systemImage).size(.xl).color(theme.foreground(.fgHero))
             }
             Text(configuration.title).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
             configuration.value

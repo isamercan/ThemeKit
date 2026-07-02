@@ -214,7 +214,7 @@ private struct FeedbackHostModifier: ViewModifier {
             ZStack {
                 theme.background(.bgTertiary).opacity(0.3).ignoresSafeArea()
                 VStack(spacing: Theme.SpacingKey.sm.value) {
-                    Spinner(size: 28, lineWidth: 3)
+                    Spinner().size(28).lineWidth(3)
                     Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                 }
                 .padding(Theme.SpacingKey.lg.value)
@@ -229,7 +229,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var notificationLayer: some View {
         if let note = presenter.activeNotification {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: note.kind.systemImage, size: .md, color: note.kind.semanticColor.accent)
+                Icon(systemName: note.kind.systemImage).size(.md).color(note.kind.semanticColor.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     if let message = note.message {
@@ -238,7 +238,7 @@ private struct FeedbackHostModifier: ViewModifier {
                 }
                 Spacer(minLength: 0)
                 Button { presenter.dismissNotification() } label: {
-                    Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
+                    Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }

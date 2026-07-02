@@ -6,6 +6,15 @@
 //  Themed button family. All colors resolve from the active theme
 //  (ADR-0001: no hardcoded colors in components).
 //
+//  Per the modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) each
+//  preset's init takes only its content + action (sync `action:` or async
+//  `task:`); every appearance/state axis is a chainable, order-free modifier.
+//  `disabled` is native (`@Environment(\.isEnabled)`, R3).
+//
+//      PrimaryButton("Book") { await book() }
+//          .size(.large).fullWidth().helperText("No charge yet")
+//          .disabled(!formValid)            // native — R3
+//
 
 import SwiftUI
 
@@ -15,6 +24,13 @@ public enum ThemeButtonStyle {
     case outline
     case ghost
     case link
+}
+
+/// Whether a preset button was created with a sync `action` or an async `task`.
+/// Drives the default for `confirmsSuccess` (task-based buttons confirm by
+/// default; action-based don't) when no explicit `.confirmsSuccess(_:)` is set.
+private enum ButtonRunMode {
+    case action, task
 }
 
 /// Shared themed button core used by the public button types. Handles tactile
@@ -34,7 +50,7 @@ private struct ThemedButton: View {
     let block: Bool
     let confirmsSuccess: Bool
     let accessibilityID: String?
-    @Binding var isLoading: Bool
+    let isLoading: Bool
     let run: () async -> Void
 
     @State private var phase: Phase = .idle
@@ -136,225 +152,310 @@ private struct ThemedButton: View {
 // MARK: - Public button types
 
 public struct PrimaryButton: View {
-    private let configuration: ButtonConfiguration
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
 
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = false,
-        accessibilityID: String? = nil,
-        isLoading: Binding<Bool> = .constant(false),
-        action: @escaping () -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .primary, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: isLoading, run: { action() }
-        )
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
     }
 
     /// Async action: shows an automatic loading spinner while the task runs, then
-    /// (optionally) a success checkmark. Tap haptic + success haptic included.
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = true,
-        accessibilityID: String? = nil,
-        task: @escaping () async -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .primary, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: .constant(false), run: task
-        )
+    /// (by default) a success checkmark. Tap haptic + success haptic included.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
     }
 
-    public var body: some View { configuration.view }
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            style: .primary, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
 }
 
 public struct SecondaryButton: View {
-    private let configuration: ButtonConfiguration
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
 
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = false,
-        accessibilityID: String? = nil,
-        isLoading: Binding<Bool> = .constant(false),
-        action: @escaping () -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .secondary, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: isLoading, run: { action() }
-        )
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
     }
 
-    /// Async action with automatic loading + optional success confirmation.
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = true,
-        accessibilityID: String? = nil,
-        task: @escaping () async -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .secondary, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: .constant(false), run: task
-        )
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
     }
 
-    public var body: some View { configuration.view }
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            style: .secondary, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
 }
 
 public struct OutlineButton: View {
-    private let configuration: ButtonConfiguration
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
 
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = false,
-        accessibilityID: String? = nil,
-        isLoading: Binding<Bool> = .constant(false),
-        action: @escaping () -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .outline, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: isLoading, run: { action() }
-        )
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
     }
 
-    /// Async action with automatic loading + optional success confirmation.
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = true,
-        accessibilityID: String? = nil,
-        task: @escaping () async -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .outline, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: .constant(false), run: task
-        )
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
     }
 
-    public var body: some View { configuration.view }
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            style: .outline, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
 }
 
 public struct GhostButton: View {
-    private let configuration: ButtonConfiguration
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
 
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = false,
-        accessibilityID: String? = nil,
-        isLoading: Binding<Bool> = .constant(false),
-        action: @escaping () -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .ghost, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: isLoading, run: { action() }
-        )
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
     }
 
-    /// Async action with automatic loading + optional success confirmation.
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        block: Bool = false,
-        helperText: String? = nil,
-        textStyle: TextStyle? = nil,
-        confirmsSuccess: Bool = true,
-        accessibilityID: String? = nil,
-        task: @escaping () async -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: .ghost, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: .constant(false), run: task
-        )
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
     }
 
-    public var body: some View { configuration.view }
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            style: .ghost, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
 }
 
 public struct LinkButton: View {
-    private let configuration: ButtonConfiguration
+    private let title: String
+    private let run: () async -> Void
 
-    public init(
-        _ title: String,
-        size: ButtonSize = .medium,
-        accessibilityID: String? = nil,
-        action: @escaping () -> Void
-    ) {
-        configuration = ButtonConfiguration(
-            title: title, style: .link, size: size, block: false,
-            accessibilityID: accessibilityID,
-            isLoading: .constant(false), run: { action() }
-        )
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var accessibilityID: String?
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
     }
 
-    public var body: some View { configuration.view }
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: nil, textStyle: nil,
+            style: .link, size: size, block: false,
+            confirmsSuccess: false, accessibilityID: accessibilityID,
+            isLoading: false, run: run
+        )
+    }
 }
 
-// MARK: - Internal config
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
-private struct ButtonConfiguration {
-    let title: String
-    var helperText: String? = nil
-    var textStyle: TextStyle? = nil
-    let style: ThemeButtonStyle
-    let size: ButtonSize
-    let block: Bool
-    var confirmsSuccess: Bool = false
-    let accessibilityID: String?
-    let isLoading: Binding<Bool>
-    let run: () async -> Void
+public extension PrimaryButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
 
-    // Only ever read from a preset's `body` (main actor), so building the
-    // main-actor `ThemedButton` here is in-context — avoids sending the async
-    // `run` closure across isolation.
-    @MainActor var view: some View {
-        ThemedButton(
-            title: title, helperText: helperText, textStyle: textStyle,
-            style: style, size: size, block: block,
-            confirmsSuccess: confirmsSuccess, accessibilityID: accessibilityID,
-            isLoading: isLoading, run: run
-        )
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension SecondaryButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension OutlineButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension GhostButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension LinkButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -364,8 +465,8 @@ private struct ButtonConfiguration {
         SecondaryButton("Secondary") {}
         OutlineButton("Outline") {}
         PrimaryButton("Disabled") {}.disabled(true)
-        PrimaryButton("Loading", isLoading: .constant(true)) {}
-        PrimaryButton("Full-width CTA", block: true) {}
+        PrimaryButton("Loading") {}.loading()
+        PrimaryButton("Full-width CTA") {}.fullWidth()
     }
     .padding()
     .environment(Theme.shared)

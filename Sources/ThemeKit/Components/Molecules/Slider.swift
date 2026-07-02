@@ -14,11 +14,11 @@ public struct Slider: View {
 
     @Binding private var value: Double
     private let bounds: ClosedRange<Double>
-    private let step: Double
     private let label: String?
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
     // Opt-in presentation — set via chainable modifiers.
+    private var step: Double = 1
     private var marks: [Double: String] = [:]
     private var axis: Axis = .horizontal
     private var verticalHeight: CGFloat = 160
@@ -31,15 +31,13 @@ public struct Slider: View {
     private let thumbSize: CGFloat = 24
     private let trackHeight: CGFloat = 4
 
-    public init(
+    public init(   // R1
         value: Binding<Double>,
         in bounds: ClosedRange<Double>,
-        step: Double = 1,
         label: String? = nil
     ) {
         self._value = value
         self.bounds = bounds
-        self.step = step
         self.label = label
     }
 
@@ -214,7 +212,7 @@ public struct Slider: View {
         var body: some View {
             VStack(spacing: 32) {
                 Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip()
-                Slider(value: $v, in: 0...8, step: 2).marks([0: "0", 4: "Mid", 8: "Max"])
+                Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"])
                 Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true)
             }
             .padding()
@@ -226,16 +224,24 @@ public struct Slider: View {
 public extension Slider {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
 
+    /// Snap increment for dragging and VoiceOver adjustments (default 1).
+    func step(_ step: Double) -> Self { copy { $0.step = step } }
     /// Labeled tick marks at the given values (e.g. `[0: "0", 4: "Mid", 8: "Max"]`).
-    func marks(_ marks: [Double: String]) -> Self { var copy = self; copy.marks = marks; return copy }
+    func marks(_ marks: [Double: String]) -> Self { copy { $0.marks = marks } }
     /// Lays the slider out vertically with the given track height (default 160).
     func axis(_ axis: Axis, height: CGFloat = 160) -> Self {
-        var copy = self; copy.axis = axis; copy.verticalHeight = height; return copy
+        copy { $0.axis = axis; $0.verticalHeight = height }
     }
     /// Shows a value tooltip above the thumb while dragging.
-    func showsValueTooltip(_ on: Bool = true) -> Self { var copy = self; copy.showValueTooltip = on; return copy }
+    func showsValueTooltip(_ on: Bool = true) -> Self { copy { $0.showValueTooltip = on } }
     /// Fires with the snapped value when a drag ends (not on every step).
-    func onChangeEnd(_ action: ((Double) -> Void)?) -> Self { var copy = self; copy.onChangeEnd = action; return copy }
+    func onChangeEnd(_ action: ((Double) -> Void)?) -> Self { copy { $0.onChangeEnd = action } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

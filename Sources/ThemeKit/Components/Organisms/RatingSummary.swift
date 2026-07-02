@@ -12,15 +12,14 @@ public struct RatingSummary: View {
     @Environment(\.theme) private var theme
 
     private let score: Double
-    private let label: String?
-    private let reviewCount: Int?
-    private let onReviews: (() -> Void)?
 
-    public init(score: Double, label: String? = nil, reviewCount: Int? = nil, onReviews: (() -> Void)? = nil) {
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var label: String? = nil
+    private var reviewCount: Int? = nil
+    private var onReviews: (() -> Void)? = nil
+
+    public init(score: Double) {   // R1
         self.score = score
-        self.label = label
-        self.reviewCount = reviewCount
-        self.onReviews = onReviews
     }
 
     public var body: some View {
@@ -48,11 +47,29 @@ public struct RatingSummary: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension RatingSummary {
+    /// Qualitative label shown next to the score badge (e.g. "Excellent").
+    func label(_ text: String?) -> Self { copy { $0.label = text } }
+
+    /// Review-count link and its tap handler (link is disabled without a handler).
+    func reviews(count: Int?, onTap: (() -> Void)? = nil) -> Self {
+        copy { $0.reviewCount = count; $0.onReviews = onTap }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(spacing: 12) {
-        RatingSummary(score: 9.0, label: "Excellent", reviewCount: 1200, onReviews: {})
-        RatingSummary(score: 8.5, label: "Very Good", reviewCount: 340)
-        RatingSummary(score: 9.8, label: "Excellent")
+        RatingSummary(score: 9.0).label("Excellent").reviews(count: 1200, onTap: {})
+        RatingSummary(score: 8.5).label("Very Good").reviews(count: 340)
+        RatingSummary(score: 9.8).label("Excellent")
     }
     .padding()
 }

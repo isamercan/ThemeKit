@@ -37,7 +37,7 @@ public struct InfoMessageList: View {
                     if message.links.isEmpty {
                         Text(message.text).textStyle(.bodySm400).foregroundStyle(message.kind.color)
                     } else {
-                        InlineText(message.text, links: message.links, baseColor: message.kind.color)
+                        InlineText(message.text, links: message.links).color(message.kind.color)
                     }
                 }
             }

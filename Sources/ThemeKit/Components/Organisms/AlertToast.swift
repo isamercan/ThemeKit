@@ -71,9 +71,9 @@ public struct AlertToast: View {
             // Leading accessory: an activity spinner while loading, otherwise the
             // status icon (a caller override falls back to the type's default).
             if isLoading {
-                Spinner(size: IconSize.sm.value, lineWidth: 2, color: type.foreground(theme))
+                Spinner().size(IconSize.sm.value).lineWidth(2).color(type.foreground(theme))
             } else {
-                Icon(systemName: systemImage ?? type.systemImage, size: .sm, color: type.foreground(theme))
+                Icon(systemName: systemImage ?? type.systemImage).size(.sm).color(type.foreground(theme))
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -93,7 +93,7 @@ public struct AlertToast: View {
 
             if let onClose {
                 Button(action: onClose) {
-                    Icon(systemName: "xmark", size: .xs, color: type.foreground(theme))
+                    Icon(systemName: "xmark").size(.xs).color(type.foreground(theme))
                 }
                 .buttonStyle(.plain)
             }

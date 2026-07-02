@@ -126,8 +126,9 @@ public struct Pagination: View {
 
     private func arrow(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(systemName: systemName, size: .sm,
-                 color: enabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+            Icon(systemName: systemName)
+                .size(.sm)
+                .color(enabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                 .frame(width: 36, height: 36)
                 .mirrorsInRTL()
         }

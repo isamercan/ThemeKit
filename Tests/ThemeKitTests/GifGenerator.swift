@@ -71,7 +71,7 @@ final class GifGenerator: XCTestCase {
         gif("AlertToast", AlertToast("Saved successfully").message("Your changes were stored.")
                                      .variant(.success).onClose {}.frame(width: 360).padding(.vertical, 12))
 
-        gif("Tooltip", Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
+        gif("Tooltip", Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
             .tooltip("Helpful tip", isPresented: .constant(true), edge: .bottom)
             .padding(.vertical, 44).padding(.horizontal, 60))
 

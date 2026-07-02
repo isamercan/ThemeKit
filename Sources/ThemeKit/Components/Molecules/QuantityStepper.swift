@@ -12,18 +12,17 @@ public struct QuantityStepper: View {
 
     @Binding private var value: Int
     private let range: ClosedRange<Int>
-    private let step: Int
     private var accessibilityID: String? = nil
+    // Opt-in presentation — set via chainable modifiers.
+    private var step: Int = 1
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
-    public init(
+    public init(   // R1
         value: Binding<Int>,
-        range: ClosedRange<Int> = 0...99,
-        step: Int = 1
+        range: ClosedRange<Int> = 0...99
     ) {
         self._value = value
         self.range = range
-        self.step = max(1, step)
     }
 
     public var body: some View {
@@ -53,8 +52,9 @@ public struct QuantityStepper: View {
 
     private func stepButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(systemName: systemName, size: .sm,
-                 color: enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
+            Icon(systemName: systemName)
+                .size(.sm)
+                .color(enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
@@ -75,5 +75,14 @@ public struct QuantityStepper: View {
 public extension QuantityStepper {
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    /// Increment applied by the − / + buttons (default 1; clamped to at least 1).
+    func step(_ step: Int) -> Self { copy { $0.step = max(1, step) } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

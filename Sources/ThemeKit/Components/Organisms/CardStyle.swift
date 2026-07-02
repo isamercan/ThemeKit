@@ -8,7 +8,7 @@
 //  editing `Card`. `Card`'s content/header/loading API is unchanged; the default
 //  style reproduces the original look, so this is additive and non-breaking.
 //
-//      Card(title: "…") { body }
+//      Card("…") { body }
 //          .cardStyle(.outlined)        // or a custom CardStyle
 //
 

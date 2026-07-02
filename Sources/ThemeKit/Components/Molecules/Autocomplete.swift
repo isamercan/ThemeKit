@@ -24,16 +24,17 @@ public struct Autocomplete: View {
     private let label: String?
     @Binding private var text: String
     private let source: Source
-    private let placeholder: String
     private let onSelect: (String) -> Void
-    private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    // Tuning — set via chainable modifiers (the async init seeds a 0.3s debounce
-    // baseline, which `.debounce(_:)` can still override).
+
+    // Appearance/tuning — set via the chainable modifiers below (R2); the async
+    // init seeds a 0.3s debounce baseline, which `.debounce(_:)` can still override.
+    private var placeholder: String = "Search"
     private var maxResults: Int = 5
     private var debounce: TimeInterval = 0
     private var isSuggestionEnabled: ((String) -> Bool)? = nil
     private var onSearch: ((String) -> Void)? = nil
+    private var accessibilityID: String? = nil
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -41,34 +42,30 @@ public struct Autocomplete: View {
     @State private var searchTask: Task<Void, Never>?
 
     /// Local filtering over a static list.
-    public init(
-        label: String? = nil,
+    public init(   // R1
+        _ label: String? = nil,
         text: Binding<String>,
         suggestions: [String],
-        placeholder: String = "Search",
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
         self._text = text
         self.source = .staticList(suggestions)
-        self.placeholder = placeholder
         self.onSelect = onSelect
     }
 
     /// Async suggestions from a provider (e.g. a remote search). Debounced, with a
     /// loading spinner and an empty state; the previous request is cancelled when
     /// the query changes.
-    public init(
-        label: String? = nil,
+    public init(   // R1
+        _ label: String? = nil,
         text: Binding<String>,
         suggest: @escaping (String) async -> [String],
-        placeholder: String = "Search",
         onSelect: @escaping (String) -> Void = { _ in }
     ) {
         self.label = label
         self._text = text
         self.source = .asyncProvider(suggest)
-        self.placeholder = placeholder
         self.onSelect = onSelect
         self.debounce = 0.3   // async baseline; `.debounce(_:)` overrides
     }
@@ -92,7 +89,7 @@ public struct Autocomplete: View {
             if let label { InputLabel(label) }
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
                 TextField(placeholder, text: $text)
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textPrimary))
@@ -102,10 +99,10 @@ public struct Autocomplete: View {
                     .a11y(A11yElement.Field.field, in: accessibilityID)
                     .accessibilityLabel(label ?? placeholder)
                 if isLoading {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                 } else if !text.isEmpty {
                     Button { text = "" } label: {
-                        Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                     }
                     .buttonStyle(.plain)
                 }
@@ -132,7 +129,7 @@ public struct Autocomplete: View {
         VStack(spacing: 0) {
             if isLoading {
                 row { HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Spinner(size: IconSize.sm.value, lineWidth: 2)
+                    Spinner().size(IconSize.sm.value).lineWidth(2)
                     Text(String(themeKit: "Searching…")).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                     Spacer()
                 } }
@@ -198,11 +195,40 @@ public struct Autocomplete: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Autocomplete {
+    /// Placeholder shown while the field is empty.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Caps the number of suggestion rows (default 5).
+    func maxResults(_ count: Int) -> Self { copy { $0.maxResults = count } }
+
+    /// Debounce interval for typeahead (async init defaults to 0.3s).
+    func debounce(_ interval: TimeInterval) -> Self { copy { $0.debounce = interval } }
+
+    /// Per-suggestion enable predicate; disabled rows are shown greyed and unselectable.
+    func suggestionEnabled(_ predicate: ((String) -> Bool)?) -> Self { copy { $0.isSuggestionEnabled = predicate } }
+
+    /// Fires with the query text on each (debounced) change.
+    func onSearch(_ action: ((String) -> Void)?) -> Self { copy { $0.onSearch = action } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview("Static") {
     struct Demo: View {
         @State var text = ""
         var body: some View {
-            Autocomplete(label: "Destination", text: $text,
+            Autocomplete("Destination", text: $text,
                          suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
                 .padding()
         }
@@ -215,7 +241,7 @@ public struct Autocomplete: View {
         @State var text = ""
         let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
         var body: some View {
-            Autocomplete(label: "Destination", text: $text, suggest: { query in
+            Autocomplete("Destination", text: $text, suggest: { query in
                 try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
                 return cities.filter { $0.localizedCaseInsensitiveContains(query) }
             })
@@ -223,19 +249,4 @@ public struct Autocomplete: View {
         }
     }
     return Demo()
-}
-
-public extension Autocomplete {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
-
-    /// Caps the number of suggestion rows (default 5).
-    func maxResults(_ count: Int) -> Self { var copy = self; copy.maxResults = count; return copy }
-    /// Debounce interval for typeahead (async init defaults to 0.3s).
-    func debounce(_ interval: TimeInterval) -> Self { var copy = self; copy.debounce = interval; return copy }
-    /// Per-suggestion enable predicate; disabled rows are shown greyed and unselectable.
-    func suggestionEnabled(_ predicate: ((String) -> Bool)?) -> Self { var copy = self; copy.isSuggestionEnabled = predicate; return copy }
-    /// Fires with the query text on each (debounced) change.
-    func onSearch(_ action: ((String) -> Void)?) -> Self { var copy = self; copy.onSearch = action; return copy }
 }

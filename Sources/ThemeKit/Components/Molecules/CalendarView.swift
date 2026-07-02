@@ -58,7 +58,7 @@ public struct CalendarView: View {
                 withAnimation(Motion.fast.animation) { displayed = d }
             }
         } label: {
-            Icon(systemName: name, size: .sm, color: theme.text(.textPrimary))
+            Icon(systemName: name).size(.sm).color(theme.text(.textPrimary))
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
         }

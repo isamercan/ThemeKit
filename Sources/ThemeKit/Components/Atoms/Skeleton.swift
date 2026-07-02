@@ -64,18 +64,32 @@ struct SkeletonShimmer: View {
 /// A standalone skeleton block of an arbitrary shape and size.
 public struct Skeleton: View {
     private let shape: SkeletonShape
-    private let width: CGFloat?
-    private let height: CGFloat?
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var width: CGFloat? = nil
+    private var height: CGFloat? = nil
 
-    public init(_ shape: SkeletonShape = .rounded(8), width: CGFloat? = nil, height: CGFloat? = nil) {
+    public init(_ shape: SkeletonShape = .rounded(8)) {   // R1 — shape only
         self.shape = shape
-        self.width = width
-        self.height = height
     }
 
     public var body: some View {
         SkeletonShimmer(shape: shape)
             .frame(width: width, height: height)
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Skeleton {
+    /// Fixed block size in points; `nil` leaves that axis unconstrained.
+    func size(width: CGFloat? = nil, height: CGFloat? = nil) -> Self {
+        copy { $0.width = width; $0.height = height }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -108,10 +122,10 @@ public extension View {
         Text("A line of body text that is being loaded.").skeleton(true)
         RoundedRectangle(cornerRadius: 12).frame(height: 120).skeleton(true, cornerRadius: 12)
         HStack {
-            Skeleton(.circle, width: 48, height: 48)
+            Skeleton(.circle).size(width: 48, height: 48)
             VStack(alignment: .leading, spacing: 8) {
-                Skeleton(.capsule, width: 160, height: 12)
-                Skeleton(.capsule, width: 100, height: 12)
+                Skeleton(.capsule).size(width: 160, height: 12)
+                Skeleton(.capsule).size(width: 100, height: 12)
             }
         }
     }

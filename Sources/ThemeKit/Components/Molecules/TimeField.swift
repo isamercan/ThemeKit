@@ -71,7 +71,7 @@ public struct TimeField: View {
 
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 if let leadingSystemImage {
-                    Icon(systemName: leadingSystemImage, size: .sm, color: iconColor)
+                    Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
                 }
                 Text(displayText ?? placeholder)
                     .textStyle(.bodyBase400)
@@ -107,13 +107,13 @@ public struct TimeField: View {
     private var trailing: some View {
         if showsClear {
             Button { time = nil } label: {
-                Icon(systemName: "xmark.circle.fill", size: .sm, color: theme.text(.textTertiary))
+                Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: accessibilityID)
             .accessibilityLabel(String(themeKit: "Clear"))
         } else {
-            Icon(systemName: "clock", size: .sm, color: iconColor)
+            Icon(systemName: "clock").size(.sm).color(iconColor)
         }
     }
 
@@ -138,7 +138,7 @@ public struct TimeField: View {
                 .environment(\.locale, pickerLocale)
                 .tint(theme.foreground(.fgHero))
                 .labelsHidden()
-            PrimaryButton("Done", block: true) { showPicker = false }
+            PrimaryButton("Done") { showPicker = false }.fullWidth()
         }
         .padding()
         .frame(minWidth: 300)

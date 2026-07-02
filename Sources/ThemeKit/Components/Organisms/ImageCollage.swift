@@ -68,7 +68,7 @@ public struct ImageCollage: View {
     private var placeholder: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .fill(theme.background(.bgSecondaryLight))
-            .overlay(Icon(systemName: "photo.on.rectangle", size: .lg, color: theme.text(.textTertiary)))
+            .overlay(Icon(systemName: "photo.on.rectangle").size(.lg).color(theme.text(.textTertiary)))
             .frame(maxWidth: .infinity)
     }
 }

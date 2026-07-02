@@ -12,12 +12,12 @@ public struct TextLink: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let underline: Bool
     private let action: () -> Void
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var underline: Bool = true
 
-    public init(_ title: String, underline: Bool = true, action: @escaping () -> Void) {
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
         self.title = title
-        self.underline = underline
         self.action = action
     }
 
@@ -32,10 +32,23 @@ public struct TextLink: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension TextLink {
+    /// Underline the link text (default true); pass `false` for a plain link.
+    func underline(_ on: Bool = true) -> Self { copy { $0.underline = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 8) {
         TextLink("Forgot password?") {}
-        TextLink("Learn more", underline: false) {}
+        TextLink("Learn more") {}.underline(false)
     }
     .padding()
 }

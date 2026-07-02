@@ -12,7 +12,7 @@ public enum ButtonGroupAxis {
 
 /// Molecule. Lays out related buttons in a vertical stack or a side-by-side row.
 /// Buttons are content-width by default (ideal for a horizontal row); for a
-/// vertical full-width CTA stack, pass the buttons `block: true`.
+/// vertical full-width CTA stack, give the buttons `.fullWidth()`.
 ///
 /// A horizontal group **wraps**: each button keeps its single-line label at its
 /// natural width and overflowing buttons flow to the next line, instead of being
@@ -43,8 +43,8 @@ public struct ButtonGroup<Content: View>: View {
 #Preview {
     VStack(spacing: 24) {
         ButtonGroup {   // vertical CTA stack → full-width
-            PrimaryButton("Continue", block: true) {}
-            SecondaryButton("Not now", block: true) {}
+            PrimaryButton("Continue") {}.fullWidth()
+            SecondaryButton("Not now") {}.fullWidth()
         }
         ButtonGroup(.horizontal) {   // side-by-side → content-width (default)
             SecondaryButton("Cancel") {}

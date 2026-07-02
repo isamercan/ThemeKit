@@ -29,8 +29,8 @@ struct HotelDetailView: View {
                     }
 
                 VStack(alignment: .leading, spacing: 16) {
-                    Title(hotel.name, subtitle: hotel.area)
-                    RatingSummary(score: hotel.score, label: hotel.scoreLabel, reviewCount: hotel.reviewCount, onReviews: {})
+                    Title(hotel.name).subtitle(hotel.area)
+                    RatingSummary(score: hotel.score).label(hotel.scoreLabel).reviews(count: hotel.reviewCount, onTap: {})
 
                     HStack(spacing: 8) {
                         ForEach(hotel.amenities, id: \.self) { a in
@@ -55,18 +55,20 @@ struct HotelDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                         .allowsHitTesting(false)
                         HStack(spacing: 4) {
-                            Icon(systemName: "mappin.circle", size: .sm, color: Theme.shared.text(.textTertiary))
+                            Icon(systemName: "mappin.circle").size(.sm).color(Theme.shared.text(.textTertiary))
                             Text(hotel.area + ", Istanbul").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         }
                     }
 
                     VStack(spacing: 8) {
-                        Accordion("Cancellation policy", leadingSystemImage: "calendar", initiallyExpanded: true) {
+                        Accordion("Cancellation policy", initiallyExpanded: true) {
                             Text(hotel.freeCancellation ? "Free cancellation up to 24 hours before check-in." : "Cancellation terms are shown during booking.")
                         }
-                        Accordion("House rules", leadingSystemImage: "list.bullet") {
+                        .icon("calendar")
+                        Accordion("House rules") {
                             Text("Check-in 2:00 PM · Check-out 12:00 PM · No pets allowed.")
                         }
+                        .icon("list.bullet")
                     }
 
                     Text("Reviews").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
@@ -95,7 +97,7 @@ struct HotelDetailView: View {
                     Text(hotel.pricePerNight.priceText).textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
                     Text("/ night").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
-                PrimaryButton("Reserve", block: true) { path.append(.checkout(hotel)) }
+                PrimaryButton("Reserve") { path.append(.checkout(hotel)) }.fullWidth()
             }
             .padding(.bottom, 4)
         }

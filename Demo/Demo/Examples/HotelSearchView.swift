@@ -23,14 +23,14 @@ struct HotelSearchView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Title("Find your stay", subtitle: "2M+ hotels worldwide")
+                    Title("Find your stay").subtitle("2M+ hotels worldwide")
 
                     PromoBanner("Early booking", action: {})
                         .subtitle("Up to 30% off summer stays").icon("sun.max.fill").ctaTitle("Explore")
 
                     Card {
                         VStack(spacing: 14) {
-                            SearchBar(text: $destination, placeholder: "Where are you going?")
+                            SearchBar(text: $destination).placeholder("Where are you going?")
                             HStack(spacing: 12) {
                                 DateField("Check-in", date: $checkIn)
                                     .style(.custom("EEE, d MMM")).clearable().icon("calendar")
@@ -65,7 +65,8 @@ struct HotelSearchView: View {
                 }
             }
             .buttonDock {
-                PrimaryButton("\(guests) guests · Search hotels", block: true) { path.append(.results) }
+                PrimaryButton("\(guests) guests · Search hotels") { path.append(.results) }
+                    .fullWidth()
                     .padding(.bottom, 4)
             }
             .onAppear {

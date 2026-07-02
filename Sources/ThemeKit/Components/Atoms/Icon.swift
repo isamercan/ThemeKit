@@ -32,15 +32,13 @@ public enum IconSize: String, CaseIterable {
 /// glyph with `IconSize.font` instead.
 public struct Icon: View {
     private let systemName: String
-    private let size: IconSize
-    private let color: Color?
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: IconSize = .md
+    private var color: Color?
 
-    /// Renders an SF Symbol at a token size. Pass a theme color, or `nil` to
-    /// inherit the surrounding `foregroundStyle`.
-    public init(systemName: String, size: IconSize = .md, color: Color? = nil) {
+    /// Renders an SF Symbol at a token size.
+    public init(systemName: String) {   // R1 — content only
         self.systemName = systemName
-        self.size = size
-        self.color = color
     }
 
     public var body: some View {
@@ -50,11 +48,27 @@ public struct Icon: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Icon {
+    /// Size tier: xs / sm / md / lg / xl (12/16/20/24/32 pt).
+    func size(_ s: IconSize) -> Self { copy { $0.size = s } }
+
+    /// Tint color; `nil` (default) inherits the surrounding `foregroundStyle`.
+    func color(_ c: Color?) -> Self { copy { $0.color = c } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     @Previewable @Environment(\.theme) var theme
     HStack(spacing: 12) {
         ForEach(IconSize.allCases, id: \.self) { s in
-            Icon(systemName: "star.fill", size: s, color: theme.foreground(.fgHero))
+            Icon(systemName: "star.fill").size(s).color(theme.foreground(.fgHero))
         }
     }
     .padding()

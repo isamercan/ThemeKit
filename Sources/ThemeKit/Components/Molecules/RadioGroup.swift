@@ -14,25 +14,23 @@ public struct RadioGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Option?
-    private let infoMessages: [InfoMessage]
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var infoMessages: [InfoMessage] = []
+    private var isOptionEnabled: ((Option) -> Bool)?
     private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
         options: [Option],
         selection: Binding<Option?>,
-        infoMessages: [InfoMessage] = [],
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
-    ) {
+    ) {   // R1 — content + data + binding + required label closure
         self.title = title
         self.options = options
         self._selection = selection
-        self.infoMessages = infoMessages
-        self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
 
@@ -89,26 +87,22 @@ public struct RadioButtonGroup<Option: Hashable>: View {
 
     private let options: [Option]
     @Binding private var selection: Option?
-    private let style: RadioGroupButtonStyle
-    private let expandsHorizontally: Bool
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var style: RadioGroupButtonStyle = .solid
+    private var expandsHorizontally: Bool = false
+    private var isOptionEnabled: ((Option) -> Bool)?
     private var accessibilityID: String? = nil
 
     public init(
         options: [Option],
         selection: Binding<Option?>,
-        style: RadioGroupButtonStyle = .solid,
-        expandsHorizontally: Bool = false,
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
-    ) {
+    ) {   // R1 — data + binding + required label closure
         self.options = options
         self._selection = selection
-        self.style = style
-        self.expandsHorizontally = expandsHorizontally
-        self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
 
@@ -174,8 +168,9 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         var body: some View {
             VStack(spacing: 24) {
                 RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .solid) { $0 }
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .outline, expandsHorizontally: true) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+                    .groupStyle(.outline).fullWidth()
             }
             .padding()
         }
@@ -183,8 +178,43 @@ public struct RadioButtonGroup<Option: Hashable>: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension RadioGroup {
+    /// Validation / info messages rendered under the group (drives the title color).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension RadioButtonGroup {
+    /// Fill style of the group: `.solid` or `.outline`.
+    func groupStyle(_ style: RadioGroupButtonStyle) -> Self { copy { $0.style = style } }
+
+    /// Expands the group to fill the available width, sharing it across segments.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }

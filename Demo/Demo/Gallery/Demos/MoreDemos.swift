@@ -41,7 +41,7 @@ struct IconDemo: View {
 
     var body: some View {
         ComponentStage("Icon", inspector: [("size", "\(size.rawValue) · \(Int(size.value))")]) {
-            Icon(systemName: symbol, size: size, color: Theme.shared.foreground(.fgHero))
+            Icon(systemName: symbol).size(size).color(Theme.shared.foreground(.fgHero))
         } knobs: {
             TextField("SF Symbol", text: $symbol).textFieldStyle(.roundedBorder).autocorrectionDisabled()
             Picker("Size", selection: $size) { ForEach(IconSize.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
@@ -87,11 +87,11 @@ struct SkeletonDemo: View {
         ComponentStage("Skeleton", inspector: [("isLoading", "\(loading)")]) {
             if shapes {
                 HStack(spacing: 12) {
-                    Skeleton(.circle, width: 56, height: 56)
+                    Skeleton(.circle).size(width: 56, height: 56)
                     VStack(alignment: .leading, spacing: 8) {
-                        Skeleton(.capsule, width: 160, height: 12)
-                        Skeleton(.capsule, width: 110, height: 12)
-                        Skeleton(.rounded(6), width: 200, height: 12)
+                        Skeleton(.capsule).size(width: 160, height: 12)
+                        Skeleton(.capsule).size(width: 110, height: 12)
+                        Skeleton(.rounded(6)).size(width: 200, height: 12)
                     }
                 }
             } else {
@@ -115,11 +115,11 @@ struct TitleDemo: View {
     @State private var action = true
     var body: some View {
         ComponentStage("Title") {
-            Title("Popular destinations",
-                  subtitle: subtitle ? "Where travellers go" : nil,
-                  eyebrow: eyebrow ? "Limited time" : nil,
-                  actionTitle: action ? "See all" : nil,
-                  action: action ? { flash("Title: See all") } : nil)
+            Title("Popular destinations")
+                .subtitle(subtitle ? "Where travellers go" : nil)
+                .eyebrow(eyebrow ? "Limited time" : nil)
+                .action(action ? "See all" : nil,
+                        action: action ? { flash("Title: See all") } : nil)
         } knobs: {
             Toggle("Eyebrow", isOn: $eyebrow)
             Toggle("Subtitle", isOn: $subtitle)
@@ -141,16 +141,13 @@ struct SearchBarDemo: View {
 
     var body: some View {
         ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("recent", "\(recent.count)")]) {
-            SearchBar(
-                text: $text,
-                suggestions: typeahead ? cities : [],
-                recent: typeahead ? recent : [],
-                onSelect: { flash("Selected: \($0)") },
-                onSubmit: { flash("Submit: \($0)") },
-                onClearRecent: typeahead ? { recent = []; flash("Recent cleared") } : nil
-            )
-            .backButton(back)
-            .trailingIcon(trailing ? "barcode.viewfinder" : nil)
+            SearchBar(text: $text)
+                .suggestions(typeahead ? cities : [])
+                .recent(typeahead ? recent : [], onClear: typeahead ? { recent = []; flash("Recent cleared") } : nil)
+                .onSelect { flash("Selected: \($0)") }
+                .onCommit { flash("Submit: \($0)") }
+                .backButton(back)
+                .trailingIcon(trailing ? "barcode.viewfinder" : nil)
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Trailing icon", isOn: $trailing)
@@ -172,8 +169,11 @@ struct SelectDemo: View {
             .init("Marmara", ["Istanbul", "Bursa", "Kocaeli"]),
             .init("Aegean", ["Izmir", "Aydin", "Mugla"]),
             .init("Central Anatolia", ["Ankara", "Konya"]),
-        ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
-           isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
+        ], selection: $city) { $0 }
+        .clearable(clearable)
+        .searchable(searchable)
+        .loading(loading)
+        .optionEnabled(disableSoldOut ? { $0 != "Konya" } : nil)
     }
 
     var body: some View {
@@ -207,8 +207,8 @@ struct MultiSelectDemo: View {
 
     var body: some View {
         ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
-            MultiSelect(label: "Cities", options: cities, selection: $picks,
-                        isOptionEnabled: disableSoldOut ? { $0 != "Adana" } : nil) { $0 }
+            MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+            .optionEnabled(disableSoldOut ? { $0 != "Adana" } : nil)
             .searchable(searchable)
             .clearable(clearable)
             .maxTags(capTags ? 2 : nil)
@@ -232,8 +232,9 @@ struct SelectBoxDemo: View {
     @State private var enabled = true
     var body: some View {
         ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
-            SelectBox(label: "Country", options: ["Turkey", "Germany", "France"], selection: $country,
-                      hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil) { $0 }
+            SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+            .hint(error ? nil : "Pick your country")
+            .errorText(error ? "Required" : nil)
             .disabled(!enabled)
         } knobs: {
             Toggle("Error state", isOn: $error)
@@ -291,7 +292,7 @@ struct TooltipDemo: View {
     @State private var colored = false
     var body: some View {
         ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)"), ("style", colored ? "info" : "default")]) {
-            Icon(systemName: "info.circle", size: .lg, color: Theme.shared.foreground(.fgHero))
+            Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
                 .tooltip("Helpful hint", isPresented: $shown, edge: edge, style: colored ? .info : nil)
                 .padding(60)
         } knobs: {
@@ -314,7 +315,7 @@ struct ButtonGroupDemo: View {
             if horizontal {
                 ButtonGroup(.horizontal) { SecondaryButton("Cancel") { flash("Cancel") }; PrimaryButton("Confirm") { flash("Confirm") } }
             } else {
-                ButtonGroup { PrimaryButton("Continue", block: true) { flash("Continue") }; SecondaryButton("Not now", block: true) { flash("Not now") } }
+                ButtonGroup { PrimaryButton("Continue") { flash("Continue") }.fullWidth(); SecondaryButton("Not now") { flash("Not now") }.fullWidth() }
             }
         } knobs: {
             Toggle("Horizontal", isOn: $horizontal)
@@ -330,9 +331,9 @@ struct CheckboxGroupDemo: View {
     private let options = ["Wifi", "Pool", "Parking", "Breakfast"]
     var body: some View {
         ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
-            CheckboxGroup(title: "Amenities", options: options, selection: $sel,
-                          selectAllTitle: selectAll ? "Select all" : nil,
-                          isOptionEnabled: disableParking ? { $0 != "Parking" } : nil) { $0 }
+            CheckboxGroup(title: "Amenities", options: options, selection: $sel) { $0 }
+                .selectAll(selectAll ? "Select all" : nil)
+                .optionEnabled(disableParking ? { $0 != "Parking" } : nil)
                 .disabled(!enabled)
         } knobs: {
             Toggle("Select-all (indeterminate)", isOn: $selectAll)
@@ -354,13 +355,16 @@ struct RadioGroupDemo: View {
         ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline"), ("enabled", "\(enabled)")]) {
             switch styleIdx {
             case 1:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .groupStyle(.solid).fullWidth().optionEnabled(optionEnabled)
                     .disabled(!enabled)
             case 2:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .groupStyle(.outline).fullWidth().optionEnabled(optionEnabled)
                     .disabled(!enabled)
             default:
-                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel, isOptionEnabled: optionEnabled) { $0 }
+                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .optionEnabled(optionEnabled)
                     .disabled(!enabled)
             }
         } knobs: {
@@ -377,8 +381,8 @@ struct ToggleGroupDemo: View {
     var body: some View {
         ComponentStage("ToggleGroup", inspector: [("on", sel.sorted().joined(separator: ", "))]) {
             ToggleGroup(title: "Notifications", options: ["push", "email", "sms"], selection: $sel,
-                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 },
-                        description: { _ in "Supporting text." })
+                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 })
+                .optionDescription { _ in "Supporting text." }
         } knobs: {
             Button("Enable all") { sel = ["push", "email", "sms"] }
         }
@@ -396,13 +400,13 @@ struct AutocompleteDemo: View {
     var body: some View {
         ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "Izmit" : "—")]) {
             if asyncMode {
-                Autocomplete(label: "Destination", text: $text, suggest: { query in
+                Autocomplete("Destination", text: $text, suggest: { query in
                     try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
                     return cities.filter { $0.localizedCaseInsensitiveContains(query) }
                 })
                 .suggestionEnabled(enabledPredicate)
             } else {
-                Autocomplete(label: "Destination", text: $text, suggestions: cities)
+                Autocomplete("Destination", text: $text, suggestions: cities)
                     .suggestionEnabled(enabledPredicate)
             }
         } knobs: {
@@ -425,12 +429,7 @@ struct CardDemo: View {
     @State private var taps = 0
 
     private var cardBody: some View {
-        Card(elevation: elevation, padding: padding,
-             title: header ? "Reservation" : nil,
-             subtitle: header ? "2 nights · 2 guests" : nil,
-             extraTitle: header ? "Details" : nil,
-             onExtra: header ? { flash("Details") } : nil,
-             isLoading: loading,
+        Card(header ? "Reservation" : nil,
              action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
@@ -438,6 +437,11 @@ struct CardDemo: View {
                     .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
             }
         }
+        .elevation(elevation)
+        .contentPadding(padding)
+        .subtitle(header ? "2 nights · 2 guests" : nil)
+        .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
+        .loading(loading)
     }
 
     var body: some View {
@@ -571,20 +575,24 @@ struct NotificationDemo: View {
     var body: some View {
         ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("type", typed ? "success" : "default")]) {
             if actions {
-                NotificationCard(title: "We Have a Suggestion for Your Holiday",
-                                 message: "24 days left until your Hilton Istanbul reservation.",
-                                 date: "December 5, 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification dismissed") } : nil) {
+                NotificationCard(title: "We Have a Suggestion for Your Holiday") {
                     ButtonGroup(.horizontal) {
-                        SecondaryButton("Later", size: .small) { flash("Notification: Later") }
-                        PrimaryButton("View", size: .small) { flash("Notification: View") }
+                        SecondaryButton("Later") { flash("Notification: Later") }.size(.small)
+                        PrimaryButton("View") { flash("Notification: View") }.size(.small)
                     }
                 }
+                .message("24 days left until your Hilton Istanbul reservation.")
+                .date("December 5, 2024")
+                .unread(unread)
+                .variant(type)
+                .onClose(closable ? { flash("Notification dismissed") } : nil)
             } else {
-                NotificationCard(title: "We Have a Suggestion for Your Holiday",
-                                 message: "24 days left until your Hilton Istanbul reservation.",
-                                 date: "December 5, 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification dismissed") } : nil)
+                NotificationCard(title: "We Have a Suggestion for Your Holiday")
+                    .message("24 days left until your Hilton Istanbul reservation.")
+                    .date("December 5, 2024")
+                    .unread(unread)
+                    .variant(type)
+                    .onClose(closable ? { flash("Notification dismissed") } : nil)
             }
         } knobs: {
             Toggle("Unread", isOn: $unread)
@@ -602,10 +610,11 @@ struct PageHeaderDemo: View {
     @State private var tags = false
     var body: some View {
         ComponentStage("PageHeader") {
-            PageHeader("Search results", subtitle: subtitle ? "128 hotels" : nil,
-                       tags: tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [],
-                       onBack: back ? { flash("PageHeader: back") } : nil,
-                       actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
+            PageHeader("Search results")
+                .subtitle(subtitle ? "128 hotels" : nil)
+                .tags(tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [])
+                .onBack(back ? { flash("PageHeader: back") } : nil)
+                .actions(actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Subtitle", isOn: $subtitle)
@@ -620,7 +629,7 @@ struct RatingSummaryDemo: View {
     @State private var reviews = true
     var body: some View {
         ComponentStage("RatingSummary", inspector: [("score", String(format: "%.1f", score))]) {
-            RatingSummary(score: score, label: "Excellent", reviewCount: reviews ? 1200 : nil, onReviews: reviews ? { flash("Reviews tapped") } : nil)
+            RatingSummary(score: score).label("Excellent").reviews(count: reviews ? 1200 : nil, onTap: reviews ? { flash("Reviews tapped") } : nil)
         } knobs: {
             HStack { Text("Score"); SwiftUI.Slider(value: $score, in: 0...10, step: 0.1) }
             Toggle("Review count", isOn: $reviews)
@@ -632,11 +641,12 @@ struct BlogCardDemo: View {
     @State private var compact = false
     var body: some View {
         ComponentStage("BlogCard", inspector: [("compact", "\(compact)")]) {
-            BlogCard(title: "How About Exploring Cappadocia on Your Own?",
-                     excerpt: "To some a miracle of nature, to others a fairyland…",
-                     compact: compact, onReadMore: { flash("BlogCard: read more") }) {
+            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
                 Theme.shared.background(.bgTertiary)
             }
+            .excerpt("To some a miracle of nature, to others a fairyland…")
+            .compact(compact)
+            .readMore { flash("BlogCard: read more") }
         } knobs: {
             Toggle("Compact", isOn: $compact)
         }
@@ -651,7 +661,7 @@ struct GalleryDemo: View {
 
     var body: some View {
         ComponentStage("Gallery", inspector: [("columns", "\(Int(columns))"), ("aspect", aspect.rawValue)]) {
-            Gallery(photos, columns: Int(columns), aspect: aspect) { $0.color.opacity(0.3) }
+            Gallery(photos) { $0.color.opacity(0.3) }.columns(Int(columns)).aspect(aspect)
         } knobs: {
             Stepper("Columns: \(Int(columns))", value: $columns, in: 1...4, step: 1)
             Picker("Aspect", selection: $aspect) {
@@ -746,9 +756,9 @@ struct IndicatorDemo: View {
         ComponentStage("Indicator", inspector: [("kind", kind.rawValue)]) {
             Group {
                 if kind == .dot {
-                    Icon(systemName: "bell", size: .xl, color: Theme.shared.text(.textPrimary)).indicatorDot(position: position)
+                    Icon(systemName: "bell").size(.xl).color(Theme.shared.text(.textPrimary)).indicatorDot(position: position)
                 } else {
-                    Icon(systemName: "envelope", size: .xl, color: Theme.shared.text(.textPrimary)).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
+                    Icon(systemName: "envelope").size(.xl).color(Theme.shared.text(.textPrimary)).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
                 }
             }
         } knobs: {
@@ -979,7 +989,7 @@ struct TextLinkDemo: View {
     @State private var underline = true
     var body: some View {
         ComponentStage("TextLink", inspector: [("underline", "\(underline)")]) {
-            TextLink("Forgot password?", underline: underline) {}
+            TextLink("Forgot password?") {}.underline(underline)
         } knobs: {
             Toggle("Underline", isOn: $underline)
         }
@@ -992,9 +1002,10 @@ struct HeroDemo: View {
     @State private var cta = true
     var body: some View {
         ComponentStage("Hero", inspector: [("dark", "\(dark)")]) {
-            Hero(title: dark ? "Summer Sale" : "Discover Istanbul",
-                 subtitle: subtitle ? "Hand-picked stays at the best prices." : nil,
-                 ctaTitle: cta ? "Explore" : nil, dark: dark, action: cta ? { flash("Hero: Explore") } : nil)
+            Hero(title: dark ? "Summer Sale" : "Discover Istanbul")
+                .subtitle(subtitle ? "Hand-picked stays at the best prices." : nil)
+                .cta(cta ? "Explore" : nil, action: cta ? { flash("Hero: Explore") } : nil)
+                .dark(dark)
         } knobs: {
             Toggle("Dark", isOn: $dark)
             Toggle("Subtitle", isOn: $subtitle)
@@ -1119,8 +1130,10 @@ struct DataTableDemo: View {
                 .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
                 .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
                 .init("Price", align: .trailing, sortKey: { .number($0.price) }) { "$\(Int($0.price))" },
-            ], rows: rows, striped: striped, selection: selectable ? $selected : nil,
-               pageSize: paged ? 4 : nil, isLoading: loading)
+            ], rows: rows, selection: selectable ? $selected : nil)
+            .striped(striped)
+            .pageSize(paged ? 4 : nil)
+            .loading(loading)
         } knobs: {
             Toggle("Striped", isOn: $striped)
             Toggle("Selectable rows", isOn: $selectable)
@@ -1174,10 +1187,11 @@ struct FieldsetDemo: View {
     @State private var subscribe = true
     var body: some View {
         ComponentStage("Fieldset") {
-            Fieldset("Contact details", helper: helper ? "We'll only use this to confirm your booking." : nil) {
+            Fieldset("Contact details") {
                 TextInput("Full name", text: $name)
                 HStack { Checkbox(isChecked: $subscribe); Text("Subscribe to newsletter").textStyle(.bodyBase400); Spacer() }
             }
+            .helper(helper ? "We'll only use this to confirm your booking." : nil)
         } knobs: {
             Toggle("Helper text", isOn: $helper)
         }
@@ -1418,9 +1432,10 @@ struct ResultDemo: View {
 
     var body: some View {
         ComponentStage("Result", inspector: [("status", status.rawValue), ("code", status.codeText)]) {
-            ResultView(status, title: copy.0, message: copy.1,
-                       primaryTitle: "Try again", onPrimary: { flash("Result: Try again") },
-                       secondaryTitle: "Home", onSecondary: { flash("Result: Home") })
+            ResultView(status, title: copy.0)
+                .message(copy.1)
+                .primaryAction("Try again", action: { flash("Result: Try again") })
+                .secondaryAction("Home", action: { flash("Result: Home") })
         } knobs: {
             Picker("Status", selection: $status) {
                 ForEach(ResultStatus.allCases, id: \.self) { Text($0.rawValue).tag($0) }
@@ -1604,7 +1619,7 @@ struct FormDemo: View {
     var body: some View {
         ComponentStage("Form", inspector: [("valid", submitted ? "\(form.isValid)" : "—"), ("focused", "\(form.focusedField.map { "\($0)" } ?? "—")")]) {
             VStack(spacing: Theme.SpacingKey.md.value) {
-                Fieldset("Create account", helper: "All fields are required.") {
+                Fieldset("Create account") {
                     TextInput(TextInputModel(label: "Email", leadingSystemImage: "envelope",
                                              infoMessages: form.messages(for: .email)),
                               text: $email, externalFocus: form.focusBinding(.email))
@@ -1613,13 +1628,14 @@ struct FormDemo: View {
                                              infoMessages: form.messages(for: .password)),
                               text: $password, externalFocus: form.focusBinding(.password))
                         .a11yID("form.password")
-                    RadioGroup(title: "Plan", options: ["Standard", "Pro"], selection: $plan,
-                               infoMessages: form.messages(for: .plan)) { $0 }
+                    RadioGroup(title: "Plan", options: ["Standard", "Pro"], selection: $plan) { $0 }
+                    .infoMessages(form.messages(for: .plan))
                     .a11yID("form.plan")
-                    Checkbox("I accept the terms and conditions", isChecked: $terms,
-                             infoMessages: form.messages(for: .terms))
+                    Checkbox("I accept the terms and conditions", isChecked: $terms)
+                    .infoMessages(form.messages(for: .terms))
                     .a11yID("form.terms")
                 }
+                .helper("All fields are required.")
                 if done {
                     InfoBanner("Your account has been created.").variant(.success)
                 }
@@ -1665,10 +1681,15 @@ struct ListDemo: View {
 
     var body: some View {
         ComponentStage("List", inspector: [("count", "\(empty ? 0 : rows.count)"), ("bordered", "\(bordered)"), ("empty", "\(empty)")]) {
-            ListView(empty ? [] : rows, header: withHeader ? "Settings" : nil, footer: withHeader ? "\(empty ? 0 : rows.count) items" : nil,
-                     bordered: bordered, loading: loading, split: split, emptyText: "No settings yet") { row in
+            ListView(empty ? [] : rows) { row in
                 ListRow(row.title, action: { flash("List: \(row.title)") }).subtitle(row.subtitle).icon(row.icon)
             }
+            .header(withHeader ? "Settings" : nil)
+            .footer(withHeader ? "\(empty ? 0 : rows.count) items" : nil)
+            .bordered(bordered)
+            .loading(loading)
+            .split(split)
+            .emptyText("No settings yet")
         } knobs: {
             Toggle("Header + footer", isOn: $withHeader)
             Toggle("Bordered", isOn: $bordered)
@@ -1737,9 +1758,10 @@ struct AccordionGroupDemo: View {
 
     var body: some View {
         ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single")]) {
-            AccordionGroup(faqs, mode: multi ? .multiple : .single, initiallyExpanded: []) { $0.q } content: {
+            AccordionGroup(faqs, initiallyExpanded: []) { $0.q } content: {
                 Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
             }
+            .mode(multi ? .multiple : .single)
         } knobs: {
             Toggle("Multiple open", isOn: $multi)
             Text("single = opening one closes the others; multiple = independent.").font(.caption).foregroundStyle(.secondary)
@@ -1758,9 +1780,11 @@ struct PagingCarouselDemo: View {
 
     var body: some View {
         ComponentStage("PagingCarousel", inspector: [("peek", "\(Int(peek))"), ("autoplay", "\(autoplay)")]) {
-            PagingCarousel(slides, peek: peek, autoplay: autoplay ? 2 : nil) { s in
+            PagingCarousel(slides) { s in
                 s.color.opacity(0.25).overlay(Text(s.title).textStyle(.headingSm))
             }
+            .peek(peek)
+            .autoplay(autoplay ? 2 : nil)
         } knobs: {
             HStack { Text("Peek"); SwiftUI.Slider(value: $peek, in: 0...64, step: 4) }
             Toggle("Autoplay (2s)", isOn: $autoplay)
@@ -1830,12 +1854,15 @@ struct ChipsDemo: View {
                 switch kind {
                 case .compact:
                     HStack(spacing: 12) {
-                        CompactChip(isSelected: $a, text: "Standard Room", price: "$399.90", rating: 4.6)
-                        CompactChip(isSelected: $b, text: "Suite Room", price: "$899.90")
+                        CompactChip("Standard Room", price: "$399.90", isSelected: $a).rating(4.6)
+                        CompactChip("Suite Room", price: "$899.90", isSelected: $b)
                     }
                 case .chose:
-                    ChoseChip(isSelected: $a, title: "Flexible rate", description: "Free cancellation",
-                              rating: 4.8, showFree: true, systemImage: "wind")
+                    ChoseChip("Flexible rate", isSelected: $a)
+                        .description("Free cancellation")
+                        .rating(4.8)
+                        .free()
+                        .icon("wind")
                 case .image:
                     HStack(spacing: 12) {
                         ImageChip(isSelected: $a, url: imageURL).size(.medium)
@@ -1843,8 +1870,8 @@ struct ChipsDemo: View {
                     }
                 case .filter:
                     HStack(spacing: 8) {
-                        FilterChip("Istanbul", shape: square ? .square : .pill) { flash("FilterChip: Istanbul") }
-                        FilterChip("4+ stars", shape: square ? .square : .pill) { flash("FilterChip: 4+ stars") }
+                        FilterChip("Istanbul") { flash("FilterChip: Istanbul") }.shape(square ? .square : .pill)
+                        FilterChip("4+ stars") { flash("FilterChip: 4+ stars") }.shape(square ? .square : .pill)
                     }
                 case .group:
                     ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking", "Restaurant"], selection: $multi) { $0 }

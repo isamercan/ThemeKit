@@ -60,7 +60,8 @@ public struct EmptyState: View {
         VStack(spacing: Theme.SpacingKey.base.value) {
             switch media {
             case .animated(let url):
-                AnimatedImage(url, contentMode: .fit)
+                AnimatedImage(url)
+                    .contentMode(.fit)
                     .frame(maxHeight: imageMaxHeight)
             case .image(let image):
                 image

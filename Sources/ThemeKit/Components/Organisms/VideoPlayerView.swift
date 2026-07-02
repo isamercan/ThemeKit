@@ -49,7 +49,7 @@ public struct VideoPlayerView: View {
             } else {
                 ZStack {
                     theme.background(.bgTertiary)
-                    Icon(systemName: "play.rectangle", size: .xl, color: theme.foreground(.fgSecondary))
+                    Icon(systemName: "play.rectangle").size(.xl).color(theme.foreground(.fgSecondary))
                 }
             }
         }

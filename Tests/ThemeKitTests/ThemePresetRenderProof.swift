@@ -38,14 +38,14 @@ final class ThemePresetRenderProof: XCTestCase {
                 Badge("New").badgeStyle(.success)
                 Badge("Sale").badgeStyle(.error)
             }
-            ProgressBar(value: 0.68, showPercentage: true)
+            ProgressBar(value: 0.68).showsPercentage()
             Rating(value: 4.5).starSize(15)
             HStack(spacing: 8) {
                 Chip("Pool", isSelected: .constant(true))
                 Chip("Wifi", isSelected: .constant(false))
             }
             HStack(spacing: 8) {
-                PrimaryButton("Book", block: true) {}
+                PrimaryButton("Book") {}.fullWidth()
                 SecondaryButton("Save") {}
             }
         }

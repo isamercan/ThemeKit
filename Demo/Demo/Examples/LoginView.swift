@@ -37,32 +37,24 @@ struct LoginView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
-                Title("Giriş Yap", subtitle: "Hesabınıza giriş yapın")
+                Title("Giriş Yap").subtitle("Hesabınıza giriş yapın")
 
                 Card {
                     VStack(spacing: Theme.SpacingKey.md.value) {
-                        TextInput(
-                            "E-posta adresi",
-                            text: $email,
-                            placeholder: "ornek@eposta.com",
-                            leadingSystemImage: "envelope",
-                            allowClear: true,
-                            infoMessages: emailMessages,
-                            keyboardType: .emailAddress,
-                            textContentType: .emailAddress,
-                            autocapitalization: TextInputCapitalization.never,
-                            autocorrectionDisabled: true
-                        )
+                        TextInput("E-posta adresi", text: $email)
+                            .placeholder("ornek@eposta.com")
+                            .icon(leading: "envelope")
+                            .clearable()
+                            .infoMessages(emailMessages)
+                            .keyboard(.emailAddress, contentType: .emailAddress, capitalization: TextInputCapitalization.never)
+                            .autocorrectionDisabled()
 
-                        TextInput(
-                            "Şifre",
-                            text: $password,
-                            placeholder: "Şifreniz",
-                            leadingSystemImage: "lock",
-                            isSecure: true,
-                            infoMessages: passwordMessages,
-                            textContentType: .password
-                        )
+                        TextInput("Şifre", text: $password)
+                            .placeholder("Şifreniz")
+                            .icon(leading: "lock")
+                            .secure()
+                            .infoMessages(passwordMessages)
+                            .keyboard(contentType: .password)
 
                         HStack {
                             Checkbox("Beni Hatırla", isChecked: $rememberMe)
@@ -70,11 +62,11 @@ struct LoginView: View {
                             TextLink("Şifremi Unuttum") {}
                         }
 
-                        PrimaryButton("Giriş Yap", block: true, isLoading: $isLoading) { signIn() }
+                        PrimaryButton("Giriş Yap") { signIn() }.fullWidth().loading(isLoading)
 
                         DividerView("veya")
 
-                        OutlineButton("Apple ile devam et", block: true) {}
+                        OutlineButton("Apple ile devam et") {}.fullWidth()
                     }
                 }
 
