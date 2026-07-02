@@ -36,6 +36,7 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit — **config-driven** via `migrate-rules.json` |
 | `render_preview(component, dark?)` | The component's **rendered PNG** (the library's gallery render), light or dark |
 | **`design_to_code(url \| fileKey+nodeId, dryRun?, a11yOnly?, expandInstances?)`** | Fetches a Figma node → ThemeKit SwiftUI. Snaps colors/spacing/radius/**type** to **tokens** and **emits** them: raw layout stacks carry token-snapped `.padding` / `.background` / `.cornerRadius` / `.themeShadow`, text nodes get `.textStyle(…)`, real **alignment** (`counterAxisAlignItems`, `SPACE_BETWEEN → Spacer()`), **axis-inferred** `VStack`/`HStack`/`ZStack` for absolute layouts, and **icons/images → `Image(…)` + PNG export URLs** from the Figma images API. Maps nodes to components (config-driven, **modifier/state-aware**: disabled / size), emits **verified-API** code + a mapping report **with a WCAG accessibility audit of the design**. Pass a Figma **`url`** directly (it parses `fileKey` + `nodeId`), or give them explicitly. `expandInstances: true` walks into unmapped component instances (forms, headers). `a11yOnly: true` returns just the audit. Needs `FIGMA_TOKEN`. _(Alias: **`figma_to_swiftui`** — same tool, kept for backward compatibility.)_ |
+| **`suggest_figma_mapping(names? \| url, brandPrefix?)`** | Drafts a `componentAliases` block that maps **your** kit's component names to ThemeKit (`MyBrandTextField` → `TextInput`). Works offline from `names`, or walks a kit from a Figma `url` (needs `FIGMA_TOKEN`). Strips the brand prefix, scores against the real catalog, returns ready-to-paste JSON + confidence; low-confidence names are flagged. See [Map your own Figma kit](#map-your-own-figma-kit). |
 
 ### Themes
 | Tool | What it returns |
@@ -227,14 +228,51 @@ claude mcp add themekit -- node "$(pwd)/dist/index.js"
     "themekit": {
       "command": "npx",
       "args": ["-y", "@isamercan/themekit-mcp"],
-      "env": { "FIGMA_TOKEN": "figd_…" }
+      "env": {
+        "FIGMA_TOKEN": "figd_…",
+        "THEMEKIT_MAPPING": "/abs/path/to/themekit-mapping.json"
+      }
     }
   }
 }
 ```
 
 `FIGMA_TOKEN` is optional — only `figma_to_swiftui` needs it; every other tool
-works without it. Then ask your agent: *"Use the themekit MCP — build a sign-up screen."*
+works without it. `THEMEKIT_MAPPING` is optional too — see below. Then ask your
+agent: *"Use the themekit MCP — build a sign-up screen."*
+
+## Map your own Figma kit
+
+Your Figma kit names components in your own vocabulary (`MyBrandTextField`);
+ThemeKit calls it `TextInput`. Teach the MCP the correspondence **once** and
+`design_to_code` emits real ThemeKit code instead of `// ⚠️ unmapped`.
+
+**1. A mapping file you own** (so reinstalls never clobber it). Anywhere in your
+project — one line per component; the generator fills each ThemeKit component's
+required init args from its verified API:
+
+```json
+{
+  "componentAliases": {
+    "MyBrandTextField": "TextInput",
+    "MyBrandButton": "PrimaryButton"
+  }
+}
+```
+
+**2. Point the server at it** with `THEMEKIT_MAPPING` (see the `.mcp.json` above).
+It's layered over the bundled defaults — your aliases/rules win, and the file can
+be partial.
+
+**3. Don't hand-write it** — run **`suggest_figma_mapping`** (with `names`, or a
+Figma `url` to walk the whole kit). It drafts the `componentAliases` block, scored
+against the real catalog, ready to paste.
+
+For components that get renamed in Figma, use a full `componentRules` entry keyed
+by the stable **`componentKey`** instead of the name. The active mapping is also
+exposed as the `themekit://figma-mapping` resource so an LLM can read it.
+
+→ Full walkthrough: **[Map Your Figma Kit](https://isamercan.github.io/ThemeKit/ai/figma-kit/)**.
 
 ## Develop
 

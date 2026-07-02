@@ -6,6 +6,36 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-07-02
+
+### Added — map your own Figma UI kit to ThemeKit
+
+Teach `design_to_code` your kit's component names (e.g. `MyBrandTextField` →
+`TextInput`) so it emits real ThemeKit code instead of `// ⚠️ unmapped`.
+
+- **`componentAliases`** — the easy path: one line per component
+  (`"MyBrandTextField": "TextInput"`), no params. The generator fills the
+  component's **required** init args from its verified API
+  (→ `TextInput("…", text: $text)`). Matches by exact name, first `/`-segment, or
+  prefix (case-insensitive). Args it can't synthesize (a model/enum/array) get an
+  honest placeholder + a needs-review note.
+- **`THEMEKIT_MAPPING` env var** — point the server at a **user-owned** mapping
+  file layered over the bundled defaults, so you add aliases/rules from your
+  project **without editing inside `node_modules`** (survives reinstalls). Your
+  rules are tried first; your aliases win; the file can be partial.
+- **`suggest_figma_mapping` tool** — drafts the whole `componentAliases` block.
+  Works offline from `names`, or walks a kit from a Figma `url` (needs
+  `FIGMA_TOKEN`). Strips the brand prefix, tokenizes the name, scores against the
+  real catalog, and returns ready-to-paste JSON with confidence + alternatives;
+  low-confidence/no-match names are flagged, never guessed. Prints each
+  instance's `componentKey` so you can switch to a stable key-based rule.
+- **`themekit://figma-mapping` resource** — exposes the active mapping (defaults
+  + your override) so an LLM can read which Figma component maps to which
+  ThemeKit component.
+
+Docs: a dedicated **"Map Your Figma Kit"** page on the site (its own sidebar
+section). Adds `test/mapping-kit.test.mjs`; 76/76 tests pass.
+
 ## [2.10.0] - 2026-07-02
 
 ### Added — Figma → Code: `import_figma_variables` (round-trip complete)

@@ -64,6 +64,12 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Figma ⇄ ThemeKit',
+          items: [
+            { label: 'Map Your Figma Kit', link: '/ai/figma-kit/', badge: { text: 'New', variant: 'success' } },
+          ],
+        },
+        {
           label: 'Components',
           items: [{ label: 'Gallery', link: '/components/' }],
         },

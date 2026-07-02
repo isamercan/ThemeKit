@@ -102,6 +102,30 @@ function textOf(node: FigmaNode): string {
 }
 
 /**
+ * argsFrom for a componentAliases match, derived from the component's *required*
+ * init params (verified API) — so `"MARKAADITextField": "TextInput"` yields
+ * `TextInput("<text>", text: $text)`. Strings pull the node's text, bindings get
+ * a `$name` stub, closures an empty `{ }`; anything richer (a model/enum/array)
+ * gets an honest placeholder and a needs-review note.
+ */
+function synthArgsFrom(api: ComponentAPI, node: FigmaNode, report: Report): Record<string, string> {
+  const out: Record<string, string> = {};
+  let usedText = false;
+  for (const p of api.params) {
+    if (p.default !== undefined) continue;                 // required only
+    const t = p.type.replace(/\s/g, "");
+    if (/^Binding</.test(t)) { out[p.label] = `$${p.name}`; continue; }
+    if (/(\(\)|Void)->|->\s*Void|^\(\)->/.test(t) || /->Void$/.test(t)) { out[p.label] = "{ }"; continue; }
+    if (/String/.test(t)) { out[p.label] = usedText ? `"${p.name}"` : "{text}"; usedText = true; continue; }
+    if (/(Int|Double|CGFloat)/.test(t)) { out[p.label] = "0"; continue; }
+    if (/Bool/.test(t)) { out[p.label] = "false"; continue; }
+    out[p.label] = `<${p.type.replace(/\?$/, "")}>`;       // unsynthesizable — placeholder + flag
+    report.needsReview.push(`${node.name}: ${api.name} needs a ${p.type} for ${p.label === "_" ? "(positional)" : p.label} — fill it in.`);
+  }
+  return out;
+}
+
+/**
  * Design-system scaffolding text that should not become real SwiftUI `Text` —
  * e.g. an icon "scribble" placeholder, or generic component slot labels. Skipped
  * by the codegen so the output isn't polluted with placeholder copy.
@@ -346,7 +370,9 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       // Leaf component — build the init from the rule, verified against the real API.
       const api = apis.get(match.component);
       const args: string[] = [];
-      const argsFrom = match.produce.argsFrom ?? {};
+      // A componentAliases match carries no argsFrom — synthesize it from the
+      // component's required params so a one-line alias produces a valid init.
+      const argsFrom = match.produce.argsFrom ?? (match.via === "alias" && api ? synthArgsFrom(api, node, report) : {});
       for (const [label, src] of Object.entries(argsFrom)) {
         if (api && label !== "_" && !api.params.some((p) => p.label === label)) {
           report.needsReview.push(`${node.name}: ${match.component} has no param "${label}" (rule may be stale)`);
