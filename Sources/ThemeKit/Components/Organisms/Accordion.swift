@@ -42,10 +42,10 @@ public struct Accordion<Content: View>: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let leadingSystemImage: String?
     private let content: () -> Content
     // Long-tail config — set via chainable modifiers, keeping the common call
     // site to `Accordion("Title", initiallyExpanded:) { … }`.
+    private var leadingSystemImage: String? = nil
     private var subtitle: String? = nil
     private var number: Int? = nil
     private var indicator: AccordionIndicator = .chevron
@@ -59,14 +59,12 @@ public struct Accordion<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
-    public init(
+    public init(   // R1 — `initiallyExpanded` seeds @State, so it stays in the init
         _ title: String,
-        leadingSystemImage: String? = nil,
         initiallyExpanded: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
-        self.leadingSystemImage = leadingSystemImage
         self.content = content
         self._expanded = State(initialValue: initiallyExpanded)
     }
