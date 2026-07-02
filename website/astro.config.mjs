@@ -33,6 +33,9 @@ export default defineConfig({
       customCss: ['./src/styles/theme.css'],
       components: {
         Footer: './src/components/Footer.astro',
+        // Upstream Hero downscales the banner to 400px wide; our override
+        // serves it at 1x/2x of its display size so it stays sharp.
+        Hero: './src/components/Hero.astro',
       },
       sidebar: [
         {
