@@ -57,16 +57,17 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Design with AI',
+          label: 'MCP Server',
           items: [
-            { label: 'MCP Server', link: '/ai/mcp/', badge: { text: 'AI', variant: 'tip' } },
-            { label: 'DESIGN.md', link: '/ai/design-md/', badge: { text: 'AI', variant: 'tip' } },
+            { label: 'Overview', link: '/ai/mcp/', badge: { text: 'AI', variant: 'tip' } },
+            { label: 'Map Your Figma Kit', link: '/ai/figma-kit/' },
+            { label: 'Design Tokens ⇄ Figma Variables', link: '/ai/figma-variables/', badge: { text: 'New', variant: 'success' } },
           ],
         },
         {
-          label: 'Figma ⇄ ThemeKit',
+          label: 'Design with AI',
           items: [
-            { label: 'Map Your Figma Kit', link: '/ai/figma-kit/', badge: { text: 'New', variant: 'success' } },
+            { label: 'DESIGN.md', link: '/ai/design-md/', badge: { text: 'AI', variant: 'tip' } },
           ],
         },
         {

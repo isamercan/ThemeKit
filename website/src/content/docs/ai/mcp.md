@@ -132,27 +132,16 @@ Map your kit's component names (e.g. `MyBrandTextField` → `TextInput`) once, s
 
 ## Design tokens ⇄ Figma Variables (round-trip)
 
-The token catalog is one source of truth in **both** directions.
+Beyond component names, the MCP bridges **design tokens** both ways:
+`export_figma_variables` turns the token catalog into a themeable Figma Variables
+library (one mode per preset), and `import_figma_variables` turns a company's
+Figma Variables file back into a live `ThemeConfig` — lossless for files ThemeKit
+exported, alias-matched for any other.
 
-**`export_figma_variables`** — tokens + the theme presets → a **Figma Variables**
-library: a `Brand` collection with **one mode per preset** (flip themes like the
-app does), plus `Color` / `Radius` / `Spacing` / `Typography` collections. Pass
-`format: "figma-rest"` for the exact body to `POST /v1/files/:key/variables`.
+→ **Full guide: [Design Tokens ⇄ Figma Variables](../figma-variables/)**
 
-**`import_figma_variables`** — the reverse: a Figma Variables JSON → a
-`ThemeConfig` + `theme.json`. It resolves the brand seeds for a chosen mode, and
-ThemeKit derives the whole palette — so a company's Figma file re-skins every
-component.
-
-```swift
-// import_figma_variables on a "Dark" mode →
-Theme.shared.apply(ThemeConfig(primaryHex: "605dff", secondaryHex: "f43098",
-                               accentHex: "00d3bb", baseHex: "1d232a", dark: true))
-```
-
-Every exported variable carries its ThemeKit token in `codeSyntax`, so the
-round-trip is **lossless** for files ThemeKit exported, and name/alias-matched for
-any other company's file.
+For mapping your kit's **component** names (`MyBrandTextField` → `TextInput`), see
+**[Map Your Figma Kit](../figma-kit/)**.
 
 ## Other AI surfaces
 
