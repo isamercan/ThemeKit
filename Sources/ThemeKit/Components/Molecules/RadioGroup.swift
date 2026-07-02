@@ -14,25 +14,23 @@ public struct RadioGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Option?
-    private let infoMessages: [InfoMessage]
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var infoMessages: [InfoMessage] = []
+    private var isOptionEnabled: ((Option) -> Bool)?
     private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
         options: [Option],
         selection: Binding<Option?>,
-        infoMessages: [InfoMessage] = [],
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
-    ) {
+    ) {   // R1 — content + data + binding + required label closure
         self.title = title
         self.options = options
         self._selection = selection
-        self.infoMessages = infoMessages
-        self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
 
@@ -89,26 +87,22 @@ public struct RadioButtonGroup<Option: Hashable>: View {
 
     private let options: [Option]
     @Binding private var selection: Option?
-    private let style: RadioGroupButtonStyle
-    private let expandsHorizontally: Bool
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var style: RadioGroupButtonStyle = .solid
+    private var expandsHorizontally: Bool = false
+    private var isOptionEnabled: ((Option) -> Bool)?
     private var accessibilityID: String? = nil
 
     public init(
         options: [Option],
         selection: Binding<Option?>,
-        style: RadioGroupButtonStyle = .solid,
-        expandsHorizontally: Bool = false,
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
-    ) {
+    ) {   // R1 — data + binding + required label closure
         self.options = options
         self._selection = selection
-        self.style = style
-        self.expandsHorizontally = expandsHorizontally
-        self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
 
@@ -174,8 +168,9 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         var body: some View {
             VStack(spacing: 24) {
                 RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .solid) { $0 }
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg, style: .outline, expandsHorizontally: true) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+                    .groupStyle(.outline).fullWidth()
             }
             .padding()
         }

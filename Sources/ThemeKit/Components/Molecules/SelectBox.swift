@@ -16,27 +16,23 @@ public struct SelectBox<Option: Hashable>: View {
     private let options: [Option]
     @Binding private var selection: Option?
     private let optionTitle: (Option) -> String
-    private let placeholder: String
-    private let hint: String?
-    private let errorText: String?
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var placeholder: String = String(themeKit: "Select")
+    private var hint: String? = nil
+    private var errorText: String? = nil
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
 
-    public init(
-        label: String? = nil,
+    public init(   // R1
+        _ label: String? = nil,
         options: [Option],
         selection: Binding<Option?>,
-        placeholder: String = String(themeKit: "Select"),
-        hint: String? = nil,
-        errorText: String? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
         self.options = options
         self._selection = selection
-        self.placeholder = placeholder
-        self.hint = hint
-        self.errorText = errorText
         self.optionTitle = optionTitle
     }
 
@@ -102,22 +98,41 @@ public struct SelectBox<Option: Hashable>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension SelectBox {
+    /// Placeholder shown while no option is selected.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Helper text rendered under the field (hidden while an error is shown).
+    func hint(_ text: String?) -> Self { copy { $0.hint = text } }
+
+    /// Error message rendered under the field (drives the error border / label color).
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var country: String?
         var body: some View {
             VStack(spacing: 16) {
-                SelectBox(label: "Country", options: ["Turkey", "Germany", "France"], selection: $country, hint: "Pick your country") { $0 }
-                SelectBox(label: "City", options: ["A", "B"], selection: .constant(nil), errorText: "Required") { $0 }
+                SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+                    .hint("Pick your country")
+                SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
+                    .errorText("Required")
             }
             .padding()
         }
     }
     return Demo()
-}
-
-public extension SelectBox {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

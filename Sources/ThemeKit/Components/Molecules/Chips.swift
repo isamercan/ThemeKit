@@ -78,15 +78,15 @@ public struct CompactChip: View {
     @Binding private var isSelected: Bool
     private let text: String
     private let price: String
-    private let imageURL: URL?
-    private let rating: Double?
 
-    public init(isSelected: Binding<Bool>, text: String, price: String, imageURL: URL? = nil, rating: Double? = nil) {
-        self._isSelected = isSelected
+    // Appearance — mutated only through the modifiers below (R2).
+    private var imageURL: URL? = nil
+    private var rating: Double? = nil
+
+    public init(_ text: String, price: String, isSelected: Binding<Bool>) {   // R1
         self.text = text
         self.price = price
-        self.imageURL = imageURL
-        self.rating = rating
+        self._isSelected = isSelected
     }
 
     public var body: some View {
@@ -123,6 +123,22 @@ public struct CompactChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension CompactChip {
+    /// Remote logo image shown next to the price.
+    func imageURL(_ url: URL?) -> Self { copy { $0.imageURL = url } }
+
+    /// Star rating shown before the label (nil hides it).
+    func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - ChoseChip
 
 /// A selectable card: a leading icon, a title with an optional "free" gradient
@@ -132,28 +148,17 @@ public struct ChoseChip: View {
 
     @Binding private var isSelected: Bool
     private let title: String
-    private let description: String?
-    private let rating: Double?
-    private let showFree: Bool
-    private let freeLabel: String
-    private let systemImage: String?
 
-    public init(
-        isSelected: Binding<Bool>,
-        title: String,
-        description: String? = nil,
-        rating: Double? = nil,
-        showFree: Bool = false,
-        freeLabel: String = String(themeKit: "Free"),
-        systemImage: String? = nil
-    ) {
-        self._isSelected = isSelected
+    // Appearance — mutated only through the modifiers below (R2).
+    private var description: String? = nil
+    private var rating: Double? = nil
+    private var showFree: Bool = false
+    private var freeLabel: String = String(themeKit: "Free")
+    private var systemImage: String? = nil
+
+    public init(_ title: String, isSelected: Binding<Bool>) {   // R1
         self.title = title
-        self.description = description
-        self.rating = rating
-        self.showFree = showFree
-        self.freeLabel = freeLabel
-        self.systemImage = systemImage
+        self._isSelected = isSelected
     }
 
     public var body: some View {
@@ -208,6 +213,30 @@ public struct ChoseChip: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ChoseChip {
+    /// Secondary line shown under the title.
+    func description(_ text: String?) -> Self { copy { $0.description = text } }
+
+    /// Star rating shown before the description (nil hides it).
+    func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+
+    /// Show the gradient "free" badge next to the title (optionally with a custom label).
+    func free(_ on: Bool = true, label: String = String(themeKit: "Free")) -> Self {
+        copy { $0.showFree = on; $0.freeLabel = label }
+    }
+
+    /// Leading SF Symbol shown before the texts.
+    func icon(_ systemImage: String?) -> Self { copy { $0.systemImage = systemImage } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - FilterChip (square / pill)
 
 public enum FilterChipShape { case pill, square }
@@ -218,14 +247,14 @@ public struct FilterChip: View {
     @Environment(\.theme) private var theme
 
     private let title: String
-    private let shape: FilterChipShape
-    private let showsClose: Bool
     private let onDismiss: (() -> Void)?
 
-    public init(_ title: String, shape: FilterChipShape = .pill, showsClose: Bool = true, onDismiss: (() -> Void)? = nil) {
+    // Appearance — mutated only through the modifiers below (R2).
+    private var shape: FilterChipShape = .pill
+    private var showsClose: Bool = true
+
+    public init(_ title: String, onDismiss: (() -> Void)? = nil) {   // R1
         self.title = title
-        self.shape = shape
-        self.showsClose = showsClose
         self.onDismiss = onDismiss
     }
 

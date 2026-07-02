@@ -4,17 +4,18 @@
 //  Created by İsa Mercan on 23.06.2026.
 //
 //  Single-select dropdown. Two modes: a native `Menu` (with grouped Sections)
-//  or a searchable inline panel (`searchable: true`) with a search field +
+//  or a searchable inline panel (`.searchable()`) with a search field +
 //  section headers — the reference Select's sectioned + searchable picker.
 //
 
 import SwiftUI
 
 /// A single-select dropdown — a native `Menu` by default, or a searchable inline
-/// panel with section headers when `searchable` is on.
+/// panel with section headers when `.searchable()` is on.
 ///
 /// ```swift
-/// Select("City", options: cities, selection: $city, searchable: true) { $0.name }
+/// Select("City", options: cities, selection: $city) { $0.name }
+///     .searchable()
 /// ```
 public struct Select<Option: Hashable>: View {
     @Environment(\.theme) private var theme
@@ -29,63 +30,41 @@ public struct Select<Option: Hashable>: View {
     private let sections: [Section]
     @Binding private var selection: Option?
     private let optionTitle: (Option) -> String
-    private let placeholder: String
-    private let allowClear: Bool
-    private let searchable: Bool
-    private let size: TextInputSize
-    private let infoMessages: [InfoMessage]
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var placeholder: String = "Select"
+    private var allowClear: Bool = false
+    private var searchable: Bool = false
+    private var size: TextInputSize = .medium
+    private var infoMessages: [InfoMessage] = []
+    private var isLoading: Bool = false
+    private var isOptionEnabled: ((Option) -> Bool)? = nil
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isLoading: Bool
-    private let isOptionEnabled: ((Option) -> Bool)?
 
     @Environment(\.selectStyle) private var selectStyle
 
     @State private var open = false
     @State private var query = ""
 
-    public init(
+    public init(   // R1
         _ label: String,
         options: [Option],
         selection: Binding<Option?>,
-        placeholder: String = "Select",
-        allowClear: Bool = false,
-        searchable: Bool = false,
-        size: TextInputSize = .medium,
-        infoMessages: [InfoMessage] = [],
-        isLoading: Bool = false,
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
-        self.init(label, sections: [Section(nil, options)], selection: selection, placeholder: placeholder,
-                  allowClear: allowClear, searchable: searchable, size: size, infoMessages: infoMessages,
-                  isLoading: isLoading,
-                  isOptionEnabled: isOptionEnabled, optionTitle: optionTitle)
+        self.init(label, sections: [Section(nil, options)], selection: selection, optionTitle: optionTitle)
     }
 
-    public init(
+    public init(   // R1
         _ label: String,
         sections: [Section],
         selection: Binding<Option?>,
-        placeholder: String = "Select",
-        allowClear: Bool = false,
-        searchable: Bool = false,
-        size: TextInputSize = .medium,
-        infoMessages: [InfoMessage] = [],
-        isLoading: Bool = false,
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
         self.sections = sections
         self._selection = selection
-        self.placeholder = placeholder
-        self.allowClear = allowClear
-        self.searchable = searchable
-        self.size = size
-        self.infoMessages = infoMessages
-        self.isLoading = isLoading
-        self.isOptionEnabled = isOptionEnabled
         self.optionTitle = optionTitle
     }
 
@@ -267,23 +246,54 @@ public struct Select<Option: Hashable>: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Select {
+    /// Placeholder shown while no option is selected.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Show a trailing clear button when an option is selected.
+    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Use the searchable inline panel instead of the native menu.
+    func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
+
+    /// Control height of the trigger field (small / medium / large).
+    func size(_ size: TextInputSize) -> Self { copy { $0.size = size } }
+
+    /// Validation / info messages rendered under the field (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Shows a loading spinner in place of the chevron (async option fetch).
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Sets the accessibility-identifier namespace for this component (its
+    /// sub-elements get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var city: String?
         var body: some View {
             VStack(spacing: 16) {
-                Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city, allowClear: true) { $0 }
+                Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                    .clearable()
                 Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
-                       selection: $city, searchable: true) { $0 }
+                       selection: $city) { $0 }
+                    .searchable()
             }
             .padding()
         }
     }
     return Demo()
-}
-
-public extension Select {
-    /// Sets the accessibility-identifier namespace for this component (its
-    /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

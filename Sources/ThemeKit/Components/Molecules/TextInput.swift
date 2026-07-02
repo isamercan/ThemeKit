@@ -118,16 +118,32 @@ public struct TextInputModel {
 
 /// Single floating-label text field. Carries the reference's production layers:
 /// a `TextInputModel` config struct, a structured `[InfoMessage]` validation
-/// model, and namespaced accessibility identifiers — alongside the flat init.
+/// model, and namespaced accessibility identifiers. Per the modifier-based
+/// architecture (COMPONENT_REFACTOR_RULES R1–R7) the canonical init takes only
+/// its label and the `text` binding; every other axis is a chainable,
+/// order-free modifier. `disabled` is native (`@Environment(\.isEnabled)`, R3).
+///
+///     TextInput("Email", text: $email)
+///         .icon(leading: "envelope").clearable()
+///         .keyboard(.emailAddress, contentType: .emailAddress)
+///         .errorText(invalid ? "Required" : nil)
+///         .disabled(!editable)            // native — R3
 public struct TextInput: View {
     @Environment(\.theme) private var theme
 
     @Binding private var text: String
-    private let model: TextInputModel
+    // Config — mutated only through the modifiers below (R2).
+    private var model: TextInputModel
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
-    private let externalFocus: Binding<Bool>?
+    private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private var accessibilityID: String? = nil
+
+    // Convenience helper/error/warning strings — merged into the rendered
+    // message list at render time (see `messages`), keeping modifiers order-free.
+    private var helperText: String?
+    private var errorText: String?
+    private var warningText: String?
 
     @FocusState private var isFocused: Bool
     @State private var reveal = false
@@ -139,55 +155,22 @@ public struct TextInput: View {
         self.externalFocus = externalFocus
     }
 
-    /// Flat initializer (legacy helper/error/warning strings map to `InfoMessage`s).
-    public init(
-        _ label: String,
-        text: Binding<String>,
-        placeholder: String = "",
-        leadingSystemImage: String? = nil,
-        suffixSystemImage: String? = nil,
-        addonBefore: String? = nil,
-        addonAfter: String? = nil,
-        isSecure: Bool = false,
-        allowClear: Bool = false,
-        maxLength: Int? = nil,
-        showCount: Bool = false,
-        size: TextInputSize = .medium,
-        formatter: TextInputFormatter? = nil,
-        helperText: String? = nil,
-        errorText: String? = nil,
-        warningText: String? = nil,
-        infoMessages: [InfoMessage] = [],
-        externalFocus: Binding<Bool>? = nil,
-        keyboardType: TextInputKeyboard = .default,
-        textContentType: TextInputContentType? = nil,
-        submitLabel: SubmitLabel = .return,
-        autocapitalization: TextInputCapitalization? = nil,
-        autocorrectionDisabled: Bool = false,
-        hardLimit: Bool = true,
-        countStyle: TextInputCountStyle = .count,
-        onSubmit: (() -> Void)? = nil
-    ) {
-        var messages = infoMessages
-        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
-        if let warningText { messages.append(InfoMessage(warningText, kind: .warning)) }
-        if let helperText { messages.append(InfoMessage(helperText, kind: .info)) }
+    public init(_ label: String, text: Binding<String>) {   // R1 — content + binding
+        self.model = TextInputModel(label: label)
         self._text = text
-        self.externalFocus = externalFocus
-        self.model = TextInputModel(
-            label: label, placeholder: placeholder, leadingSystemImage: leadingSystemImage,
-            suffixSystemImage: suffixSystemImage, addonBefore: addonBefore, addonAfter: addonAfter,
-            isSecure: isSecure, allowClear: allowClear,
-            maxLength: maxLength, showCount: showCount, size: size, formatter: formatter,
-            infoMessages: messages,
-            keyboardType: keyboardType, textContentType: textContentType, submitLabel: submitLabel,
-            autocapitalization: autocapitalization, autocorrectionDisabled: autocorrectionDisabled,
-            hardLimit: hardLimit, countStyle: countStyle, onSubmit: onSubmit
-        )
+        self.externalFocus = nil
     }
 
     private var floating: Bool { isFocused || !text.isEmpty }
-    private var dominant: InfoMessage.Kind? { model.infoMessages.dominantKind }
+    /// `infoMessages` plus the helper/error/warning conveniences (computed merge).
+    private var messages: [InfoMessage] {
+        var messages = model.infoMessages
+        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        if let warningText { messages.append(InfoMessage(warningText, kind: .warning)) }
+        if let helperText { messages.append(InfoMessage(helperText, kind: .info)) }
+        return messages
+    }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
     private var showsClear: Bool { model.allowClear && !text.isEmpty && isEnabled && !model.isSecure }
@@ -285,9 +268,9 @@ public struct TextInput: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             fieldBox
 
-            if !model.infoMessages.isEmpty || model.showCount {
+            if !messages.isEmpty || model.showCount {
                 HStack(alignment: .firstTextBaseline) {
-                    InfoMessageList(model.infoMessages)
+                    InfoMessageList(messages)
                         .a11y(A11yElement.Field.message, in: accessibilityID)
                     Spacer(minLength: Theme.SpacingKey.sm.value)
                     if model.showCount {
@@ -383,6 +366,89 @@ public struct TextInput: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension TextInput {
+    /// Placeholder shown inside the field once the label floats.
+    func placeholder(_ text: String) -> Self { copy { $0.model.placeholder = text } }
+
+    /// Leading / trailing SF Symbols shown inside the field.
+    func icon(leading: String? = nil, trailing: String? = nil) -> Self {
+        copy { $0.model.leadingSystemImage = leading; $0.model.suffixSystemImage = trailing }
+    }
+
+    /// Static addon segments rendered before / after the field (e.g. "https://", ".com").
+    func addons(before: String? = nil, after: String? = nil) -> Self {
+        copy { $0.model.addonBefore = before; $0.model.addonAfter = after }
+    }
+
+    /// Masks input as a password field with a reveal toggle.
+    func secure(_ on: Bool = true) -> Self { copy { $0.model.isSecure = on } }
+
+    /// Show a trailing clear button while the field has text.
+    func clearable(_ on: Bool = true) -> Self { copy { $0.model.allowClear = on } }
+
+    /// Caps input at `max` characters; a soft limit (`hardLimit: false`) allows overflow and flags the counter instead.
+    func maxLength(_ max: Int?, hardLimit: Bool = true) -> Self {
+        copy { $0.model.maxLength = max; $0.model.hardLimit = hardLimit }
+    }
+
+    /// Shows the character counter, reading `12/50` (`.count`) or `38 left` (`.remaining`).
+    func showsCount(_ on: Bool = true, style: TextInputCountStyle = .count) -> Self {
+        copy { $0.model.showCount = on; $0.model.countStyle = style }
+    }
+
+    /// Control height preset (defaults to `.medium`, R4).
+    func size(_ size: TextInputSize) -> Self { copy { $0.model.size = size } }
+
+    /// Live input formatter applied on every change (e.g. phone masks).
+    func formatter(_ formatter: TextInputFormatter?) -> Self { copy { $0.model.formatter = formatter } }
+
+    /// Convenience hint appended to the message list as an `.info` `InfoMessage`.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Convenience error appended to the message list as an `.error` `InfoMessage`.
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Convenience warning appended to the message list as a `.warning` `InfoMessage`.
+    func warningText(_ text: String?) -> Self { copy { $0.warningText = text } }
+
+    /// Validation / info messages rendered under the field (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.model.infoMessages = messages } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`).
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Keyboard / autofill / return-key / capitalization traits (iOS; ignored on macOS).
+    func keyboard(_ type: TextInputKeyboard = .default,
+                  contentType: TextInputContentType? = nil,
+                  submit: SubmitLabel = .return,
+                  capitalization: TextInputCapitalization? = nil) -> Self {
+        copy {
+            $0.model.keyboardType = type
+            $0.model.textContentType = contentType
+            $0.model.submitLabel = submit
+            $0.model.autocapitalization = capitalization
+        }
+    }
+
+    /// Disables system autocorrection for the field.
+    func autocorrectionDisabled(_ on: Bool = true) -> Self { copy { $0.model.autocorrectionDisabled = on } }
+
+    /// Action fired when the user submits (named `onCommit` to avoid shadowing SwiftUI's `.onSubmit`).
+    func onCommit(_ action: (() -> Void)?) -> Self { copy { $0.model.onSubmit = action } }
+
+    /// Sets the accessibility-identifier namespace for this field (its sub-elements
+    /// — label, field, clear, reveal, messages — get `"<id>.<element>"`).
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 // MARK: - Platform keyboard traits
 
 private extension View {
@@ -463,29 +529,23 @@ private extension TextInputCapitalization {
         var body: some View {
             VStack(spacing: 16) {
                 // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
-                TextInput("Email", text: $email, leadingSystemImage: "envelope",
-                          allowClear: true, infoMessages: emailMessages,
-                          keyboardType: .emailAddress, textContentType: .emailAddress,
-                          submitLabel: .next, autocapitalization: .never, autocorrectionDisabled: true)
+                TextInput("Email", text: $email)
+                    .icon(leading: "envelope").clearable()
+                    .infoMessages(emailMessages)
+                    .keyboard(.emailAddress, contentType: .emailAddress, submit: .next, capitalization: .never)
+                    .autocorrectionDisabled()
                     .a11yID("loginEmail")
-                // Password manager autofill on a secure field.
+                // Password manager autofill on a secure field (config-model entry point).
                 TextInput(TextInputModel(label: "Password", isSecure: true, maxLength: 24, showCount: true,
                                          textContentType: .password,
                                          submitLabel: .go), text: $pass)
                     .a11yID("loginPass")
                 // Soft limit: can exceed 80, counter turns red instead of truncating.
-                TextInput("Bio", text: $bio, maxLength: 80, showCount: true,
-                          hardLimit: false, countStyle: .remaining)
+                TextInput("Bio", text: $bio)
+                    .maxLength(80, hardLimit: false).showsCount(style: .remaining)
             }
             .padding()
         }
     }
     return Demo()
-}
-
-public extension TextInput {
-    /// Sets the accessibility-identifier namespace for this field (its sub-elements
-    /// — label, field, clear, reveal, messages — get `"<id>.<element>"`). Replaces
-    /// the `accessibilityID:` init/model param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
 }

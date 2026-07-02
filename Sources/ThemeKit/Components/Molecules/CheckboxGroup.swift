@@ -14,28 +14,24 @@ public struct CheckboxGroup<Option: Hashable>: View {
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
-    private let infoMessages: [InfoMessage]
-    private let selectAllTitle: String?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
-    private let isOptionEnabled: ((Option) -> Bool)?
     private let label: (Option) -> String
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var infoMessages: [InfoMessage] = []
+    private var selectAllTitle: String?
+    private var isOptionEnabled: ((Option) -> Bool)?
     private var accessibilityID: String? = nil
 
     public init(
         title: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
-        infoMessages: [InfoMessage] = [],
-        selectAllTitle: String? = nil,
-        isOptionEnabled: ((Option) -> Bool)? = nil,
         label: @escaping (Option) -> String
-    ) {
+    ) {   // R1 — content + data + binding + required label closure
         self.title = title
         self.options = options
         self._selection = selection
-        self.infoMessages = infoMessages
-        self.selectAllTitle = selectAllTitle
-        self.isOptionEnabled = isOptionEnabled
         self.label = label
     }
 
@@ -123,8 +119,25 @@ public struct CheckboxGroup<Option: Hashable>: View {
     return Demo()
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
 public extension CheckboxGroup {
+    /// Validation / info messages rendered under the group (drives the title color).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Adds a "select all" master row with the given title (nil hides it).
+    func selectAll(_ title: String?) -> Self { copy { $0.selectAllTitle = title } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.
-    func a11yID(_ id: String?) -> Self { var copy = self; copy.accessibilityID = id; return copy }
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
