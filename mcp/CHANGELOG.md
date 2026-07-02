@@ -6,6 +6,23 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2026-07-02
+
+### Fixed
+
+- **Catalog refreshed to the v0.5.0 (R1–R7) modifier API.** ThemeKit #162 moved
+  optional init arguments to chainable modifiers across 55 components (init
+  signatures) and added 59 modifiers (169 → 228), but shipped without
+  regenerating the MCP data — so `get_component_api`, `get_usage_snippet`,
+  `get_variants_states` and `design_to_code` were serving stale init signatures
+  (e.g. `Spinner(size:lineWidth:color:)`, `Card(elevation:padding:…)`).
+  Regenerated `data/themekit.json` from the post-refactor symbol graph so the
+  APIs match the library again. Component/token/preset counts unchanged
+  (119 / 217 / 33); the mapping rules and codegen were already compatible
+  (50/50 tests pass against the refreshed data).
+- Bundled `data/THEMEKIT-CHANGELOG.md` now includes the v0.5.0 entry, so
+  `get_migration_guide` can report the R1–R7 breaking changes.
+
 ## [2.8.0] - 2026-07-02
 
 ### Added — `design_to_code` fidelity pass
