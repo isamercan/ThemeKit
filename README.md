@@ -1,6 +1,6 @@
 # ThemeKit
 
-> **Native, brand-neutral SwiftUI design system** — 117 token-bound components that
+> **Native, brand-neutral SwiftUI design system** — 119 token-bound components that
 > re-skin from a single accent color: light/dark, per-subtree, zero core dependencies.
 
 [![CI](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml/badge.svg)](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml)
@@ -13,7 +13,7 @@
 **[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
-  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 117 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 119 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
 > The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
@@ -33,10 +33,14 @@ import ThemeKit
 - 🎨 **Figma → SwiftUI** — the MCP's `design_to_code` (alias `figma_to_swiftui`) turns a Figma node into
   token-matched, verified-API ThemeKit code with a mapping report (see the
   **Advanced — Figma → SwiftUI & MCP** section).
+- 🔁 **Code ⇄ Figma round-trip** — `export_figma_variables` turns the token catalog
+  + 32 presets into a themeable **Figma Variables** library (one mode per preset);
+  `import_figma_variables` pulls any company's Figma file back into a live
+  `ThemeConfig` that re-skins every component. One vocabulary, both directions.
 - 🪄 **Design Mode** — point ThemeKit at a free-form `design.md` (or a bundled style
   — Linear, Notion, iOS, Brutalist, Pastel) and it re-skins **every** component to
   match, via an offline heuristic parser (+ an optional LLM path).
-- 🤖 **AI-native** — a 24-tool **MCP server**, a Claude Code **Agent skill**, and an
+- 🤖 **AI-native** — a 26-tool **MCP server**, a Claude Code **Agent skill**, and an
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
   shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
@@ -45,7 +49,7 @@ import ThemeKit
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
-- **117 components** — Atoms / Molecules / Organisms, all token-bound.
+- **119 components** — Atoms / Molecules / Organisms, all token-bound.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
   accent (or `base-100`) color into a full Ant-style palette on device (no Python,
   no baked files).
@@ -197,14 +201,14 @@ gallery, and a full booking flow built entirely from ThemeKit components.
 
 ## Components
 
-117 token-bound components, grouped by complexity:
+119 token-bound components, grouped by complexity:
 
 - **Atoms** (29) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
   `StatusDot`, `Skeleton`, `ProgressBar`, `BorderBeam`, `RollingNumber`…
-- **Molecules** (45) — `TextInput`, `OTPInput`, `Select`, `Checkbox`,
-  `RadioGroup`, `Slider`, `RangeSlider`, `SearchBar`, `Tooltip`, buttons…
-- **Organisms** (43) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
-  `Timeline`, `ResultView`, `Upload`, `Tour`, `NavigationBar`, `ThemePicker`…
+- **Molecules** (46) — `TextInput`, `OTPInput`, `Select`, `Checkbox`,
+  `RadioGroup`, `Slider`, `RangeSlider`, `SearchBar`, `Tooltip`, `TimeField`, buttons…
+- **Organisms** (44) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Steps`,
+  `Timeline`, `ResultView`, `Upload`, `Tour`, `NavigationBar`, `Sidebar`, `ThemePicker`…
 
 Every component is curated by category in the [DocC catalog](#documentation).
 
@@ -566,7 +570,7 @@ source (`make skill`) feeds three surfaces, so they can't drift from the code:
 
 | Surface | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | 24 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `design_to_code` (alias `figma_to_swiftui`)… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **MCP server** ([`mcp/`](mcp/)) | 26 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `design_to_code` (alias `figma_to_swiftui`), `export_figma_variables`, `import_figma_variables`, `suggest_figma_mapping`, `design_md_to_themeconfig`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
 | **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
@@ -614,7 +618,37 @@ https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
 ```
 
 Point it at a **single screen/frame** — it treats a Figma component `INSTANCE` as an
-opaque leaf and won't expand a board of nested instances (see [`mcp/README.md`](mcp/README.md#how-to-trigger-it-from-chat)).
+opaque leaf. Pass **`expandInstances: true`** to recurse into instances too
+(forms, headers, nav bars) and get much more of the screen, at the cost of more
+raw SwiftUI to review (see [`mcp/README.md`](mcp/README.md#how-to-trigger-it-from-chat)).
+
+### Code ⇄ Figma round-trip (design tokens ⇄ Figma Variables)
+
+`design_to_code` goes Figma → SwiftUI; two more tools close the loop so the token
+catalog is one source of truth in **both** directions:
+
+- **`export_figma_variables`** — the tokens + all 32 presets become a themeable
+  **Figma Variables** library: a **Brand** collection with **one mode per preset**
+  (a designer flips the mode and the whole file re-brands, exactly like
+  `ThemePreset.named(id).apply()`), plus **Color / Radius / Spacing / Typography**
+  collections. Every variable carries its ThemeKit token in `codeSyntax`.
+  `format: "figma-rest"` emits the exact body for `POST /v1/files/:key/variables`.
+- **`import_figma_variables`** — the reverse. Hand it a company's
+  `GET /variables/local` JSON and it resolves the brand seeds for a chosen `mode`
+  into a **`ThemeConfig`** + `theme.json`; ThemeKit derives the rest, so any brand
+  **re-skins every component** from a few seeds. Files this server exported are
+  lossless (the `codeSyntax` token pins each seed); other files resolve by name
+  with an `aliases` map, and anything unresolved is reported, never guessed.
+
+### Map your own Figma kit
+
+Your Figma kit names things in your own vocabulary (`MyBrandTextField`); ThemeKit
+calls it `TextInput`. Run **`suggest_figma_mapping`** (offline from `names`, or
+walk a whole kit from a Figma `url`) and it drafts a `componentAliases` block,
+scored against the real catalog — ready to paste into a mapping file you own.
+Point the server at it with `THEMEKIT_MAPPING` and `design_to_code` emits real
+ThemeKit code instead of `// ⚠️ unmapped`. Full walkthrough:
+**[Map Your Figma Kit](https://isamercan.github.io/ThemeKit/ai/figma-kit/)**.
 
 ## Documentation
 
