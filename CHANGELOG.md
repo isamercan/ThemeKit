@@ -5,6 +5,56 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.5.0] - 2026-07-02
+
+The modifier refactor (R1–R7) completes: a full-library sweep converts the **58
+remaining components** so every public component now follows the same contract —
+`init` carries only content, bindings, required data, and primary callbacks;
+every appearance/state axis is a chainable, order-free modifier routed through a
+single copy-on-write helper. Old inits are removed (clean break, pre-1.0), each
+recorded in `.api-breakage-allowlist.txt`.
+
+### ⚠️ Breaking
+- **Button family** (`PrimaryButton`/`SecondaryButton`/`OutlineButton`/`GhostButton`,
+  9→2 params ×2 inits; `LinkButton` 4→2): `size:`→`.size(_:)`, `block:`→`.fullWidth(_:)`,
+  `helperText:`→`.helperText(_:)`, `textStyle:`→`.titleTextStyle(_:)`,
+  `confirmsSuccess:`→`.confirmsSuccess(_:)`, `accessibilityID:`→`.a11yID(_:)`,
+  `isLoading: Binding<Bool>`→`.loading(_ on: Bool = true)` (the binding was only read).
+- **`TextInput` flat init removed** (26 params → `TextInput(_ label:text:)`); the
+  `TextInputModel`-based init remains the supported second entry point. New modifiers:
+  `.placeholder .icon(leading:trailing:) .addons(before:after:) .secure .clearable
+  .maxLength(_:hardLimit:) .showsCount(_:style:) .size .formatter .helperText .errorText
+  .warningText .infoMessages .externalFocus .keyboard(_:contentType:submit:capitalization:)
+  .autocorrectionDisabled .onCommit` (renamed from `onSubmit:` — avoids native `.onSubmit`).
+- **Select family**: `Select` (11→4 ×2), `SelectBox`, `MultiSelect`, `Autocomplete` (×2),
+  `SearchBar` (8→1/2 — callbacks moved to `.onSearch/.onSelect/.onCommit`, chrome to
+  `.placeholder/.suggestions/.recent(_:onClear:)`).
+- **Groups & form controls**: `CheckboxGroup` (`.selectAll/.infoMessages/.optionEnabled`),
+  `RadioGroup`, `RadioButtonGroup` (`.groupStyle/.fullWidth/.optionEnabled`), `ToggleGroup`
+  (`.optionDescription`), `Checkbox`/`RadioButton` (`.infoMessages`), `ColorField`
+  (`.supportsOpacity`), `Fieldset` (`.helper`), `Slider`/`RangeSlider`/`QuantityStepper`
+  (`step:`→`.step(_:)`).
+- **Chips**: `ChoseChip` (title now positional-first), `CompactChip`, `FilterChip`
+  (`.shape/.closable`), `ChipGroup` (`selectionStyle:`→`.chipStyle(_:)`).
+- **Organisms**: `Card` (9→3: `.subtitle/.elevation/.contentPadding/.extraAction/.loading`),
+  `ListView`, `DataTable`, `NotificationCard` (`type:`→`.variant(_:)`), `ResultView`
+  (`.primaryAction/.secondaryAction`), `Hero` (`.subtitle/.cta/.dark`), `BlogCard`,
+  `MenuCard`, `PageHeader`, `Gallery`, `PagingCarousel`, `RatingSummary`
+  (`.reviews(count:onTap:)`), `RadioCard`/`CheckboxCard` (`.description`), `KeyValueTable`,
+  `Diff` (`aspectRatio:`→`.aspect(_:)` — avoids native `.aspectRatio`), `UploadList`,
+  `Accordion` (`leadingSystemImage:`→`.icon(_:)`), `AccordionGroup` (`.mode`).
+- **Atoms**: `Title`, `InlineText` (`style:`→`.inlineStyle(_:)`), `Icon`
+  (`.size/.color` — ~94 call sites migrated), `Spinner`, `Skeleton`
+  (`.size(width:height:)`), `ProgressBar` (`.showsPercentage/.status`), `Rating`
+  (`.layout/.countLabel`), `Ribbon` (`.color`), `AvatarGroup`
+  (`.size/.maxVisible/.fillColor`), `AnimatedImage`, `TextLink` (`.underline`).
+- **ThemeKitLottie**: `LottieEmptyState` (inits keyed on the media source, EmptyState-style;
+  `.loop/.animationHeight/.message/.primaryAction`), `LottieIllustration` (`.loop`).
+
+All call sites in the library, Demo app, gallery usage snippets, tests, screenshot/GIF
+generators, and DocC samples migrated in the same change; defaults are preserved, so
+rendering is unchanged.
+
 ## [0.4.0] - 2026-06-30
 
 The modifier-based component refactor (COMPONENT_REFACTOR_RULES R1–R7): bloated
