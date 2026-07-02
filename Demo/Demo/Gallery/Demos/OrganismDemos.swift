@@ -245,11 +245,11 @@ struct SelectionCardsDemo: View {
     var body: some View {
         ComponentStage("SelectionCards", inspector: [("kind", useCheckbox ? "checkbox" : "radio")]) {
             if useCheckbox {
-                CheckboxCard("Add checked bag", description: "+$250", isChecked: checked) { checked.toggle(); flash("CheckboxCard: \(checked ? "selected" : "removed")") }
+                CheckboxCard("Add checked bag", isChecked: checked) { checked.toggle(); flash("CheckboxCard: \(checked ? "selected" : "removed")") }.description("+$250")
             } else {
                 VStack(spacing: 12) {
-                    RadioCard("Standard", description: "Free delivery in 3–5 days", isSelected: radio == "std") { radio = "std"; flash("RadioCard: Standard") }
-                    RadioCard("Express", description: "Next-day delivery", isSelected: radio == "exp") { radio = "exp"; flash("RadioCard: Express") }
+                    RadioCard("Standard", isSelected: radio == "std") { radio = "std"; flash("RadioCard: Standard") }.description("Free delivery in 3–5 days")
+                    RadioCard("Express", isSelected: radio == "exp") { radio = "exp"; flash("RadioCard: Express") }.description("Next-day delivery")
                 }
             }
         } knobs: {

@@ -158,7 +158,7 @@ public struct ListRow: View {
         } else if let leadingSystemImage {
             ZStack {
                 Circle().fill(theme.background(.bgElevatorTertiary)).frame(width: 40, height: 40)
-                Icon(systemName: leadingSystemImage, size: .sm, color: theme.foreground(.fgHero))
+                Icon(systemName: leadingSystemImage).size(.sm).color(theme.foreground(.fgHero))
             }
             .overlay(alignment: .topTrailing) {
                 if let alertCount, alertCount > 0 {
@@ -251,7 +251,7 @@ public struct ListRow: View {
         case .none:
             EmptyView()
         case .chevron:
-            Icon(systemName: "chevron.right", size: .sm, color: theme.text(.textTertiary))
+            Icon(systemName: "chevron.right").size(.sm).color(theme.text(.textTertiary))
                 .mirrorsInRTL()
         case .value(let text):
             Text(text)
@@ -261,12 +261,12 @@ public struct ListRow: View {
             ThemeToggle(isOn: binding)
         case .checkmark(let on):
             if on {
-                Icon(systemName: "checkmark", size: .sm, color: theme.foreground(.fgHero))
+                Icon(systemName: "checkmark").size(.sm).color(theme.foreground(.fgHero))
             }
         case .checkbox(let binding):
             Checkbox(isChecked: binding)
         case .button(let label, let buttonAction):
-            LinkButton(label, size: .small, action: buttonAction)
+            LinkButton(label, action: buttonAction).size(.small)
         case .price(let price):
             priceView(price)
         case .status(let text, let systemImage):

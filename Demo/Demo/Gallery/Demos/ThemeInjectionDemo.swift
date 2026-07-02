@@ -55,7 +55,9 @@ struct ThemeInjectionDemo: View {
 
     private var sample: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Hero(title: "Stay", subtitle: "Find your spot", ctaTitle: "Book", action: {})
+            Hero(title: "Stay")
+                .subtitle("Find your spot")
+                .cta("Book", action: {})
                 .frame(height: 150)
             HStack(spacing: 8) {
                 Badge("Info").badgeStyle(.info).icon("bell.fill")
@@ -63,7 +65,7 @@ struct ThemeInjectionDemo: View {
             }
             InfoBanner("Subtree-themed banner").variant(.success)
             Stat(title: "Bookings", value: "1,284").icon("ticket").trend(.up("+12%"))
-            PrimaryButton("Continue", block: true) {}
+            PrimaryButton("Continue") {}.fullWidth()
         }
     }
 }

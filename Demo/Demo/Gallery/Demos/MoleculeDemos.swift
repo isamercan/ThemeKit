@@ -91,8 +91,8 @@ struct CheckboxDemo: View {
 
     var body: some View {
         ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
-            Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked,
-                     infoMessages: messages)
+            Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked)
+                    .infoMessages(messages)
                     .customSize(big ? 32 : nil)
                     .type(type)
                     .indeterminate(indeterminate)
@@ -246,12 +246,12 @@ struct SliderDemo: View {
     var body: some View {
         ComponentStage("Slider", inspector: [("value", "\(Int(value))"), ("axis", vertical ? "vertical" : "horizontal"), ("onChangeEnd", committed)]) {
             if vertical {
-                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))")
+                ThemeKit.Slider(value: $value, in: 0...8, label: "Guests \(Int(value))")
                     .axis(.vertical, height: 180)
                     .onChangeEnd { committed = "\(Int($0))" }
                     .disabled(!enabled)
             } else {
-                ThemeKit.Slider(value: $value, in: 0...8, step: 1, label: "Guests \(Int(value))")
+                ThemeKit.Slider(value: $value, in: 0...8, label: "Guests \(Int(value))")
                     .marks(marks ? [0: "0", 4: "4", 8: "8"] : [:])
                     .showsValueTooltip(tooltip)
                     .onChangeEnd { committed = "\(Int($0))" }
@@ -279,12 +279,14 @@ struct RangeSliderDemo: View {
     var body: some View {
         ComponentStage("RangeSlider", inspector: [("range", "\(Int(lo))–\(Int(hi))"), ("onChangeEnd", lastCommit)]) {
             if inputs {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
                     .inputs(titles: ("Min $", "Max $"))
                     .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
                     .disabled(!enabled)
             } else {
-                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000, step: 50)
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
                     .marks(marks ? [0, 250, 500, 750, 1000] : [])
                     .onChangeEnd { l, u in lastCommit = "\(Int(l))–\(Int(u))" }
                     .valueLabel { "$\(Int($0))" }
@@ -370,7 +372,7 @@ struct QuantityStepperDemo: View {
 
     var body: some View {
         ComponentStage("QuantityStepper", inspector: [("value", "\(value)"), ("step", bigStep ? "5" : "1")]) {
-            QuantityStepper(value: $value, range: 0...100, step: bigStep ? 5 : 1)
+            QuantityStepper(value: $value, range: 0...100).step(bigStep ? 5 : 1)
         } knobs: {
             Toggle("Step 5", isOn: $bigStep)
             Stepper("Value: \(value)", value: $value, in: 0...100)

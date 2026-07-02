@@ -26,23 +26,20 @@ final class FormControlSnapshotTests: SnapshotTestCase {
 
     func testTextInput_filled() {
         assertComponentSnapshot(
-            TextInput("Email", text: .constant("traveller@example.com"), leadingSystemImage: "envelope")
+            TextInput("Email", text: .constant("traveller@example.com")).icon(leading: "envelope")
         )
     }
 
     func testTextInput_errorState() {
         assertComponentSnapshot(
-            TextInput(
-                "Email",
-                text: .constant("not-an-email"),
-                infoMessages: [InfoMessage("Enter a valid email address", kind: .error)]
-            )
+            TextInput("Email", text: .constant("not-an-email"))
+                .infoMessages([InfoMessage("Enter a valid email address", kind: .error)])
         )
     }
 
     func testTextInput_secure() {
         assertComponentSnapshot(
-            TextInput("Password", text: .constant("hunter2"), isSecure: true)
+            TextInput("Password", text: .constant("hunter2")).secure()
         )
     }
 
@@ -83,11 +80,8 @@ final class FormControlSnapshotTests: SnapshotTestCase {
 
     func testTextInput_errorState_darkMode() {
         assertComponentSnapshot(
-            TextInput(
-                "Email",
-                text: .constant("not-an-email"),
-                infoMessages: [InfoMessage("Enter a valid email address", kind: .error)]
-            ),
+            TextInput("Email", text: .constant("not-an-email"))
+                .infoMessages([InfoMessage("Enter a valid email address", kind: .error)]),
             colorScheme: .dark
         )
     }

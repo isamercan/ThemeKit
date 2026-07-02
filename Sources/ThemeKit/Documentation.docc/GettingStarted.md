@@ -46,14 +46,16 @@ struct SignInView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Sign in").textStyle(.headingLg)
 
-            TextInput("Email", text: $email, placeholder: "you@example.com",
-                      leadingSystemImage: "envelope")
+            TextInput("Email", text: $email)
+                .placeholder("you@example.com")
+                .icon(leading: "envelope")
 
             Badge("Beta").badgeStyle(.info)
 
-            PrimaryButton("Continue", block: true) {
+            PrimaryButton("Continue") {
                 // handle sign-in
             }
+            .fullWidth()
         }
         .padding()
     }

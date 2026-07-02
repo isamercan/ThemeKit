@@ -82,7 +82,7 @@ public struct InfoBanner: View {
     public var body: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             if showIcon {
-                Icon(systemName: type.systemImage, size: .sm, color: type.accent(theme))
+                Icon(systemName: type.systemImage).size(.sm).color(type.accent(theme))
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -96,7 +96,7 @@ public struct InfoBanner: View {
                         .textStyle(.bodySm400)
                         .foregroundStyle(theme.text(.textSecondary))
                 } else {
-                    InlineText(message, links: links, baseColor: theme.text(.textSecondary))
+                    InlineText(message, links: links).color(theme.text(.textSecondary))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,7 +110,7 @@ public struct InfoBanner: View {
 
             if let onDismiss {
                 Button(action: onDismiss) {
-                    Icon(systemName: "xmark", size: .xs, color: theme.text(.textTertiary))
+                    Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
             }

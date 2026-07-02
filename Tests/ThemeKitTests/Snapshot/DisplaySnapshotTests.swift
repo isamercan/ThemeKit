@@ -31,7 +31,7 @@ final class DisplaySnapshotTests: SnapshotTestCase {
 
     func testAvatar_group() {
         assertComponentSnapshot(
-            AvatarGroup([AvatarContent.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")], max: 3)
+            AvatarGroup([AvatarContent.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")]).maxVisible(3)
         )
     }
 
@@ -40,12 +40,12 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testCard_elevations() {
         assertComponentSnapshot(
             VStack(spacing: 12) {
-                Card(elevation: .soft) {
+                Card {
                     Text("Soft card").textStyle(.bodyMd500)
                 }
-                Card(elevation: .elevated) {
+                Card {
                     Text("Elevated card").textStyle(.bodyMd500)
-                }
+                }.elevation(.elevated)
             }
         )
     }
@@ -80,9 +80,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testRating_layouts() {
         assertComponentSnapshot(
             VStack(alignment: .leading, spacing: 10) {
-                Rating(value: 4.3, countLabel: "(128)")
-                Rating(value: 4.3, layout: .numberRate, countLabel: "1,284 reviews")
-                Rating(value: 8.4, layout: .rateNumberText)
+                Rating(value: 4.3).countLabel("(128)")
+                Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews")
+                Rating(value: 8.4).layout(.rateNumberText)
             }
         )
     }
@@ -92,10 +92,10 @@ final class DisplaySnapshotTests: SnapshotTestCase {
     func testProgressBar_statuses() {
         assertComponentSnapshot(
             VStack(spacing: 12) {
-                ProgressBar(value: 0.3, showPercentage: true)
-                ProgressBar(value: 0.7, showPercentage: true).gradient()
-                ProgressBar(value: 0.5, showPercentage: true, status: .exception)
-                ProgressBar(value: 1.0, showPercentage: true, status: .success)
+                ProgressBar(value: 0.3).showsPercentage()
+                ProgressBar(value: 0.7).showsPercentage().gradient()
+                ProgressBar(value: 0.5).showsPercentage().status(.exception)
+                ProgressBar(value: 1.0).showsPercentage().status(.success)
             }
         )
     }
@@ -127,9 +127,9 @@ final class DisplaySnapshotTests: SnapshotTestCase {
 
     func testCard_darkMode() {
         assertComponentSnapshot(
-            Card(elevation: .elevated) {
+            Card {
                 Text("Elevated card").textStyle(.bodyMd500)
-            },
+            }.elevation(.elevated),
             colorScheme: .dark
         )
     }

@@ -41,7 +41,7 @@ struct IconDemo: View {
 
     var body: some View {
         ComponentStage("Icon", inspector: [("size", "\(size.rawValue) · \(Int(size.value))")]) {
-            Icon(systemName: symbol, size: size, color: Theme.shared.foreground(.fgHero))
+            Icon(systemName: symbol).size(size).color(Theme.shared.foreground(.fgHero))
         } knobs: {
             TextField("SF Symbol", text: $symbol).textFieldStyle(.roundedBorder).autocorrectionDisabled()
             Picker("Size", selection: $size) { ForEach(IconSize.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
@@ -87,11 +87,11 @@ struct SkeletonDemo: View {
         ComponentStage("Skeleton", inspector: [("isLoading", "\(loading)")]) {
             if shapes {
                 HStack(spacing: 12) {
-                    Skeleton(.circle, width: 56, height: 56)
+                    Skeleton(.circle).size(width: 56, height: 56)
                     VStack(alignment: .leading, spacing: 8) {
-                        Skeleton(.capsule, width: 160, height: 12)
-                        Skeleton(.capsule, width: 110, height: 12)
-                        Skeleton(.rounded(6), width: 200, height: 12)
+                        Skeleton(.capsule).size(width: 160, height: 12)
+                        Skeleton(.capsule).size(width: 110, height: 12)
+                        Skeleton(.rounded(6)).size(width: 200, height: 12)
                     }
                 }
             } else {
@@ -115,11 +115,11 @@ struct TitleDemo: View {
     @State private var action = true
     var body: some View {
         ComponentStage("Title") {
-            Title("Popular destinations",
-                  subtitle: subtitle ? "Where travellers go" : nil,
-                  eyebrow: eyebrow ? "Limited time" : nil,
-                  actionTitle: action ? "See all" : nil,
-                  action: action ? { flash("Title: See all") } : nil)
+            Title("Popular destinations")
+                .subtitle(subtitle ? "Where travellers go" : nil)
+                .eyebrow(eyebrow ? "Limited time" : nil)
+                .action(action ? "See all" : nil,
+                        action: action ? { flash("Title: See all") } : nil)
         } knobs: {
             Toggle("Eyebrow", isOn: $eyebrow)
             Toggle("Subtitle", isOn: $subtitle)
@@ -141,16 +141,13 @@ struct SearchBarDemo: View {
 
     var body: some View {
         ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("recent", "\(recent.count)")]) {
-            SearchBar(
-                text: $text,
-                suggestions: typeahead ? cities : [],
-                recent: typeahead ? recent : [],
-                onSelect: { flash("Selected: \($0)") },
-                onSubmit: { flash("Submit: \($0)") },
-                onClearRecent: typeahead ? { recent = []; flash("Recent cleared") } : nil
-            )
-            .backButton(back)
-            .trailingIcon(trailing ? "barcode.viewfinder" : nil)
+            SearchBar(text: $text)
+                .suggestions(typeahead ? cities : [])
+                .recent(typeahead ? recent : [], onClear: typeahead ? { recent = []; flash("Recent cleared") } : nil)
+                .onSelect { flash("Selected: \($0)") }
+                .onCommit { flash("Submit: \($0)") }
+                .backButton(back)
+                .trailingIcon(trailing ? "barcode.viewfinder" : nil)
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Trailing icon", isOn: $trailing)
@@ -172,8 +169,11 @@ struct SelectDemo: View {
             .init("Marmara", ["Istanbul", "Bursa", "Kocaeli"]),
             .init("Aegean", ["Izmir", "Aydin", "Mugla"]),
             .init("Central Anatolia", ["Ankara", "Konya"]),
-        ], selection: $city, allowClear: clearable, searchable: searchable, isLoading: loading,
-           isOptionEnabled: disableSoldOut ? { $0 != "Konya" } : nil) { $0 }
+        ], selection: $city) { $0 }
+        .clearable(clearable)
+        .searchable(searchable)
+        .loading(loading)
+        .optionEnabled(disableSoldOut ? { $0 != "Konya" } : nil)
     }
 
     var body: some View {
@@ -207,8 +207,8 @@ struct MultiSelectDemo: View {
 
     var body: some View {
         ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
-            MultiSelect(label: "Cities", options: cities, selection: $picks,
-                        isOptionEnabled: disableSoldOut ? { $0 != "Adana" } : nil) { $0 }
+            MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+            .optionEnabled(disableSoldOut ? { $0 != "Adana" } : nil)
             .searchable(searchable)
             .clearable(clearable)
             .maxTags(capTags ? 2 : nil)
@@ -232,8 +232,9 @@ struct SelectBoxDemo: View {
     @State private var enabled = true
     var body: some View {
         ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
-            SelectBox(label: "Country", options: ["Turkey", "Germany", "France"], selection: $country,
-                      hint: error ? nil : "Pick your country", errorText: error ? "Required" : nil) { $0 }
+            SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+            .hint(error ? nil : "Pick your country")
+            .errorText(error ? "Required" : nil)
             .disabled(!enabled)
         } knobs: {
             Toggle("Error state", isOn: $error)
@@ -330,9 +331,9 @@ struct CheckboxGroupDemo: View {
     private let options = ["Wifi", "Pool", "Parking", "Breakfast"]
     var body: some View {
         ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
-            CheckboxGroup(title: "Amenities", options: options, selection: $sel,
-                          selectAllTitle: selectAll ? "Select all" : nil,
-                          isOptionEnabled: disableParking ? { $0 != "Parking" } : nil) { $0 }
+            CheckboxGroup(title: "Amenities", options: options, selection: $sel) { $0 }
+                .selectAll(selectAll ? "Select all" : nil)
+                .optionEnabled(disableParking ? { $0 != "Parking" } : nil)
                 .disabled(!enabled)
         } knobs: {
             Toggle("Select-all (indeterminate)", isOn: $selectAll)
@@ -354,13 +355,16 @@ struct RadioGroupDemo: View {
         ComponentStage("RadioGroup", inspector: [("selection", sel ?? "nil"), ("style", styleIdx == 0 ? "stacked" : styleIdx == 1 ? "button/solid" : "button/outline"), ("enabled", "\(enabled)")]) {
             switch styleIdx {
             case 1:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .solid, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .groupStyle(.solid).fullWidth().optionEnabled(optionEnabled)
                     .disabled(!enabled)
             case 2:
-                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel, style: .outline, expandsHorizontally: true, isOptionEnabled: optionEnabled) { $0 }
+                RadioButtonGroup(options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .groupStyle(.outline).fullWidth().optionEnabled(optionEnabled)
                     .disabled(!enabled)
             default:
-                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel, isOptionEnabled: optionEnabled) { $0 }
+                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .optionEnabled(optionEnabled)
                     .disabled(!enabled)
             }
         } knobs: {
@@ -377,8 +381,8 @@ struct ToggleGroupDemo: View {
     var body: some View {
         ComponentStage("ToggleGroup", inspector: [("on", sel.sorted().joined(separator: ", "))]) {
             ToggleGroup(title: "Notifications", options: ["push", "email", "sms"], selection: $sel,
-                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 },
-                        description: { _ in "Supporting text." })
+                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 })
+                .optionDescription { _ in "Supporting text." }
         } knobs: {
             Button("Enable all") { sel = ["push", "email", "sms"] }
         }
@@ -396,13 +400,13 @@ struct AutocompleteDemo: View {
     var body: some View {
         ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "Izmit" : "—")]) {
             if asyncMode {
-                Autocomplete(label: "Destination", text: $text, suggest: { query in
+                Autocomplete("Destination", text: $text, suggest: { query in
                     try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
                     return cities.filter { $0.localizedCaseInsensitiveContains(query) }
                 })
                 .suggestionEnabled(enabledPredicate)
             } else {
-                Autocomplete(label: "Destination", text: $text, suggestions: cities)
+                Autocomplete("Destination", text: $text, suggestions: cities)
                     .suggestionEnabled(enabledPredicate)
             }
         } knobs: {
@@ -425,12 +429,7 @@ struct CardDemo: View {
     @State private var taps = 0
 
     private var cardBody: some View {
-        Card(elevation: elevation, padding: padding,
-             title: header ? "Reservation" : nil,
-             subtitle: header ? "2 nights · 2 guests" : nil,
-             extraTitle: header ? "Details" : nil,
-             onExtra: header ? { flash("Details") } : nil,
-             isLoading: loading,
+        Card(header ? "Reservation" : nil,
              action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
@@ -438,6 +437,11 @@ struct CardDemo: View {
                     .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
             }
         }
+        .elevation(elevation)
+        .contentPadding(padding)
+        .subtitle(header ? "2 nights · 2 guests" : nil)
+        .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
+        .loading(loading)
     }
 
     var body: some View {
@@ -571,20 +575,24 @@ struct NotificationDemo: View {
     var body: some View {
         ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("type", typed ? "success" : "default")]) {
             if actions {
-                NotificationCard(title: "We Have a Suggestion for Your Holiday",
-                                 message: "24 days left until your Hilton Istanbul reservation.",
-                                 date: "December 5, 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification dismissed") } : nil) {
+                NotificationCard(title: "We Have a Suggestion for Your Holiday") {
                     ButtonGroup(.horizontal) {
-                        SecondaryButton("Later", size: .small) { flash("Notification: Later") }
-                        PrimaryButton("View", size: .small) { flash("Notification: View") }
+                        SecondaryButton("Later") { flash("Notification: Later") }.size(.small)
+                        PrimaryButton("View") { flash("Notification: View") }.size(.small)
                     }
                 }
+                .message("24 days left until your Hilton Istanbul reservation.")
+                .date("December 5, 2024")
+                .unread(unread)
+                .variant(type)
+                .onClose(closable ? { flash("Notification dismissed") } : nil)
             } else {
-                NotificationCard(title: "We Have a Suggestion for Your Holiday",
-                                 message: "24 days left until your Hilton Istanbul reservation.",
-                                 date: "December 5, 2024", isUnread: unread, type: type,
-                                 onClose: closable ? { flash("Notification dismissed") } : nil)
+                NotificationCard(title: "We Have a Suggestion for Your Holiday")
+                    .message("24 days left until your Hilton Istanbul reservation.")
+                    .date("December 5, 2024")
+                    .unread(unread)
+                    .variant(type)
+                    .onClose(closable ? { flash("Notification dismissed") } : nil)
             }
         } knobs: {
             Toggle("Unread", isOn: $unread)
@@ -602,10 +610,11 @@ struct PageHeaderDemo: View {
     @State private var tags = false
     var body: some View {
         ComponentStage("PageHeader") {
-            PageHeader("Search results", subtitle: subtitle ? "128 hotels" : nil,
-                       tags: tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [],
-                       onBack: back ? { flash("PageHeader: back") } : nil,
-                       actions: actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
+            PageHeader("Search results")
+                .subtitle(subtitle ? "128 hotels" : nil)
+                .tags(tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [])
+                .onBack(back ? { flash("PageHeader: back") } : nil)
+                .actions(actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
         } knobs: {
             Toggle("Back button", isOn: $back)
             Toggle("Subtitle", isOn: $subtitle)

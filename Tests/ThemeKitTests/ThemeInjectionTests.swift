@@ -74,7 +74,7 @@ final class ThemeInjectionTests: XCTestCase {
     func testRealComponentReskinsUnderInjectedTheme() throws {
         let def   = Theme(); def.loadTheme(named: "defaultTheme")
         let grape = Theme(); grape.applyGenerated(primaryHex: "7C3AED")
-        let make: () -> AnyView = { AnyView(Hero(title: "Stay", ctaTitle: "Book", action: {}).frame(width: 240, height: 130)) }
+        let make: () -> AnyView = { AnyView(Hero(title: "Stay").cta("Book", action: {}).frame(width: 240, height: 130)) }
 
         let d  = try XCTUnwrap(pixels(make().theme(def)),   "no Hero render under default")
         let d2 = try XCTUnwrap(pixels(make().theme(def)),   "no Hero render under default (#2)")
