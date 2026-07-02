@@ -45,8 +45,38 @@ to rebuild it; nothing is hand-maintained, so the APIs can't drift.
 | `theme_preview(id)` | A **PNG swatch card** (renders inline) |
 | `get_design_tokens(category: "contrast")` | A **WCAG** text-on-surface contrast report (AA / AAA grading) |
 
+### Code → Figma
+| Tool | What it returns |
+|---|---|
+| **`export_figma_variables(format?, collections?)`** | Turns the tokens + 32 presets into a **Figma Variables** library — a **Brand** collection with **one MODE per preset** (flip themes like the app does), plus **Color / Radius / Spacing / Typography** collections. `format: "figma-rest"` gives the exact body to `POST /v1/files/:key/variables`. Every variable carries its ThemeKit token in **`codeSyntax`**, so design ↔ code stay in sync and a **future Figma→tokens import can round-trip**. Filter with `collections`. |
+
 Plus resources (`themekit://guide`, `themekit://components`, `themekit://component/{name}`)
 and prompts (`themekit-screen`, `migrate-to-themekit`).
+
+## Design tokens → Figma Variables
+
+`design_to_code` goes Figma → SwiftUI; **`export_figma_variables`** goes the
+other way — the token catalog becomes a themeable Figma Variables library:
+
+- **Brand** — `primary` / `secondary` / `accent` / `base`, with **one mode per
+  theme preset** (`Default`, `Dark`, `Dracula`, …). A designer switches the mode
+  and the whole file re-brands, exactly like `ThemePreset.named(id).apply()`.
+- **Color** — every resolved color token (`foreground/*`, `background/*`,
+  `text/*`, `palette/primary/50`, …) as a `COLOR` variable.
+- **Radius** — the size scale plus the `box` / `field` / `selector` roles (`FLOAT`).
+- **Spacing** — the spacing scale (`FLOAT`).
+- **Typography** — `size` / `lineHeight` (`FLOAT`) and `weight` (`STRING`) per text style.
+
+Each variable's **`codeSyntax`** stores the originating ThemeKit token, and the
+token↔variable name mapping is a pure, invertible function — so design and code
+share one vocabulary today, and a **Figma → tokens importer** (planned) can read
+a designed file straight back into a `theme.json`.
+
+```jsonc
+// tool-agnostic model (default), or the Figma bulk-write body:
+export_figma_variables({ "format": "figma-rest", "collections": ["Brand", "Color"] })
+// → POST it to https://api.figma.com/v1/files/<FILE_KEY>/variables  (X-Figma-Token)
+```
 
 ## Figma → SwiftUI
 
