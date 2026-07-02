@@ -6,7 +6,7 @@
  *   - theme presets   → ThemePresets.swift
  * Run with `npm run build:data` (or `make mcp-data`). Never hand-edited.
  */
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSymbolGraph, parseComponents, parseEnums, type Component, type Param } from "./symbolGraph.js";
@@ -53,7 +53,7 @@ function themePresets(): { id: string; name: string; primary: string; secondary:
 function synthUsage(name: string, params: Param[]): string {
   const placeholder = (p: Param): string => {
     const t = p.type.replace(/\s/g, "");
-    if (/^Binding</.test(t)) return `$${p.name}`;
+    if (/^Binding</.test(t)) return p.label === "_" ? `$${p.name}` : `${p.label}: $${p.name}`;
     if (/->Void$/.test(t) || /^\(\)->/.test(t)) return p.label === "_" ? "{ }" : `${p.label}: { }`;
     if (/String/.test(t)) return p.label === "_" ? `"${p.name}"` : `${p.label}: "${p.name}"`;
     if (/Int|Double|CGFloat/.test(t)) return p.label === "_" ? "1" : `${p.label}: 1`;
@@ -101,6 +101,10 @@ function main() {
 
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(out, null, 2));
+  // Bundle the library CHANGELOG so get_migration_guide works from an npm install
+  // (where the repo root isn't available). The MCP's own CHANGELOG.md is separate.
+  const changelog = join(REPO, "CHANGELOG.md");
+  if (existsSync(changelog)) copyFileSync(changelog, join(dirname(OUT), "THEMEKIT-CHANGELOG.md"));
   console.log(
     `Wrote ${OUT} — ${out.components.length} components, ${out.modifiers.length} modifiers, ` +
     `${(out.tokens as DesignToken[]).length} tokens, ${out.themes.length} presets`

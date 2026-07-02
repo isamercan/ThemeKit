@@ -6,6 +6,66 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-07-02
+
+### Added — `design_to_code` fidelity pass
+
+The Figma → SwiftUI pipeline now *emits* the visual data it previously only
+reported, so the generated screen looks like the design:
+
+- **Container styling is emitted** — a raw layout stack now carries its
+  token-snapped `.padding(Theme.SpacingKey…)` (uniform and horizontal/vertical),
+  `.background(theme.background(…))`, `.cornerRadius(Theme.RadiusKey…)` and
+  `.themeShadow(.soft/.elevated)` (from the node's `DROP_SHADOW`, by blur radius).
+  ThemeKit components stay theme-driven — only raw SwiftUI gets explicit styling.
+- **Typography snaps to `TextStyle`** — a text node's `fontSize`/`fontWeight`
+  resolves to the nearest token (same weight, ≤ 2 pt) and emits
+  `.textStyle(.bodyBase400 …)`; no match is an honest *needs review*.
+- **Real alignment** — `counterAxisAlignItems` (and Figma's MIN default) maps to
+  `VStack(alignment: .leading)` / `HStack(alignment: .top)` etc.;
+  `primaryAxisAlignItems: SPACE_BETWEEN` inserts `Spacer()` between children.
+- **Absolute layouts stop collapsing into VStacks** — a `GROUP` /
+  `layoutMode: NONE` frame infers its axis from the child bounding boxes
+  (non-overlapping top-to-bottom → `VStack`, left-to-right → `HStack`, children
+  re-ordered visually) and genuinely overlapping children become a
+  `ZStack(alignment: .topLeading)` flagged for review.
+- **Icons and images become assets** — vector nodes (and icon frames drawn
+  entirely from vectors) emit `Image("slug").accessibilityLabel(…)`, are listed
+  in the report, and the tool fetches their **PNG export URLs** from the Figma
+  images API (valid ~14 days) into a new *Asset export URLs* section.
+- **Decorative shapes render** — a `RECTANGLE`/`ELLIPSE` with a token-matched
+  fill becomes `RoundedRectangle(cornerRadius: …).fill(theme…)` / `Circle()`
+  instead of an unmapped comment.
+- **Gradient fills are flagged** — `GRADIENT_*` fills land in *needs review*
+  instead of silently vanishing.
+- **13 new mapping rules** — Tag, SearchBar, Rating, Spinner, ProgressBar,
+  Skeleton, EmptyState, InfoBanner, AlertToast, OTPInput, QuantityStepper,
+  Pagination, Accordion (every arg label verified against the catalog by a test).
+
+### Changed
+
+- **Frames only become `Card` when they look like a surface** (fill, stroke or
+  shadow). A bare autolayout frame is now a plain layout stack — wrapping every
+  frame in a Card was the single biggest source of "doesn't match the design"
+  output.
+- Mapping rule `namePattern`s now match **case-insensitively**
+  (`button/primary` ≡ `Button/Primary`).
+- `usage` snippets keep labels on labelled `Binding` params
+  (`SearchBar(text: $text)`, not `SearchBar($text)`).
+
+### Fixed
+
+- **`search_components` crashed** on intents hitting a stale synonym (`toast`,
+  `tooltip`, `badge`) — ghost names removed, and synonym candidates are now
+  validated against the generated catalog so drift can never crash the tool.
+- **`get_migration_guide` silently dropped the oldest CHANGELOG section** — the
+  section regex used `\Z`, which does not exist in JavaScript; replaced with a
+  true end-of-string anchor (migrating *from* 0.1.0 works now).
+- **npm installs**: `get_migration_guide` reads the ThemeKit CHANGELOG bundled
+  into `data/THEMEKIT-CHANGELOG.md` by `build:data`, and `render_preview`
+  falls back to fetching the gallery render from GitHub when `Screenshots/`
+  isn't on disk — both tools previously only worked in-repo.
+
 ## [2.7.0] - 2026-06-30
 
 ### Changed

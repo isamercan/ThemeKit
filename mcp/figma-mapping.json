@@ -65,6 +65,64 @@
       "match": { "namePattern": "^(Input|TextField|TextInput)", "type": "INSTANCE" },
       "produce": { "component": "TextInput", "confidence": 0.85,
                    "argsFrom": { "_": "{label}", "text": "$text" } }
+    },
+    {
+      "//": "The rules below cover the rest of the catalog's common instances. Bindings are stubbed with .constant — wire real state on review.",
+      "match": { "namePattern": "^Tag\\b", "type": "INSTANCE" },
+      "produce": { "component": "Tag", "confidence": 0.85, "argsFrom": { "_": "{text}" } }
+    },
+    {
+      "match": { "namePattern": "^Search", "type": "INSTANCE" },
+      "produce": { "component": "SearchBar", "confidence": 0.8,
+                   "argsFrom": { "text": ".constant(\"\")" } }
+    },
+    {
+      "match": { "namePattern": "^(Rating|Stars?)\\b", "type": "INSTANCE" },
+      "produce": { "component": "Rating", "confidence": 0.8, "argsFrom": { "value": "0" } }
+    },
+    {
+      "match": { "namePattern": "^(Spinner|Loader|Loading)", "type": "INSTANCE" },
+      "produce": { "component": "Spinner", "confidence": 0.8 }
+    },
+    {
+      "match": { "namePattern": "^Progress", "type": "INSTANCE" },
+      "produce": { "component": "ProgressBar", "confidence": 0.75, "argsFrom": { "value": "0.5" } }
+    },
+    {
+      "match": { "namePattern": "^Skeleton", "type": "INSTANCE" },
+      "produce": { "component": "Skeleton", "confidence": 0.85 }
+    },
+    {
+      "match": { "namePattern": "^Empty", "type": "INSTANCE" },
+      "produce": { "component": "EmptyState", "confidence": 0.75 }
+    },
+    {
+      "match": { "namePattern": "^(Banner|InfoBanner)", "type": "INSTANCE" },
+      "produce": { "component": "InfoBanner", "confidence": 0.8, "argsFrom": { "_": "{text}" } }
+    },
+    {
+      "match": { "namePattern": "^(Toast|Snackbar|AlertToast)", "type": "INSTANCE" },
+      "produce": { "component": "AlertToast", "confidence": 0.75, "argsFrom": { "_": "{text}" } }
+    },
+    {
+      "match": { "namePattern": "^OTP", "type": "INSTANCE" },
+      "produce": { "component": "OTPInput", "confidence": 0.85,
+                   "argsFrom": { "code": ".constant(\"\")" } }
+    },
+    {
+      "match": { "namePattern": "^(Stepper|Quantity)", "type": "INSTANCE" },
+      "produce": { "component": "QuantityStepper", "confidence": 0.8,
+                   "argsFrom": { "value": ".constant(1)" } }
+    },
+    {
+      "match": { "namePattern": "^Pagination", "type": "INSTANCE" },
+      "produce": { "component": "Pagination", "confidence": 0.8,
+                   "argsFrom": { "current": ".constant(1)", "total": "5" } }
+    },
+    {
+      "match": { "namePattern": "^Accordion", "type": "INSTANCE" },
+      "produce": { "component": "Accordion", "confidence": 0.8,
+                   "argsFrom": { "_": "{text}" }, "trailingClosure": "content" }
     }
   ],
 

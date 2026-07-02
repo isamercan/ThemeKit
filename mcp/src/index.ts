@@ -14,7 +14,7 @@ import { PNG } from "pngjs";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { fetchFigmaNode, parseFigmaUrl } from "./figma/client.js";
+import { fetchFigmaNode, fetchFigmaImages, parseFigmaUrl } from "./figma/client.js";
 import { loadMapping } from "./figma/mapping.js";
 import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
@@ -34,6 +34,8 @@ const REPO = join(here, "..", "..");                          // repo root (when
 const data: Data = JSON.parse(readFileSync(join(here, "..", "data", "themekit.json"), "utf8"));
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 const find = (name: string) => data.components.find((c) => c.name.toLowerCase() === name.toLowerCase());
+/** Exact catalog names — guards synonym/candidate lists against drift from the generated data. */
+const CATALOG = new Set(data.components.map((c) => c.name));
 
 // Single source of truth for the version — read package.json, never hardcode.
 const pkg = JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8")) as { version?: string };
@@ -142,21 +144,21 @@ const SYNONYMS: Record<string, string[]> = {
   dropdown: ["Select", "MultiSelect", "Autocomplete"], select: ["Select", "SelectBox", "MultiSelect"],
   input: ["TextInput", "MultiLineTextInput", "InputNumber", "OTPInput", "SearchBar"],
   text: ["TextInput", "MultiLineTextInput", "Title", "InlineText"], search: ["SearchBar", "Autocomplete"],
-  number: ["InputNumber", "QuantityStepper", "RollingNumber"], otp: ["OTPInput"],
+  number: ["InputNumber", "QuantityStepper", "RollingNumber", "Counter"], otp: ["OTPInput"],
   toggle: ["ThemeToggle", "Checkbox", "RadioButton", "Swap"], checkbox: ["Checkbox", "CheckboxGroup"],
   radio: ["RadioButton", "RadioGroup"], slider: ["Slider", "RangeSlider"],
   list: ["DataTable", "Accordion", "TreeSelect"], table: ["DataTable"], tree: ["TreeSelect"],
-  feedback: ["Toast", "AlertToast", "Callout", "InfoBanner", "ResultView", "EmptyState"],
-  alert: ["AlertToast", "Callout", "InfoBanner"], toast: ["Toast", "AlertToast"], empty: ["EmptyState"],
+  feedback: ["AlertToast", "Callout", "InfoBanner", "ResultView", "EmptyState"],
+  alert: ["AlertToast", "Callout", "InfoBanner"], toast: ["AlertToast"], empty: ["EmptyState"],
   loading: ["Spinner", "Skeleton", "ProgressBar", "RadialProgress"], progress: ["ProgressBar", "RadialProgress", "Steps"],
   button: ["PrimaryButton", "SecondaryButton", "ThemeButton", "ButtonGroup", "ShareButton"],
-  rating: ["Rating"], star: ["Rating"], badge: ["Badge", "CountBadge", "ScoreBadge"],
+  rating: ["Rating"], star: ["Rating"], badge: ["Badge", "ScoreBadge", "Counter"],
   filter: ["Chip", "FilterChip", "ChipGroup", "FilterGroup"], chip: ["Chip", "ImageChip", "CompactChip"],
   tag: ["Tag"], avatar: ["Avatar", "AvatarGroup"], card: ["Card", "CardStack"], carousel: ["Carousel"],
   image: ["RemoteImage", "AnimatedImage", "ImageChip"], video: ["VideoPlayerView"],
   nav: ["NavigationBar", "Breadcrumbs", "SegmentedTabBar", "Pagination"], tab: ["SegmentedTabBar", "SegmentedControl"],
   theme: ["ThemePicker", "ThemeToggle", "ColorField"], color: ["ColorField"],
-  step: ["Steps", "StepIndicator", "QuantityStepper"], divider: ["DividerView"], tooltip: ["Tooltip"],
+  step: ["Steps", "StepIndicator", "QuantityStepper"], divider: ["DividerView"],
 };
 
 server.registerTool("search_components", {
@@ -168,7 +170,8 @@ server.registerTool("search_components", {
   const score = new Map<string, number>();
   const bump = (name: string, by: number) => score.set(name, (score.get(name) ?? 0) + by);
   for (const w of words) {
-    for (const cand of SYNONYMS[w] ?? []) bump(cand, 3);
+    // Only bump synonyms that exist in the generated catalog — a stale synonym must never crash the tool.
+    for (const cand of SYNONYMS[w] ?? []) if (CATALOG.has(cand)) bump(cand, 3);
     for (const c of data.components) {
       if (c.name.toLowerCase() === w) bump(c.name, 5);
       else if (c.name.toLowerCase().includes(w)) bump(c.name, 2);
@@ -177,9 +180,9 @@ server.registerTool("search_components", {
   }
   const ranked = [...score.entries()].filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]).slice(0, 10);
   if (!ranked.length) return text(`No components matched "${intent}". Try list_components.`);
-  return text(ranked.map(([n, s]) => {
-    const c = find(n)!;
-    return `- ${n} (${c.category}, score ${s}) — ${c.doc || c.init}`;
+  return text(ranked.flatMap(([n, s]) => {
+    const c = find(n);
+    return c ? [`- ${n} (${c.category}, score ${s}) — ${c.doc || c.init}`] : [];
   }).join("\n"));
 });
 
@@ -206,11 +209,15 @@ server.registerTool("get_migration_guide", {
   description: "What changed between two ThemeKit versions (from the CHANGELOG) — breaking changes first, then additions. Omit `to` for the latest.",
   inputSchema: { fromVersion: z.string().describe('e.g. "0.1.1"'), toVersion: z.string().optional() },
 }, async ({ fromVersion, toVersion }) => {
-  const path = join(REPO, "CHANGELOG.md");
-  if (!existsSync(path)) return text("CHANGELOG.md not found (run the MCP from the ThemeKit repo).");
+  // In-repo: the live CHANGELOG at the repo root. npm install: the copy bundled
+  // into data/ by build:data (REPO points outside the package there).
+  const candidates = [join(REPO, "CHANGELOG.md"), join(here, "..", "data", "THEMEKIT-CHANGELOG.md")];
+  const path = candidates.find(existsSync);
+  if (!path) return text("The ThemeKit CHANGELOG was not found (rebuild the package data with `make mcp-data`).");
   const md = readFileSync(path, "utf8");
   // Split into [version] sections in file order (newest first).
-  const re = /^##\s*\[(\d+\.\d+\.\d+)\][^\n]*\n([\s\S]*?)(?=^##\s*\[|\Z)/gm;
+  // NB: JS has no \Z anchor — `$(?![\s\S])` is the true end-of-string (so the oldest section still matches).
+  const re = /^##\s*\[(\d+\.\d+\.\d+)\][^\n]*\n([\s\S]*?)(?=^##\s*\[|$(?![\s\S]))/gm;
   const sections: { v: string; body: string }[] = [];
   for (const m of md.matchAll(re)) sections.push({ v: m[1], body: m[2].trim() });
   const versions = sections.map((s) => s.v);
@@ -388,11 +395,21 @@ server.registerTool("render_preview", {
 }, async ({ component, dark }) => {
   const c = find(component);
   const name = c?.name ?? component;
-  const file = join(REPO, "Screenshots", `${name}${dark ? "-dark" : ""}.png`);
-  if (!existsSync(file)) {
+  const fileName = `${name}${dark ? "-dark" : ""}.png`;
+  const file = join(REPO, "Screenshots", fileName);
+  let png: string | null = null;
+  if (existsSync(file)) {
+    png = readFileSync(file).toString("base64");
+  } else {
+    // npm install: the gallery isn't bundled (≈8 MB) — fetch the same render from GitHub.
+    try {
+      const res = await fetch(`https://raw.githubusercontent.com/isamercan/ThemeKit/main/Screenshots/${encodeURIComponent(fileName)}`);
+      if (res.ok) png = Buffer.from(await res.arrayBuffer()).toString("base64");
+    } catch { /* offline — fall through to the text fallback */ }
+  }
+  if (!png) {
     return text(`No rendered preview for "${name}". Gallery renders live in Screenshots/ (regenerate with \`make screenshots\`); some live/overlay components aren't captured. Try get_component_api + get_usage_snippet instead.`);
   }
-  const png = readFileSync(file).toString("base64");
   return { content: [
     { type: "image" as const, data: png, mimeType: "image/png" },
     { type: "text" as const, text: `${name}${dark ? " (dark)" : ""} — ${c?.usage ?? ""}` },
@@ -628,9 +645,20 @@ const runDesignToCode = async ({ url, fileKey, nodeId, dryRun, a11yOnly, expandI
   const mapping = loadMapping(join(here, "..", "figma-mapping.json"));
   const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
   const { code, report } = generate(node, mapping, data.tokens, apis, { expandInstances });
-  if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}`);
+  // Icons/images the design uses → temporary PNG export URLs (the images API renders them).
+  let assetSection = "";
+  if (report.assets.length) {
+    try {
+      const urls = await fetchFigmaImages(fileKey, report.assets.map((a) => a.nodeId), token);
+      const rows = report.assets.map((a) => `- ${a.name} → Image("${a.slug}"): ${urls[a.nodeId] ?? "(no render)"}`);
+      assetSection = `\n\n## Asset export URLs (PNG @2x — expire after ~14 days)\n${rows.join("\n")}`;
+    } catch (e) {
+      assetSection = `\n\n## Assets\nCould not fetch export URLs: ${(e as Error).message}`;
+    }
+  }
+  if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}${assetSection}`);
   const verdict = lintVerdict(code);
-  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}\n\n## Auto-validation (validate_code)\n${verdict}\n\nReview the ⚠️ items and verify any param with get_component_api.`);
+  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}${assetSection}\n\n## Auto-validation (validate_code)\n${verdict}\n\nReview the ⚠️ items and verify any param with get_component_api.`);
 };
 
 // Primary, readable name; `figma_to_swiftui` is kept as a backward-compatible alias
