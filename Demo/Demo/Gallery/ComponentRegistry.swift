@@ -225,6 +225,21 @@ enum ComponentRegistry {
         .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...]).title("Summary").bordered()"#) {
             KeyValueTable(rows: [.init("Status", value: "Active", style: .success), .init("Old price", value: "$5,000", style: .strikethrough), .init("Total", value: "$4,250")]).title("Reservation summary").bordered()
         },
+        .static("FlightCard", .organisms, usage: #"FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr).price(1_299).badge("Cheapest") { }"#) {
+            VStack(spacing: 12) {
+                FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: .now, arrival: .now.addingTimeInterval(2 * 3_600 + 20 * 60)).price(1_299).badge("Cheapest").onSelect { }
+                FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: .now, arrival: .now.addingTimeInterval(4 * 3_600)).stops(1).price(3_499)
+            }.frame(maxWidth: 360)
+        },
+        .static("FareSummary", .organisms, usage: #"FareSummary([.item("Base fare", 1_100), .discount("Member", 100), .total("Total", 1_199)])"#) {
+            FareSummary([.item("Base fare", 1_100), .item("Taxes & fees", 199), .discount("Member discount", 100), .total("Total", 1_199)]).frame(maxWidth: 360)
+        },
+        .static("ReviewCard", .organisms, usage: #"ReviewCard(author: "Elif K.", score: 9.2, text: "…").date(d).verified()"#) {
+            ReviewCard(author: "Elif Kaya", score: 9.2, text: "Spotless rooms and a great location right by the marina. Breakfast was excellent.").date(.now).title("Would absolutely stay again").verified().frame(maxWidth: 360)
+        },
+        .static("LoyaltyCard", .organisms, usage: #"LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif K.").progress(0.62, toNextTier: "Platinum")"#) {
+            LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif Kaya").progress(0.62, toNextTier: "Platinum").frame(maxWidth: 360)
+        },
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]
 
