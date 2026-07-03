@@ -1,6 +1,24 @@
 {
-  "originHash" : "42e1283b1d55be412b38c3790834d06efcc15a45bd19add062075759c4dd770a",
+  "originHash" : "7961d541b0587fac3a0e7606c34a824a094502821282a5a28c2fc43601735488",
   "pins" : [
+    {
+      "identity" : "almanac",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/isamercan/Almanac.git",
+      "state" : {
+        "revision" : "4ba4c199771718d71218940498f3b8fd25805602",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "horizoncalendar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/airbnb/HorizonCalendar.git",
+      "state" : {
+        "revision" : "a360d71a1255f0b24e378f2ee31a7a7d674a49b6",
+        "version" : "2.0.0"
+      }
+    },
     {
       "identity" : "lottie-ios",
       "kind" : "remoteSourceControl",

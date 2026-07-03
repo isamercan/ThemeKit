@@ -5,6 +5,29 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.6.0] - 2026-07-03
+
+### Added — `ThemeKitCalendar`: a token-bound date-range calendar (opt-in add-on)
+
+A new opt-in product wraps [Almanac](https://github.com/isamercan/Almanac) (a SwiftUI
+date-range calendar on HorizonCalendar) and drives its colours from ThemeKit tokens —
+so the calendar re-skins with the active preset and per-subtree `.theme(_:)` injection,
+like every other component.
+
+- **`DateRangePicker`** — a `View` wrapping Almanac's range picker with `.range` /
+  `.hotel` / `.rentACar` framing; reads `@Environment(\.theme)` and applies the
+  token-derived style automatically. Named to avoid `Foundation.Calendar` and echo
+  SwiftUI's `DatePicker`.
+- **The bridge** — `CalendarTheme(themeKit:)` / `CalendarStyle.themeKit(_:)` map Almanac's
+  ten semantic colour slots to ThemeKit tokens (`ink→text(.textPrimary)`,
+  `surface→background(.bgElevatorPrimary)`, `inBetweenFill→palette(.primary100)`, …).
+  `.themeKitCalendarStyle(_:)` applies it to any Almanac calendar view.
+- **Zero-dep core preserved** — Almanac is a **conditional, iOS-only** dependency of the
+  `ThemeKitCalendar` target (`.when(platforms: [.iOS])`); the sources are `#if os(iOS)`
+  guarded, so the core stays dependency-free and the package still builds on macOS.
+- Adds `Tests/ThemeKitCalendarTests` (iOS lane); `@_exported import Almanac` so one
+  `import ThemeKitCalendar` is enough.
+
 ## [0.5.0] - 2026-07-02
 
 The modifier refactor (R1–R7) completes: a full-library sweep converts the **58
