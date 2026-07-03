@@ -81,6 +81,23 @@ enum ComponentRegistry {
         .static("ShareButton", .atoms, usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#) {
             ShareButton(item: "https://github.com/isamercan/ThemeKit")
         },
+        .static("PriceTag", .atoms, usage: #"PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()"#) {
+            VStack(alignment: .leading, spacing: 12) {
+                PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()
+                PriceTag(2_499, currencyCode: "EUR").emphasis(.hero)
+                PriceTag(1_299).size(.small)
+            }
+        },
+        .static("PointsBadge", .atoms, usage: #"PointsBadge(1_250).unit("mil").style(.earn).size(.large)"#) {
+            VStack(alignment: .leading, spacing: 12) {
+                PointsBadge(1_250).unit("mil").style(.earn).size(.large)
+                PointsBadge(500).style(.redeem)
+                PointsBadge(8_430).style(.balance).icon("wallet.pass.fill")
+            }
+        },
+        .static("CountdownTimer", .atoms, usage: #"CountdownTimer(until: deadline).style(.urgent).size(.large)"#) {
+            CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
+        },
 
         // MARK: Molecules
         .static("ColorField", .molecules, usage: #"ColorField("Brand color", selection: $color)"#) {
