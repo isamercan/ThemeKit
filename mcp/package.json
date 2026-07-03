@@ -1,6 +1,6 @@
 {
   "name": "@isamercan/themekit-mcp",
-  "version": "2.12.0",
+  "version": "3.0.0",
   "description": "MCP server for the ThemeKit SwiftUI design system — components, modifiers, tokens and theme presets on demand.",
   "type": "module",
   "bin": {
@@ -10,7 +10,6 @@
     "dist",
     "data/themekit.json",
     "data/THEMEKIT-CHANGELOG.md",
-    "figma-mapping.json",
     "migrate-rules.json",
     "CHANGELOG.md"
   ],
@@ -32,12 +31,10 @@
   "homepage": "https://github.com/isamercan/ThemeKit",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "pngjs": "^7.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@types/pngjs": "^6.0.5",
     "typescript": "^5.5.0"
   }
 }

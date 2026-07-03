@@ -6,6 +6,26 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-07-03
+
+### Removed — slimmed to the essentials (BREAKING)
+
+Comparing our deterministic `design_to_code` against the official Figma MCP made
+the split clear: the Figma MCP + an LLM produce far better Figma→code than a rule
+engine. So the whole deterministic Figma-transpile subsystem is gone; the MCP now
+reads designs *through* a Figma MCP (`design_via_figma_mcp`) and focuses on the
+ThemeKit-authority + verification layer.
+
+- **Removed tools:** `design_to_code`, `figma_to_swiftui` (alias), `suggest_figma_mapping`
+  (drafted aliases for that mapping), and the cosmetic `render_preview`, `theme_preview`,
+  `diff_theme`. Removed the `themekit://figma-mapping` resource.
+- **Removed modules/data:** `figma/codegen.ts`, `figma/a11yAudit.ts`, `figma/mapping.ts`,
+  `figma-mapping.json`; dropped the `pngjs` dependency. 28 → **22 tools**.
+- **Keep using** `design_via_figma_mcp` for Figma → ThemeKit (Figma MCP reads → the
+  LLM maps → `get_component_api` / `validate_code` / `a11y_audit` verify).
+
+Safe to break: no external consumers yet and the Swift package is pre-1.0.
+
 ## [2.12.0] - 2026-07-03
 
 ### Added — `design_via_figma_mcp`: read the design *through* a Figma MCP server

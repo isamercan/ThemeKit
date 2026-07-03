@@ -46,7 +46,7 @@ test("multi-init components expose the extra inits", () => {
   assert.ok(ti.inits && ti.inits.length >= 1, "TextInput has extra inits");
 });
 
-test("server registers design_to_code and its figma_to_swiftui alias", async () => {
+test("server registers design_via_figma_mcp and drops the removed design_to_code", async () => {
   const transport = new StdioClientTransport({
     command: "node",
     args: [join(here, "..", "dist", "index.js")],
@@ -56,8 +56,11 @@ test("server registers design_to_code and its figma_to_swiftui alias", async () 
   await client.connect(transport);
   try {
     const names = (await client.listTools()).tools.map((t) => t.name);
-    assert.ok(names.includes("design_to_code"), "design_to_code is registered");
-    assert.ok(names.includes("figma_to_swiftui"), "figma_to_swiftui alias is registered");
+    assert.ok(names.includes("design_via_figma_mcp"), "design_via_figma_mcp is registered");
+    // Removed in 3.0.0 (superseded by design_via_figma_mcp).
+    for (const gone of ["design_to_code", "figma_to_swiftui", "suggest_figma_mapping", "render_preview", "theme_preview", "diff_theme"]) {
+      assert.ok(!names.includes(gone), `${gone} was removed`);
+    }
   } finally {
     await client.close();
   }
