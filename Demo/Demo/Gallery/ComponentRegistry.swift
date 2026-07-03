@@ -47,6 +47,17 @@ struct StatefulPreview<Value, Content: View>: View {
     var body: some View { content($value) }
 }
 
+/// Two-binding demo for the price histogram + range filter.
+private struct PriceHistogramDemo: View {
+    @State private var low = 800.0
+    @State private var high = 3_200.0
+    var body: some View {
+        PriceHistogram(bins: [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2],
+                       lowerValue: $low, upperValue: $high, in: 0...5_000)
+            .frame(maxWidth: 340)
+    }
+}
+
 enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
@@ -170,6 +181,19 @@ enum ComponentRegistry {
                 ThemeKit.Amenity("Gym", systemImage: "dumbbell"),
                 ThemeKit.Amenity("Pet friendly", systemImage: "pawprint"),
             ]).columns(2).frame(maxWidth: 340)
+        },
+        .static("PriceHistogram", .molecules, usage: #"PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000)"#) {
+            PriceHistogramDemo()
+        },
+        .static("InstallmentSelector", .molecules, usage: #"InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months).interestFreeUpTo(3)"#) {
+            StatefulPreview(3) { months in
+                InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: months).interestFreeUpTo(3).frame(maxWidth: 340)
+            }
+        },
+        .static("CurrencyPicker", .molecules, usage: #"CurrencyPicker(selection: $code, currencies: Currency.common)"#) {
+            StatefulPreview("TRY") { code in
+                CurrencyPicker(selection: code, currencies: ThemeKit.Currency.common).frame(maxWidth: 340)
+            }
         },
 
         // MARK: Organisms
