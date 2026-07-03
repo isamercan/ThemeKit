@@ -189,6 +189,4 @@ alias map, and from then on it's lossless too.
 
 ## See also
 
-- [Map Your Figma Kit](../figma-kit/) — the other half: mapping your kit's
-  *component* names (not just tokens) to ThemeKit.
 - [MCP Server](../mcp/) — the full tool list and install.
