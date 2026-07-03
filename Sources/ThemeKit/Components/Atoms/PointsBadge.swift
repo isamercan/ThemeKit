@@ -19,7 +19,7 @@ public enum PointsStyle {
     func foreground(_ theme: Theme) -> Color {
         switch self {
         case .earn: return theme.foreground(.systemcolorsFgSuccess)
-        case .redeem: return theme.foreground(.fgHero)
+        case .redeem: return theme.text(.textSecondaryInverse)   // white on the brand fill
         case .balance: return theme.text(.textPrimary)
         }
     }
