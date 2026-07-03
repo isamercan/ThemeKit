@@ -25,10 +25,21 @@ let package = Package(
             name: "ThemeKitLottie",
             targets: ["ThemeKitLottie"]
         ),
+        // Optional add-on — a token-bound date-range calendar, built on Almanac
+        // (→ HorizonCalendar, iOS-only). Import ONLY if you need it; the core stays
+        // dependency-free and cross-platform.
+        .library(
+            name: "ThemeKitCalendar",
+            targets: ["ThemeKitCalendar"]
+        ),
     ],
     dependencies: [
         // Used solely by the ThemeKitLottie add-on target.
         .package(url: "https://github.com/airbnb/lottie-ios.git", from: "4.4.0"),
+        // Used solely by the ThemeKitCalendar add-on target (iOS-only; pulls
+        // HorizonCalendar transitively). A conditional dependency keeps it off
+        // macOS builds, so the core package still builds everywhere.
+        .package(url: "https://github.com/isamercan/Almanac.git", from: "0.2.0"),
         // TEST-ONLY: visual regression (snapshot) testing. Never linked into the
         // shipped library — only the test target depends on it, so consumers
         // still get a zero-dependency core.
@@ -62,12 +73,29 @@ let package = Package(
                 .product(name: "Lottie", package: "lottie-ios"),
             ]
         ),
+        // Calendar add-on: core + Almanac. The Almanac product is linked ONLY on
+        // iOS (it's UIKit/HorizonCalendar-based); the sources are `#if os(iOS)`
+        // guarded so the target compiles to an empty module elsewhere.
+        .target(
+            name: "ThemeKitCalendar",
+            dependencies: [
+                "ThemeKit",
+                .product(name: "Almanac", package: "Almanac", condition: .when(platforms: [.iOS])),
+            ]
+        ),
         .testTarget(
             name: "ThemeKitTests",
             dependencies: [
                 "ThemeKit",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ]
+        ),
+        // iOS-only: the sources are `#if os(iOS)` guarded, so on macOS this builds
+        // (and passes) as an empty test target — the calendar bridge is exercised
+        // on the iOS lane.
+        .testTarget(
+            name: "ThemeKitCalendarTests",
+            dependencies: ["ThemeKitCalendar", "ThemeKit"]
         ),
     ],
     swiftLanguageModes: [.v6]

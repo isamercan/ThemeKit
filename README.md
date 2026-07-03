@@ -57,7 +57,10 @@ import ThemeKit
 - **Accessibility** — Dynamic Type and Reduce Motion honored throughout.
 - **Localization** — English-default strings via a bundled String Catalog (with
   Turkish), every default still overridable.
-- **Zero-dependency core** — Lottie is an opt-in, separate product.
+- 📅 **Calendar add-on** — `ThemeKitCalendar` adds a token-bound date-range picker
+  (`DateRangePicker`, built on [Almanac](https://github.com/isamercan/Almanac)) that
+  re-skins with the active theme; opt-in, iOS-only.
+- **Zero-dependency core** — Lottie and the Calendar are opt-in, separate products.
 - **DocC catalog**, a demo app, and a test suite.
 
 ## Requirements
@@ -66,7 +69,7 @@ import ThemeKit
 |---|---|
 | Platforms | iOS 17+ · macOS 14+ |
 | Swift tools | 6.2 |
-| Dependencies | none (core) · `lottie-ios` 4.4.0+ (only the Lottie add-on) |
+| Dependencies | none (core) · `lottie-ios` 4.4.0+ (Lottie add-on) · `Almanac` 0.2.0+ (Calendar add-on, iOS-only) |
 
 ## Installation
 
@@ -95,6 +98,7 @@ targets: [
 |---|---|---|
 | `ThemeKit` | none | the full design system (core) |
 | `ThemeKitLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
+| `ThemeKitCalendar` | `Almanac` (→ `HorizonCalendar`, iOS-only) | a token-bound date-range calendar (`DateRangePicker`) that re-skins with the active theme; pulls Almanac **only** if imported |
 
 ## Quick start
 
