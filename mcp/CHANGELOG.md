@@ -6,6 +6,84 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-07-03
+
+### Removed — slimmed to the essentials (BREAKING)
+
+Comparing our deterministic `design_to_code` against the official Figma MCP made
+the split clear: the Figma MCP + an LLM produce far better Figma→code than a rule
+engine. So the whole deterministic Figma-transpile subsystem is gone; the MCP now
+reads designs *through* a Figma MCP (`design_via_figma_mcp`) and focuses on the
+ThemeKit-authority + verification layer.
+
+- **Removed tools:** `design_to_code`, `figma_to_swiftui` (alias), `suggest_figma_mapping`
+  (drafted aliases for that mapping), and the cosmetic `render_preview`, `theme_preview`,
+  `diff_theme`. Removed the `themekit://figma-mapping` resource.
+- **Removed modules/data:** `figma/codegen.ts`, `figma/a11yAudit.ts`, `figma/mapping.ts`,
+  `figma-mapping.json`; dropped the `pngjs` dependency. 28 → **22 tools**.
+- **Keep using** `design_via_figma_mcp` for Figma → ThemeKit (Figma MCP reads → the
+  LLM maps → `get_component_api` / `validate_code` / `a11y_audit` verify).
+
+Safe to break: no external consumers yet and the Swift package is pre-1.0.
+
+## [2.12.0] - 2026-07-03
+
+### Added — `design_via_figma_mcp`: read the design *through* a Figma MCP server
+
+Our deterministic transpiler is a weak *reader* of Figma; the official Figma MCP
+(Dev Mode `get_design_context`) reads far richer context — real text overrides
+(`E-posta adresi`, `Şifre`), resolved variables, Code Connect. So this server can
+now act as an MCP **client** and pull that reference itself.
+
+- **`design_via_figma_mcp(url | fileKey+nodeId)`** — opens our own client
+  connection to a Figma MCP, calls its `get_design_context` / `get_code` /
+  `get_metadata` (auto-discovered), and returns the high-fidelity reference plus a
+  **ThemeKit adaptation kit** (which components to use, secure/email fields, icon →
+  SF Symbol, tokens-not-hardcoded) and a self-verify checklist (`get_component_api`
+  → `validate_code` → `a11y_audit`). The LLM maps the reference to idiomatic
+  ThemeKit (it does that better than any rule engine); we supply the read + the
+  ThemeKit authority + the verification.
+- Endpoint via **`FIGMA_MCP_URL`** (Streamable HTTP, default
+  `http://127.0.0.1:3845/mcp` — enable *Figma ▸ Preferences ▸ Dev Mode MCP server*)
+  or **`FIGMA_MCP_CMD`** (stdio). No `FIGMA_TOKEN` needed. The hosted
+  `https://mcp.figma.com` is OAuth-gated and not reachable this way.
+- New `src/figma/figmaMcpClient.ts`; adds `test/figma-mcp-client.test.mjs` with a
+  mock Figma MCP server (88/88 tests pass). MCP is hub-and-spoke, so a server can't
+  call a sibling the agent connected — this is the correct way to bridge them.
+
+## [2.11.1] - 2026-07-03
+
+### Fixed — `design_to_code` layout & content fidelity
+
+Four fixes found by dogfooding a real, FontAwesome-based login screen into the
+Demo app (round-trip: Figma → generated code → built + rendered on device):
+
+- **Icon fonts → SF Symbols.** Icons drawn as FontAwesome text (ligatures like
+  `characters: "chevron-right"`) were emitted as literal `Text("chevron-right")`,
+  because the fetched node dropped `fontFamily`. Now the client carries
+  `fontFamily`/`fontPostScriptName`, and an icon-font TEXT node maps its ligature
+  to an SF Symbol → `Image(systemName: "chevron.right")` (Font Awesome / Material /
+  Ionicons / Feather / Phosphor). Unmapped glyphs are flagged, never emitted as text.
+- **`layoutWrap: WRAP` respected.** A HORIZONTAL auto-layout frame with wrap flows
+  onto multiple rows in Figma, but `inferAxis` forced an `HStack`, so full-width
+  wrapped items (e.g. stacked inputs) landed side-by-side. WRAP now falls through
+  to bounding-box inference, which reads the real rows → `VStack`.
+- **Palette tokens use the right accessor.** A fill that snapped to a palette token
+  emitted `theme.background(.primary300)` — but `.primary300` is a `PaletteColorKey`,
+  so the generated Swift didn't compile. `tokenAccessor` now routes `palette.*`
+  tokens to `theme.palette(...)`.
+- **Labeled controls keep their label.** Mapping a `Checkbox` (and `Radio`/`Toggle`)
+  instance swallowed its inner text, emitting an unlabeled `Checkbox(isChecked:)`.
+  The codegen now lifts the instance's inner label → `Checkbox("Beni Hatırla", isChecked:)`.
+- **Unmapped components are now visible.** A component instance with no ThemeKit
+  equivalent used to emit an invisible `// ⚠️ unmapped` comment; it now renders a
+  placeholder `Card { Text("⚠️ <name> — no ThemeKit match") }`, so gaps are obvious
+  on screen (plain layout frames/shapes/text are unchanged).
+- **Text field type inference.** A `TextInput` whose name/copy reads as a password
+  gets `.secure()`.
+
+Adds `test/icon-layout.test.mjs` (8 tests); 84/84 pass. No API changes.
+
 ## [2.11.0] - 2026-07-02
 
 ### Added — map your own Figma UI kit to ThemeKit

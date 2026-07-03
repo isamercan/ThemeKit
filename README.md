@@ -30,9 +30,9 @@ import ThemeKit
 
 ## Features
 
-- 🎨 **Figma → SwiftUI** — the MCP's `design_to_code` (alias `figma_to_swiftui`) turns a Figma node into
-  token-matched, verified-API ThemeKit code with a mapping report (see the
-  **Advanced — Figma → SwiftUI & MCP** section).
+- 🎨 **Figma → ThemeKit** — `design_via_figma_mcp` reads a design *through a Figma
+  MCP server*, the LLM maps it to idiomatic ThemeKit, and the server verifies it
+  (`get_component_api` / `validate_code`); see the **Advanced — Figma & MCP** section.
 - 🔁 **Code ⇄ Figma round-trip** — `export_figma_variables` turns the token catalog
   + 32 presets into a themeable **Figma Variables** library (one mode per preset);
   `import_figma_variables` pulls any company's Figma file back into a live
@@ -40,7 +40,7 @@ import ThemeKit
 - 🪄 **Design Mode** — point ThemeKit at a free-form `design.md` (or a bundled style
   — Linear, Notion, iOS, Brutalist, Pastel) and it re-skins **every** component to
   match, via an offline heuristic parser (+ an optional LLM path).
-- 🤖 **AI-native** — a 26-tool **MCP server**, a Claude Code **Agent skill**, and an
+- 🤖 **AI-native** — a 22-tool **MCP server**, a Claude Code **Agent skill**, and an
   **`llms.txt`**, so agents generate correct, token-bound UI — all from one source.
 - 🧩 **Design tokens everywhere** — colors / radius / spacing from JSON, typography /
   shadows in code; one semantic name (`fg-hero`, `rd-sm`), different values per theme.
@@ -566,7 +566,7 @@ default.
 > doesn't run the catalog compiler), so only English resolves there. Xcode /
 > `xcodebuild` compile it, so all bundled localizations resolve in real apps.
 
-## ⭐ Advanced — Figma → SwiftUI & MCP
+## ⭐ Advanced — Figma & MCP
 
 ThemeKit is built for the AI-assisted workflow — so generated UI uses the *right*
 component + modifier and resolves colors from tokens, never hardcoded values. One
@@ -574,7 +574,7 @@ source (`make skill`) feeds three surfaces, so they can't drift from the code:
 
 | Surface | What it does | How to use it |
 |---|---|---|
-| **MCP server** ([`mcp/`](mcp/)) | 26 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `compose_screen`, `diff_theme`, `render_preview`, `theme_preview`, `scaffold_screen`, `design_to_code` (alias `figma_to_swiftui`), `export_figma_variables`, `import_figma_variables`, `suggest_figma_mapping`, `design_md_to_themeconfig`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
+| **MCP server** ([`mcp/`](mcp/)) | 22 on-demand tools — `get_component_api`, `get_design_tokens`, `search_components`, `validate_code`, `a11y_audit`, `lint_snippet`, `compose_screen`, `scaffold_screen`, `migrate_snippet`, `design_via_figma_mcp`, `export_figma_variables`, `import_figma_variables`, `design_md_to_themeconfig`, `generate_theme`… — the agent pulls focused, verified context while it codes. | `claude mcp add themekit -- npx -y @isamercan/themekit-mcp` (or from the repo: `cd mcp && npm i && npm run build`). Works in any MCP editor — Cursor, Windsurf, Claude Code. |
 | **Agent skill** ([`skills/themekit/`](skills/themekit/)) | A Claude Code skill: idioms + patterns, every component's init & modifiers, the theme presets — generates correct ThemeKit code. | `/plugin marketplace add isamercan/ThemeKit` → `/plugin install themekit@themekit`, **or** copy `skills/themekit/` into `.claude/skills/` (zero-install). |
 | **`llms.txt`** | Structured LLM context about every component, modifier and theme — the [llms.txt](https://llmstxt.org) standard, at the repo root. | Point any `llms.txt`-aware editor (Cursor, Windsurf, Copilot…) at [`llms.txt`](llms.txt). |
 
@@ -600,54 +600,46 @@ Check versions with `npm view @isamercan/themekit-mcp version`; the
 the repo instead? `git pull && cd mcp && npm i && npm run build` tracks the very
 latest tools.
 
-### Figma → SwiftUI
+### Figma → ThemeKit (via a Figma MCP)
 
-The star tool, `design_to_code` (alias `figma_to_swiftui`), turns a Figma node into ThemeKit SwiftUI with
-**verified** APIs instead of guesses: it snaps fills / spacing / radius to design
-tokens, maps nodes to components (config-driven via `figma-mapping.json`, then
-heuristics), and returns the code plus a mapping report. Unmapped nodes are
-flagged — never silently dropped.
+`design_via_figma_mcp` reads a design **through a Figma MCP server** (real text
+overrides, resolved variables, Code Connect — far richer than a REST transpile),
+hands the LLM that reference plus a **ThemeKit adaptation kit**, and points it at
+`get_component_api` / `validate_code` / `a11y_audit` to verify. The division of
+labor: **the Figma MCP reads, the LLM maps to idiomatic ThemeKit, and this server
+supplies the ThemeKit authority + verification** — the LLM maps far better than a
+rule engine, which is why the old deterministic `design_to_code` was removed in
+v3.0.0.
 
-```text
-Card {
-    VStack(spacing: Theme.SpacingKey.md.value) {
-        Badge("Sale").badgeStyle(.error)
-        PrimaryButton("Continue") { }
-        // ⚠️ unmapped: Mystery Widget (INSTANCE)
-    }
+**Setup** — turn on the Figma desktop **Dev Mode MCP server** (Figma ▸ Preferences ▸
+*Enable Dev Mode MCP server*); it serves at `http://127.0.0.1:3845/mcp`. Point the
+themekit server at it:
+
+```json
+"themekit": {
+  "command": "npx",
+  "args": ["-y", "@isamercan/themekit-mcp"],
+  "env": { "FIGMA_MCP_URL": "http://127.0.0.1:3845/mcp" }
 }
-// 3/4 nodes mapped · fill #f04438 → fg-error (ΔE 0.0) · itemSpacing 16 → sp-md
 ```
 
-Set `FIGMA_TOKEN` in the MCP server's env — it's **optional**, only this tool needs
-it; every other tool works without it. See [`mcp/README.md`](mcp/README.md) for the
-full tool list and the `figma-mapping.json` schema.
+`FIGMA_MCP_URL` defaults to that address (optional on the standard port); use
+`FIGMA_MCP_CMD` for a stdio Figma MCP. **No `FIGMA_TOKEN` needed** — the Dev Mode
+server uses your Figma session. The hosted `https://mcp.figma.com` is OAuth-gated
+and can't be called this way.
 
-**Triggering it** — paste a Figma link and ask the agent; it pulls `fileKey` +
-`nodeId` straight from the URL (the URL's `node-id=25795-9030` becomes `25795:9030`):
+**Use it** — paste a Figma link and ask:
 
 ```text
-Use the themekit MCP. Convert this Figma node to ThemeKit SwiftUI:
+Use the themekit MCP · design_via_figma_mcp on this node, then map it to idiomatic
+ThemeKit and verify with validate_code + a11y_audit:
 https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
 ```
-
-Or name the tool explicitly so the agent picks it directly (handy when several MCP
-servers are configured):
-
-```text
-Connect the themekit MCP and call design_to_code with this url:
-https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
-```
-
-Point it at a **single screen/frame** — it treats a Figma component `INSTANCE` as an
-opaque leaf. Pass **`expandInstances: true`** to recurse into instances too
-(forms, headers, nav bars) and get much more of the screen, at the cost of more
-raw SwiftUI to review (see [`mcp/README.md`](mcp/README.md#how-to-trigger-it-from-chat)).
 
 ### Code ⇄ Figma round-trip (design tokens ⇄ Figma Variables)
 
-`design_to_code` goes Figma → SwiftUI; two more tools close the loop so the token
-catalog is one source of truth in **both** directions:
+`design_via_figma_mcp` goes Figma → ThemeKit; two more tools close the loop so the
+token catalog is one source of truth in **both** directions:
 
 - **`export_figma_variables`** — the tokens + all 32 presets become a themeable
   **Figma Variables** library: a **Brand** collection with **one mode per preset**
@@ -661,16 +653,6 @@ catalog is one source of truth in **both** directions:
   **re-skins every component** from a few seeds. Files this server exported are
   lossless (the `codeSyntax` token pins each seed); other files resolve by name
   with an `aliases` map, and anything unresolved is reported, never guessed.
-
-### Map your own Figma kit
-
-Your Figma kit names things in your own vocabulary (`MyBrandTextField`); ThemeKit
-calls it `TextInput`. Run **`suggest_figma_mapping`** (offline from `names`, or
-walk a whole kit from a Figma `url`) and it drafts a `componentAliases` block,
-scored against the real catalog — ready to paste into a mapping file you own.
-Point the server at it with `THEMEKIT_MAPPING` and `design_to_code` emits real
-ThemeKit code instead of `// ⚠️ unmapped`. Full walkthrough:
-**[Map Your Figma Kit](https://isamercan.github.io/ThemeKit/ai/figma-kit/)**.
 
 ## Documentation
 

@@ -72,7 +72,7 @@ cd mcp && git pull && npm i && npm run build
 
 ## What you get
 
-26 on-demand tools (plus a `figma_to_swiftui` backward-compat alias), in four groups.
+22 on-demand tools, in four groups.
 
 ### Read — context (kills hallucinated APIs)
 
@@ -97,14 +97,11 @@ cd mcp && git pull && npm i && npm run build
 | `lint_snippet(swift)` | Flags hardcoded colors / radius / fonts / padding |
 | `a11y_audit(swift)` | Missing `.a11yID`, unlabeled icons, hardcoded colors, + a WCAG contrast hint |
 | `migrate_snippet(swift)` | Rewrites plain SwiftUI toward ThemeKit (config-driven) |
-| `render_preview(component, dark?)` | The component's **rendered PNG**, light or dark |
-| **`design_to_code(url …)`** | **Figma node → ThemeKit SwiftUI** — see below |
-| `suggest_figma_mapping(names? \| url)` | Drafts a `componentAliases` map from **your** kit's names — see [Map Your Figma Kit](../figma-kit/) |
+| **`design_via_figma_mcp(url)`** | **Figma → ThemeKit through a Figma MCP** — see below |
 
 ### Themes
 
-`list_themes` · `theme_colors(id)` · `generate_theme(...)` · `diff_theme(a, b)`
-(per-channel CIE76 ΔE) · `theme_preview(id)` (PNG swatch) ·
+`list_themes` · `theme_colors(id)` · `theme_snippet(id?)` · `generate_theme(...)` ·
 `design_md_to_themeconfig(...)` (see [DESIGN.md](../design-md/)).
 
 ### Design tokens ⇄ Figma Variables
@@ -113,59 +110,35 @@ cd mcp && git pull && npm i && npm run build
 between the token catalog and a Figma Variables library. See
 [below](#design-tokens--figma-variables-round-trip).
 
-## Figma → SwiftUI
+## Figma → ThemeKit (via a Figma MCP)
 
-The star tool, **`design_to_code`** (alias `figma_to_swiftui`), turns a Figma node
-into ThemeKit SwiftUI with **verified** APIs instead of guesses — and it doesn't
-just map component names, it reproduces the design:
+**`design_via_figma_mcp`** reads a design **through a Figma MCP server** and hands
+the LLM that reference plus a **ThemeKit adaptation kit** to map from. The division
+of labor:
 
-- **Tokens are emitted, not just reported** — fills → `.background`/`.foregroundStyle`,
-  padding → `.padding`, corner radius → `.cornerRadius`, shadows → `.themeShadow`,
-  and text `fontSize`/`weight` → `.textStyle(…)`, all snapped to the nearest token.
-- **Real layout** — auto-layout alignment (`counterAxisAlignItems`,
-  `SPACE_BETWEEN → Spacer()`), and an **inferred axis** (`VStack`/`HStack`/`ZStack`)
-  for absolute frames instead of collapsing everything to a stack.
-- **Icons & images** become `Image(…)` with **PNG export URLs** from the Figma
-  images API; gradients and anything unmapped are flagged — never silently dropped.
-- Component matching is config-driven via `figma-mapping.json` (rules, then your
-  own [`componentAliases`](../figma-kit/)), then heuristics.
+- **The Figma MCP reads** — real text overrides, resolved variables, Code Connect
+  (far richer than a raw REST transpile).
+- **The LLM maps** the reference to idiomatic ThemeKit — it does this far better
+  than a rule engine (which is why the deterministic `design_to_code` was removed
+  in v3.0.0).
+- **This server verifies** — `get_component_api` (real init/modifiers, no
+  hallucinated API), `validate_code`, `a11y_audit`.
 
-Just paste a Figma link and ask:
+:::note[Setup — Figma Dev Mode MCP server]
+Turn it on in **Figma ▸ Preferences ▸ Enable Dev Mode MCP server** (serves at
+`http://127.0.0.1:3845/mcp`), then point this server at it with **`FIGMA_MCP_URL`**
+(default that address) — or **`FIGMA_MCP_CMD`** for a stdio Figma MCP. **No
+`FIGMA_TOKEN` needed.** The hosted `https://mcp.figma.com` is OAuth-gated and can't
+be called this way.
+:::
+
+Paste a Figma link and ask:
 
 ```text
-Use the themekit MCP. Convert this Figma node to ThemeKit SwiftUI:
+Use the themekit MCP · design_via_figma_mcp on this node, then map it to idiomatic
+ThemeKit and verify with validate_code + a11y_audit:
 https://www.figma.com/design/<FILE_KEY>/App?node-id=<NODE-ID>
 ```
-
-It returns token-bound, verified-API code with a mapping report:
-
-```swift
-Card {
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-        Text("Create account").textStyle(.headingBase)
-        TextInput("Email", text: $text)
-        PrimaryButton("Continue") { }.controlSize(.large)
-        HStack(alignment: .top) {
-            Text("Have an account?").textStyle(.bodyBase400)
-            Spacer()
-            Text("Log in").textStyle(.heading3xs)
-        }
-    }
-}
-// 6/7 nodes mapped · fill #f04438 → fg-error (ΔE 0.0) · itemSpacing 16 → sp-md · padding 24 → sp-base
-```
-
-:::note
-`design_to_code` needs `FIGMA_TOKEN` set in the server's env (`export
-FIGMA_TOKEN=figd_…`) — it's **optional**, only the Figma tools need it. Add `dryRun:
-true` for just the mapping plan, or `a11yOnly: true` for just the accessibility
-audit. See [`mcp/README.md`](https://github.com/isamercan/ThemeKit/blob/main/mcp/README.md) for the full tool list and the `figma-mapping.json` schema.
-:::
-
-:::tip[Using your own Figma UI kit?]
-Map your kit's component names (e.g. `MyBrandTextField` → `TextInput`) once, so
-`design_to_code` emits real ThemeKit code. See **[Map Your Figma Kit](../figma-kit/)**.
-:::
 
 ## Design tokens ⇄ Figma Variables (round-trip)
 
@@ -176,9 +149,6 @@ Figma Variables file back into a live `ThemeConfig` — lossless for files Theme
 exported, alias-matched for any other.
 
 → **Full guide: [Design Tokens ⇄ Figma Variables](../figma-variables/)**
-
-For mapping your kit's **component** names (`MyBrandTextField` → `TextInput`), see
-**[Map Your Figma Kit](../figma-kit/)**.
 
 ## Other AI surfaces
 

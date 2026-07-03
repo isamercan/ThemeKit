@@ -10,15 +10,12 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { PNG } from "pngjs";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { fetchFigmaNode, fetchFigmaImages, parseFigmaUrl } from "./figma/client.js";
-import { loadMapping } from "./figma/mapping.js";
-import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
-import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
-import { auditA11y, formatA11y } from "./figma/a11yAudit.js";
+import { parseFigmaUrl } from "./figma/client.js";
+import { getDesignContextViaMcp, figmaMcpConfig, figmaMcpConfigured } from "./figma/figmaMcpClient.js";
+import { contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
 import { buildVariables, toFigmaRestPayload } from "./figma/variables.js";
 import { importVariables, formatImport } from "./figma/importVariables.js";
 interface Param { label: string; name: string; type: string; default?: string; }
@@ -42,8 +39,6 @@ const CATALOG = new Set(data.components.map((c) => c.name));
 // Figma → ThemeKit mapping: the bundled defaults, overlaid by an optional
 // user-owned file (THEMEKIT_MAPPING) so users add their own componentAliases /
 // componentRules from their project without editing inside node_modules.
-const MAPPING_PATH = join(here, "..", "figma-mapping.json");
-const USER_MAPPING = process.env.THEMEKIT_MAPPING;
 
 // Single source of truth for the version — read package.json, never hardcode.
 const pkg = JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8")) as { version?: string };
@@ -275,29 +270,6 @@ server.registerTool("theme_colors", {
   return text(`${t.name}\nprimary #${t.primary}\nsecondary #${t.secondary}\naccent #${t.accent}\nbase #${t.base}`);
 });
 
-server.registerTool("diff_theme", {
-  title: "Diff two theme presets",
-  description: "Compares two presets channel by channel — primary / secondary / accent / base — with the per-channel CIE76 ΔE so you can see how far apart two brands really are. ΔE < 2 ≈ indistinguishable; 2–10 close; > 10 clearly different.",
-  inputSchema: {
-    a: z.string().describe('First preset id, e.g. "dracula"'),
-    b: z.string().describe('Second preset id, e.g. "nord"'),
-  },
-}, async ({ a, b }) => {
-  const ta = data.themes.find((t) => t.id === a);
-  const tb = data.themes.find((t) => t.id === b);
-  if (!ta) return text(`No preset "${a}". Use list_themes.`);
-  if (!tb) return text(`No preset "${b}". Use list_themes.`);
-  const channels: ("primary" | "secondary" | "accent" | "base")[] = ["primary", "secondary", "accent", "base"];
-  const rows = channels.map((ch) => {
-    const ha = `#${ta[ch]}`, hb = `#${tb[ch]}`;
-    const dE = deltaE(ha, hb);
-    const verdict = dE < 2 ? "≈ same" : dE <= 10 ? "close" : "different";
-    return `- ${ch}: ${ha} → ${hb}  (ΔE ${dE.toFixed(1)}, ${verdict})`;
-  });
-  const changed = channels.filter((ch) => ta[ch].toLowerCase() !== tb[ch].toLowerCase()).length;
-  return text([`# ${ta.name} → ${tb.name}`, `${changed}/${channels.length} channels differ.`, "", ...rows].join("\n"));
-});
-
 server.registerTool("theme_snippet", {
   title: "Theme apply snippet", description: "Swift code to apply a preset live, or show the picker.",
   inputSchema: { id: z.string().optional() },
@@ -371,72 +343,6 @@ server.registerTool("design_md_to_themeconfig", {
   return text(lines.join("\n"));
 });
 
-// ── Theme preview image (pngjs) ────────────────────────────────────────────
-
-function hexToRgb(h: string): [number, number, number] {
-  const s = h.replace("#", "");
-  return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
-}
-function themePNG(t: ThemePreset): string {
-  const W = 480, H = 150;
-  const png = new PNG({ width: W, height: H });
-  const base = hexToRgb(t.base);
-  const isDark = (base[0] * 0.299 + base[1] * 0.587 + base[2] * 0.114) / 255 < 0.5;
-  const border: [number, number, number] = isDark ? [255, 255, 255] : [0, 0, 0];
-  const set = (x: number, y: number, c: [number, number, number], a = 255) => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return;
-    const i = (W * y + x) << 2; png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2]; png.data[i + 3] = a;
-  };
-  const rect = (x0: number, y0: number, w: number, h: number, c: [number, number, number], a = 255) => {
-    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) set(x, y, c, a);
-  };
-  rect(0, 0, W, H, base);
-  rect(0, 0, W, 8, hexToRgb(t.primary));
-  const cols = [t.primary, t.secondary, t.accent].map(hexToRgb);
-  const pad = 28, gap = 20, sh = 78, sw = Math.round((W - pad * 2 - gap * 2) / 3);
-  cols.forEach((c, i) => { const x = pad + i * (sw + gap), y = 44; rect(x - 1, y - 1, sw + 2, sh + 2, border, 40); rect(x, y, sw, sh, c); });
-  return PNG.sync.write(png).toString("base64");
-}
-
-server.registerTool("theme_preview", {
-  title: "Theme preview image", description: "A PNG swatch card for a preset (renders inline).",
-  inputSchema: { id: z.string() },
-}, async ({ id }) => {
-  const t = data.themes.find((x) => x.id === id);
-  if (!t) return text(`No preset "${id}". Use list_themes.`);
-  return { content: [
-    { type: "image" as const, data: themePNG(t), mimeType: "image/png" },
-    { type: "text" as const, text: `${t.name} — primary #${t.primary} · secondary #${t.secondary} · accent #${t.accent} · base #${t.base}` },
-  ] };
-});
-
-server.registerTool("render_preview", {
-  title: "Render a component preview",
-  description: "Returns the rendered PNG of a component (the library's own gallery render), light or dark. Lets you see what it looks like before using it.",
-  inputSchema: { component: z.string().describe("Component name, e.g. Badge"), dark: z.boolean().optional() },
-}, async ({ component, dark }) => {
-  const c = find(component);
-  const name = c?.name ?? component;
-  const fileName = `${name}${dark ? "-dark" : ""}.png`;
-  const file = join(REPO, "Screenshots", fileName);
-  let png: string | null = null;
-  if (existsSync(file)) {
-    png = readFileSync(file).toString("base64");
-  } else {
-    // npm install: the gallery isn't bundled (≈8 MB) — fetch the same render from GitHub.
-    try {
-      const res = await fetch(`https://raw.githubusercontent.com/isamercan/ThemeKit/main/Screenshots/${encodeURIComponent(fileName)}`);
-      if (res.ok) png = Buffer.from(await res.arrayBuffer()).toString("base64");
-    } catch { /* offline — fall through to the text fallback */ }
-  }
-  if (!png) {
-    return text(`No rendered preview for "${name}". Gallery renders live in Screenshots/ (regenerate with \`make screenshots\`); some live/overlay components aren't captured. Try get_component_api + get_usage_snippet instead.`);
-  }
-  return { content: [
-    { type: "image" as const, data: png, mimeType: "image/png" },
-    { type: "text" as const, text: `${name}${dark ? " (dark)" : ""} — ${c?.usage ?? ""}` },
-  ] };
-});
 
 // ── Act tools ──────────────────────────────────────────────────────────────
 
@@ -632,65 +538,67 @@ server.registerTool("migrate_snippet", {
   return text(`Suggested:\n\n\`\`\`swift\n${out}\n\`\`\`\n\nNotes:\n${notes.length ? notes.map((n) => `- ${n}`).join("\n") : "- (none automatic; run validate_code)"}\n\nReplace plain Button/TextField with PrimaryButton/TextInput; check param names with get_component_api.`);
 });
 
-// ── Figma → SwiftUI (the star) ─────────────────────────────────────────────
 
-const designToCodeConfig = {
-  title: "Figma → SwiftUI (ThemeKit)",
-  description: "Fetches a Figma node (REST) and generates ThemeKit SwiftUI: snaps colors/spacing/radius to design tokens, maps nodes to components (figma-mapping.json rules, then heuristics), emits code with VERIFIED parameter names, and returns a mapping report (matched / unmapped / token snaps / needs-review) plus a WCAG accessibility audit of the design. Pass a Figma `url` directly (recommended), or an explicit `fileKey` + `nodeId`. Set dryRun for the plan only, or a11yOnly to return just the accessibility audit. Needs FIGMA_TOKEN in the env.",
+// ── design_to_code, but sourcing the design from a Figma MCP server ─────────
+// Our deterministic transpiler beats no one at reading Figma; the official Figma
+// MCP (Dev Mode / get_design_context) reads far richer context (real text
+// overrides, resolved variables, Code Connect). So instead of re-fetching over
+// REST, we open our OWN client connection to a Figma MCP, pull its high-fidelity
+// reference, and hand it back with a ThemeKit "adaptation kit" — the LLM maps the
+// reference to idiomatic ThemeKit (it does this better than any rule engine), then
+// self-verifies with validate_code / a11y_audit. This is the hub-and-spoke-correct
+// way for "our MCP to call the Figma MCP".
+server.registerTool("design_via_figma_mcp", {
+  title: "Design → ThemeKit (via a Figma MCP server)",
+  description:
+    "Calls a **Figma MCP** server (its get_design_context/get_code) for a node, then returns that high-fidelity reference plus a ThemeKit adaptation kit so you (the LLM) can map it to idiomatic ThemeKit and self-verify. Reads the design through the Figma MCP — richer than our REST path (real text overrides, resolved variables, Code Connect) and no FIGMA_TOKEN needed. Configure the endpoint with FIGMA_MCP_URL (Streamable HTTP, default http://127.0.0.1:3845/mcp — enable Figma ▸ Preferences ▸ Dev Mode MCP server) or FIGMA_MCP_CMD (stdio). The remote https://mcp.figma.com is OAuth-gated and not reachable this way. Pass a Figma `url` (or fileKey+nodeId). After mapping, run validate_code + a11y_audit + get_component_api on the ThemeKit result.",
   inputSchema: {
-    url: z.string().optional().describe("Figma file/design URL (e.g. https://www.figma.com/design/<key>/App?node-id=25795-9030). Parsed into fileKey + nodeId; overrides them if both are also given."),
-    fileKey: z.string().optional().describe("Figma file key (from the file URL). Optional if `url` is given."),
-    nodeId: z.string().optional().describe("Node id, e.g. 1:23 (from 'Copy link to selection'). Optional if `url` is given."),
-    dryRun: z.boolean().optional().describe("Return only the mapping plan + report, no code"),
-    a11yOnly: z.boolean().optional().describe("Return only the WCAG accessibility audit of the Figma design (no code, no mapping)"),
-    expandInstances: z.boolean().optional().describe("Walk into unmapped Figma component INSTANCEs (forms, headers, nav bars) instead of emitting an opaque leaf. Use for screens built from nested instances; default false."),
+    url: z.string().optional().describe("Figma URL (…?node-id=1-2) — fileKey + nodeId are parsed from it"),
+    fileKey: z.string().optional(),
+    nodeId: z.string().optional().describe("dash or colon form, e.g. 25795-9030 / 25795:9030"),
   },
-};
+}, async ({ url, fileKey, nodeId }) => {
+  if (!figmaMcpConfigured()) {
+    return text(
+      "No Figma MCP endpoint configured. Set one of:\n" +
+      "- FIGMA_MCP_URL=http://127.0.0.1:3845/mcp  (Figma desktop ▸ Preferences ▸ Enable Dev Mode MCP server)\n" +
+      "- FIGMA_MCP_CMD=\"<command that speaks MCP over stdio>\"\n" +
+      "(The hosted https://mcp.figma.com server is OAuth-gated and can't be called from here.)"
+    );
+  }
+  let fk = fileKey, nid = nodeId;
+  if (url) { try { ({ fileKey: fk, nodeId: nid } = parseFigmaUrl(url)); } catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); } }
+  if (!fk || !nid) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`.");
+  nid = nid.replace(/-/g, ":");
 
-const runDesignToCode = async ({ url, fileKey, nodeId, dryRun, a11yOnly, expandInstances }: {
-  url?: string; fileKey?: string; nodeId?: string; dryRun?: boolean; a11yOnly?: boolean; expandInstances?: boolean;
-}) => {
-  const token = process.env.FIGMA_TOKEN;
-  if (!token) return text("FIGMA_TOKEN is not set. Add it to the MCP server's env (see the README) and retry.");
-  if (url) {
-    try { ({ fileKey, nodeId } = parseFigmaUrl(url)); }
-    catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); }
+  let ref: { tool: string; text: string; serverName?: string };
+  try {
+    ref = await getDesignContextViaMcp(fk, nid, figmaMcpConfig());
+  } catch (e) {
+    return text(`Could not reach the Figma MCP (${figmaMcpConfig().url ?? figmaMcpConfig().cmd}): ${(e as Error).message}`);
   }
-  if (!fileKey || !nodeId) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`.");
-  let node;
-  try { node = await fetchFigmaNode(fileKey, nodeId, token); }
-  catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
-  if (a11yOnly) {
-    const findings = auditA11y(node);
-    return text(`# Accessibility audit — Figma design (WCAG 2.1)\n\n${formatA11y(findings)}\n\nThis audits the design's real colors, font sizes and dimensions before any code is generated.`);
-  }
-  const mapping = loadMapping(MAPPING_PATH, USER_MAPPING);
-  const apis = new Map<string, ComponentAPI>(data.components.map((c) => [c.name, { name: c.name, params: c.params }]));
-  const { code, report } = generate(node, mapping, data.tokens, apis, { expandInstances });
-  // Icons/images the design uses → temporary PNG export URLs (the images API renders them).
-  let assetSection = "";
-  if (report.assets.length) {
-    try {
-      const urls = await fetchFigmaImages(fileKey, report.assets.map((a) => a.nodeId), token);
-      const rows = report.assets.map((a) => `- ${a.name} → Image("${a.slug}"): ${urls[a.nodeId] ?? "(no render)"}`);
-      assetSection = `\n\n## Asset export URLs (PNG @2x — expire after ~14 days)\n${rows.join("\n")}`;
-    } catch (e) {
-      assetSection = `\n\n## Assets\nCould not fetch export URLs: ${(e as Error).message}`;
-    }
-  }
-  if (dryRun) return text(`# Dry run — mapping plan (no code generated)\n\n${formatReport(report)}${assetSection}`);
-  const verdict = lintVerdict(code);
-  return text(`\`\`\`swift\n${code}\n\`\`\`\n\n---\n${formatReport(report)}${assetSection}\n\n## Auto-validation (validate_code)\n${verdict}\n\nReview the ⚠️ items and verify any param with get_component_api.`);
-};
 
-// Primary, readable name; `figma_to_swiftui` is kept as a backward-compatible alias
-// so existing prompts and automations keep working.
-server.registerTool("design_to_code",
-  { ...designToCodeConfig, title: "Design → Code (Figma → ThemeKit SwiftUI)" },
-  runDesignToCode);
-server.registerTool("figma_to_swiftui",
-  { ...designToCodeConfig, title: "Figma → SwiftUI (ThemeKit) — alias of design_to_code" },
-  runDesignToCode);
+  const kit = [
+    "## ThemeKit adaptation kit",
+    "Map the reference above to **idiomatic ThemeKit SwiftUI** (not a literal transcription):",
+    "- Use real ThemeKit components — `TextInput`, `Checkbox`, `PrimaryButton`/`ThemeButton`, `DividerView`, `Card`, `Chip`, `Icon`…",
+    "- A password field → `TextInput(...).secure()`; an email field → `.keyboard(.emailAddress)`.",
+    "- Icons: FontAwesome/text glyphs → SF Symbols via `Icon(systemName:)` / `Image(systemName:)`.",
+    "- Colors/spacing/radius/type → ThemeKit tokens (`theme.text(...)`, `Theme.SpacingKey…`), never hardcoded.",
+    "- Collapse the design-system nesting; add the implied intent (validation, `.loading()`, bindings).",
+    "",
+    "Then **verify** with this server's tools:",
+    "- `get_component_api(name)` — confirm every init/modifier is real (no hallucinated API).",
+    "- `validate_code(swift)` — anti-patterns + hallucinated-component + brace balance.",
+    "- `a11y_audit(swift)` · `lint_snippet(swift)` — accessibility + hardcoded-token check.",
+  ].join("\n");
+
+  return text(
+    `# Design reference via the Figma MCP\n` +
+    `_source: ${ref.serverName ?? "figma-mcp"} · tool: ${ref.tool} · node ${fk}:${nid}_\n\n` +
+    `${ref.text}\n\n${kit}`
+  );
+});
 
 // ── Code → Figma: design tokens as a Figma Variables library ────────────────
 // The reverse of design_to_code. Round-trip-ready: reversible token↔variable
@@ -745,83 +653,6 @@ server.registerTool("import_figma_variables", {
   }
 });
 
-// ── Suggest a Figma-kit → ThemeKit mapping (drafts componentAliases) ────────
-interface Suggestion { figma: string; component: string | null; confidence: number; alternatives: string[]; componentKey?: string; }
-
-/** Suggest a ThemeKit component for a Figma component name (brand prefix stripped, camelCase-tokenized). */
-function suggestForName(figmaName: string, prefixes: string[]): Suggestion {
-  let base = figmaName.split("/")[0];
-  for (const p of prefixes) if (p) base = base.replace(new RegExp("^" + p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "");
-  const ranked = scoreCatalog(tokenizeName(base));
-  if (!ranked.length) return { figma: figmaName, component: null, confidence: 0, alternatives: [] };
-  const [topName, topScore] = ranked[0];
-  // Exact stripped-name hit is near-certain; otherwise scale by score.
-  const exact = CATALOG.has(topName) && tokenizeName(base).join("") === topName.toLowerCase();
-  const confidence = exact ? 0.98 : topScore >= 6 ? 0.95 : topScore >= 5 ? 0.9 : topScore >= 3 ? 0.75 : 0.55;
-  return { figma: figmaName, component: topName, confidence, alternatives: ranked.slice(1, 3).map(([n]) => n) };
-}
-
-/** Collect distinct component instances (first name segment → componentId) from a Figma subtree. */
-function collectInstances(node: { type: string; name: string; componentId?: string; children?: unknown[] }, acc: Map<string, string | undefined>): void {
-  if (node.type === "INSTANCE") { const key = node.name.split("/")[0]; if (!acc.has(key)) acc.set(key, node.componentId); }
-  for (const c of (node.children ?? []) as typeof node[]) collectInstances(c, acc);
-}
-
-server.registerTool("suggest_figma_mapping", {
-  title: "Suggest a Figma-kit → ThemeKit mapping",
-  description:
-    "Drafts a `componentAliases` block for the Figma → ThemeKit mapping. Give a list of Figma component `names` (offline), or a Figma `url` / `fileKey`+`nodeId` to walk a kit's component instances (needs FIGMA_TOKEN). It strips the brand prefix, tokenizes the name, and scores it against the real ThemeKit catalog — so `MARKAADITextField` → `TextInput`. Returns ready-to-paste JSON (put it in your own file and point THEMEKIT_MAPPING at it) plus confidence + alternatives; low-confidence and no-match names are flagged, never guessed silently.",
-  inputSchema: {
-    names: z.array(z.string()).optional().describe('Figma component names, e.g. ["MARKAADITextField","MARKAADIButton"]'),
-    url: z.string().optional().describe("A Figma file/kit URL — walks its component instances (needs FIGMA_TOKEN)."),
-    fileKey: z.string().optional(),
-    nodeId: z.string().optional(),
-    brandPrefix: z.union([z.string(), z.array(z.string())]).optional().describe('Prefix(es) to strip, e.g. "MARKAADI" or ["Acme","ACME"]'),
-  },
-}, async ({ names, url, fileKey, nodeId, brandPrefix }) => {
-  const prefixes = Array.isArray(brandPrefix) ? brandPrefix : brandPrefix ? [brandPrefix] : [];
-  let targets: { name: string; componentKey?: string }[] = [];
-
-  if (names?.length) {
-    targets = names.map((n) => ({ name: n }));
-  } else if (url || (fileKey && nodeId)) {
-    const token = process.env.FIGMA_TOKEN;
-    if (!token) return text("Walking a Figma kit needs FIGMA_TOKEN. Or pass `names` to work offline.");
-    if (url) { try { ({ fileKey, nodeId } = parseFigmaUrl(url)); } catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); } }
-    if (!fileKey || !nodeId) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`, or `names`.");
-    let node;
-    try { node = await fetchFigmaNode(fileKey, nodeId, token); }
-    catch (e) { return text(`Figma fetch failed: ${(e as Error).message}`); }
-    const acc = new Map<string, string | undefined>();
-    collectInstances(node, acc);
-    targets = [...acc.entries()].map(([name, componentKey]) => ({ name, componentKey }));
-    if (!targets.length) return text("No component instances found under that node. Point it at a UI-kit page/frame of component instances.");
-  } else {
-    return text("Give `names` (offline), or a Figma `url` / `fileKey`+`nodeId` to walk a kit.");
-  }
-
-  // Don't re-suggest names the current mapping already covers.
-  const mapping = loadMapping(MAPPING_PATH, USER_MAPPING);
-  const known = new Set(Object.keys(mapping.componentAliases).map((k) => k.toLowerCase()));
-
-  const suggestions = targets.map((t) => ({ ...suggestForName(t.name, prefixes), componentKey: t.componentKey }));
-  const aliases: Record<string, string> = {};
-  const lines: string[] = [];
-  for (const s of suggestions) {
-    if (known.has(s.figma.toLowerCase())) { lines.push(`- ${s.figma}: already mapped → ${mapping.componentAliases[s.figma] ?? "(rule)"}`); continue; }
-    if (!s.component || s.confidence < 0.55) { lines.push(`- ${s.figma}: no confident match — set it manually (search_components "${s.figma}")`); continue; }
-    aliases[s.figma] = s.component;
-    const alt = s.alternatives.length ? `  alt: ${s.alternatives.join(", ")}` : "";
-    const key = s.componentKey ? `  [key ${s.componentKey}]` : "";
-    lines.push(`- ${s.figma} → ${s.component}  (${Math.round(s.confidence * 100)}%)${alt}${key}`);
-  }
-
-  const block = Object.keys(aliases).length
-    ? `\n\nPaste into your mapping file (then set THEMEKIT_MAPPING to it):\n\`\`\`json\n${JSON.stringify({ componentAliases: aliases }, null, 2)}\n\`\`\``
-    : "\n\n(No new confident aliases to add.)";
-  return text(`# Suggested Figma → ThemeKit aliases (${Object.keys(aliases).length}/${targets.length})\n${lines.join("\n")}${block}\n\nReview each — the generator fills required init args from the ThemeKit API. Prefer keying by componentKey (a rule) for names that get renamed in Figma.`);
-});
-
 // ── Resources & prompts ────────────────────────────────────────────────────
 
 server.registerResource("guide", "themekit://guide",
@@ -837,30 +668,6 @@ server.registerResource("component", new ResourceTemplate("themekit://component/
     const body = c ? [`# ${c.name}`, c.doc, `Init: ${c.init}`, ...c.modifiers.map((m) => `.${m.signature.replace(/^\./, "")} — ${m.doc}`)].join("\n") : `Unknown: ${name}`;
     return { contents: [{ uri: uri.href, text: body }] };
   });
-// The active Figma → ThemeKit mapping (bundled + any THEMEKIT_MAPPING override),
-// so an LLM can read which Figma component maps to which ThemeKit component.
-server.registerResource("figma-mapping", "themekit://figma-mapping",
-  { title: "Figma → ThemeKit mapping", description: "Active componentAliases + componentRules + heuristics", mimeType: "text/markdown" },
-  async (uri) => {
-    const m = loadMapping(MAPPING_PATH, USER_MAPPING);
-    const aliases = Object.entries(m.componentAliases);
-    const rules = m.componentRules.map((r) => `- ${r.match.componentKey ? `key ${r.match.componentKey}` : r.match.namePattern ?? "?"}${r.match.type ? ` (${r.match.type})` : ""} → ${r.produce.component}`);
-    const body = [
-      "# Figma → ThemeKit mapping (active)",
-      USER_MAPPING ? `Includes your override: ${USER_MAPPING}` : "Bundled defaults only (set THEMEKIT_MAPPING to add your own).",
-      "",
-      `## componentAliases (${aliases.length})`,
-      aliases.length ? aliases.map(([k, v]) => `- ${k} → ${v}`).join("\n") : "- (none yet — run suggest_figma_mapping to draft some)",
-      "",
-      `## componentRules (${rules.length})`,
-      rules.join("\n") || "- (none)",
-      "",
-      "## heuristics (fallback when nothing matches)",
-      Object.entries(m.heuristics).map(([k, v]) => `- ${k}: ${v}`).join("\n"),
-    ].join("\n");
-    return { contents: [{ uri: uri.href, text: body }] };
-  });
-
 server.registerPrompt("themekit-screen",
   { title: "Build a ThemeKit screen", description: "Generate a screen with ThemeKit", argsSchema: { description: z.string() } },
   ({ description }) => ({ messages: [{ role: "user", content: { type: "text", text:
