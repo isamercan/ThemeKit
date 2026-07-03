@@ -6,6 +6,33 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1] - 2026-07-03
+
+### Fixed — `design_to_code` layout & content fidelity
+
+Four fixes found by dogfooding a real, FontAwesome-based login screen into the
+Demo app (round-trip: Figma → generated code → built + rendered on device):
+
+- **Icon fonts → SF Symbols.** Icons drawn as FontAwesome text (ligatures like
+  `characters: "chevron-right"`) were emitted as literal `Text("chevron-right")`,
+  because the fetched node dropped `fontFamily`. Now the client carries
+  `fontFamily`/`fontPostScriptName`, and an icon-font TEXT node maps its ligature
+  to an SF Symbol → `Image(systemName: "chevron.right")` (Font Awesome / Material /
+  Ionicons / Feather / Phosphor). Unmapped glyphs are flagged, never emitted as text.
+- **`layoutWrap: WRAP` respected.** A HORIZONTAL auto-layout frame with wrap flows
+  onto multiple rows in Figma, but `inferAxis` forced an `HStack`, so full-width
+  wrapped items (e.g. stacked inputs) landed side-by-side. WRAP now falls through
+  to bounding-box inference, which reads the real rows → `VStack`.
+- **Palette tokens use the right accessor.** A fill that snapped to a palette token
+  emitted `theme.background(.primary300)` — but `.primary300` is a `PaletteColorKey`,
+  so the generated Swift didn't compile. `tokenAccessor` now routes `palette.*`
+  tokens to `theme.palette(...)`.
+- **Labeled controls keep their label.** Mapping a `Checkbox` (and `Radio`/`Toggle`)
+  instance swallowed its inner text, emitting an unlabeled `Checkbox(isChecked:)`.
+  The codegen now lifts the instance's inner label → `Checkbox("Beni Hatırla", isChecked:)`.
+
+Adds `test/icon-layout.test.mjs` (7 tests); 83/83 pass. No API changes.
+
 ## [2.11.0] - 2026-07-02
 
 ### Added — map your own Figma UI kit to ThemeKit

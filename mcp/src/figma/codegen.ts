@@ -81,7 +81,10 @@ export type Axis = "VERTICAL" | "HORIZONTAL" | "STACKED";
  */
 export function inferAxis(node: FigmaNode): Axis {
   if (node.layoutMode === "VERTICAL") return "VERTICAL";
-  if (node.layoutMode === "HORIZONTAL") return "HORIZONTAL";
+  // A HORIZONTAL frame with WRAP flows onto multiple rows in Figma (SwiftUI's HStack
+  // never wraps), so don't force HStack — fall through to bounding-box inference,
+  // which reads the real rows: full-width items stacked top-to-bottom → VStack.
+  if (node.layoutMode === "HORIZONTAL" && node.layoutWrap !== "WRAP") return "HORIZONTAL";
   const kids = node.children ?? [];
   const boxes = kids.map((c) => c.absoluteBoundingBox).filter(Boolean) as { x: number; y: number; width: number; height: number }[];
   if (boxes.length >= 2 && boxes.length === kids.length) {
@@ -136,6 +139,51 @@ const PLACEHOLDER_TEXT = new Set([
 ]);
 function isPlaceholderText(node: FigmaNode): boolean {
   return node.type === "TEXT" && PLACEHOLDER_TEXT.has((node.characters ?? "").trim().toLowerCase());
+}
+
+// ── Icon fonts: a FontAwesome/Material text glyph → an SF Symbol ────────────
+// Icons in Figma are often TEXT nodes rendered with an icon font (FontAwesome
+// ligatures: characters="chevron-right"). ThemeKit/SwiftUI use SF Symbols, so
+// map the ligature name to the nearest SF Symbol instead of emitting raw text.
+const ICON_FONT = /(font\s*awesome|fontawesome|^fa[-\s]|material\s*icons|material-icons|ionicons|feather|remixicon|phosphor)/i;
+const SF_SYMBOL: Record<string, string> = {
+  "chevron-right": "chevron.right", "chevron-left": "chevron.left", "chevron-up": "chevron.up", "chevron-down": "chevron.down",
+  "angle-right": "chevron.right", "angle-left": "chevron.left", "angle-down": "chevron.down", "caret-right": "chevron.right",
+  "arrow-right": "arrow.right", "arrow-left": "arrow.left", "arrow-up": "arrow.up", "arrow-down": "arrow.down",
+  "eye": "eye", "eye-slash": "eye.slash",
+  "magnifying-glass": "magnifyingglass", "magnifying-glass-plus": "plus.magnifyingglass", "search": "magnifyingglass",
+  "house": "house", "house-chimney": "house", "home": "house",
+  "heart": "heart", "star": "star", "bell": "bell", "bookmark": "bookmark", "tag": "tag",
+  "user": "person", "circle-user": "person.circle", "users": "person.2",
+  "suitcase": "suitcase", "suitcase-rolling": "suitcase",
+  "location-dot": "mappin.and.ellipse", "location": "location", "map": "map", "route": "map", "map-pin": "mappin",
+  "envelope": "envelope", "lock": "lock", "phone": "phone", "globe": "globe",
+  "message": "message", "message-question": "questionmark.circle", "comment": "bubble.left", "circle-question": "questionmark.circle", "question": "questionmark",
+  "gear": "gearshape", "sliders": "slider.horizontal.3", "filter": "line.3.horizontal.decrease.circle",
+  "xmark": "xmark", "check": "checkmark", "plus": "plus", "minus": "minus",
+  "calendar": "calendar", "clock": "clock", "camera": "camera", "image": "photo", "images": "photo.on.rectangle",
+  "list": "list.bullet", "bars": "line.3.horizontal", "ellipsis": "ellipsis",
+  "trash": "trash", "pen": "pencil", "pencil": "pencil", "download": "arrow.down.circle", "upload": "arrow.up.circle", "share": "square.and.arrow.up",
+  "bag": "bag", "cart": "cart", "gift": "gift",
+  "info": "info.circle", "circle-info": "info.circle", "triangle-exclamation": "exclamationmark.triangle", "circle-check": "checkmark.circle",
+};
+const ICON_UNMAPPED = " "; // sentinel: it IS an icon-font glyph, but we have no SF Symbol for it
+/** An SF Symbol name for an icon-font TEXT node, ICON_UNMAPPED if it's an icon we can't map, or null if not an icon. */
+function iconSymbol(node: FigmaNode): string | null {
+  if (node.type !== "TEXT") return null;
+  const fam = `${node.style?.fontFamily ?? ""} ${node.style?.fontPostScriptName ?? ""}`;
+  if (!ICON_FONT.test(fam)) return null;
+  const key = (node.characters ?? "").trim().toLowerCase().replace(/\s+/g, "-");
+  return SF_SYMBOL[key] ?? ICON_UNMAPPED;
+}
+
+/** First meaningful (non-placeholder, non-icon) text in a subtree — the label a
+ *  mapped control (Checkbox/Radio/Toggle) swallowed when its instance was mapped. */
+function deepText(node: FigmaNode): string | null {
+  if (node.type === "TEXT" && !isPlaceholderText(node) && !iconSymbol(node) && (node.characters ?? "").trim())
+    return node.characters!.trim();
+  for (const c of node.children ?? []) { const t = deepText(c); if (t) return t; }
+  return null;
 }
 
 function firstFill(node: FigmaNode) {
@@ -353,6 +401,20 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
     if (isPlaceholderText(node)) return "";
     report.nodes++;
     snapColor(node);
+
+    // Icon-font TEXT (FontAwesome ligature etc.) → an SF Symbol Image, not raw text.
+    const icon = iconSymbol(node);
+    if (icon) {
+      const label = (node.characters ?? "").trim();
+      const a11y = `.accessibilityLabel("${label.replace(/"/g, "'")}")`;
+      if (icon === ICON_UNMAPPED) {
+        report.needsReview.push(`${node.name}: icon-font glyph "${label}" — no SF Symbol mapping; set one manually`);
+        return `${pad(d)}Image(systemName: "questionmark.square.dashed")${textColorMod(node)}${a11y}   // ⚠️ icon: map "${label}" → SF Symbol`;
+      }
+      report.tokenSnaps.push(`${node.name}: icon "${label}" → Image(systemName: "${icon}")`);
+      return `${pad(d)}Image(systemName: "${icon}")${textColorMod(node)}${a11y}`;
+    }
+
     const match = matchComponent(node, mapping);
 
     if (match) {
@@ -380,6 +442,13 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
         }
         const val = src === "{text}" ? `"${textOf(node).replace(/"/g, "'")}"` : src === "{label}" ? `"${node.name}"` : src;
         args.push(label === "_" ? val : `${label}: ${val}`);
+      }
+      // Labeled controls (Checkbox/Radio/Toggle) whose rule left the leading label
+      // empty: lift the instance's inner text so "Beni Hatırla" isn't swallowed.
+      const LABELED_CONTROLS = new Set(["Checkbox", "RadioButton", "Radio", "Toggle"]);
+      if (LABELED_CONTROLS.has(match.component) && api?.params[0]?.label === "_" && /String/.test(api.params[0].type) && !args.some((a) => a.startsWith('"'))) {
+        const label = deepText(node);
+        if (label) args.unshift(`"${label.replace(/"/g, "'")}"`);
       }
       const styleMods: string[] = [];
       if (match.produce.styleFromNameSegment != null) {

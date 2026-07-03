@@ -18,13 +18,14 @@ export interface FigmaNode {
   effects?: FigmaEffect[];
   cornerRadius?: number; rectangleCornerRadii?: number[];
   layoutMode?: "HORIZONTAL" | "VERTICAL" | "NONE";
+  layoutWrap?: "NO_WRAP" | "WRAP";
   primaryAxisAlignItems?: "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN";
   counterAxisAlignItems?: "MIN" | "CENTER" | "MAX" | "BASELINE";
   itemSpacing?: number;
   paddingLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number;
   componentId?: string;
   componentProperties?: Record<string, { type?: string; value: string | boolean }>;
-  style?: { fontSize?: number; fontWeight?: number; lineHeightPx?: number };
+  style?: { fontSize?: number; fontWeight?: number; lineHeightPx?: number; fontFamily?: string; fontPostScriptName?: string };
   opacity?: number;
   visible?: boolean;
   absoluteBoundingBox?: { x: number; y: number; width: number; height: number } | null;

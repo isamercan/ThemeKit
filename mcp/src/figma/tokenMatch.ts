@@ -63,6 +63,7 @@ export function tokenAccessor(tokenName: string): string {
     case "foreground": return `theme.foreground(.${camel})`;
     case "border": return `theme.border(.${camel})`;
     case "text": return `theme.text(.${camel})`;
+    case "palette": return `theme.palette(.${camel})`;
     case "background":
     default: return `theme.background(.${camel})`;
   }
