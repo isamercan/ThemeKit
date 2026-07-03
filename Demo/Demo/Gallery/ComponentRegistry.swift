@@ -35,6 +35,18 @@ struct ComponentEntry: Identifiable {
     }
 }
 
+/// Gives a `.static` gallery preview its own mutable `@State` so interactive
+/// components (steppers, toggles) work without a bespoke Demo view.
+struct StatefulPreview<Value, Content: View>: View {
+    @State private var value: Value
+    private let content: (Binding<Value>) -> Content
+    init(_ initial: Value, @ViewBuilder content: @escaping (Binding<Value>) -> Content) {
+        _value = State(initialValue: initial)
+        self.content = content
+    }
+    var body: some View { content($value) }
+}
+
 enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
@@ -141,6 +153,24 @@ enum ComponentRegistry {
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
+        .static("GuestSelector", .molecules, usage: #"GuestSelector(selection: $guests).showsRooms(false)"#) {
+            StatefulPreview(GuestSelection(rooms: 1, adults: 2, children: 1)) { guests in
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(guests.wrappedValue.summary).textStyle(.bodyBase400)
+                    GuestSelector(selection: guests)
+                }.frame(maxWidth: 340)
+            }
+        },
+        .static("AmenityGrid", .molecules, usage: #"AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), …]).columns(2)"#) {
+            AmenityGrid([
+                ThemeKit.Amenity("Free Wi-Fi", systemImage: "wifi"),
+                ThemeKit.Amenity("Pool", systemImage: "figure.pool.swim"),
+                ThemeKit.Amenity("Breakfast", systemImage: "fork.knife"),
+                ThemeKit.Amenity("Parking", systemImage: "parkingsign"),
+                ThemeKit.Amenity("Gym", systemImage: "dumbbell"),
+                ThemeKit.Amenity("Pet friendly", systemImage: "pawprint"),
+            ]).columns(2).frame(maxWidth: 340)
+        },
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
