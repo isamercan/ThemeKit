@@ -578,6 +578,24 @@ Then just ask: *"Build a sign-up screen. Use the ThemeKit skill."* Works with
 **Claude Code, Cursor, Windsurf, GitHub Copilot**, and any tool that supports MCP
 or `llms.txt`.
 
+**Keeping the MCP current** — the server ships to npm and is **updated
+regularly** (see the [changelog](mcp/CHANGELOG.md)). Because `npx` caches
+packages, an install that pins no version keeps running the release it first
+cached — pin `@latest` so it launches the newest each time, or clear the cache to
+refresh:
+
+```sh
+# always launch the latest published release
+claude mcp add themekit -- npx -y @isamercan/themekit-mcp@latest
+# or refresh a stale npx cache, then restart the server
+rm -rf ~/.npm/_npx
+```
+
+Check versions with `npm view @isamercan/themekit-mcp version`; the
+`get_migration_guide` tool summarizes what changed between any two. Running from
+the repo instead? `git pull && cd mcp && npm i && npm run build` tracks the very
+latest tools.
+
 ### Figma → SwiftUI
 
 The star tool, `design_to_code` (alias `figma_to_swiftui`), turns a Figma node into ThemeKit SwiftUI with

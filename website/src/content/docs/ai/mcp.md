@@ -33,9 +33,46 @@ Then just ask your agent:
 Works with **Claude Code, Cursor, Windsurf, GitHub Copilot**, and any tool that
 supports MCP.
 
+## Keeping it up to date
+
+The server is published to npm and **updated regularly** — browse the
+[changelog](https://github.com/isamercan/ThemeKit/blob/main/mcp/CHANGELOG.md) or
+the [npm page](https://www.npmjs.com/package/@isamercan/themekit-mcp) for the
+release history.
+
+`npx` caches packages, so an install that pins no version keeps running the
+release it first cached. Pin `@latest` so it fetches the newest each time the
+server starts:
+
+```sh
+claude mcp remove themekit
+claude mcp add themekit -- npx -y @isamercan/themekit-mcp@latest
+```
+
+Already set up without `@latest`? Clear the npx cache once, then it re-fetches on
+the next start:
+
+```sh
+rm -rf ~/.npm/_npx        # npx package cache
+```
+
+Check what you run against the latest published, and see what changed:
+
+```sh
+npm view @isamercan/themekit-mcp version   # latest on npm
+```
+
+The `get_migration_guide(from, to?)` tool also summarizes the diff (breaking
+first) between any two versions. Running from the repo instead? `git pull` in your
+clone and rebuild — this always tracks the very latest tools:
+
+```sh
+cd mcp && git pull && npm i && npm run build
+```
+
 ## What you get
 
-27 on-demand tools, in four groups.
+26 on-demand tools (plus a `figma_to_swiftui` backward-compat alias), in four groups.
 
 ### Read — context (kills hallucinated APIs)
 
