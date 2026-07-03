@@ -35,6 +35,42 @@ struct ComponentEntry: Identifiable {
     }
 }
 
+/// Gives a `.static` gallery preview its own mutable `@State` so interactive
+/// components (steppers, toggles) work without a bespoke Demo view.
+struct StatefulPreview<Value, Content: View>: View {
+    @State private var value: Value
+    private let content: (Binding<Value>) -> Content
+    init(_ initial: Value, @ViewBuilder content: @escaping (Binding<Value>) -> Content) {
+        _value = State(initialValue: initial)
+        self.content = content
+    }
+    var body: some View { content($value) }
+}
+
+/// Seat-map demo with a live multi-select set.
+private struct SeatMapDemo: View {
+    @State private var picked: Set<String> = ["12C"]
+    private var rows: [[SeatSlot]] {
+        (10...14).map { r in
+            [.seat(Seat("\(r)A", premium: r == 10)), .seat(Seat("\(r)B")), .seat(Seat("\(r)C", occupied: r == 12)),
+             .aisle,
+             .seat(Seat("\(r)D")), .seat(Seat("\(r)E", occupied: r == 13)), .seat(Seat("\(r)F"))]
+        }
+    }
+    var body: some View { SeatMap(rows: rows, selection: $picked).maxSelection(3) }
+}
+
+/// Two-binding demo for the price histogram + range filter.
+private struct PriceHistogramDemo: View {
+    @State private var low = 800.0
+    @State private var high = 3_200.0
+    var body: some View {
+        PriceHistogram(bins: [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2],
+                       lowerValue: $low, upperValue: $high, in: 0...5_000)
+            .frame(maxWidth: 340)
+    }
+}
+
 enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
@@ -81,6 +117,23 @@ enum ComponentRegistry {
         .static("ShareButton", .atoms, usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#) {
             ShareButton(item: "https://github.com/isamercan/ThemeKit")
         },
+        .static("PriceTag", .atoms, usage: #"PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()"#) {
+            VStack(alignment: .leading, spacing: 12) {
+                PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()
+                PriceTag(2_499, currencyCode: "EUR").emphasis(.hero)
+                PriceTag(1_299).size(.small)
+            }
+        },
+        .static("PointsBadge", .atoms, usage: #"PointsBadge(1_250).unit("mil").style(.earn).size(.large)"#) {
+            VStack(alignment: .leading, spacing: 12) {
+                PointsBadge(1_250).unit("mil").style(.earn).size(.large)
+                PointsBadge(500).style(.redeem)
+                PointsBadge(8_430).style(.balance).icon("wallet.pass.fill")
+            }
+        },
+        .static("CountdownTimer", .atoms, usage: #"CountdownTimer(until: deadline).style(.urgent).size(.large)"#) {
+            CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
+        },
 
         // MARK: Molecules
         .static("ColorField", .molecules, usage: #"ColorField("Brand color", selection: $color)"#) {
@@ -124,6 +177,37 @@ enum ComponentRegistry {
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
+        .static("GuestSelector", .molecules, usage: #"GuestSelector(selection: $guests).showsRooms(false)"#) {
+            StatefulPreview(GuestSelection(rooms: 1, adults: 2, children: 1)) { guests in
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(guests.wrappedValue.summary).textStyle(.bodyBase400)
+                    GuestSelector(selection: guests)
+                }.frame(maxWidth: 340)
+            }
+        },
+        .static("AmenityGrid", .molecules, usage: #"AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), …]).columns(2)"#) {
+            AmenityGrid([
+                ThemeKit.Amenity("Free Wi-Fi", systemImage: "wifi"),
+                ThemeKit.Amenity("Pool", systemImage: "figure.pool.swim"),
+                ThemeKit.Amenity("Breakfast", systemImage: "fork.knife"),
+                ThemeKit.Amenity("Parking", systemImage: "parkingsign"),
+                ThemeKit.Amenity("Gym", systemImage: "dumbbell"),
+                ThemeKit.Amenity("Pet friendly", systemImage: "pawprint"),
+            ]).columns(2).frame(maxWidth: 340)
+        },
+        .static("PriceHistogram", .molecules, usage: #"PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000)"#) {
+            PriceHistogramDemo()
+        },
+        .static("InstallmentSelector", .molecules, usage: #"InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months).interestFreeUpTo(3)"#) {
+            StatefulPreview(3) { months in
+                InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: months).interestFreeUpTo(3).frame(maxWidth: 340)
+            }
+        },
+        .static("CurrencyPicker", .molecules, usage: #"CurrencyPicker(selection: $code, currencies: Currency.common)"#) {
+            StatefulPreview("TRY") { code in
+                CurrencyPicker(selection: code, currencies: ThemeKit.Currency.common).frame(maxWidth: 340)
+            }
+        },
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
@@ -177,6 +261,27 @@ enum ComponentRegistry {
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url).loop().muted().muteToggle()"#),
         .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...]).title("Summary").bordered()"#) {
             KeyValueTable(rows: [.init("Status", value: "Active", style: .success), .init("Old price", value: "$5,000", style: .strikethrough), .init("Total", value: "$4,250")]).title("Reservation summary").bordered()
+        },
+        .static("FlightCard", .organisms, usage: #"FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr).price(1_299).badge("Cheapest") { }"#) {
+            VStack(spacing: 12) {
+                FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: .now, arrival: .now.addingTimeInterval(2 * 3_600 + 20 * 60)).price(1_299).badge("Cheapest").onSelect { }
+                FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: .now, arrival: .now.addingTimeInterval(4 * 3_600)).stops(1).price(3_499)
+            }.frame(maxWidth: 360)
+        },
+        .static("FareSummary", .organisms, usage: #"FareSummary([.item("Base fare", 1_100), .discount("Member", 100), .total("Total", 1_199)])"#) {
+            FareSummary([.item("Base fare", 1_100), .item("Taxes & fees", 199), .discount("Member discount", 100), .total("Total", 1_199)]).frame(maxWidth: 360)
+        },
+        .static("ReviewCard", .organisms, usage: #"ReviewCard(author: "Elif K.", score: 9.2, text: "…").date(d).verified()"#) {
+            ReviewCard(author: "Elif Kaya", score: 9.2, text: "Spotless rooms and a great location right by the marina. Breakfast was excellent.").date(.now).title("Would absolutely stay again").verified().frame(maxWidth: 360)
+        },
+        .static("LoyaltyCard", .organisms, usage: #"LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif K.").progress(0.62, toNextTier: "Platinum")"#) {
+            LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif Kaya").progress(0.62, toNextTier: "Platinum").frame(maxWidth: 360)
+        },
+        .static("SeatMap", .organisms, usage: #"SeatMap(rows: layout, selection: $picked).maxSelection(2)"#) {
+            SeatMapDemo()
+        },
+        .static("LocationCard", .organisms, usage: #"LocationCard(title: "Marina Bay Hotel", latitude: 38.42, longitude: 27.14).subtitle("…").distance("1.2 km")"#) {
+            LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428).subtitle("Kordon Cd. No:12, İzmir").distance("1.2 km to center").frame(maxWidth: 340)
         },
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]
