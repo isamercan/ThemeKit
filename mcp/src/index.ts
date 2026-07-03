@@ -15,6 +15,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchFigmaNode, fetchFigmaImages, parseFigmaUrl } from "./figma/client.js";
+import { getDesignContextViaMcp, figmaMcpConfig, figmaMcpConfigured } from "./figma/figmaMcpClient.js";
 import { loadMapping } from "./figma/mapping.js";
 import { generate, formatReport, type ComponentAPI } from "./figma/codegen.js";
 import { deltaE, contrastRatio, wcagGrade } from "./figma/tokenMatch.js";
@@ -691,6 +692,67 @@ server.registerTool("design_to_code",
 server.registerTool("figma_to_swiftui",
   { ...designToCodeConfig, title: "Figma → SwiftUI (ThemeKit) — alias of design_to_code" },
   runDesignToCode);
+
+// ── design_to_code, but sourcing the design from a Figma MCP server ─────────
+// Our deterministic transpiler beats no one at reading Figma; the official Figma
+// MCP (Dev Mode / get_design_context) reads far richer context (real text
+// overrides, resolved variables, Code Connect). So instead of re-fetching over
+// REST, we open our OWN client connection to a Figma MCP, pull its high-fidelity
+// reference, and hand it back with a ThemeKit "adaptation kit" — the LLM maps the
+// reference to idiomatic ThemeKit (it does this better than any rule engine), then
+// self-verifies with validate_code / a11y_audit. This is the hub-and-spoke-correct
+// way for "our MCP to call the Figma MCP".
+server.registerTool("design_via_figma_mcp", {
+  title: "Design → ThemeKit (via a Figma MCP server)",
+  description:
+    "Calls a **Figma MCP** server (its get_design_context/get_code) for a node, then returns that high-fidelity reference plus a ThemeKit adaptation kit so you (the LLM) can map it to idiomatic ThemeKit and self-verify. Reads the design through the Figma MCP — richer than our REST path (real text overrides, resolved variables, Code Connect) and no FIGMA_TOKEN needed. Configure the endpoint with FIGMA_MCP_URL (Streamable HTTP, default http://127.0.0.1:3845/mcp — enable Figma ▸ Preferences ▸ Dev Mode MCP server) or FIGMA_MCP_CMD (stdio). The remote https://mcp.figma.com is OAuth-gated and not reachable this way. Pass a Figma `url` (or fileKey+nodeId). After mapping, run validate_code + a11y_audit + get_component_api on the ThemeKit result.",
+  inputSchema: {
+    url: z.string().optional().describe("Figma URL (…?node-id=1-2) — fileKey + nodeId are parsed from it"),
+    fileKey: z.string().optional(),
+    nodeId: z.string().optional().describe("dash or colon form, e.g. 25795-9030 / 25795:9030"),
+  },
+}, async ({ url, fileKey, nodeId }) => {
+  if (!figmaMcpConfigured()) {
+    return text(
+      "No Figma MCP endpoint configured. Set one of:\n" +
+      "- FIGMA_MCP_URL=http://127.0.0.1:3845/mcp  (Figma desktop ▸ Preferences ▸ Enable Dev Mode MCP server)\n" +
+      "- FIGMA_MCP_CMD=\"<command that speaks MCP over stdio>\"\n" +
+      "(The hosted https://mcp.figma.com server is OAuth-gated and can't be called from here.)"
+    );
+  }
+  let fk = fileKey, nid = nodeId;
+  if (url) { try { ({ fileKey: fk, nodeId: nid } = parseFigmaUrl(url)); } catch (e) { return text(`Could not parse the Figma URL: ${(e as Error).message}`); } }
+  if (!fk || !nid) return text("Provide a Figma `url`, or both `fileKey` and `nodeId`.");
+  nid = nid.replace(/-/g, ":");
+
+  let ref: { tool: string; text: string; serverName?: string };
+  try {
+    ref = await getDesignContextViaMcp(fk, nid, figmaMcpConfig());
+  } catch (e) {
+    return text(`Could not reach the Figma MCP (${figmaMcpConfig().url ?? figmaMcpConfig().cmd}): ${(e as Error).message}`);
+  }
+
+  const kit = [
+    "## ThemeKit adaptation kit",
+    "Map the reference above to **idiomatic ThemeKit SwiftUI** (not a literal transcription):",
+    "- Use real ThemeKit components — `TextInput`, `Checkbox`, `PrimaryButton`/`ThemeButton`, `DividerView`, `Card`, `Chip`, `Icon`…",
+    "- A password field → `TextInput(...).secure()`; an email field → `.keyboard(.emailAddress)`.",
+    "- Icons: FontAwesome/text glyphs → SF Symbols via `Icon(systemName:)` / `Image(systemName:)`.",
+    "- Colors/spacing/radius/type → ThemeKit tokens (`theme.text(...)`, `Theme.SpacingKey…`), never hardcoded.",
+    "- Collapse the design-system nesting; add the implied intent (validation, `.loading()`, bindings).",
+    "",
+    "Then **verify** with this server's tools:",
+    "- `get_component_api(name)` — confirm every init/modifier is real (no hallucinated API).",
+    "- `validate_code(swift)` — anti-patterns + hallucinated-component + brace balance.",
+    "- `a11y_audit(swift)` · `lint_snippet(swift)` — accessibility + hardcoded-token check.",
+  ].join("\n");
+
+  return text(
+    `# Design reference via the Figma MCP\n` +
+    `_source: ${ref.serverName ?? "figma-mcp"} · tool: ${ref.tool} · node ${fk}:${nid}_\n\n` +
+    `${ref.text}\n\n${kit}`
+  );
+});
 
 // ── Code → Figma: design tokens as a Figma Variables library ────────────────
 // The reverse of design_to_code. Round-trip-ready: reversible token↔variable

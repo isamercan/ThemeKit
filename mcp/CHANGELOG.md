@@ -6,6 +6,31 @@ npm package under [`mcp/`](.); the ThemeKit Swift library has its own
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-07-03
+
+### Added — `design_via_figma_mcp`: read the design *through* a Figma MCP server
+
+Our deterministic transpiler is a weak *reader* of Figma; the official Figma MCP
+(Dev Mode `get_design_context`) reads far richer context — real text overrides
+(`E-posta adresi`, `Şifre`), resolved variables, Code Connect. So this server can
+now act as an MCP **client** and pull that reference itself.
+
+- **`design_via_figma_mcp(url | fileKey+nodeId)`** — opens our own client
+  connection to a Figma MCP, calls its `get_design_context` / `get_code` /
+  `get_metadata` (auto-discovered), and returns the high-fidelity reference plus a
+  **ThemeKit adaptation kit** (which components to use, secure/email fields, icon →
+  SF Symbol, tokens-not-hardcoded) and a self-verify checklist (`get_component_api`
+  → `validate_code` → `a11y_audit`). The LLM maps the reference to idiomatic
+  ThemeKit (it does that better than any rule engine); we supply the read + the
+  ThemeKit authority + the verification.
+- Endpoint via **`FIGMA_MCP_URL`** (Streamable HTTP, default
+  `http://127.0.0.1:3845/mcp` — enable *Figma ▸ Preferences ▸ Dev Mode MCP server*)
+  or **`FIGMA_MCP_CMD`** (stdio). No `FIGMA_TOKEN` needed. The hosted
+  `https://mcp.figma.com` is OAuth-gated and not reachable this way.
+- New `src/figma/figmaMcpClient.ts`; adds `test/figma-mcp-client.test.mjs` with a
+  mock Figma MCP server (88/88 tests pass). MCP is hub-and-spoke, so a server can't
+  call a sibling the agent connected — this is the correct way to bridge them.
+
 ## [2.11.1] - 2026-07-03
 
 ### Fixed — `design_to_code` layout & content fidelity
