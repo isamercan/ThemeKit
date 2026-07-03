@@ -468,6 +468,8 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       if (match.produce.trailingClosure) call += ` { }`;
       call += styleMods.join("");
       call += stateModifiers(node, match.produce, report).join("");
+      // Infer a text field's type from its name/copy — a password field is secure.
+      if (match.component === "TextInput" && /\b(pass(word)?|şifre|sifre)\b/i.test(`${node.name} ${textOf(node)}`)) call += ".secure()";
       // Raw SwiftUI Text (heuristic) — snap its font to a TextStyle and its fill to a token color.
       if (match.component === "Text") call += textStyleMod(node) + textColorMod(node);
       return `${tag}${pad(d)}${call}`;
@@ -515,6 +517,13 @@ export function generate(root: FigmaNode, mapping: Mapping, tokens: DesignToken[
       return `${pad(d)}${note}\n${stackBlock(node, d)}${mods}`;
     }
     report.unmapped.push(`${node.name} (${node.type})`);
+    // A component instance with no ThemeKit equivalent → a VISIBLE placeholder Card
+    // naming the missing component, so the gap shows on screen instead of hiding in
+    // a comment. Plain nodes (shapes/text/frames handled above) keep the comment.
+    if (node.type === "INSTANCE" || node.type === "COMPONENT" || node.componentId) {
+      const label = `${node.name} — no ThemeKit match`.replace(/"/g, "'");
+      return `${pad(d)}Card {\n${pad(d + 1)}Text("⚠️ ${label}").textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))\n${pad(d)}}`;
+    }
     return `${pad(d)}// ⚠️ unmapped: ${node.name} (${node.type})`;
   }
 

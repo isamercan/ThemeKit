@@ -33,10 +33,10 @@ test("snaps the red fill to a token and reports it", () => {
   assert.ok(report.tokenSnaps.some((s) => /error/i.test(s)), "red fill snapped to an error token");
 });
 
-test("flags the unmapped node — never silently dropped", () => {
+test("flags the unmapped node — a visible placeholder Card, never silently dropped", () => {
   const { code, report } = generate(node, mapping, data.tokens, apis);
   assert.ok(report.unmapped.some((u) => /Mystery Widget/.test(u)));
-  assert.match(code, /⚠️ unmapped: Mystery Widget/);
+  assert.match(code, /Card \{[\s\S]*Mystery Widget — no ThemeKit match/);
 });
 
 test("parseFigmaUrl: /design/ URL — dash node-id normalised to colon", () => {
@@ -67,9 +67,9 @@ test("spacingValueExpr: maps token names to the real SpacingKey cases (not a nai
 
 const instance = read("./fixtures/figma-instance.json");
 
-test("expandInstances off (default): an unmapped INSTANCE stays an opaque leaf", () => {
+test("expandInstances off (default): an unmapped INSTANCE becomes an opaque placeholder Card", () => {
   const { code } = generate(instance, mapping, data.tokens, apis);
-  assert.match(code, /⚠️ unmapped: Login Form \(INSTANCE\)/);
+  assert.match(code, /Card \{[\s\S]*Login Form — no ThemeKit match/); // visible placeholder, not a hidden comment
   assert.doesNotMatch(code, /Giriş Yap/); // children are not walked
 });
 

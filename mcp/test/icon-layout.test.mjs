@@ -83,3 +83,14 @@ test("a mapped Checkbox lifts its inner label instead of dropping it", () => {
   ] };
   assert.match(gen(node).code, /Checkbox\("Beni Hatırla"/);
 });
+
+// ── unmapped component → visible placeholder ─────────────────────────────────
+test("a component instance with no ThemeKit match becomes a visible placeholder Card", () => {
+  const node = { id: "1", name: "Root", type: "FRAME", layoutMode: "VERTICAL", children: [
+    { id: "2", name: "FancyWidget", type: "INSTANCE" }, // no children, no mapping rule
+  ] };
+  const { code } = gen(node);
+  assert.match(code, /Card \{/);
+  assert.match(code, /FancyWidget — no ThemeKit match/);
+  assert.doesNotMatch(code, /\/\/ ⚠️ unmapped: FancyWidget/); // not a hidden comment anymore
+});

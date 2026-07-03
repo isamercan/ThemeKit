@@ -30,8 +30,14 @@ Demo app (round-trip: Figma → generated code → built + rendered on device):
 - **Labeled controls keep their label.** Mapping a `Checkbox` (and `Radio`/`Toggle`)
   instance swallowed its inner text, emitting an unlabeled `Checkbox(isChecked:)`.
   The codegen now lifts the instance's inner label → `Checkbox("Beni Hatırla", isChecked:)`.
+- **Unmapped components are now visible.** A component instance with no ThemeKit
+  equivalent used to emit an invisible `// ⚠️ unmapped` comment; it now renders a
+  placeholder `Card { Text("⚠️ <name> — no ThemeKit match") }`, so gaps are obvious
+  on screen (plain layout frames/shapes/text are unchanged).
+- **Text field type inference.** A `TextInput` whose name/copy reads as a password
+  gets `.secure()`.
 
-Adds `test/icon-layout.test.mjs` (7 tests); 83/83 pass. No API changes.
+Adds `test/icon-layout.test.mjs` (8 tests); 84/84 pass. No API changes.
 
 ## [2.11.0] - 2026-07-02
 
