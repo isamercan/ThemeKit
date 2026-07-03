@@ -5,6 +5,38 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.7.0] - 2026-07-03
+
+### Added — travel component suite (14 components)
+
+Domain components for flight / hotel / car booking, all **token-bound** and
+**modifier-based** per the R1–R7 contract (init carries content/bindings; every
+appearance axis is a chainable modifier). Registered in the Demo gallery; strings
+default to English.
+
+**Atoms**
+- `PriceTag` — currency + struck-through original + per-unit suffix + auto discount badge.
+- `PointsBadge` — loyalty points/miles pill (earn / redeem / balance).
+- `CountdownTimer` — live HH:MM:SS boxes (`TimelineView`), `.urgent` palette, `onFinish`.
+
+**Molecules**
+- `GuestSelector` — rooms & guests (adults/children/infants) from `QuantityStepper`, with a `GuestSelection` summary.
+- `AmenityGrid` — icon+label amenities, token-tinted, configurable columns.
+- `PriceHistogram` — price-distribution bars over a `RangeSlider` (in-range = accent).
+- `InstallmentSelector` — instalment plans (per-month + total), interest-free tag (TR taksit).
+- `CurrencyPicker` — symbol/code/name rows with a ticked selection; ships `Currency.common`.
+
+**Organisms**
+- `FlightCard` — airline · times + airport codes · flight-path line (duration/stops) · price + Select.
+- `FareSummary` — itemised fare lines (item/discount/total); total is a hero `PriceTag`.
+- `ReviewCard` — single review: `Avatar` + author + date + `ScoreBadge` + text + photo strip.
+- `LoyaltyCard` — tier · member · points on a brand gradient + progress to the next tier.
+- `SeatMap` — cabin seat grid with aisles, occupied/premium states, multi-select + `maxSelection`.
+- `LocationCard` — MapKit map preview + pin + address/distance (lat/lon convenience init).
+
+All reuse existing atoms where natural (PriceTag, Badge, ScoreBadge, Avatar, RangeSlider,
+QuantityStepper). MapKit is a system framework, so `LocationCard` stays in the zero-dependency core.
+
 ## [0.6.0] - 2026-07-03
 
 ### Added — `ThemeKitCalendar`: a token-bound date-range calendar (opt-in add-on)
