@@ -47,6 +47,19 @@ struct StatefulPreview<Value, Content: View>: View {
     var body: some View { content($value) }
 }
 
+/// Seat-map demo with a live multi-select set.
+private struct SeatMapDemo: View {
+    @State private var picked: Set<String> = ["12C"]
+    private var rows: [[SeatSlot]] {
+        (10...14).map { r in
+            [.seat(Seat("\(r)A", premium: r == 10)), .seat(Seat("\(r)B")), .seat(Seat("\(r)C", occupied: r == 12)),
+             .aisle,
+             .seat(Seat("\(r)D")), .seat(Seat("\(r)E", occupied: r == 13)), .seat(Seat("\(r)F"))]
+        }
+    }
+    var body: some View { SeatMap(rows: rows, selection: $picked).maxSelection(3) }
+}
+
 /// Two-binding demo for the price histogram + range filter.
 private struct PriceHistogramDemo: View {
     @State private var low = 800.0
@@ -263,6 +276,12 @@ enum ComponentRegistry {
         },
         .static("LoyaltyCard", .organisms, usage: #"LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif K.").progress(0.62, toNextTier: "Platinum")"#) {
             LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif Kaya").progress(0.62, toNextTier: "Platinum").frame(maxWidth: 360)
+        },
+        .static("SeatMap", .organisms, usage: #"SeatMap(rows: layout, selection: $picked).maxSelection(2)"#) {
+            SeatMapDemo()
+        },
+        .static("LocationCard", .organisms, usage: #"LocationCard(title: "Marina Bay Hotel", latitude: 38.42, longitude: 27.14).subtitle("…").distance("1.2 km")"#) {
+            LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428).subtitle("Kordon Cd. No:12, İzmir").distance("1.2 km to center").frame(maxWidth: 340)
         },
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]
