@@ -61,9 +61,9 @@ public struct PriceHistogram: View {
                 }
             }
             .frame(height: barHeight, alignment: .bottom)
-            .animation(reduceMotion ? nil : .snappy, value: bins)
-            .animation(reduceMotion ? nil : .easeInOut, value: lowerValue)
-            .animation(reduceMotion ? nil : .easeInOut, value: upperValue)
+            .animation(Animation.snappy.ifMotionAllowed(reduceMotion), value: bins)
+            .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: lowerValue)
+            .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: upperValue)
             RangeSlider(lowerValue: $lowerValue, upperValue: $upperValue, in: bounds)
             if showsBounds {
                 HStack {

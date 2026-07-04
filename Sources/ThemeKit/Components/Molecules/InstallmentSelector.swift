@@ -49,7 +49,7 @@ public struct InstallmentSelector: View {
         let planTotal = effectiveTotal(count)
         let interestFree = count > 1 && count <= interestFreeUpTo && (surcharge[count] ?? 0) == 0
         return Button {
-            withAnimation(reduceMotion ? nil : .snappy) { selection = count }
+            withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { selection = count }
         } label: {
             HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
                 Image(systemName: selected ? "largecircle.fill.circle" : "circle")

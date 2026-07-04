@@ -54,8 +54,7 @@ public struct Barcode: View {
         let filter = CIFilter.code128BarcodeGenerator()
         filter.message = Data(string.utf8)
         guard let output = filter.outputImage else { return nil }
-        let context = CIContext()
-        return context.createCGImage(output, from: output.extent)
+        return CoreImageContext.shared.createCGImage(output, from: output.extent)
     }
 }
 

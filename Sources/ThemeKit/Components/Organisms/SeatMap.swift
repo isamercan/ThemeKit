@@ -144,7 +144,7 @@ public struct SeatMap: View {
         let assigned = passengerMode ? assignedInitials(seat.id) : nil
         let selected = passengerMode ? (assigned != nil) : selection.contains(seat.id)
         return Button {
-            withAnimation(reduceMotion ? nil : .snappy) {
+            withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) {
                 if passengerMode { assignSeat(seat) } else { toggle(seat) }
             }
         } label: {

@@ -61,7 +61,7 @@ public struct LoyaltyCard: View {
         .contentShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .onTapGesture {
             guard flippable, membership != nil else { return }
-            withAnimation(reduceMotion ? nil : .spring(.smooth)) { flipped.toggle() }
+            withAnimation(Animation.spring(.smooth).ifMotionAllowed(reduceMotion)) { flipped.toggle() }
         }
         .accessibilityAddTraits(flippable && membership != nil ? .isButton : [])
         .accessibilityHint(flippable && membership != nil ? "Double-tap to \(flipped ? "show card" : "show membership code")" : "")
@@ -123,11 +123,18 @@ public struct LoyaltyCard: View {
 
     private func progressView(_ value: Double) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(onCard.opacity(0.25))
-                    Capsule().fill(onCard).frame(width: geo.size.width * min(1, max(0, value)))
-                }
+            Canvas { context, size in
+                let radius = size.height / 2
+                let clamped = min(1, max(0, value))
+                context.fill(
+                    Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: radius),
+                    with: .color(onCard.opacity(0.25))
+                )
+                let width = max(size.height, size.width * clamped)
+                context.fill(
+                    Path(roundedRect: CGRect(x: 0, y: 0, width: width, height: size.height), cornerRadius: radius),
+                    with: .color(onCard)
+                )
             }
             .frame(height: 6)
             if let nextTier {

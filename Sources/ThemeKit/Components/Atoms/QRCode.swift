@@ -45,8 +45,7 @@ public struct QRCode: View {
         filter.message = Data(string.utf8)
         filter.correctionLevel = "M"
         guard let output = filter.outputImage else { return nil }
-        let context = CIContext()
-        return context.createCGImage(output, from: output.extent)
+        return CoreImageContext.shared.createCGImage(output, from: output.extent)
     }
 }
 
