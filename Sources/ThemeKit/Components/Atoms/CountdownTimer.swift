@@ -106,6 +106,7 @@ public struct CountdownTimer: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityText(remaining))
+            .accessibilityAddTraits(.updatesFrequently)
         }
         .task(id: deadline) {
             let secs = deadline.timeIntervalSinceNow

@@ -61,6 +61,7 @@ public struct PriceHistogram: View {
                 }
             }
             .frame(height: barHeight, alignment: .bottom)
+            .accessibilityHidden(true)   // decorative; the RangeSlider carries the interactive a11y
             .animation(Animation.snappy.ifMotionAllowed(reduceMotion), value: bins)
             .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: lowerValue)
             .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: upperValue)

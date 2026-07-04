@@ -10,7 +10,7 @@
 import SwiftUI
 
 /// One leg of a multi-leg ``FlightCard`` (outbound, return, connection…).
-public struct FlightLeg: Identifiable, Sendable, Equatable {
+public struct FlightLeg: Identifiable, Sendable, Equatable, Codable {
     /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
     public var id: String { "\(origin)-\(destination)@\(Int(departure.timeIntervalSinceReferenceDate))" }
     public let airline: String
@@ -173,9 +173,11 @@ public struct FlightCard: View {
                 line
                 Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
             }
-            Text(leg.layover ?? stopsLabel(leg.stops))
-                .textStyle(.overline400)
-                .foregroundStyle(leg.stops == 0 ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
+            Group {
+                if let layover = leg.layover { Text(layover) } else { Text(stopsLabel(leg.stops)) }
+            }
+            .textStyle(.overline400)
+            .foregroundStyle(leg.stops == 0 ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
         }
         .frame(maxWidth: .infinity)
     }
@@ -185,7 +187,7 @@ public struct FlightCard: View {
         let h = minutes / 60, m = minutes % 60
         return h > 0 ? "\(h)h \(m)m" : "\(m)m"
     }
-    private func stopsLabel(_ stops: Int) -> String {
+    private func stopsLabel(_ stops: Int) -> LocalizedStringKey {
         switch stops {
         case 0: return "Nonstop"
         case 1: return "1 stop"
@@ -249,7 +251,7 @@ public struct FlightCard: View {
         return h > 0 ? "\(h)h \(m)m" : "\(m)m"
     }
 
-    private var stopsText: String {
+    private var stopsText: LocalizedStringKey {
         switch stops {
         case 0: return "Nonstop"
         case 1: return "1 stop"

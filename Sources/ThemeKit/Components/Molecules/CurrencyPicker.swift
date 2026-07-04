@@ -11,7 +11,7 @@
 import SwiftUI
 
 /// One currency option.
-public struct Currency: Identifiable, Sendable, Hashable {
+public struct Currency: Identifiable, Sendable, Hashable, Codable {
     public var id: String { code }
     public let code: String
     public let symbol: String

@@ -12,7 +12,7 @@
 import SwiftUI
 
 /// One amenity — an SF Symbol and a label.
-public struct Amenity: Identifiable, Sendable, Hashable {
+public struct Amenity: Identifiable, Sendable, Hashable, Codable {
     public let id: String
     public let systemImage: String
     public let label: String

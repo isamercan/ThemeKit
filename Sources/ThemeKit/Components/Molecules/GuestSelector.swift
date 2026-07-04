@@ -10,7 +10,7 @@
 import SwiftUI
 
 /// The value a ``GuestSelector`` edits.
-public struct GuestSelection: Equatable, Sendable {
+public struct GuestSelection: Equatable, Sendable, Codable {
     public var rooms: Int
     public var adults: Int
     public var children: Int
@@ -41,9 +41,9 @@ public struct GuestSelection: Equatable, Sendable {
 }
 
 private struct GuestRow: Identifiable {
-    let id = UUID()
-    let title: String
-    let subtitle: String?
+    let id: String                         // stable key (no per-access UUID churn)
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey?
     let keyPath: WritableKeyPath<GuestSelection, Int>
     let range: ClosedRange<Int>
     let visible: Bool
@@ -75,10 +75,10 @@ public struct GuestSelector: View {
 
     private var rows: [GuestRow] {
         [
-            GuestRow(title: "Rooms", subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
-            GuestRow(title: "Adults", subtitle: "Age 13+", keyPath: \.adults, range: adultRange, visible: true),
-            GuestRow(title: "Children", subtitle: "Age 2–12", keyPath: \.children, range: childRange, visible: true),
-            GuestRow(title: "Infants", subtitle: "Under 2", keyPath: \.infants, range: infantRange, visible: showsInfants),
+            GuestRow(id: "rooms", title: "Rooms", subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
+            GuestRow(id: "adults", title: "Adults", subtitle: "Age 13+", keyPath: \.adults, range: adultRange, visible: true),
+            GuestRow(id: "children", title: "Children", subtitle: "Age 2–12", keyPath: \.children, range: childRange, visible: true),
+            GuestRow(id: "infants", title: "Infants", subtitle: "Under 2", keyPath: \.infants, range: infantRange, visible: showsInfants),
         ].filter(\.visible)
     }
 

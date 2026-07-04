@@ -14,7 +14,7 @@
 import SwiftUI
 
 /// A single seat.
-public struct Seat: Identifiable, Sendable, Hashable {
+public struct Seat: Identifiable, Sendable, Hashable, Codable {
     public let id: String        // e.g. "12A"
     public var isOccupied: Bool
     public var isPremium: Bool
@@ -30,7 +30,7 @@ public struct Seat: Identifiable, Sendable, Hashable {
 public enum SeatSlot: Sendable, Hashable { case seat(Seat), aisle }
 
 /// A traveller a seat can be assigned to (see `SeatMap.passengers`).
-public struct Passenger: Identifiable, Sendable, Hashable {
+public struct Passenger: Identifiable, Sendable, Hashable, Codable {
     public let id: String
     public let initials: String
     public init(id: String, initials: String) {
