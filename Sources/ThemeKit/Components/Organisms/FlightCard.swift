@@ -10,8 +10,9 @@
 import SwiftUI
 
 /// One leg of a multi-leg ``FlightCard`` (outbound, return, connection…).
-public struct FlightLeg: Identifiable, Sendable {
-    public let id = UUID()
+public struct FlightLeg: Identifiable, Sendable, Equatable {
+    /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
+    public var id: String { "\(origin)-\(destination)@\(Int(departure.timeIntervalSinceReferenceDate))" }
     public let airline: String
     public let origin: String
     public let destination: String

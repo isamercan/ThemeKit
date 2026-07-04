@@ -139,8 +139,10 @@ public struct SeatMap: View {
     }
 
     private func seatView(_ seat: Seat) -> some View {
-        let selected = selection.contains(seat.id)
+        // In passenger mode `assignment` is the single source of truth; `selection`
+        // is a one-way output mirror (written in `assignSeat`, never read here).
         let assigned = passengerMode ? assignedInitials(seat.id) : nil
+        let selected = passengerMode ? (assigned != nil) : selection.contains(seat.id)
         return Button {
             withAnimation(reduceMotion ? nil : .snappy) {
                 if passengerMode { assignSeat(seat) } else { toggle(seat) }
