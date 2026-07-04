@@ -140,7 +140,7 @@ public struct FlightCard: View {
     @ViewBuilder private var routeContent: some View {
         if let legs {
             VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-                ForEach(Array(legs.enumerated()), id: \.element.id) { index, leg in
+                ForEach(Array(legs.enumerated()), id: \.offset) { index, leg in
                     if index > 0 { Divider().overlay(theme.border(.borderPrimary)) }
                     legRow(leg)
                 }

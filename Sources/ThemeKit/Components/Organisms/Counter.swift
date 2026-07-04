@@ -40,7 +40,7 @@ public struct Counter: View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             ForEach(segments) { segment in
                 VStack(spacing: 2) {
-                    Text(String(format: "%02d", segment.value))
+                    Text(zeroPad2(segment.value))
                         .textStyle(.labelMd700)
                         .monospacedDigit()
                         .foregroundStyle(theme.text(.textPrimary))

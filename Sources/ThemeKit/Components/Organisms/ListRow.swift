@@ -150,7 +150,7 @@ public struct ListRow: View {
             RemoteImage(leadingImageURL).ratio(1).cornerRadius(Theme.RadiusKey.sm.value)
                 .frame(width: 48, height: 48)
         } else if let number {
-            Text(String(format: "%02d", number))
+            Text(zeroPad2(number))
                 .textStyle(.labelMd700)
                 .foregroundStyle(isSelected ? theme.text(.textHero) : theme.text(.textPrimary))
                 .monospacedDigit()
