@@ -131,10 +131,10 @@ public struct CountdownTimer: View {
             switch format {
             case .boxed: boxed(remaining, st)
             case .inline:
-                Text(inlineString(remaining)).textStyle(size.textStyle).monospacedDigit()
+                Text(Self.inlineString(remaining, showsDays: showsDays)).textStyle(size.textStyle).monospacedDigit()
                     .foregroundStyle(st.foreground(theme))
             case .text:
-                Text(compactString(remaining)).textStyle(size.textStyle)
+                Text(Self.compactString(remaining, showsDays: showsDays)).textStyle(size.textStyle)
                     .foregroundStyle(st.foreground(theme))
             }
         }
@@ -144,7 +144,7 @@ public struct CountdownTimer: View {
 
     private func boxed(_ remaining: TimeInterval, _ st: CountdownStyle) -> some View {
         HStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
-            let segs = segments(remaining)
+            let segs = Self.segments(remaining, showsDays: showsDays)
             ForEach(Array(segs.enumerated()), id: \.offset) { index, seg in
                 if index > 0 { Text(":").textStyle(size.textStyle).foregroundStyle(st.foreground(theme)) }
                 box(seg.value, label: seg.label, st: st)
@@ -155,7 +155,7 @@ public struct CountdownTimer: View {
 
     private func box(_ value: Int, label: String, st: CountdownStyle) -> some View {
         VStack(spacing: 2) {
-            Text(String(format: "%02d", value))
+            Text(Self.pad2(value))
                 .textStyle(size.textStyle)
                 .foregroundStyle(st.foreground(theme))
                 .frame(minWidth: size.boxWidth, minHeight: size.boxHeight)
@@ -171,7 +171,8 @@ public struct CountdownTimer: View {
         return style
     }
 
-    private func segments(_ remaining: TimeInterval) -> [(value: Int, label: String)] {
+    /// Breaks a remaining interval into labelled segments (pure; unit-tested).
+    static func segments(_ remaining: TimeInterval, showsDays: Bool) -> [(value: Int, label: String)] {
         let total = Int(remaining)
         let days = total / 86_400
         let hours = (total % 86_400) / 3_600
@@ -185,19 +186,25 @@ public struct CountdownTimer: View {
         return out
     }
 
-    private func inlineString(_ remaining: TimeInterval) -> String {
-        segments(remaining).map { String(format: "%02d", $0.value) }.joined(separator: ":")
+    /// `00:09:44`-style readout (pure; unit-tested).
+    static func inlineString(_ remaining: TimeInterval, showsDays: Bool) -> String {
+        segments(remaining, showsDays: showsDays).map { pad2($0.value) }.joined(separator: ":")
     }
 
-    private func compactString(_ remaining: TimeInterval) -> String {
+    /// Two-digit zero pad — avoids `String(format: "%02d", Int)`, which passes a 64-bit
+    /// `Int` where `%d` expects a 32-bit `CInt` (undefined behaviour / crashes).
+    static func pad2(_ value: Int) -> String { value < 10 ? "0\(value)" : "\(value)" }
+
+    /// Natural top-two-unit readout like `"9m 58s"` (pure; unit-tested).
+    static func compactString(_ remaining: TimeInterval, showsDays: Bool) -> String {
         let short = ["days": "d", "hrs": "h", "min": "m", "sec": "s"]
-        let parts = segments(remaining).drop { $0.value == 0 }
+        let parts = segments(remaining, showsDays: showsDays).drop { $0.value == 0 }
         let top = parts.prefix(2).map { "\($0.value)\(short[$0.label] ?? "")" }
         return top.isEmpty ? "0s" : top.joined(separator: " ")
     }
 
     private func accessibilityText(_ remaining: TimeInterval) -> String {
-        remaining <= 0 ? "Time's up" : segments(remaining).map { "\($0.value) \($0.label)" }.joined(separator: " ")
+        remaining <= 0 ? "Time's up" : Self.segments(remaining, showsDays: showsDays).map { "\($0.value) \($0.label)" }.joined(separator: " ")
     }
 }
 

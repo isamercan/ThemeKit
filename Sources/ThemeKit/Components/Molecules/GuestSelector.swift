@@ -23,6 +23,9 @@ public struct GuestSelection: Equatable, Sendable {
         self.infants = infants
     }
 
+    /// Total guests (adults + children + infants), used for cabin-capacity caps.
+    public var guestCount: Int { adults + children + infants }
+
     /// A compact readout for a trigger field, e.g. `"1 room · 2 adults · 1 child"`.
     public var summary: String {
         func part(_ n: Int, _ singular: String, _ plural: String) -> String? {
@@ -107,11 +110,15 @@ public struct GuestSelector: View {
     /// (rooms are unaffected). The upper bound shrinks as other rows fill up.
     private func effectiveRange(_ row: GuestRow) -> ClosedRange<Int> {
         guard let maxTotal, row.keyPath != \GuestSelection.rooms else { return row.range }
-        let guests = selection.adults + selection.children + selection.infants
-        let remaining = max(0, maxTotal - guests)
+        let remaining = max(0, maxTotal - selection.guestCount)
         let current = selection[keyPath: row.keyPath]
-        let upper = max(row.range.lowerBound, min(row.range.upperBound, current + remaining))
-        return row.range.lowerBound...upper
+        return row.range.lowerBound...Self.cappedUpperBound(range: row.range, current: current, remaining: remaining)
+    }
+
+    /// The effective upper bound for a guest row given the remaining cabin capacity
+    /// (pure; unit-tested).
+    static func cappedUpperBound(range: ClosedRange<Int>, current: Int, remaining: Int) -> Int {
+        max(range.lowerBound, min(range.upperBound, current + remaining))
     }
 }
 
