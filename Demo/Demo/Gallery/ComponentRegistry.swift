@@ -134,6 +134,12 @@ enum ComponentRegistry {
         .static("CountdownTimer", .atoms, usage: #"CountdownTimer(until: deadline).style(.urgent).size(.large)"#) {
             CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
         },
+        .static("QRCode", .atoms, usage: #"QRCode("https://themekit.dev/pass/BID12025").size(160)   // CoreImage, no dep"#) {
+            QRCode("https://github.com/isamercan/ThemeKit").size(160)
+        },
+        .static("Barcode", .atoms, usage: #"Barcode("9824097217421298").height(56).showsValue()   // Code 128, no dep"#) {
+            Barcode("9824097217421298").height(56).showsValue().frame(maxWidth: 300)
+        },
 
         // MARK: Molecules
         .static("ColorField", .molecules, usage: #"ColorField("Brand color", selection: $color)"#) {

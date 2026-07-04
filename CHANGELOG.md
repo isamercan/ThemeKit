@@ -39,6 +39,20 @@ unchanged, so no call site needs migrating.
 - `SeatMap` — column/row rulers (`.showsLabels`), new `SeatLegend` (`.legend`).
 - `LocationCard` — `.pois` extra pins, `.directions` (opens Apple Maps) / `.onDirections`.
 
+### Added — new atoms & completed deferrals
+
+New CoreImage atoms (still **zero dependencies**):
+- `QRCode` — scannable QR (`CIQRCodeGenerator`).
+- `Barcode` — Code 128 (`CICode128BarcodeGenerator`) with an optional caption.
+
+Previously-deferred features, now shipped (all additive):
+- `LoyaltyCard` — `.flippable()` to a back face with `.membership(.qr / .barcode)`.
+- `FlightCard` — `FlightLeg` + `FlightCard(legs:)` multi-leg itineraries (outbound + return,
+  per-leg airline & layover); the single-leg path is unchanged.
+- `SeatMap` — `.passengers([Passenger], assignment:)` seat-to-traveller assignment (initials +
+  active-passenger tabs, `selection` kept in sync) and `.zoomable()` pinch-zoom.
+- `LocationCard` — `.snapshot()` renders a static `MKMapSnapshotter` image (cheap in long lists).
+
 Still zero new dependencies; ThemeKit + Demo build clean.
 
 ## [0.7.0] - 2026-07-03
