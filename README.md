@@ -1,6 +1,6 @@
 # ThemeKit
 
-> **Native, brand-neutral SwiftUI design system** — 133 token-bound components that
+> **Native, brand-neutral SwiftUI design system** — 135 token-bound components that
 > re-skin from a single accent color: light/dark, per-subtree, zero core dependencies.
 
 [![CI](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml/badge.svg)](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml)
@@ -13,7 +13,7 @@
 **[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
-  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 133 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 135 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
 > The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
@@ -49,7 +49,7 @@ import ThemeKit
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
-- **133 components** — Atoms / Molecules / Organisms, all token-bound.
+- **135 components** — Atoms / Molecules / Organisms, all token-bound.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
   accent (or `base-100`) color into a full Ant-style palette on device (no Python,
   no baked files).
@@ -205,10 +205,10 @@ gallery, and a full booking flow built entirely from ThemeKit components.
 
 ## Components
 
-133 token-bound components, grouped by complexity:
+135 token-bound components, grouped by complexity:
 
-- **Atoms** (32) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
-  `StatusDot`, `ProgressBar`, `PriceTag`, `PointsBadge`, `CountdownTimer`…
+- **Atoms** (34) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
+  `StatusDot`, `ProgressBar`, `PriceTag`, `PointsBadge`, `CountdownTimer`, `QRCode`, `Barcode`…
 - **Molecules** (51) — `TextInput`, `OTPInput`, `Select`, `Checkbox`, `RangeSlider`,
   `SearchBar`, `TimeField`, `GuestSelector`, `PriceHistogram`, `InstallmentSelector`, `CurrencyPicker`, buttons…
 - **Organisms** (50) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Timeline`,
