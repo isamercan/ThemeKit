@@ -14,7 +14,7 @@
 import SwiftUI
 
 /// A single seat.
-public struct Seat: Identifiable, Sendable, Hashable {
+public struct Seat: Identifiable, Sendable, Hashable, Codable {
     public let id: String        // e.g. "12A"
     public var isOccupied: Bool
     public var isPremium: Bool
@@ -29,6 +29,16 @@ public struct Seat: Identifiable, Sendable, Hashable {
 /// A cell in a seat row — a seat or an aisle gap.
 public enum SeatSlot: Sendable, Hashable { case seat(Seat), aisle }
 
+/// A traveller a seat can be assigned to (see `SeatMap.passengers`).
+public struct Passenger: Identifiable, Sendable, Hashable, Codable {
+    public let id: String
+    public let initials: String
+    public init(id: String, initials: String) {
+        self.id = id
+        self.initials = initials
+    }
+}
+
 /// A token-bound seat map.
 ///
 /// ```swift
@@ -41,13 +51,19 @@ public struct SeatMap: View {
 
     private let rows: [[SeatSlot]]
     @Binding private var selection: Set<String>
+    @State private var activePassenger: String?
+    @State private var zoom: CGFloat = 1
     // Appearance/state — mutated only through the modifiers below (R2).
     private var maxSelection: Int = .max
     private var seatSize: CGFloat = 44        // HIG minimum touch target
     private var showsLabels: Bool = false
     private var showsLegend: Bool = false
+    private var passengers: [Passenger] = []
+    private var assignment: Binding<[String: String]>?
+    private var zoomable: Bool = false
 
     private let gutter: CGFloat = 22
+    private var passengerMode: Bool { !passengers.isEmpty && assignment != nil }
 
     public init(rows: [[SeatSlot]], selection: Binding<Set<String>>) {
         self.rows = rows
@@ -56,6 +72,7 @@ public struct SeatMap: View {
 
     public var body: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
+            if passengerMode { passengerTabs }
             VStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
                 if showsLabels { columnHeader }
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
@@ -74,7 +91,27 @@ public struct SeatMap: View {
                 }
             }
             .dynamicTypeClamp()
+            .modifier(PinchZoom(enabled: zoomable, zoom: $zoom))
             if showsLegend { SeatLegend().showsPremium(hasPremium) }
+        }
+    }
+
+    private var passengerTabs: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            ForEach(passengers) { passenger in
+                let isActive = (activePassenger ?? passengers.first?.id) == passenger.id
+                Button { activePassenger = passenger.id } label: {
+                    VStack(spacing: 2) {
+                        Text(passenger.initials).textStyle(.labelSm600)
+                        Text(assignment?.wrappedValue[passenger.id] ?? "—").textStyle(.overline400)
+                    }
+                    .foregroundStyle(isActive ? theme.text(.textSecondaryInverse) : theme.text(.textPrimary))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(isActive ? theme.foreground(.fgHero) : theme.background(.bgSecondaryLight), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Passenger \(passenger.initials), seat \(assignment?.wrappedValue[passenger.id] ?? "unassigned")")
+            }
         }
     }
 
@@ -102,9 +139,14 @@ public struct SeatMap: View {
     }
 
     private func seatView(_ seat: Seat) -> some View {
-        let selected = selection.contains(seat.id)
+        // In passenger mode `assignment` is the single source of truth; `selection`
+        // is a one-way output mirror (written in `assignSeat`, never read here).
+        let assigned = passengerMode ? assignedInitials(seat.id) : nil
+        let selected = passengerMode ? (assigned != nil) : selection.contains(seat.id)
         return Button {
-            withAnimation(reduceMotion ? nil : .snappy) { toggle(seat) }
+            withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) {
+                if passengerMode { assignSeat(seat) } else { toggle(seat) }
+            }
         } label: {
             RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
                 .fill(fill(seat, selected: selected))
@@ -112,11 +154,7 @@ public struct SeatMap: View {
                     RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
                         .stroke(stroke(seat, selected: selected), lineWidth: 1)
                 )
-                .overlay(
-                    Image(systemName: selected ? "checkmark" : (seat.isOccupied ? "xmark" : "chair"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(content(seat, selected: selected))
-                )
+                .overlay(seatGlyph(seat, selected: selected, assigned: assigned))
                 .frame(width: seatSize, height: seatSize)
         }
         .buttonStyle(.plain)
@@ -127,6 +165,16 @@ public struct SeatMap: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
+    @ViewBuilder private func seatGlyph(_ seat: Seat, selected: Bool, assigned: String?) -> some View {
+        if let assigned {
+            Text(assigned).textStyle(.labelSm600).foregroundStyle(content(seat, selected: selected))
+        } else {
+            Image(systemName: selected ? "checkmark" : (seat.isOccupied ? "xmark" : "chair"))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(content(seat, selected: selected))
+        }
+    }
+
     private func toggle(_ seat: Seat) {
         guard !seat.isOccupied else { return }
         if selection.contains(seat.id) {
@@ -134,6 +182,30 @@ public struct SeatMap: View {
         } else if selection.count < maxSelection {
             selection.insert(seat.id)
         }
+    }
+
+    private func assignedInitials(_ seatId: String) -> String? {
+        guard let assignment else { return nil }
+        for passenger in passengers where assignment.wrappedValue[passenger.id] == seatId {
+            return passenger.initials
+        }
+        return nil
+    }
+
+    private func assignSeat(_ seat: Seat) {
+        guard !seat.isOccupied, let assignment else { return }
+        let active = activePassenger ?? passengers.first?.id
+        guard let active else { return }
+        var map = assignment.wrappedValue
+        if map[active] == seat.id {
+            map[active] = nil                                   // tap own seat → unassign
+        } else {
+            for (person, seatId) in map where seatId == seat.id { map[person] = nil }  // steal from others
+            map[active] = seat.id
+        }
+        assignment.wrappedValue = map
+        selection = Set(map.values)
+        if let next = passengers.first(where: { map[$0.id] == nil }) { activePassenger = next.id }
     }
 
     private var templateRow: [SeatSlot] { rows.max(by: { $0.count < $1.count }) ?? [] }
@@ -172,6 +244,14 @@ public extension SeatMap {
     func showsLabels(_ on: Bool = true) -> Self { copy { $0.showsLabels = on } }
     /// Appends a ``SeatLegend`` (Available / Selected / Occupied [/ Premium]).
     func legend(_ on: Bool = true) -> Self { copy { $0.showsLegend = on } }
+    /// Assigns seats to specific travellers: tapping a seat gives it to the active
+    /// passenger (shown by their initials) and advances to the next unassigned one.
+    /// `assignment` maps passenger id → seat id; `selection` stays in sync.
+    func passengers(_ people: [Passenger], assignment: Binding<[String: String]>) -> Self {
+        copy { $0.passengers = people; $0.assignment = assignment }
+    }
+    /// Enables pinch-to-zoom (1×–2.5×) on the seat grid.
+    func zoomable(_ on: Bool = true) -> Self { copy { $0.zoomable = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -211,6 +291,27 @@ public struct SeatLegend: View {
     /// Adds a "Premium" key.
     public func showsPremium(_ on: Bool = true) -> Self {
         var c = self; c.showsPremium = on; return c
+    }
+}
+
+/// Pinch-to-zoom (1×–2.5×) for the seat grid, applied only when enabled.
+private struct PinchZoom: ViewModifier {
+    let enabled: Bool
+    @Binding var zoom: CGFloat
+    @GestureState private var pinch: CGFloat = 1
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .scaleEffect(zoom * pinch)
+                .gesture(
+                    MagnifyGesture()
+                        .updating($pinch) { value, state, _ in state = value.magnification }
+                        .onEnded { value in zoom = min(2.5, max(1, zoom * value.magnification)) }
+                )
+        } else {
+            content
+        }
     }
 }
 

@@ -10,7 +10,7 @@
 import SwiftUI
 
 /// The value a ``GuestSelector`` edits.
-public struct GuestSelection: Equatable, Sendable {
+public struct GuestSelection: Equatable, Sendable, Codable {
     public var rooms: Int
     public var adults: Int
     public var children: Int
@@ -22,6 +22,9 @@ public struct GuestSelection: Equatable, Sendable {
         self.children = children
         self.infants = infants
     }
+
+    /// Total guests (adults + children + infants), used for cabin-capacity caps.
+    public var guestCount: Int { adults + children + infants }
 
     /// A compact readout for a trigger field, e.g. `"1 room · 2 adults · 1 child"`.
     public var summary: String {
@@ -38,9 +41,9 @@ public struct GuestSelection: Equatable, Sendable {
 }
 
 private struct GuestRow: Identifiable {
-    let id = UUID()
-    let title: String
-    let subtitle: String?
+    let id: String                         // stable key (no per-access UUID churn)
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey?
     let keyPath: WritableKeyPath<GuestSelection, Int>
     let range: ClosedRange<Int>
     let visible: Bool
@@ -72,10 +75,10 @@ public struct GuestSelector: View {
 
     private var rows: [GuestRow] {
         [
-            GuestRow(title: "Rooms", subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
-            GuestRow(title: "Adults", subtitle: "Age 13+", keyPath: \.adults, range: adultRange, visible: true),
-            GuestRow(title: "Children", subtitle: "Age 2–12", keyPath: \.children, range: childRange, visible: true),
-            GuestRow(title: "Infants", subtitle: "Under 2", keyPath: \.infants, range: infantRange, visible: showsInfants),
+            GuestRow(id: "rooms", title: "Rooms", subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
+            GuestRow(id: "adults", title: "Adults", subtitle: "Age 13+", keyPath: \.adults, range: adultRange, visible: true),
+            GuestRow(id: "children", title: "Children", subtitle: "Age 2–12", keyPath: \.children, range: childRange, visible: true),
+            GuestRow(id: "infants", title: "Infants", subtitle: "Under 2", keyPath: \.infants, range: infantRange, visible: showsInfants),
         ].filter(\.visible)
     }
 
@@ -107,11 +110,15 @@ public struct GuestSelector: View {
     /// (rooms are unaffected). The upper bound shrinks as other rows fill up.
     private func effectiveRange(_ row: GuestRow) -> ClosedRange<Int> {
         guard let maxTotal, row.keyPath != \GuestSelection.rooms else { return row.range }
-        let guests = selection.adults + selection.children + selection.infants
-        let remaining = max(0, maxTotal - guests)
+        let remaining = max(0, maxTotal - selection.guestCount)
         let current = selection[keyPath: row.keyPath]
-        let upper = max(row.range.lowerBound, min(row.range.upperBound, current + remaining))
-        return row.range.lowerBound...upper
+        return row.range.lowerBound...Self.cappedUpperBound(range: row.range, current: current, remaining: remaining)
+    }
+
+    /// The effective upper bound for a guest row given the remaining cabin capacity
+    /// (pure; unit-tested).
+    static func cappedUpperBound(range: ClosedRange<Int>, current: Int, remaining: Int) -> Int {
+        max(range.lowerBound, min(range.upperBound, current + remaining))
     }
 }
 

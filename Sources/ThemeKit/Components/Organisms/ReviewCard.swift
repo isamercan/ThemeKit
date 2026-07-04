@@ -52,7 +52,7 @@ public struct ReviewCard: View {
                 .lineLimit(isExpandable && !expanded ? 3 : nil)
             if isExpandable {
                 Button {
-                    withAnimation(reduceMotion ? nil : .snappy) { expanded.toggle() }
+                    withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { expanded.toggle() }
                 } label: {
                     Text(expanded ? "Show less" : "Read more")
                         .textStyle(.labelBase600).foregroundStyle(theme.foreground(.fgHero))

@@ -12,7 +12,7 @@
 import SwiftUI
 
 /// One amenity — an SF Symbol and a label.
-public struct Amenity: Identifiable, Sendable, Hashable {
+public struct Amenity: Identifiable, Sendable, Hashable, Codable {
     public let id: String
     public let systemImage: String
     public let label: String
@@ -82,7 +82,7 @@ public struct AmenityGrid: View {
             }
             if hiddenCount > 0 {
                 Button {
-                    withAnimation(reduceMotion ? nil : .snappy) { expanded = true }
+                    withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { expanded = true }
                 } label: {
                     Text("+\(hiddenCount) more")
                         .textStyle(.labelBase600)

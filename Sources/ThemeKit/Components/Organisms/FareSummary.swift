@@ -12,9 +12,10 @@
 import SwiftUI
 
 /// One line of a ``FareSummary``.
-public struct FareLine: Identifiable, Sendable {
-    public enum Kind: Sendable { case item, discount, total }
-    public let id = UUID()
+public struct FareLine: Identifiable, Sendable, Equatable, Codable {
+    public enum Kind: String, Sendable, Codable { case item, discount, total }
+    /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
+    public var id: String { "\(kind.rawValue):\(label)" }
     let label: String
     let amount: Decimal
     let kind: Kind

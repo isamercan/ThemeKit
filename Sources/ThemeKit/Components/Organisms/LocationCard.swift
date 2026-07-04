@@ -9,6 +9,13 @@
 
 import SwiftUI
 import MapKit
+#if canImport(UIKit)
+import UIKit
+private typealias SnapshotImage = UIImage
+#elseif canImport(AppKit)
+import AppKit
+private typealias SnapshotImage = NSImage
+#endif
 
 /// A token-bound location preview card.
 ///
@@ -33,6 +40,7 @@ public struct LocationPin: Identifiable, Sendable {
 public struct LocationCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @State private var snapshotImage: SnapshotImage?
 
     // Required content (R1).
     private let title: String
@@ -46,6 +54,7 @@ public struct LocationCard: View {
     private var pois: [LocationPin] = []
     private var showsDirections: Bool = false
     private var onDirectionsHandler: (() -> Void)?
+    private var useSnapshot: Bool = false
 
     public init(title: String, coordinate: CLLocationCoordinate2D) {
         self.title = title
@@ -59,14 +68,7 @@ public struct LocationCard: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Map(initialPosition: .region(region)) {
-                Marker(title, coordinate: coordinate)
-                ForEach(pois) { pin in
-                    Marker(pin.title, coordinate: pin.coordinate).tint(theme.text(.textSecondary))
-                }
-            }
-            .frame(height: mapHeight)
-            .allowsHitTesting(false)
+            mapPreview
 
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -104,6 +106,51 @@ public struct LocationCard: View {
         .onTapGesture { onTap?() }
     }
 
+    @ViewBuilder private var mapPreview: some View {
+        if useSnapshot {
+            ZStack {
+                if let snapshotImage {
+                    #if canImport(UIKit)
+                    Image(uiImage: snapshotImage).resizable().scaledToFill()
+                    #elseif canImport(AppKit)
+                    Image(nsImage: snapshotImage).resizable().scaledToFill()
+                    #endif
+                } else {
+                    Rectangle().fill(theme.background(.bgSecondary)).overlay(ProgressView())
+                }
+                Image(systemName: "mappin").font(.title2)
+                    .foregroundStyle(theme.foreground(.fgHero)).shadow(radius: 2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: mapHeight)
+            .clipped()
+            .task(id: snapshotKey) { await generateSnapshot() }
+        } else {
+            Map(initialPosition: .region(region)) {
+                Marker(title, coordinate: coordinate)
+                ForEach(pois) { pin in
+                    Marker(pin.title, coordinate: pin.coordinate).tint(theme.text(.textSecondary))
+                }
+            }
+            .frame(height: mapHeight)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var snapshotKey: String {
+        "\(coordinate.latitude),\(coordinate.longitude),\(spanMeters),\(mapHeight)"
+    }
+
+    @MainActor private func generateSnapshot() async {
+        let options = MKMapSnapshotter.Options()
+        options.region = region
+        options.size = CGSize(width: 800, height: max(1, mapHeight * 3))
+        let snapshotter = MKMapSnapshotter(options: options)
+        if let snapshot = try? await snapshotter.start() {
+            snapshotImage = snapshot.image
+        }
+    }
+
     private var region: MKCoordinateRegion {
         MKCoordinateRegion(center: coordinate, latitudinalMeters: spanMeters, longitudinalMeters: spanMeters)
     }
@@ -135,6 +182,9 @@ public extension LocationCard {
     func directions(_ on: Bool = true) -> Self { copy { $0.showsDirections = on } }
     /// Custom handler for the Directions button (overrides the default Apple Maps launch).
     func onDirections(_ action: @escaping () -> Void) -> Self { copy { $0.showsDirections = true; $0.onDirectionsHandler = action } }
+    /// Renders a static MKMapSnapshotter image instead of a live `Map` — far cheaper
+    /// in long scrolling lists (a live Map per row is expensive).
+    func snapshot(_ on: Bool = true) -> Self { copy { $0.useSnapshot = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

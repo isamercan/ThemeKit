@@ -138,7 +138,10 @@ public struct PriceTag: View {
         value.formatted(.currency(code: currencyCode).precision(.fractionLength(fractionDigits)))
     }
 
-    private var discountPercent: Int? {
+    private var discountPercent: Int? { Self.discountPercent(original: original, amount: amount) }
+
+    /// Rounded discount percentage from an original vs current price (pure; unit-tested).
+    static func discountPercent(original: Decimal?, amount: Decimal) -> Int? {
         guard let original, original > 0, original > amount else { return nil }
         let ratio = (original - amount) / original
         return Int((ratio as NSDecimalNumber).doubleValue * 100 + 0.5)

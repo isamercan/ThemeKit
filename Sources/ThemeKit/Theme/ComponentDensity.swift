@@ -2,10 +2,16 @@
 //  ComponentDensity.swift
 //  ThemeKit
 //
-//  A single density axis for the whole component library. Set it once on a subtree
-//  (`.componentDensity(.compact)`) and every component that reads it tightens or
-//  relaxes its intrinsic spacing/padding together — instead of every component
-//  carrying its own ad-hoc size enum. Individual size modifiers still win locally.
+//  ThemeKit sizing has two complementary axes, on purpose:
+//
+//   • DENSITY (this file) — the *spacing* axis. Set once on a subtree
+//     (`.componentDensity(.compact)`) and every component tightens or relaxes its
+//     intrinsic spacing/padding together. It scales gaps, not type or control heights.
+//   • SIZE (per-component `.size(_:)`) — the *dimension* axis. Discrete tiers
+//     (`.small`/`.medium`/`.large`) pick type ramp + control height for one component.
+//
+//  They stack: `PriceTag(x).size(.large)` inside a `.componentDensity(.compact)`
+//  screen is a large price with tight surrounding spacing.
 //
 
 import SwiftUI
