@@ -140,7 +140,7 @@ public struct FlightCard: View {
     @ViewBuilder private var routeContent: some View {
         if let legs {
             VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-                ForEach(Array(legs.enumerated()), id: \.element.id) { index, leg in
+                ForEach(Array(legs.enumerated()), id: \.offset) { index, leg in
                     if index > 0 { Divider().overlay(theme.border(.borderPrimary)) }
                     legRow(leg)
                 }
@@ -152,7 +152,9 @@ public struct FlightCard: View {
 
     private func legRow(_ leg: FlightLeg) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if (legs?.count ?? 0) > 1 {
+            // Per-leg airline only when it differs from the header airline (avoids
+            // repeating "Anadolu Air" on the first leg when the header already shows it).
+            if (legs?.count ?? 0) > 1, leg.airline != airline {
                 Text(leg.airline).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
             }
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {

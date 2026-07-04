@@ -76,7 +76,7 @@ public struct Accordion<Content: View>: View {
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     if let number {
-                        Text(String(format: "%02d", number))
+                        Text(zeroPad2(number))
                             .textStyle(titleSize.textStyle)
                             .foregroundStyle(titleColor)
                             .monospacedDigit()

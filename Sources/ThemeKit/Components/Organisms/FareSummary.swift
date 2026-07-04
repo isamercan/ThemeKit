@@ -62,7 +62,9 @@ public struct FareSummary: View {
 
     public var body: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            ForEach(lines) { line in
+            // Position-keyed: robust to duplicate labels (two "Fee" lines) which would
+            // collide on the content-derived `id`. Fare lists are fixed-order, so index is stable.
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 switch line.kind {
                 case .item:     itemRow(line, value: formatted(line.amount), color: theme.text(.textSecondary), valueColor: theme.text(.textPrimary))
                 case .discount: itemRow(line, value: "-\(formatted(line.amount))", color: theme.foreground(.systemcolorsFgSuccess), valueColor: theme.foreground(.systemcolorsFgSuccess))

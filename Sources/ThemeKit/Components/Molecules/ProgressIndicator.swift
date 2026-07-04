@@ -111,7 +111,7 @@ public struct ProgressIndicator: View {
         switch stepText {
         case .none: return ""
         case .slash: return "\(current) / \(total)"
-        case .padded: return String(format: "%02d | %02d", current, total)
+        case .padded: return "\(zeroPad2(current)) | \(zeroPad2(total))"
         }
     }
 }

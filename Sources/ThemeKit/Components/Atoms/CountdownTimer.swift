@@ -194,7 +194,7 @@ public struct CountdownTimer: View {
 
     /// Two-digit zero pad — avoids `String(format: "%02d", Int)`, which passes a 64-bit
     /// `Int` where `%d` expects a 32-bit `CInt` (undefined behaviour / crashes).
-    static func pad2(_ value: Int) -> String { value < 10 ? "0\(value)" : "\(value)" }
+    static func pad2(_ value: Int) -> String { zeroPad2(value) }
 
     /// Natural top-two-unit readout like `"9m 58s"` (pure; unit-tested).
     static func compactString(_ remaining: TimeInterval, showsDays: Bool) -> String {
