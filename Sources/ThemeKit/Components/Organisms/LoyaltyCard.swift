@@ -17,6 +17,8 @@ import SwiftUI
 /// ```
 public struct LoyaltyCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Required content (R1).
     private let tier: String
@@ -28,6 +30,8 @@ public struct LoyaltyCard: View {
     private var nextTier: String?
     private var systemImage: String = "seal.fill"
     private var gradientOverride: [Color]?
+    private var animatesValue: Bool = false
+    private var logoSlot: AnyView?
 
     public init(tier: String, points: Int) {
         self.tier = tier
@@ -35,11 +39,15 @@ public struct LoyaltyCard: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+        VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.md.value)) {
             HStack {
                 Text(tier.uppercased()).textStyle(.labelMd700).foregroundStyle(onCard)
                 Spacer()
-                Image(systemName: systemImage).font(.system(size: 20)).foregroundStyle(onCard)
+                if let logoSlot {
+                    logoSlot
+                } else {
+                    Image(systemName: systemImage).font(.title3).foregroundStyle(onCard)
+                }
             }
             if let memberName {
                 Text(memberName).textStyle(.bodyBase500).foregroundStyle(onCard.opacity(0.9))
@@ -48,11 +56,12 @@ public struct LoyaltyCard: View {
             HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
                 Text(points.formatted(.number.grouping(.automatic)))
                     .textStyle(.heading2xl).foregroundStyle(onCard)
+                    .contentTransition(animatesValue && !reduceMotion ? .numericText(value: Double(points)) : .identity)
                 Text(unit).textStyle(.bodyBase400).foregroundStyle(onCard.opacity(0.8))
             }
             if let progress { progressView(progress) }
         }
-        .padding(Theme.SpacingKey.lg.value)
+        .padding(density.scale(Theme.SpacingKey.lg.value))
         .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
         .background(gradient, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
     }
@@ -95,6 +104,10 @@ public extension LoyaltyCard {
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     /// Overrides the brand gradient.
     func gradient(_ colors: [Color]?) -> Self { copy { $0.gradientOverride = colors } }
+    /// A brand logo slot in the top-trailing corner (replaces the tier icon).
+    func logo<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.logoSlot = AnyView(content()) } }
+    /// Animates the points balance on change (numeric-text; no-op under Reduce Motion).
+    func animatesValue(_ on: Bool = true) -> Self { copy { $0.animatesValue = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

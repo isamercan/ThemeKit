@@ -18,6 +18,7 @@ import SwiftUI
 /// ```
 public struct FlightCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
 
     // Required content (R1).
     private let airline: String
@@ -32,6 +33,10 @@ public struct FlightCard: View {
     private var airlineSystemImage: String = "airplane.circle.fill"
     private var badge: String?
     private var onSelect: (() -> Void)?
+    private var favorite: Binding<Bool>?
+    private var scarcity: Int?
+    private var fareBrand: String?
+    private var footerSlot: AnyView?
 
     public init(airline: String, from origin: String, to destination: String, departure: Date, arrival: Date) {
         self.airline = airline
@@ -42,25 +47,53 @@ public struct FlightCard: View {
     }
 
     public var body: some View {
-        VStack(spacing: Theme.SpacingKey.md.value) {
+        VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
             header
             route
-            if price != nil || onSelect != nil { footer }
+            if let scarcity { scarcityRow(scarcity) }
+            if footerSlot != nil || price != nil || onSelect != nil { footer }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(density.scale(Theme.SpacingKey.md.value))
         .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var header: some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Image(systemName: airlineSystemImage)
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundStyle(theme.foreground(.fgHero))
             Text(airline).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+            if let fareBrand {
+                Text(fareBrand).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary))
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(theme.background(.bgSecondaryLight), in: Capsule())
+            }
             Spacer()
             if let badge { Badge(badge).badgeStyle(.success).size(.small) }
+            if let favorite { favoriteButton(favorite) }
         }
+    }
+
+    private func favoriteButton(_ fav: Binding<Bool>) -> some View {
+        Button { fav.wrappedValue.toggle() } label: {
+            Image(systemName: fav.wrappedValue ? "heart.fill" : "heart")
+                .font(.body)
+                .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                .symbolEffect(.bounce, value: fav.wrappedValue)
+                .frame(minWidth: 44, minHeight: 44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(fav.wrappedValue ? "Remove from favourites" : "Add to favourites")
+    }
+
+    private func scarcityRow(_ count: Int) -> some View {
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            Image(systemName: "flame.fill").font(.caption2)
+            Text("\(count) seat\(count == 1 ? "" : "s") left").textStyle(.bodySm400)
+        }
+        .foregroundStyle(theme.foreground(.systemcolorsFgError))
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var route: some View {
@@ -101,11 +134,15 @@ public struct FlightCard: View {
         Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
     }
 
-    private var footer: some View {
-        HStack {
-            if let price { PriceTag(price, currencyCode: currencyCode).size(.large).emphasis(.hero) }
-            Spacer()
-            if let onSelect { PrimaryButton("Select") { onSelect() }.size(.small) }
+    @ViewBuilder private var footer: some View {
+        if let footerSlot {
+            footerSlot
+        } else {
+            HStack {
+                if let price { PriceTag(price, currencyCode: currencyCode).size(.large).emphasis(.hero) }
+                Spacer()
+                if let onSelect { PrimaryButton("Select") { onSelect() }.size(.small) }
+            }
         }
     }
 
@@ -137,6 +174,14 @@ public extension FlightCard {
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
     /// Adds a "Select" button to the footer.
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
+    /// A heart toggle in the header bound to a favourite flag.
+    func favorite(_ isFavorite: Binding<Bool>) -> Self { copy { $0.favorite = isFavorite } }
+    /// Shows a "N seats left" scarcity line (urgent colour).
+    func scarcity(_ seatsLeft: Int?) -> Self { copy { $0.scarcity = seatsLeft } }
+    /// A fare-brand chip next to the airline, e.g. "Eco Flex".
+    func fareBrand(_ name: String?) -> Self { copy { $0.fareBrand = name } }
+    /// Replaces the default price+Select footer with custom content.
+    func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

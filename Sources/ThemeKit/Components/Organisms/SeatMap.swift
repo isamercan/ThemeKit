@@ -6,6 +6,10 @@
 //  multi-select binding. Token-bound: available / selected / occupied / premium all
 //  resolve from the theme. Suits flight & event seat selection.
 //
+//  Flexible: 44pt seats (HIG minimum) that clamp Dynamic Type, optional column/row
+//  rulers, a standalone SeatLegend, spring selection (reduce-motion aware) and a
+//  VoiceOver seat-state label + hint.
+//
 
 import SwiftUI
 
@@ -28,16 +32,22 @@ public enum SeatSlot: Sendable, Hashable { case seat(Seat), aisle }
 /// A token-bound seat map.
 ///
 /// ```swift
-/// SeatMap(rows: layout, selection: $picked).maxSelection(2)
+/// SeatMap(rows: layout, selection: $picked).maxSelection(2).showsLabels().legend()
 /// ```
 public struct SeatMap: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let rows: [[SeatSlot]]
     @Binding private var selection: Set<String>
     // Appearance/state — mutated only through the modifiers below (R2).
     private var maxSelection: Int = .max
-    private var seatSize: CGFloat = 34
+    private var seatSize: CGFloat = 44        // HIG minimum touch target
+    private var showsLabels: Bool = false
+    private var showsLegend: Bool = false
+
+    private let gutter: CGFloat = 22
 
     public init(rows: [[SeatSlot]], selection: Binding<Set<String>>) {
         self.rows = rows
@@ -45,15 +55,47 @@ public struct SeatMap: View {
     }
 
     public var body: some View {
-        VStack(spacing: Theme.SpacingKey.xs.value) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    ForEach(Array(row.enumerated()), id: \.offset) { _, slot in
-                        switch slot {
-                        case .aisle: Color.clear.frame(width: seatSize * 0.6, height: seatSize)
-                        case .seat(let seat): seatView(seat)
+        VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
+            VStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+                if showsLabels { columnHeader }
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                    HStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+                        if showsLabels {
+                            Text(rowNumber(row)).textStyle(.overline500)
+                                .foregroundStyle(theme.text(.textTertiary)).frame(width: gutter)
+                        }
+                        ForEach(Array(row.enumerated()), id: \.offset) { _, slot in
+                            switch slot {
+                            case .aisle: Color.clear.frame(width: seatSize * 0.6, height: seatSize)
+                            case .seat(let seat): seatView(seat)
+                            }
                         }
                     }
+                }
+            }
+            .dynamicTypeClamp()
+            if showsLegend { SeatLegend().showsPremium(hasPremium) }
+        }
+    }
+
+    private var hasPremium: Bool {
+        rows.contains { row in
+            row.contains { slot in
+                if case .seat(let s) = slot { return s.isPremium }
+                return false
+            }
+        }
+    }
+
+    private var columnHeader: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+            if showsLabels { Color.clear.frame(width: gutter) }
+            ForEach(Array(templateRow.enumerated()), id: \.offset) { _, slot in
+                switch slot {
+                case .aisle: Color.clear.frame(width: seatSize * 0.6)
+                case .seat(let seat):
+                    Text(columnLetter(seat.id)).textStyle(.overline500)
+                        .foregroundStyle(theme.text(.textTertiary)).frame(width: seatSize)
                 }
             }
         }
@@ -61,7 +103,9 @@ public struct SeatMap: View {
 
     private func seatView(_ seat: Seat) -> some View {
         let selected = selection.contains(seat.id)
-        return Button { toggle(seat) } label: {
+        return Button {
+            withAnimation(reduceMotion ? nil : .snappy) { toggle(seat) }
+        } label: {
             RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
                 .fill(fill(seat, selected: selected))
                 .overlay(
@@ -70,14 +114,17 @@ public struct SeatMap: View {
                 )
                 .overlay(
                     Image(systemName: selected ? "checkmark" : (seat.isOccupied ? "xmark" : "chair"))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(content(seat, selected: selected))
                 )
                 .frame(width: seatSize, height: seatSize)
         }
         .buttonStyle(.plain)
         .disabled(seat.isOccupied)
-        .accessibilityLabel("Seat \(seat.id)\(seat.isOccupied ? ", occupied" : selected ? ", selected" : "")")
+        .accessibilityLabel("Seat \(seat.id)\(seat.isPremium ? ", premium" : "")")
+        .accessibilityValue(seat.isOccupied ? "Occupied" : selected ? "Selected" : "Available")
+        .accessibilityHint(seat.isOccupied ? "" : "Double-tap to \(selected ? "deselect" : "select")")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func toggle(_ seat: Seat) {
@@ -87,6 +134,13 @@ public struct SeatMap: View {
         } else if selection.count < maxSelection {
             selection.insert(seat.id)
         }
+    }
+
+    private var templateRow: [SeatSlot] { rows.max(by: { $0.count < $1.count }) ?? [] }
+    private func columnLetter(_ id: String) -> String { String(id.drop { $0.isNumber }) }
+    private func rowNumber(_ row: [SeatSlot]) -> String {
+        for slot in row { if case .seat(let s) = slot { return String(s.id.prefix { $0.isNumber }) } }
+        return ""
     }
 
     private func fill(_ seat: Seat, selected: Bool) -> Color {
@@ -112,13 +166,51 @@ public struct SeatMap: View {
 public extension SeatMap {
     /// Max seats a user can pick at once (default unlimited).
     func maxSelection(_ count: Int) -> Self { copy { $0.maxSelection = max(1, count) } }
-    /// Seat square size in points (default 34).
-    func seatSize(_ size: CGFloat) -> Self { copy { $0.seatSize = size } }
+    /// Seat square size in points (default 44 — the HIG minimum touch target).
+    func seatSize(_ size: CGFloat) -> Self { copy { $0.seatSize = max(44, size) } }
+    /// Shows a column-letter header and a row-number gutter derived from the seat ids.
+    func showsLabels(_ on: Bool = true) -> Self { copy { $0.showsLabels = on } }
+    /// Appends a ``SeatLegend`` (Available / Selected / Occupied [/ Premium]).
+    func legend(_ on: Bool = true) -> Self { copy { $0.showsLegend = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
         return c
+    }
+}
+
+/// A key for a ``SeatMap`` — Available / Selected / Occupied (and optionally Premium).
+public struct SeatLegend: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    private var showsPremium: Bool = false
+
+    public init() {}
+
+    public var body: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
+            item(fill: theme.background(.bgElevatorPrimary), border: theme.border(.borderPrimary), "Available")
+            item(fill: theme.foreground(.fgHero), border: theme.foreground(.fgHero), "Selected")
+            item(fill: theme.background(.bgSecondary), border: theme.border(.borderPrimary), "Occupied")
+            if showsPremium { item(fill: theme.background(.bgTurquoiseLight), border: theme.background(.bgTurquoise), "Premium") }
+        }
+    }
+
+    private func item(fill: Color, border: Color, _ label: String) -> some View {
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(fill)
+                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(border, lineWidth: 1))
+                .frame(width: 14, height: 14)
+            Text(label).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Adds a "Premium" key.
+    public func showsPremium(_ on: Bool = true) -> Self {
+        var c = self; c.showsPremium = on; return c
     }
 }
 
@@ -133,7 +225,7 @@ public extension SeatMap {
             }
         }
         var body: some View {
-            SeatMap(rows: rows, selection: $picked).maxSelection(3).padding()
+            SeatMap(rows: rows, selection: $picked).maxSelection(3).showsLabels().legend().padding()
         }
     }
     return Demo()
