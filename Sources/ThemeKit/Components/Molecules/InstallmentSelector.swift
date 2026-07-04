@@ -17,6 +17,8 @@ import SwiftUI
 /// ```
 public struct InstallmentSelector: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let total: Decimal
     private let options: [Int]
@@ -24,6 +26,8 @@ public struct InstallmentSelector: View {
     private let currencyCode: String
     // Appearance/state — mutated only through the modifiers below (R2).
     private var interestFreeUpTo: Int = 0
+    private var recommendedCount: Int?
+    private var surcharge: [Int: Decimal] = [:]
 
     public init(total: Decimal, options: [Int], selection: Binding<Int>, currencyCode: String = "TRY") {
         self.total = total
@@ -42,28 +46,37 @@ public struct InstallmentSelector: View {
 
     private func row(_ count: Int) -> some View {
         let selected = selection == count
-        return Button { selection = count } label: {
-            HStack(spacing: Theme.SpacingKey.md.value) {
+        let planTotal = effectiveTotal(count)
+        let interestFree = count > 1 && count <= interestFreeUpTo && (surcharge[count] ?? 0) == 0
+        return Button {
+            withAnimation(reduceMotion ? nil : .snappy) { selection = count }
+        } label: {
+            HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
                 Image(systemName: selected ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(selected ? theme.foreground(.fgHero) : theme.text(.textTertiary))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(count <= 1 ? "Single payment" : "\(count) installments")
-                        .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
-                    if count > 1, count <= interestFreeUpTo {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        Text(count <= 1 ? "Single payment" : "\(count) installments")
+                            .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+                        if count == recommendedCount {
+                            Badge("Recommended").badgeStyle(.success).size(.small)
+                        }
+                    }
+                    if interestFree {
                         Text("Interest-free").textStyle(.bodySm400).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
                     }
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     if count > 1 {
-                        Text("\(formatted(total / Decimal(count)))/mo")
+                        Text("\(formatted(planTotal / Decimal(count)))/mo")
                             .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     }
-                    Text(formatted(total)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+                    Text(formatted(planTotal)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                 }
             }
-            .padding(Theme.SpacingKey.md.value)
+            .padding(density.scale(Theme.SpacingKey.md.value))
             .background(selected ? theme.background(.bgHero) : theme.background(.bgElevatorPrimary),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
@@ -71,6 +84,9 @@ public struct InstallmentSelector: View {
         }
         .buttonStyle(.plain)
     }
+
+    /// The plan's grand total — base plus any per-plan surcharge (interest).
+    private func effectiveTotal(_ count: Int) -> Decimal { total + (surcharge[count] ?? 0) }
 
     private func formatted(_ value: Decimal) -> String {
         value.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
@@ -82,6 +98,10 @@ public struct InstallmentSelector: View {
 public extension InstallmentSelector {
     /// Instalment counts up to (and including) this are tagged "Interest-free".
     func interestFreeUpTo(_ count: Int) -> Self { copy { $0.interestFreeUpTo = count } }
+    /// Flags one plan as recommended with a badge.
+    func recommended(_ count: Int) -> Self { copy { $0.recommendedCount = count } }
+    /// Per-plan surcharge (interest) added to the base total, keyed by instalment count.
+    func surcharge(_ amounts: [Int: Decimal]) -> Self { copy { $0.surcharge = amounts } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

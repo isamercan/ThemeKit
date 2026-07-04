@@ -53,6 +53,7 @@ private struct GuestRow: Identifiable {
 /// ```
 public struct GuestSelector: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
     @Binding private var selection: GuestSelection
 
     // Appearance/state — mutated only through the modifiers below (R2).
@@ -62,6 +63,8 @@ public struct GuestSelector: View {
     private var childRange: ClosedRange<Int> = 0...10
     private var infantRange: ClosedRange<Int> = 0...6
     private var roomRange: ClosedRange<Int> = 1...8
+    private var maxTotal: Int?
+    private var onChangeHandler: ((GuestSelection) -> Void)?
 
     public init(selection: Binding<GuestSelection>) {   // R1 — binding
         self._selection = selection
@@ -88,15 +91,27 @@ public struct GuestSelector: View {
                         }
                     }
                     Spacer()
-                    QuantityStepper(value: binding(for: row.keyPath), range: row.range)
+                    QuantityStepper(value: binding(for: row.keyPath), range: effectiveRange(row))
                 }
-                .padding(.vertical, Theme.SpacingKey.sm.value)
+                .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
             }
         }
+        .onChange(of: selection) { _, new in onChangeHandler?(new) }
     }
 
     private func binding(for keyPath: WritableKeyPath<GuestSelection, Int>) -> Binding<Int> {
         Binding(get: { selection[keyPath: keyPath] }, set: { selection[keyPath: keyPath] = $0 })
+    }
+
+    /// Caps the guest rows so their combined count never exceeds `maxTotal`
+    /// (rooms are unaffected). The upper bound shrinks as other rows fill up.
+    private func effectiveRange(_ row: GuestRow) -> ClosedRange<Int> {
+        guard let maxTotal, row.keyPath != \GuestSelection.rooms else { return row.range }
+        let guests = selection.adults + selection.children + selection.infants
+        let remaining = max(0, maxTotal - guests)
+        let current = selection[keyPath: row.keyPath]
+        let upper = max(row.range.lowerBound, min(row.range.upperBound, current + remaining))
+        return row.range.lowerBound...upper
     }
 }
 
@@ -115,6 +130,10 @@ public extension GuestSelector {
     func infantRange(_ range: ClosedRange<Int>) -> Self { copy { $0.infantRange = range } }
     /// Allowed room count.
     func roomRange(_ range: ClosedRange<Int>) -> Self { copy { $0.roomRange = range } }
+    /// Caps the combined guest count (adults + children + infants) — e.g. a cabin capacity.
+    func maxTotal(_ count: Int) -> Self { copy { $0.maxTotal = count } }
+    /// Called whenever the selection changes.
+    func onChange(_ handler: @escaping (GuestSelection) -> Void) -> Self { copy { $0.onChangeHandler = handler } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

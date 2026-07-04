@@ -5,6 +5,9 @@
 //  A price-distribution histogram over a RangeSlider — bars in the selected range are
 //  the brand accent, the rest are muted (the Airbnb-style price filter). Token-bound.
 //
+//  Flexible: a live selected-range readout + result count, min/max bound labels, and
+//  animated bar heights (reduce-motion aware).
+//
 
 import SwiftUI
 
@@ -12,9 +15,12 @@ import SwiftUI
 ///
 /// ```swift
 /// PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000)
+///     .showsBounds().resultCount(results)
 /// ```
 public struct PriceHistogram: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let bins: [Int]
     @Binding private var lowerValue: Double
@@ -23,6 +29,9 @@ public struct PriceHistogram: View {
     // Appearance/state — mutated only through the modifiers below (R2).
     private var barHeight: CGFloat = 56
     private var accent: Color?
+    private var currencyCode: String = "TRY"
+    private var resultCount: Int?
+    private var showsBounds: Bool = false
 
     public init(bins: [Int], lowerValue: Binding<Double>, upperValue: Binding<Double>, in bounds: ClosedRange<Double>) {
         self.bins = bins
@@ -32,7 +41,17 @@ public struct PriceHistogram: View {
     }
 
     public var body: some View {
-        VStack(spacing: Theme.SpacingKey.xs.value) {
+        VStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+            if showsBounds || resultCount != nil {
+                HStack {
+                    Text("\(formatted(lowerValue)) – \(formatted(upperValue))")
+                        .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+                    Spacer()
+                    if let resultCount {
+                        Text("\(resultCount) results").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                }
+            }
             HStack(alignment: .bottom, spacing: 2) {
                 ForEach(Array(bins.enumerated()), id: \.offset) { index, count in
                     Capsule()
@@ -42,11 +61,25 @@ public struct PriceHistogram: View {
                 }
             }
             .frame(height: barHeight, alignment: .bottom)
+            .animation(reduceMotion ? nil : .snappy, value: bins)
+            .animation(reduceMotion ? nil : .easeInOut, value: lowerValue)
+            .animation(reduceMotion ? nil : .easeInOut, value: upperValue)
             RangeSlider(lowerValue: $lowerValue, upperValue: $upperValue, in: bounds)
+            if showsBounds {
+                HStack {
+                    Text(formatted(bounds.lowerBound)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+                    Spacer()
+                    Text(formatted(bounds.upperBound)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+                }
+            }
         }
     }
 
     private var selectedColor: Color { accent ?? theme.foreground(.fgHero) }
+
+    private func formatted(_ value: Double) -> String {
+        Decimal(Int(value.rounded())).formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+    }
 
     private func heightRatio(_ count: Int) -> CGFloat {
         let maxCount = bins.max() ?? 0
@@ -69,6 +102,12 @@ public extension PriceHistogram {
     func barHeight(_ height: CGFloat) -> Self { copy { $0.barHeight = height } }
     /// Overrides the selected-bar colour (otherwise the theme accent).
     func accent(_ color: Color?) -> Self { copy { $0.accent = color } }
+    /// Currency for the range / bound labels (default TRY).
+    func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
+    /// Shows a live selected-range readout and how many results it matches.
+    func resultCount(_ count: Int?) -> Self { copy { $0.resultCount = count } }
+    /// Shows the min / max bound labels under the slider (and the range readout above).
+    func showsBounds(_ on: Bool = true) -> Self { copy { $0.showsBounds = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -84,6 +123,7 @@ public extension PriceHistogram {
         let bins = [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2]
         var body: some View {
             PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
+                .showsBounds().resultCount(87)
                 .padding()
         }
     }
