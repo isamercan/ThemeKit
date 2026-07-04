@@ -152,7 +152,9 @@ public struct FlightCard: View {
 
     private func legRow(_ leg: FlightLeg) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if (legs?.count ?? 0) > 1 {
+            // Per-leg airline only when it differs from the header airline (avoids
+            // repeating "Anadolu Air" on the first leg when the header already shows it).
+            if (legs?.count ?? 0) > 1, leg.airline != airline {
                 Text(leg.airline).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
             }
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
