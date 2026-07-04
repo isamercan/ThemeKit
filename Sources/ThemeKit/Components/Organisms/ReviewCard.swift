@@ -17,6 +17,9 @@ import SwiftUI
 /// ```
 public struct ReviewCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var expanded = false
 
     // Required content (R1).
     private let author: String
@@ -27,6 +30,10 @@ public struct ReviewCard: View {
     private var title: String?
     private var verified: Bool = false
     private var photos: [URL] = []
+    private var showsStars: Bool = false
+    private var isExpandable: Bool = false
+    private var onPhotoTap: ((Int) -> Void)?
+    private var actionsSlot: AnyView?
 
     public init(author: String, score: Double, text: String) {
         self.author = author
@@ -35,15 +42,27 @@ public struct ReviewCard: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+        VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
             header
             if let title {
                 Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
             }
-            Text(text).textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+            Text(text)
+                .textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+                .lineLimit(isExpandable && !expanded ? 3 : nil)
+            if isExpandable {
+                Button {
+                    withAnimation(reduceMotion ? nil : .snappy) { expanded.toggle() }
+                } label: {
+                    Text(expanded ? "Show less" : "Read more")
+                        .textStyle(.labelBase600).foregroundStyle(theme.foreground(.fgHero))
+                }
+                .buttonStyle(.plain)
+            }
             if !photos.isEmpty { photoStrip }
+            if let actionsSlot { actionsSlot }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(density.scale(Theme.SpacingKey.md.value))
         .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
@@ -66,17 +85,25 @@ public struct ReviewCard: View {
                 }
             }
             Spacer()
-            ScoreBadge(score, large: false)
+            if showsStars {
+                Rating(value: score / 2).allowHalf()
+            } else {
+                ScoreBadge(score, large: false)
+            }
         }
     }
 
     private var photoStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                ForEach(photos, id: \.self) { url in
-                    RemoteImage(url)
-                        .frame(width: 72, height: 72)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+            HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+                ForEach(Array(photos.enumerated()), id: \.element) { index, url in
+                    Button { onPhotoTap?(index) } label: {
+                        RemoteImage(url)
+                            .frame(width: 72, height: 72)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(onPhotoTap == nil)
                 }
             }
         }
@@ -100,6 +127,14 @@ public extension ReviewCard {
     func verified(_ on: Bool = true) -> Self { copy { $0.verified = on } }
     /// A horizontal strip of review photos.
     func photos(_ urls: [URL]) -> Self { copy { $0.photos = urls } }
+    /// Shows a star rating (derived from the 0–10 score) instead of the ScoreBadge.
+    func stars(_ on: Bool = true) -> Self { copy { $0.showsStars = on } }
+    /// Truncates long text to 3 lines with a "Read more" toggle.
+    func expandable(_ on: Bool = true) -> Self { copy { $0.isExpandable = on } }
+    /// Called with the photo index when a photo is tapped (enables the lightbox).
+    func onPhotoTap(_ handler: @escaping (Int) -> Void) -> Self { copy { $0.onPhotoTap = handler } }
+    /// A footer slot for actions — Helpful, Report, a host reply.
+    func actions<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.actionsSlot = AnyView(content()) } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

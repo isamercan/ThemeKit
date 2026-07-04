@@ -5,6 +5,42 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.8.0] - 2026-07-04
+
+### Changed — travel component flexibility pass (14 components, no breaking changes)
+
+A UX-audited upgrade of the 0.7.0 travel suite (vs. HIG, Dynamic Type & SwiftUI-animation
+best practices). Everything is **additive** — existing initialisers and modifiers are
+unchanged, so no call site needs migrating.
+
+**Foundation**
+- `ComponentDensity` environment (`.componentDensity(.compact/.regular/.spacious)`) — one
+  axis tightens/relaxes a whole subtree's spacing.
+
+**Cross-cutting**
+- Fixed-height controls now use `scaledControlHeight` / Dynamic-Type clamps (never clip).
+- `SeatMap` seats are **44pt** (the HIG minimum touch target), up from 34.
+- Reduce-Motion-aware animation throughout (numeric-text prices, spring selections, timer pulse).
+- `.redacted(.placeholder)` skeleton loading honoured across the cards.
+
+**Per component**
+- `PriceTag` — value semantics (`.free`/`.soldOut`/`.from`), `.animatesValue`, trailing slot.
+- `PointsBadge` — scaled height + icon, `.animatesValue`, trailing slot.
+- `CountdownTimer` — formats (`.boxed`/`.inline`/`.text`), `.urgentBelow()` escalation + last-10s pulse, `.onExpired` slot.
+- `GuestSelector` — `.maxTotal` cabin-capacity cap, `.onChange`.
+- `AmenityGrid` — `.limit` progressive disclosure, `.highlighted`.
+- `PriceHistogram` — live range readout + `.resultCount`, bound labels, animated bars.
+- `InstallmentSelector` — `.recommended` badge, `.surcharge` (interest), spring selection.
+- `CurrencyPicker` — `.searchable`, derived country flags, `.recents` section.
+- `FlightCard` — custom `.footer` slot, `.favorite($)`, `.scarcity`, `.fareBrand`.
+- `FareSummary` — per-line `.info` + `.onInfo`, `.footer` slot, animated total.
+- `ReviewCard` — `.stars`, expandable text, tappable photos (`.onPhotoTap`), `.actions` slot.
+- `LoyaltyCard` — `.logo` slot, animated points balance.
+- `SeatMap` — column/row rulers (`.showsLabels`), new `SeatLegend` (`.legend`).
+- `LocationCard` — `.pois` extra pins, `.directions` (opens Apple Maps) / `.onDirections`.
+
+Still zero new dependencies; ThemeKit + Demo build clean.
+
 ## [0.7.0] - 2026-07-03
 
 ### Added — travel component suite (14 components)

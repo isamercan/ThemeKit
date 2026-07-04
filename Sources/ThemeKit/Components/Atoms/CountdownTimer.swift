@@ -6,6 +6,10 @@
 //  via `TimelineView(.periodic)`. Token-bound; `.urgent` swaps to the error palette
 //  for "price held for 09:58" pressure. `onFinish` fires once when the deadline passes.
 //
+//  Flexible: three formats (.boxed / .inline / .text), automatic urgency escalation
+//  below a threshold with a reduce-motion-aware pulse on the last 10 seconds, an
+//  expired slot, and Dynamic-Type-safe boxes.
+//
 
 import SwiftUI
 
@@ -27,6 +31,16 @@ public enum CountdownStyle {
         case .urgent: return theme.background(.systemcolorsBgErrorLight)
         }
     }
+}
+
+/// How the remaining time is laid out.
+public enum CountdownFormat: Sendable {
+    /// Segmented boxes with unit labels — the default, high-impact.
+    case boxed
+    /// A single compact `00:09:44` monospaced readout.
+    case inline
+    /// Natural text, top two units — `"9m 58s"`.
+    case text
 }
 
 public enum CountdownSize {
@@ -59,17 +73,22 @@ public enum CountdownSize {
 ///
 /// ```swift
 /// CountdownTimer(until: .now.addingTimeInterval(600))
-///     .style(.urgent).size(.large).showsDays(false) { /* expired */ }
+///     .format(.inline).urgentBelow(60).onFinish { soldOut = true }
 /// ```
 public struct CountdownTimer: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let deadline: Date
     // Appearance/state — mutated only through the modifiers below (R2).
     private var style: CountdownStyle = .standard
+    private var format: CountdownFormat = .boxed
     private var size: CountdownSize = .medium
     private var showsDays: Bool = false
+    private var urgentThreshold: TimeInterval?
     private var onFinish: (() -> Void)?
+    private var expiredSlot: AnyView?
 
     public init(until deadline: Date) {   // R1 — content
         self.deadline = deadline
@@ -78,11 +97,11 @@ public struct CountdownTimer: View {
     public var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, deadline.timeIntervalSince(context.date))
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                let segs = segments(remaining)
-                ForEach(Array(segs.enumerated()), id: \.offset) { index, seg in
-                    if index > 0 { Text(":").textStyle(size.textStyle).foregroundStyle(style.foreground(theme)) }
-                    box(seg.value, label: seg.label)
+            Group {
+                if remaining <= 0 {
+                    expiredView
+                } else {
+                    activeView(remaining)
                 }
             }
             .accessibilityElement(children: .combine)
@@ -96,17 +115,60 @@ public struct CountdownTimer: View {
         }
     }
 
-    private func box(_ value: Int, label: String) -> some View {
+    @ViewBuilder private var expiredView: some View {
+        if let expiredSlot {
+            expiredSlot
+        } else {
+            Text("Time's up").textStyle(size.textStyle).foregroundStyle(theme.text(.textTertiary))
+        }
+    }
+
+    private func activeView(_ remaining: TimeInterval) -> some View {
+        let st = effectiveStyle(remaining)
+        let pulsing = remaining <= 10 && !reduceMotion
+        let beat = Int(remaining) % 2 == 0
+        return Group {
+            switch format {
+            case .boxed: boxed(remaining, st)
+            case .inline:
+                Text(inlineString(remaining)).textStyle(size.textStyle).monospacedDigit()
+                    .foregroundStyle(st.foreground(theme))
+            case .text:
+                Text(compactString(remaining)).textStyle(size.textStyle)
+                    .foregroundStyle(st.foreground(theme))
+            }
+        }
+        .opacity(pulsing && beat ? 0.5 : 1)
+        .animation(.easeInOut(duration: 0.5), value: beat)
+    }
+
+    private func boxed(_ remaining: TimeInterval, _ st: CountdownStyle) -> some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+            let segs = segments(remaining)
+            ForEach(Array(segs.enumerated()), id: \.offset) { index, seg in
+                if index > 0 { Text(":").textStyle(size.textStyle).foregroundStyle(st.foreground(theme)) }
+                box(seg.value, label: seg.label, st: st)
+            }
+        }
+        .dynamicTypeClamp()
+    }
+
+    private func box(_ value: Int, label: String, st: CountdownStyle) -> some View {
         VStack(spacing: 2) {
             Text(String(format: "%02d", value))
                 .textStyle(size.textStyle)
-                .foregroundStyle(style.foreground(theme))
-                .frame(width: size.boxWidth, height: size.boxHeight)
-                .background(style.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+                .foregroundStyle(st.foreground(theme))
+                .frame(minWidth: size.boxWidth, minHeight: size.boxHeight)
+                .background(st.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
             if !label.isEmpty {
                 Text(label).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
             }
         }
+    }
+
+    private func effectiveStyle(_ remaining: TimeInterval) -> CountdownStyle {
+        if let urgentThreshold, remaining <= urgentThreshold { return .urgent }
+        return style
     }
 
     private func segments(_ remaining: TimeInterval) -> [(value: Int, label: String)] {
@@ -123,6 +185,17 @@ public struct CountdownTimer: View {
         return out
     }
 
+    private func inlineString(_ remaining: TimeInterval) -> String {
+        segments(remaining).map { String(format: "%02d", $0.value) }.joined(separator: ":")
+    }
+
+    private func compactString(_ remaining: TimeInterval) -> String {
+        let short = ["days": "d", "hrs": "h", "min": "m", "sec": "s"]
+        let parts = segments(remaining).drop { $0.value == 0 }
+        let top = parts.prefix(2).map { "\($0.value)\(short[$0.label] ?? "")" }
+        return top.isEmpty ? "0s" : top.joined(separator: " ")
+    }
+
     private func accessibilityText(_ remaining: TimeInterval) -> String {
         remaining <= 0 ? "Time's up" : segments(remaining).map { "\($0.value) \($0.label)" }.joined(separator: " ")
     }
@@ -133,10 +206,17 @@ public struct CountdownTimer: View {
 public extension CountdownTimer {
     /// standard / urgent colour treatment.
     func style(_ s: CountdownStyle) -> Self { copy { $0.style = s } }
+    /// Layout: boxed / inline / text.
+    func format(_ f: CountdownFormat) -> Self { copy { $0.format = f } }
     /// Size tier: small / medium / large.
     func size(_ s: CountdownSize) -> Self { copy { $0.size = s } }
     /// Shows a leading days box (default false — HH rolls days into hours).
     func showsDays(_ on: Bool) -> Self { copy { $0.showsDays = on } }
+    /// Auto-escalates to the urgent palette once fewer than `seconds` remain,
+    /// and pulses on the final 10 seconds (no-op under Reduce Motion).
+    func urgentBelow(_ seconds: TimeInterval) -> Self { copy { $0.urgentThreshold = seconds } }
+    /// Content shown once the deadline passes (defaults to "Time's up").
+    func onExpired<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.expiredSlot = AnyView(content()) } }
     /// Called once when the deadline passes (also immediately if already past).
     func onFinish(_ action: (() -> Void)?) -> Self { copy { $0.onFinish = action } }
 
@@ -150,7 +230,8 @@ public extension CountdownTimer {
 #Preview {
     VStack(spacing: 24) {
         CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
-        CountdownTimer(until: .now.addingTimeInterval(3 * 86_400 + 3_720)).showsDays(true)
+        CountdownTimer(until: .now.addingTimeInterval(125)).format(.inline).urgentBelow(60).size(.large)
+        CountdownTimer(until: .now.addingTimeInterval(3 * 86_400 + 3_720)).format(.text)
     }
     .padding()
 }

@@ -5,6 +5,9 @@
 //  A loyalty points / miles pill (earn · redeem · balance). Token-bound: the colour
 //  comes from the theme, so it re-skins with the brand. Reused by LoyaltyCard.
 //
+//  Flexible: Dynamic-Type-safe height (scaledControlHeight, never clips), a numeric-text
+//  animation on change (reduce-motion aware), a trailing slot, and density-aware padding.
+//
 
 import SwiftUI
 
@@ -49,22 +52,18 @@ public enum PointsSize {
         case .large: return .labelMd600
         }
     }
-    var iconSize: CGFloat {
-        switch self {
-        case .small: return 12
-        case .medium: return 14
-        case .large: return 16
-        }
-    }
 }
 
 /// A token-bound loyalty-points pill.
 ///
 /// ```swift
 /// PointsBadge(1_250).unit("mil").style(.earn).size(.large)   // "＋1.250 mil"
+/// PointsBadge(8_430).style(.balance).animatesValue().trailing { TierDot(.gold) }
 /// ```
 public struct PointsBadge: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let points: Int
     // Appearance/state — mutated only through the modifiers below (R2).
@@ -73,19 +72,24 @@ public struct PointsBadge: View {
     private var size: PointsSize = .medium
     private var systemImage: String = "star.circle.fill"
     private var showsSign: Bool = true
+    private var animatesValue: Bool = false
+    private var trailingSlot: AnyView?
 
     public init(_ points: Int) {   // R1 — content
         self.points = points
     }
 
     public var body: some View {
-        HStack(spacing: Theme.SpacingKey.xs.value) {
-            Image(systemName: systemImage).font(.system(size: size.iconSize))
-            Text(label).textStyle(size.textStyle)
+        HStack(spacing: density.scale(Theme.SpacingKey.xs.value)) {
+            Image(systemName: systemImage).font(size.textStyle.font)
+            Text(label)
+                .textStyle(size.textStyle)
+                .contentTransition(animatesValue && !reduceMotion ? .numericText(value: Double(points)) : .identity)
+            if let trailingSlot { trailingSlot }
         }
         .foregroundStyle(style.foreground(theme))
-        .padding(.horizontal, Theme.SpacingKey.sm.value)
-        .frame(height: size.height)
+        .padding(.horizontal, density.scale(Theme.SpacingKey.sm.value))
+        .scaledControlHeight(size.height)
         .background(style.background(theme), in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(label)
@@ -111,6 +115,10 @@ public extension PointsBadge {
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     /// Shows a leading `＋` on earned points (default true).
     func showsSign(_ on: Bool) -> Self { copy { $0.showsSign = on } }
+    /// Animates digit changes (numeric-text transition); no-op under Reduce Motion.
+    func animatesValue(_ on: Bool = true) -> Self { copy { $0.animatesValue = on } }
+    /// A trailing slot after the value (e.g. a tier marker).
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.trailingSlot = AnyView(content()) } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -124,6 +132,7 @@ public extension PointsBadge {
         PointsBadge(1_250).unit("mil").style(.earn).size(.large)
         PointsBadge(500).style(.redeem)
         PointsBadge(8_430).unit("pts").style(.balance).icon("wallet.pass.fill")
+            .trailing { Image(systemName: "chevron.right").font(.caption2).opacity(0.5) }
     }
     .padding()
 }
