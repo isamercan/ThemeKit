@@ -1,0 +1,226 @@
+//
+//  DestinationCard.swift
+//  ThemeKit
+//
+//  A travel destination / favourite card — a media header with an optional corner
+//  ribbon and a favourite heart, then a title, subtitle, tag chips and a price +
+//  score row. Token-bound. Composes the atoms (RemoteImage, PriceTag, ScoreBadge,
+//  Tag) into one richly-configurable card, in the spirit of ``ListRow``.
+//
+
+import SwiftUI
+
+/// A token-bound destination / favourite card.
+///
+/// ```swift
+/// DestinationCard("Bali & Unforgettable 3-Days", image: url)
+///     .subtitle("Indonesia").ribbon("Top #1")
+///     .price(1_450).rating(4.8).favorite($isFavourite)
+///     .tags(["Beach", "Culture"]).onTap { open() }
+/// ```
+public struct DestinationCard: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+
+    // Required content (R1).
+    private let title: String
+    private let imageURL: URL?
+    // Appearance/state — mutated only through the modifiers below (R2).
+    private var subtitle: String?
+    private var price: Decimal?
+    private var currencyCode = "TRY"
+    private var rating: Double?
+    private var ribbon: String?
+    private var ribbonColor: SemanticColor = .primary
+    private var badge: String?
+    private var tags: [String] = []
+    private var favorite: Binding<Bool>?
+    private var aspect: CGFloat = 4.0 / 3.0
+    private var overlayTitle = false
+    private var onTap: (() -> Void)?
+    private var mediaSlot: AnyView?
+    private var footerSlot: AnyView?
+    private var elevation: CardElevation = .soft
+
+    public init(_ title: String, image url: URL? = nil) {   // R1 — content
+        self.title = title
+        self.imageURL = url
+    }
+
+    public var body: some View {
+        let card = VStack(alignment: .leading, spacing: 0) {
+            mediaSection
+            infoSection
+        }
+        .background(theme.background(.bgElevatorPrimary))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+                .stroke(theme.border(.borderPrimary), lineWidth: 0.5)
+        )
+        .modifier(DestinationElevation(elevation: elevation))
+
+        if let onTap {
+            Button(action: onTap) { card }.buttonStyle(.plain)
+        } else {
+            card
+        }
+    }
+
+    // MARK: Media
+
+    private var mediaSection: some View {
+        mediaContent
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .overlay(alignment: .topLeading) { if let ribbon { ribbonTag(ribbon) } }
+            .overlay(alignment: .topTrailing) { if let favorite { heartButton(favorite) } }
+            .overlay(alignment: .bottomLeading) { if overlayTitle { overlayTitleBar } }
+    }
+
+    @ViewBuilder private var mediaContent: some View {
+        if let mediaSlot {
+            mediaSlot
+        } else if let imageURL {
+            RemoteImage(imageURL).ratio(aspect).contentMode(.fill)
+        } else {
+            ZStack {
+                Rectangle().fill(theme.background(.bgSecondary))
+                Image(systemName: "photo").font(.largeTitle).foregroundStyle(theme.text(.textTertiary))
+            }
+            .aspectRatio(aspect, contentMode: .fit)
+        }
+    }
+
+    private func ribbonTag(_ text: String) -> some View {
+        Text(text)
+            .textStyle(.labelSm700)
+            .foregroundStyle(ribbonColor.onSolid)
+            .padding(.horizontal, Theme.SpacingKey.sm.value)
+            .padding(.vertical, 4)
+            .background(ribbonColor.solid, in: Capsule())
+            .padding(Theme.SpacingKey.sm.value)
+            .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+    }
+
+    private func heartButton(_ fav: Binding<Bool>) -> some View {
+        Button { fav.wrappedValue.toggle() } label: {
+            Image(systemName: fav.wrappedValue ? "heart.fill" : "heart")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textSecondaryInverse))
+                .symbolEffect(.bounce, value: fav.wrappedValue)
+                .frame(width: 32, height: 32)
+                .background(.black.opacity(0.28), in: Circle())
+                .padding(Theme.SpacingKey.sm.value)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(fav.wrappedValue ? "Remove from favourites" : "Add to favourites")
+    }
+
+    private var overlayTitleBar: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).textStyle(.labelMd700).foregroundStyle(theme.text(.textSecondaryInverse))
+            if let subtitle {
+                Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondaryInverse).opacity(0.9))
+            }
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(colors: [.black.opacity(0), .black.opacity(0.65)], startPoint: .top, endPoint: .bottom)
+        )
+    }
+
+    // MARK: Info
+
+    private var infoSection: some View {
+        VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            if !overlayTitle {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary)).lineLimit(2)
+                    if let badge { Badge(badge).badgeStyle(.info).variant(.soft).size(.small) }
+                }
+                if let subtitle {
+                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1)
+                }
+            }
+            if !tags.isEmpty {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    ForEach(tags, id: \.self) { Tag($0).variant(.soft) }
+                }
+            }
+            if price != nil || rating != nil || footerSlot != nil {
+                HStack(alignment: .center) {
+                    if let price { PriceTag(price, currencyCode: currencyCode).emphasis(.hero) }
+                    Spacer(minLength: Theme.SpacingKey.sm.value)
+                    if let rating { ScoreBadge(rating) }
+                }
+            }
+            if let footerSlot { footerSlot }
+        }
+        .padding(density.scale(Theme.SpacingKey.md.value))
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension DestinationCard {
+    /// A location / description line under the title.
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
+    /// The price, rendered as a hero `PriceTag` in the footer row.
+    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// A 0–5 review score, rendered as a `ScoreBadge`.
+    func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+    /// A corner ribbon, e.g. "Top #1".
+    func ribbon(_ text: String?, color: SemanticColor = .primary) -> Self { copy { $0.ribbon = text; $0.ribbonColor = color } }
+    /// An inline badge next to the title.
+    func badge(_ text: String?) -> Self { copy { $0.badge = text } }
+    /// Tag chips under the title (Beach, Culture…).
+    func tags(_ list: [String]) -> Self { copy { $0.tags = list } }
+    /// A favourite heart bound to a flag, top-trailing on the media.
+    func favorite(_ isFavorite: Binding<Bool>) -> Self { copy { $0.favorite = isFavorite } }
+    /// Media aspect ratio (width ÷ height, default 4:3).
+    func aspect(_ ratio: CGFloat) -> Self { copy { $0.aspect = max(0.2, ratio) } }
+    /// Draw the title over the media (with a scrim) instead of below it.
+    func overlayTitle(_ on: Bool = true) -> Self { copy { $0.overlayTitle = on } }
+    /// Tap handler for the whole card.
+    func onTap(_ action: (() -> Void)?) -> Self { copy { $0.onTap = action } }
+    /// Replace the media with custom content (a carousel, a map…).
+    func media<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.mediaSlot = AnyView(content()) } }
+    /// A footer slot under the price row — a CTA, an amenity strip…
+    func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
+    /// Surface elevation: none / soft / elevated.
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+private struct DestinationElevation: ViewModifier {
+    let elevation: CardElevation
+    @ViewBuilder func body(content: Content) -> some View {
+        switch elevation {
+        case .none: content
+        case .soft: content.themeShadow(.soft)
+        case .elevated: content.themeShadow(.elevated)
+        }
+    }
+}
+
+#Preview {
+    @Previewable @Environment(\.theme) var theme
+    @Previewable @State var fav = true
+    ScrollView {
+        VStack(spacing: 16) {
+            DestinationCard("Bali & Unforgettable 3-Days")
+                .subtitle("Indonesia").ribbon("Top #1")
+                .price(1_450).rating(4.8).favorite($fav)
+                .tags(["Beach", "Culture"])
+        }
+        .padding()
+    }
+    .background(theme.background(.bgSecondary))
+}

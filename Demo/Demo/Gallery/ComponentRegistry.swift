@@ -47,29 +47,8 @@ struct StatefulPreview<Value, Content: View>: View {
     var body: some View { content($value) }
 }
 
-/// Seat-map demo with a live multi-select set.
-private struct SeatMapDemo: View {
-    @State private var picked: Set<String> = ["12C"]
-    private var rows: [[SeatSlot]] {
-        (10...14).map { r in
-            [.seat(Seat("\(r)A", premium: r == 10)), .seat(Seat("\(r)B")), .seat(Seat("\(r)C", occupied: r == 12)),
-             .aisle,
-             .seat(Seat("\(r)D")), .seat(Seat("\(r)E", occupied: r == 13)), .seat(Seat("\(r)F"))]
-        }
-    }
-    var body: some View { SeatMap(rows: rows, selection: $picked).maxSelection(3) }
-}
-
-/// Two-binding demo for the price histogram + range filter.
-private struct PriceHistogramDemo: View {
-    @State private var low = 800.0
-    @State private var high = 3_200.0
-    var body: some View {
-        PriceHistogram(bins: [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2],
-                       lowerValue: $low, upperValue: $high, in: 0...5_000)
-            .frame(maxWidth: 340)
-    }
-}
+// Interactive travel demos (PriceTagDemo, SeatMapDemo, PriceHistogramDemo, …)
+// live in Demos/TravelDemos.swift — every prop/modifier is an editable knob.
 
 enum ComponentRegistry {
     static let all: [ComponentEntry] = [
@@ -86,10 +65,10 @@ enum ComponentRegistry {
         .knob("ProgressBar", .atoms, demo: ProgressBarDemo(), usage: #"ProgressBar(value: 0.4).showsPercentage()"#),
         .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).showsLabel()"#),
         .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9").cornerRadius(12)   // .gif/.apng animate natively"#),
-        .static("AnimatedImage", .atoms, usage: #"AnimatedImage(gifURL)   // GIF/APNG via ImageIO — no dependency"#) { AnimatedImage(URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")).frame(width: 180, height: 180).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)) },
+        .knob("AnimatedImage", .atoms, demo: AnimatedImageDemo(), usage: #"AnimatedImage(gifURL).contentMode(.fit).cornerRadius(16)   // GIF/APNG via ImageIO — no dependency"#),
         .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284).size(40)   // odometer digit roll"#),
         .knob("Indicator", .atoms, demo: IndicatorDemo(), usage: #"icon.indicatorDot()   // or .indicator { Badge("3") }"#),
-        .static("Kbd", .atoms, usage: #"Kbd("⌘")  Kbd("K")"#) { HStack(spacing: 6) { Kbd("⌘"); Kbd("K"); Text("then").font(.caption).foregroundStyle(.secondary); Kbd("esc") } },
+        .knob("Kbd", .atoms, demo: KbdDemo(), usage: #"Kbd("⌘")  Kbd("K")"#),
         .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online").pulse()"#),
         .knob("Swap", .atoms, demo: SwapDemo(), usage: #"Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal")"#),
         .knob("TextLink", .atoms, demo: TextLinkDemo(), usage: #"TextLink("Forgot password?") { }"#),
@@ -99,52 +78,28 @@ enum ComponentRegistry {
         .knob("Spinner", .atoms, demo: SpinnerDemo(), usage: #"Spinner().size(24).lineWidth(3)"#),
         .knob("Tag", .atoms, demo: TagDemo(), usage: #"Tag("Sold out", onRemove: { }).tagStyle(.error).variant(.solid)"#),
         .knob("Title", .atoms, demo: TitleDemo(), usage: #"Title("Section").subtitle("Sub").action("See all", action: { })"#),
-        .static("InlineText", .atoms, usage: #"InlineText("Accept the Terms.", links: [("Terms", { })])"#) {
-            InlineText("By continuing you accept the Terms and the Privacy Policy.", links: [("Terms", {}), ("Privacy Policy", {})])
+        .knob("InlineText", .atoms, demo: InlineTextDemo(), usage: #"InlineText("Accept the Terms.", links: [("Terms", { })]).inlineStyle(.bodyBase400).color(tint)"#),
+        .knob("Join", .atoms, demo: JoinDemo(), usage: #"Join(.horizontal) { ButtonA; ButtonB; ButtonC }   // connected group, rounded outer corners"#),
+        .knob("Mask", .atoms, demo: MaskDemo(), usage: #"image.themeMask(.squircle)   // .circle / .squircle / .hexagon / .star"#),
+        .knob("TextRotate", .atoms, demo: TextRotateDemo(), usage: #"TextRotate(["faster.", "themed.", "accessible."], interval: 2)"#),
+        .knob("Gauge", .atoms, demo: GaugeDemo(), usage: #"GaugeView(value: 0.72, label: "CPU").gaugeStyle(.circular).showsValue()"#),
+        .knob("ShareButton", .atoms, demo: ShareButtonDemo(), usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#),
+        .knob("PriceTag", .atoms, demo: PriceTagDemo(), usage: #"PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()   // .free() · .soldOut() · .from() · .fractionDigits(2)"#),
+        .knob("PointsBadge", .atoms, demo: PointsBadgeDemo(), usage: #"PointsBadge(1_250).unit("mil").style(.earn).size(.large).showsSign(true)   // .earn · .redeem · .balance"#),
+        .knob("CountdownTimer", .atoms, demo: CountdownTimerDemo(), usage: #"CountdownTimer(until: deadline).style(.urgent).format(.boxed).size(.large).showsDays(false)"#),
+        .knob("QRCode", .atoms, demo: QRCodeDemo(), usage: #"QRCode("https://themekit.dev/pass/BID12025").size(160)   // CoreImage, no dep"#),
+        .knob("Barcode", .atoms, demo: BarcodeDemo(), usage: #"Barcode("9824097217421298").height(56).showsValue()   // Code 128, no dep"#),
+        .knob("Confetti", .atoms, demo: ConfettiDemo(), usage: #"Confetti().pieceCount(60)   // or: view.confetti(trigger: submissions)"#),
+        .knob("FareFeatureRow", .atoms, demo: FareFeatureRowDemo(), usage: ##"FareFeatureRow("Checked bag", systemImage: "suitcase.fill", detail: "1 × 20 kg", status: .included)   // .included/.excluded/.info"##),
+        .knob("SwapButton", .atoms, demo: SwapButtonDemo(), usage: #"SwapButton { swap(&from, &to) }.size(34)   // action flip; see Swap for the on/off toggle"#),
+        .static("SearchBadge", .atoms, usage: ##"SearchBadge("SAW")   // soft-blue pill; .colors(background:foreground:) · .icon("bolt.fill")"##) {
+            HStack(spacing: 8) { SearchBadge("SAW"); SearchBadge("23 Jul '24"); SearchBadge("4 Guests"); SearchBadge("Direct").colors(background: .badgeBgPurple, foreground: .textPurple).icon("bolt.fill") }
         },
-        .static("Join", .atoms, usage: #"Join { ButtonA; ButtonB; ButtonC }   // connected group, rounded outer corners"#) {
-            Join { ForEach(["Day", "Week", "Month"], id: \.self) { Text($0).textStyle(.labelBase600).padding(.horizontal, 14).frame(height: 40) } }
-        },
-        .static("Mask", .atoms, usage: #"image.themeMask(.squircle)   // .circle / .squircle / .hexagon / .star"#) {
-            HStack(spacing: 14) { ForEach(MaskShape.allCases, id: \.self) { Rectangle().fill(.blue.gradient).frame(width: 52, height: 52).themeMask($0) } }
-        },
-        .static("TextRotate", .atoms, usage: #"TextRotate(["faster.", "themed.", "accessible."], interval: 2)"#) {
-            HStack(spacing: 4) { Text("Build").textStyle(.headingSm); TextRotate(["faster.", "themed.", "accessible."]) }
-        },
-        .static("Gauge", .atoms, usage: #"GaugeView(value: 0.72, label: "CPU").gaugeStyle(.circular)"#) {
-            HStack(spacing: 24) { GaugeView(value: 0.72, label: "CPU"); GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).frame(width: 140) }
-        },
-        .static("ShareButton", .atoms, usage: #"ShareButton(item: url)   // wraps SwiftUI ShareLink"#) {
-            ShareButton(item: "https://github.com/isamercan/ThemeKit")
-        },
-        .static("PriceTag", .atoms, usage: #"PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()"#) {
-            VStack(alignment: .leading, spacing: 12) {
-                PriceTag(1_299).original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()
-                PriceTag(2_499, currencyCode: "EUR").emphasis(.hero)
-                PriceTag(1_299).size(.small)
-            }
-        },
-        .static("PointsBadge", .atoms, usage: #"PointsBadge(1_250).unit("mil").style(.earn).size(.large)"#) {
-            VStack(alignment: .leading, spacing: 12) {
-                PointsBadge(1_250).unit("mil").style(.earn).size(.large)
-                PointsBadge(500).style(.redeem)
-                PointsBadge(8_430).style(.balance).icon("wallet.pass.fill")
-            }
-        },
-        .static("CountdownTimer", .atoms, usage: #"CountdownTimer(until: deadline).style(.urgent).size(.large)"#) {
-            CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
-        },
-        .static("QRCode", .atoms, usage: #"QRCode("https://themekit.dev/pass/BID12025").size(160)   // CoreImage, no dep"#) {
-            QRCode("https://github.com/isamercan/ThemeKit").size(160)
-        },
-        .static("Barcode", .atoms, usage: #"Barcode("9824097217421298").height(56).showsValue()   // Code 128, no dep"#) {
-            Barcode("9824097217421298").height(56).showsValue().frame(maxWidth: 300)
-        },
+        .knob("FlightStatusBadge", .atoms, demo: FlightStatusBadgeDemo(), usage: ##"FlightStatusBadge(.delayed).time("+35m").solid()   // on-time/boarding/delayed/cancelled…"##),
+        .knob("IconTile", .atoms, demo: IconTileDemo(), usage: ##"IconTile("suitcase.fill").accent(.turquoise).size(46)   // shared leading tile"##),
 
         // MARK: Molecules
-        .static("ColorField", .molecules, usage: #"ColorField("Brand color", selection: $color)"#) {
-            ColorField("Brand color", selection: .constant(.blue)).frame(maxWidth: 320)
-        },
+        .knob("ColorField", .molecules, demo: ColorFieldDemo(), usage: #"ColorField("Brand color", selection: $color).supportsOpacity()"#),
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete("Destination", text: $text, suggestions: items)\n// async: Autocomplete(text: $text, suggest: { await api.search($0) })"#),
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue") { }"#),
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
@@ -183,37 +138,37 @@ enum ComponentRegistry {
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
-        .static("GuestSelector", .molecules, usage: #"GuestSelector(selection: $guests).showsRooms(false)"#) {
-            StatefulPreview(GuestSelection(rooms: 1, adults: 2, children: 1)) { guests in
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(guests.wrappedValue.summary).textStyle(.bodyBase400)
-                    GuestSelector(selection: guests)
-                }.frame(maxWidth: 340)
+        .knob("GuestSelector", .molecules, demo: GuestSelectorDemo(), usage: #"GuestSelector(selection: $guests).showsRooms(true).showsInfants(false).maxTotal(9)"#),
+        .knob("AmenityGrid", .molecules, demo: AmenityGridDemo(), usage: #"AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), …]).columns(2).size(.medium).limit(4).highlighted(["Free Wi-Fi"])"#),
+        .knob("PriceHistogram", .molecules, demo: PriceHistogramDemo(), usage: #"PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000).showsBounds().resultCount(n)"#),
+        .knob("PriceTrendChart", .molecules, demo: PriceTrendChartDemo(), usage: ##"PriceTrendChart(points, selection: $day).title("July").onPage(prev: …, next: …)   // per-day fare bars"##),
+        .knob("PriceBreakdown", .molecules, demo: PriceBreakdownDemo(), usage: ##"PriceBreakdown(190_960).note("2 rooms · 4 nights").original(248_000).discountBadge("-23%").extra("Extra 8%", 175_683)"##),
+        .knob("DatePriceStrip", .molecules, demo: DatePriceStripDemo(), usage: ##"DatePriceStrip([DatePriceItem("18 Jul", price: 1_767.99), …], selection: $i).columns(3).highlightCheapest()"##),
+        .static("DatePriceCard", .molecules, usage: ##"DatePriceCard(DatePriceItem("18 Jul", price: 1_767.99), isSelected: true) { pick() }.currency("TRY").cheapest()"##) {
+            HStack(spacing: 8) {
+                DatePriceCard(DatePriceItem("17 Jul", price: 1_474.99), isSelected: false) { }.cheapest()
+                DatePriceCard(DatePriceItem("18 Jul", price: 1_767.99), isSelected: true) { }
+            }.frame(maxWidth: 240)
+        },
+        .knob("SortSummaryBar", .molecules, demo: SortSummaryBarDemo(), usage: ##"SortSummaryBar([SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"), …], selection: $sort).onMore { }"##),
+        .static("SortTab", .molecules, usage: ##"SortTab(SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"), isSelected: true) { select() }"##) {
+            HStack(spacing: 20) {
+                SortTab(SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"), isSelected: true) { }
+                SortTab(SortOption("Cheapest", value: "₺2.178", subtitle: "6h 45m", icon: "tag.fill"), isSelected: false) { }
             }
         },
-        .static("AmenityGrid", .molecules, usage: #"AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), …]).columns(2)"#) {
-            AmenityGrid([
-                ThemeKit.Amenity("Free Wi-Fi", systemImage: "wifi"),
-                ThemeKit.Amenity("Pool", systemImage: "figure.pool.swim"),
-                ThemeKit.Amenity("Breakfast", systemImage: "fork.knife"),
-                ThemeKit.Amenity("Parking", systemImage: "parkingsign"),
-                ThemeKit.Amenity("Gym", systemImage: "dumbbell"),
-                ThemeKit.Amenity("Pet friendly", systemImage: "pawprint"),
-            ]).columns(2).frame(maxWidth: 340)
-        },
-        .static("PriceHistogram", .molecules, usage: #"PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000)"#) {
-            PriceHistogramDemo()
-        },
-        .static("InstallmentSelector", .molecules, usage: #"InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months).interestFreeUpTo(3)"#) {
-            StatefulPreview(3) { months in
-                InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: months).interestFreeUpTo(3).frame(maxWidth: 340)
-            }
-        },
-        .static("CurrencyPicker", .molecules, usage: #"CurrencyPicker(selection: $code, currencies: Currency.common)"#) {
-            StatefulPreview("TRY") { code in
-                CurrencyPicker(selection: code, currencies: ThemeKit.Currency.common).frame(maxWidth: 340)
-            }
-        },
+        .knob("FlightRoute", .molecules, demo: FlightRouteDemo(), usage: ##"FlightRoute(from: "IST", to: "AYT", departure: dep, arrival: arr).stops(1).nextDay()"##),
+        .knob("FieldButton", .molecules, demo: FieldButtonDemo(), usage: ##"FieldButton("2 Passengers · Economy") { openSheet() }.label("Passengers").icon("person.2.fill")"##),
+        .knob("SearchField", .molecules, demo: SearchFieldDemo(), usage: ##"SearchField("From") { openPicker() }.value(code: "IST", title: "Istanbul", subtitle: "All airports")\n// or fully custom: SearchField("Dates") { }.content { DateRange(…) }.onClear { }"##),
+        .knob("SuggestionRow", .molecules, demo: SuggestionRowDemo(), usage: ##"SuggestionRow("Ankara, Türkiye") { pick() }.icon("airplane").code("ANK").subtitle("Any").highlight(query)   // .nested() for sub-airports"##),
+        .knob("SmartSuggestion", .molecules, demo: SmartSuggestionDemo(), usage: ##"SmartSuggestion("Berlin outbound is 12% cheaper on Sat 13 Sep.").label("Smart tip").tint(.success).onTap { }"##),
+        .knob("PassengerRow", .molecules, demo: PassengerRowDemo(), usage: ##"PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345").seat("14C").status("Checked in").onEdit { }"##),
+        .knob("LayoverRow", .molecules, demo: LayoverRowDemo(), usage: ##"LayoverRow(duration: "2h 15m", airport: "Istanbul (IST)").warning("Short connection")"##),
+        .knob("StepperRow", .molecules, demo: StepperRowDemo(), usage: ##"StepperRow("Adult", value: $adults).subtitle("+12 yrs").range(1...9)   // passenger/room/quantity counter"##),
+        .knob("RecentSearchRow", .molecules, demo: RecentSearchRowDemo(), usage: ##"RecentSearchRow(from: "IST", to: "AYT") { rerun() }.roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy").onRemove { }"##),
+        .knob("TripTypeToggle", .molecules, demo: TripTypeToggleDemo(), usage: ##"TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $trip).icons([…])"##),
+        .knob("InstallmentSelector", .molecules, demo: InstallmentSelectorDemo(), usage: #"InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months).interestFreeUpTo(3).recommended(6).surcharge([12: 750])"#),
+        .knob("CurrencyPicker", .molecules, demo: CurrencyPickerDemo(), usage: #"CurrencyPicker(selection: $code, currencies: Currency.common).showsName().searchable().recents(recent)"#),
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
@@ -230,16 +185,8 @@ enum ComponentRegistry {
         .knob("FAB", .organisms, demo: FABDemo(), usage: #"FloatingActionButton(systemImage: "plus", actions: [.init(systemImage: "camera", action: { })])"#),
         .knob("Hero", .organisms, demo: HeroDemo(), usage: #"Hero(title: "…").subtitle("…").cta("Explore", action: { })"#),
         .knob("Stack", .organisms, demo: CardStackDemo(), usage: #"CardStack(items) { item in cardView }"#),
-        .static("Footer", .organisms, usage: #"Footer(columns: [.init("Company", items: [.init("About")])], note: "© 2026")"#) {
-            Footer(columns: [.init("Company", items: [.init("About"), .init("Careers")]), .init("Support", items: [.init("Help"), .init("Contact")]), .init("Legal", items: [.init("Terms"), .init("Privacy")])], note: "© 2026 ThemeKit.")
-        },
-        .static("Diff", .organisms, usage: #"Diff { beforeView } after: { afterView }"#) {
-            Diff {
-                Theme.shared.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
-            } after: {
-                Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
-            }
-        },
+        .knob("Footer", .organisms, demo: FooterDemo(), usage: #"Footer(columns: [.init("Company", items: [.init("About")])], note: "© 2026")"#),
+        .knob("Diff", .organisms, demo: DiffDemo(), usage: #"Diff { beforeView } after: { afterView }.aspect(1.6)"#),
         .knob("Timeline", .organisms, demo: TimelineDemo(), usage: #"Timeline([.init(title: "Placed", state: .done, color: .success)]).pending("Awaiting…")"#),
         .knob("Coupon", .organisms, demo: CouponDemo(), usage: #"Coupon(code: "UXMUQ", onCopy: { }).couponStyle(.outlined)"#),
         .knob("EmptyState", .organisms, demo: EmptyStateDemo(), usage: #"EmptyState("Empty").icon("tray").message("…").primaryAction("Retry") { }"#),
@@ -265,30 +212,37 @@ enum ComponentRegistry {
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items) { item in mediaView }.peek(36).autoplay(2)"#),
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url).loop().muted().muteToggle()"#),
-        .static("KeyValueTable", .organisms, usage: #"KeyValueTable(rows: [...]).title("Summary").bordered()"#) {
-            KeyValueTable(rows: [.init("Status", value: "Active", style: .success), .init("Old price", value: "$5,000", style: .strikethrough), .init("Total", value: "$4,250")]).title("Reservation summary").bordered()
-        },
-        .static("FlightCard", .organisms, usage: #"FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr).price(1_299).badge("Cheapest") { }"#) {
-            VStack(spacing: 12) {
-                FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: .now, arrival: .now.addingTimeInterval(2 * 3_600 + 20 * 60)).price(1_299).badge("Cheapest").onSelect { }
-                FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: .now, arrival: .now.addingTimeInterval(4 * 3_600)).stops(1).price(3_499)
-            }.frame(maxWidth: 360)
-        },
-        .static("FareSummary", .organisms, usage: #"FareSummary([.item("Base fare", 1_100), .discount("Member", 100), .total("Total", 1_199)])"#) {
-            FareSummary([.item("Base fare", 1_100), .item("Taxes & fees", 199), .discount("Member discount", 100), .total("Total", 1_199)]).frame(maxWidth: 360)
-        },
-        .static("ReviewCard", .organisms, usage: #"ReviewCard(author: "Elif K.", score: 9.2, text: "…").date(d).verified()"#) {
-            ReviewCard(author: "Elif Kaya", score: 9.2, text: "Spotless rooms and a great location right by the marina. Breakfast was excellent.").date(.now).title("Would absolutely stay again").verified().frame(maxWidth: 360)
-        },
-        .static("LoyaltyCard", .organisms, usage: #"LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif K.").progress(0.62, toNextTier: "Platinum")"#) {
-            LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif Kaya").progress(0.62, toNextTier: "Platinum").frame(maxWidth: 360)
-        },
-        .static("SeatMap", .organisms, usage: #"SeatMap(rows: layout, selection: $picked).maxSelection(2)"#) {
-            SeatMapDemo()
-        },
-        .static("LocationCard", .organisms, usage: #"LocationCard(title: "Marina Bay Hotel", latitude: 38.42, longitude: 27.14).subtitle("…").distance("1.2 km")"#) {
-            LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428).subtitle("Kordon Cd. No:12, İzmir").distance("1.2 km to center").frame(maxWidth: 340)
-        },
+        .knob("KeyValueTable", .organisms, demo: KeyValueTableDemo(), usage: #"KeyValueTable(rows: [...]).title("Summary").bordered()"#),
+        .knob("FlightCard", .organisms, demo: FlightCardDemo(), usage: #"FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr).stops(0).price(1_299).badge("Cheapest").scarcity(3).fareBrand("Eco Flex").onSelect { }\n// multi-leg: FlightCard(legs: [outbound, ret]).price(7_178)"#),
+        .knob("FareSummary", .organisms, demo: FareSummaryDemo(), usage: #"FareSummary([.item("Base fare", 1_100, info: "…"), .discount("Member", 100), .total("Total", 1_199)]).onInfo { line in } footer: { TermsLink() }"#),
+        .knob("ReviewCard", .organisms, demo: ReviewCardDemo(), usage: #"ReviewCard(author: "Elif K.", score: 9.2, text: "…").date(d).title("…").verified().stars().expandable().photos(urls).onPhotoTap { }"#),
+        .knob("LoyaltyCard", .organisms, demo: LoyaltyCardDemo(), usage: #"LoyaltyCard(tier: "Gold", points: 8_430).memberName("Elif K.").progress(0.62, toNextTier: "Platinum").membership(.qr(id)).flippable().logo { }"#),
+        .knob("SeatMap", .organisms, demo: SeatMapDemo(), usage: ##"SeatMap(columns: "ABC DEF", rows: Array(1...30), selection: $picked) { id, row, col in\n    SeatInfo(available: !sold.contains(id), price: row <= 3 ? 600 : 80, tier: row == 14 ? .exit : .standard)\n}.legend().showsSeatInfo().recommended(["11C"])"##),
+        .static("Seat Layouts", .organisms, usage: ##"// letters = seats, spaces = gaps (repeat = wider aisle)\nSeatMap(columns: "AB CDE FG", rows: Array(1...30), selection: $picked)   // 2·3·2"##) { SeatLayoutsShowcase() },
+        .knob("LocationCard", .organisms, demo: LocationCardDemo(), usage: #"LocationCard(title: "Marina Bay Hotel", latitude: 38.42, longitude: 27.14).subtitle("…").distance("1.2 km").directions().pois(pins).snapshot()"#),
+        .knob("TicketStub", .organisms, demo: TicketStubDemo(), usage: #"TicketStub { FlightCard(...) }.stub { Barcode(id).showsValue() }.notchRadius(12).perforation().elevation(.elevated)"#),
+        .knob("DestinationCard", .organisms, demo: DestinationCardDemo(), usage: #"DestinationCard("Bali & 3-Days", image: url).ribbon("Top #1").price(1_450).rating(4.8).favorite($fav).tags(["Beach", "Culture"]).onTap { }"#),
+        .knob("FareFamilyCard", .organisms, demo: FareFamilyCardDemo(), usage: ##"FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([FareFeature("Cabin bag", systemImage: "handbag")]).selection($picked)"##),
+        .knob("FlightResultRow", .organisms, demo: FlightResultRowDemo(), usage: ##"FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: arr).flightNo("TK 2434").price(3_538.99).baggage("15 kg").badge("Cheapest").returnLeg(from: "AYT", to: "IST", departure: d2, arrival: a2).onSelect { }"##),
+        .knob("DateRangePicker", .organisms, demo: DateRangePickerDemo(), usage: ##"DateRangePicker(.hotel) { result in … }.display(.month/.week/.year/.browse).daySelection(.rounded).accent(.turquoise).day { ctx in HeatCell(ctx) }.holiday(on: days, color: .error, name: "…")   // or someView.dateRangePicker(isPresented: $show) { … }"##),
+        .knob("SheetHeader", .organisms, demo: SheetHeaderDemo(), usage: ##"SheetHeader("Passengers").onBack { }.onClose { }.progress(0.4)   // modal header (not the tab NavigationBar)"##),
+        .knob("Calendar Designer", .organisms, demo: CalendarDesignerDemo(), usage: ##"CalendarStyleConfigurator(style: $style)   // live design playground → style.generatedSwiftCode (Almanac)"##),
+        .knob("TimeWheel", .molecules, demo: TimeWheelDemo(), usage: ##"TimeWheel(hour: $h, minute: $m, isAM: $am).format(.amPm)   // themed drum time picker (Almanac)"##),
+        .knob("FilterRow", .molecules, demo: FilterRowDemo(), usage: ##"FilterRow("Direct", isOn: $direct).count(128).icon("airplane")   // Checkbox atom + title + count"##),
+        .knob("FilterList", .organisms, demo: FilterListDemo(), usage: ##"FilterList([FilterOption("Direct", count: 128), …], selection: $stops).title("Stops").bordered().selectAll("All")"##),
+        .knob("FilterBar", .organisms, demo: FilterBarDemo(), usage: ##"FilterBar([QuickFilter("8+ rating"), QuickFilter("Seafront"), …], selection: $active).onFilter { }.onSort { }   // leading buttons collapse on scroll"##),
+        .knob("HotelResultCard", .organisms, demo: HotelResultCardDemo(), usage: ##"HotelResultCard(name: "Mirage Park Resort").images(urls).score(8.9, reviews: 949).features([…]).original(248_000).discountBadge("-23%").price(190_960).extraDiscount("Extra 8%", 175_683).favorite($fav).onSelect { }"##),
+        .knob("FlightTicketCard", .organisms, demo: FlightTicketCardDemo(), usage: ##"FlightTicketCard(from: "NYC", to: "SFO").cities(from: "New York City", to: "San Francisco").duration("1h 45m").times(departure: "10:00 AM", arrival: "11:30 AM").airline("Garuda").price(140, currencyCode: "USD").favorite($fav)"##),
+        .knob("BoardingPass", .organisms, demo: BoardingPassDemo(), usage: ##"BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER").airline("Pegasus").flightNo("PC 1234").times(departure: "13:15", arrival: "16:05").gate("A12", seat: "14C", boarding: "12:45").barcode("…")"##),
+        .knob("AncillaryCard", .organisms, demo: AncillaryCardDemo(), usage: ##"AncillaryCard("Checked baggage").icon("suitcase.fill").subtitle("20 kg").price(450, suffix: "/ bag").quantity($bags, range: 0...4)   // or .added($on)"##),
+        .knob("RoomCard", .organisms, demo: RoomCardDemo(), usage: ##"RoomCard(name: "Deluxe Room").board("All-inclusive").features([FareFeature(…)]).original(12_000).discountBadge("-20%").price(9_600).unit("/ night").onSelect { }"##),
+        .knob("StickyBookingBar", .organisms, demo: StickyBookingBarDemo(), usage: ##"StickyBookingBar("Book now") { }.price(9_600).original(12_000).discountBadge("-20%").note("2 rooms · 4 nights")   // .safeAreaInset(.bottom)"##),
+        .knob("MapCallout", .organisms, demo: MapCalloutDemo(), usage: ##"MapCallout(title: "Mirage Park Resort").image(url).score(8.9).price(9_600).onSelect { }   // over any Map, no MapKit dep"##),
+        .knob("AgentPriceRow", .organisms, demo: AgentPriceRowDemo(), usage: ##"AgentPriceRow("Trip.com") { open() }.logo(url).rating(4.2).badge("Cheapest").original(4_100).price(3_538).cta("Go to site").recommended()"##),
+        .knob("PriceAlertCard", .organisms, demo: PriceAlertCardDemo(), usage: ##"PriceAlertCard("Get price alerts", isOn: $alerts).subtitle("…").price(3_538).trend(.down, "-8%")"##),
+        .knob("PaymentCardField", .molecules, demo: PaymentCardFieldDemo(), usage: ##"PaymentCardField(number: $n, expiry: $e, cvv: $c).holder($name)   // brand auto-detect + 4-4-4-4 / MM/YY"##),
+        .knob("InstallmentPicker", .molecules, demo: InstallmentPickerDemo(), usage: ##"InstallmentPicker([InstallmentOption(count: 3, total: 9_900, monthly: 3_300), …], selection: $count).currency("TRY")"##),
+        .knob("MapPriceMarker", .molecules, demo: MapPriceMarkerDemo(), usage: ##"MapPriceMarker("₺1.250").selected(isActive).icon("heart.fill")   // in any Map annotation"##),
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
     ]
 

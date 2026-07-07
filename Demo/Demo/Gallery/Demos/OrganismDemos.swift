@@ -146,17 +146,37 @@ struct CounterDemo: View {
 }
 
 struct CouponDemo: View {
-    @State private var code = "UXMUQ"
+    @State private var code = "EOYP25"
     @State private var style: CouponStyle = .outlined
+    @State private var size: CouponSize = .medium
+    @State private var block = false
+    @State private var icon = false
+    @State private var discount = true
+    @State private var expiry = true
+
+    private var coupon: Coupon {
+        var c = Coupon(code: code, onCopy: { flash("Copied \(code)") }).couponStyle(style).size(size).block(block)
+        if icon { c = c.icon("tag.fill") }
+        if discount { c = c.discount("20% OFF") }
+        if expiry && block { c = c.expiry("Valid until Dec 31, 2025") }
+        return c
+    }
 
     var body: some View {
-        ComponentStage("Coupon", inspector: [("style", "\(style)")]) {
-            Coupon(code: code).couponStyle(style)
+        ComponentStage("Coupon", inspector: [("style", "\(style)"), ("layout", block ? "block" : "inline")]) {
+            coupon.frame(maxWidth: block ? 320 : nil)
         } knobs: {
-            TextField("Code", text: $code).textFieldStyle(.roundedBorder)
+            TextField("Code", text: $code).textFieldStyle(.roundedBorder).autocorrectionDisabled()
             Picker("Style", selection: $style) {
                 Text("Filled").tag(CouponStyle.filled); Text("Outlined").tag(CouponStyle.outlined); Text("Plain").tag(CouponStyle.plain)
             }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                Text("S").tag(CouponSize.small); Text("M").tag(CouponSize.medium); Text("L").tag(CouponSize.large)
+            }.pickerStyle(.segmented)
+            Toggle("Block layout (full width)", isOn: $block)
+            Toggle("Leading icon", isOn: $icon)
+            Toggle("Discount chip (20% OFF)", isOn: $discount)
+            if block { Toggle("Expiry line", isOn: $expiry) }
         }
     }
 }

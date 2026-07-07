@@ -3,11 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 71;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1A1111111111111111111112 /* ThemeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111111 /* ThemeKit */; };
+		1A1111111111111111111122 /* ThemeKitCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111121 /* ThemeKitCalendar */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A1111111111111111111112 /* ThemeKit in Frameworks */,
+				1A1111111111111111111122 /* ThemeKitCalendar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,6 +69,7 @@
 			name = Demo;
 			packageProductDependencies = (
 				1A1111111111111111111111 /* ThemeKit */,
+				1A1111111111111111111121 /* ThemeKitCalendar */,
 			);
 			productName = Demo;
 			productReference = 1A1111111111111111111105 /* Demo.app */;
@@ -98,9 +101,8 @@
 			mainGroup = 1A1111111111111111111102;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				1A1111111111111111111110 /* XCLocalSwiftPackageReference "../" */,
+				1A1111111111111111111110 /* XCLocalSwiftPackageReference ".." */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 1A1111111111111111111103 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -328,7 +330,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		1A1111111111111111111110 /* XCLocalSwiftPackageReference "../" */ = {
+		1A1111111111111111111110 /* XCLocalSwiftPackageReference ".." */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ..;
 		};
@@ -337,7 +339,11 @@
 /* Begin XCSwiftPackageProductDependency section */
 		1A1111111111111111111111 /* ThemeKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = "ThemeKit";
+			productName = ThemeKit;
+		};
+		1A1111111111111111111121 /* ThemeKitCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThemeKitCalendar;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
