@@ -12,6 +12,7 @@ on:
     paths:
       - 'Sources/**'
       - 'website/**'
+      - 'Screenshots/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
