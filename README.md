@@ -1,6 +1,6 @@
 # ThemeKit
 
-> **Native, brand-neutral SwiftUI design system** — 135 token-bound components that
+> **Native, brand-neutral SwiftUI design system** — 175 token-bound components that
 > re-skin from a single accent color: light/dark, per-subtree, zero core dependencies.
 
 [![CI](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml/badge.svg)](https://github.com/isamercan/ThemeKit/actions/workflows/ci.yml)
@@ -13,7 +13,7 @@
 **[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
-  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 135 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 175 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
 > The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
@@ -49,7 +49,14 @@ import ThemeKit
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
-- **135 components** — Atoms / Molecules / Organisms, all token-bound.
+- **175 components** — Atoms / Molecules / Organisms, all token-bound.
+- 🧬 **Flexibility architecture** — six archetype style protocols (`CardStyle`,
+  `FieldStyle`, `ChipStyle`, `BarStyle`, `MeterStyle`, `ToastStyle`,
+  `ListRowStyle`) let you re-skin a whole component family with `.cardStyle(_:)`
+  / `.fieldStyle(_:)` / etc., `ViewBuilder` slots (`.leading{}`, `.trailing{}`,
+  `.empty{}`…) inject custom content, and config modifiers accept theme tokens
+  (`.spacing(SpacingKey)`, `.cornerRadius(RadiusRole)`) alongside raw values —
+  all additive, defaults pixel-identical.
 - **Runtime theming** — a Swift token generator + a live configurator turn any
   accent (or `base-100`) color into a full Ant-style palette on device (no Python,
   no baked files).
@@ -205,16 +212,23 @@ gallery, and a full booking flow built entirely from ThemeKit components.
 
 ## Components
 
-135 token-bound components, grouped by complexity:
+175 token-bound components, grouped by complexity:
 
-- **Atoms** (34) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
-  `StatusDot`, `ProgressBar`, `PriceTag`, `PointsBadge`, `CountdownTimer`, `QRCode`, `Barcode`…
-- **Molecules** (51) — `TextInput`, `OTPInput`, `Select`, `Checkbox`, `RangeSlider`,
-  `SearchBar`, `TimeField`, `GuestSelector`, `PriceHistogram`, `InstallmentSelector`, `CurrencyPicker`, buttons…
-- **Organisms** (50) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Timeline`,
-  `NavigationBar`, `Sidebar`, `FlightCard`, `FareSummary`, `ReviewCard`, `LoyaltyCard`, `SeatMap`, `LocationCard`…
+- **Atoms** (44) — `Badge`, `Chip`, `Avatar`, `Icon`, `Rating`, `Spinner`,
+  `StatusDot`, `ProgressBar`, `PriceTag`, `PointsBadge`, `CountdownTimer`, `QRCode`, `Barcode`,
+  `Aura`, `TiltCard`, `CodeBlock`…
+- **Molecules** (64) — `TextInput`, `OTPInput`, `Select`, `Checkbox`, `RangeSlider`,
+  `SearchBar`, `TimeField`, `GuestSelector`, `PriceHistogram`, `InstallmentSelector`, `CurrencyPicker`,
+  `Dropdown`, `ScrubGallery`, buttons…
+- **Organisms** (67) — `Card`, `Carousel`, `DataTable`, `Accordion`, `Timeline`,
+  `NavigationBar`, `Sidebar`, `FlightCard`, `FareSummary`, `ReviewCard`, `LoyaltyCard`, `SeatMap`, `LocationCard`,
+  `HotelResultCard`, `BoardingPass`, `BrowserFrame`, `WindowFrame`, `PhoneFrame`…
 
-Every component is curated by category in the [DocC catalog](#documentation).
+Every component is curated by category in the [DocC catalog](#documentation), and
+listed with a verified usage snippet on the docs site —
+[Atoms](https://isamercan.github.io/ThemeKit/components/atoms/) ·
+[Molecules](https://isamercan.github.io/ThemeKit/components/molecules/) ·
+[Organisms](https://isamercan.github.io/ThemeKit/components/organisms/).
 
 ## Component gallery
 
@@ -411,6 +425,24 @@ _Entrance previews rendered from the live components. SelectBox, BottomSheet, To
 </tr>
 </table>
 <!-- GALLERY:END -->
+
+> **Pending screenshots.** The travel-booking suite and the daisyUI parity sweep
+> (0.7.0–0.16.0) added 50 components that don't have a rendered tile above yet —
+> `make screenshots` needs a macOS run to catch them up. They're all live in the
+> [Demo app](#demo) and documented with a usage snippet in the
+> [Pages component reference](https://isamercan.github.io/ThemeKit/components/atoms/)
+> today: `Aura`, `CodeBlock`, `Confetti`, `FareFeatureRow`, `FlightStatusBadge`,
+> `IconTile`, `SearchBadge`, `SwapButton`, `TiltCard`; `DatePriceCard`,
+> `DatePriceStrip`, `Dropdown`, `FieldButton`, `FilterRow`, `FlightRoute`,
+> `InstallmentPicker`, `LayoverRow`, `MapPriceMarker`, `PassengerRow`,
+> `PaymentCardField`, `PriceBreakdown`, `PriceTrendChart`, `RecentSearchRow`,
+> `ScrubGallery`, `SearchField`, `SmartSuggestion`, `SortSummaryBar`, `SortTab`,
+> `StepperRow`, `SuggestionRow`, `TripTypeToggle`; `AgentPriceRow`,
+> `AncillaryCard`, `BoardingPass`, `BrowserFrame`, `DestinationCard`,
+> `FareFamilyCard`, `FilterBar`, `FilterList`, `FlightResultRow`,
+> `FlightTicketCard`, `HotelResultCard`, `MapCallout`, `PhoneFrame`,
+> `PriceAlertCard`, `RoomCard`, `SheetHeader`, `StickyBookingBar`, `TicketStub`,
+> `WindowFrame`.
 
 ## Token system
 
@@ -709,7 +741,9 @@ validation, localization, accessibility mapping, and component render smoke test
 
 > **Shipped:** the package is public (MIT), the MCP server is on npm
 > (`@isamercan/themekit-mcp`), the Claude Code plugin is installable
-> (`/plugin marketplace add isamercan/ThemeKit`), and the DocC docs are live.
+> (`/plugin marketplace add isamercan/ThemeKit`), the DocC docs are live, and the
+> flexibility programme (style protocols, slots, config modifiers — see
+> [Features](#features)) closed in `0.16.0`.
 
 ## Contributing
 
