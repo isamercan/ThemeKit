@@ -11,8 +11,14 @@ import SwiftUI
 ///   • an async `suggest` provider (remote search) with debounce, a loading
 ///     spinner, an empty "no results" state, and in-flight cancellation.
 /// State (the bound text) is owned by the caller.
+///
+/// The field's *chrome* (fill, border, shape) is delegated to the ambient
+/// ``FieldStyle`` (`.fieldStyle(_:)`), like `TextInput`. The suggestion
+/// dropdown is a popover card, not a field, and keeps its own chrome.
 public struct Autocomplete: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
 
     /// Where suggestions come from.
@@ -88,32 +94,7 @@ public struct Autocomplete: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             if let label { InputLabel(label) }
 
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
-                TextField(placeholder, text: $text)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textPrimary))
-                    .tint(theme.foreground(.fgHero))
-                    .focused($isFocused)
-                    .disabled(!isEnabled)
-                    .a11y(A11yElement.Field.field, in: accessibilityID)
-                    .accessibilityLabel(label ?? placeholder)
-                if isLoading {
-                    Spinner().size(IconSize.sm.value).lineWidth(2)
-                } else if !text.isEmpty {
-                    Button { text = "" } label: {
-                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .scaledControlHeight(48)
-            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(isFocused ? theme.border(.borderHero) : theme.border(.borderPrimary), lineWidth: isFocused ? 1.5 : 1)
-            )
+            fieldBox
 
             if showsDropdown { dropdown }
         }
@@ -122,6 +103,51 @@ public struct Autocomplete: View {
             update(for: value)
             onSearch?(value)
         }
+    }
+
+    /// The composed field row (icon + editor + spinner/clear), padded and sized —
+    /// everything a `FieldStyle` receives as `configuration.content`. The fixed
+    /// 48pt control height is layout, not chrome, so it stays here.
+    private var fieldCore: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
+            TextField(placeholder, text: $text)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+                .tint(theme.foreground(.fgHero))
+                .focused($isFocused)
+                .disabled(!isEnabled)
+                .a11y(A11yElement.Field.field, in: accessibilityID)
+                .accessibilityLabel(label ?? placeholder)
+            if isLoading {
+                Spinner().size(IconSize.sm.value).lineWidth(2)
+            } else if !text.isEmpty {
+                Button { text = "" } label: {
+                    Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .scaledControlHeight(48)
+    }
+
+    /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Configuration mapping: `isFocused` ← the field's `@FocusState`;
+    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` are `false`
+    /// (Autocomplete has no validation concept); `size` is `.medium` —
+    /// Autocomplete has no `TextInputSize` axis (its fixed 48pt control height
+    /// lives in the content and matches no preset).
+    @ViewBuilder
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldCore),
+            isFocused: isFocused,
+            isEnabled: isEnabled,
+            hasError: false,
+            hasWarning: false,
+            size: .medium
+        ))
     }
 
     @ViewBuilder
@@ -227,10 +253,17 @@ public extension Autocomplete {
 #Preview("Static") {
     struct Demo: View {
         @State var text = ""
+        @State var underlined = ""
         var body: some View {
-            Autocomplete("Destination", text: $text,
-                         suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
-                .padding()
+            VStack(spacing: 16) {
+                Autocomplete("Destination", text: $text,
+                             suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
+                // Same field, underlined chrome via the ambient FieldStyle.
+                Autocomplete("Destination", text: $underlined,
+                             suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
+                    .fieldStyle(.underlined)
+            }
+            .padding()
         }
     }
     return Demo()
