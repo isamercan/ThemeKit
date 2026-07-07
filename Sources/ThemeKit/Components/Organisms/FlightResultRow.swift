@@ -7,6 +7,12 @@
 //  baggage chip, a price and a Select action. The row counterpart to ``FlightCard``.
 //  Token-bound; reuses PriceTag, Badge, Icon, ThemeButton.
 //
+//  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
+//  active `CardStyle` from the environment — `.surface()` feeds the
+//  `CardStyleConfiguration`, so the default look is unchanged while `.cardStyle(_:)`
+//  can swap in a completely different shell. The row is shadowless with an
+//  always-on hairline, which is `DefaultCardStyle` at `.none` elevation exactly.
+//
 
 import SwiftUI
 
@@ -15,6 +21,7 @@ import SwiftUI
 public struct FlightResultRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     // Required content (R1).
     private let airline: String
@@ -23,6 +30,7 @@ public struct FlightResultRow: View {
     private let departure: Date
     private let arrival: Date
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var flightNo: String?
     private var cabinClass: String?
     private var airlineSystemImage = "airplane.circle.fill"
@@ -51,6 +59,20 @@ public struct FlightResultRow: View {
     }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate.
+        // `.none` matches today's chrome: no shadow, hairline border.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(rowContent),
+            elevation: .none,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
+    }
+
+    /// The row's inner layout — everything inside the shell.
+    private var rowContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             HStack(alignment: .center, spacing: density.scale(Theme.SpacingKey.sm.value)) {
                 airlineBlock.frame(width: 92, alignment: .leading)
@@ -68,8 +90,6 @@ public struct FlightResultRow: View {
             if badge != nil || baggage != nil || urgencyText != nil || onDetails != nil { metaRow }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var airlineBlock: some View {
@@ -141,6 +161,9 @@ public struct FlightResultRow: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightResultRow {
+    /// Surface fill (background token key, default `.bgBase`) — feeds the
+    /// active `CardStyle`'s configuration.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Flight number, e.g. "TK 2434".
     func flightNo(_ text: String?) -> Self { copy { $0.flightNo = text } }
     /// Cabin class caption, e.g. "Economy".
@@ -191,4 +214,13 @@ public extension FlightResultRow {
             .onSelect("Select") { }.onDetails { }
     }
     .padding()
+}
+
+#Preview("Outlined card style") {
+    let dep = Date()
+    return FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: dep.addingTimeInterval(90 * 60))
+        .flightNo("TK 2434").cabin("Economy").price(3_538.99).baggage("15 kg")
+        .onSelect("Select") { }
+        .cardStyle(.outlined)
+        .padding()
 }

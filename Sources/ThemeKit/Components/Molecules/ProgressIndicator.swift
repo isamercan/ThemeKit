@@ -68,6 +68,10 @@ public struct ProgressIndicator: View {
             }
             bar
         }
+        // One element for VoiceOver: "Progress, N of M".
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(themeKit: "Progress"))
+        .accessibilityValue(String(themeKit: "\(current) of \(total)"))
     }
 
     @ViewBuilder

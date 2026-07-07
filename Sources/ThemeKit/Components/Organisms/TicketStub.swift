@@ -9,6 +9,9 @@
 //  cut with a `destinationOut` composite, so they read correctly on any
 //  background (solid, gradient or image).
 //
+//  CardStyle exception: the notched, perforated tear-line shell *is* this
+//  component's identity, so it deliberately does not route through `CardStyle`.
+//
 
 import SwiftUI
 

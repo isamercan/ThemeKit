@@ -8,8 +8,15 @@ import SwiftUI
 
 /// Organism. A page footer: columns of titled links + an optional bottom note.
 /// (daisyUI "Footer".)
+///
+/// Chrome is drawn by the ambient ``BarStyle`` (`.barStyle(_:)`): the whole
+/// column grid is the `.bottom`-edge configuration's content (a footer has no
+/// leading/trailing accessories) with the hairline suppressed — so the default
+/// style reproduces the original flat fill pixel-identically. `surface(_:)`
+/// still wins over the fill the style would draw.
 public struct Footer: View {
     @Environment(\.theme) private var theme
+    @Environment(\.barStyle) private var barStyle
 
     public struct Item: Identifiable {
         public let id = UUID()
@@ -26,6 +33,10 @@ public struct Footer: View {
 
     private let columns: [Column]
     private let note: String?
+    // Appearance — mutated only through the modifiers below (R2).
+    /// `nil` = the active `BarStyle` picks its own fill (the default style uses
+    /// `.bgWhite`, the original footer surface); set via `surface(_:)`.
+    private var surfaceOverride: Theme.BackgroundColorKey?
 
     public init(columns: [Column], note: String? = nil) {
         self.columns = columns
@@ -33,6 +44,19 @@ public struct Footer: View {
     }
 
     public var body: some View {
+        // A footer never draws a hairline (its divider is content, above the
+        // note), so the hairline the style would add is suppressed; a set
+        // `surface(_:)` beats the style's fill (same rule as SheetHeader).
+        barStyle.makeBody(configuration: BarStyleConfiguration(leading: nil,
+                                                               content: AnyView(contentStack),
+                                                               trailing: nil,
+                                                               edge: .bottom))
+            .environment(\.barChromeOverrides,
+                         BarChromeOverrides(surface: surfaceOverride,
+                                            showsHairline: false))
+    }
+
+    private var contentStack: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
             HStack(alignment: .top, spacing: Theme.SpacingKey.lg.value) {
                 ForEach(columns) { column in
@@ -56,15 +80,34 @@ public struct Footer: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgBase))
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Footer {
+    /// Surface fill (background token key). Wins over the fill the active
+    /// `BarStyle` would draw; when unset, the style picks its own (the default
+    /// style uses `.bgWhite`, the original footer surface).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceOverride = key } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
 #Preview {
-    Footer(columns: [
+    let columns: [Footer.Column] = [
         .init("Company", items: [.init("About"), .init("Careers"), .init("Press")]),
         .init("Support", items: [.init("Help center"), .init("Contact"), .init("FAQ")]),
         .init("Legal", items: [.init("Terms"), .init("Privacy")]),
-    ], note: "© 2026 ThemeKit. All rights reserved.")
+    ]
+    return VStack(spacing: 24) {
+        Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
+        Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
+            .barStyle(.floating)
+    }
     .padding()
 }

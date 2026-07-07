@@ -42,7 +42,11 @@ public struct Select<Option: Hashable>: View {
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
+    /// Legacy chrome hook — honored only when a custom style was injected with
+    /// the (deprecated) `.selectStyle(_:)`. Otherwise chrome comes from `\.fieldStyle`.
     @Environment(\.selectStyle) private var selectStyle
+    /// The shared form-field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     @State private var open = false
     @State private var query = ""
@@ -128,15 +132,33 @@ public struct Select<Option: Hashable>: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// The trigger field — content composed here, chrome supplied by the ``SelectStyle``.
+    /// The trigger field — content composed here, chrome supplied by a style.
+    ///
+    /// When the environment still holds the *default* `SelectStyle` (nobody called
+    /// the deprecated `.selectStyle(_:)`), chrome is delegated to the shared
+    /// ``FieldStyle`` via `\.fieldStyle`: the open state maps to `isFocused`, and
+    /// `size` maps 1:1 (Select's size axis is already a `TextInputSize`). If a
+    /// custom `SelectStyle` *was* injected, the legacy path renders unchanged.
+    @ViewBuilder
     private var field: some View {
-        selectStyle.makeBody(configuration: SelectStyleConfiguration(
-            content: AnyView(fieldContent),
-            isOpen: open,
-            isEnabled: isEnabled,
-            hasError: infoMessages.dominantKind == .error,
-            hasWarning: infoMessages.dominantKind == .warning
-        ))
+        if selectStyle.isDefault {
+            fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+                content: AnyView(fieldContent),
+                isFocused: open,
+                isEnabled: isEnabled,
+                hasError: infoMessages.dominantKind == .error,
+                hasWarning: infoMessages.dominantKind == .warning,
+                size: size
+            ))
+        } else {
+            selectStyle.makeBody(configuration: SelectStyleConfiguration(
+                content: AnyView(fieldContent),
+                isOpen: open,
+                isEnabled: isEnabled,
+                hasError: infoMessages.dominantKind == .error,
+                hasWarning: infoMessages.dominantKind == .warning
+            ))
+        }
     }
 
     @ViewBuilder
@@ -292,6 +314,9 @@ public extension Select {
                 Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
                        selection: $city) { $0 }
                     .searchable()
+                // Chrome via the shared FieldStyle axis.
+                Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                    .fieldStyle(.underlined)
             }
             .padding()
         }

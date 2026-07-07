@@ -10,6 +10,8 @@ import SwiftUI
 /// filename. (daisyUI "File Input"; complements the list-based Upload.)
 public struct FileInput: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
 
@@ -28,58 +30,72 @@ public struct FileInput: View {
         self.onPick = onPick
     }
 
-    private var fieldBorder: Color {
-        switch infoMessages.dominantKind {
-        case .error: return theme.border(.systemcolorsBorderError)
-        case .warning: return theme.border(.systemcolorsBorderWarning)
-        default: return theme.border(.borderPrimary)
-        }
-    }
+    private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             if let label { InputLabel(label) }
 
-            HStack(spacing: 0) {
-                Button(action: onPick) {
-                    HStack(spacing: Theme.SpacingKey.xs.value) {
-                        Image(systemName: "paperclip").font(.system(size: 13, weight: .semibold))
-                        Text(buttonTitle).textStyle(.labelSm700)
-                    }
-                    .foregroundStyle(theme.text(.textHero))
-                    .padding(.horizontal, Theme.SpacingKey.md.value)
-                    .frame(maxHeight: .infinity)
-                    .background(theme.background(.bgElevatorTertiary))
-                }
-                .buttonStyle(.plain)
-                .disabled(!isEnabled)
-
-                Text(fileName ?? placeholder)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(fileName != nil ? theme.text(.textPrimary) : theme.text(.textTertiary))
-                    .lineLimit(1)
-                    .padding(.horizontal, Theme.SpacingKey.md.value)
-
-                Spacer(minLength: 0)
-
-                if fileName != nil, let onClear {
-                    Button(action: onClear) {
-                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, Theme.SpacingKey.md.value)
-                    .accessibilityLabel(String(themeKit: "Remove"))
-                }
-            }
-            .frame(height: 48)
-            .background(theme.background(.bgWhite))
-            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(fieldBorder, lineWidth: infoMessages.dominantKind != nil ? 1.5 : 1))
+            fieldBox
 
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages)
             }
         }
+    }
+
+    /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Mapping: there is no focusable text element (a button + static filename),
+    /// so `isFocused` is always `false`; error/warning come from `infoMessages`'
+    /// dominant kind; `size` is `.medium` — FileInput has no `TextInputSize` axis
+    /// (the row keeps its fixed 48pt height in the content).
+    @ViewBuilder
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldRow),
+            isFocused: false,
+            isEnabled: isEnabled,
+            hasError: dominant == .error,
+            hasWarning: dominant == .warning,
+            size: .medium
+        ))
+    }
+
+    /// The "choose file" segment + filename row, sized — everything the
+    /// ``FieldStyle`` receives as `configuration.content`.
+    private var fieldRow: some View {
+        HStack(spacing: 0) {
+            Button(action: onPick) {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Image(systemName: "paperclip").font(.system(size: 13, weight: .semibold))
+                    Text(buttonTitle).textStyle(.labelSm700)
+                }
+                .foregroundStyle(theme.text(.textHero))
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .frame(maxHeight: .infinity)
+                .background(theme.background(.bgElevatorTertiary))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isEnabled)
+
+            Text(fileName ?? placeholder)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(fileName != nil ? theme.text(.textPrimary) : theme.text(.textTertiary))
+                .lineLimit(1)
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+
+            Spacer(minLength: 0)
+
+            if fileName != nil, let onClear {
+                Button(action: onClear) {
+                    Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, Theme.SpacingKey.md.value)
+                .accessibilityLabel(String(themeKit: "Remove"))
+            }
+        }
+        .frame(height: 48)
     }
 }
 
@@ -112,6 +128,8 @@ public extension FileInput {
     VStack(spacing: 16) {
         FileInput("Passport", onPick: {})
         FileInput("Photo", onPick: {}).fileName("passport-scan.jpg")
+        // Swapped chrome: underlined field, same behavior.
+        FileInput("Receipt", onPick: {}).fieldStyle(.underlined)
     }
     .padding()
 }

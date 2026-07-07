@@ -40,6 +40,7 @@ public struct FilterList: View {
     private var bordered = false
     private var showsSeparators = true
     private var selectAllTitle: String?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(_ options: [FilterOption], selection: Binding<Set<String>>) {   // R1
         self.options = options
@@ -82,7 +83,7 @@ public struct FilterList: View {
                     .padding(.horizontal, rowPadding)
             }
         }
-        .background(bordered ? theme.background(.bgBase) : .clear, in: shape)
+        .background(bordered ? theme.background(surfaceKey) : .clear, in: shape)
         .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
     }
 
@@ -118,6 +119,8 @@ public extension FilterList {
     func showsSeparators(_ on: Bool = true) -> Self { copy { $0.showsSeparators = on } }
     /// Adds a "select all" master row with the given title (nil hides it).
     func selectAll(_ title: String?) -> Self { copy { $0.selectAllTitle = title } }
+    /// Surface fill (background token key, default `.bgBase`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

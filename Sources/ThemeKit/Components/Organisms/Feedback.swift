@@ -13,6 +13,17 @@
 //      feedback.toast("Saved", kind: .success)
 //      feedback.confirm(title: "Delete?", primaryTitle: "Delete", primaryKind: .error) { … }
 //
+//  Custom content slots: `feedback.toast { … }` and `feedback.notify { … }`
+//  present caller-drawn views through the same stacking / auto-dismiss / swipe /
+//  transition infrastructure as the fixed layouts.
+//
+//  CardStyle exception: the toast, notification and loading shells deliberately
+//  do NOT read `@Environment(\.cardStyle)`. They are floating overlay chrome on
+//  top of arbitrary app content; ambient card styles are tuned for in-flow cards
+//  (e.g. `.outlined` has a transparent surface, which would make these surfaces
+//  illegible over whatever they cover). Scrim, stacking, gestures and dismissal
+//  always stay in the component.
+//
 
 import SwiftUI
 
@@ -67,6 +78,21 @@ public final class FeedbackPresenter {
         let isLoading: Bool
         let action: ToastAction?
         let duration: Double?
+        /// When set, the row renders this instead of the stock `AlertToast`
+        /// (custom content slot); the presentation infrastructure is shared.
+        let custom: AnyView?
+
+        init(title: String, message: String?, kind: FeedbackKind, systemImage: String?,
+             isLoading: Bool, action: ToastAction?, duration: Double?, custom: AnyView? = nil) {
+            self.title = title
+            self.message = message
+            self.kind = kind
+            self.systemImage = systemImage
+            self.isLoading = isLoading
+            self.action = action
+            self.duration = duration
+            self.custom = custom
+        }
     }
 
     public struct ConfirmRequest: Identifiable {
@@ -86,6 +112,17 @@ public final class FeedbackPresenter {
         let message: String?
         let kind: FeedbackKind
         let duration: Double
+        /// When set, the card body renders this instead of the stock icon +
+        /// title / message layout; the card chrome and dismissal are shared.
+        let custom: AnyView?
+
+        init(title: String, message: String?, kind: FeedbackKind, duration: Double, custom: AnyView? = nil) {
+            self.title = title
+            self.message = message
+            self.kind = kind
+            self.duration = duration
+            self.custom = custom
+        }
     }
 
     /// Stacked toasts (newest last), capped at `maxVisibleToasts`.
@@ -114,6 +151,20 @@ public final class FeedbackPresenter {
     ) -> UUID {
         enqueue(ToastItem(title: title, message: message, kind: kind,
                           systemImage: systemImage, isLoading: false, action: action, duration: duration))
+    }
+
+    /// Show a transient toast with fully custom content. Same stacking, cap,
+    /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow and
+    /// swipe-to-dismiss as `toast(_:)` — only the row's visuals are yours.
+    /// Returns the id for manual dismissal via `dismissToast(_:)`.
+    @discardableResult
+    public func toast<Content: View>(
+        duration: Double? = 2.5,
+        @ViewBuilder content: () -> Content
+    ) -> UUID {
+        enqueue(ToastItem(title: "", message: nil, kind: .info, systemImage: nil,
+                          isLoading: false, action: nil, duration: duration,
+                          custom: AnyView(content())))
     }
 
     /// Present a loading toast (spinner), run async work, then morph the *same*
@@ -169,6 +220,13 @@ public final class FeedbackPresenter {
     /// Present a richer notification card (title + message + icon) at the top.
     public func notify(_ title: String, message: String? = nil, kind: FeedbackKind = .info, duration: Double = 4) {
         activeNotification = NotificationItem(title: title, message: message, kind: kind, duration: duration)
+    }
+
+    /// Present a notification card with fully custom body content. Same top-edge
+    /// card chrome, close button, transition and auto-dismiss as `notify(_:)`.
+    public func notify<Content: View>(duration: Double = 4, @ViewBuilder content: () -> Content) {
+        activeNotification = NotificationItem(title: "", message: nil, kind: .info,
+                                              duration: duration, custom: AnyView(content()))
     }
 
     /// Show a blocking loading indicator (spinner + text). Does not auto-dismiss —
@@ -229,11 +287,15 @@ private struct FeedbackHostModifier: ViewModifier {
     private var notificationLayer: some View {
         if let note = presenter.activeNotification {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: note.kind.systemImage).size(.md).color(note.kind.semanticColor.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
-                    if let message = note.message {
-                        Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                if let custom = note.custom {
+                    custom
+                } else {
+                    Icon(systemName: note.kind.systemImage).size(.md).color(note.kind.semanticColor.accent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+                        if let message = note.message {
+                            Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                        }
                     }
                 }
                 Spacer(minLength: 0)
@@ -299,13 +361,7 @@ private struct FeedbackToastRow: View {
     @State private var offset: CGFloat = 0
 
     var body: some View {
-        AlertToast(item.title)
-            .message(item.message)
-            .variant(item.kind.toastType)
-            .icon(item.systemImage)
-            .loading(item.isLoading)
-            .action(item.action)
-            .onClose(onDismiss)
+        row
             .themeShadow(.elevated)
             .offset(y: offset)
             .opacity(dragOpacity)
@@ -316,6 +372,22 @@ private struct FeedbackToastRow: View {
                 try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
                 onDismiss()
             }
+    }
+
+    /// Stock `AlertToast`, or the caller-drawn view for custom-content toasts.
+    @ViewBuilder
+    private var row: some View {
+        if let custom = item.custom {
+            custom
+        } else {
+            AlertToast(item.title)
+                .message(item.message)
+                .variant(item.kind.toastType)
+                .icon(item.systemImage)
+                .loading(item.isLoading)
+                .action(item.action)
+                .onClose(onDismiss)
+        }
     }
 
     /// Fade the row out as it is dragged toward its anchored edge.
@@ -379,4 +451,44 @@ public extension View {
         }
     }
     return Demo().feedbackHost(toastPosition: .bottom)
+}
+
+#Preview("Custom content slots") {
+    struct Demo: View {
+        @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+        @Environment(\.theme) private var theme
+        var body: some View {
+            VStack(spacing: 12) {
+                ThemeButton("Custom toast") {
+                    feedback.toast {
+                        HStack(spacing: Theme.SpacingKey.sm.value) {
+                            Spinner().size(16).lineWidth(2)
+                            Text("Syncing 3 of 7 trips…")
+                                .textStyle(.labelBase600)
+                                .foregroundStyle(theme.text(.textPrimary))
+                        }
+                        .padding(Theme.SpacingKey.md.value)
+                        .background(theme.background(.bgWhite), in: Capsule())
+                    }
+                }
+                ThemeButton("Custom notification") {
+                    feedback.notify {
+                        HStack(spacing: Theme.SpacingKey.sm.value) {
+                            Icon(systemName: "airplane.departure").size(.md).color(theme.foreground(.fgHero))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Flight update").textStyle(.labelBase600)
+                                    .foregroundStyle(theme.text(.textPrimary))
+                                Text("Gate changed to B12 — boarding at 14:20.")
+                                    .textStyle(.bodySm400)
+                                    .foregroundStyle(theme.text(.textSecondary))
+                            }
+                        }
+                    }
+                }
+                .variant(.outline)
+            }
+            .padding()
+        }
+    }
+    return Demo().feedbackHost()
 }

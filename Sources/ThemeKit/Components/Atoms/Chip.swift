@@ -32,8 +32,15 @@ public enum ChipSelectionStyle {
 /// Improved, token-bound rewrite of the reference BasicChip — a single clear
 /// selection API (tonal / solid) instead of the reference's nested
 /// status × mode × fullSelect × isExist matrix.
+///
+/// Chroma is drawn by the active ``ChipStyle``: the environment style set with
+/// `.chipStyle(_:)` on any ancestor, or — when the enum shorthand
+/// `.chipStyle(.tonal / .solid)` is used on the chip itself — the matching
+/// built-in ``TonalChipStyle`` / ``SolidChipStyle``. Both paths go through the
+/// same `ChipStyle.makeBody` gate.
 public struct Chip: View {
     @Environment(\.theme) private var theme
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     @Binding private var isSelected: Bool
     private let title: String
@@ -41,9 +48,11 @@ public struct Chip: View {
     // Appearance/config — set via chainable modifiers (R2), keeping the common
     // call site to `Chip("x", isSelected: $on)`.
     private var size: ChipSize = .small
-    private var selectionStyle: ChipSelectionStyle = .tonal
+    private var selectionStyle: ChipSelectionStyle? = nil   // nil → environment style
     private var leadingSystemImage: String? = nil
     private var rating: Double? = nil
+    private var leadingSlot: AnyView? = nil
+    private var trailingSlot: AnyView? = nil
     private var isExist: Bool = true
     private var isInteractive: Bool = true
     private var expandsHorizontally: Bool = false
@@ -57,7 +66,37 @@ public struct Chip: View {
         Button {
             isSelected.toggle()
         } label: {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
+            resolvedStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(labelContent),
+                isSelected: isSelected,
+                isEnabled: isEnabled && isExist,
+                size: size))
+                .opacity(isExist ? 1 : 0.6)
+        }
+        .buttonStyle(PressFeedbackStyle())
+        .disabled(!isEnabled || !isInteractive || !isExist)
+        .allowsHitTesting(isInteractive && isExist)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The enum shorthand resolves to the matching built-in `ChipStyle`;
+    /// otherwise the environment style applies — built-ins and custom styles
+    /// share the same door.
+    private var resolvedStyle: AnyChipStyle {
+        switch selectionStyle {
+        case .tonal: return AnyChipStyle(TonalChipStyle())
+        case .solid: return AnyChipStyle(SolidChipStyle())
+        case nil: return environmentChipStyle
+        }
+    }
+
+    /// The chip's content (chroma-free): leading slot — or the icon/rating
+    /// shorthands — then the title, then the trailing slot.
+    private var labelContent: some View {
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            if let leadingSlot {
+                leadingSlot
+            } else {
                 if let leadingSystemImage {
                     Image(systemName: leadingSystemImage).font(.system(size: 14))
                 }
@@ -68,47 +107,14 @@ public struct Chip: View {
                         Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
                     }
                 }
-                Text(title).textStyle(.labelBase600)
-                    .strikethrough(!isExist, color: theme.text(.textTertiary))
             }
-            .foregroundStyle(foreground)
-            .frame(maxWidth: expandsHorizontally ? .infinity : nil)
-            .padding(.horizontal, size.horizontalPadding)
-            .padding(.vertical, size.verticalPadding)
-            .background(background, in: Capsule())
-            .overlay(Capsule().strokeBorder(border, lineWidth: isSelected ? 1.5 : 1))
-            .opacity(isExist ? 1 : 0.6)
+            Text(title).textStyle(.labelBase600)
+                .strikethrough(!isExist, color: theme.text(.textTertiary))
+            if let trailingSlot {
+                trailingSlot
+            }
         }
-        .buttonStyle(PressFeedbackStyle())
-        .disabled(!isEnabled || !isInteractive || !isExist)
-        .allowsHitTesting(isInteractive && isExist)
-    }
-
-    private var foreground: Color {
-        if !isEnabled || !isExist { return theme.text(.textDisabled) }
-        guard isSelected else { return theme.text(.textSecondary) }
-        switch selectionStyle {
-        case .tonal: return theme.text(.textHero)
-        case .solid: return theme.foreground(.fgSecondary)
-        }
-    }
-
-    private var background: Color {
-        if !isEnabled || !isExist { return theme.background(.bgSecondaryLight) }
-        guard isSelected else { return theme.background(.bgWhite) }
-        switch selectionStyle {
-        case .tonal: return theme.background(.bgElevatorTertiary)
-        case .solid: return theme.background(.bgHero)
-        }
-    }
-
-    private var border: Color {
-        if !isEnabled { return theme.border(.borderPrimary) }
-        guard isSelected else { return theme.border(.borderPrimary) }
-        switch selectionStyle {
-        case .tonal: return theme.border(.borderHero)
-        case .solid: return theme.background(.bgHero)
-        }
+        .frame(maxWidth: expandsHorizontally ? .infinity : nil)
     }
 }
 
@@ -117,19 +123,36 @@ public struct Chip: View {
 public extension Chip {
     /// Control size: small / large.
     func size(_ s: ChipSize) -> Self { copy { $0.size = s } }
-    /// How a selected chip is filled: tonal / solid.
+    /// How a selected chip is filled: tonal / solid. A shorthand for the
+    /// built-in ``TonalChipStyle`` / ``SolidChipStyle`` — it overrides the
+    /// environment's ``ChipStyle`` for this chip only.
     func chipStyle(_ s: ChipSelectionStyle) -> Self { copy { $0.selectionStyle = s } }
     /// A leading SF Symbol before the title.
     func icon(_ systemName: String?) -> Self { copy { $0.leadingSystemImage = systemName } }
     /// A leading star + numeric rating before the title.
     func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
+    /// A custom leading view before the title; when set, it replaces the
+    /// `icon`/`rating` shorthands.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        let view = AnyView(content())
+        return copy { $0.leadingSlot = view }
+    }
+    /// A custom trailing view after the title.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        let view = AnyView(content())
+        return copy { $0.trailingSlot = view }
+    }
     /// Whether the represented item still exists; `false` strikes through and dims
     /// the chip (e.g. a sold-out filter).
     func exists(_ on: Bool = true) -> Self { copy { $0.isExist = on } }
     /// Whether the chip responds to taps (a read-only display chip passes `false`).
+    @available(*, deprecated, message: "Use .disabled(_:) / allowsHitTesting instead.")
     func interactive(_ on: Bool = true) -> Self { copy { $0.isInteractive = on } }
     /// Stretches the chip to fill the available width (e.g. a full-width filter row).
-    func expands(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+    /// Stretches the chip to fill the available width (e.g. a full-width filter row).
+    @available(*, deprecated, renamed: "fullWidth")
+    func expands(_ on: Bool = true) -> Self { fullWidth(on) }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -150,6 +173,16 @@ public extension Chip {
             Chip("Large", isSelected: .constant(false)).size(.large)
             Chip("Disabled", isSelected: .constant(false)).disabled(true)
         }
+        // Environment ChipStyle + slots: `.chipStyle(.solid)` on the container
+        // resolves to `SolidChipStyle` via the `View` extension, so both chips
+        // inherit it without the enum shorthand.
+        HStack {
+            Chip("Env solid", isSelected: .constant(true))
+            Chip("Slots", isSelected: .constant(false))
+                .leading { Image(systemName: "leaf.fill").font(.system(size: 12)) }
+                .trailing { Image(systemName: "chevron.down").font(.system(size: 10)) }
+        }
+        .chipStyle(.solid)
     }
     .padding()
 }

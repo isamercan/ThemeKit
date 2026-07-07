@@ -102,7 +102,10 @@ public extension PriceHistogram {
     /// Max bar height in points (default 56).
     func barHeight(_ height: CGFloat) -> Self { copy { $0.barHeight = height } }
     /// Overrides the selected-bar colour (otherwise the theme accent).
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func accent(_ color: Color?) -> Self { copy { $0.accent = color } }
+    /// Token-bound overload — selected bars use the semantic colour's base.
+    func accent(_ color: SemanticColor) -> Self { copy { $0.accent = color.base } }
     /// Currency for the range / bound labels (default TRY).
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Shows a live selected-range readout and how many results it matches.

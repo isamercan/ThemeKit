@@ -14,12 +14,18 @@
 //      .onSelect { book() }
 //  ```
 //
+//  The outer shell (surface fill, corner clipping, border, elevation shadow) is drawn
+//  by the active `CardStyle` from the environment — `.surface()/.cornerRadius()/
+//  .elevation()` and the `selection(_:)` state feed the `CardStyleConfiguration`, so
+//  `.cardStyle(_:)` can swap in a completely different shell.
+//
 
 import SwiftUI
 
 public struct RoomCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let name: String
     // Content — mutated only through the modifiers below (R2).
@@ -51,6 +57,22 @@ public struct RoomCard: View {
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate. The
+        // radio `selection(_:)` state feeds `isSelected`, so the selected border is
+        // the style's to draw (the default style uses the hero border token).
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: isSelected,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+            .contentShape(shape)
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
             header
             if let occupancy {
@@ -69,10 +91,6 @@ public struct RoomCard: View {
             priceBlock
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(isSelected ? accentSemantic.base : theme.border(.borderPrimary), lineWidth: isSelected ? 1.5 : 1))
-        .modifier(RoomCardShadow(elevation: elevation))
-        .contentShape(shape)
     }
 
     private var isSelected: Bool { selection?.wrappedValue ?? false }
@@ -120,17 +138,6 @@ public struct RoomCard: View {
     }
 }
 
-private struct RoomCardShadow: ViewModifier {
-    let elevation: CardElevation
-    @ViewBuilder func body(content: Content) -> some View {
-        switch elevation {
-        case .none: content
-        case .soft: content.themeShadow(.soft)
-        case .elevated: content.themeShadow(.elevated)
-        }
-    }
-}
-
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension RoomCard {
@@ -171,5 +178,21 @@ public extension RoomCard {
             .original(12_000).discountBadge("-20%").price(9_600).unit("/ night")
             .badge("Last 2").onSelect { }
     }
+    .padding()
+}
+
+#Preview("Outlined style + selection") {
+    @Previewable @State var selected = true
+    VStack(spacing: 12) {
+        RoomCard(name: "Standard Room, Garden View")
+            .board("Bed & breakfast").occupancy("2 adults")
+            .price(6_400).unit("/ night")
+            .selection($selected)
+        RoomCard(name: "Family Suite")
+            .board("Half board").occupancy("2 adults, 2 children")
+            .price(14_200).unit("/ night")
+            .selection(.constant(false))
+    }
+    .cardStyle(.outlined)
     .padding()
 }

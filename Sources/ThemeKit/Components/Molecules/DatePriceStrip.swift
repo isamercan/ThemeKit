@@ -22,9 +22,12 @@ public struct DatePriceItem: Identifiable, Sendable {
 }
 
 /// A single selectable date+price card. Public so it can be reused outside ``DatePriceStrip``.
+/// The shell (surface, hairline, selected frame) is drawn by the active `CardStyle`;
+/// selection flows through `Configuration.isSelected`, so `.cardStyle(_:)` reskins it.
 public struct DatePriceCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let item: DatePriceItem
     private let isSelected: Bool
@@ -39,28 +42,42 @@ public struct DatePriceCard: View {
         self.action = action
     }
 
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous) }
     private var priceColor: Color {
         isSelected ? theme.foreground(.fgHero) : (isCheapest ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textPrimary))
     }
 
     public var body: some View {
         Button(action: action) {
-            VStack(spacing: 2) {
-                Text(item.date).textStyle(.labelSm600)
-                    .foregroundStyle(isSelected ? theme.foreground(.fgHero) : theme.text(.textSecondary))
-                Text(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(2))))
-                    .textStyle(.labelBase700).foregroundStyle(priceColor)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
-            .padding(.horizontal, Theme.SpacingKey.xs.value)
-            .background(isSelected ? theme.background(.bgHero).opacity(0.06) : theme.background(.bgBase), in: shape)
-            .overlay(shape.stroke(isSelected ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: isSelected ? 1.5 : 1))
+            // The shell (fill, hairline, selected hero frame) is drawn by the
+            // active `CardStyle`; selection flows through `Configuration.isSelected`.
+            // Flat card → `.none` elevation keeps the classic 1pt hairline.
+            cardStyle.makeBody(configuration: CardStyleConfiguration(
+                content: AnyView(cardContent),
+                elevation: .none,
+                isSelected: isSelected,
+                isPressed: false,
+                surfaceKey: .bgElevatorPrimary,
+                radius: .selector))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(item.date), \(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))\(isCheapest ? ", lowest fare" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The card's inner layout — everything inside the shell. The 6% hero wash on
+    /// selection is not expressible as a `surfaceKey` token, so it stays in-content,
+    /// layered over the style's surface fill (a custom style cannot recolour it).
+    private var cardContent: some View {
+        VStack(spacing: 2) {
+            Text(item.date).textStyle(.labelSm600)
+                .foregroundStyle(isSelected ? theme.foreground(.fgHero) : theme.text(.textSecondary))
+            Text(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(2))))
+                .textStyle(.labelBase700).foregroundStyle(priceColor)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
+        .padding(.horizontal, Theme.SpacingKey.xs.value)
+        .background(isSelected ? theme.background(.bgHero).opacity(0.06) : Color.clear)
     }
 }
 
@@ -166,4 +183,14 @@ public extension DatePriceStrip {
         var body: some View { DatePriceStrip(items, selection: $sel).padding() }
     }
     return Demo()
+}
+
+#Preview("Selected card + outlined style") {
+    HStack(spacing: 8) {
+        DatePriceCard(DatePriceItem("17 Jul", price: 1_697.99), isSelected: true) { }
+        DatePriceCard(DatePriceItem("18 Jul", price: 1_474.99), isSelected: false) { }
+            .cheapest()
+    }
+    .cardStyle(.outlined)
+    .padding()
 }

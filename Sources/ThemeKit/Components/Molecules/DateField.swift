@@ -27,9 +27,13 @@ public enum DateFieldComponents {
 /// matching border, an optional clear button, a disabled state, and a leading
 /// icon. The displayed value is formatter-driven: pick a `DateFieldStyle` (or a
 /// custom pattern), a `locale`, and which `components` (date / time) to show.
+/// The field chrome (fill + border) is a swappable ``FieldStyle`` set with
+/// `.fieldStyle(_:)`; the default reproduces the original look.
 public struct DateField: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     private let label: String?
     @Binding private var date: Date?
@@ -70,41 +74,58 @@ public struct DateField: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             if let label { InputLabel(label).hasError(hasError) }
 
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                if let leadingSystemImage {
-                    Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
-                }
-                Text(displayText ?? placeholder)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(textColor)
-                Spacer(minLength: 0)
-                trailing
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .scaledControlHeight(48)
-            .frame(maxWidth: .infinity)
-            .background(backgroundColor, in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: showPicker || hasError || hasWarning ? 1.5 : 1)
-            )
-            .contentShape(Rectangle())
-            .onTapGesture { if isEnabled { showPicker = true } }
-            .popover(isPresented: $showPicker) { picker }
-            .a11y(A11yElement.Select.trigger, in: accessibilityID)
-            // Fall back to a generic field name — never "" (which would blank the
-            // control's name) and never the placeholder. The chosen date is carried
-            // by accessibilityValue.
-            .accessibilityLabel(label ?? String(themeKit: "Date"))
-            .accessibilityValue(displayText ?? "")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { if isEnabled { showPicker = true } }
+            fieldBox
+                .contentShape(Rectangle())
+                .onTapGesture { if isEnabled { showPicker = true } }
+                .popover(isPresented: $showPicker) { picker }
+                .a11y(A11yElement.Select.trigger, in: accessibilityID)
+                // Fall back to a generic field name — never "" (which would blank the
+                // control's name) and never the placeholder. The chosen date is carried
+                // by accessibilityValue.
+                .accessibilityLabel(label ?? String(themeKit: "Date"))
+                .accessibilityValue(displayText ?? "")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { if isEnabled { showPicker = true } }
 
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages)
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
+    }
+
+    /// The composed field row (icon + value + trailing accessory), sized —
+    /// everything the active ``FieldStyle`` receives as `configuration.content`.
+    private var fieldCore: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            if let leadingSystemImage {
+                Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
+            }
+            Text(displayText ?? placeholder)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(textColor)
+            Spacer(minLength: 0)
+            trailing
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .scaledControlHeight(48)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Configuration mapping: the open popover reads as `isFocused`; the dominant
+    /// `infoMessages` kind drives `hasError` / `hasWarning`. `size` is nominal
+    /// `.medium` — `DateField` has no `TextInputSize` axis; its height stays the
+    /// component's own scaled 48pt, carried by the content.
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldCore),
+            isFocused: showPicker,
+            isEnabled: isEnabled,
+            hasError: hasError,
+            hasWarning: hasWarning,
+            size: .medium
+        ))
     }
 
     @ViewBuilder
@@ -166,17 +187,6 @@ public struct DateField: View {
     private var textColor: Color {
         if !isEnabled { return theme.text(.textDisabled) }
         return date == nil ? theme.text(.textTertiary) : theme.text(.textPrimary)
-    }
-
-    private var backgroundColor: Color {
-        theme.background(isEnabled ? .bgWhite : .bgSecondaryLight)
-    }
-
-    private var borderColor: Color {
-        if hasError { return theme.border(.systemcolorsBorderError) }
-        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
-        if showPicker { return theme.border(.borderHero) }
-        return theme.border(.borderPrimary)
     }
 
     // MARK: - Formatting
@@ -264,6 +274,10 @@ public extension DateField {
                     .infoMessages(meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
                 // Disabled.
                 DateField("Locked", date: .constant(.now)).disabled(true)
+                // Underlined chrome via the shared FieldStyle hook.
+                DateField("Departure", date: $checkIn)
+                    .icon("calendar")
+                    .fieldStyle(.underlined)
             }
             .padding()
         }

@@ -7,6 +7,14 @@
 //  / terminal) and a perforated stub carrying a barcode (or QR) and booking ref.
 //  Reuses ``TicketStub`` (perforation) and ``Barcode`` / ``QRCode``. Token-bound.
 //
+//  CardStyle exemption (deliberate): the shell here is the decorative perforated
+//  ticket surface — ``TicketStub`` carves the side notches out of its fill with a
+//  `destinationOut` composite, so the fill, notches, perforation and elevation
+//  shadow are one inseparable unit. Routing any of it through the environment
+//  `CardStyle` would paint the notches shut (a style draws a plain rounded-rect
+//  fill/border). The whole shell therefore stays with `TicketStub`;
+//  `.cardStyle(_:)` intentionally has no effect on this component.
+//
 //  ```swift
 //  BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
 //      .airline("Pegasus").flightNo("PC 1234").times(departure: "13:15", arrival: "16:05")
@@ -51,6 +59,9 @@ public struct BoardingPass: View {
     private var accentBase: Color { (accent ?? .primary).base }
 
     public var body: some View {
+        // Decorative-shell exception: the perforated `TicketStub` surface (fill +
+        // notches + tear line + shadow) is the chrome here and is kept as-is —
+        // see the header note. `.surface()`/`.elevation()` feed it directly.
         TicketStub {
             VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.md.value)) {
                 header
@@ -180,5 +191,17 @@ public extension BoardingPass {
         .cities(from: "Istanbul", to: "Berlin").times(departure: "13:15", arrival: "16:05").date("13 Sep")
         .gate("A12", seat: "14C", boarding: "12:45", terminal: "1")
         .bookingRef("PNR: X7K2QF").barcode("PC1234SAWBER14C")
+        .frame(maxWidth: 340).padding()
+}
+
+// The perforated ticket shell is exempt from `CardStyle` (see header note):
+// under `.cardStyle(.outlined)` the pass renders identically to the default.
+#Preview("Card-style exempt shell") {
+    BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
+        .airline("Pegasus").flightNo("PC 1234")
+        .times(departure: "13:15", arrival: "16:05")
+        .gate("A12", seat: "14C", boarding: "12:45")
+        .qr("PC1234SAWBER14C")
+        .cardStyle(.outlined)
         .frame(maxWidth: 340).padding()
 }

@@ -14,6 +14,10 @@
 //  `.onSelect(_:)` fires when a suggestion or recent item is tapped. With none
 //  of these set, the bar behaves exactly as before.
 //
+//  The field's *chrome* (fill, border, shape) is delegated to the ambient
+//  ``FieldStyle`` (`.fieldStyle(_:)`), like `TextInput`. The back button sits
+//  outside the chrome; the dropdown is a popover card and keeps its own chrome.
+//
 
 import SwiftUI
 
@@ -28,6 +32,8 @@ import SwiftUI
 /// ```
 public struct SearchBar: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
 
     /// Where typeahead suggestions come from. `.none` keeps the classic bar
@@ -93,30 +99,7 @@ public struct SearchBar: View {
                     .buttonStyle(.plain)
                 }
 
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
-
-                    TextField(placeholder, text: $text)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textPrimary))
-                        .tint(theme.foreground(.fgHero))
-                        .focused($isFocused)
-                        .disabled(!isEnabled)
-                        .submitLabel(.search)
-                        .onSubmit { commitSubmit() }
-                        .a11y(A11yElement.Field.field, in: accessibilityID)
-                        .accessibilityLabel(placeholder)
-
-                    trailingControl
-                }
-                .padding(.horizontal, Theme.SpacingKey.md.value)
-                .scaledControlHeight(44)
-                .background(theme.background(.bgBase),
-                           in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
-                        .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
-                )
+                fieldBox
             }
 
             dropdown
@@ -126,6 +109,49 @@ public struct SearchBar: View {
             update(for: value)
             onSearch?(value)
         }
+    }
+
+    /// The composed field row (search icon + editor + trailing control), padded
+    /// and sized — everything a `FieldStyle` receives as `configuration.content`.
+    /// The fixed 44pt control height is layout, not chrome, so it stays here.
+    private var fieldCore: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
+
+            TextField(placeholder, text: $text)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+                .tint(theme.foreground(.fgHero))
+                .focused($isFocused)
+                .disabled(!isEnabled)
+                .submitLabel(.search)
+                .onSubmit { commitSubmit() }
+                .a11y(A11yElement.Field.field, in: accessibilityID)
+                .accessibilityLabel(placeholder)
+
+            trailingControl
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .scaledControlHeight(44)
+    }
+
+    /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Configuration mapping: `isFocused` ← the field's `@FocusState`;
+    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` are `false`
+    /// (SearchBar has no validation concept); `size` is `.small` — SearchBar has
+    /// no `TextInputSize` axis, but its fixed 44pt control height (kept in the
+    /// content) exactly matches `TextInputSize.small`, so size-keyed styles see
+    /// the truthful preset.
+    @ViewBuilder
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldCore),
+            isFocused: isFocused,
+            isEnabled: isEnabled,
+            hasError: false,
+            hasWarning: false,
+            size: .small
+        ))
     }
 
     // MARK: - Trailing control (spinner ▸ clear ▸ custom action)
@@ -388,10 +414,13 @@ public extension SearchBar {
     struct Demo: View {
         @State var a = ""
         @State var b = "query"
+        @State var c = ""
         var body: some View {
             VStack(spacing: 16) {
                 SearchBar(text: $a).trailingIcon("barcode.viewfinder")
                 SearchBar(text: $b).backButton()
+                // Same bar, underlined chrome via the ambient FieldStyle.
+                SearchBar(text: $c).fieldStyle(.underlined)
             }
             .padding()
         }

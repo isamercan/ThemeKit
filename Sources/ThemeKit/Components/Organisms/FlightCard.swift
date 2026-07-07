@@ -6,6 +6,12 @@
 //  codes, a flight-path line with duration and a stops label, and an optional price +
 //  select action. Token-bound; the surface, accent and price all come from the theme.
 //
+//  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
+//  active `CardStyle` from the environment — `.surface()` feeds the
+//  `CardStyleConfiguration`, so the default look is unchanged while `.cardStyle(_:)`
+//  can swap in a completely different shell. The card is shadowless with an
+//  always-on hairline, which is `DefaultCardStyle` at `.none` elevation exactly.
+//
 
 import SwiftUI
 
@@ -46,6 +52,7 @@ public struct FlightLeg: Identifiable, Sendable, Equatable, Codable {
 public struct FlightCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     // Required content (R1).
     private let airline: String
@@ -55,6 +62,7 @@ public struct FlightCard: View {
     private let arrival: Date
     private let legs: [FlightLeg]?
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var stops: Int = 0
     private var price: Decimal?
     private var currencyCode: String = "TRY"
@@ -88,6 +96,20 @@ public struct FlightCard: View {
     }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate.
+        // `.none` matches today's chrome: no shadow, hairline border.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: .none,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
             header
             routeContent
@@ -95,8 +117,6 @@ public struct FlightCard: View {
             if footerSlot != nil || price != nil || onSelect != nil { footer }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var header: some View {
@@ -265,6 +285,9 @@ public struct FlightCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightCard {
+    /// Surface fill (background token key, default `.bgBase`) — feeds the
+    /// active `CardStyle`'s configuration.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Number of stops (0 = nonstop, shown in green).
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     /// The fare, rendered as a hero `PriceTag` in the footer.
@@ -301,4 +324,13 @@ public extension FlightCard {
             .stops(1).price(3_499)
     }
     .padding()
+}
+
+#Preview("Outlined card style") {
+    let dep = Date()
+    return FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB",
+                      departure: dep, arrival: dep.addingTimeInterval(70 * 60))
+        .price(1_299).badge("Cheapest").onSelect { }
+        .cardStyle(.outlined)
+        .padding()
 }

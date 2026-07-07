@@ -4,7 +4,16 @@
 //  Created by İsa Mercan on 23.06.2026.
 //
 //  Organism. A modal dialog (title / message / up to two actions) presented over
-//  a dimmed scrim via the `.dialog(...)` modifier.
+//  a dimmed scrim via the `.dialog(...)` modifier. Two slotted variants sit next
+//  to the fixed layout: `.dialog(content:footer:)` (scrollable body + pinned
+//  footer) and `.dialog(content:)` (the whole card interior is caller-drawn).
+//
+//  CardStyle exception: the dialog shell deliberately does NOT read
+//  `@Environment(\.cardStyle)`. It is floating modal chrome — Liquid Glass /
+//  Material via `glassChrome` (decorative, not a plain card fill), and ambient
+//  card styles are tuned for in-flow cards (e.g. `.outlined` has a transparent
+//  surface, which would leave the dialog illegible over the dimmed scrim).
+//  Scrim, transition and dismissal always stay in the component.
 //
 
 import SwiftUI
@@ -256,6 +265,81 @@ public extension View {
     }
 }
 
+// MARK: - Fully custom card interior (content-only slot)
+
+private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    @Binding var isPresented: Bool
+    let closable: Bool
+    let maskClosable: Bool
+    let width: CGFloat?
+    let afterClose: (() -> Void)?
+    let dialogContent: () -> DialogContent
+
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
+    private func close() {
+        isPresented = false
+        afterClose?()
+    }
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if isPresented {
+                ZStack {
+                    theme.background(.bgTertiary).opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture { if maskClosable { close() } }
+
+                    dialogContent()
+                        .padding(Theme.SpacingKey.lg.value)
+                        .frame(maxWidth: width ?? 320)
+                        // Same floating modal chrome as `DialogCard`.
+                        .glassChrome(in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
+                        .overlay(alignment: .topTrailing) {
+                            if closable {
+                                Button(action: close) {
+                                    Icon(systemName: "xmark").size(.sm).color(theme.text(.textTertiary))
+                                        .padding(Theme.SpacingKey.md.value)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .themeShadow(.elevated)
+                        .padding(Theme.SpacingKey.lg.value)
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
+        }
+        .animation(motion, value: isPresented)
+    }
+}
+
+public extension View {
+    /// A modal whose card interior is entirely caller-drawn. Reuses the standard
+    /// dialog presentation — dimmed scrim, glass card chrome, fade transition,
+    /// scrim-tap / close-button dismissal — while the content is a free slot.
+    /// The fixed `title / message / actions` and `content:footer:` overloads
+    /// remain unchanged next to this one.
+    func dialog<DialogContent: View>(
+        isPresented: Binding<Bool>,
+        closable: Bool = false,
+        maskClosable: Bool = true,
+        width: CGFloat? = nil,
+        afterClose: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> DialogContent
+    ) -> some View {
+        modifier(FreeformDialogModifier(
+            isPresented: isPresented, closable: closable, maskClosable: maskClosable,
+            width: width, afterClose: afterClose, dialogContent: content
+        ))
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var show = true
@@ -264,6 +348,29 @@ public extension View {
                 .dialog(isPresented: $show, title: "Delete trip?",
                         message: "This action cannot be undone.",
                         primaryTitle: "Delete", secondaryTitle: "Cancel", onSecondary: {})
+        }
+    }
+    return Demo()
+}
+
+#Preview("Custom content slot") {
+    struct Demo: View {
+        @Environment(\.theme) private var theme
+        @State var show = true
+        var body: some View {
+            Color.gray.opacity(0.1).ignoresSafeArea()
+                .dialog(isPresented: $show, closable: true) {
+                    VStack(spacing: Theme.SpacingKey.md.value) {
+                        Icon(systemName: "sparkles").size(.xl).color(theme.foreground(.fgHero))
+                        Text("Rate your stay").textStyle(.headingSm)
+                            .foregroundStyle(theme.text(.textPrimary))
+                        Text("Any layout works here — forms, ratings, media.")
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                            .multilineTextAlignment(.center)
+                        PrimaryButton("Submit") { show = false }
+                    }
+                }
         }
     }
     return Demo()

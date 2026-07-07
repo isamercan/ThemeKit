@@ -22,6 +22,8 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     private var loading = false
     private var split = true
     private var emptyText: String?
+    private var emptySlot: AnyView?
+    private var loadingSlot: AnyView?
 
     public init(_ items: [Item], @ViewBuilder row: @escaping (Item) -> Row) {   // R1
         self.items = items
@@ -41,12 +43,20 @@ public struct ListView<Item: Identifiable, Row: View>: View {
             }
 
             if loading {
-                ForEach(0..<3, id: \.self) { index in
-                    skeletonRow
-                    if split && index < 2 { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
+                if let loadingSlot {
+                    loadingSlot
+                } else {
+                    ForEach(0..<3, id: \.self) { index in
+                        skeletonRow
+                        if split && index < 2 { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
+                    }
                 }
             } else if items.isEmpty {
-                emptyRow
+                if let emptySlot {
+                    emptySlot
+                } else {
+                    emptyRow
+                }
             } else {
                 // Lazy so a long list inside a ScrollView only builds visible rows
                 // (a no-op cost when used standalone / unscrolled).
@@ -127,6 +137,13 @@ public extension ListView {
     /// Text shown when there are no items (defaults to "No data").
     func emptyText(_ text: String?) -> Self { copy { $0.emptyText = text } }
 
+    /// Custom empty-state view; when set it replaces the ``emptyText(_:)`` row.
+    func empty<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.emptySlot = AnyView(content()) } }
+
+    /// Custom loading view; when set it replaces the default skeleton rows
+    /// while ``loading(_:)`` is on.
+    func loadingView<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.loadingSlot = AnyView(content()) } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -146,6 +163,27 @@ public extension ListView {
         .header("Settings").footer("3 items")
         ListView(rows) { _ in EmptyView() }
             .header("Loading").loading()
+        ListView([Row]()) { _ in EmptyView() }
+            .header("Empty slot")
+            .empty {
+                VStack(spacing: 8) {
+                    Image(systemName: "tray")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                    Text("Nothing here yet")
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Theme.SpacingKey.lg.value)
+            }
+        ListView(rows) { _ in EmptyView() }
+            .header("Custom loading").loading()
+            .loadingView {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.SpacingKey.lg.value)
+            }
     }
     .padding()
 }

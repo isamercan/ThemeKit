@@ -7,6 +7,14 @@
 //  timeline with a plane, a perforated tear (reusing ``TicketStub``) and a stub
 //  with the airline, price and a favourite. Token-bound; every part is a modifier.
 //
+//  CardStyle exemption (deliberate): the shell here is the decorative perforated
+//  ticket surface — ``TicketStub`` carves the side notches out of its fill with a
+//  `destinationOut` composite, so the fill, notches, perforation and elevation
+//  shadow are one inseparable unit. Routing any of it through the environment
+//  `CardStyle` would paint the notches shut (a style draws a plain rounded-rect
+//  fill/border). The whole shell therefore stays with `TicketStub`;
+//  `.cardStyle(_:)` intentionally has no effect on this component.
+//
 //  ```swift
 //  FlightTicketCard(from: "NYC", to: "SFO")
 //      .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
@@ -48,6 +56,9 @@ public struct FlightTicketCard: View {
     private var accentBase: Color { (accent ?? .primary).base }
 
     public var body: some View {
+        // Decorative-shell exception: the perforated `TicketStub` surface (fill +
+        // notches + tear line + shadow) is the chrome here and is kept as-is —
+        // see the header note. `.surface()`/`.elevation()` feed it directly.
         TicketStub {
             routeHeader
         }
@@ -167,4 +178,15 @@ public extension FlightTicketCard {
         }
     }
     return Demo()
+}
+
+// The perforated ticket shell is exempt from `CardStyle` (see header note):
+// under `.cardStyle(.outlined)` the card renders identically to the default.
+#Preview("Card-style exempt shell") {
+    FlightTicketCard(from: "NYC", to: "SFO")
+        .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
+        .times(departure: "10:00 AM", arrival: "11:30 AM")
+        .airline("Garuda Indonesia").price(140, currencyCode: "USD")
+        .cardStyle(.outlined)
+        .frame(maxWidth: 320).padding()
 }

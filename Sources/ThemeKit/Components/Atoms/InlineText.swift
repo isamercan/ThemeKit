@@ -53,7 +53,11 @@ public struct InlineText: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension InlineText {
-    /// Base text color (defaults to the theme's secondary text color).
+    /// Semantic base text color; `nil` (default) uses the theme's secondary text color.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.baseColor = color?.base } }
+
+    /// Raw base text color (back-compat); prefer `accent(_:)`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func color(_ color: Color?) -> Self { copy { $0.baseColor = color } }
 
     /// Typography token for the body text. Named `inlineStyle` so it doesn't

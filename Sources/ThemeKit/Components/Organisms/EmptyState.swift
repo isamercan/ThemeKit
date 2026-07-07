@@ -31,6 +31,8 @@ public struct EmptyState: View {
     private var imageMaxHeight: CGFloat = 160
     private var iconForeground: Color?
     private var iconBackground: Color?
+    private var iconForegroundKey: Theme.ForegroundColorKey?
+    private var iconBackgroundKey: Theme.BackgroundColorKey?
     private var iconCircleSize: CGFloat = 88
     private var buttonTitle: String?
     private var action: (() -> Void)?
@@ -71,11 +73,11 @@ public struct EmptyState: View {
             case .symbol(let systemImage):
                 ZStack {
                     Circle()
-                        .fill(iconBackground ?? theme.background(.bgElevatorTertiary))
+                        .fill(iconBackground ?? iconBackgroundKey.map { theme.background($0) } ?? theme.background(.bgElevatorTertiary))
                         .frame(width: iconCircleSize, height: iconCircleSize)
                     Image(systemName: systemImage)
                         .font(.system(size: iconCircleSize * 0.36))
-                        .foregroundStyle(iconForeground ?? theme.foreground(.fgHero))
+                        .foregroundStyle(iconForeground ?? iconForegroundKey.map { theme.foreground($0) } ?? theme.foreground(.fgHero))
                 }
             }
 
@@ -124,8 +126,14 @@ public extension EmptyState {
     /// Override the icon glyph color (defaults to the `.fgHero` token, R4).
     func iconForeground(_ c: Color?) -> Self { copy { $0.iconForeground = c } }
 
+    /// Token-bound overload — glyph uses a theme foreground key, resolved against the environment theme.
+    func iconForeground(_ key: Theme.ForegroundColorKey) -> Self { copy { $0.iconForegroundKey = key } }
+
     /// Override the icon circle fill (defaults to the `.bgElevatorTertiary` token, R4).
     func iconBackground(_ c: Color?) -> Self { copy { $0.iconBackground = c } }
+
+    /// Token-bound overload — circle fill uses a theme background key, resolved against the environment theme.
+    func iconBackground(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.iconBackgroundKey = key } }
 
     /// Diameter of the icon circle.
     func iconCircleSize(_ size: CGFloat) -> Self { copy { $0.iconCircleSize = size } }

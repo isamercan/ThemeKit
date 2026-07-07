@@ -64,6 +64,7 @@ public extension Spinner {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.semantic = color } }
 
     /// Raw tint override (back-compat); prefer `accent(_:)`. Wins over `accent`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func color(_ c: Color?) -> Self { copy { $0.color = c } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

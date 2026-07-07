@@ -8,8 +8,16 @@ import SwiftUI
 
 /// Organism. A notification surface: bell icon, optional unread dot + timestamp,
 /// title, message and optional actions.
+///
+/// The outer shell (surface fill, corner clipping, elevation shadow/border) is drawn
+/// by the active `CardStyle` from the environment — `.surface()/.cornerRadius()/
+/// .elevation()` feed the `CardStyleConfiguration`, so the default look (white
+/// surface, box corner, soft shadow — the classic `Card` chrome) is unchanged while
+/// `.cardStyle(_:)` can swap in a completely different shell. `.leading {}` replaces
+/// the built-in icon; the unread dot is content emphasis and never touches the shell.
 public struct NotificationCard<Actions: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.cardStyle) private var cardStyle
 
     private let title: String
     private let actions: Actions?
@@ -20,6 +28,11 @@ public struct NotificationCard<Actions: View>: View {
     private var isUnread = false
     private var type: FeedbackKind?
     private var onClose: (() -> Void)?
+    private var leadingSlot: AnyView?
+    // Shell — token-fed; defaults match the previous `Card`-provided chrome.
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var radiusRole: Theme.RadiusRole = .box
+    private var elevation: CardElevation = .soft
 
     public init(title: String, @ViewBuilder actions: () -> Actions) {   // R1
         self.title = title
@@ -30,40 +43,64 @@ public struct NotificationCard<Actions: View>: View {
     private var iconColor: Color { type?.semanticColor.accent ?? theme.foreground(.fgHero) }
 
     public var body: some View {
-        Card {
-            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: iconName).size(.sm).color(iconColor)
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — the defaults reproduce the previous `Card` wrapper exactly.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+    }
 
-                VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-                    if let date {
-                        HStack(spacing: Theme.SpacingKey.xs.value) {
-                            if isUnread {
-                                Circle().fill(theme.foreground(.systemcolorsFgError)).frame(width: 6, height: 6)
-                            }
-                            Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+    /// The card's inner layout — everything inside the shell. The 16pt padding and
+    /// leading-aligned max-width frame match `Card`'s default content treatment.
+    private var cardContent: some View {
+        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            leadingArea
+
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                if let date {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        if isUnread {
+                            Circle().fill(theme.foreground(.systemcolorsFgError)).frame(width: 6, height: 6)
                         }
-                    }
-                    Text(title)
-                        .textStyle(.labelBase600)
-                        .foregroundStyle(theme.text(.textPrimary))
-                    if let message {
-                        Text(message)
-                            .textStyle(.bodySm400)
-                            .foregroundStyle(theme.text(.textSecondary))
-                    }
-                    if let actions {
-                        actions.padding(.top, Theme.SpacingKey.xs.value)
+                        Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                     }
                 }
-                Spacer(minLength: 0)
-                if let onClose {
-                    Button(action: onClose) {
-                        Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(themeKit: "Dismiss"))
+                Text(title)
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textPrimary))
+                if let message {
+                    Text(message)
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                }
+                if let actions {
+                    actions.padding(.top, Theme.SpacingKey.xs.value)
                 }
             }
+            Spacer(minLength: 0)
+            if let onClose {
+                Button(action: onClose) {
+                    Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Dismiss"))
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The leading icon region: the `.leading {}` slot when set, else the
+    /// variant-driven bell icon.
+    @ViewBuilder private var leadingArea: some View {
+        if let leadingSlot {
+            leadingSlot
+        } else {
+            Icon(systemName: iconName).size(.sm).color(iconColor)
         }
     }
 }
@@ -92,6 +129,18 @@ public extension NotificationCard {
     /// Show a trailing dismiss button invoking `action`.
     func onClose(_ action: (() -> Void)?) -> Self { copy { $0.onClose = action } }
 
+    /// Replace the leading icon region with custom content — an avatar, a brand
+    /// mark. Omit to keep the `variant(_:)`-driven bell icon.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.leadingSlot = AnyView(content()) } }
+
+    // Shell (token-fed, drawn by the active `CardStyle`).
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// Container corner radius role (default `.box`).
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Surface elevation (default `.soft` — the classic card shadow).
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -115,4 +164,14 @@ public extension NotificationCard {
             .date("November 28, 2024")
     }
     .padding()
+}
+
+#Preview("Outlined style + leading slot") {
+    NotificationCard(title: "Ayşe replied to your review")
+        .message("\"Thanks for the kind words — see you next summer!\"")
+        .date("Today, 09:41")
+        .unread()
+        .leading { Avatar(.initials("AD")).size(.sm) }
+        .cardStyle(.outlined)
+        .padding()
 }

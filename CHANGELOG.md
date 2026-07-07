@@ -5,6 +5,227 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.16.0] - 2026-07-07
+
+### Changed — flexibility wave 6: naming sweep, raw-type cleanup, grade-1 floor lift
+
+Closes the flexibility programme (see `docs/flexibility-faz3-report.md`).
+
+- **`accent(_:)` is the one colour verb.** New `accent(SemanticColor?)` on Icon,
+  InlineText, RollingNumber, ProgressBar (fill), Avatar/AvatarGroup, CalendarView,
+  ScoreBadge, ShareButton, FareFeatureRow, TextRotate, SortTab, Counter,
+  Breadcrumbs, ThemeController, ListSectionHeader, FloatingActionButton,
+  SmartSuggestion, CalendarView. Raw-`Color` colour modifiers (`color`, `fillColor`,
+  `ringColor`, `badgeColor`, `colors`, `tint`, `selectionColor`) are deprecated —
+  still functional. Badge deliberately keeps `badgeStyle` as its semantic gate.
+- **Geometry tokens:** `cornerRadius(RadiusRole)` / `spacing(SpacingKey)` /
+  `peek(SpacingKey)` overloads on AnimatedImage, RemoteImage, ImageCollage,
+  FilterBar, PagingCarousel, PriceTrendChart; raw CGFloat knobs stay (documented).
+- **Aliases:** `Chip.expands` / `Coupon.block` deprecated-renamed to `fullWidth`.
+- **Grade-1 floor lift:** Breadcrumbs, FilterGroup, ScoreBadge, TextRotate,
+  FareFeatureRow, ShareButton, CalendarView, ThemeController, ThemePicker, SortTab,
+  Counter (new `CounterSize`), ListSectionHeader (+`trailing{}` slot) all gain
+  copy-on-write modifier layers. HeroSurface evaluated — Hero's `background{}`
+  builder already covers it.
+- **Housekeeping:** Carousel/VideoPlayerView modifiers normalised onto the standard
+  `copy(_:)` helper.
+
+## [0.15.0] - 2026-07-07
+
+### Added — flexibility wave 5: presenter content slots + container state slots
+
+- **`ToastStyle`** (new protocol; `.default` / `.capsule`): `AlertToast` bridges via
+  `isDefault` — `feedbackHost` toasts inherit the hook. `.toast(isPresented:
+  autoDismiss:content:)` presents fully custom toasts through the same
+  presentation modifier.
+- **Presenters:** `Dialog` gains a free-form card overload; `Feedback` gains
+  `toast{}` / `notify{}` builder overloads; `Tour` gains `tourHost(stepCard:)`
+  with a public `TourStepContext` (step/index/count + next/prev/skip).
+  `BottomSheet` / `Drawer` were already ViewBuilder-slotted. CardStyle adoption
+  deliberately skipped for floating presenter chrome (documented in-file).
+- **Containers:** `ListView` and `DataTable` gain `.empty{}` / `.loadingView{}`
+  (DataTable also `.header{}` / `.footer{}` outside the column strip); `Gallery`
+  gains `.empty{}`.
+- **`CardStack`** gets its modifier layer: `.maxVisible`, token-typed
+  `.peekOffset`, `.rotation` (fanned-deck scatter). No swipe axis — the deck has
+  no gesture behaviour to bind; empty-deck negative padding clamped.
+
+## [0.14.0] - 2026-07-07
+
+### Changed — flexibility wave 4: chip, bar and meter families bridge into their archetype styles
+
+- **Chips (`ChipStyle`):** `ImageChip` / `CompactChip` / `ChoseChip` / `FilterChip` /
+  `MapPriceMarker` keep their non-capsule chroma pixel-identical while the default
+  style is ambient (`AnyChipStyle.isDefault` bridge) and hand content to
+  `makeBody` when a custom `.chipStyle(_:)` is set. `ChipGroup` unchanged.
+- **Bars (`BarStyle`):** `Footer` delegates fully; `PageHeader`, `NavigationBar`
+  and `StickyBookingBar` bridge (legacy chrome — chrome-less / capsule + shadow /
+  overlay hairline — cannot be expressed by `DefaultBarStyle`, so it stays
+  byte-identical until a custom style is set). `NavigationBar` gains a per-item
+  `.item{}` builder; `BarChromeOverrides` gains a `showsShadow` channel.
+- **Meters (`MeterStyle`):** `RadialProgress` adopts via a new built-in
+  `RadialMeterStyle` (`.radial`; ring geometry extracted verbatim, dashboard/size/
+  lineWidth as style parameters) and hands over fully to custom `.meterStyle`.
+  `Steps` gains a per-step `.marker{}` builder (percent ring + a11y preserved).
+  `GaugeView` documented exception (native `Gauge`).
+- **Katman-2 exceptions (evaluated, untouched):** `FilterBar`, `SortSummaryBar`
+  (no bar chrome — bare rows), `Sidebar` (vertical rail), `SegmentedTabBar`,
+  `SegmentedControl`, `TripTypeToggle` (track+selection control chroma);
+  `Badge`/`Tag` family stays Katman-2 — their variant system is the style axis,
+  they carry no selection state.
+
+## [0.13.0] - 2026-07-07
+
+### Changed — flexibility wave 3: the form family routes its chrome through `FieldStyle`
+
+15 field components now delegate their box chrome (fill, border, corner) to the
+environment `FieldStyle`; `.fieldStyle(_:)` re-skins the whole form without forking:
+
+- **Select family:** `Select` folds into FieldStyle when no custom `SelectStyle` is
+  injected (legacy path byte-identical otherwise); `SelectStyle`, its built-ins and
+  `.selectStyle(_:)` are **deprecated** but functional. `SelectBox`, `MultiSelect`,
+  `TreeSelect` delegate their trigger chrome (open → `isFocused`).
+- **Date/number:** `DateField`, `TimeField` (open popover → `isFocused`),
+  `InputNumber`, `FieldButton` (field-look shell; fill normalises to `bgWhite`).
+- **Specialised:** `OTPInput` (per-digit cells; active cell = `isFocused`, warnings
+  now tint the border), `PaymentCardField` (real per-row focus — focused rows show
+  the hero border), `FileInput`, `ColorField`, `MultiLineTextInput`.
+- **Search:** `SearchBar` (fill normalises `bgElevatorPrimary` → `bgWhite`, gains a
+  focus border), `Autocomplete`; `SearchField` keeps its five legacy chrome modifiers
+  as a byte-identical override path and defers to FieldStyle only when none is set.
+- **Exceptions:** `GuestSelector` (no field box), `CurrencyPicker` (inherits via
+  `SearchBar`).
+
+**Behaviour notes:** disabled fields now uniformly use the muted `bgSecondaryLight`
+fill; error/warning beats the open/focus border and thickens to 1.5pt; corner radii
+move to the `.field` role token (same fallback size in bundled themes). Demo
+showcase gained a "Form family" section.
+
+## [0.12.0] - 2026-07-07
+
+### Changed — flexibility wave 2: the card family routes its shells through `CardStyle`
+
+16 card components now delegate their outer shell (surface fill, corner clipping,
+border, shadow) to the environment `CardStyle` — `surface()/cornerRadius()/elevation()`
+feed the `CardStyleConfiguration`, and `.cardStyle(_:)` can swap in a completely
+different shell without forking:
+
+- **Flight:** `FlightCard`, `FlightResultRow`.
+- **Media:** `RoomCard`, `DestinationCard` (+`.overlay{}`), `LocationCard`
+  (+`.media{}` replacing the map region, +`.overlay{}`), `AncillaryCard`.
+- **Content:** `ReviewCard`, `NotificationCard` (+`.leading{}`), `PriceAlertCard`,
+  `BlogCard` (opt-in shell via `surface/cornerRadius/elevation`, +`.overlay{}`).
+- **Selectable:** `FareFamilyCard`, `RadioCard`, `CheckboxCard`, `DatePriceCard`,
+  `RoomCard`/`AncillaryCard` — selection now flows through
+  `CardStyleConfiguration.isSelected` (selected borders normalise to the style's
+  1.5pt `borderHero` `strokeBorder`).
+- **Partial/exceptions (documented in-file):** `LoyaltyCard` (gradient front is the
+  component's identity; flat back face delegated), `MapCallout` (pointer triangle and
+  accent border stay component-drawn), `TicketStub`, `Coupon`, `FlightTicketCard`,
+  `BoardingPass` (notched/dashed ticket shells cannot be expressed as a flat surface),
+  `RatingSummary` (no shell), `KeyValueTable` (bordered shell delegated, +`surface(_:)`).
+
+**Behaviour notes:** hairline borders follow `Card` semantics (drawn at `.none`
+elevation; shadowed shells drop it), `stroke` → `strokeBorder` sub-pixel
+normalisation, and selected borders use the `borderHero` token instead of per-card
+accent strokes. Demo showcase gained a "Card family" section — one custom style
+reskinning several different cards.
+
+## [0.11.0] - 2026-07-07
+
+### Added — flexibility wave 1: archetype style protocols + 6 pilots
+
+First wave of the slot/config/style architecture (see `docs/flexibility-audit-faz1.md`).
+Four new archetype style protocols, each mirroring the `CardStyle` idiom
+(Configuration + `AnyX` erasure + environment key + `.xStyle(_:)` + `where Self ==`
+statics), with the default style extracted pixel-identical from the pilot component:
+
+- **`ListRowStyle`** (`.default` / `.inset`) — pilot `ListRow`, which also gains
+  `.leading{}` / `.trailing{}` ViewBuilder slots (the `ListRowTrailing` enum stays).
+- **`FieldStyle`** (`.default` / `.underlined`) — pilot `TextInput`, which gains
+  `.leading{}` / `.trailing{}` slots; all 21 existing modifiers unchanged.
+- **`ChipStyle`** (`.tonal` / `.solid`) — pilot `Chip`; the `ChipSelectionStyle`
+  enum shorthand now routes through the same `makeBody` gate as environment styles.
+  `Chip.interactive(_:)` deprecated in favour of `.disabled(_:)` (still works).
+- **`BarStyle`** (`.default` / `.floating`) — pilot `SheetHeader`, which gains
+  `.leading{}`; `surface()`/`showsDivider()` keep working via internal overrides.
+- **`MeterStyle`** (`.linear` / `.striped`) — pilot `ProgressBar`; data (fraction,
+  fill, track) stays in the component, geometry moves to the style; `steps` is now
+  a configuration field handled by the style.
+- **`CardStyleConfiguration`** additively gains `isSelected` / `isPressed` /
+  `surfaceKey` / `radius`; `DefaultCardStyle` reads surface+radius from it and draws
+  a hero border when selected. Pilot `HotelResultCard` routes its shell through
+  `.cardStyle` and gains `.media{}` / `.overlay{}` slots.
+
+**Behaviour notes:** defaults are pixel-identical except (1) `HotelResultCard` at
+`.soft`/`.elevated` now follows `Card`'s border semantics (shadow only; hairline at
+`.none`), and (2) an `exists(false)`+selected `Chip`'s border drops to the disabled
+palette (no callers).
+
+**Demo** — new "Flexibility Showcase" gallery page: every pilot shown three ways
+(default / slots filled / re-skinned via a custom style defined in the demo target —
+the fork-free proof).
+
+## [0.10.0] - 2026-07-07
+
+### Fixed — audit sprint 1: P0 cleanup (all additive, no call-site breaks)
+
+Closes the P0 findings of the non-daisyUI component audit (travel suite, media atoms,
+app-shell organisms, form extras).
+
+**Dead API wired**
+- `MapCallout.accent(_:)` now tints the border + CTA chevron; `RecentSearchRow.accent(_:)`
+  now brand-tints the leading icon tile. (Both stored the value but never read it.)
+
+**Token overloads for raw-`Color` APIs** (originals kept)
+- `PriceHistogram.accent(SemanticColor)`, `AmenityGrid.tint(SemanticColor)`,
+  `EmptyState.iconForeground(Theme.ForegroundColorKey)` / `.iconBackground(Theme.BackgroundColorKey)` —
+  demos no longer unwrap `Theme.shared` by hand.
+
+**Accessibility**
+- `NavigationBar` — items take an optional `label`, expose it (or the symbol's base name)
+  to VoiceOver, and report `.isSelected`.
+- `RollingNumber` — reads the value instead of the 0-9 digit skeleton.
+- `ProgressIndicator` — one element: label "Progress", value "N of M" (localized).
+- `Steps` — one element per step (title + description, state as value, button trait when
+  tappable, `.isSelected` on the active step).
+- Chips — `ImageChip`/`CompactChip`/`ChoseChip` now expose button + selected traits
+  (they were plain tap gestures); `Chip` reports `.isSelected`; `FilterChip`'s close
+  button is labelled "Remove".
+- `PriceAlertCard` — the container `.combine` no longer flattens the live Toggle; the
+  Toggle is the card's single, fully-labelled VoiceOver element.
+
+**Correctness**
+- `GaugeView` — value is clamped into `range`, and the readout is the position within
+  the range (no more "7 200%" on non-0…1 ranges).
+- `VideoPlayerView` — full macOS parity: the stateful inline player (autoplay, loop,
+  mute, progress, overlays, active-gating) now runs on both platforms; only the AVKit
+  host view is platform-conditional (`AVPlayerView` on macOS).
+- `Steps.small()` — no longer a no-op; compact titles on both axes (and the horizontal
+  default title style is now `labelBase600`, matching the vertical axis).
+
+**Localization** — 4 new step-state accessibility keys (en + tr).
+
+### Changed — base-100 component surfaces (daisyUI colour-model alignment)
+
+Card-like components now default to the page's blank surface token **`bgWhite`**
+(daisyUI `base-100`) instead of the elevation tint `bgElevatorPrimary`; the tint is
+reserved for secondary/nested surfaces (table header strips, zebra rows, selector
+fills, device chrome).
+
+- Default flipped on the 11 components that already had `.surface(_:)`:
+  `PaymentCardField`, `AgentPriceRow`, `AncillaryCard`, `BoardingPass`,
+  `FlightTicketCard`, `HotelResultCard`, `MapCallout`, `PriceAlertCard`, `RoomCard`,
+  `StickyBookingBar`, `TicketStub`.
+- 11 components with a hardcoded surface gained `.surface(_:)` (default `bgWhite`):
+  `ReviewCard`, `FlightCard`, `FlightResultRow`, `LoyaltyCard`, `LocationCard`,
+  `DestinationCard`, `FareFamilyCard`, `SheetHeader`, `Footer`, `FilterList`,
+  `RecentSearchRow` (bordered variant).
+- `Card` (via `DefaultCardStyle`) and `DataTable` rows were already base-100; DataTable's
+  header strip + zebra stripes keep the tint deliberately.
+- **Migration:** this is a visual default change — `.surface(.bgElevatorPrimary)`
+  restores the previous look per component. Snapshots need re-recording.
+
 ## [0.9.0] - 2026-07-07
 
 ### Added — daisyUI parity sweep (9 new components, 12 upgraded)

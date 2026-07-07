@@ -29,6 +29,10 @@ public struct Breadcrumbs: View {
     private let crumbs: [Crumb]
     private let maxItems: Int?
 
+    // Appearance — mutated only through the modifiers below (R2).
+    private var separatorSystemImage = "chevron.right"
+    private var accent: SemanticColor?
+
     public init(_ crumbs: [Crumb], maxItems: Int? = nil) {
         self.crumbs = crumbs
         self.maxItems = maxItems
@@ -55,7 +59,7 @@ public struct Breadcrumbs: View {
             Button { crumbs[index].action?() } label: {
                 Text(crumbs[index].title)
                     .textStyle(isLast ? .labelSm700 : .labelSm600)
-                    .foregroundStyle(isLast ? theme.text(.textPrimary) : theme.text(.textHero))
+                    .foregroundStyle(isLast ? currentColor : theme.text(.textHero))
             }
             .buttonStyle(.plain)
             .disabled(isLast || crumbs[index].action == nil)
@@ -75,8 +79,14 @@ public struct Breadcrumbs: View {
         }
     }
 
+    /// The current (last) crumb's tint — the accent token when set, else the
+    /// primary text token.
+    private var currentColor: Color {
+        accent.map { $0.accent } ?? theme.text(.textPrimary)
+    }
+
     private var separator: some View {
-        Image(systemName: "chevron.right")
+        Image(systemName: separatorSystemImage)
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(theme.text(.textTertiary))
             .mirrorsInRTL()
@@ -104,6 +114,21 @@ public struct Breadcrumbs: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Breadcrumbs {
+    /// SF Symbol drawn between crumbs (default `chevron.right`; mirrors in RTL).
+    func separator(_ systemName: String) -> Self { copy { $0.separatorSystemImage = systemName } }
+    /// Token-fed tint for the current (last) crumb; `nil` keeps the primary text token.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     VStack(alignment: .leading, spacing: 16) {
         Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel")])
@@ -111,6 +136,9 @@ public struct Breadcrumbs: View {
             .init("Home", action: {}), .init("Hotels", action: {}), .init("Turkey", action: {}),
             .init("Marmara", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel"),
         ], maxItems: 4)
+        Breadcrumbs([.init("Home", action: {}), .init("Flights", action: {}), .init("IST → LHR")])
+            .separator("arrow.right")
+            .accent(.turquoise)
     }
     .padding()
 }

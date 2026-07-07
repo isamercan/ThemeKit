@@ -19,6 +19,17 @@
 //      .titleStyle(.bodyBase500, color: .textHero)
 //  ```
 //
+//  CHROME DELEGATION (FieldStyle) — with a legacy-override rule:
+//  The card's chrome (fill, border, shape, shadow) is normally delegated to the
+//  ambient ``FieldStyle`` (`.fieldStyle(_:)`), like `TextInput`. BUT the five
+//  pre-existing chrome modifiers — `background(_:)`, `borderColor(_:)`,
+//  `cornerRadius(_:)`, `focused(_:)`, `showsShadow(_:)` — keep working exactly
+//  as before: if the caller sets ANY of them, the component draws its own
+//  legacy chrome from those token keys (the override path) and the ambient
+//  `FieldStyle` is ignored. If NONE of them is set, the chrome comes from the
+//  ambient `FieldStyle`. Content (pills, titles, dates, passengers, slots) is
+//  unaffected either way.
+//
 
 import SwiftUI
 
@@ -49,6 +60,9 @@ public struct PassengerCount: Identifiable, Sendable {
 public struct SearchField: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    /// The card chrome (fill + border), used when no legacy chrome modifier is set.
+    @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
     private enum Content {
         case placeholder
@@ -66,6 +80,10 @@ public struct SearchField: View {
     private var trailing: SearchFieldTrailing = .none
     private var onClear: (() -> Void)?
     // Per-element overrides — all TOKEN KEYS (never raw colours / numbers).
+    // The five card-chrome overrides (`backgroundKey`, `borderKey`, `radiusRole`,
+    // `focusOverride`, `shadowOverride`) are Optionals so "set at all" is
+    // detectable: any of them non-nil routes chrome to the legacy path (see the
+    // file-header rule); all nil delegates chrome to the ambient `FieldStyle`.
     private var backgroundKey: Theme.BackgroundColorKey?
     private var borderKey: Theme.BorderColorKey?
     private var radiusRole: Theme.RadiusRole?
@@ -77,8 +95,8 @@ public struct SearchField: View {
     private var subtitleColorKey: Theme.TextColorKey?
     private var placeholderColorKey: Theme.TextColorKey?
     private var iconColorKey: Theme.ForegroundColorKey?
-    private var isFocused = false
-    private var showsShadow = false
+    private var focusOverride: Bool?    // set via `focused(_:)`; nil = never set
+    private var shadowOverride: Bool?   // set via `showsShadow(_:)`; nil = never set
 
     /// Fixed card height from the design (64pt) — a layout constant, not a theme knob.
     private let cardHeight: CGFloat = 64
@@ -90,6 +108,14 @@ public struct SearchField: View {
 
     // MARK: Resolved tokens (defaults match the design; each override is a token key)
 
+    /// True when any of the five legacy chrome modifiers was called — the
+    /// component then draws its own chrome and ignores the ambient `FieldStyle`.
+    private var usesLegacyChrome: Bool {
+        backgroundKey != nil || borderKey != nil || radiusRole != nil
+            || focusOverride != nil || shadowOverride != nil
+    }
+    private var isFocused: Bool { focusOverride ?? false }
+    private var showsShadow: Bool { shadowOverride ?? false }
     private var cornerRadius: CGFloat { (radiusRole ?? .field).value }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: cornerRadius, style: .continuous) }
     private var resolvedBackground: Color { theme.background(backgroundKey ?? .bgWhite) }
@@ -104,22 +130,55 @@ public struct SearchField: View {
 
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                contentView
-                Spacer(minLength: 0)
-                if let accessorySlot { accessorySlot }
-                trailingView
-            }
-            .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
-            .frame(minHeight: cardHeight)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(resolvedBackground, in: shape)
-            .overlay(shape.stroke(resolvedBorder, lineWidth: isFocused ? 1.5 : 1))
-            .modifier(OptionalSoftShadow(on: showsShadow))
+            chromedCard
+                .contentShape(Rectangle())   // full-card hit area even with fill-less chrome (e.g. `.underlined`)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityText)
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// The composed card row (content + accessory + trailing), padded and sized —
+    /// what a `FieldStyle` receives as `configuration.content` on the delegated
+    /// path. The fixed 64pt design height is layout, not chrome, so it stays here.
+    private var cardCore: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            contentView
+            Spacer(minLength: 0)
+            if let accessorySlot { accessorySlot }
+            trailingView
+        }
+        .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
+        .frame(minHeight: cardHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Chrome routing per the file-header rule: any legacy chrome modifier set
+    /// → the original token-driven chrome; none set → the ambient ``FieldStyle``.
+    /// Configuration mapping on the delegated path: `isFocused` ← `focused(_:)`
+    /// (always `false` there, since calling `focused(_:)` routes to the legacy
+    /// path); `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` are `false`
+    /// (SearchField has no validation concept); `size` is `.large` — SearchField
+    /// has no `TextInputSize` axis, but its fixed 64pt card height (kept in the
+    /// content) exactly matches `TextInputSize.large`, so size-keyed styles see
+    /// the truthful preset.
+    @ViewBuilder
+    private var chromedCard: some View {
+        if usesLegacyChrome {
+            cardCore
+                .background(resolvedBackground, in: shape)
+                .overlay(shape.stroke(resolvedBorder, lineWidth: isFocused ? 1.5 : 1))
+                .modifier(OptionalSoftShadow(on: showsShadow))
+        } else {
+            fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+                content: AnyView(cardCore),
+                isFocused: isFocused,
+                isEnabled: isEnabled,
+                hasError: false,
+                hasWarning: false,
+                size: .large
+            ))
+        }
     }
 
     // MARK: Content
@@ -240,7 +299,9 @@ public extension SearchField {
     /// A fully custom trailing accessory (a moon+nights, quick-date chips…).
     func accessory<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.accessorySlot = AnyView(content()) } }
 
-    // Card chrome — token keys / roles, never raw values
+    // Card chrome — token keys / roles, never raw values. Calling ANY of these
+    // five routes the chrome to the legacy path (the ambient `FieldStyle` is
+    // then ignored) — see the file-header rule.
     /// Card background (background token key, default `.bgWhite`).
     func background(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.backgroundKey = key } }
     /// Border colour (border token key, default soft blue). Overridden by ``focused(_:)``.
@@ -248,9 +309,9 @@ public extension SearchField {
     /// Corner radius (radius role, default `.field`).
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
     /// Focused/active state (hero border).
-    func focused(_ on: Bool = true) -> Self { copy { $0.isFocused = on } }
+    func focused(_ on: Bool = true) -> Self { copy { $0.focusOverride = on } }
     /// Adds a soft elevation shadow.
-    func showsShadow(_ on: Bool = true) -> Self { copy { $0.showsShadow = on } }
+    func showsShadow(_ on: Bool = true) -> Self { copy { $0.shadowOverride = on } }
 
     // Per-element text/pill styling — token keys / styles
     /// Recolour the code/date/count pills (background + text token keys).
@@ -291,6 +352,9 @@ private struct OptionalSoftShadow: ViewModifier {
             .passengers(badge: "4 Guests", [PassengerCount("person.fill", "2"), PassengerCount("figure.child", "1")])
         SearchField("From") { }.value(code: "IST", title: "Istanbul", subtitle: "All airports")
             .chipColors(background: .bgHero, foreground: .textSecondaryInverse).borderColor(.borderHero).titleStyle(color: .textHero)
+        // No legacy chrome modifier set → chrome comes from the ambient FieldStyle.
+        SearchField("To") { }.value(code: "ESB", title: "Ankara", subtitle: "Esenboğa Havalimanı")
+            .fieldStyle(.underlined)
     }
     .padding()
     .background(Theme.shared.background(.bgSecondary))

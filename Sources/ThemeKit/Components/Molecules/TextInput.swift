@@ -122,14 +122,19 @@ public struct TextInputModel {
 /// architecture (COMPONENT_REFACTOR_RULES R1–R7) the canonical init takes only
 /// its label and the `text` binding; every other axis is a chainable,
 /// order-free modifier. `disabled` is native (`@Environment(\.isEnabled)`, R3).
+/// The field chrome (fill + border) is a swappable ``FieldStyle`` set with
+/// `.fieldStyle(_:)`; the default reproduces the original look.
 ///
 ///     TextInput("Email", text: $email)
 ///         .icon(leading: "envelope").clearable()
 ///         .keyboard(.emailAddress, contentType: .emailAddress)
 ///         .validate([.required(), .email()], on: .editingEnd)   // daisyUI Validator
 ///         .disabled(!editable)            // native — R3
+///         .fieldStyle(.underlined)        // swap the chrome, keep the behavior
 public struct TextInput: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     @Binding private var text: String
     // Config — mutated only through the modifiers below (R2).
@@ -138,6 +143,11 @@ public struct TextInput: View {
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     private var accessibilityID: String? = nil
+
+    // Custom slot views placed in the field row, before / after the text.
+    // Additive to `icon` / `addons` — those APIs are untouched.
+    private var leadingContent: AnyView? = nil
+    private var trailingContent: AnyView? = nil
 
     // Convenience helper/error/warning strings — merged into the rendered
     // message list at render time (see `messages`), keeping modifiers order-free.
@@ -228,6 +238,8 @@ public struct TextInput: View {
                 Icon(systemName: leadingSystemImage).size(.sm).color(iconColor)
             }
 
+            if let leadingContent { leadingContent }
+
             ZStack(alignment: .leading) {
                 Text(model.label)
                     .textStyle(floating ? .labelSm600 : .bodyBase400)
@@ -242,7 +254,9 @@ public struct TextInput: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(Motion.fast.animation, value: floating)
 
-            trailing
+            if let trailingContent { trailingContent }
+
+            trailingAccessory
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
     }
@@ -261,8 +275,9 @@ public struct TextInput: View {
         Rectangle().fill(theme.border(.borderPrimary)).frame(width: 1)
     }
 
-    @ViewBuilder
-    private var fieldBox: some View {
+    /// The composed field row (addons + content), sized — everything a
+    /// `FieldStyle` receives as `configuration.content`.
+    private var fieldCore: some View {
         Group {
             if hasAddons {
                 HStack(spacing: 0) {
@@ -279,12 +294,20 @@ public struct TextInput: View {
             }
         }
         .frame(height: model.size.height)
-        .background(backgroundColor, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
-                .strokeBorder(borderColor, lineWidth: isFocused || hasError || hasWarning ? 1.5 : 1)
-        )
+    }
+
+    /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Interaction (tap-to-focus) stays here; only the surface is delegated.
+    @ViewBuilder
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldCore),
+            isFocused: isFocused,
+            isEnabled: isEnabled,
+            hasError: hasError,
+            hasWarning: hasWarning,
+            size: model.size
+        ))
         .contentShape(Rectangle())
         .onTapGesture { if isEnabled { isFocused = true } }
     }
@@ -355,7 +378,7 @@ public struct TextInput: View {
     }
 
     @ViewBuilder
-    private var trailing: some View {
+    private var trailingAccessory: some View {
         if model.isSecure {
             Button { reveal.toggle() } label: {
                 Icon(systemName: reveal ? "eye.slash" : "eye").size(.sm).color(theme.text(.textTertiary))
@@ -385,17 +408,6 @@ public struct TextInput: View {
     private var iconColor: Color {
         isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled)
     }
-
-    private var backgroundColor: Color {
-        theme.background(isEnabled ? .bgWhite : .bgSecondaryLight)
-    }
-
-    private var borderColor: Color {
-        if hasError { return theme.border(.systemcolorsBorderError) }
-        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
-        if isFocused { return theme.border(.borderHero) }
-        return theme.border(.borderPrimary)
-    }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
@@ -412,6 +424,20 @@ public extension TextInput {
     /// Static addon segments rendered before / after the field (e.g. "https://", ".com").
     func addons(before: String? = nil, after: String? = nil) -> Self {
         copy { $0.model.addonBefore = before; $0.model.addonAfter = after }
+    }
+
+    /// Custom view placed in the field row, before the label / text — e.g. a
+    /// currency symbol, avatar, or flag. Additive to `icon(leading:)`, which
+    /// keeps rendering ahead of it.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingContent = AnyView(content()) }
+    }
+
+    /// Custom view placed in the field row, after the label / text — e.g. a unit
+    /// tag or an inline button. Additive to the trailing accessory (clear /
+    /// reveal / `icon(trailing:)`), which keeps rendering after it.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.trailingContent = AnyView(content()) }
     }
 
     /// Masks input as a password field with a reveal toggle.
@@ -576,6 +602,7 @@ private extension TextInputCapitalization {
         @State var email = ""
         @State var pass = ""
         @State var bio = ""
+        @State var amount = ""
         private var emailMessages: [InfoMessage] {
             Validator.validate(email, [.required(), .email()])
         }
@@ -596,6 +623,12 @@ private extension TextInputCapitalization {
                 // Soft limit: can exceed 80, counter turns red instead of truncating.
                 TextInput("Bio", text: $bio)
                     .maxLength(80, hardLimit: false).showsCount(style: .remaining)
+                // Underlined chrome + custom leading/trailing slots.
+                TextInput("Amount", text: $amount)
+                    .leading { Text("$").textStyle(.bodyBase400) }
+                    .trailing { Text("USD").textStyle(.labelSm600) }
+                    .keyboard(.decimalPad)
+                    .fieldStyle(.underlined)
             }
             .padding()
         }

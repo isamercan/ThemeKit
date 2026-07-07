@@ -90,7 +90,11 @@ public struct Ribbon<Content: View>: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Ribbon {
-    /// Semantic color of the ribbon (default .primary).
+    /// Semantic color of the ribbon; `nil` restores the default (`.primary`).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color ?? .primary } }
+
+    /// Semantic color of the ribbon (back-compat); prefer `accent(_:)`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
@@ -109,7 +113,7 @@ public extension Ribbon {
         Ribbon("New") {
             RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
         }
-        .color(.error)
+        .accent(.error)
     }
     .padding(40)
 }

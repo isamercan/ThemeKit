@@ -12,20 +12,14 @@
 
 import SwiftUI
 
-private struct PopconfirmModifier: ViewModifier {
-    @Environment(\.theme) private var theme
-
+/// Shared presentation shell for both overloads: an overlay anchored to the
+/// chosen edge, fixed-size card, edge placement, fade+scale transition, and
+/// micro-motion animation. What the card contains is the caller's business.
+private struct PopconfirmPresenter<Card: View>: ViewModifier {
     @Binding var isPresented: Bool
-    let title: String
-    let message: String?
-    let confirmTitle: String
-    let cancelTitle: String
-    let confirmKind: FeedbackKind
     let edge: TooltipEdge
-    let onConfirm: () async -> Void
-    let onCancel: (() -> Void)?
+    let card: Card
 
-    @State private var loading = false
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
@@ -41,6 +35,43 @@ private struct PopconfirmModifier: ViewModifier {
             }
         }
         .animation(motion, value: isPresented)
+    }
+}
+
+/// The Popconfirm card chrome — `md` padding on a fixed 260pt-wide white
+/// surface with a small continuous corner, a 1pt hairline, and the elevated
+/// token shadow. One source of truth so the standard and custom-content
+/// overloads stay pixel-aligned.
+private struct PopconfirmSurface: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .padding(Theme.SpacingKey.md.value)
+            .frame(width: 260)
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
+            .themeShadow(.elevated)
+    }
+}
+
+private struct PopconfirmModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+
+    @Binding var isPresented: Bool
+    let title: String
+    let message: String?
+    let confirmTitle: String
+    let cancelTitle: String
+    let confirmKind: FeedbackKind
+    let edge: TooltipEdge
+    let onConfirm: () async -> Void
+    let onCancel: (() -> Void)?
+
+    @State private var loading = false
+
+    func body(content: Content) -> some View {
+        content.modifier(PopconfirmPresenter(isPresented: $isPresented, edge: edge, card: card))
     }
 
     private var card: some View {
@@ -71,11 +102,7 @@ private struct PopconfirmModifier: ViewModifier {
                 .color(confirmKind.semanticColor).size(.small).loading(loading)
             }
         }
-        .padding(Theme.SpacingKey.md.value)
-        .frame(width: 260)
-        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
-        .themeShadow(.elevated)
+        .modifier(PopconfirmSurface())
     }
 }
 
@@ -115,6 +142,23 @@ public extension View {
             edge: edge, onConfirm: onConfirm, onCancel: onCancel
         ))
     }
+
+    /// Anchored popover with fully custom content in place of the stock
+    /// title/message/buttons layout. The card shell (white surface, hairline,
+    /// elevated shadow, 260pt width) and the presentation (edge placement,
+    /// transition, motion) match the standard `.popconfirm(...)`; what's inside
+    /// — and how it dismisses, typically by flipping `isPresented` — is the
+    /// caller's.
+    func popconfirm<V: View>(
+        isPresented: Binding<Bool>,
+        edge: TooltipEdge = .top,
+        @ViewBuilder content: () -> V
+    ) -> some View {
+        modifier(PopconfirmPresenter(
+            isPresented: isPresented, edge: edge,
+            card: content().modifier(PopconfirmSurface())
+        ))
+    }
 }
 
 #Preview {
@@ -124,6 +168,32 @@ public extension View {
             ThemeButton("Delete") { show.toggle() }.color(.error).variant(.soft)
                 .popconfirm(isPresented: $show, title: "Delete this item?", message: "This can't be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel") {}
+                .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Custom content") {
+    struct Demo: View {
+        @State var show = true
+        @State var rating = 4
+        var body: some View {
+            ThemeButton("Rate this stay") { show.toggle() }.variant(.outline)
+                .popconfirm(isPresented: $show) {
+                    VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                        Text("How was your stay?").textStyle(.labelBase600)
+                        HStack(spacing: Theme.SpacingKey.xs.value) {
+                            ForEach(1...5, id: \.self) { star in
+                                Button { rating = star } label: {
+                                    Icon(systemName: star <= rating ? "star.fill" : "star").size(.sm)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        ThemeButton("Send") { show = false }.size(.small)
+                    }
+                }
                 .padding(80)
         }
     }

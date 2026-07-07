@@ -180,6 +180,7 @@ public extension RadioButton {
 
     /// Override the selected-fill color (defaults to the `.bgHero` token, R4);
     /// prefer the token-fed `accent(_:)`. Wins over `accent`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func fillColor(_ c: Color?) -> Self { copy { $0.backgroundColor = c } }
 
     /// Semantic tint for the selected fill/border (glyph auto-contrasts); `nil`

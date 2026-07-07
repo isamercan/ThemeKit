@@ -8,8 +8,20 @@ import SwiftUI
 
 /// Atom. Circular determinate progress with status colors and an optional
 /// dashboard (gapped) variant. (Ant Progress type="circle"/"dashboard".)
+///
+/// Drawing is delegated to a ``MeterStyle`` — the component keeps the DATA
+/// (fraction clamping, the fill priority `ringColor` > `accent` > `status`,
+/// the track token, the center label) and the style draws the GEOMETRY.
+/// When no `.meterStyle(_:)` is set, the component uses ``RadialMeterStyle``
+/// built from its own `size` / `lineWidth` / `dashboard` — *not* the
+/// environment's `LinearMeterStyle` default, which would flatten the ring
+/// into a bar. An explicit `.meterStyle(_:)` (detected via
+/// `AnyMeterStyle.isDefault == false`) replaces the ring geometry entirely.
+/// Accessibility and the value animation stay on the component, so they apply
+/// uniformly to every style.
 public struct RadialProgress: View {
     @Environment(\.theme) private var theme
+    @Environment(\.meterStyle) private var meterStyle
 
     private let value: Double
 
@@ -36,42 +48,72 @@ public struct RadialProgress: View {
     /// the success checkmark (value >= 1) hasn't appeared.
     private var percent: Int { value >= 1 ? 100 : min(99, Int((value * 100).rounded())) }
 
-    private var gap: CGFloat { dashboard ? 0.25 : 0 }            // fraction left open
-    private var rotation: Double { dashboard ? 90 + Double(gap) * 180 : -90 }
     // Raw override wins, then the semantic accent, then the status color.
     private var color: Color { tint ?? semantic?.solid ?? status.semantic.solid }
     /// Semantic driving the success / exception glyph tint (accent-aware).
     private var glyphSemantic: SemanticColor { semantic ?? status.semantic }
 
     public var body: some View {
-        ZStack {
-            Circle()
-                .trim(from: 0, to: 1 - gap)
-                .stroke(theme.border(.borderPrimary), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(rotation))
-            Circle()
-                .trim(from: 0, to: value * (1 - gap))
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(rotation))
-                .animation(motion, value: value)
-            if showLabel {
-                if status == .success && value >= 1 {
-                    Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
-                } else if status == .exception {
-                    Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
-                } else {
-                    Text("\(percent)%")
-                        .font(.system(size: size * 0.26, weight: .semibold))
-                        .foregroundStyle(theme.text(.textPrimary))
-                }
-            }
+        meter
+            // The ring fill is purely visual; speak the percentage to VoiceOver.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
+            .accessibilityValue(Text("\(percent)%"))
+            .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
+            .animation(motion, value: value)
+    }
+
+    /// The active geometry. `isDefault` bridges the shared `\.meterStyle`
+    /// environment (whose default is `LinearMeterStyle`, for `ProgressBar`) to
+    /// this component's own ring default: only an *explicitly set* style
+    /// replaces `RadialMeterStyle`.
+    @ViewBuilder
+    private var meter: some View {
+        if meterStyle.isDefault {
+            RadialMeterStyle(size: size, lineWidth: lineWidth, dashboard: dashboard)
+                .makeBody(configuration: configuration)
+        } else {
+            meterStyle.makeBody(configuration: configuration)
         }
-        .frame(width: size, height: size)
-        // The ring fill is purely visual; speak the percentage to VoiceOver.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
-        .accessibilityValue(Text("\(percent)%"))
-        .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
+    }
+
+    /// The resolved inputs handed to the active ``MeterStyle`` — data here,
+    /// geometry there. `height` carries the stroke width so linear styles draw
+    /// at a sensible thickness; ``RadialMeterStyle`` gets `size` / `lineWidth`
+    /// / `dashboard` through its init instead (the shared configuration has no
+    /// radial fields).
+    private var configuration: MeterStyleConfiguration {
+        MeterStyleConfiguration(
+            fraction: value,
+            status: status,
+            steps: nil,
+            height: lineWidth,
+            fill: AnyShapeStyle(color),
+            track: theme.border(.borderPrimary),
+            successFraction: nil,
+            label: labelView
+        )
+    }
+
+    /// The center label block: success checkmark / exception cross / percent;
+    /// nil when `showsLabel(false)`.
+    private var labelView: AnyView? {
+        guard showLabel else { return nil }
+        if status == .success && value >= 1 {
+            return AnyView(
+                Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
+            )
+        }
+        if status == .exception {
+            return AnyView(
+                Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
+            )
+        }
+        return AnyView(
+            Text("\(percent)%")
+                .font(.system(size: size * 0.26, weight: .semibold))
+                .foregroundStyle(theme.text(.textPrimary))
+        )
     }
 }
 
@@ -98,6 +140,7 @@ public extension RadialProgress {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.semantic = color } }
 
     /// Raw ring fill override (back-compat); prefer `accent(_:)`. Wins over `accent`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func ringColor(_ c: Color?) -> Self { copy { $0.tint = c } }
 
     /// Spoken VoiceOver label for the ring (the value is announced separately).
@@ -111,12 +154,16 @@ public extension RadialProgress {
 }
 
 #Preview {
-    HStack(spacing: 20) {
-        RadialProgress(0.25)
-        RadialProgress(0.7).size(80).lineWidth(8).dashboard()
-        RadialProgress(1.0).status(.success)
-        RadialProgress(0.4).status(.exception)
-        RadialProgress(0.6).accent(.purple)
+    VStack(spacing: 24) {
+        HStack(spacing: 20) {
+            RadialProgress(0.25)
+            RadialProgress(0.7).size(80).lineWidth(8).dashboard()
+            RadialProgress(1.0).status(.success)
+            RadialProgress(0.4).status(.exception)
+            RadialProgress(0.6).accent(.purple)
+        }
+        // An explicit custom MeterStyle replaces the ring geometry entirely.
+        RadialProgress(0.6).meterStyle(.striped)
     }
     .padding()
 }

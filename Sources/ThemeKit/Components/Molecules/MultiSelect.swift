@@ -12,6 +12,8 @@ import SwiftUI
 /// remains for the simple case.
 public struct MultiSelect<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     private let label: String?
     private let options: [Option]
@@ -45,14 +47,8 @@ public struct MultiSelect<Option: Hashable>: View {
         self.optionTitle = optionTitle
     }
 
-    private var fieldBorder: Color {
-        if open { return theme.border(.borderHero) }
-        switch infoMessages.dominantKind {
-        case .error: return theme.border(.systemcolorsBorderError)
-        case .warning: return theme.border(.systemcolorsBorderWarning)
-        default: return theme.border(.borderPrimary)
-        }
-    }
+    private var hasError: Bool { infoMessages.dominantKind == .error }
+    private var hasWarning: Bool { infoMessages.dominantKind == .warning }
 
     private var selectedOptions: [Option] { options.filter { selection.contains($0) } }
     private var visibleTags: [Option] { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).visible }
@@ -82,55 +78,67 @@ public struct MultiSelect<Option: Hashable>: View {
         .animation(Motion.fast.animation, value: open)
     }
 
+    /// The trigger wrapped in the active ``FieldStyle`` chrome. Configuration
+    /// mapping: the open panel maps to `isFocused`; `hasError` / `hasWarning`
+    /// come from `infoMessages.dominantKind`; and — MultiSelect having no
+    /// `TextInputSize` axis — `size` maps to `.medium` (whose 56pt matches the
+    /// field's own 56pt min-height, which stays in the content).
     private var field: some View {
         Button {
             if isEnabled { open.toggle() }
         } label: {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                if selection.isEmpty {
-                    Text(placeholder)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textTertiary))
-                } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Theme.SpacingKey.xs.value) {
-                            ForEach(visibleTags, id: \.self) { opt in
-                                Tag(optionTitle(opt), onRemove: isEnabled ? { selection.remove(opt) } : nil)
-                            }
-                            if overflowCount > 0 {
-                                Tag("+\(overflowCount)")
-                            }
-                        }
-                    }
-                }
-                Spacer(minLength: 0)
-                if allowClear && !selection.isEmpty && isEnabled && !isLoading {
-                    Button { selection.removeAll() } label: {
-                        Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                }
-                if isLoading {
-                    Spinner().size(IconSize.sm.value).lineWidth(2)
-                } else {
-                    Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
-                }
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(minHeight: 56)
-            .frame(maxWidth: .infinity)
-            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
-                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(fieldBorder, lineWidth: open ? 1.5 : 1)
-            )
+            fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+                content: AnyView(fieldContent),
+                isFocused: open,
+                isEnabled: isEnabled,
+                hasError: hasError,
+                hasWarning: hasWarning,
+                size: .medium
+            ))
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
         .a11y(A11yElement.Select.trigger, in: accessibilityID)
         .accessibilityLabel(label ?? "")
         .accessibilityValue(String(themeKit: "\(selection.count) selected"))
+    }
+
+    /// The composed trigger row (tags / placeholder + clear + chevron) —
+    /// everything a `FieldStyle` receives as `configuration.content`.
+    private var fieldContent: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            if selection.isEmpty {
+                Text(placeholder)
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textTertiary))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        ForEach(visibleTags, id: \.self) { opt in
+                            Tag(optionTitle(opt), onRemove: isEnabled ? { selection.remove(opt) } : nil)
+                        }
+                        if overflowCount > 0 {
+                            Tag("+\(overflowCount)")
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+            if allowClear && !selection.isEmpty && isEnabled && !isLoading {
+                Button { selection.removeAll() } label: {
+                    Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+            }
+            if isLoading {
+                Spinner().size(IconSize.sm.value).lineWidth(2)
+            } else {
+                Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .frame(minHeight: 56)
+        .frame(maxWidth: .infinity)
     }
 
     private var panel: some View {
@@ -235,8 +243,13 @@ public extension MultiSelect {
         @State var picks: Set<String> = ["Istanbul"]
         let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
         var body: some View {
-            MultiSelect("Cities", options: cities, selection: $picks) { $0 }
-                .padding()
+            VStack(spacing: 16) {
+                MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+                // Chrome via the shared FieldStyle axis.
+                MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
+                    .fieldStyle(.underlined)
+            }
+            .padding()
         }
     }
     return Demo()

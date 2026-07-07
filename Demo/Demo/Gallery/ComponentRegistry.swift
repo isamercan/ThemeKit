@@ -317,6 +317,7 @@ enum ComponentRegistry {
             }
             .padding(.horizontal, 24)
         },
+        .knob("Flexibility Showcase", .organisms, demo: FlexibilityShowcaseDemo(), usage: #"ListRow("…").leading { Avatar(…) }.listRowStyle(TimelineRowStyle())   // slots + custom styles, fork-free"#),
         .static("PhoneFrame", .organisms, usage: ##"PhoneFrame { AppScreen() }.notch(.island).bezel(.neutral)"##) {
             PhoneFrame {
                 VStack(spacing: 8) {

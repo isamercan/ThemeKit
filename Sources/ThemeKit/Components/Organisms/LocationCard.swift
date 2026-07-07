@@ -6,6 +6,11 @@
 //  a title, an address and an optional distance. Token-bound (info + surface). MapKit
 //  is a system framework, so this stays in the dependency-free core.
 //
+//  The outer shell (surface fill, corner clipping, border, elevation shadow) is drawn
+//  by the active `CardStyle` from the environment — `.surface()` feeds the
+//  `CardStyleConfiguration`, so `.cardStyle(_:)` can swap in a completely different
+//  shell. `.media {}` replaces the map/snapshot region; `.overlay {}` layers over it.
+//
 
 import SwiftUI
 import MapKit
@@ -40,12 +45,14 @@ public struct LocationPin: Identifiable, Sendable {
 public struct LocationCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
     @State private var snapshotImage: SnapshotImage?
 
     // Required content (R1).
     private let title: String
     private let coordinate: CLLocationCoordinate2D
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var subtitle: String?
     private var distance: String?
     private var mapHeight: CGFloat = 140
@@ -55,6 +62,8 @@ public struct LocationCard: View {
     private var showsDirections: Bool = false
     private var onDirectionsHandler: (() -> Void)?
     private var useSnapshot: Bool = false
+    private var mediaSlot: AnyView?
+    private var overlaySlot: AnyView?
 
     public init(title: String, coordinate: CLLocationCoordinate2D) {
         self.title = title
@@ -67,8 +76,25 @@ public struct LocationCard: View {
     }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate.
+        // `.none` elevation reproduces today's flat look: the default style's 1pt
+        // hairline border and no shadow.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: .none,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
+            .contentShape(Rectangle())
+            .onTapGesture { onTap?() }
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            mapPreview
+            mediaArea
 
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -99,11 +125,22 @@ public struct LocationCard: View {
             }
             .padding(density.scale(Theme.SpacingKey.md.value))
         }
-        .background(theme.background(.bgBase))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
-        .contentShape(Rectangle())
-        .onTapGesture { onTap?() }
+    }
+
+    // MARK: Media
+
+    /// The media region: the `.media {}` slot when set, else the built-in map, with
+    /// the custom overlay layered on top.
+    private var mediaArea: some View {
+        media
+            .frame(maxWidth: .infinity)
+            .frame(height: mapHeight)
+            .clipped()
+            .overlay { if let overlaySlot { overlaySlot } }
+    }
+
+    @ViewBuilder private var media: some View {
+        if let mediaSlot { mediaSlot } else { mapPreview }
     }
 
     @ViewBuilder private var mapPreview: some View {
@@ -166,6 +203,8 @@ public struct LocationCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LocationCard {
+    /// Surface fill (background token key, default `.bgBase`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// An address line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// A distance line, e.g. `"1.2 km to center"`.
@@ -185,6 +224,12 @@ public extension LocationCard {
     /// Renders a static MKMapSnapshotter image instead of a live `Map` — far cheaper
     /// in long scrolling lists (a live Map per row is expensive).
     func snapshot(_ on: Bool = true) -> Self { copy { $0.useSnapshot = on } }
+    /// Replace the map/snapshot region with custom media content (a photo, a custom
+    /// map renderer…). The view is sized to `mapHeight` and clipped. Omit to keep
+    /// the built-in map preview.
+    func media<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.mediaSlot = AnyView(content()) } }
+    /// Layer custom content over the media region (a scrim, a "tap to expand" hint…).
+    func overlay<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.overlaySlot = AnyView(content()) } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -197,5 +242,24 @@ public extension LocationCard {
     LocationCard(title: "Marina Bay Hotel", coordinate: CLLocationCoordinate2D(latitude: 38.4237, longitude: 27.1428))
         .subtitle("Kordon Cd. No:12, İzmir")
         .distance("1.2 km to center")
+        .padding()
+}
+
+#Preview("Outlined style + media slot") {
+    @Previewable @Environment(\.theme) var theme
+    LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428)
+        .media {
+            LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        .overlay {
+            Text("Map preview unavailable").textStyle(.labelSm700)
+                .foregroundStyle(theme.text(.textSecondaryInverse))
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(.black.opacity(0.35), in: Capsule())
+        }
+        .subtitle("Kordon Cd. No:12, İzmir")
+        .distance("1.2 km to center")
+        .cardStyle(.outlined)
         .padding()
 }

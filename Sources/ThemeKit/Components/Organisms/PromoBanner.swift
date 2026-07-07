@@ -98,7 +98,14 @@ public extension PromoBanner {
     func ctaTitle(_ title: String?) -> Self { copy { $0.ctaTitle = title } }
 
     /// Banner tint treatment: blue / dark / turquoise (R4 token-bound).
-    func color(_ tint: PromoBannerTint) -> Self { copy { $0.tint = tint } }
+    /// Standard accent vocabulary (flexibility audit §6). No `SemanticColor`
+    /// overload: `PromoBannerTint` is already token-bound and a second `.turquoise`
+    /// case would make call sites ambiguous.
+    func accent(_ tint: PromoBannerTint) -> Self { copy { $0.tint = tint } }
+
+    /// Banner tint treatment: blue / dark / turquoise.
+    @available(*, deprecated, message: "Use accent(_:).")
+    func color(_ tint: PromoBannerTint) -> Self { accent(tint) }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -112,7 +119,7 @@ public extension PromoBanner {
         PromoBanner("Early booking", action: {})
             .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore")
         PromoBanner("Plus", action: {})
-            .subtitle("Members get exclusive deals").icon("star.circle.fill").ctaTitle("Join").color(.dark)
+            .subtitle("Members get exclusive deals").icon("star.circle.fill").ctaTitle("Join").accent(.dark)
     }
     .padding()
 }

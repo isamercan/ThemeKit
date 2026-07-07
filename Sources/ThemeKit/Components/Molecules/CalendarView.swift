@@ -15,12 +15,20 @@ public struct CalendarView: View {
     @Binding private var selection: Date?
     @State private var displayed: Date
 
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var accent: SemanticColor?
+    private var showsWeekdayHeader = true
+    private var firstWeekdayOverride: Int?
+
     /// Tracks the environment locale so month titles, weekday symbols, and the
     /// first day of the week follow the app's language (and mirror correctly for
     /// RTL). Defaults to the system locale, so existing call sites are unchanged.
     private var calendar: Calendar {
         var c = Calendar.current
         c.locale = locale
+        if let firstWeekdayOverride {
+            c.firstWeekday = min(max(firstWeekdayOverride, 1), 7)
+        }
         return c
     }
 
@@ -32,7 +40,7 @@ public struct CalendarView: View {
     public var body: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
             header
-            weekdayRow
+            if showsWeekdayHeader { weekdayRow }
             grid
         }
         .padding(Theme.SpacingKey.md.value)
@@ -96,13 +104,20 @@ public struct CalendarView: View {
         } label: {
             Text("\(calendar.component(.day, from: date))")
                 .textStyle(.bodyBase400)
-                .foregroundStyle(isSelected ? theme.foreground(.fgSecondary) : (isToday ? theme.text(.textHero) : theme.text(.textPrimary)))
+                .foregroundStyle(isSelected ? selectedContent : (isToday ? todayText : theme.text(.textPrimary)))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? theme.background(.bgHero) : .clear, in: Circle())
-                .overlay { if isToday && !isSelected { Circle().stroke(theme.border(.borderHero), lineWidth: 1) } }
+                .background(isSelected ? selectedFill : .clear, in: Circle())
+                .overlay { if isToday && !isSelected { Circle().stroke(todayRing, lineWidth: 1) } }
         }
         .buttonStyle(.plain)
     }
+
+    // MARK: - Accent resolution (defaults keep the hero tokens, R4)
+
+    private var selectedFill: Color { accent?.solid ?? theme.background(.bgHero) }
+    private var selectedContent: Color { accent?.onSolid ?? theme.foreground(.fgSecondary) }
+    private var todayText: Color { accent?.accent ?? theme.text(.textHero) }
+    private var todayRing: Color { accent?.border ?? theme.border(.borderHero) }
 
     // MARK: - Date math
 
@@ -128,10 +143,43 @@ public struct CalendarView: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension CalendarView {
+    /// Token-fed accent for the selected day (today's ring/text follows the same
+    /// ladder); `nil` (default) keeps the hero tokens.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    /// Show or hide the weekday-initials row (default on).
+    func showsWeekdayHeader(_ on: Bool = true) -> Self { copy { $0.showsWeekdayHeader = on } }
+
+    /// Override the first day of the week — `1` = Sunday … `7` = Saturday
+    /// (clamped); `nil` (default) follows the locale's convention.
+    func firstWeekday(_ day: Int?) -> Self { copy { $0.firstWeekdayOverride = day } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var date: Date? = .now
-        var body: some View { CalendarView(selection: $date).padding() }
+        @State var compact: Date? = .now
+        var body: some View {
+            ScrollView {
+                VStack(spacing: Theme.SpacingKey.md.value) {
+                    CalendarView(selection: $date)
+                    CalendarView(selection: $compact)
+                        .accent(.success)
+                        .firstWeekday(2)   // Monday first
+                        .showsWeekdayHeader(false)
+                }
+                .padding()
+            }
+        }
     }
     return Demo()
 }

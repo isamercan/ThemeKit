@@ -203,6 +203,7 @@ public extension Badge {
     /// A trailing SF Symbol after the text (e.g. a dismiss chevron).
     func trailingIcon(_ systemName: String?) -> Self { copy { $0.trailingSystemImage = systemName } }
     /// Overrides the text/foreground color (otherwise derived from style + variant).
+    @available(*, deprecated, message: "Use badgeStyle(_:) with a semantic BadgeStyle (plus variant(_:)) instead of a raw color.")
     func badgeColor(_ color: Color?) -> Self { copy { $0.textColor = color } }
     /// Fills the badge with a horizontal gradient instead of the style background.
     func gradient(_ colors: [Color]?) -> Self { copy { $0.gradient = colors } }

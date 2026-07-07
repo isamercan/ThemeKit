@@ -29,6 +29,7 @@ public struct RecentSearchRow: View {
     private var onRemove: (() -> Void)?
     private var accent: SemanticColor?
     private var bordered = false
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(from: String, to: String, action: @escaping () -> Void = {}) {   // R1
         self.from = from
@@ -44,7 +45,7 @@ public struct RecentSearchRow: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                IconTile(systemImage).size(40).iconSize(16)
+                IconTile(systemImage).size(40).iconSize(16).accent(accent)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(from).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
@@ -58,7 +59,7 @@ public struct RecentSearchRow: View {
             }
             .padding(density.scale(Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(bordered ? theme.background(.bgBase) : .clear, in: shape)
+            .background(bordered ? theme.background(surfaceKey) : .clear, in: shape)
             .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
             .contentShape(shape)
         }
@@ -71,7 +72,7 @@ public struct RecentSearchRow: View {
             Button { onRemove() } label: {
                 Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary))
                     .frame(width: 44, height: 44).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel("Remove")
+            }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Remove"))
         } else {
             Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
         }
@@ -92,9 +93,12 @@ public extension RecentSearchRow {
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     /// Adds a trailing remove (✕) button instead of the chevron.
     func onRemove(_ action: @escaping () -> Void) -> Self { copy { $0.onRemove = action } }
+    /// Brand-tints the leading icon tile (default: neutral tile).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Wrap in a bordered surface (default off — flush list row).
     func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+    /// Surface fill of the bordered variant (background token key, default `.bgBase`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

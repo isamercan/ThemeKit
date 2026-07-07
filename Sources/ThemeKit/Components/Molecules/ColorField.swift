@@ -10,6 +10,9 @@ import SwiftUI
 /// color well on the trailing edge. (daisyUI "Color Picker".)
 public struct ColorField: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
 
     private let label: String
     @Binding private var selection: Color
@@ -22,7 +25,25 @@ public struct ColorField: View {
         self._selection = selection
     }
 
+    /// The field chrome is delegated to the active ``FieldStyle``. Mapping: the
+    /// system color well never drives keyboard focus, so `isFocused` is always
+    /// `false`; there is no validation axis, so `hasError`/`hasWarning` are
+    /// `false`; `size` is `.medium` — ColorField has no `TextInputSize` axis
+    /// (the row keeps its fixed 52pt height in the content).
     public var body: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(row),
+            isFocused: false,
+            isEnabled: isEnabled,
+            hasError: false,
+            hasWarning: false,
+            size: .medium
+        ))
+    }
+
+    /// The label + color-well row, sized — everything the ``FieldStyle``
+    /// receives as `configuration.content`.
+    private var row: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             Text(label)
                 .textStyle(.bodyBase400)
@@ -33,12 +54,6 @@ public struct ColorField: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .frame(height: 52)
-        .background(theme.background(.bgWhite),
-                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .stroke(theme.border(.borderPrimary), lineWidth: 1)
-        )
     }
 }
 
@@ -58,7 +73,14 @@ public extension ColorField {
 #Preview {
     struct Demo: View {
         @State var color: Color = .blue
-        var body: some View { ColorField("Brand color", selection: $color).padding() }
+        var body: some View {
+            VStack(spacing: 16) {
+                ColorField("Brand color", selection: $color)
+                // Swapped chrome: underlined field, same behavior.
+                ColorField("Accent color", selection: $color).fieldStyle(.underlined)
+            }
+            .padding()
+        }
     }
     return Demo()
 }

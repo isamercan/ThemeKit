@@ -20,6 +20,8 @@ public struct TreeNode: Identifiable {
 /// (Ant TreeSelect.) Nodes are a simple value tree; selection is a set of node ids.
 public struct TreeSelect: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     // Appearance/state/config — mutated only through the modifiers below (R2).
     private var label: String?
@@ -120,30 +122,40 @@ public struct TreeSelect: View {
             .padding(.vertical, Theme.SpacingKey.sm.value)
     }
 
+    /// The trigger wrapped in the active ``FieldStyle`` chrome. Configuration
+    /// mapping: the open panel maps to `isFocused`; TreeSelect models no
+    /// validation, so `hasError` / `hasWarning` are always `false`; and — having
+    /// no `TextInputSize` axis — `size` maps to `.medium` (whose 56pt matches the
+    /// field's own 56pt control height, which stays in the content).
     private var field: some View {
         Button { if isEnabled { open.toggle() } } label: {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                Text(summary)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(selection.isEmpty ? theme.text(.textTertiary) : theme.text(.textPrimary))
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .scaledControlHeight(56)
-            .frame(maxWidth: .infinity)
-            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(
-                        open ? theme.border(.borderHero) : theme.border(.borderPrimary),
-                        lineWidth: open ? 1.5 : 1
-                    )
-            )
+            fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+                content: AnyView(fieldContent),
+                isFocused: open,
+                isEnabled: isEnabled,
+                hasError: false,
+                hasWarning: false,
+                size: .medium
+            ))
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+    }
+
+    /// The composed trigger row (summary + chevron) — everything a `FieldStyle`
+    /// receives as `configuration.content`.
+    private var fieldContent: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Text(summary)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(selection.isEmpty ? theme.text(.textTertiary) : theme.text(.textPrimary))
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .scaledControlHeight(56)
+        .frame(maxWidth: .infinity)
     }
 
     private var summary: String {
@@ -289,9 +301,14 @@ public extension TreeSelect {
             ]),
         ]
         var body: some View {
-            TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"])
-                .cascade().searchable()
-                .padding()
+            VStack(spacing: 16) {
+                TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"])
+                    .cascade().searchable()
+                // Chrome via the shared FieldStyle axis.
+                TreeSelect("Underlined", nodes: tree, selection: $picks)
+                    .fieldStyle(.underlined)
+            }
+            .padding()
         }
     }
     return Demo()

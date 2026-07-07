@@ -183,15 +183,21 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
 
 public extension Carousel {
     /// Advances pages automatically every `interval` seconds.
-    func autoplay(_ interval: TimeInterval?) -> Self { var copy = self; copy.autoplay = interval; return copy }
+    func autoplay(_ interval: TimeInterval?) -> Self { copy { $0.autoplay = interval } }
     /// Shows prev / next arrow buttons.
-    func arrows(_ on: Bool = true) -> Self { var copy = self; copy.showsArrows = on; return copy }
+    func arrows(_ on: Bool = true) -> Self { copy { $0.showsArrows = on } }
     /// Shows the page-dot indicators (default true) and where they sit.
     func dots(_ on: Bool = true, position: Edge = .bottom) -> Self {
-        var copy = self; copy.showsDots = on; copy.dotPosition = position; return copy
+        copy { $0.showsDots = on; $0.dotPosition = position }
     }
     /// Cross-fades between pages instead of sliding.
-    func fade(_ on: Bool = true) -> Self { var copy = self; copy.fade = on; return copy }
+    func fade(_ on: Bool = true) -> Self { copy { $0.fade = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
 
 private extension View {

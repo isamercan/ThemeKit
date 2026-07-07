@@ -44,6 +44,8 @@ public struct Steps: View {
     private var axis: Axis = .horizontal
     private var small = false
     private var progressDot = false
+    /// Custom per-step marker (`marker(_:)`); nil renders the stock circle/number.
+    private var markerBuilder: ((Step, Int) -> AnyView)? = nil
 
     public init(_ steps: [Step], onSelect: ((Int) -> Void)? = nil) {   // R1
         self.steps = steps
@@ -63,10 +65,10 @@ public struct Steps: View {
                                     .frame(height: 2)
                                     .offset(x: dotSize * 0.57)
                             }
-                            marker(step, number: index + 1)
+                            marker(step, index: index)
                         }
                         Text(step.title)
-                            .textStyle(small ? .labelSm600 : .labelSm600)
+                            .textStyle(small ? .labelSm600 : .labelBase600)
                             .foregroundStyle(titleColor(step.state))
                             .multilineTextAlignment(.center)
                         if let description = step.description {
@@ -77,6 +79,7 @@ public struct Steps: View {
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect?(index) }
+                    .modifier(StepAccessibility(step: step, tappable: onSelect != nil))
                 }
             }
         } else {
@@ -84,14 +87,14 @@ public struct Steps: View {
                 ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
                     HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                         VStack(spacing: 0) {
-                            marker(step, number: index + 1)
+                            marker(step, index: index)
                             if index < steps.count - 1 {
                                 Rectangle().fill(connectorColor(index)).frame(width: 2, height: 28)
                             }
                         }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(step.title)
-                                .textStyle(.labelBase600)
+                                .textStyle(small ? .labelSm600 : .labelBase600)
                                 .foregroundStyle(titleColor(step.state))
                             if let description = step.description {
                                 Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
@@ -101,29 +104,44 @@ public struct Steps: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect?(index) }
+                    .modifier(StepAccessibility(step: step, tappable: onSelect != nil))
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func marker(_ step: Step, number: Int) -> some View {
+    private func marker(_ step: Step, index: Int) -> some View {
         ZStack {
-            if progressDot {
+            if let markerBuilder {
+                // Custom marker replaces the stock circle/number (and the
+                // progress-dot variant), centered in the same dotSize slot so
+                // connectors and layout are unchanged. The Ant `percent` ring
+                // is still drawn around it.
+                markerBuilder(step, index)
+                percentRing(step)
+            } else if progressDot {
                 Circle().fill(dotFill(step.state)).frame(width: 10, height: 10)
             } else {
                 Circle().fill(fill(step.state)).frame(width: dotSize, height: dotSize)
                 Circle().strokeBorder(stroke(step.state), lineWidth: 1.5).frame(width: dotSize, height: dotSize)
-                glyph(step, number: number)
-                if let percent = step.percent, step.state == .active {
-                    Circle().trim(from: 0, to: CGFloat(min(max(percent, 0), 1)))
-                        .stroke(theme.background(.bgHero), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: dotSize + 7, height: dotSize + 7)
-                }
+                glyph(step, number: index + 1)
+                percentRing(step)
             }
         }
         .frame(width: dotSize, height: dotSize)
+    }
+
+    /// 0...1 ring around an active marker (Ant Steps `percent`) — shared by the
+    /// stock and custom (`marker(_:)`) markers.
+    @ViewBuilder
+    private func percentRing(_ step: Step) -> some View {
+        if let percent = step.percent, step.state == .active {
+            Circle().trim(from: 0, to: CGFloat(min(max(percent, 0), 1)))
+                .stroke(theme.background(.bgHero), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: dotSize + 7, height: dotSize + 7)
+        }
     }
 
     private func dotFill(_ state: StepState) -> Color {
@@ -179,6 +197,30 @@ public struct Steps: View {
     }
 }
 
+/// One VoiceOver element per step — "title, description", value = state, button trait when tappable.
+private struct StepAccessibility: ViewModifier {
+    let step: Steps.Step
+    let tappable: Bool
+
+    private var stateText: String {
+        switch step.state {
+        case .done: return String(themeKit: "Completed")
+        case .active: return String(themeKit: "Current")
+        case .todo: return String(themeKit: "Not started")
+        case .error: return String(themeKit: "Error")
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(step.description.map { "\(step.title), \($0)" } ?? step.title)
+            .accessibilityValue(stateText)
+            .accessibilityAddTraits(tappable ? .isButton : [])
+            .accessibilityAddTraits(step.state == .active ? .isSelected : [])
+    }
+}
+
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Steps {
@@ -191,6 +233,16 @@ public extension Steps {
     /// Render minimal progress dots instead of numbered markers (Ant `progressDot`).
     func progressDot(_ on: Bool = true) -> Self { copy { $0.progressDot = on } }
 
+    /// Replace the default circle/number marker with a custom view, built per
+    /// step from the step and its zero-based index. The custom view is
+    /// centered in the marker's slot (connectors and layout are unchanged),
+    /// the Ant `percent` ring is still drawn around an active marker, and the
+    /// per-step VoiceOver behavior (`StepAccessibility`) is untouched. Omit
+    /// for the stock markers.
+    func marker<V: View>(@ViewBuilder _ content: @escaping (Steps.Step, Int) -> V) -> Self {
+        copy { $0.markerBuilder = { step, index in AnyView(content(step, index)) } }
+    }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -202,6 +254,13 @@ public extension Steps {
     VStack(spacing: 40) {
         Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])
         Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)]).axis(.vertical)
+        // Custom per-step markers; the percent ring still wraps the active step.
+        Steps([.init("Cart", state: .done), .init("Pay", state: .active, percent: 0.6), .init("Done", state: .todo)])
+            .marker { step, index in
+                Image(systemName: step.state == .done ? "checkmark.seal.fill" : "\(index + 1).circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(step.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
+            }
     }
     .padding()
 }

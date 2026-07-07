@@ -9,12 +9,19 @@
 //  Token-bound; reuses RemoteImage, ScoreBadge, PriceTag, Badge. Every part is a
 //  modifier so a developer composes exactly what they need.
 //
+//  The outer shell (surface fill, corner clipping, elevation shadow/border) is drawn
+//  by the active `CardStyle` from the environment — the `.surface()/.cornerRadius()/
+//  .elevation()` modifiers feed the `CardStyleConfiguration`, so the default look is
+//  unchanged while `.cardStyle(_:)` can swap in a completely different shell.
+//  `.media {}` replaces the built-in gallery; `.overlay {}` layers content over it.
+//
 
 import SwiftUI
 
 public struct HotelResultCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let name: String
     // Content — mutated only through the modifiers below (R2).
@@ -38,6 +45,8 @@ public struct HotelResultCard: View {
     private var favorite: Binding<Bool>?
     private var onSelect: (() -> Void)?
     private var footerSlot: AnyView?
+    private var mediaSlot: AnyView?
+    private var overlaySlot: AnyView?
     // Styling — token-fed.
     private var accent: SemanticColor?
     private var imageHeight: CGFloat = 200
@@ -54,26 +63,38 @@ public struct HotelResultCard: View {
     private var accentColor: Color { accent.map { $0.base } ?? theme.foreground(.fgHero) }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+            .contentShape(shape)
+            .accessibilityElement(children: .contain)
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(spacing: 0) {
             imageArea
             content
         }
-        .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
-        .clipShape(shape)
-        .modifier(HotelCardShadow(elevation: elevation))
-        .contentShape(shape)
-        .accessibilityElement(children: .contain)
     }
 
     // MARK: Image
 
     private var imageArea: some View {
         ZStack(alignment: .top) {
-            carousel
+            media
             .frame(height: imageHeight)
             .frame(maxWidth: .infinity)
             .clipped()
+
+            // Custom overlay sits above the media, below the badge/favourite row.
+            if let overlaySlot { overlaySlot }
 
             HStack(alignment: .top) {
                 if let cornerBadge {
@@ -87,6 +108,11 @@ public struct HotelResultCard: View {
             .padding(density.scale(Theme.SpacingKey.sm.value))
         }
         .frame(height: imageHeight)
+    }
+
+    /// The media section: the `.media {}` slot when set, else the built-in gallery.
+    @ViewBuilder private var media: some View {
+        if let mediaSlot { mediaSlot } else { carousel }
     }
 
     @ViewBuilder private var carousel: some View {
@@ -201,17 +227,6 @@ public struct HotelResultCard: View {
     }
 }
 
-private struct HotelCardShadow: ViewModifier {
-    let elevation: CardElevation
-    @ViewBuilder func body(content: Content) -> some View {
-        switch elevation {
-        case .none: content
-        case .soft: content.themeShadow(.soft)
-        case .elevated: content.themeShadow(.elevated)
-        }
-    }
-}
-
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension HotelResultCard {
@@ -232,6 +247,13 @@ public extension HotelResultCard {
     func favorite(_ binding: Binding<Bool>) -> Self { copy { $0.favorite = binding } }
     func onSelect(_ action: @escaping () -> Void) -> Self { copy { $0.onSelect = action } }
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
+    /// Replace the built-in image gallery with custom media content. The view is
+    /// sized to the card's `imageHeight` and clipped; badge/favourite/overlay still
+    /// layer on top. Omit to keep the default `image(_:)`/`images(_:)` gallery.
+    func media<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.mediaSlot = AnyView(content()) } }
+    /// Layer custom content over the media section (top-aligned in its ZStack).
+    /// The corner badge and favourite button keep their position above it.
+    func overlay<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.overlaySlot = AnyView(content()) } }
     // Styling (token-fed)
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func imageHeight(_ height: CGFloat) -> Self { copy { $0.imageHeight = max(80, height) } }
@@ -260,6 +282,32 @@ public extension HotelResultCard {
             .badge("Deal")
             .favorite(.constant(true))
             .onSelect { }
+            .padding()
+    }
+}
+
+#Preview("Outlined style + media slot") {
+    @Previewable @Environment(\.theme) var theme
+    ScrollView {
+        HotelResultCard(name: "Fable Boutique Hotel")
+            .media {
+                LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+            .overlay {
+                Text("Members only").textStyle(.labelSm700)
+                    .foregroundStyle(theme.text(.textSecondaryInverse))
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(.black.opacity(0.35), in: Capsule())
+                    .padding(Theme.SpacingKey.sm.value)
+            }
+            .location("Göcek, Muğla")
+            .score(9.4, label: "Exceptional", reviews: 212)
+            .features(["Adults only", "Private beach"])
+            .price(84_500)
+            .badge("New")
+            .favorite(.constant(false))
+            .cardStyle(.outlined)
             .padding()
     }
 }

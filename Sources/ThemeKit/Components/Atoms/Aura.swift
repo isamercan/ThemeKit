@@ -61,7 +61,11 @@ public struct Aura: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Aura {
-    /// Semantic tint of the glow (default `.primary`).
+    /// Semantic tint of the glow; `nil` restores the default (`.primary`).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color ?? .primary } }
+
+    /// Semantic tint of the glow (back-compat); prefer `accent(_:)`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
 
     /// Diameter of the blob in points (default 120).
@@ -146,8 +150,8 @@ private struct AuraModifier: ViewModifier {
             .aura(.purple, radius: 32, intensity: 0.7)
 
         HStack(spacing: 40) {
-            Aura().color(.turquoise).size(90)
-            Aura().color(.pink).intensity(0.9).size(90)
+            Aura().accent(.turquoise).size(90)
+            Aura().accent(.pink).intensity(0.9).size(90)
         }
     }
     .padding(48)
