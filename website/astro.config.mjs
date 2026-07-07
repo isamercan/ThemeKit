@@ -13,7 +13,7 @@ export default defineConfig({
     starlight({
       title: 'ThemeKit',
       description:
-        'A themeable SwiftUI component library — 80+ accessible components, design tokens, light/dark, and RTL.',
+        'A themeable SwiftUI component library — 175 accessible components, design tokens, light/dark, and RTL.',
       tagline: 'Themeable SwiftUI components, built to ship.',
       logo: {
         src: './src/assets/logo.svg',
@@ -50,6 +50,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'Theming', link: '/guides/theming/' },
+            { label: 'Customization & Style Protocols', link: '/guides/customization/', badge: { text: 'New', variant: 'success' } },
             { label: 'Accessibility', link: '/guides/accessibility/' },
             { label: 'Form Validation', link: '/guides/form-validation/' },
             { label: 'RTL Support', link: '/guides/rtl/' },
@@ -71,7 +72,12 @@ export default defineConfig({
         },
         {
           label: 'Components',
-          items: [{ label: 'Gallery', link: '/components/' }],
+          items: [
+            { label: 'Gallery', link: '/components/' },
+            { label: 'Atoms', link: '/components/atoms/' },
+            { label: 'Molecules', link: '/components/molecules/' },
+            { label: 'Organisms', link: '/components/organisms/' },
+          ],
         },
         {
           label: 'Design',
