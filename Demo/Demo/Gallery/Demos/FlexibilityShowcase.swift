@@ -115,6 +115,27 @@ struct FlexibilityShowcaseDemo: View {
                     }
                 }
 
+                section("Card family — CardStyle (Wave 2)") {
+                    labeled("isSelected flows through the style") {
+                        HStack(spacing: 12) {
+                            RadioCard("Round trip", isSelected: true) { }
+                            CheckboxCard("Add baggage", isChecked: true) { }
+                        }
+                    }
+                    labeled("Slot (.leading) — NotificationCard") {
+                        NotificationCard(title: "Price dropped 8%")
+                            .message("IST → AYT is now ₺3.538")
+                            .leading { Avatar(.initials("TK")).size(.sm) }
+                    }
+                    labeled("One custom style reskins the whole family (PosterCardStyle)") {
+                        VStack(spacing: 12) {
+                            FareFamilyCard("Extra Fly", price: 4_250).selected()
+                            NotificationCard(title: "Gate changed").message("New gate: B7")
+                        }
+                        .cardStyle(PosterCardStyle())
+                    }
+                }
+
                 section("HotelResultCard — CardStyle") {
                     labeled("Default") {
                         HotelResultCard(name: "Mirage Park Resort")

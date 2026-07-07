@@ -5,6 +5,36 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.12.0] - 2026-07-07
+
+### Changed — flexibility wave 2: the card family routes its shells through `CardStyle`
+
+16 card components now delegate their outer shell (surface fill, corner clipping,
+border, shadow) to the environment `CardStyle` — `surface()/cornerRadius()/elevation()`
+feed the `CardStyleConfiguration`, and `.cardStyle(_:)` can swap in a completely
+different shell without forking:
+
+- **Flight:** `FlightCard`, `FlightResultRow`.
+- **Media:** `RoomCard`, `DestinationCard` (+`.overlay{}`), `LocationCard`
+  (+`.media{}` replacing the map region, +`.overlay{}`), `AncillaryCard`.
+- **Content:** `ReviewCard`, `NotificationCard` (+`.leading{}`), `PriceAlertCard`,
+  `BlogCard` (opt-in shell via `surface/cornerRadius/elevation`, +`.overlay{}`).
+- **Selectable:** `FareFamilyCard`, `RadioCard`, `CheckboxCard`, `DatePriceCard`,
+  `RoomCard`/`AncillaryCard` — selection now flows through
+  `CardStyleConfiguration.isSelected` (selected borders normalise to the style's
+  1.5pt `borderHero` `strokeBorder`).
+- **Partial/exceptions (documented in-file):** `LoyaltyCard` (gradient front is the
+  component's identity; flat back face delegated), `MapCallout` (pointer triangle and
+  accent border stay component-drawn), `TicketStub`, `Coupon`, `FlightTicketCard`,
+  `BoardingPass` (notched/dashed ticket shells cannot be expressed as a flat surface),
+  `RatingSummary` (no shell), `KeyValueTable` (bordered shell delegated, +`surface(_:)`).
+
+**Behaviour notes:** hairline borders follow `Card` semantics (drawn at `.none`
+elevation; shadowed shells drop it), `stroke` → `strokeBorder` sub-pixel
+normalisation, and selected borders use the `borderHero` token instead of per-card
+accent strokes. Demo showcase gained a "Card family" section — one custom style
+reskinning several different cards.
+
 ## [0.11.0] - 2026-07-07
 
 ### Added — flexibility wave 1: archetype style protocols + 6 pilots

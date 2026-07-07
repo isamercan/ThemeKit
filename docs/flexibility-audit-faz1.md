@@ -467,7 +467,7 @@ uygulanan desenin aynısı (~35 dosya).
 | Dalga | Kapsam | Kanıt |
 |---|---|---|
 | 1 ✅ *(0.11.0)* | Arketip protokolleri tanımlanır + 6 pilot (ListRow, TextInput, Chip, SheetHeader, ProgressBar, HotelResultCard) | Catalog "Flexibility Showcase" ilk 6 girişi: default / zengin slot / custom style |
-| 2 | C arketipi: 23 kart organizması CardStyle'a bağlanır, media/overlay slotları | kartlar fork'suz reskin demoları |
+| 2 ✅ *(0.12.0)* | C arketipi: kart organizmaları CardStyle'a bağlandı (16 adopt + 7 gerekçeli istisna/kısmi), media/overlay slotları | showcase "Card family" bölümü: tek custom style birden çok kartı yeniden giydiriyor |
 | 3 | D arketipi: 19 form alanı FieldStyle'a | form reskin demosu |
 | 4 | A+E+F: chip/bar/gösterge aileleri | showcase güncellenir |
 | 5 | G+H: presenter içerik slotları + konteyner empty/loading slotları + CardStack inşası | showcase |
