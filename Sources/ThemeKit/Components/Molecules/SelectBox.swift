@@ -11,6 +11,8 @@ import SwiftUI
 /// Combobox / DropDown field. Single-select via native Menu.
 public struct SelectBox<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     private let label: String?
     private let options: [Option]
@@ -60,22 +62,7 @@ public struct SelectBox<Option: Hashable>: View {
                     }
                 }
             } label: {
-                HStack {
-                    Text(selection.map(optionTitle) ?? placeholder)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(selection == nil ? theme.text(.textTertiary) : theme.text(.textPrimary))
-                    Spacer(minLength: 0)
-                    Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
-                }
-                .padding(.horizontal, Theme.SpacingKey.md.value)
-                .scaledControlHeight(48)
-                .frame(maxWidth: .infinity)
-                .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
-                           in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                        .strokeBorder(borderColor, lineWidth: hasError ? 1.5 : 1)
-                )
+                fieldBox
             }
             .disabled(!isEnabled)
             .a11y(A11yElement.Select.trigger, in: accessibilityID)
@@ -90,11 +77,41 @@ public struct SelectBox<Option: Hashable>: View {
         }
     }
 
+    /// The composed trigger row — everything a `FieldStyle` receives as
+    /// `configuration.content`. The fixed 48pt control height lives here, so the
+    /// style only supplies the surface (fill + border + corner).
+    private var fieldContent: some View {
+        HStack {
+            Text(selection.map(optionTitle) ?? placeholder)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(selection == nil ? theme.text(.textTertiary) : theme.text(.textPrimary))
+            Spacer(minLength: 0)
+            Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .scaledControlHeight(48)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// The trigger wrapped in the active ``FieldStyle`` chrome. Configuration
+    /// mapping: the native `Menu` exposes no open state, so `isFocused` is always
+    /// `false` (matching the old chroma, which had no focus ring either);
+    /// `hasWarning` is `false` (SelectBox models only hint/error); and — SelectBox
+    /// having no `TextInputSize` axis — `size` maps to `.medium`, purely advisory
+    /// for styles that key off it (the row keeps its own 48pt height).
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldContent),
+            isFocused: false,
+            isEnabled: isEnabled,
+            hasError: hasError,
+            hasWarning: false,
+            size: .medium
+        ))
+    }
+
     private var labelColor: Color {
         hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textPrimary)
-    }
-    private var borderColor: Color {
-        hasError ? theme.border(.systemcolorsBorderError) : theme.border(.borderPrimary)
     }
 }
 
@@ -130,6 +147,9 @@ public extension SelectBox {
                     .hint("Pick your country")
                 SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
                     .errorText("Required")
+                // Chrome via the shared FieldStyle axis.
+                SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                    .fieldStyle(.underlined)
             }
             .padding()
         }
