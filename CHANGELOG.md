@@ -5,6 +5,30 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.14.0] - 2026-07-07
+
+### Changed — flexibility wave 4: chip, bar and meter families bridge into their archetype styles
+
+- **Chips (`ChipStyle`):** `ImageChip` / `CompactChip` / `ChoseChip` / `FilterChip` /
+  `MapPriceMarker` keep their non-capsule chroma pixel-identical while the default
+  style is ambient (`AnyChipStyle.isDefault` bridge) and hand content to
+  `makeBody` when a custom `.chipStyle(_:)` is set. `ChipGroup` unchanged.
+- **Bars (`BarStyle`):** `Footer` delegates fully; `PageHeader`, `NavigationBar`
+  and `StickyBookingBar` bridge (legacy chrome — chrome-less / capsule + shadow /
+  overlay hairline — cannot be expressed by `DefaultBarStyle`, so it stays
+  byte-identical until a custom style is set). `NavigationBar` gains a per-item
+  `.item{}` builder; `BarChromeOverrides` gains a `showsShadow` channel.
+- **Meters (`MeterStyle`):** `RadialProgress` adopts via a new built-in
+  `RadialMeterStyle` (`.radial`; ring geometry extracted verbatim, dashboard/size/
+  lineWidth as style parameters) and hands over fully to custom `.meterStyle`.
+  `Steps` gains a per-step `.marker{}` builder (percent ring + a11y preserved).
+  `GaugeView` documented exception (native `Gauge`).
+- **Katman-2 exceptions (evaluated, untouched):** `FilterBar`, `SortSummaryBar`
+  (no bar chrome — bare rows), `Sidebar` (vertical rail), `SegmentedTabBar`,
+  `SegmentedControl`, `TripTypeToggle` (track+selection control chroma);
+  `Badge`/`Tag` family stays Katman-2 — their variant system is the style axis,
+  they carry no selection state.
+
 ## [0.13.0] - 2026-07-07
 
 ### Changed — flexibility wave 3: the form family routes its chrome through `FieldStyle`

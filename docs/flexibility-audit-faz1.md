@@ -469,7 +469,7 @@ uygulanan desenin aynısı (~35 dosya).
 | 1 ✅ *(0.11.0)* | Arketip protokolleri tanımlanır + 6 pilot (ListRow, TextInput, Chip, SheetHeader, ProgressBar, HotelResultCard) | Catalog "Flexibility Showcase" ilk 6 girişi: default / zengin slot / custom style |
 | 2 ✅ *(0.12.0)* | C arketipi: kart organizmaları CardStyle'a bağlandı (16 adopt + 7 gerekçeli istisna/kısmi), media/overlay slotları | showcase "Card family" bölümü: tek custom style birden çok kartı yeniden giydiriyor |
 | 3 ✅ *(0.13.0)* | D arketipi: 15 form alanı FieldStyle'a (SelectStyle deprecated köprüyle katlandı; GuestSelector/CurrencyPicker istisna) | showcase "Form family" bölümü |
-| 4 | A+E+F: chip/bar/gösterge aileleri | showcase güncellenir |
+| 4 ✅ *(0.14.0)* | A+E+F: chip/bar/gösterge aileleri (isDefault köprüleriyle; Badge/Tag ailesi + segment kontrolleri gerekçeli K2 istisnası) | showcase güncellendi |
 | 5 | G+H: presenter içerik slotları + konteyner empty/loading slotları + CardStack inşası | showcase |
 | 6 | İsim standardı süpürmesi (deprecation'lar), ham tip temizliği, Not-1 tabanı, rapor + önce/sonra tablosu | tam CatalogView + özet rapor |
 

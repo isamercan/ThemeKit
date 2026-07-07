@@ -23,6 +23,7 @@ struct FlexibilityShowcaseDemo: View {
     @State private var progress = 0.62
     @State private var when: Date? = nil
     @State private var otp = ""
+    @State private var tab = 0
 
     var body: some View {
         ScrollView {
@@ -114,6 +115,37 @@ struct FlexibilityShowcaseDemo: View {
                     }
                     labeled("Custom style (TickMeterStyle — demo-defined)") {
                         ProgressBar(value: progress).showsPercentage().meterStyle(TickMeterStyle())
+                    }
+                }
+
+                section("Chips, bars & meters (Wave 4)") {
+                    labeled("Rich chips through a custom style (.solid)") {
+                        HStack(spacing: 12) {
+                            CompactChip("Standard", price: "$399", isSelected: $chipA)
+                            CompactChip("Suite", price: "$899", isSelected: $chipB)
+                        }
+                        .chipStyle(.solid)
+                    }
+                    labeled("NavigationBar — .item{} slot + .floating bar") {
+                        NavigationBar(items: [
+                            .init(systemImage: "house", label: "Home"),
+                            .init(systemImage: "heart", label: "Saved"),
+                            .init(systemImage: "person", label: "Profile"),
+                        ], selection: $tab)
+                        .item { item, isActive in
+                            VStack(spacing: 4) {
+                                Image(systemName: item.systemImage)
+                                if let label = item.label { Text(label).font(.caption2) }
+                            }
+                            .opacity(isActive ? 1 : 0.45)
+                        }
+                        .barStyle(.floating)
+                    }
+                    labeled("RadialProgress — default ring vs custom meter") {
+                        HStack(spacing: 24) {
+                            RadialProgress(progress).showsLabel()
+                            RadialProgress(progress).showsLabel().meterStyle(TickMeterStyle())
+                        }
                     }
                 }
 
