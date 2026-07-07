@@ -6,6 +6,11 @@
 //  to the next tier, on a brand gradient. Token-bound: the gradient is built from the
 //  theme's primary palette, so it re-skins with the brand.
 //
+//  CardStyle: the gradient FRONT face is this component's identity, so it stays a
+//  deliberate exception and never routes through `CardStyle`. The flat BACK face
+//  (membership code) is a plain card surface, so its shell is drawn by the active
+//  `.cardStyle(_:)` — the existing `.surface(_:)` key feeds its configuration.
+//
 
 import SwiftUI
 
@@ -25,6 +30,7 @@ public enum MembershipCode: Sendable, Equatable {
 public struct LoyaltyCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var flipped = false
 
@@ -96,7 +102,19 @@ public struct LoyaltyCard: View {
         .background(gradient, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
     }
 
+    /// The back shell (surface fill, corner clipping, border) is drawn by the active
+    /// `CardStyle`; `.none` elevation keeps the original hairline border and no shadow.
     private var backFace: some View {
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(backContent),
+            elevation: .none,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
+    }
+
+    private var backContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Text("MEMBERSHIP").textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
             codeView
@@ -107,8 +125,6 @@ public struct LoyaltyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.lg.value))
         .frame(maxWidth: .infinity, minHeight: 180)
-        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     @ViewBuilder private var codeView: some View {
@@ -157,7 +173,8 @@ public struct LoyaltyCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LoyaltyCard {
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Back-face surface fill (background token key, default `.bgWhite`). Feeds the
+    /// active `CardStyle`'s configuration; the gradient front face is unaffected.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// The member's name, shown under the tier.
     func memberName(_ name: String?) -> Self { copy { $0.memberName = name } }
@@ -189,5 +206,16 @@ public extension LoyaltyCard {
     LoyaltyCard(tier: "Gold", points: 8_430)
         .memberName("Elif Kaya")
         .progress(0.62, toNextTier: "Platinum")
+        .padding()
+}
+
+#Preview("Outlined style (back face)") {
+    // The outlined `CardStyle` redraws the flat back face — tap the card to flip.
+    // The gradient front face is the component's identity and stays as-is.
+    LoyaltyCard(tier: "Platinum", points: 12_800)
+        .memberName("Elif Kaya")
+        .membership(.qr("MBR-2201-4410"))
+        .flippable()
+        .cardStyle(.outlined)
         .padding()
 }

@@ -3,6 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
+//  The `bordered` shell (surface fill, corner clipping, hairline border) is drawn
+//  by the active `CardStyle` — `.surface(_:)` feeds its configuration. With
+//  `bordered(false)` (the default) the table stays bare, with no shell at all;
+//  the `title` is part of the content and always renders above the shell.
+//
 
 import SwiftUI
 
@@ -23,6 +28,7 @@ public enum TableValueStyle {
 /// style (plain / success / error / muted / strikethrough).
 public struct KeyValueTable: View {
     @Environment(\.theme) private var theme
+    @Environment(\.cardStyle) private var cardStyle
 
     public struct Row: Identifiable {
         public let id = UUID()
@@ -41,6 +47,7 @@ public struct KeyValueTable: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var title: String? = nil
     private var bordered: Bool = false
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     public init(rows: [Row]) {   // R1
         self.rows = rows
@@ -54,13 +61,15 @@ public struct KeyValueTable: View {
                     .foregroundStyle(theme.text(.textPrimary))
             }
             if bordered {
-                table
-                    .background(theme.background(.bgWhite),
-                                in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                            .strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
-                    )
+                // The bordered shell is drawn by the active `CardStyle`; `.none`
+                // elevation keeps the original hairline border and no shadow.
+                cardStyle.makeBody(configuration: CardStyleConfiguration(
+                    content: AnyView(table),
+                    elevation: .none,
+                    isSelected: false,
+                    isPressed: false,
+                    surfaceKey: surfaceKey,
+                    radius: .field))
             } else {
                 table
             }
@@ -95,8 +104,12 @@ public extension KeyValueTable {
     /// Heading rendered above the table.
     func title(_ text: String?) -> Self { copy { $0.title = text } }
 
-    /// Wraps the table in a bordered, padded surface.
+    /// Wraps the table in a bordered, padded surface (drawn by the active `CardStyle`).
     func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+
+    /// Surface fill for the bordered shell (background token key, default `.bgWhite`).
+    /// Feeds the `CardStyle` configuration; ignored while `bordered` is off.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -112,5 +125,16 @@ public extension KeyValueTable {
         .init("Total", value: "$4,250"),
         .init("Refund", value: "Cancelled", style: .error),
     ])
+    .padding()
+}
+
+#Preview("Bordered + outlined style") {
+    KeyValueTable(rows: [
+        .init("Status", value: "Active", style: .success),
+        .init("Total", value: "$4,250"),
+    ])
+    .title("Summary")
+    .bordered()
+    .cardStyle(.outlined)
     .padding()
 }

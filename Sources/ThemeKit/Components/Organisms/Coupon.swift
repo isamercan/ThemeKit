@@ -3,6 +3,9 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
+//  CardStyle exception: the dashed-border coupon shell (and its filled/plain
+//  variants) is the component's identity, so it does not route through `CardStyle`.
+//
 
 import SwiftUI
 
