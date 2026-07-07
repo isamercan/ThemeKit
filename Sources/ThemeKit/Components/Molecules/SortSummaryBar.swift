@@ -32,6 +32,8 @@ public struct SortTab: View {
     private let option: SortOption
     private let isSelected: Bool
     private let action: () -> Void
+    // Appearance — mutated only through the modifiers below (R2).
+    private var accent: SemanticColor?
 
     public init(_ option: SortOption, isSelected: Bool, action: @escaping () -> Void) {   // R1
         self.option = option
@@ -39,16 +41,21 @@ public struct SortTab: View {
         self.action = action
     }
 
+    /// Selected underline/icon tint — semantic accent when set, else the hero token (R4).
+    private var selectionTint: Color { accent?.accent ?? theme.foreground(.fgHero) }
+    /// Selected title color — follows the accent when set, else primary text.
+    private var selectedTitle: Color { accent?.accent ?? theme.text(.textPrimary) }
+
     public var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 4) {
                     if let icon = option.icon {
                         Image(systemName: icon).font(.system(size: 12))
-                            .foregroundStyle(isSelected ? theme.foreground(.fgHero) : theme.text(.textSecondary))
+                            .foregroundStyle(isSelected ? selectionTint : theme.text(.textSecondary))
                     }
                     Text(option.title).textStyle(.labelBase600)
-                        .foregroundStyle(isSelected ? theme.text(.textPrimary) : theme.text(.textSecondary))
+                        .foregroundStyle(isSelected ? selectedTitle : theme.text(.textSecondary))
                 }
                 if let value = option.value {
                     Text(value).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
@@ -56,7 +63,7 @@ public struct SortTab: View {
                 if let subtitle = option.subtitle {
                     Text(subtitle).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                 }
-                Rectangle().fill(isSelected ? theme.foreground(.fgHero) : .clear).frame(height: 2).padding(.top, 2)
+                Rectangle().fill(isSelected ? selectionTint : .clear).frame(height: 2).padding(.top, 2)
             }
             .frame(minWidth: 84, alignment: .leading)
             .contentShape(Rectangle())
@@ -64,6 +71,20 @@ public struct SortTab: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(option.title)\(option.value.map { ", " + $0 } ?? "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+// MARK: - SortTab modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension SortTab {
+    /// Token-fed tint for the selected underline, icon and title; `nil`
+    /// (default) keeps the hero token.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -128,11 +149,18 @@ public extension SortSummaryBar {
     struct Demo: View {
         @State private var sel = 0
         var body: some View {
-            SortSummaryBar([
-                SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"),
-                SortOption("Cheapest", value: "₺2.178", subtitle: "6h 45m", icon: "tag.fill"),
-                SortOption("Fastest", value: "₺2.852", subtitle: "1h 05m", icon: "bolt.fill"),
-            ], selection: $sel).onMore { }.padding()
+            VStack(alignment: .leading, spacing: 24) {
+                SortSummaryBar([
+                    SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"),
+                    SortOption("Cheapest", value: "₺2.178", subtitle: "6h 45m", icon: "tag.fill"),
+                    SortOption("Fastest", value: "₺2.852", subtitle: "1h 05m", icon: "bolt.fill"),
+                ], selection: $sel).onMore { }
+
+                // Standalone accented tab (custom layouts).
+                SortTab(SortOption("Cheapest", value: "₺2.178", icon: "tag.fill"), isSelected: true) {}
+                    .accent(.success)
+            }
+            .padding()
         }
     }
     return Demo()

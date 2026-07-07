@@ -20,11 +20,17 @@ public struct ThemeController: View {
 
     private let options: [Option]
     @Binding private var selectedName: String
+    // Appearance — mutated only through the modifiers below (R2).
+    private var accent: SemanticColor?
+    private var fullWidth = true
 
     public init(options: [Option], selectedName: Binding<String>) {
         self.options = options
         self._selectedName = selectedName
     }
+
+    /// Active-label tint — semantic accent when set, else the hero token (R4).
+    private var activeText: Color { accent?.accent ?? theme.text(.textHero) }
 
     public var body: some View {
         HStack(spacing: 4) {
@@ -36,8 +42,9 @@ public struct ThemeController: View {
                 } label: {
                     Text(option.label)
                         .textStyle(isActive ? .labelBase700 : .labelBase600)
-                        .foregroundStyle(isActive ? theme.text(.textHero) : theme.text(.textSecondary))
-                        .frame(maxWidth: .infinity)
+                        .foregroundStyle(isActive ? activeText : theme.text(.textSecondary))
+                        .frame(maxWidth: fullWidth ? .infinity : nil)
+                        .padding(.horizontal, fullWidth ? 0 : Theme.SpacingKey.sm.value)
                         .padding(.vertical, Theme.SpacingKey.sm.value)
                         .background {
                             if isActive {
@@ -56,15 +63,37 @@ public struct ThemeController: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ThemeController {
+    /// Token-fed tint for the active option's label; `nil` (default) keeps the hero token.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    /// Stretch options to share the available width (default on); off = intrinsic widths.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.fullWidth = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var theme = "defaultTheme"
         var body: some View {
-            ThemeController(options: [
+            let options: [ThemeController.Option] = [
                 .init(name: "defaultTheme", label: "Default"),
                 .init(name: "oceanTheme", label: "Ocean"),
                 .init(name: "sunsetTheme", label: "Sunset"),
-            ], selectedName: $theme)
+            ]
+            VStack(spacing: 16) {
+                ThemeController(options: options, selectedName: $theme)
+                ThemeController(options: options, selectedName: $theme)
+                    .accent(.success)
+                    .fullWidth(false)
+            }
             .padding()
         }
     }

@@ -22,6 +22,9 @@ public struct ThemePicker: View {
     @Binding private var selection: String?
     private let themes: [ThemePreset]
     private let onSelect: (ThemePreset) -> Void
+    // Appearance — mutated only through the modifiers below (R2).
+    private var fixedColumns: Int?
+    private var spacing: CGFloat = 12
 
     /// - Parameters:
     ///   - selection: the active theme `id`; updated on tap.
@@ -37,10 +40,16 @@ public struct ThemePicker: View {
         self.onSelect = onSelect ?? { $0.apply() }
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 240), spacing: 12)]
+    /// Fixed count when set via `columns(_:)`, else the adaptive default.
+    private var columns: [GridItem] {
+        if let fixedColumns, fixedColumns > 0 {
+            return Array(repeating: GridItem(.flexible(), spacing: spacing), count: fixedColumns)
+        }
+        return [GridItem(.adaptive(minimum: 160, maximum: 240), spacing: spacing)]
+    }
 
     public var body: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
+        LazyVGrid(columns: columns, spacing: spacing) {
             ForEach(themes) { item in
                 Button {
                     selection = item.id
@@ -54,6 +63,23 @@ public struct ThemePicker: View {
                 .accessibilityAddTraits(selection == item.id ? [.isSelected, .isButton] : .isButton)
             }
         }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ThemePicker {
+    /// Fix the grid to `count` equal columns; `nil` (default) keeps the adaptive
+    /// 160–240pt sizing. Non-positive counts fall back to adaptive.
+    func columns(_ count: Int?) -> Self { copy { $0.fixedColumns = count } }
+
+    /// Gap between cards, both axes (default 12).
+    func spacing(_ value: CGFloat) -> Self { copy { $0.spacing = value } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -121,8 +147,13 @@ private struct ThemeCard: View {
         @State var active: String? = "dracula"
         var body: some View {
             ScrollView {
-                ThemePicker(selection: $active, onSelect: { active = $0.id })
-                    .padding()
+                VStack(spacing: 24) {
+                    ThemePicker(selection: $active, onSelect: { active = $0.id })
+                    ThemePicker(selection: $active, onSelect: { active = $0.id })
+                        .columns(2)
+                        .spacing(8)
+                }
+                .padding()
             }
         }
     }

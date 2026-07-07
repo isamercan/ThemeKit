@@ -403,15 +403,42 @@ public extension ListRow {
 public struct ListSectionHeader: View {
     @Environment(\.theme) private var theme
 
+    // Appearance — mutated only through the modifiers below (R2).
+    private var textStyle: TextStyle = .labelSm700
+    private var accent: SemanticColor?
+    private var trailingSlot: AnyView?
+
     private let title: String
     public init(_ title: String) { self.title = title }
 
     public var body: some View {
-        Text(title.uppercased())
-            .textStyle(.labelSm700)
-            .foregroundStyle(theme.text(.textTertiary))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, Theme.SpacingKey.sm.value)
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            Text(title.uppercased())
+                .textStyle(textStyle)
+                .foregroundStyle(accent?.accent ?? theme.text(.textTertiary))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let trailingSlot { trailingSlot }
+        }
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+}
+
+// MARK: - ListSectionHeader modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ListSectionHeader {
+    /// Typography of the header label (default `.labelSm700`).
+    func textStyle(_ style: TextStyle) -> Self { copy { $0.textStyle = style } }
+
+    /// Token-fed tint for the header label; `nil` (default) keeps tertiary text.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    /// Trailing accessory aligned to the header's edge (e.g. a "See all" link).
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.trailingSlot = AnyView(content()) } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
@@ -423,6 +450,9 @@ public struct ListSectionHeader: View {
         var body: some View {
             ScrollView {
                 VStack(spacing: 0) {
+                    ListSectionHeader("Settings")
+                        .accent(.primary)
+                        .trailing { LinkButton("See all", action: {}).size(.small) }
                     ListRow("Account", action: {}).subtitle("Profile & security").icon("person.circle")
                     DividerView().size(.small)
                     ListRow("Notifications").trailing(.toggle($push))
