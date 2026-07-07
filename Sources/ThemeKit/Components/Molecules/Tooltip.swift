@@ -65,9 +65,12 @@ private struct TooltipBubble: View {
     let text: String
     let edge: TooltipEdge
     let style: BadgeStyle?
+    let color: SemanticColor?
     let maxWidth: CGFloat?
 
-    private var bubbleColor: Color { style?.semantic.solid ?? theme.background(.bgTertiary) }
+    // `color` (full semantic palette, incl. primary/secondary/accent) wins over
+    // the badge-style shorthand; nil-nil keeps the dark default.
+    private var bubbleColor: Color { color?.solid ?? style?.semantic.solid ?? theme.background(.bgTertiary) }
     // Auto-contrast against whatever bubble is shown (styled solid or the dark default).
     private var textColor: Color { ColorContrast.content(on: bubbleColor) }
 
@@ -115,6 +118,7 @@ private struct BindingTooltip: ViewModifier {
     @Binding var isPresented: Bool
     let edge: TooltipEdge
     let style: BadgeStyle?
+    let color: SemanticColor?
     let maxWidth: CGFloat?
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -124,7 +128,7 @@ private struct BindingTooltip: ViewModifier {
         content
             .overlay(alignment: edge.alignment) {
                 if isPresented {
-                    TooltipBubble(text: text, edge: edge, style: style, maxWidth: maxWidth)
+                    TooltipBubble(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth)
                         .fixedSize(horizontal: maxWidth == nil, vertical: true)
                         .modifier(TooltipPlacement(edge: edge))
                         .transition(.opacity)
@@ -140,12 +144,13 @@ private struct SelfTooltip: ViewModifier {
     let text: String
     let edge: TooltipEdge
     let style: BadgeStyle?
+    let color: SemanticColor?
     let maxWidth: CGFloat?
     @State private var shown = false
 
     func body(content: Content) -> some View {
         content
-            .tooltip(text, isPresented: $shown, edge: edge, style: style, maxWidth: maxWidth)
+            .tooltip(text, isPresented: $shown, edge: edge, style: style, color: color, maxWidth: maxWidth)
             .contentShape(Rectangle())
             .onTapGesture { shown.toggle() }
             .accessibilityHint(Text(text))
@@ -154,16 +159,18 @@ private struct SelfTooltip: ViewModifier {
 
 public extension View {
     /// Binding-driven tooltip. `edge` chooses which side of the anchor it points
-    /// from; `style` recolors the bubble (nil keeps the dark default); `maxWidth`
-    /// lets long text wrap.
+    /// from; `style` recolors the bubble (nil keeps the dark default); `color`
+    /// tints it with any semantic color and wins over `style` (daisyUI
+    /// `tooltip-{color}`); `maxWidth` lets long text wrap.
     func tooltip(
         _ text: String,
         isPresented: Binding<Bool>,
         edge: TooltipEdge = .top,
         style: BadgeStyle? = nil,
+        color: SemanticColor? = nil,
         maxWidth: CGFloat? = nil
     ) -> some View {
-        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, style: style, maxWidth: maxWidth))
+        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, style: style, color: color, maxWidth: maxWidth))
     }
 
     /// Self-managed tooltip: tap the anchor to toggle it (tap again to dismiss).
@@ -172,9 +179,10 @@ public extension View {
         _ text: String,
         edge: TooltipEdge = .top,
         style: BadgeStyle? = nil,
+        color: SemanticColor? = nil,
         maxWidth: CGFloat? = nil
     ) -> some View {
-        modifier(SelfTooltip(text: text, edge: edge, style: style, maxWidth: maxWidth))
+        modifier(SelfTooltip(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth))
     }
 }
 
@@ -193,6 +201,8 @@ public extension View {
                     Icon(systemName: "exclamationmark.triangle").size(.md).color(theme.foreground(.fgHero))
                         .tooltip("A longer hint that wraps onto several lines", edge: .leading, style: .warning, maxWidth: 140)
                 }
+                Icon(systemName: "star.circle").size(.md).color(theme.foreground(.fgHero))
+                    .tooltip("Primary-tinted tooltip", edge: .bottom, color: .primary)
             }
             .padding(80)
         }

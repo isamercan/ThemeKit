@@ -16,6 +16,7 @@ public struct ThemeToggle: View {
     private var isLoading = false
     private var onSystemImage: String?
     private var offSystemImage: String?
+    private var accent: SemanticColor?
     private var accessibilityID: String? = nil
 
     @Binding private var isOn: Bool
@@ -76,7 +77,8 @@ public struct ThemeToggle: View {
 
     private var track: Color {
         guard isEnabled else { return theme.background(.bgSecondary) }
-        return isOn ? theme.background(.bgHero) : theme.background(.bgSecondary)
+        guard isOn else { return theme.background(.bgSecondary) }
+        return accent?.solid ?? theme.background(.bgHero)
     }
 }
 
@@ -88,6 +90,8 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true)).symbols(on: "checkmark", off: "xmark")
         ThemeToggle(isOn: .constant(true)).loading()
         ThemeToggle(isOn: .constant(true)).disabled(true)
+        ThemeToggle(isOn: .constant(true)).accent(.success)
+        ThemeToggle(isOn: .constant(true)).accent(.error).controlSize(.small)
     }
     .padding()
 }
@@ -102,6 +106,10 @@ public extension ThemeToggle {
     func symbols(on: String? = nil, off: String? = nil) -> Self {
         copy { $0.onSystemImage = on; $0.offSystemImage = off }
     }
+
+    /// Semantic tint for the on-state track; `nil` (default) uses the hero
+    /// background token. (daisyUI `toggle-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.

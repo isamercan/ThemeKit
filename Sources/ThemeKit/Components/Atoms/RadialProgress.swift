@@ -20,6 +20,7 @@ public struct RadialProgress: View {
     private var status: ProgressStatus = .normal
     private var dashboard: Bool = false
     private var tint: Color?
+    private var semantic: SemanticColor?
     private var accessibilityLabelText: String?
 
     @Environment(\.microAnimations) private var micro
@@ -37,7 +38,10 @@ public struct RadialProgress: View {
 
     private var gap: CGFloat { dashboard ? 0.25 : 0 }            // fraction left open
     private var rotation: Double { dashboard ? 90 + Double(gap) * 180 : -90 }
-    private var color: Color { tint ?? status.semantic.solid }
+    // Raw override wins, then the semantic accent, then the status color.
+    private var color: Color { tint ?? semantic?.solid ?? status.semantic.solid }
+    /// Semantic driving the success / exception glyph tint (accent-aware).
+    private var glyphSemantic: SemanticColor { semantic ?? status.semantic }
 
     public var body: some View {
         ZStack {
@@ -52,9 +56,9 @@ public struct RadialProgress: View {
                 .animation(motion, value: value)
             if showLabel {
                 if status == .success && value >= 1 {
-                    Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(status.semantic.accent)
+                    Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
                 } else if status == .exception {
-                    Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(status.semantic.accent)
+                    Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
                 } else {
                     Text("\(percent)%")
                         .font(.system(size: size * 0.26, weight: .semibold))
@@ -89,7 +93,11 @@ public extension RadialProgress {
     /// Dashboard (gapped) ring variant.
     func dashboard(_ on: Bool = true) -> Self { copy { $0.dashboard = on } }
 
-    /// Override the ring fill color (otherwise derived from `status`).
+    /// Semantic tint for the ring fill and glyphs; `nil` (default) derives from
+    /// `status`. (daisyUI radial-progress colors.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.semantic = color } }
+
+    /// Raw ring fill override (back-compat); prefer `accent(_:)`. Wins over `accent`.
     func ringColor(_ c: Color?) -> Self { copy { $0.tint = c } }
 
     /// Spoken VoiceOver label for the ring (the value is announced separately).
@@ -108,6 +116,7 @@ public extension RadialProgress {
         RadialProgress(0.7).size(80).lineWidth(8).dashboard()
         RadialProgress(1.0).status(.success)
         RadialProgress(0.4).status(.exception)
+        RadialProgress(0.6).accent(.purple)
     }
     .padding()
 }

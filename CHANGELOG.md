@@ -5,6 +5,32 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.9.0] - 2026-07-07
+
+### Added — daisyUI parity sweep (9 new components, 12 upgraded)
+
+Closes the audit against daisyUI's component catalog (61 components, 8 categories).
+
+**New components**
+- `Aura` (atom) — breathing glow halo; standalone blob or `.aura(_:radius:intensity:)` modifier.
+- `TiltCard` (atom) — touch-adapted hover-3D card; `.tilt3D(maxAngle:shine:radius:)` drag tilt with spring-back and optional specular shine.
+- `CodeBlock` (atom) — terminal-style code mockup; `CodeLine` prefixes, per-line semantic highlights, `.copyable()`.
+- `ScrubGallery` (molecule) — touch-adapted hover gallery; finger-scrub flips pages, RTL-aware, segment indicator.
+- `Dropdown` (molecule) — token-bound anchored action menu; `DropdownItem` roles (incl. `.destructive`), `.divider`, `.edge(_:)` placement, outside-tap dismiss.
+- `BrowserFrame` / `WindowFrame` / `PhoneFrame` (organisms) — daisyUI Mockup category: browser chrome, OS window chrome, phone bezel (`.notch(.island/.notch/.none)`) around any content.
+- Declarative validation for `TextInput` — `.validate([.required(), .email()], on: .live/.editingEnd/.submit)` + `.onValidation`; rides the existing `ValidationRule` engine and `infoMessages` styling ("reward early, punish late").
+
+**Upgraded (all additive, defaults unchanged)**
+- `Spinner` — `SpinnerStyle`: `.ring/.dots/.bars/.ball/.infinity` + `.accent(SemanticColor)` (daisyUI Loading parity).
+- `Kbd` — `KbdSize` `.xs/.sm/.md/.lg`.
+- `ChatBubble`, `RadialProgress`, `TextLink`, `Checkbox`, `RadioButton`, `ThemeToggle` — `.accent(SemanticColor)` with auto-contrasting foregrounds.
+- `Tooltip` — `color: SemanticColor?` tint on both overloads.
+- `MultiLineTextInput` — `.size(TextInputSize)` height presets + `.countStyle(_:)` counter parity with TextInput.
+- `SegmentedTabBar` — `.pill` style (daisyUI tabs-box): sliding filled pill via `matchedGeometryEffect`.
+
+**Demo** — 9 new gallery entries; 11 usage cards refreshed with the new axes.
+**Localization** — 5 new accessibility keys (en + tr).
+
 ## [0.8.0] - 2026-07-04
 
 ### Changed — travel component flexibility pass (14 components, no breaking changes)

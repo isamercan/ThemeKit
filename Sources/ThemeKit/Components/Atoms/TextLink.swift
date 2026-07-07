@@ -15,6 +15,7 @@ public struct TextLink: View {
     private let action: () -> Void
     // Appearance/config — mutated only through the modifiers below (R2).
     private var underline: Bool = true
+    private var accent: SemanticColor?
 
     public init(_ title: String, action: @escaping () -> Void) {   // R1
         self.title = title
@@ -26,7 +27,7 @@ public struct TextLink: View {
             Text(title)
                 .textStyle(.linkBase)
                 .underline(underline)
-                .foregroundStyle(theme.text(.textHero))
+                .foregroundStyle(accent?.accent ?? theme.text(.textHero))
         }
         .buttonStyle(.plain)
     }
@@ -37,6 +38,10 @@ public struct TextLink: View {
 public extension TextLink {
     /// Underline the link text (default true); pass `false` for a plain link.
     func underline(_ on: Bool = true) -> Self { copy { $0.underline = on } }
+
+    /// Semantic tint for the link text; `nil` (default) uses the theme's hero
+    /// text token. (daisyUI `link-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -49,6 +54,8 @@ public extension TextLink {
     VStack(alignment: .leading, spacing: 8) {
         TextLink("Forgot password?") {}
         TextLink("Learn more") {}.underline(false)
+        TextLink("Delete account") {}.accent(.error)
+        TextLink("View receipt") {}.accent(.success).underline(false)
     }
     .padding()
 }

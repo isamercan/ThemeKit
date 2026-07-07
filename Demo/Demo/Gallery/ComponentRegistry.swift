@@ -63,19 +63,19 @@ enum ComponentRegistry {
         .knob("Icon", .atoms, demo: IconDemo(), usage: #"Icon(systemName: "star.fill").size(.md).color(theme.foreground(.fgHero))"#),
         .knob("InputLabel", .atoms, demo: InputLabelDemo(), usage: #"InputLabel("Email").required().hasInfo()"#),
         .knob("ProgressBar", .atoms, demo: ProgressBarDemo(), usage: #"ProgressBar(value: 0.4).showsPercentage()"#),
-        .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).showsLabel()"#),
+        .knob("RadialProgress", .atoms, demo: RadialProgressDemo(), usage: #"RadialProgress(0.6).size(96).accent(.purple).showsLabel()"#),
         .knob("RemoteImage", .atoms, demo: RemoteImageDemo(), usage: #"RemoteImage(url, ratio: "16:9").cornerRadius(12)   // .gif/.apng animate natively"#),
         .knob("AnimatedImage", .atoms, demo: AnimatedImageDemo(), usage: #"AnimatedImage(gifURL).contentMode(.fit).cornerRadius(16)   // GIF/APNG via ImageIO — no dependency"#),
         .knob("RollingNumber", .atoms, demo: RollingNumberDemo(), usage: #"RollingNumber(1284).size(40)   // odometer digit roll"#),
         .knob("Indicator", .atoms, demo: IndicatorDemo(), usage: #"icon.indicatorDot()   // or .indicator { Badge("3") }"#),
-        .knob("Kbd", .atoms, demo: KbdDemo(), usage: #"Kbd("⌘")  Kbd("K")"#),
+        .knob("Kbd", .atoms, demo: KbdDemo(), usage: #"Kbd("⌘").size(.lg)  Kbd("K").size(.lg)   // xs/sm/md/lg"#),
         .knob("Status", .atoms, demo: StatusDotDemo(), usage: #"StatusDot(.online, label: "Online").pulse()"#),
         .knob("Swap", .atoms, demo: SwapDemo(), usage: #"Swap(isOn: $on).symbols(on: "xmark", off: "line.3.horizontal")"#),
-        .knob("TextLink", .atoms, demo: TextLinkDemo(), usage: #"TextLink("Forgot password?") { }"#),
+        .knob("TextLink", .atoms, demo: TextLinkDemo(), usage: #"TextLink("Forgot password?") { }.accent(.primary)   // .underline(false) to remove"#),
         .knob("Rating", .atoms, demo: RatingDemo(), usage: #"Rating(value: 4.5).allowHalf().onRate { value = $0 }"#),
         .knob("ScoreBadge", .atoms, demo: ScoreBadgeDemo(), usage: #"ScoreBadge(9.0, large: false)"#),
         .knob("Skeleton", .atoms, demo: SkeletonDemo(), usage: #"Text("Loading…").skeleton(isLoading)"#),
-        .knob("Spinner", .atoms, demo: SpinnerDemo(), usage: #"Spinner().size(24).lineWidth(3)"#),
+        .knob("Spinner", .atoms, demo: SpinnerDemo(), usage: #"Spinner().style(.dots).accent(.success).size(24)   // ring/dots/bars/ball/infinity"#),
         .knob("Tag", .atoms, demo: TagDemo(), usage: #"Tag("Sold out", onRemove: { }).tagStyle(.error).variant(.solid)"#),
         .knob("Title", .atoms, demo: TitleDemo(), usage: #"Title("Section").subtitle("Sub").action("See all", action: { })"#),
         .knob("InlineText", .atoms, demo: InlineTextDemo(), usage: #"InlineText("Accept the Terms.", links: [("Terms", { })]).inlineStyle(.bodyBase400).color(tint)"#),
@@ -97,6 +97,30 @@ enum ComponentRegistry {
         },
         .knob("FlightStatusBadge", .atoms, demo: FlightStatusBadgeDemo(), usage: ##"FlightStatusBadge(.delayed).time("+35m").solid()   // on-time/boarding/delayed/cancelled…"##),
         .knob("IconTile", .atoms, demo: IconTileDemo(), usage: ##"IconTile("suitcase.fill").accent(.turquoise).size(46)   // shared leading tile"##),
+        .static("Aura", .atoms, usage: ##"card.aura(.primary)   // breathing glow halo · Aura().color(.purple).size(120).intensity(0.7)"##) {
+            HStack(spacing: 48) {
+                Aura().color(.primary).size(90)
+                Card { Text("Featured").padding(28) }.aura(.purple)
+            }
+            .padding(.vertical, 32)
+        },
+        .static("TiltCard", .atoms, usage: ##"card.tilt3D(shine: true)   // drag to tilt · TiltCard { … }.maxAngle(.degrees(12))"##) {
+            Card {
+                VStack(spacing: 8) {
+                    Text("✈️").font(.largeTitle)
+                    Text("Drag me").font(.headline)
+                }
+                .padding(36)
+            }
+            .tilt3D(shine: true)
+        },
+        .static("CodeBlock", .atoms, usage: ##"CodeBlock([CodeLine("npm i themekit", prefix: "$"), CodeLine("Done!", prefix: ">", highlight: .success)]).copyable()"##) {
+            CodeBlock([
+                CodeLine("npm i themekit", prefix: "$"),
+                CodeLine("added 1 package in 2s", prefix: ">"),
+                CodeLine("Done!", prefix: ">", highlight: .success)
+            ]).copyable()
+        },
 
         // MARK: Molecules
         .knob("ColorField", .molecules, demo: ColorFieldDemo(), usage: #"ColorField("Brand color", selection: $color).supportsOpacity()"#),
@@ -104,10 +128,10 @@ enum ComponentRegistry {
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue") { }"#),
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save") { }.color(.success).variant(.soft).size(.medium).shape(.pill)"#),
-        .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on).infoMessages(error ? [.init("Required", kind: .error)] : [])"#),
+        .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on).accent(.success).infoMessages(error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber("Max price", value: $n, range: 0...10000).step(50).unit("$")"#),
-        .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text).characterLimit(200)"#),
+        .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text).size(.small).characterLimit(200).countStyle(.remaining)"#),
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code) { verify($0) }\n         .digitCount(6).secure().resend(interval: 30) { resend() }"#),
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")], maxItems: 4)"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
@@ -124,7 +148,7 @@ enum ComponentRegistry {
         .knob("Steps", .molecules, demo: StepsDemo(), usage: #"Steps([.init("Cart", description: "2 items", state: .done), .init("Pay", state: .error)]) { active = $0 }"#),
         .knob("QuantityStepper", .molecules, demo: QuantityStepperDemo(), usage: #"QuantityStepper(value: $qty, range: 0...10)"#),
         .knob("Micro-motion", .molecules, demo: MicroMotionDemo(), usage: #"View().microAnimations(false)   // theme-wide at root, or per-component"#),
-        .knob("RadioButton", .molecules, demo: RadioButtonDemo(), usage: #"RadioButton(isSelected: $on)"#),
+        .knob("RadioButton", .molecules, demo: RadioButtonDemo(), usage: #"RadioButton(isSelected: $on).accent(.error)"#),
         .knob("RadioGroup", .molecules, demo: RadioGroupDemo(), usage: #"RadioGroup(options: items, selection: $sel) { $0 }"#),
         .knob("RangeSlider", .molecules, demo: RangeSliderDemo(), usage: #"RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000).step(50).marks([0, 500, 1000]).onChangeEnd(search)"#),
         .knob("SearchBar", .molecules, demo: SearchBarDemo(), usage: #"SearchBar(text: $text).suggestions(cities).recent(recent).onCommit(search)"#),
@@ -135,9 +159,9 @@ enum ComponentRegistry {
         .knob("SelectBox", .molecules, demo: SelectBoxDemo(), usage: #"SelectBox("Country", options: items, selection: $sel) { $0 }"#),
         .knob("Slider", .molecules, demo: SliderDemo(), usage: #"Slider(value: $v, in: 0...8).marks([0: "0", 8: "Max"]).showsValueTooltip()"#),
         .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput("Email", text: $t).keyboard(.emailAddress, contentType: .emailAddress, submit: .next)"##),
-        .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).symbols(on: "checkmark")"#),
+        .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).accent(.success).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
-        .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top)"#),
+        .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top, color: .primary)"#),
         .knob("GuestSelector", .molecules, demo: GuestSelectorDemo(), usage: #"GuestSelector(selection: $guests).showsRooms(true).showsInfants(false).maxTotal(9)"#),
         .knob("AmenityGrid", .molecules, demo: AmenityGridDemo(), usage: #"AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), …]).columns(2).size(.medium).limit(4).highlighted(["Free Wi-Fi"])"#),
         .knob("PriceHistogram", .molecules, demo: PriceHistogramDemo(), usage: #"PriceHistogram(bins: counts, lowerValue: $low, upperValue: $high, in: 0...5_000).showsBounds().resultCount(n)"#),
@@ -169,6 +193,33 @@ enum ComponentRegistry {
         .knob("TripTypeToggle", .molecules, demo: TripTypeToggleDemo(), usage: ##"TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $trip).icons([…])"##),
         .knob("InstallmentSelector", .molecules, demo: InstallmentSelectorDemo(), usage: #"InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months).interestFreeUpTo(3).recommended(6).surcharge([12: 750])"#),
         .knob("CurrencyPicker", .molecules, demo: CurrencyPickerDemo(), usage: #"CurrencyPicker(selection: $code, currencies: Currency.common).showsName().searchable().recents(recent)"#),
+        .static("Dropdown", .molecules, usage: ##"Dropdown(items: [.init("Rename", systemImage: "pencil"), .divider, .init("Delete", systemImage: "trash", role: .destructive)]) { trigger }.edge(.bottomTrailing)"##) {
+            Dropdown(items: [
+                DropdownItem("Rename", systemImage: "pencil"),
+                DropdownItem("Duplicate", systemImage: "plus.square.on.square"),
+                .divider,
+                DropdownItem("Delete", systemImage: "trash", role: .destructive)
+            ]) {
+                Label("Actions", systemImage: "chevron.down")
+            }
+            .padding(.bottom, 160)
+        },
+        .static("ScrubGallery", .molecules, usage: ##"ScrubGallery(images).accent(.primary)   // scrub a finger across to flip pages"##) {
+            ScrubGallery(count: 3) { i in
+                ZStack {
+                    Rectangle().fill([SemanticColor.primary, .purple, .turquoise][i].soft)
+                    Text("Page \(i + 1)").font(.headline)
+                }
+            }
+            .frame(height: 180)
+            .padding(.horizontal, 24)
+        },
+        .static("Validation", .molecules, usage: ##"TextInput("Email", text: $t).validate([.required(), .email()], on: .editingEnd).onValidation { ok in … }"##) {
+            StatefulPreview("") { text in
+                TextInput("Email", text: text).validate([.required(), .email()], on: .live)
+            }
+            .padding(.horizontal, 24)
+        },
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
@@ -178,7 +229,7 @@ enum ComponentRegistry {
         .knob("BottomSheet", .organisms, demo: BottomSheetDemo(), usage: #"// install once: .sheetHost()\n@Environment(SheetPresenter.self) var sheet: SheetPresenter\nsheet.present(detents: [.height(280), .large]) { FilterView() }\n// or declarative: someView.bottomSheet(isPresented: $open, detents: [.medium]) { … }"#),
         .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message").variant(.success).calloutStyle(.plain)"#),
         .knob("Card", .organisms, demo: CardDemo(), usage: #"Card { content }.elevation(.soft)"#),
-        .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", time: "09:24").side(.outgoing).icon("person.fill")"#),
+        .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", time: "09:24").side(.outgoing).accent(.success)"#),
         .knob("Counter", .organisms, demo: CounterDemo(), usage: #"Counter(days: 2, hours: 8, minutes: 45)"#),
         .knob("DataTable", .organisms, demo: DataTableDemo(), usage: #"DataTable(columns: cols, rows: rows, selection: $selected).pageSize(10)"#),
         .knob("Drawer", .organisms, demo: DrawerDemo(), usage: #"someView.drawer(isPresented: $open, edge: .leading) { menu }\n// or imperative: install .drawerHost(); @Environment(DrawerPresenter.self) var drawer: DrawerPresenter\ndrawer.present(edge: .leading) { menu }   // drag-to-dismiss built in"#),
@@ -206,7 +257,7 @@ enum ComponentRegistry {
         .knob("Popconfirm", .organisms, demo: PopconfirmDemo(), usage: ##"trigger.popconfirm(isPresented: $show, title: "Delete?", confirmTitle: "Delete") { delete() }"##),
         .knob("Tour", .organisms, demo: TourDemo(), usage: ##"view.tourTarget("search");  root.tourHost(tour, steps: [TourStep("search", title: "…", message: "…")])"##),
         .knob("Dialog", .organisms, demo: DialogDemo(), usage: #"view.dialog(isPresented: $show, title: "…") { content } footer: { buttons }"#),
-        .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i)"#),
+        .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i).tabStyle(.pill)"#),
         .knob("SelectionCards", .organisms, demo: SelectionCardsDemo(), usage: #"RadioCard("Standard", isSelected: sel == id) { sel = id }.description("…")"#),
         .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@State var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
@@ -244,6 +295,38 @@ enum ComponentRegistry {
         .knob("InstallmentPicker", .molecules, demo: InstallmentPickerDemo(), usage: ##"InstallmentPicker([InstallmentOption(count: 3, total: 9_900, monthly: 3_300), …], selection: $count).currency("TRY")"##),
         .knob("MapPriceMarker", .molecules, demo: MapPriceMarkerDemo(), usage: ##"MapPriceMarker("₺1.250").selected(isActive).icon("heart.fill")   // in any Map annotation"##),
         .knob("Theme Injection", .organisms, demo: ThemeInjectionDemo(), usage: #"let ocean = Theme(); ocean.loadTheme(named: "oceanTheme")\nmySubtree.theme(ocean)   // re-skins just this subtree"#),
+        .static("BrowserFrame", .organisms, usage: ##"BrowserFrame(url: "https://themekit.dev") { content }.accent(.primary)"##) {
+            BrowserFrame(url: "https://themekit.dev") {
+                VStack(spacing: 8) {
+                    Text("Hello, web").font(.headline)
+                    Text("Any content works here").font(.caption)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(36)
+            }
+            .padding(.horizontal, 24)
+        },
+        .static("WindowFrame", .organisms, usage: ##"WindowFrame("Preferences") { content }.accent(.info)"##) {
+            WindowFrame("Preferences") {
+                VStack(spacing: 8) {
+                    Text("General").font(.headline)
+                    Text("Window chrome around any content").font(.caption)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(36)
+            }
+            .padding(.horizontal, 24)
+        },
+        .static("PhoneFrame", .organisms, usage: ##"PhoneFrame { AppScreen() }.notch(.island).bezel(.neutral)"##) {
+            PhoneFrame {
+                VStack(spacing: 8) {
+                    Text("📱").font(.largeTitle)
+                    Text("App screen").font(.headline)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 380)
+        },
     ]
 
     static func entries(in category: ComponentCategory) -> [ComponentEntry] {
