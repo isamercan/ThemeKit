@@ -151,6 +151,8 @@ public extension FilterBar {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
     /// Gap between controls (default 8).
     func spacing(_ value: CGFloat) -> Self { copy { $0.spacing = max(0, value) } }
+    /// Gap between controls from a theme spacing token.
+    func spacing(_ key: Theme.SpacingKey) -> Self { spacing(key.value) }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

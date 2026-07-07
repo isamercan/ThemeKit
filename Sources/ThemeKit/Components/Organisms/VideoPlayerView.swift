@@ -66,15 +66,21 @@ public struct VideoPlayerView: View {
 
 public extension VideoPlayerView {
     /// Whether the video starts playing on appear (default true).
-    func autoplay(_ on: Bool = true) -> Self { var copy = self; copy.autoplay = on; return copy }
+    func autoplay(_ on: Bool = true) -> Self { copy { $0.autoplay = on } }
     /// Whether playback loops back to the start (default true).
-    func loop(_ on: Bool = true) -> Self { var copy = self; copy.loop = on; return copy }
+    func loop(_ on: Bool = true) -> Self { copy { $0.loop = on } }
     /// Whether the audio starts muted (default true — required for iOS inline autoplay).
-    func muted(_ on: Bool = true) -> Self { var copy = self; copy.muted = on; return copy }
+    func muted(_ on: Bool = true) -> Self { copy { $0.muted = on } }
     /// Shows a mute/unmute toggle button overlay.
-    func muteToggle(_ on: Bool = true) -> Self { var copy = self; copy.showMuteToggle = on; return copy }
+    func muteToggle(_ on: Bool = true) -> Self { copy { $0.showMuteToggle = on } }
     /// Whether tapping the video toggles play/pause.
-    func tapToToggle(_ on: Bool = true) -> Self { var copy = self; copy.tapToToggle = on; return copy }
+    func tapToToggle(_ on: Bool = true) -> Self { copy { $0.tapToToggle = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
 }
 
 /// Stateful inline player that owns its `AVPlayer`, draws the overlays and

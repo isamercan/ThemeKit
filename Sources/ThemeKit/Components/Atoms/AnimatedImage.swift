@@ -116,6 +116,9 @@ public extension AnimatedImage {
     /// Clipping corner radius in points (default 0).
     func cornerRadius(_ r: CGFloat) -> Self { copy { $0.cornerRadius = r } }
 
+    /// Clipping corner radius from a theme radius role (box / field / selector).
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { cornerRadius(role.value) }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)

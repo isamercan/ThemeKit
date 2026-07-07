@@ -118,6 +118,9 @@ public extension RemoteImage {
     /// Corner radius of the clip shape (ignored when `.circle()`).
     func cornerRadius(_ r: CGFloat) -> Self { copy { $0.cornerRadius = r } }
 
+    /// Corner radius from a theme radius role (box / field / selector); ignored when `.circle()`.
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { cornerRadius(role.value) }
+
     /// Clip to a circle instead of a rounded rectangle.
     func circle(_ on: Bool = true) -> Self { copy { $0.circle = on } }
 

@@ -159,7 +159,10 @@ public extension Coupon {
     /// An expiry line under the code (block layout only), e.g. "Valid until Dec 31".
     func expiry(_ text: String?) -> Self { copy { $0.expiry = text } }
     /// Full-width block layout: label above, large code + copy below, optional expiry.
-    func block(_ on: Bool = true) -> Self { copy { $0.isBlock = on } }
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.isBlock = on } }
+    /// Full-width block layout: label above, large code + copy below, optional expiry.
+    @available(*, deprecated, renamed: "fullWidth")
+    func block(_ on: Bool = true) -> Self { fullWidth(on) }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

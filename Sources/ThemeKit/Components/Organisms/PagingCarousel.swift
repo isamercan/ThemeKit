@@ -77,8 +77,14 @@ public extension PagingCarousel {
     /// How much of the previous / next tile peeks at each edge (default 32pt).
     func peek(_ points: CGFloat) -> Self { copy { $0.peek = points } }
 
+    /// Peek amount from a theme spacing token (default `.lg`).
+    func peek(_ key: Theme.SpacingKey) -> Self { peek(key.value) }
+
     /// Spacing between tiles (default 12pt).
     func spacing(_ points: CGFloat) -> Self { copy { $0.spacing = points } }
+
+    /// Spacing between tiles from a theme spacing token.
+    func spacing(_ key: Theme.SpacingKey) -> Self { spacing(key.value) }
 
     /// Advances tiles automatically every `interval` seconds.
     func autoplay(_ interval: TimeInterval?) -> Self { copy { $0.autoplay = interval } }

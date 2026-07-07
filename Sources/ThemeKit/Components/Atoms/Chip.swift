@@ -149,7 +149,10 @@ public extension Chip {
     @available(*, deprecated, message: "Use .disabled(_:) / allowsHitTesting instead.")
     func interactive(_ on: Bool = true) -> Self { copy { $0.isInteractive = on } }
     /// Stretches the chip to fill the available width (e.g. a full-width filter row).
-    func expands(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.expandsHorizontally = on } }
+    /// Stretches the chip to fill the available width (e.g. a full-width filter row).
+    @available(*, deprecated, renamed: "fullWidth")
+    func expands(_ on: Bool = true) -> Self { fullWidth(on) }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
