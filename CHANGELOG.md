@@ -36,6 +36,10 @@ statics), with the default style extracted pixel-identical from the pilot compon
 `.none`), and (2) an `exists(false)`+selected `Chip`'s border drops to the disabled
 palette (no callers).
 
+**Demo** — new "Flexibility Showcase" gallery page: every pilot shown three ways
+(default / slots filled / re-skinned via a custom style defined in the demo target —
+the fork-free proof).
+
 ## [0.10.0] - 2026-07-07
 
 ### Fixed — audit sprint 1: P0 cleanup (all additive, no call-site breaks)
