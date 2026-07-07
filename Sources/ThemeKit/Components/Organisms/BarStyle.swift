@@ -78,7 +78,7 @@ enum BarMetrics {
 /// `BarStyleConfiguration`: they are component-owned modifiers, so the
 /// component plumbs them to the style through this internal environment value
 /// instead. Built-in styles honor them; custom styles may ignore them.
-struct BarChromeOverrides {
+struct BarChromeOverrides: Sendable {
     /// When non-`nil`, replaces the style's own surface fill.
     var surface: Theme.BackgroundColorKey?
     /// When `false`, suppresses the style's edge hairline (also used when a

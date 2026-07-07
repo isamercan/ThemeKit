@@ -157,7 +157,7 @@ struct AnySelectStyle {
         AnySelectStyle(isDefault: true) { AnyView(DefaultSelectField(configuration: $0)) }
     }
 
-    func makeBody(configuration: SelectStyleConfiguration) -> AnyView { _makeBody(configuration) }
+    @MainActor func makeBody(configuration: SelectStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct SelectStyleKey: EnvironmentKey {

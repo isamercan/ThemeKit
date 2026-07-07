@@ -334,7 +334,7 @@ for name, data in THEMES.items():
 
 # ---- Generate Swift color key enums ----
 def emit_enum(swift_name, cat, table):
-    lines = [f"    public enum {swift_name}: String, CaseIterable {{"]
+    lines = [f"    public enum {swift_name}: String, CaseIterable, Sendable {{"]
     for sub in table:
         lines.append(f'        case {case_name(sub)} = "{json_name(cat, sub)}"')
     lines.append("    }")
