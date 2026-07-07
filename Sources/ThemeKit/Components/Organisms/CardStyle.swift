@@ -15,12 +15,38 @@
 import SwiftUI
 
 /// The inputs a `CardStyle` renders: the card's already-composed content (header +
-/// body, padded) and its elevation, so a style can vary chrome by elevation.
+/// body, padded) plus the chrome knobs — elevation, selection/press state, surface
+/// fill token and radius role — so a style can draw the whole shell from tokens.
 public struct CardStyleConfiguration {
     /// The card's content, type-erased (mirrors `ButtonStyleConfiguration.label`).
     public let content: AnyView
     /// The requested elevation, for styles that key shadow/border off it.
     public let elevation: CardElevation
+    /// Whether the card is selected. The default style marks this with a hero border.
+    public let isSelected: Bool
+    /// Whether the card is being pressed, for styles that add press feedback.
+    public let isPressed: Bool
+    /// Token key for the surface fill. Defaults to the classic white card surface.
+    public let surfaceKey: Theme.BackgroundColorKey
+    /// Radius role for the container corner. Defaults to the large box corner.
+    public let radius: Theme.RadiusRole
+
+    /// The new parameters default to the pre-existing chrome (`.bgWhite` / `.box`,
+    /// unselected, unpressed), so `CardStyleConfiguration(content:elevation:)`
+    /// call sites keep compiling and rendering identically.
+    init(content: AnyView,
+         elevation: CardElevation,
+         isSelected: Bool = false,
+         isPressed: Bool = false,
+         surfaceKey: Theme.BackgroundColorKey = .bgWhite,
+         radius: Theme.RadiusRole = .box) {
+        self.content = content
+        self.elevation = elevation
+        self.isSelected = isSelected
+        self.isPressed = isPressed
+        self.surfaceKey = surfaceKey
+        self.radius = radius
+    }
 }
 
 /// Defines a card's container appearance. Implement `makeBody` to wrap the
@@ -31,9 +57,10 @@ public protocol CardStyle {
     @ViewBuilder @MainActor func makeBody(configuration: CardStyleConfiguration) -> Body
 }
 
-/// The stock card surface: white fill, a hairline border only at `.none`
-/// elevation, and a token shadow for `.soft` / `.elevated`. Reads the active
-/// `\.theme`, so an injected theme re-skins it too.
+/// The stock card surface: the configuration's surface fill (white by default),
+/// corner clipping from its radius role, a hairline border only at `.none`
+/// elevation, a token shadow for `.soft` / `.elevated`, and a 1.5pt hero border
+/// when selected. Reads the active `\.theme`, so an injected theme re-skins it too.
 public struct DefaultCardStyle: CardStyle {
     public init() {}
     public func makeBody(configuration: CardStyleConfiguration) -> some View {
@@ -45,14 +72,25 @@ private struct DefaultCardSurface: View {
     let configuration: CardStyleConfiguration
     @Environment(\.theme) private var theme
 
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: configuration.radius.value, style: .continuous)
+    }
+
+    /// Selection promotes the border to the hero token; otherwise the original
+    /// hairline appears only at `.none` elevation (shadow carries the other levels).
+    private var borderColor: Color {
+        theme.border(configuration.isSelected ? .borderHero : .borderPrimary)
+    }
+    private var borderWidth: CGFloat {
+        if configuration.isSelected { return 1.5 }
+        return configuration.elevation == .none ? 1 : 0
+    }
+
     var body: some View {
         configuration.content
-            .background(theme.background(.bgWhite),
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-                    .strokeBorder(theme.border(.borderPrimary), lineWidth: configuration.elevation == .none ? 1 : 0)
-            )
+            .background(theme.background(configuration.surfaceKey), in: shape)
+            .clipShape(shape)   // keeps edge-to-edge content (e.g. media) inside the corner
+            .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
             .modifier(CardShadow(elevation: configuration.elevation))
     }
 }
@@ -70,12 +108,14 @@ private struct OutlinedCardSurface: View {
     let configuration: CardStyleConfiguration
     @Environment(\.theme) private var theme
 
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: configuration.radius.value, style: .continuous)
+    }
+
     var body: some View {
         configuration.content
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-                    .strokeBorder(theme.border(.borderPrimary), lineWidth: 1.5)
-            )
+            .clipShape(shape)   // keeps edge-to-edge content (e.g. media) inside the corner
+            .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1.5))
     }
 }
 
@@ -111,7 +151,8 @@ extension EnvironmentValues {
 }
 
 public extension View {
-    /// Set the ``CardStyle`` for `Card`s in this view and its descendants.
+    /// Set the ``CardStyle`` for `Card`s (and card-shaped organisms such as
+    /// `HotelResultCard`) in this view and its descendants.
     func cardStyle<S: CardStyle>(_ style: sending S) -> some View {
         environment(\.cardStyle, AnyCardStyle(style))
     }
