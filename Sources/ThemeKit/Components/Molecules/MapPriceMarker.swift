@@ -13,8 +13,17 @@
 
 import SwiftUI
 
+/// Chroma: while the environment carries the default ``ChipStyle`` the pill
+/// draws its own accent fill + border (pixel-identical to the pre-ChipStyle
+/// look — the built-ins don't know the marker's accent tokens). A style set
+/// with `.chipStyle(_:)` takes over the pill via `makeBody(configuration:)`.
+/// The pointer triangle, soft shadow, and selection scale/spring are marker
+/// anatomy, not chip chroma — they stay outside the style in both paths (the
+/// pointer keeps the default accent-based fill even under a custom style).
 public struct MapPriceMarker: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     private let text: String
     // Appearance — mutated only through the modifiers below (R2).
@@ -32,16 +41,8 @@ public struct MapPriceMarker: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 4) {
-                if let systemImage { Image(systemName: systemImage).font(.system(size: 11, weight: .semibold)) }
-                Text(text).textStyle(.labelSm700)
-            }
-            .foregroundStyle(fg)
-            .padding(.horizontal, Theme.SpacingKey.sm.value)
-            .frame(height: 30)
-            .background(bg, in: Capsule())
-            .overlay(Capsule().stroke(isSelected ? Color.clear : theme.border(.borderPrimary), lineWidth: 1))
-            .themeShadow(.soft)
+            pill
+                .themeShadow(.soft)
             if showsPointer {
                 Triangle().fill(bg).frame(width: 10, height: 6)
             }
@@ -50,6 +51,34 @@ public struct MapPriceMarker: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
         .accessibilityLabel(text)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Default environment style → today's own chroma; custom style → its
+    /// `makeBody`. `ChipSize` mapping: the compact 30pt pill maps to `.small`
+    /// density (MapPriceMarker has no `ChipSize` of its own).
+    @ViewBuilder private var pill: some View {
+        if environmentChipStyle.isDefault {
+            labelContent
+                .foregroundStyle(fg)
+                .padding(.horizontal, Theme.SpacingKey.sm.value)
+                .frame(height: 30)
+                .background(bg, in: Capsule())
+                .overlay(Capsule().stroke(isSelected ? Color.clear : theme.border(.borderPrimary), lineWidth: 1))
+        } else {
+            environmentChipStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(labelContent),
+                isSelected: isSelected,
+                isEnabled: isEnabled,
+                size: .small))
+        }
+    }
+
+    /// The pill's content (chroma-free): optional icon + price label.
+    private var labelContent: some View {
+        HStack(spacing: 4) {
+            if let systemImage { Image(systemName: systemImage).font(.system(size: 11, weight: .semibold)) }
+            Text(text).textStyle(.labelSm700)
+        }
     }
 }
 
@@ -84,10 +113,19 @@ public extension MapPriceMarker {
 }
 
 #Preview {
-    HStack(spacing: 16) {
-        MapPriceMarker("₺1.250")
-        MapPriceMarker("₺2.100").selected()
-        MapPriceMarker("Sold out").icon("xmark").pointer(false)
+    VStack(spacing: 16) {
+        HStack(spacing: 16) {
+            MapPriceMarker("₺1.250")
+            MapPriceMarker("₺2.100").selected()
+            MapPriceMarker("Sold out").icon("xmark").pointer(false)
+        }
+        // Custom ChipStyle via the environment: the pill routes through
+        // `SolidChipStyle.makeBody`; the pointer/shadow/scale stay the marker's.
+        HStack(spacing: 16) {
+            MapPriceMarker("₺1.250")
+            MapPriceMarker("₺2.100").selected()
+        }
+        .chipStyle(.solid)
     }
     .padding()
 }

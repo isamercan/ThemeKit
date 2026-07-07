@@ -125,15 +125,25 @@ public extension ChipStyle where Self == SolidChipStyle {
 // MARK: - Type erasure + environment plumbing
 
 struct AnyChipStyle: ChipStyle {
+    /// `true` only for the environment key's stock default below. Molecules
+    /// whose stock chroma is not the capsule the built-ins draw (ImageChip,
+    /// CompactChip, ChoseChip, FilterChip, MapPriceMarker) check this flag:
+    /// while the environment still carries the default they draw their own
+    /// pixel-identical chroma; any style set with `.chipStyle(_:)` is unmarked
+    /// and routes them through `makeBody(configuration:)` instead. `Chip`
+    /// ignores the flag — its `resolvedStyle` already arbitrates between the
+    /// enum shorthand and the environment style.
+    let isDefault: Bool
     private let _makeBody: @MainActor (ChipStyleConfiguration) -> AnyView
-    init<S: ChipStyle>(_ style: sending S) {
+    init<S: ChipStyle>(_ style: sending S, isDefault: Bool = false) {
+        self.isDefault = isDefault
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: ChipStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct ChipStyleKey: EnvironmentKey {
-    static let defaultValue = AnyChipStyle(TonalChipStyle())
+    static let defaultValue = AnyChipStyle(TonalChipStyle(), isDefault: true)
 }
 
 extension EnvironmentValues {

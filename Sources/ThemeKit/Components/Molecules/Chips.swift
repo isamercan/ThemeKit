@@ -25,9 +25,16 @@ public enum ImageChipSize {
 }
 
 /// A selectable remote-image tile with a selection border. (Reference ImageChip.)
+///
+/// Chroma: while the environment carries the default ``ChipStyle`` the tile
+/// draws its own rounded-rectangle selection border (pixel-identical to the
+/// pre-ChipStyle look — the built-in styles draw capsules, not tiles). A style
+/// set with `.chipStyle(_:)` takes over via `makeBody(configuration:)`; the
+/// image tile is passed as the configuration's content.
 public struct ImageChip: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     // Appearance — mutated only through the modifiers below (R2).
     private var size: ImageChipSize = .medium
@@ -41,20 +48,40 @@ public struct ImageChip: View {
     }
 
     public var body: some View {
-        let s = size.size
-        RemoteImage(url).ratio(s.width / s.height).cornerRadius(Theme.RadiusKey.sm.value)
-            .frame(width: s.width, height: s.height)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
-                                  lineWidth: isSelected ? 2 : 1)
-            )
-            .opacity(isEnabled ? 1 : 0.5)
+        chrome
             .contentShape(Rectangle())
             .onTapGesture { if isEnabled { isSelected.toggle() } }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isButton)
             .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Default environment style → today's own chroma; custom style → its
+    /// `makeBody`. `ChipSize` mapping: the small tile reads as `.small`,
+    /// medium/large tiles as `.large` (ImageChip has no `ChipSize` of its own).
+    @ViewBuilder private var chrome: some View {
+        if environmentChipStyle.isDefault {
+            tile
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                        .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
+                                      lineWidth: isSelected ? 2 : 1)
+                )
+                .opacity(isEnabled ? 1 : 0.5)
+        } else {
+            environmentChipStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(tile),
+                isSelected: isSelected,
+                isEnabled: isEnabled,
+                size: size == .small ? .small : .large))
+        }
+    }
+
+    /// The chroma-free content: the remote image at the tile's aspect and size.
+    private var tile: some View {
+        let s = size.size
+        return RemoteImage(url).ratio(s.width / s.height).cornerRadius(Theme.RadiusKey.sm.value)
+            .frame(width: s.width, height: s.height)
     }
 }
 
@@ -75,8 +102,15 @@ public extension ImageChip {
 
 /// A selectable card: an optional rating + label row, then an optional logo +
 /// price row. (Reference CompactChip.)
+///
+/// Chroma: while the environment carries the default ``ChipStyle`` the card
+/// draws its own rounded-rectangle fill + selection border (pixel-identical to
+/// the pre-ChipStyle look — the built-in styles draw capsules, not cards). A
+/// style set with `.chipStyle(_:)` takes over via `makeBody(configuration:)`.
 public struct CompactChip: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     @Binding private var isSelected: Bool
     private let text: String
@@ -93,6 +127,42 @@ public struct CompactChip: View {
     }
 
     public var body: some View {
+        chrome
+            .contentShape(Rectangle())
+            .onTapGesture { isSelected.toggle() }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Default environment style → today's own chroma; custom style → its
+    /// `makeBody`. `ChipSize` mapping: the card's `md` padding + heading-sized
+    /// price map to `.large` density (CompactChip has no `ChipSize` of its own).
+    @ViewBuilder private var chrome: some View {
+        if environmentChipStyle.isDefault {
+            labelContent
+                .foregroundStyle(theme.text(.textPrimary))
+                .padding(Theme.SpacingKey.md.value)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                        .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
+                                      lineWidth: isSelected ? 2 : 1)
+                )
+        } else {
+            environmentChipStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(labelContent.frame(maxWidth: .infinity, alignment: .leading)),
+                isSelected: isSelected,
+                isEnabled: isEnabled,
+                size: .large))
+        }
+    }
+
+    /// The card's content (chroma-free): rating + label row, then logo + price
+    /// row. Text color comes from the surrounding chroma; the rating star keeps
+    /// its warning tint.
+    private var labelContent: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let rating {
@@ -100,32 +170,17 @@ public struct CompactChip: View {
                         Image(systemName: "star.fill").font(.system(size: 11))
                             .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                         Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
-                            .foregroundStyle(theme.text(.textPrimary))
                     }
                 }
                 Text(text).textStyle(.labelBase600).lineLimit(1)
-                    .foregroundStyle(theme.text(.textPrimary))
             }
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let imageURL {
                     RemoteImage(imageURL).contentMode(.fit).frame(height: 16)
                 }
-                Text(price).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                Text(price).textStyle(.headingSm)
             }
         }
-        .padding(Theme.SpacingKey.md.value)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
-                              lineWidth: isSelected ? 2 : 1)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { isSelected.toggle() }
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -149,8 +204,15 @@ public extension CompactChip {
 
 /// A selectable card: a leading icon, a title with an optional "free" gradient
 /// badge, and a rating + description row. (Reference ChoseChip.)
+///
+/// Chroma: while the environment carries the default ``ChipStyle`` the card
+/// draws its own rounded-rectangle fill + selection border (pixel-identical to
+/// the pre-ChipStyle look — the built-in styles draw capsules, not cards). A
+/// style set with `.chipStyle(_:)` takes over via `makeBody(configuration:)`.
 public struct ChoseChip: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     @Binding private var isSelected: Bool
     private let title: String
@@ -168,6 +230,41 @@ public struct ChoseChip: View {
     }
 
     public var body: some View {
+        chrome
+            .contentShape(Rectangle())
+            .onTapGesture { isSelected.toggle() }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Default environment style → today's own chroma; custom style → its
+    /// `makeBody`. `ChipSize` mapping: the card's `base` padding + two-line
+    /// layout map to `.large` density (ChoseChip has no `ChipSize` of its own).
+    @ViewBuilder private var chrome: some View {
+        if environmentChipStyle.isDefault {
+            labelContent
+                .foregroundStyle(theme.text(.textPrimary))
+                .padding(Theme.SpacingKey.base.value)
+                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                        .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
+                                      lineWidth: isSelected ? 2 : 1)
+                )
+        } else {
+            environmentChipStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(labelContent),
+                isSelected: isSelected,
+                isEnabled: isEnabled,
+                size: .large))
+        }
+    }
+
+    /// The card's content (chroma-free): icon, title + optional badge, rating +
+    /// description row. Title/rating color comes from the surrounding chroma;
+    /// the icon, star, badge, and secondary description keep their own tokens.
+    private var labelContent: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             if let systemImage {
                 Icon(systemName: systemImage).size(.md).color(theme.foreground(.fgHero))
@@ -175,7 +272,6 @@ public struct ChoseChip: View {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     Text(title).textStyle(.labelMd600).lineLimit(1)
-                        .foregroundStyle(theme.text(.textPrimary))
                     if showFree { freeBadge }
                 }
                 HStack(spacing: Theme.SpacingKey.xs.value) {
@@ -184,7 +280,6 @@ public struct ChoseChip: View {
                             Image(systemName: "star.fill").font(.system(size: 11))
                                 .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
                             Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
-                                .foregroundStyle(theme.text(.textPrimary))
                         }
                     }
                     if let description {
@@ -195,18 +290,6 @@ public struct ChoseChip: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(Theme.SpacingKey.base.value)
-        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
-                              lineWidth: isSelected ? 2 : 1)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { isSelected.toggle() }
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var freeBadge: some View {
@@ -252,8 +335,16 @@ public enum FilterChipShape { case pill, square }
 
 /// A dismissible filter chip in a pill (with a soft shadow) or square shape.
 /// (Reference FilterChip.)
+///
+/// Chroma: while the environment carries the default ``ChipStyle`` the chip
+/// draws its own pill/square fill + border (pixel-identical to the
+/// pre-ChipStyle look). A style set with `.chipStyle(_:)` takes over via
+/// `makeBody(configuration:)`. The pill's soft shadow is elevation, not
+/// chroma — it stays outside the style in both paths.
 public struct FilterChip: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.chipStyle) private var environmentChipStyle
 
     private let title: String
     private let onDismiss: (() -> Void)?
@@ -275,15 +366,40 @@ public struct FilterChip: View {
 
     public var body: some View {
         if shape == .pill {
-            chipBody.themeShadow(.soft)
+            chrome.themeShadow(.soft)
         } else {
-            chipBody
+            chrome
         }
     }
 
-    private var chipBody: some View {
+    /// Default environment style → today's own chroma; custom style → its
+    /// `makeBody`. `ChipSize` mapping: the compact label + `sm` vertical
+    /// padding map to `.small` density (FilterChip has no `ChipSize` of its
+    /// own). FilterChip has no selection state, so the configuration's
+    /// `isSelected` is always `false`.
+    @ViewBuilder private var chrome: some View {
+        if environmentChipStyle.isDefault {
+            labelContent
+                .foregroundStyle(theme.text(.textPrimary))
+                .padding(.vertical, Theme.SpacingKey.sm.value)
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .background(theme.background(.bgWhite), in: clipShape)
+                .overlay(clipShape.stroke(theme.border(.borderPrimary), lineWidth: 1))
+        } else {
+            environmentChipStyle.makeBody(configuration: ChipStyleConfiguration(
+                content: AnyView(labelContent),
+                isSelected: false,
+                isEnabled: isEnabled,
+                size: .small))
+        }
+    }
+
+    /// The chip's content (chroma-free): title + optional close button. Title
+    /// color comes from the surrounding chroma; the close glyph keeps its
+    /// tertiary token.
+    private var labelContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
+            Text(title).textStyle(.labelSm600)
             if showsClose {
                 Button { onDismiss?() } label: {
                     Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
@@ -293,10 +409,6 @@ public struct FilterChip: View {
                 .accessibilityLabel(String(themeKit: "Remove"))
             }
         }
-        .padding(.vertical, Theme.SpacingKey.sm.value)
-        .padding(.horizontal, Theme.SpacingKey.md.value)
-        .background(theme.background(.bgWhite), in: clipShape)
-        .overlay(clipShape.stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 }
 
@@ -394,6 +506,19 @@ public extension ChipGroup {
                         FilterChip("4+ stars") {}.shape(.square)
                     }
                     ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
+                    // Custom ChipStyle via the environment: `.chipStyle(.solid)`
+                    // on the container is non-default, so these molecules route
+                    // through `SolidChipStyle.makeBody` (capsule chroma) instead
+                    // of their own default rounded-rectangle chroma.
+                    VStack(alignment: .leading, spacing: 12) {
+                        CompactChip("Solid style", price: "$120.00", isSelected: $a).rating(4.2)
+                        ChoseChip("Solid style", isSelected: $c).description("Custom chroma")
+                        HStack {
+                            FilterChip("Solid") {}
+                            ImageChip(isSelected: $a, url: nil).size(.small)
+                        }
+                    }
+                    .chipStyle(.solid)
                 }
                 .padding()
             }
