@@ -106,7 +106,7 @@ public struct LoyaltyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.lg.value))
         .frame(maxWidth: .infinity, minHeight: 180)
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 

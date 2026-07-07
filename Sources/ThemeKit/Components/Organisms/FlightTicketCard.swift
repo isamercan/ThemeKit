@@ -38,7 +38,7 @@ public struct FlightTicketCard: View {
     private var favorite: Binding<Bool>?
     private var accent: SemanticColor?
     private var elevation: CardElevation = .soft
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(from: String, to: String) {   // R1
         self.from = from

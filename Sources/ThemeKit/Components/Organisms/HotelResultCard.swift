@@ -43,7 +43,7 @@ public struct HotelResultCard: View {
     private var imageHeight: CGFloat = 200
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .soft
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var showsPageDots = true
 
     @State private var page = 0

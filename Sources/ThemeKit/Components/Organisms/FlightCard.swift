@@ -95,7 +95,7 @@ public struct FlightCard: View {
             if footerSlot != nil || price != nil || onSelect != nil { footer }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 

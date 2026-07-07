@@ -55,7 +55,7 @@ struct ContentView: View {
             PrimaryButton("Continue") { /* … */ }.fullWidth()
         }
         .padding(Theme.SpacingKey.lg.value)
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgWhite))
     }
 }
 ```
@@ -63,7 +63,7 @@ struct ContentView: View {
 ## Tokens
 
 - **Text:** `theme.text(.textPrimary | .textSecondary | .textTertiary | .textDisabled | .textHero)`
-- **Surfaces:** `theme.background(.bgWhite | .bgElevatorPrimary | .bgSecondary | .bgHero | …)`
+- **Surfaces:** `theme.background(.bgWhite | .bgElevatorPrimary | .bgSecondary | .bgHero | …)`  — default component surface is `.bgWhite` (base-100)
 - **Borders:** `theme.border(.borderPrimary | .borderHero | …)`
 - **Foreground:** `theme.foreground(.fgHero | .fgSecondary | …)`
 - **Semantic colors** (`SemanticColor`): `.primary .secondary .accent .neutral .info

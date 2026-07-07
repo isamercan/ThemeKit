@@ -96,7 +96,7 @@ struct DesignPreviewSheet: View {
             }
         }
         .padding()
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private var warnings: some View {

@@ -30,7 +30,7 @@ public struct PriceAlertCard: View {
     private var trend: PriceTrend?
     private var trendText: String?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var radiusRole: Theme.RadiusRole = .box
 
     public init(_ title: String, isOn: Binding<Bool>) {   // R1

@@ -111,7 +111,7 @@ public struct SearchBar: View {
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(44)
-                .background(theme.background(.bgElevatorPrimary),
+                .background(theme.background(.bgBase),
                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)

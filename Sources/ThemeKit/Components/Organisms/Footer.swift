@@ -56,7 +56,7 @@ public struct Footer: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
     }
 }
 

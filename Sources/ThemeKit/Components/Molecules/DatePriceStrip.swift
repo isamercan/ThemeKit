@@ -55,7 +55,7 @@ public struct DatePriceCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
             .padding(.horizontal, Theme.SpacingKey.xs.value)
-            .background(isSelected ? theme.background(.bgHero).opacity(0.06) : theme.background(.bgElevatorPrimary), in: shape)
+            .background(isSelected ? theme.background(.bgHero).opacity(0.06) : theme.background(.bgBase), in: shape)
             .overlay(shape.stroke(isSelected ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: isSelected ? 1.5 : 1))
         }
         .buttonStyle(.plain)

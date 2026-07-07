@@ -42,7 +42,11 @@
     },
     {
       "name": "background.bg-white",
-      "hex": "fffcf9"
+      "hex": "ffffff"
+    },
+    {
+      "name": "background.bg-base",
+      "hex": "f5ece2"
     },
     {
       "name": "background.bg-hero",

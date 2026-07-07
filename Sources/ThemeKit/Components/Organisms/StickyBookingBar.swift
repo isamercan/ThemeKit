@@ -30,7 +30,7 @@ public struct StickyBookingBar: View {
     private var ctaIcon: String?
     private var isEnabled = true
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var showsShadow = true
     private var leadingSlot: AnyView?
 

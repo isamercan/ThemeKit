@@ -50,7 +50,7 @@ public struct FieldButton: View {
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .frame(height: fieldLabel != nil ? 56 : 48)
             .frame(maxWidth: .infinity)
-            .background(theme.background(.bgElevatorPrimary), in: shape)
+            .background(theme.background(.bgBase), in: shape)
             .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
         }
         .buttonStyle(.plain)

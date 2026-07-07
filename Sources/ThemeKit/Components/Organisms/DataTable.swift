@@ -150,7 +150,7 @@ public struct DataTable<Row: Identifiable>: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
     }
 
     @ViewBuilder
@@ -204,7 +204,7 @@ public struct DataTable<Row: Identifiable>: View {
 
     private func rowBackground(index: Int, isSelected: Bool) -> Color {
         if isSelected { return theme.background(.systemcolorsBgInfoLight) }
-        if striped && index % 2 == 1 { return theme.background(.bgElevatorPrimary).opacity(0.5) }
+        if striped && index % 2 == 1 { return theme.background(.bgBase).opacity(0.5) }
         return theme.background(.bgWhite)
     }
 

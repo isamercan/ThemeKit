@@ -25,6 +25,7 @@ extension Theme {
 
     public enum BackgroundColorKey: String, CaseIterable {
         case bgWhite = "background.bg-white"
+        case bgBase = "background.bg-base"
         case bgHero = "background.bg-hero"
         case bgElevatorPrimary = "background.bg-elevator-primary"
         case bgElevatorTertiary = "background.bg-elevator-tertiary"

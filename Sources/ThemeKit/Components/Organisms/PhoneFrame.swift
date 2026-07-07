@@ -55,7 +55,7 @@ public struct PhoneFrame<Content: View>: View {
     public var body: some View {
         content()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(theme.background(.bgElevatorPrimary))
+            .background(theme.background(.bgBase))
             .clipShape(screenShape)
             .overlay(alignment: .top) { cutout }
             .overlay(alignment: .bottom) { homeIndicator }

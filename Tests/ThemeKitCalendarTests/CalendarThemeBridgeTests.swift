@@ -20,7 +20,7 @@ final class CalendarThemeBridgeTests: XCTestCase {
 
         XCTAssertEqual(ct.ink, theme.text(.textPrimary))
         XCTAssertEqual(ct.onInk, theme.text(.textSecondaryInverse))
-        XCTAssertEqual(ct.surface, theme.background(.bgElevatorPrimary))
+        XCTAssertEqual(ct.surface, theme.background(.bgBase))
         XCTAssertEqual(ct.line, theme.border(.borderPrimary))
         XCTAssertEqual(ct.weekendText, theme.text(.textTertiary))
         XCTAssertEqual(ct.todayRing, theme.foreground(.fgHero))

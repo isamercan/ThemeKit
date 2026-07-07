@@ -82,7 +82,7 @@ public struct FilterList: View {
                     .padding(.horizontal, rowPadding)
             }
         }
-        .background(bordered ? theme.background(.bgElevatorPrimary) : .clear, in: shape)
+        .background(bordered ? theme.background(.bgBase) : .clear, in: shape)
         .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
     }
 

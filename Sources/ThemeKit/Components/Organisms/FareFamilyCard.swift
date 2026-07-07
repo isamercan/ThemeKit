@@ -65,7 +65,7 @@ public struct FareFamilyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgElevatorPrimary), in: shape)
+        .background(theme.background(.bgBase), in: shape)
         .overlay(shape.stroke(active ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: active ? 2 : 1))
         .contentShape(Rectangle())
         .onTapGesture { if selection != nil { select() } }

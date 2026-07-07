@@ -47,7 +47,7 @@ struct ContentView: View {
             PrimaryButton("Get started") { await signIn() }
         }
         .padding(theme.spacing(.base))
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgWhite))
         .cornerRadius(.base)
         .themeShadow(.elevated)
     }

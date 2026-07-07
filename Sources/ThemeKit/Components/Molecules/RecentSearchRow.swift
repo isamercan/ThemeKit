@@ -58,7 +58,7 @@ public struct RecentSearchRow: View {
             }
             .padding(density.scale(Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(bordered ? theme.background(.bgElevatorPrimary) : .clear, in: shape)
+            .background(bordered ? theme.background(.bgBase) : .clear, in: shape)
             .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
             .contentShape(shape)
         }

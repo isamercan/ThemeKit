@@ -28,7 +28,8 @@ FOREGROUND = {
     "systemcolors/fg-info": ("d", "info", 500),
 }
 BACKGROUND = {
-    "bg-white": ("a", "ffffff", "181c24"),         # primary surface / card
+    "bg-white": ("a", "ffffff", "181c24"),         # pure white (overlays, modals)
+    "bg-base": ("d", "neutral", 50),               # base-100 surface (page + component backgrounds)
     "bg-hero": ("d", "primary", 500),
     "bg-elevator-primary": ("d", "neutral", 50),   # page background
     "bg-elevator-tertiary": ("d", "primary", 50),  # soft primary container
@@ -281,7 +282,7 @@ def case_name(sub):
 # ---- Build theme JSON (colors + radius + spacing + typography + shadows) ----
 # Anchor surfaces (pure white / solid neutral fill) that also get a faint primary
 # wash on a full re-skin, so cards aren't a theme-neutral island.
-SURFACE_TINT_KEYS = {("background", "bg-white"), ("background", "bg-tertiary")}
+SURFACE_TINT_KEYS = {("background", "bg-tertiary")}
 
 
 def build_theme(primary_base="056bfd", dark=False, tint=0.0,

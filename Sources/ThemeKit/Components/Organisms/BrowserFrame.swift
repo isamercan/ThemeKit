@@ -46,7 +46,7 @@ public struct BrowserFrame<Content: View>: View {
             content()
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
         .clipShape(shape)
         .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
         .modifier(CardShadow(elevation: elevation))
@@ -72,7 +72,7 @@ public struct BrowserFrame<Content: View>: View {
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity)
-            .background(theme.background(.bgElevatorPrimary), in: Capsule())
+            .background(theme.background(.bgBase), in: Capsule())
             .overlay(Capsule().stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 }

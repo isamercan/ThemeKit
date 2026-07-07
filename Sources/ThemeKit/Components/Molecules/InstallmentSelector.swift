@@ -77,7 +77,7 @@ public struct InstallmentSelector: View {
                 }
             }
             .padding(density.scale(Theme.SpacingKey.md.value))
-            .background(selected ? theme.background(.bgHero) : theme.background(.bgElevatorPrimary),
+            .background(selected ? theme.background(.bgHero) : theme.background(.bgBase),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
                 .stroke(selected ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: selected ? 1.5 : 1))

@@ -35,7 +35,7 @@ public struct FilterGroup<Option: Hashable>: View {
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(theme.text(.textTertiary))
                                 .frame(width: 32, height: 32)
-                                .background(theme.background(.bgElevatorPrimary), in: Circle())
+                                .background(theme.background(.bgBase), in: Circle())
                                 .overlay(Circle().strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
                         }
                         .buttonStyle(.plain)

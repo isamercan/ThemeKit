@@ -99,7 +99,7 @@ public struct LocationCard: View {
             }
             .padding(density.scale(Theme.SpacingKey.md.value))
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
         .contentShape(Rectangle())

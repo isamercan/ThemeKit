@@ -60,7 +60,7 @@ public struct SheetHeader: View {
                 Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
             }
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
     }
 
     private func sideSlot<V: View>(alignment: Alignment, @ViewBuilder _ content: () -> V) -> some View {

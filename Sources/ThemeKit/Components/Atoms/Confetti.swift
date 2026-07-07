@@ -127,7 +127,7 @@ private struct ConfettiPiece: Identifiable {
 #Preview {
     @Previewable @Environment(\.theme) var theme
     ZStack {
-        theme.background(.bgElevatorPrimary)
+        theme.background(.bgBase)
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(theme.foreground(.fgHero))
             Text("Thanks for your feedback!").textStyle(.headingSm)

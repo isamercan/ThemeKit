@@ -52,7 +52,7 @@ public struct DestinationCard: View {
             mediaSection
             infoSection
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
