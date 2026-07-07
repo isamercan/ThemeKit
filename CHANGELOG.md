@@ -5,6 +5,33 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.13.0] - 2026-07-07
+
+### Changed — flexibility wave 3: the form family routes its chrome through `FieldStyle`
+
+15 field components now delegate their box chrome (fill, border, corner) to the
+environment `FieldStyle`; `.fieldStyle(_:)` re-skins the whole form without forking:
+
+- **Select family:** `Select` folds into FieldStyle when no custom `SelectStyle` is
+  injected (legacy path byte-identical otherwise); `SelectStyle`, its built-ins and
+  `.selectStyle(_:)` are **deprecated** but functional. `SelectBox`, `MultiSelect`,
+  `TreeSelect` delegate their trigger chrome (open → `isFocused`).
+- **Date/number:** `DateField`, `TimeField` (open popover → `isFocused`),
+  `InputNumber`, `FieldButton` (field-look shell; fill normalises to `bgWhite`).
+- **Specialised:** `OTPInput` (per-digit cells; active cell = `isFocused`, warnings
+  now tint the border), `PaymentCardField` (real per-row focus — focused rows show
+  the hero border), `FileInput`, `ColorField`, `MultiLineTextInput`.
+- **Search:** `SearchBar` (fill normalises `bgElevatorPrimary` → `bgWhite`, gains a
+  focus border), `Autocomplete`; `SearchField` keeps its five legacy chrome modifiers
+  as a byte-identical override path and defers to FieldStyle only when none is set.
+- **Exceptions:** `GuestSelector` (no field box), `CurrencyPicker` (inherits via
+  `SearchBar`).
+
+**Behaviour notes:** disabled fields now uniformly use the muted `bgSecondaryLight`
+fill; error/warning beats the open/focus border and thickens to 1.5pt; corner radii
+move to the `.field` role token (same fallback size in bundled themes). Demo
+showcase gained a "Form family" section.
+
 ## [0.12.0] - 2026-07-07
 
 ### Changed — flexibility wave 2: the card family routes its shells through `CardStyle`

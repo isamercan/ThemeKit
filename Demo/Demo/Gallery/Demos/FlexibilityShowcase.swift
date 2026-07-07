@@ -21,6 +21,8 @@ struct FlexibilityShowcaseDemo: View {
     @State private var email = ""
     @State private var amount = ""
     @State private var progress = 0.62
+    @State private var when: Date? = nil
+    @State private var otp = ""
 
     var body: some View {
         ScrollView {
@@ -112,6 +114,30 @@ struct FlexibilityShowcaseDemo: View {
                     }
                     labeled("Custom style (TickMeterStyle — demo-defined)") {
                         ProgressBar(value: progress).showsPercentage().meterStyle(TickMeterStyle())
+                    }
+                }
+
+                section("Form family — FieldStyle (Wave 3)") {
+                    labeled("Every field reads the ambient style") {
+                        VStack(spacing: 12) {
+                            TextInput("Email", text: $email).placeholder("you@example.com")
+                            DateField("Departure", date: $when)
+                            OTPInput(code: $otp)
+                        }
+                    }
+                    labeled("Built-in .underlined across the family") {
+                        VStack(spacing: 12) {
+                            TextInput("Email", text: $email)
+                            DateField("Departure", date: $when)
+                        }
+                        .fieldStyle(.underlined)
+                    }
+                    labeled("One custom style, whole form (PillFieldStyle)") {
+                        VStack(spacing: 12) {
+                            TextInput("Search destination", text: $email).icon("magnifyingglass")
+                            DateField("Departure", date: $when)
+                        }
+                        .fieldStyle(PillFieldStyle())
                     }
                 }
 
