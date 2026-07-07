@@ -108,8 +108,13 @@ public extension FloatingActionButton {
     /// Corner treatment of the main button: circle / square.
     func shape(_ s: FABShape) -> Self { copy { $0.shape = s } }
 
+    /// Semantic color token driving the main button's fill (R4); `nil` restores
+    /// the primary default. Standard accent vocabulary (flexibility audit §6).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color ?? .primary } }
+
     /// Semantic color token driving the main button's fill (R4).
-    func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
+    func color(_ c: SemanticColor) -> Self { accent(c) }
 
     /// Count bubble on the main button (hidden when 0 or nil).
     func badge(_ count: Int?) -> Self { copy { $0.badge = count } }

@@ -124,6 +124,7 @@ public extension AmenityGrid {
     /// Size tier: small / medium / large.
     func size(_ s: AmenitySize) -> Self { copy { $0.size = s } }
     /// Overrides the icon tint (otherwise the theme accent).
+    @available(*, deprecated, message: "Use tint(_:) with a SemanticColor token.")
     func tint(_ color: Color?) -> Self { copy { $0.tint = color } }
     /// Token-bound overload — icons use the semantic colour's base.
     func tint(_ color: SemanticColor) -> Self { copy { $0.tint = color.base } }

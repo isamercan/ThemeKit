@@ -54,6 +54,7 @@ public struct Avatar: View {
     private var size: AvatarSize = .md
     private var customDimension: CGFloat?
     private var background: AvatarBackground = .blue
+    private var accentColor: SemanticColor?
     private var shape: AvatarShape = .circle
     private var presence: StatusKind?
     private var presencePulse: Bool = false
@@ -71,10 +72,14 @@ public struct Avatar: View {
         }
     }
 
+    /// Semantic accent (when set) wins over the `AvatarBackground` palette (R4).
+    private var surfaceFill: Color { accentColor?.solid ?? background.fill(theme) }
+    private var contentColor: Color { accentColor?.onSolid ?? background.foreground(theme) }
+
     public var body: some View {
         ZStack {
-            clip.fill(background.fill(theme))
-            if background.hasBorder {
+            clip.fill(surfaceFill)
+            if accentColor == nil && background.hasBorder {
                 clip.stroke(theme.border(.borderPrimary), lineWidth: 2)
             }
             contentView
@@ -107,11 +112,11 @@ public struct Avatar: View {
         case .icon(let name):
             Image(systemName: name)
                 .font(.system(size: dim * 0.5))
-                .foregroundStyle(background.foreground(theme))
+                .foregroundStyle(contentColor)
         case .initials(let text):
             Text(text.prefix(2).uppercased())
                 .font(.system(size: dim * 0.38, weight: .semibold))
-                .foregroundStyle(background.foreground(theme))
+                .foregroundStyle(contentColor)
         case .image(let image):
             image.resizable().scaledToFill()
         }
@@ -127,9 +132,19 @@ public extension Avatar {
     /// Arbitrary point-size avatar (Ant numeric `size`), overriding the size tier.
     func dimension(_ points: CGFloat) -> Self { copy { $0.customDimension = points } }
 
+    /// Semantic tint for the surface behind the icon/initials (content
+    /// auto-contrasts); `nil` (default) keeps the `AvatarBackground` palette.
+    /// Standard accent vocabulary (flexibility audit §6).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
+
     /// Surface fill behind the icon/initials (renamed from `background:` to avoid
     /// clashing with SwiftUI's `.background`, R5).
-    func fillColor(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
+    func fillColor(_ b: AvatarBackground) -> Self { backgroundPalette(b) }
+
+    /// Non-deprecated internal path for the `AvatarBackground` palette, so
+    /// in-package composition (e.g. `AvatarGroup`) stays warning-free.
+    internal func backgroundPalette(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
 
     /// Circle (default) or rounded square.
     func shape(_ s: AvatarShape) -> Self { copy { $0.shape = s } }
@@ -155,6 +170,7 @@ public struct AvatarGroup: View {
     private var size: AvatarSize = .md
     private var max: Int = 4
     private var background: AvatarBackground = .blue
+    private var accentColor: SemanticColor?
 
     public init(_ avatars: [AvatarContent]) {   // R1 — content only
         self.avatars = avatars
@@ -165,11 +181,11 @@ public struct AvatarGroup: View {
     public var body: some View {
         HStack(spacing: -size.dimension * 0.35) {
             ForEach(Array(avatars.prefix(max).enumerated()), id: \.offset) { _, content in
-                Avatar(content).size(size).fillColor(background)
+                Avatar(content).size(size).backgroundPalette(background).accent(accentColor)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
             if overflow > 0 {
-                Avatar(.initials("+\(overflow)")).size(size).fillColor(.dark)
+                Avatar(.initials("+\(overflow)")).size(size).backgroundPalette(.dark)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
         }
@@ -185,7 +201,13 @@ public extension AvatarGroup {
     /// How many avatars show before collapsing into the "+N" bubble (default 4, floored at 1).
     func maxVisible(_ count: Int) -> Self { copy { $0.max = Swift.max(count, 1) } }
 
+    /// Semantic tint for every member avatar's surface (content auto-contrasts);
+    /// `nil` (default) keeps the `AvatarBackground` palette. The "+N" overflow
+    /// bubble keeps its dark palette for contrast. Matches Avatar's `.accent(_:)`.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
+
     /// Surface fill behind the avatars' icon/initials (matches Avatar's `.fillColor`, R5).
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func fillColor(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
@@ -199,7 +221,7 @@ public extension AvatarGroup {
     VStack(alignment: .leading, spacing: 16) {
         HStack(spacing: 12) {
             Avatar(.icon("person.fill"))
-            Avatar(.initials("AB")).fillColor(.dark).shape(.square)
+            Avatar(.initials("AB")).accent(.neutral).shape(.square)
             Avatar(.icon("building.2.fill")).shape(.square)
         }
         AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).maxVisible(4)
@@ -210,7 +232,7 @@ public extension AvatarGroup {
 #Preview("States") {
     PreviewMatrix("Avatar") {
         PreviewCase("Icon")     { Avatar(.icon("person.fill")) }
-        PreviewCase("Initials") { Avatar(.initials("AB")).fillColor(.dark).shape(.square) }
+        PreviewCase("Initials") { Avatar(.initials("AB")).accent(.neutral).shape(.square) }
         PreviewCase("Building") { Avatar(.icon("building.2.fill")).shape(.square) }
         PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")]).maxVisible(3) }
     }

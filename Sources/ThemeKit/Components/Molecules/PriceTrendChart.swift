@@ -187,16 +187,26 @@ public extension PriceTrendChart {
     func title(_ text: String?) -> Self { copy { $0.title = text } }
     /// Currency code for the prices (default "TRY").
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
-    /// Bar accent colour (token). Default the hero foreground.
-    func accent(_ color: SemanticColor) -> Self { copy { $0.accentColor = color } }
+    /// Bar accent colour (token); `nil` (default) uses the hero foreground.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
+    /// Colour of the selected-day pill (token); `nil` (default) uses the
+    /// primary-text/inverse pair. Standard accent vocabulary (flexibility audit §6).
+    func selectionAccent(_ color: SemanticColor?) -> Self { copy { $0.selectionColorToken = color } }
     /// Colour of the selected-day pill (token). Default the primary-text/inverse pair.
-    func selectionColor(_ color: SemanticColor?) -> Self { copy { $0.selectionColorToken = color } }
-    /// Chart height in points (default 120).
+    @available(*, deprecated, message: "Use selectionAccent(_:) with a SemanticColor token.")
+    func selectionColor(_ color: SemanticColor?) -> Self { selectionAccent(color) }
+    /// Chart height in points (default 120). Chart geometry is a legitimate
+    /// raw-CGFloat knob (not deprecated).
     func barHeight(_ height: CGFloat) -> Self { copy { $0.barHeight = max(48, height) } }
     /// Fixed bar/column width — used when ``scrollable(_:)`` is on (default 26).
+    /// Chart geometry is a legitimate raw-CGFloat knob (not deprecated).
     func barWidth(_ width: CGFloat) -> Self { copy { $0.barWidth = max(8, width) } }
-    /// Gap between bars (default 6).
+    /// Gap between bars in points (default 6). Chart geometry is a legitimate
+    /// raw-CGFloat knob (not deprecated); prefer the `Theme.SpacingKey` overload
+    /// when a spacing token fits.
     func spacing(_ value: CGFloat) -> Self { copy { $0.spacing = max(0, value) } }
+    /// Token-bound overload — gap between bars from the spacing scale.
+    func spacing(_ key: Theme.SpacingKey) -> Self { spacing(key.value) }
     /// Bar corner radius (radius role, default `.selector`).
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.cornerRole = role } }
     /// Horizontally scroll the bars (fixed width each) instead of fitting them to the width.

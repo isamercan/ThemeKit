@@ -8,7 +8,7 @@
 //
 //  ```swift
 //  SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.")
-//      .label("Smart tip").tint(.success).onTap { applySuggestion() }
+//      .label("Smart tip").accent(.success).onTap { applySuggestion() }
 //  ```
 //
 
@@ -76,8 +76,12 @@ public extension SmartSuggestion {
     func label(_ text: String?) -> Self { copy { $0.label = text } }
     /// The leading icon (default a sparkle).
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
+    /// Token-fed accent for the surface / label / icon (default success green);
+    /// `nil` restores the default. Standard accent vocabulary (flexibility audit §6).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.tint = color ?? .success } }
     /// Token-fed tint for the surface / accent (default success green).
-    func tint(_ color: SemanticColor) -> Self { copy { $0.tint = color } }
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
+    func tint(_ color: SemanticColor) -> Self { accent(color) }
     /// Makes the whole banner tappable (adds a trailing chevron).
     func onTap(_ action: @escaping () -> Void) -> Self { copy { $0.onTap = action } }
     /// A trailing text action (e.g. "Apply").
@@ -95,7 +99,7 @@ public extension SmartSuggestion {
 #Preview {
     VStack(spacing: 10) {
         SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.").label("Smart tip").onTap { }
-        SmartSuggestion("Add a checked bag now and save ₺150.").label("Deal").tint(.warning).action("Add") { }
+        SmartSuggestion("Add a checked bag now and save ₺150.").label("Deal").accent(.warning).action("Add") { }
     }
     .padding()
 }
