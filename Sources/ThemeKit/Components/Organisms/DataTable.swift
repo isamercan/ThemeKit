@@ -77,6 +77,10 @@ public struct DataTable<Row: Identifiable>: View {
     private var pageSize: Int?
     private var isLoading = false
     private var onRowTap: ((Row) -> Void)?
+    private var emptySlot: AnyView?
+    private var loadingSlot: AnyView?
+    private var headerSlot: AnyView?
+    private var footerSlot: AnyView?
 
     @State private var sortColumn: Int?
     @State private var sortAscending = true
@@ -104,6 +108,7 @@ public struct DataTable<Row: Identifiable>: View {
 
     public var body: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
+            if let headerSlot { headerSlot }
             tableCard
             if pageSize != nil, pageCount > 1 {
                 HStack {
@@ -111,6 +116,7 @@ public struct DataTable<Row: Identifiable>: View {
                     Pagination(current: $currentPage, total: pageCount)
                 }
             }
+            if let footerSlot { footerSlot }
         }
         .onChange(of: rows.count) { _, _ in clampPage() }
         .onChange(of: sortColumn) { _, _ in currentPage = 1 }
@@ -120,9 +126,21 @@ public struct DataTable<Row: Identifiable>: View {
         VStack(spacing: 0) {
             headerRow
             if isLoading {
-                loadingRow
+                if let loadingSlot {
+                    loadingSlot
+                        .frame(maxWidth: .infinity)
+                        .background(theme.background(.bgWhite))
+                } else {
+                    loadingRow
+                }
             } else if displayRows.isEmpty {
-                emptyRow
+                if let emptySlot {
+                    emptySlot
+                        .frame(maxWidth: .infinity)
+                        .background(theme.background(.bgWhite))
+                } else {
+                    emptyRow
+                }
             } else {
                 // Lazy so an unpaginated table (pageSize == nil) over many rows only
                 // builds visible rows when scrolled; a no-op when paged/standalone.
@@ -269,6 +287,22 @@ public extension DataTable {
     /// Callback invoked when a row is tapped (also makes rows interactive).
     func onRowTap(_ action: ((Row) -> Void)?) -> Self { copy { $0.onRowTap = action } }
 
+    /// Custom empty-state view shown inside the card when there are no rows
+    /// (replaces the default "No data" row).
+    func empty<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.emptySlot = AnyView(content()) } }
+
+    /// Custom loading view shown inside the card while ``loading(_:)`` is on
+    /// (replaces the default spinner row).
+    func loadingView<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.loadingSlot = AnyView(content()) } }
+
+    /// A view rendered above the table card (outside the column-title strip) —
+    /// e.g. a title, search field, or toolbar.
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
+
+    /// A view rendered below the table card (after pagination when present) —
+    /// e.g. a summary line or legend.
+    func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -299,13 +333,53 @@ private struct DefaultTextCell: View {
             Booking(hotel: "City Inn", nights: 2, price: 1900),
         ]
         var body: some View {
-            DataTable(columns: [
-                .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
-                .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
-                .init("Price", align: .trailing, sortKey: { .number($0.price) }) { row in
-                    Text("$\(Int(row.price))").textStyle(.labelSm700)
-                },
-            ], rows: rows, selection: $selected)
+            VStack(spacing: 24) {
+                DataTable(columns: [
+                    .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
+                    .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
+                    .init("Price", align: .trailing, sortKey: { .number($0.price) }) { row in
+                        Text("$\(Int(row.price))").textStyle(.labelSm700)
+                    },
+                ], rows: rows, selection: $selected)
+                .header {
+                    HStack {
+                        Text("Bookings").textStyle(.labelBase600)
+                        Spacer()
+                        Text("Q3").textStyle(.bodySm400).foregroundStyle(.secondary)
+                    }
+                }
+                .footer {
+                    Text("3 bookings · updated just now")
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
+                DataTable(columns: [
+                    .init("Hotel") { $0.hotel },
+                    .init("Price", align: .trailing) { "$\(Int($0.price))" },
+                ], rows: [Booking]())
+                .empty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "tray")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                        Text("No bookings yet")
+                            .textStyle(.bodySm400)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, Theme.SpacingKey.lg.value)
+                }
+
+                DataTable(columns: [
+                    .init("Hotel") { $0.hotel },
+                ], rows: [Booking]())
+                .loading()
+                .loadingView {
+                    ProgressView()
+                        .padding(.vertical, Theme.SpacingKey.lg.value)
+                }
+            }
             .padding()
         }
     }

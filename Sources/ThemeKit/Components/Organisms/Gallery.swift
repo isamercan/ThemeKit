@@ -15,6 +15,7 @@ public struct Gallery<Item: Identifiable, Content: View>: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var columns: Int = 2
     private var aspect: AspectRatioToken = .square
+    private var emptySlot: AnyView?
 
     public init(_ items: [Item], @ViewBuilder content: @escaping (Item) -> Content) {   // R1
         self.items = items
@@ -22,12 +23,16 @@ public struct Gallery<Item: Identifiable, Content: View>: View {
     }
 
     public var body: some View {
-        LazyVGrid(columns: GridLayout.columns(columns), spacing: GridLayout.gutter) {
-            ForEach(items) { item in
-                content(item)
-                    .aspectRatioToken(aspect, contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        if items.isEmpty, let emptySlot {
+            emptySlot
+        } else {
+            LazyVGrid(columns: GridLayout.columns(columns), spacing: GridLayout.gutter) {
+                ForEach(items) { item in
+                    content(item)
+                        .aspectRatioToken(aspect, contentMode: .fill)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+                }
             }
         }
     }
@@ -42,6 +47,10 @@ public extension Gallery {
     /// Fixed aspect ratio applied to every cell (default `.square`).
     func aspect(_ ratio: AspectRatioToken) -> Self { copy { $0.aspect = ratio } }
 
+    /// Custom view shown in place of the grid when `items` is empty
+    /// (default: an empty grid, i.e. nothing).
+    func empty<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.emptySlot = AnyView(content()) } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -52,10 +61,28 @@ public extension Gallery {
 #Preview {
     struct Photo: Identifiable { let id = UUID(); let color: Color }
     let photos = [Photo(color: .blue), Photo(color: .teal), Photo(color: .orange), Photo(color: .purple)]
-    return Gallery(photos) { photo in
-        photo.color.opacity(0.3)
+    return VStack(spacing: 24) {
+        Gallery(photos) { photo in
+            photo.color.opacity(0.3)
+        }
+        .columns(2)
+        .aspect(.square)
+
+        Gallery([Photo]()) { photo in
+            photo.color.opacity(0.3)
+        }
+        .empty {
+            VStack(spacing: 8) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                Text("No photos yet")
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Theme.SpacingKey.lg.value)
+        }
     }
-    .columns(2)
-    .aspect(.square)
     .padding()
 }
