@@ -32,6 +32,7 @@ public struct LoyaltyCard: View {
     private let tier: String
     private let points: Int
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var memberName: String?
     private var unit: String = "pts"
     private var progress: Double?
@@ -106,7 +107,7 @@ public struct LoyaltyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.lg.value))
         .frame(maxWidth: .infinity, minHeight: 180)
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
@@ -156,6 +157,8 @@ public struct LoyaltyCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LoyaltyCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// The member's name, shown under the tier.
     func memberName(_ name: String?) -> Self { copy { $0.memberName = name } }
     /// The points unit (default `"pts"`).

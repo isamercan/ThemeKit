@@ -27,6 +27,18 @@ public struct GaugeView: View {
         self.label = label
     }
 
+    /// `value` clamped into `range` — an out-of-range value must not crash `Gauge`
+    /// or overshoot the readout.
+    private var clampedValue: Double { min(max(value, range.lowerBound), range.upperBound) }
+
+    /// Position of the clamped value inside `range`, 0…1 — the readout is a
+    /// percentage of the range, not of the raw value.
+    private var fraction: Double {
+        let span = range.upperBound - range.lowerBound
+        guard span > 0 else { return 0 }
+        return (clampedValue - range.lowerBound) / span
+    }
+
     public var body: some View {
         gauge
             .tint(theme.foreground(.fgHero))
@@ -34,11 +46,11 @@ public struct GaugeView: View {
 
     @ViewBuilder
     private var gauge: some View {
-        let base = Gauge(value: value, in: range) {
+        let base = Gauge(value: clampedValue, in: range) {
             if let label { Text(label).textStyle(.labelSm600) }
         } currentValueLabel: {
             if showsValue {
-                Text(value.formatted(.percent.precision(.fractionLength(0))))
+                Text(fraction.formatted(.percent.precision(.fractionLength(0))))
                     .foregroundStyle(theme.text(.textPrimary))
             }
         }

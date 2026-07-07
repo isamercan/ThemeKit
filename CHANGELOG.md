@@ -5,6 +5,66 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.10.0] - 2026-07-07
+
+### Fixed — audit sprint 1: P0 cleanup (all additive, no call-site breaks)
+
+Closes the P0 findings of the non-daisyUI component audit (travel suite, media atoms,
+app-shell organisms, form extras).
+
+**Dead API wired**
+- `MapCallout.accent(_:)` now tints the border + CTA chevron; `RecentSearchRow.accent(_:)`
+  now brand-tints the leading icon tile. (Both stored the value but never read it.)
+
+**Token overloads for raw-`Color` APIs** (originals kept)
+- `PriceHistogram.accent(SemanticColor)`, `AmenityGrid.tint(SemanticColor)`,
+  `EmptyState.iconForeground(Theme.ForegroundColorKey)` / `.iconBackground(Theme.BackgroundColorKey)` —
+  demos no longer unwrap `Theme.shared` by hand.
+
+**Accessibility**
+- `NavigationBar` — items take an optional `label`, expose it (or the symbol's base name)
+  to VoiceOver, and report `.isSelected`.
+- `RollingNumber` — reads the value instead of the 0-9 digit skeleton.
+- `ProgressIndicator` — one element: label "Progress", value "N of M" (localized).
+- `Steps` — one element per step (title + description, state as value, button trait when
+  tappable, `.isSelected` on the active step).
+- Chips — `ImageChip`/`CompactChip`/`ChoseChip` now expose button + selected traits
+  (they were plain tap gestures); `Chip` reports `.isSelected`; `FilterChip`'s close
+  button is labelled "Remove".
+- `PriceAlertCard` — the container `.combine` no longer flattens the live Toggle; the
+  Toggle is the card's single, fully-labelled VoiceOver element.
+
+**Correctness**
+- `GaugeView` — value is clamped into `range`, and the readout is the position within
+  the range (no more "7 200%" on non-0…1 ranges).
+- `VideoPlayerView` — full macOS parity: the stateful inline player (autoplay, loop,
+  mute, progress, overlays, active-gating) now runs on both platforms; only the AVKit
+  host view is platform-conditional (`AVPlayerView` on macOS).
+- `Steps.small()` — no longer a no-op; compact titles on both axes (and the horizontal
+  default title style is now `labelBase600`, matching the vertical axis).
+
+**Localization** — 4 new step-state accessibility keys (en + tr).
+
+### Changed — base-100 component surfaces (daisyUI colour-model alignment)
+
+Card-like components now default to the page's blank surface token **`bgWhite`**
+(daisyUI `base-100`) instead of the elevation tint `bgElevatorPrimary`; the tint is
+reserved for secondary/nested surfaces (table header strips, zebra rows, selector
+fills, device chrome).
+
+- Default flipped on the 11 components that already had `.surface(_:)`:
+  `PaymentCardField`, `AgentPriceRow`, `AncillaryCard`, `BoardingPass`,
+  `FlightTicketCard`, `HotelResultCard`, `MapCallout`, `PriceAlertCard`, `RoomCard`,
+  `StickyBookingBar`, `TicketStub`.
+- 11 components with a hardcoded surface gained `.surface(_:)` (default `bgWhite`):
+  `ReviewCard`, `FlightCard`, `FlightResultRow`, `LoyaltyCard`, `LocationCard`,
+  `DestinationCard`, `FareFamilyCard`, `SheetHeader`, `Footer`, `FilterList`,
+  `RecentSearchRow` (bordered variant).
+- `Card` (via `DefaultCardStyle`) and `DataTable` rows were already base-100; DataTable's
+  header strip + zebra stripes keep the tint deliberately.
+- **Migration:** this is a visual default change — `.surface(.bgElevatorPrimary)`
+  restores the previous look per component. Snapshots need re-recording.
+
 ## [0.9.0] - 2026-07-07
 
 ### Added — daisyUI parity sweep (9 new components, 12 upgraded)

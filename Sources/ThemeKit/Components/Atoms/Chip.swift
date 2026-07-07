@@ -82,6 +82,7 @@ public struct Chip: View {
         .buttonStyle(PressFeedbackStyle())
         .disabled(!isEnabled || !isInteractive || !isExist)
         .allowsHitTesting(isInteractive && isExist)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var foreground: Color {

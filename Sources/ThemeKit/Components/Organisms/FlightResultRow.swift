@@ -23,6 +23,7 @@ public struct FlightResultRow: View {
     private let departure: Date
     private let arrival: Date
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var flightNo: String?
     private var cabinClass: String?
     private var airlineSystemImage = "airplane.circle.fill"
@@ -68,7 +69,7 @@ public struct FlightResultRow: View {
             if badge != nil || baggage != nil || urgencyText != nil || onDetails != nil { metaRow }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
@@ -141,6 +142,8 @@ public struct FlightResultRow: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightResultRow {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Flight number, e.g. "TK 2434".
     func flightNo(_ text: String?) -> Self { copy { $0.flightNo = text } }
     /// Cabin class caption, e.g. "Economy".

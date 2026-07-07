@@ -26,7 +26,7 @@ public struct MapCallout: View {
     private var currencyCode = "TRY"
     private var onSelect: (() -> Void)?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var showsPointer = true
 
     public init(title: String) { self.title = title }   // R1
@@ -58,13 +58,13 @@ public struct MapCallout: View {
                 }
                 Spacer(minLength: 4)
                 if onSelect != nil {
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(accent.map { $0.base } ?? theme.text(.textTertiary)).mirrorsInRTL()
                 }
             }
             .padding(density.scale(Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(theme.background(surfaceKey), in: shape)
-            .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
+            .overlay(shape.stroke(accent.map { $0.base } ?? theme.border(.borderPrimary), lineWidth: accent == nil ? 1 : 1.5))
             .themeShadow(.soft)
             .contentShape(shape)
         }
@@ -93,6 +93,7 @@ public extension MapCallout {
     func score(_ value: Double?) -> Self { copy { $0.score = value } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     func onSelect(_ action: @escaping () -> Void) -> Self { copy { $0.onSelect = action } }
+    /// Tints the border and CTA chevron (default: neutral border, tertiary chevron).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func pointer(_ on: Bool) -> Self { copy { $0.showsPointer = on } }

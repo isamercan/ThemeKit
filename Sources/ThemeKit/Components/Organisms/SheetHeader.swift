@@ -27,6 +27,7 @@ public struct SheetHeader: View {
     private var trailingSlot: AnyView?
     private var showsDivider = true
     private var accent: SemanticColor?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     public init(_ title: String) { self.title = title }   // R1
 
@@ -60,7 +61,7 @@ public struct SheetHeader: View {
                 Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
             }
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(surfaceKey))
     }
 
     private func sideSlot<V: View>(alignment: Alignment, @ViewBuilder _ content: () -> V) -> some View {
@@ -101,6 +102,8 @@ public extension SheetHeader {
     /// Draw the bottom hairline divider (default on; ignored when a progress bar is shown).
     func showsDivider(_ on: Bool) -> Self { copy { $0.showsDivider = on } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

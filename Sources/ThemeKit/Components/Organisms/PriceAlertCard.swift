@@ -30,7 +30,7 @@ public struct PriceAlertCard: View {
     private var trend: PriceTrend?
     private var trendText: String?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var radiusRole: Theme.RadiusRole = .box
 
     public init(_ title: String, isOn: Binding<Bool>) {   // R1
@@ -51,20 +51,22 @@ public struct PriceAlertCard: View {
     public var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             IconTile(systemImage).size(44).accent(accentSemantic)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
                 if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(2) }
                 if price != nil || trend != nil { priceTrend }
             }
+            .accessibilityHidden(true)
             Spacer(minLength: 6)
+            // The Toggle is the card's one VoiceOver element (label = card texts) — a
+            // `.combine` on the container would flatten it into a static element.
             Toggle("", isOn: $isOn).labelsHidden().tint(accentSemantic.base)
+                .accessibilityLabel([title, subtitle].compactMap { $0 }.joined(separator: ", "))
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
         .background(theme.background(surfaceKey), in: shape)
         .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     private var priceTrend: some View {

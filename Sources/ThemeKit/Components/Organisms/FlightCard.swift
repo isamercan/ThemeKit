@@ -55,6 +55,7 @@ public struct FlightCard: View {
     private let arrival: Date
     private let legs: [FlightLeg]?
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var stops: Int = 0
     private var price: Decimal?
     private var currencyCode: String = "TRY"
@@ -95,7 +96,7 @@ public struct FlightCard: View {
             if footerSlot != nil || price != nil || onSelect != nil { footer }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
@@ -265,6 +266,8 @@ public struct FlightCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Number of stops (0 = nonstop, shown in green).
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     /// The fare, rendered as a hero `PriceTag` in the footer.

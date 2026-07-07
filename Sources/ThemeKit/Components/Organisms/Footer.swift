@@ -26,6 +26,8 @@ public struct Footer: View {
 
     private let columns: [Column]
     private let note: String?
+    // Appearance — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     public init(columns: [Column], note: String? = nil) {
         self.columns = columns
@@ -56,7 +58,20 @@ public struct Footer: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(surfaceKey))
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension Footer {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

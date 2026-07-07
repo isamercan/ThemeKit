@@ -44,7 +44,7 @@ public struct PaymentCardField: View {
     // Config — mutated only through the modifiers below (R2).
     private var holder: Binding<String>?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var numberPlaceholder = "Card number"
     private var holderPlaceholder = "Cardholder name"
 

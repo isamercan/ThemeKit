@@ -27,6 +27,7 @@ public struct FareFamilyCard: View {
     private let name: String
     private let price: Decimal
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var currencyCode = "TRY"
     private var accent: SemanticColor = .success
     private var features: [FareFeature] = []
@@ -65,7 +66,7 @@ public struct FareFamilyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(.bgElevatorPrimary), in: shape)
+        .background(theme.background(surfaceKey), in: shape)
         .overlay(shape.stroke(active ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: active ? 2 : 1))
         .contentShape(Rectangle())
         .onTapGesture { if selection != nil { select() } }
@@ -97,6 +98,8 @@ public struct FareFamilyCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FareFamilyCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Currency code for the price (default "TRY").
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// The tier accent colour — brands the name badge and CTA (green / orange / purple…).

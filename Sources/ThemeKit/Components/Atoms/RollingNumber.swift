@@ -32,6 +32,9 @@ public struct RollingNumber: View {
                 DigitColumn(digit: digit, size: size, weight: weight, color: color)
             }
         }
+        // VoiceOver reads the value, not the 0-9 digit skeleton behind the roll.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(value.formatted())
     }
 }
 

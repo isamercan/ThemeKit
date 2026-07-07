@@ -42,7 +42,7 @@ public struct RoomCard: View {
     private var accent: SemanticColor?
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .soft
-    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     public init(name: String) { self.name = name }   // R1
 

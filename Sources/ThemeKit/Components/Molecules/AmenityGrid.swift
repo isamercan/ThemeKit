@@ -125,6 +125,8 @@ public extension AmenityGrid {
     func size(_ s: AmenitySize) -> Self { copy { $0.size = s } }
     /// Overrides the icon tint (otherwise the theme accent).
     func tint(_ color: Color?) -> Self { copy { $0.tint = color } }
+    /// Token-bound overload — icons use the semantic colour's base.
+    func tint(_ color: SemanticColor) -> Self { copy { $0.tint = color.base } }
     /// Shows only the first `count`, with a "+N more" expander for the rest.
     func limit(_ count: Int) -> Self { copy { $0.limit = max(1, count) } }
     /// Amenities (by label) to emphasise in the accent colour.

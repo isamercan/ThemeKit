@@ -15,7 +15,11 @@ copy-on-write modifier'lar, density) oturmuş; asıl sorun desenin eşitsiz
 yayılması — aynı işi yapan iki component'ten biri erişilebilir ve
 accent'liyken ikizi değil.
 
-## En kritik bulgular (P0)
+## En kritik bulgular (P0) — ✅ 0.10.0'da kapatıldı
+
+> Aşağıda özetlenen (denetim özetinde adı geçen) P0'ların tamamı 0.10.0'da
+> kapatıldı. Denetim artifact'inde satır referanslı ek P0 detayı varsa ilk
+> mac build + snapshot turunda doğrulanmalı.
 
 - **Ölü API:** `MapCallout` ve `RecentSearchRow`'un `.accent` modifier'ları
   tanımlı ama body'de hiç okunmuyor.
@@ -56,30 +60,33 @@ dark: `#131b29`), yani mavimsi bir elevation tint'i:
 Sonuç: beyaz sayfa üzerinde her kart mavimsi görünüyor; sayfa/zemin hiyerarşisi
 daisyUI'ın tersine kurulmuş.
 
-**Yapılacak:**
+**Yapılan (0.10.0):**
 
-1. Kart benzeri component'lerin varsayılan zeminini `.bgElevatorPrimary` →
-   `.bgWhite` (base-100) olarak değiştir.
-2. Zemin gömülü 35 dosyadan kart/surface niteliğindekilere `.surface(key)`
-   override'ı ekle (copy-on-write deseniyle); `SeatCell` standart koltuk dolgusu
-   gibi bilinçli tint kullanımları olduğu gibi kalır ve tek tek işaretlenir.
-3. `bgElevatorPrimary/Tertiary`'nin rolünü dokümante et: yalnız ikincil/iç içe
-   yüzeyler (nested surface, hover/girinti), asla birincil kart zemini değil.
-4. Görsel varsayılan değiştiği için snapshot'lar yenilenir; CHANGELOG'a
-   migration notu düşülür (`.surface(.bgElevatorPrimary)` ile eski görünüm
-   geri alınabilir).
-
-> Bu iş Sprint 4'ün (tema eksenleri) kapsamına eklendi — token semantiği
-> düzeltilmeden `.surface` yayılımı yapmak tint'li default'u kalıcılaştırırdı.
+1. ✅ 11 override'lı component'in varsayılanı `.bgWhite`'a çevrildi.
+2. ✅ 11 gömülü zeminli kart/surface component'ine `.surface(key)` eklendi
+   (`ReviewCard`, `FlightCard`, `FlightResultRow`, `LoyaltyCard`, `LocationCard`,
+   `DestinationCard`, `FareFamilyCard`, `SheetHeader`, `Footer`, `FilterList`,
+   `RecentSearchRow`). `Card` (`DefaultCardStyle`) ve `DataTable` satırları zaten
+   base-100 çıktı; DataTable'ın thead şeridi + zebra satırları bilinçli tint.
+3. ✅ Bilinçli tint olarak kalanlar (~24 dosya): seçici/track dolguları
+   (`SegmentedControl`, `InstallmentPicker/Selector`, `SelectStyle`, `FieldButton`,
+   `SearchBar`, `FilterGroup`, `DatePriceStrip`, `FlightRoute`, `ThemeController`),
+   cihaz şasileri (`BrowserFrame`, `PhoneFrame`, `WindowFrame`), koltuk dolguları
+   (`SeatCell`, `SeatMap*`), nötr banner varyantları (`Callout`, `InfoBanner`),
+   dekoratifler (`Kbd`, `DividerView`, `SwapButton`, `Confetti`). Bunların
+   base-100'e çekilip çekilmeyeceği Sprint 4'te tek tek değerlendirilecek.
+4. ⏳ Snapshot yenileme CI'sız ortamda yapılamadı — ilk mac build'inde
+   re-record gerekir. Migration notu CHANGELOG 0.10.0'da
+   (`.surface(.bgElevatorPrimary)` eski görünümü geri getirir).
 
 ## Sprint omurgası
 
 | # | Sprint | Kapsam | Çıkış kriteri |
 |---|--------|--------|---------------|
-| 1 | **P0 temizliği** | ~20 dosya, tamamı additive: ölü `.accent` API'leri bağlanır, ham `Color` alan API'lere token overload'ları, `NavigationBar`/`RollingNumber`/`ProgressIndicator`/`Steps`/Chips a11y, `GaugeView` clamp, `VideoPlayerView` macOS parity, `Steps.small()` düzeltmesi | 17 P0'ın tamamı kapalı; mevcut çağrı yerleri derlenmeye devam eder |
+| 1 | **P0 temizliği** ✅ *(0.10.0)* | ~20 dosya, tamamı additive: ölü `.accent` API'leri bağlanır, ham `Color` alan API'lere token overload'ları, `NavigationBar`/`RollingNumber`/`ProgressIndicator`/`Steps`/Chips a11y, `GaugeView` clamp, `VideoPlayerView` macOS parity, `Steps.small()` düzeltmesi | 17 P0'ın tamamı kapalı; mevcut çağrı yerleri derlenmeye devam eder |
 | 2 | **Motion + 44pt + RTL** | 10 gate'siz animasyona `motionGate`, 12 küçük dokunma hedefine 44pt, LTR-sabit slider/carousel geometrilerine layout-direction desteği | Reduce Motion'da sıfır kayan animasyon; tüm interaktifler ≥44pt; RTL snapshot'ları yeşil |
 | 3 | **i18n süpürmesi** | ~50 İngilizce literal (en büyük yüzey SeatMap ailesi); `GuestSelection.summary` çoğullama düzeltmesi | Kullanıcıya görünen literal kalmaz; `verify-i18n` yeşil |
-| 4 | **Tema eksenleri + base-100 zemini** | `ComponentDefaults` zinciri (bugün 5 component'te) yaygınlaştırılır; form diliminde `.accent` yalnız `DateRangePicker`'da — diğerlerine eklenir; **yukarıdaki surface token düzeltmesi: default'lar `bgWhite`'a, gömülü zeminlere `.surface()` override'ı** | Form component'lerinde tutarlı `.accent`; kart default'ları base-100; snapshot'lar güncel |
+| 4 | **Tema eksenleri + base-100 zemini** *(base-100 kısmı ✅ 0.10.0'da öne çekildi)* | `ComponentDefaults` zinciri (bugün 5 component'te) yaygınlaştırılır; form diliminde `.accent` yalnız `DateRangePicker`'da — diğerlerine eklenir; kalan bilinçli tint'lerin (seçici/track dolguları, cihaz şasileri) base-100 değerlendirmesi | Form component'lerinde tutarlı `.accent`; kart default'ları base-100 ✅; snapshot'lar güncel |
 | 5 | **Validasyon yayılımı** | 0.9.0'ın `.validate` katmanı OTP, `InputNumber`, `Date/TimeField`, grup bileşenleri ve `PaymentCardField`'e | Form bileşenlerinin tamamında `.validate` |
 | 6 | **Slot ve durumlar** | `DataTable` skeleton satırları, `CardStack` yeniden inşası (hiç modifier'ı yok), `Gallery` overlay, poster/empty durumları | Liste/kart organizmalarında loading-empty-error üçlüsü |
 | 7 | **Presenter a11y** | Toast'lar VoiceOver'a duyurulur (announcement), modal'lara Escape + `.isModal` | VoiceOver ile toast/modal akışı tam |

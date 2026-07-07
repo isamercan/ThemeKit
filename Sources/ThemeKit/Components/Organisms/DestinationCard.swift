@@ -26,6 +26,7 @@ public struct DestinationCard: View {
     private let title: String
     private let imageURL: URL?
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var subtitle: String?
     private var price: Decimal?
     private var currencyCode = "TRY"
@@ -52,7 +53,7 @@ public struct DestinationCard: View {
             mediaSection
             infoSection
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(surfaceKey))
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
@@ -165,6 +166,8 @@ public struct DestinationCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension DestinationCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// A location / description line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// The price, rendered as a hero `PriceTag` in the footer row.

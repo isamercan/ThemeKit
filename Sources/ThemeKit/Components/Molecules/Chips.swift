@@ -52,6 +52,9 @@ public struct ImageChip: View {
             .opacity(isEnabled ? 1 : 0.5)
             .contentShape(Rectangle())
             .onTapGesture { if isEnabled { isSelected.toggle() } }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -120,6 +123,9 @@ public struct CompactChip: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { isSelected.toggle() }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -198,6 +204,9 @@ public struct ChoseChip: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { isSelected.toggle() }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var freeBadge: some View {
@@ -281,6 +290,7 @@ public struct FilterChip: View {
                         .foregroundStyle(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Remove"))
             }
         }
         .padding(.vertical, Theme.SpacingKey.sm.value)

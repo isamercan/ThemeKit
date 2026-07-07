@@ -46,6 +46,7 @@ public struct LocationCard: View {
     private let title: String
     private let coordinate: CLLocationCoordinate2D
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var subtitle: String?
     private var distance: String?
     private var mapHeight: CGFloat = 140
@@ -99,7 +100,7 @@ public struct LocationCard: View {
             }
             .padding(density.scale(Theme.SpacingKey.md.value))
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(surfaceKey))
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
         .contentShape(Rectangle())
@@ -166,6 +167,8 @@ public struct LocationCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LocationCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// An address line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// A distance line, e.g. `"1.2 km to center"`.

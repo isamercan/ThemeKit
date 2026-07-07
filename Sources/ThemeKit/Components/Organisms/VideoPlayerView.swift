@@ -56,18 +56,12 @@ public struct VideoPlayerView: View {
         .clipped()
     }
 
-    #if os(iOS)
     private func player(_ url: URL) -> some View {
         InlineVideo(url: url, autoplay: autoplay, loop: loop, muted: muted,
                     showMuteToggle: showMuteToggle, tapToToggle: tapToToggle,
                     progress: progress, externalMuted: externalMuted, onTap: onTap,
                     isActive: $isActive)
     }
-    #else
-    private func player(_ url: URL) -> some View {
-        VideoPlayer(player: AVPlayer(url: url))
-    }
-    #endif
 }
 
 public extension VideoPlayerView {
@@ -83,9 +77,9 @@ public extension VideoPlayerView {
     func tapToToggle(_ on: Bool = true) -> Self { var copy = self; copy.tapToToggle = on; return copy }
 }
 
-#if os(iOS)
 /// Stateful inline player that owns its `AVPlayer`, draws the overlays and
 /// drives the optional `progress` binding via a periodic time observer.
+/// Cross-platform — only the AVKit host view below is platform-conditional.
 private struct InlineVideo: View {
     let url: URL
     let autoplay: Bool
@@ -233,6 +227,7 @@ private struct InlineVideo: View {
     }
 }
 
+#if os(iOS)
 private struct SimpleVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer
 
@@ -246,5 +241,19 @@ private struct SimpleVideoPlayer: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {}
+}
+#elseif os(macOS)
+private struct SimpleVideoPlayer: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.player = player
+        view.controlsStyle = .none
+        view.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateNSView(_ view: AVPlayerView, context: Context) {}
 }
 #endif

@@ -66,7 +66,7 @@ public struct Steps: View {
                             marker(step, number: index + 1)
                         }
                         Text(step.title)
-                            .textStyle(small ? .labelSm600 : .labelSm600)
+                            .textStyle(small ? .labelSm600 : .labelBase600)
                             .foregroundStyle(titleColor(step.state))
                             .multilineTextAlignment(.center)
                         if let description = step.description {
@@ -77,6 +77,7 @@ public struct Steps: View {
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect?(index) }
+                    .modifier(StepAccessibility(step: step, tappable: onSelect != nil))
                 }
             }
         } else {
@@ -91,7 +92,7 @@ public struct Steps: View {
                         }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(step.title)
-                                .textStyle(.labelBase600)
+                                .textStyle(small ? .labelSm600 : .labelBase600)
                                 .foregroundStyle(titleColor(step.state))
                             if let description = step.description {
                                 Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
@@ -101,6 +102,7 @@ public struct Steps: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { onSelect?(index) }
+                    .modifier(StepAccessibility(step: step, tappable: onSelect != nil))
                 }
             }
         }
@@ -176,6 +178,30 @@ public struct Steps: View {
     }
     private func connectorColor(_ index: Int) -> Color {
         steps[index].state == .done ? theme.background(.bgHero) : theme.border(.borderPrimary)
+    }
+}
+
+/// One VoiceOver element per step — "title, description", value = state, button trait when tappable.
+private struct StepAccessibility: ViewModifier {
+    let step: Steps.Step
+    let tappable: Bool
+
+    private var stateText: String {
+        switch step.state {
+        case .done: return String(themeKit: "Completed")
+        case .active: return String(themeKit: "Current")
+        case .todo: return String(themeKit: "Not started")
+        case .error: return String(themeKit: "Error")
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(step.description.map { "\(step.title), \($0)" } ?? step.title)
+            .accessibilityValue(stateText)
+            .accessibilityAddTraits(tappable ? .isButton : [])
+            .accessibilityAddTraits(step.state == .active ? .isSelected : [])
     }
 }
 

@@ -26,6 +26,7 @@ public struct ReviewCard: View {
     private let score: Double
     private let text: String
     // Appearance/state — mutated only through the modifiers below (R2).
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var date: Date?
     private var title: String?
     private var verified: Bool = false
@@ -63,7 +64,7 @@ public struct ReviewCard: View {
             if let actionsSlot { actionsSlot }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
@@ -119,6 +120,8 @@ public struct ReviewCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension ReviewCard {
+    /// Surface fill (background token key, default `.bgWhite`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// The review date, shown under the author.
     func date(_ date: Date?) -> Self { copy { $0.date = date } }
     /// A bold one-line summary above the body.

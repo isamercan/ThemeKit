@@ -15,10 +15,14 @@ public struct NavigationBar: View {
         public let id = UUID()
         let systemImage: String
         let activeSystemImage: String?
-        public init(systemImage: String, activeSystemImage: String? = nil) {
+        let label: String?
+        public init(systemImage: String, activeSystemImage: String? = nil, label: String? = nil) {
             self.systemImage = systemImage
             self.activeSystemImage = activeSystemImage
+            self.label = label
         }
+        /// VoiceOver fallback when no explicit label — the symbol's base name ("house.fill" → "house").
+        var accessibilityText: String { label ?? systemImage.split(separator: ".").first.map(String.init) ?? systemImage }
     }
 
     private let items: [Item]
@@ -48,6 +52,8 @@ public struct NavigationBar: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(item.accessibilityText)
+                .accessibilityAddTraits(isActive ? .isSelected : [])
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
