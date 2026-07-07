@@ -125,7 +125,9 @@ public struct PaymentCardField: View {
         ))
     }
 
-    @ViewBuilder private func field(_ binding: Binding<String>, _ placeholder: String, role: FieldRole, keyboard: KeyboardKind = .default, secure: Bool = false, format: @escaping (String) -> String) -> some View {
+    @ViewBuilder private func field(_ binding: Binding<String>, _ placeholder: String, role: FieldRole,
+                                    keyboard: KeyboardKind = .default, secure: Bool = false,
+                                    format: @escaping (String) -> String) -> some View {
         Group {
             if secure {
                 SecureField(placeholder, text: binding)

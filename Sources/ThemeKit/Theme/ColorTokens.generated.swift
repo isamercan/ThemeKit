@@ -10,7 +10,7 @@
 import SwiftUI
 
 extension Theme {
-    public enum ForegroundColorKey: String, CaseIterable {
+    public enum ForegroundColorKey: String, CaseIterable, Sendable {
         case fgHero = "foreground.fg-hero"
         case fgSecondary = "foreground.fg-secondary"
         case fgTurquoise = "foreground.fg-turquoise"
@@ -23,7 +23,7 @@ extension Theme {
         case systemcolorsFgInfo = "foreground.systemcolors.fg-info"
     }
 
-    public enum BackgroundColorKey: String, CaseIterable {
+    public enum BackgroundColorKey: String, CaseIterable, Sendable {
         case bgWhite = "background.bg-white"
         case bgBase = "background.bg-base"
         case bgHero = "background.bg-hero"
@@ -51,7 +51,7 @@ extension Theme {
         case systemcolorsBgInfoLight = "background.systemcolors.bg-info-light"
     }
 
-    public enum BorderColorKey: String, CaseIterable {
+    public enum BorderColorKey: String, CaseIterable, Sendable {
         case borderHero = "border.border-hero"
         case borderPrimary = "border.border-primary"
         case borderOrange = "border.border-orange"
@@ -66,7 +66,7 @@ extension Theme {
         case systemcolorsBorderInfoLight = "border.systemcolors.border-info-light"
     }
 
-    public enum TextColorKey: String, CaseIterable {
+    public enum TextColorKey: String, CaseIterable, Sendable {
         case textPrimary = "text.text-primary"
         case textSecondary = "text.text-secondary"
         case textTertiary = "text.text-tertiary"
@@ -76,7 +76,7 @@ extension Theme {
         case textSecondaryInverse = "text.text-secondary-inverse"
     }
 
-    public enum PaletteColorKey: String, CaseIterable {
+    public enum PaletteColorKey: String, CaseIterable, Sendable {
         case primary50 = "palette.primary.50"
         case primary100 = "palette.primary.100"
         case primary200 = "palette.primary.200"
