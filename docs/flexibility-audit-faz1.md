@@ -462,11 +462,11 @@ uygulanan desenin aynısı (~35 dosya).
    kapanır. Bu remote ortamda Swift toolchain YOK — build/snapshot doğrulaması
    senin tarafında veya CI'da koşulmalı. **Onay + build'i kimin koşacağı?**
 
-## 9. FAZ 2 dalga planı (öneri)
+## 9. FAZ 2 dalga planı (onaylandı — kararlar: arketip-paylaşımlı protokoller ✓, butonlar 4 struct + native ButtonStyle köprüsü ve tam zenginlikte ✓, dalga sonu build kullanıcıda ✓)
 
 | Dalga | Kapsam | Kanıt |
 |---|---|---|
-| 1 | Arketip protokolleri tanımlanır + 6 pilot (ListRow, TextInput, Chip, SheetHeader, ProgressBar, HotelResultCard) | Catalog "Flexibility Showcase" ilk 6 girişi: default / zengin slot / custom style |
+| 1 ✅ *(0.11.0)* | Arketip protokolleri tanımlanır + 6 pilot (ListRow, TextInput, Chip, SheetHeader, ProgressBar, HotelResultCard) | Catalog "Flexibility Showcase" ilk 6 girişi: default / zengin slot / custom style |
 | 2 | C arketipi: 23 kart organizması CardStyle'a bağlanır, media/overlay slotları | kartlar fork'suz reskin demoları |
 | 3 | D arketipi: 19 form alanı FieldStyle'a | form reskin demosu |
 | 4 | A+E+F: chip/bar/gösterge aileleri | showcase güncellenir |

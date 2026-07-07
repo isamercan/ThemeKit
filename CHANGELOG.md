@@ -5,6 +5,37 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.11.0] - 2026-07-07
+
+### Added — flexibility wave 1: archetype style protocols + 6 pilots
+
+First wave of the slot/config/style architecture (see `docs/flexibility-audit-faz1.md`).
+Four new archetype style protocols, each mirroring the `CardStyle` idiom
+(Configuration + `AnyX` erasure + environment key + `.xStyle(_:)` + `where Self ==`
+statics), with the default style extracted pixel-identical from the pilot component:
+
+- **`ListRowStyle`** (`.default` / `.inset`) — pilot `ListRow`, which also gains
+  `.leading{}` / `.trailing{}` ViewBuilder slots (the `ListRowTrailing` enum stays).
+- **`FieldStyle`** (`.default` / `.underlined`) — pilot `TextInput`, which gains
+  `.leading{}` / `.trailing{}` slots; all 21 existing modifiers unchanged.
+- **`ChipStyle`** (`.tonal` / `.solid`) — pilot `Chip`; the `ChipSelectionStyle`
+  enum shorthand now routes through the same `makeBody` gate as environment styles.
+  `Chip.interactive(_:)` deprecated in favour of `.disabled(_:)` (still works).
+- **`BarStyle`** (`.default` / `.floating`) — pilot `SheetHeader`, which gains
+  `.leading{}`; `surface()`/`showsDivider()` keep working via internal overrides.
+- **`MeterStyle`** (`.linear` / `.striped`) — pilot `ProgressBar`; data (fraction,
+  fill, track) stays in the component, geometry moves to the style; `steps` is now
+  a configuration field handled by the style.
+- **`CardStyleConfiguration`** additively gains `isSelected` / `isPressed` /
+  `surfaceKey` / `radius`; `DefaultCardStyle` reads surface+radius from it and draws
+  a hero border when selected. Pilot `HotelResultCard` routes its shell through
+  `.cardStyle` and gains `.media{}` / `.overlay{}` slots.
+
+**Behaviour notes:** defaults are pixel-identical except (1) `HotelResultCard` at
+`.soft`/`.elevated` now follows `Card`'s border semantics (shadow only; hairline at
+`.none`), and (2) an `exists(false)`+selected `Chip`'s border drops to the disabled
+palette (no callers).
+
 ## [0.10.0] - 2026-07-07
 
 ### Fixed — audit sprint 1: P0 cleanup (all additive, no call-site breaks)
