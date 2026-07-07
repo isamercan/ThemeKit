@@ -471,7 +471,7 @@ uygulanan desenin aynısı (~35 dosya).
 | 3 ✅ *(0.13.0)* | D arketipi: 15 form alanı FieldStyle'a (SelectStyle deprecated köprüyle katlandı; GuestSelector/CurrencyPicker istisna) | showcase "Form family" bölümü |
 | 4 ✅ *(0.14.0)* | A+E+F: chip/bar/gösterge aileleri (isDefault köprüleriyle; Badge/Tag ailesi + segment kontrolleri gerekçeli K2 istisnası) | showcase güncellendi |
 | 5 ✅ *(0.15.0)* | G+H: ToastStyle + presenter custom-içerik overload'ları + konteyner empty/loading slotları + CardStack inşası (Dialog/Feedback/Tour kabukları gerekçeli CardStyle istisnası) | showcase |
-| 6 | İsim standardı süpürmesi (deprecation'lar), ham tip temizliği, Not-1 tabanı, rapor + önce/sonra tablosu | tam CatalogView + özet rapor |
+| 6 ✅ *(0.16.0)* | İsim standardı süpürmesi (28 kontrollü deprecation), geometri token overload'ları, fullWidth alias'ları, Not-1 tabanı (12 component), copy(_:) normalizasyonu | `docs/flexibility-faz3-report.md` |
 
 ---
 

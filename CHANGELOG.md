@@ -5,6 +5,31 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.16.0] - 2026-07-07
+
+### Changed — flexibility wave 6: naming sweep, raw-type cleanup, grade-1 floor lift
+
+Closes the flexibility programme (see `docs/flexibility-faz3-report.md`).
+
+- **`accent(_:)` is the one colour verb.** New `accent(SemanticColor?)` on Icon,
+  InlineText, RollingNumber, ProgressBar (fill), Avatar/AvatarGroup, CalendarView,
+  ScoreBadge, ShareButton, FareFeatureRow, TextRotate, SortTab, Counter,
+  Breadcrumbs, ThemeController, ListSectionHeader, FloatingActionButton,
+  SmartSuggestion, CalendarView. Raw-`Color` colour modifiers (`color`, `fillColor`,
+  `ringColor`, `badgeColor`, `colors`, `tint`, `selectionColor`) are deprecated —
+  still functional. Badge deliberately keeps `badgeStyle` as its semantic gate.
+- **Geometry tokens:** `cornerRadius(RadiusRole)` / `spacing(SpacingKey)` /
+  `peek(SpacingKey)` overloads on AnimatedImage, RemoteImage, ImageCollage,
+  FilterBar, PagingCarousel, PriceTrendChart; raw CGFloat knobs stay (documented).
+- **Aliases:** `Chip.expands` / `Coupon.block` deprecated-renamed to `fullWidth`.
+- **Grade-1 floor lift:** Breadcrumbs, FilterGroup, ScoreBadge, TextRotate,
+  FareFeatureRow, ShareButton, CalendarView, ThemeController, ThemePicker, SortTab,
+  Counter (new `CounterSize`), ListSectionHeader (+`trailing{}` slot) all gain
+  copy-on-write modifier layers. HeroSurface evaluated — Hero's `background{}`
+  builder already covers it.
+- **Housekeeping:** Carousel/VideoPlayerView modifiers normalised onto the standard
+  `copy(_:)` helper.
+
 ## [0.15.0] - 2026-07-07
 
 ### Added — flexibility wave 5: presenter content slots + container state slots
