@@ -6,6 +6,12 @@
 //  review text, and an optional photo strip. The per-review counterpart to the
 //  aggregate RatingSummary. Token-bound.
 //
+//  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
+//  active `CardStyle` from the environment — `.surface()/.cornerRadius()/.elevation()`
+//  feed the `CardStyleConfiguration`. The default `.none` elevation reproduces the
+//  original shadow-free, hairline-bordered look, while `.cardStyle(_:)` can swap in
+//  a completely different shell.
+//
 
 import SwiftUI
 
@@ -19,6 +25,7 @@ public struct ReviewCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.cardStyle) private var cardStyle
     @State private var expanded = false
 
     // Required content (R1).
@@ -27,6 +34,8 @@ public struct ReviewCard: View {
     private let text: String
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var radiusRole: Theme.RadiusRole = .box
+    private var elevation: CardElevation = .none
     private var date: Date?
     private var title: String?
     private var verified: Bool = false
@@ -43,6 +52,19 @@ public struct ReviewCard: View {
     }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — the default `.none` elevation yields the original hairline.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
             header
             if let title {
@@ -64,8 +86,6 @@ public struct ReviewCard: View {
             if let actionsSlot { actionsSlot }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(surfaceKey), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var header: some View {
@@ -122,6 +142,10 @@ public struct ReviewCard: View {
 public extension ReviewCard {
     /// Surface fill (background token key, default `.bgWhite`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// Container corner radius role (default `.box`).
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Surface elevation (default `.none` — the original hairline-bordered look).
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
     /// The review date, shown under the author.
     func date(_ date: Date?) -> Self { copy { $0.date = date } }
     /// A bold one-line summary above the body.
@@ -153,4 +177,11 @@ public extension ReviewCard {
         ReviewCard(author: "Marco P.", score: 7.4, text: "Good value, though the wifi was slow in the evenings.")
     }
     .padding()
+}
+
+#Preview("Outlined style") {
+    ReviewCard(author: "Ayşe D.", score: 8.6, text: "Lovely staff and a quiet room overlooking the courtyard.")
+        .date(.now).verified()
+        .cardStyle(.outlined)
+        .padding()
 }

@@ -5,6 +5,12 @@
 //  Organism. A "get price alerts" card — a bell icon, a title + subtitle, an optional
 //  current price with a trend indicator, and a toggle bound to the caller. Token-bound.
 //
+//  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
+//  active `CardStyle` from the environment — `.surface()/.cornerRadius()/.elevation()`
+//  feed the `CardStyleConfiguration`. The default `.none` elevation reproduces the
+//  original shadow-free, hairline-bordered look, while `.cardStyle(_:)` can swap in
+//  a completely different shell. The Toggle stays the card's single VoiceOver element.
+//
 //  ```swift
 //  PriceAlertCard("Get price alerts", isOn: $alerts)
 //      .subtitle("We'll email you when the price changes").price(3_538).trend(.down, "-8%")
@@ -19,6 +25,7 @@ public enum PriceTrend: Sendable { case up, down, flat }
 public struct PriceAlertCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let title: String
     @Binding private var isOn: Bool
@@ -32,6 +39,7 @@ public struct PriceAlertCard: View {
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var radiusRole: Theme.RadiusRole = .box
+    private var elevation: CardElevation = .none
 
     public init(_ title: String, isOn: Binding<Bool>) {   // R1
         self.title = title
@@ -40,7 +48,6 @@ public struct PriceAlertCard: View {
 
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
     private var trendColor: Color {
         switch trend { case .down: theme.foreground(.systemcolorsFgSuccess); case .up: theme.foreground(.systemcolorsFgError); default: theme.text(.textSecondary) }
     }
@@ -49,6 +56,21 @@ public struct PriceAlertCard: View {
     }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — the default `.none` elevation yields the original hairline.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+    }
+
+    /// The card's inner layout — everything inside the shell. The IconTile/text
+    /// block stays `accessibilityHidden`; the labelled Toggle remains the card's
+    /// one VoiceOver element.
+    private var cardContent: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             IconTile(systemImage).size(44).accent(accentSemantic)
                 .accessibilityHidden(true)
@@ -65,8 +87,6 @@ public struct PriceAlertCard: View {
                 .accessibilityLabel([title, subtitle].compactMap { $0 }.joined(separator: ", "))
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
     private var priceTrend: some View {
@@ -93,6 +113,8 @@ public extension PriceAlertCard {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Surface elevation (default `.none` — the original hairline-bordered look).
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -107,6 +129,19 @@ public extension PriceAlertCard {
         var body: some View {
             PriceAlertCard("Get price alerts", isOn: $on)
                 .subtitle("We'll notify you when this route's price changes").price(3_538).trend(.down, "-8%").padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("Outlined style") {
+    struct Demo: View {
+        @State private var on = false
+        var body: some View {
+            PriceAlertCard("Get price alerts", isOn: $on)
+                .subtitle("We'll email you when the price changes")
+                .cardStyle(.outlined)
+                .padding()
         }
     }
     return Demo()
