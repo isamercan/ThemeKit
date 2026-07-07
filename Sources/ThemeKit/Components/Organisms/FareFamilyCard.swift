@@ -34,7 +34,7 @@ public struct FareFamilyCard: View {
     private let name: String
     private let price: Decimal
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var currencyCode = "TRY"
     private var accent: SemanticColor = .success
     private var features: [FareFeature] = []
@@ -117,7 +117,7 @@ public struct FareFamilyCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FareFamilyCard {
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Currency code for the price (default "TRY").
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }

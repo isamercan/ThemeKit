@@ -49,17 +49,17 @@ public struct ThemeController: View {
                         .background {
                             if isActive {
                                 RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
-                                    .fill(theme.background(.bgWhite))
-                                    .themeShadow(.soft)
-                            }
+                                .fill(theme.background(.bgWhite))
+                                .themeShadow(.soft)
                         }
-                        .contentShape(Rectangle())
+                    }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(4)
-        .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }
 

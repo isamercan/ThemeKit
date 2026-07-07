@@ -32,7 +32,7 @@ public struct DestinationCard: View {
     private let title: String
     private let imageURL: URL?
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var subtitle: String?
     private var price: Decimal?
     private var currencyCode = "TRY"
@@ -181,7 +181,7 @@ public struct DestinationCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension DestinationCard {
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// A location / description line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }

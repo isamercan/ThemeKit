@@ -58,7 +58,7 @@ public struct WindowFrame<Content: View>: View {
             content()
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(theme.background(.bgElevatorPrimary))
+        .background(theme.background(.bgBase))
         .clipShape(shape)
         .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
         .modifier(CardShadow(elevation: elevation))

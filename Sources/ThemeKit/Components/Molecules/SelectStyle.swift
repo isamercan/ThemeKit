@@ -97,7 +97,7 @@ private struct FilledSelectField: View {
 
     var body: some View {
         configuration.content
-            .background(theme.background(.bgElevatorPrimary),
+            .background(theme.background(.bgBase),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
             .overlay(alignment: .bottom) {
                 if configuration.hasError {

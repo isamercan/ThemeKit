@@ -52,7 +52,7 @@ public struct Kbd: View {
             .foregroundStyle(theme.text(.textPrimary))
             .padding(.horizontal, size.horizontalPadding)
             .frame(minWidth: size.minSide, minHeight: size.minSide)
-            .background(theme.background(.bgElevatorPrimary),
+            .background(theme.background(.bgBase),
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)

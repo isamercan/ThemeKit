@@ -73,7 +73,7 @@ public struct InstallmentPicker: View {
             }
             .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
             .frame(minHeight: 56)
-            .background(isOn ? (accent ?? .primary).bg : theme.background(.bgElevatorPrimary), in: shape)
+            .background(isOn ? (accent ?? .primary).bg : theme.background(.bgBase), in: shape)
             .overlay(shape.stroke(isOn ? accentBase : theme.border(.borderPrimary), lineWidth: isOn ? 1.5 : 1))
             .contentShape(shape)
         }

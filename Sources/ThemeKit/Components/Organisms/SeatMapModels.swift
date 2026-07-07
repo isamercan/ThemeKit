@@ -107,7 +107,7 @@ public struct SeatPalette: Sendable {
     public func colors(for tier: SeatTier, theme: Theme) -> (fill: Color, stroke: Color) {
         if let accent = overrides[tier] { return (accent.opacity(0.14), accent) }
         switch tier {
-        case .standard: return (theme.background(.bgElevatorPrimary), theme.border(.borderPrimary))
+        case .standard: return (theme.background(.bgBase), theme.border(.borderPrimary))
         case .extraLegroom: return (SemanticColor.info.bg, SemanticColor.info.base)
         case .exit: return (SemanticColor.warning.bg, SemanticColor.warning.base)
         case .premium: return (theme.background(.bgTurquoiseLight), theme.background(.bgTurquoise))

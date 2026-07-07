@@ -33,7 +33,7 @@ public struct ReviewCard: View {
     private let score: Double
     private let text: String
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .none
     private var date: Date?
@@ -140,7 +140,7 @@ public struct ReviewCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension ReviewCard {
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Container corner radius role (default `.box`).
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }

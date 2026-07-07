@@ -21,7 +21,7 @@ public extension CalendarTheme {
     /// |---|---|
     /// | `ink` (text + selected fill) | `text(.textPrimary)` |
     /// | `onInk` (on the selected fill) | `text(.textSecondaryInverse)` |
-    /// | `surface` (page / cell bg) | `background(.bgElevatorPrimary)` |
+    /// | `surface` (page / cell bg) | `background(.bgBase)` |
     /// | `line` (borders / disabled) | `border(.borderPrimary)` |
     /// | `weekendText` | `text(.textTertiary)` |
     /// | `todayRing` | `foreground(.fgHero)` |
@@ -33,7 +33,7 @@ public extension CalendarTheme {
         self.init(
             ink: theme.text(.textPrimary),
             onInk: theme.text(.textSecondaryInverse),
-            surface: theme.background(.bgElevatorPrimary),
+            surface: theme.background(.bgBase),
             line: theme.border(.borderPrimary),
             weekendText: theme.text(.textTertiary),
             todayRing: theme.foreground(.fgHero),

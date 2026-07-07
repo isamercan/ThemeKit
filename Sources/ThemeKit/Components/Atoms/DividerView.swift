@@ -73,7 +73,7 @@ public struct DividerView: View {
                 theme.border(.borderPrimary).frame(height: 1)
             case .medium, .large:
                 theme.border(.borderPrimary).frame(height: 1)
-                theme.background(.bgElevatorPrimary).frame(height: size.height - 1)
+                theme.background(.bgBase).frame(height: size.height - 1)
             }
         }
     }

@@ -30,7 +30,7 @@ public struct FlightResultRow: View {
     private let departure: Date
     private let arrival: Date
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var flightNo: String?
     private var cabinClass: String?
     private var airlineSystemImage = "airplane.circle.fill"
@@ -161,7 +161,7 @@ public struct FlightResultRow: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightResultRow {
-    /// Surface fill (background token key, default `.bgWhite`) — feeds the
+    /// Surface fill (background token key, default `.bgBase`) — feeds the
     /// active `CardStyle`'s configuration.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Flight number, e.g. "TK 2434".

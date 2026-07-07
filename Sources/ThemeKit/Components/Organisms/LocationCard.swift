@@ -52,7 +52,7 @@ public struct LocationCard: View {
     private let title: String
     private let coordinate: CLLocationCoordinate2D
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var subtitle: String?
     private var distance: String?
     private var mapHeight: CGFloat = 140
@@ -203,7 +203,7 @@ public struct LocationCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LocationCard {
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// An address line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }

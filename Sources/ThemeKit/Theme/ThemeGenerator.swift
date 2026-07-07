@@ -174,7 +174,7 @@ enum ThemeGenerator {
         ("systemcolors/fg-warning", .d("warning", 500)), ("systemcolors/fg-info", .d("info", 500)),
     ]
     private static let background: [(String, Tok)] = [
-        ("bg-white", .a("ffffff", "181c24")), ("bg-hero", .d("primary", 500)),
+        ("bg-white", .a("ffffff", "181c24")), ("bg-base", .d("neutral", 50)), ("bg-hero", .d("primary", 500)),
         ("bg-elevator-primary", .d("neutral", 50)), ("bg-elevator-tertiary", .d("primary", 50)),
         ("bg-secondary", .d("neutral", 300)), ("bg-secondary-light", .d("neutral", 100)),
         ("bg-tertiary", .a("000929", "3a4150")),
@@ -236,7 +236,7 @@ enum ThemeGenerator {
         ("soft", [("3352a414", 6, 0, 2)]),
     ]
 
-    private static let surfaceTintKeys: Set<String> = ["background.bg-white", "background.bg-tertiary"]
+    private static let surfaceTintKeys: Set<String> = ["background.bg-tertiary"]
 
     // MARK: - Public entry point
 
@@ -245,6 +245,7 @@ enum ThemeGenerator {
     /// Mirrors daisyUI's `base-100 … base-300` ramp.
     private static let baseSurfaceBlend: [(String, Double)] = [
         ("background.bg-white", 0),
+        ("background.bg-base", 0),
         ("background.bg-elevator-primary", 5),
         ("background.bg-secondary-light", 8),
         ("background.bg-secondary", 16),

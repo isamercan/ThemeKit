@@ -38,7 +38,7 @@ public struct LoyaltyCard: View {
     private let tier: String
     private let points: Int
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var memberName: String?
     private var unit: String = "pts"
     private var progress: Double?
@@ -173,7 +173,7 @@ public struct LoyaltyCard: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension LoyaltyCard {
-    /// Back-face surface fill (background token key, default `.bgWhite`). Feeds the
+    /// Back-face surface fill (background token key, default `.bgBase`). Feeds the
     /// active `CardStyle`'s configuration; the gradient front face is unaffected.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// The member's name, shown under the tier.

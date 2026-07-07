@@ -54,7 +54,7 @@ public struct PaymentCardField: View {
     // Config — mutated only through the modifiers below (R2).
     private var holder: Binding<String>?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var numberPlaceholder = "Card number"
     private var holderPlaceholder = "Cardholder name"
 
@@ -105,7 +105,7 @@ public struct PaymentCardField: View {
     /// `hasError`/`hasWarning` are always `false` (this component has no
     /// validation axis); `size` is `.medium` — the rows have no `TextInputSize`
     /// axis (they keep their fixed 52pt min-height in the content). A custom
-    /// `surface(_:)` key (anything other than the default `.bgWhite`) is painted
+    /// `surface(_:)` key (anything other than the default `.bgBase`) is painted
     /// inside the content so the modifier keeps working; with the default key the
     /// fill is left entirely to the style.
     private func fieldBox<Content: View>(_ role: FieldRole, @ViewBuilder _ content: () -> Content) -> some View {
@@ -185,7 +185,7 @@ public extension PaymentCardField {
     func holder(_ binding: Binding<String>) -> Self { copy { $0.holder = binding } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Custom fill for the field rows, painted *inside* the ``FieldStyle`` chrome.
-    /// With the default `.bgWhite` the fill is left entirely to the style.
+    /// With the default `.bgBase` the fill is left entirely to the style.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func placeholders(number: String? = nil, holder: String? = nil) -> Self {
         copy { if let number { $0.numberPlaceholder = number }; if let holder { $0.holderPlaceholder = holder } }

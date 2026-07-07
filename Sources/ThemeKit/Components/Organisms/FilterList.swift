@@ -40,7 +40,7 @@ public struct FilterList: View {
     private var bordered = false
     private var showsSeparators = true
     private var selectAllTitle: String?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(_ options: [FilterOption], selection: Binding<Set<String>>) {   // R1
         self.options = options
@@ -119,7 +119,7 @@ public extension FilterList {
     func showsSeparators(_ on: Bool = true) -> Self { copy { $0.showsSeparators = on } }
     /// Adds a "select all" master row with the given title (nil hides it).
     func selectAll(_ title: String?) -> Self { copy { $0.selectAllTitle = title } }
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

@@ -71,7 +71,7 @@ public struct FlightRoute: View {
                 if stops > 0 {
                     HStack(spacing: 10) {
                         ForEach(0..<min(stops, 3), id: \.self) { _ in
-                            Circle().fill(theme.background(.bgElevatorPrimary)).frame(width: 6, height: 6)
+                            Circle().fill(theme.background(.bgBase)).frame(width: 6, height: 6)
                                 .overlay(Circle().stroke(theme.text(.textTertiary), lineWidth: 1.5))
                         }
                     }

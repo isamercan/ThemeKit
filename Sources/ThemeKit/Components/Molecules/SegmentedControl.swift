@@ -88,7 +88,7 @@ public struct SegmentedControl: View {
             }
         }
         .padding(4)
-        .background(theme.background(.bgElevatorPrimary),
+        .background(theme.background(.bgBase),
                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
         .opacity(isEnabled ? 1 : 0.5)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)

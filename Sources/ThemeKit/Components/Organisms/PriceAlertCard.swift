@@ -37,7 +37,7 @@ public struct PriceAlertCard: View {
     private var trend: PriceTrend?
     private var trendText: String?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .none
 

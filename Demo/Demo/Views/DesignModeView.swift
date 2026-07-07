@@ -50,7 +50,7 @@ struct DesignModeView: View {
                 }
                 .padding()
             }
-            .background(theme.background(.bgElevatorPrimary).ignoresSafeArea())
+            .background(theme.background(.bgBase).ignoresSafeArea())
             .navigationTitle("Design Mode")
             .overlay { if loading { ProgressView().controlSize(.large) } }
         }

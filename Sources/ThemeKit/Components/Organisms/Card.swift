@@ -154,5 +154,5 @@ struct CardShadow: ViewModifier {
         .elevation(.elevated)
     }
     .padding()
-    .background(theme.background(.bgElevatorPrimary))
+    .background(theme.background(.bgBase))
 }

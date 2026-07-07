@@ -118,7 +118,7 @@ public struct SeatCell: View {
             .font(.system(size: 8, weight: .bold))
             .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
             .padding(2)
-            .background(theme.background(.bgElevatorPrimary), in: Circle())
+            .background(theme.background(.bgBase), in: Circle())
             .offset(x: 3, y: -3)
     }
 

@@ -11,7 +11,7 @@ public enum InfoBannerType {
 
     func background(_ theme: Theme) -> Color {
         switch self {
-        case .neutral: return theme.background(.bgElevatorPrimary)
+        case .neutral: return theme.background(.bgBase)
         case .info: return theme.background(.systemcolorsBgInfoLight)
         case .success: return theme.background(.systemcolorsBgSuccessLight)
         case .warning: return theme.background(.systemcolorsBgWarningLight)

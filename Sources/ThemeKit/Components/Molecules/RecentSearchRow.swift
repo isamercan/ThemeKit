@@ -29,7 +29,7 @@ public struct RecentSearchRow: View {
     private var onRemove: (() -> Void)?
     private var accent: SemanticColor?
     private var bordered = false
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(from: String, to: String, action: @escaping () -> Void = {}) {   // R1
         self.from = from
@@ -97,7 +97,7 @@ public extension RecentSearchRow {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Wrap in a bordered surface (default off — flush list row).
     func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
-    /// Surface fill of the bordered variant (background token key, default `.bgWhite`).
+    /// Surface fill of the bordered variant (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

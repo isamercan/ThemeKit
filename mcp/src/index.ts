@@ -487,7 +487,7 @@ server.registerTool("a11y_audit", {
 
 const SCAFFOLDS: Record<string, string> = {
   form: `Card(title: "Sign up") {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    TextInput("Email", text: $email, leadingSystemImage: "envelope").a11yID("email")\n    TextInput("Password", text: $pw, isSecure: true).a11yID("pw")\n    Checkbox("Accept terms", isChecked: $agree)\n    PrimaryButton("Create account", block: true) { submit() }.disabled(!agree)\n  }\n}`,
-  list: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.sm.value) {\n    ForEach(items) { item in Card { ListRow(title: item.title, subtitle: item.subtitle) } }\n  }.padding(Theme.SpacingKey.md.value)\n}.background(theme.background(.bgElevatorPrimary))`,
+  list: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.sm.value) {\n    ForEach(items) { item in Card { ListRow(title: item.title, subtitle: item.subtitle) } }\n  }.padding(Theme.SpacingKey.md.value)\n}.background(theme.background(.bgWhite))`,
   detail: `ScrollView {\n  VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {\n    Title("Detail")\n    HStack { Badge("Info").badgeStyle(.info); Rating(value: 4.5) }\n    PrimaryButton("Continue", block: true) {}\n  }.padding(Theme.SpacingKey.lg.value)\n}`,
   settings: `ScrollView {\n  VStack(spacing: Theme.SpacingKey.md.value) {\n    Card(title: "Preferences") { ToggleGroup { ThemeToggle(isOn: $notify) } }\n    Card(title: "Theme") { ThemePicker(selection: $active) }\n  }.padding(Theme.SpacingKey.md.value)\n}`,
 };
@@ -519,7 +519,7 @@ server.registerTool("compose_screen", {
   const inner = body.map((l) => indent + indent + l).join("\n");
   const stack = `${indent}VStack(alignment: .leading, spacing: Theme.SpacingKey.${sp}.value) {\n${inner}\n${indent}}`;
   let composed: string;
-  if (layout === "scroll") composed = `ScrollView {\n${stack}\n${indent}.padding(Theme.SpacingKey.${sp}.value)\n}\n.background(theme.background(.bgElevatorPrimary))`;
+  if (layout === "scroll") composed = `ScrollView {\n${stack}\n${indent}.padding(Theme.SpacingKey.${sp}.value)\n}\n.background(theme.background(.bgWhite))`;
   else if (layout === "card") composed = `Card {\n${stack}\n}`;
   else composed = stack.replace(/^ {4}/, "").replace(/\n {4}/g, "\n");
   const note = unknown.length ? `\n\n⚠️ Unknown components (verify with search_components / list_components): ${unknown.join(", ")}` : "";

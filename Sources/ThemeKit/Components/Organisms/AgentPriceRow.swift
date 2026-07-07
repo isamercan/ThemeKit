@@ -35,7 +35,7 @@ public struct AgentPriceRow: View {
     private var ctaTitle = "Select"
     private var recommended = false
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var radiusRole: Theme.RadiusRole = .box
 
     public init(_ provider: String, action: @escaping () -> Void = {}) {   // R1

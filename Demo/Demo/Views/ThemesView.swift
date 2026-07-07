@@ -33,7 +33,7 @@ struct ThemesView: View {
                 }
                 .padding()
             }
-            .background(theme.background(.bgElevatorPrimary).ignoresSafeArea())
+            .background(theme.background(.bgBase).ignoresSafeArea())
             .navigationTitle("Themes")
         }
     }

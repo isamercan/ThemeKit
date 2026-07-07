@@ -37,7 +37,7 @@ public struct MapCallout: View {
     private var currencyCode = "TRY"
     private var onSelect: (() -> Void)?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var showsPointer = true
 
     public init(title: String) { self.title = title }   // R1

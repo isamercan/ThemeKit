@@ -29,7 +29,7 @@ public struct SwapButton: View {
                 .font(.system(size: diameter * 0.42, weight: .semibold))
                 .foregroundStyle(theme.foreground(.fgHero))
                 .frame(width: diameter, height: diameter)
-                .background(theme.background(.bgElevatorPrimary), in: Circle())
+                .background(theme.background(.bgBase), in: Circle())
                 .overlay { if bordered { Circle().stroke(theme.border(.borderPrimary), lineWidth: 1) } }
         }
         .buttonStyle(.plain)

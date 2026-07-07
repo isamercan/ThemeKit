@@ -37,7 +37,7 @@ public struct TicketStub<Content: View>: View {
     private var notchRadius: CGFloat = 10
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .soft
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var dashKey: Theme.BorderColorKey = .borderPrimary
     private var paddingKey: Theme.SpacingKey = .md
 
@@ -118,7 +118,7 @@ public extension TicketStub {
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
     /// Surface elevation: none / soft / elevated.
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
-    /// Surface fill (background token key, default `.bgWhite`).
+    /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Perforation dash colour (border token key, default `.borderPrimary`).
     func dashColor(_ key: Theme.BorderColorKey) -> Self { copy { $0.dashKey = key } }

@@ -39,7 +39,7 @@ public struct AncillaryCard: View {
     private var addTitle = "Add"
     private var addedTitle = "Added"
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var radiusRole: Theme.RadiusRole = .box
 
     public init(_ title: String) { self.title = title }   // R1

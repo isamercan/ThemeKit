@@ -47,7 +47,7 @@ public struct BoardingPass: View {
     private var barcodeValue: String?
     private var qrValue: String?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var elevation: CardElevation = .elevated
 
     public init(passenger: String, from: String, to: String) {   // R1
