@@ -2,7 +2,8 @@
 //  MeterStyle.swift
 //  ThemeKit
 //
-//  The `ButtonStyle`-shaped styling hook for linear meters (`ProgressBar`).
+//  The `ButtonStyle`-shaped styling hook for meters (`ProgressBar`,
+//  `RadialProgress`).
 //  The split is: DATA lives in the component, GEOMETRY lives in the style.
 //  `ProgressBar` clamps the fraction, resolves the fill (color override >
 //  status gradient > status solid), the track token and the label block, then
@@ -182,18 +183,85 @@ public extension MeterStyle where Self == StripedMeterStyle {
     static var striped: StripedMeterStyle { StripedMeterStyle() }
 }
 
+/// The ring meter geometry (`RadialProgress`'s stock look): a circular track,
+/// a trim-proportional fill ring on top, and the label centered inside.
+/// Diameter, stroke width and the dashboard gap are geometry, so they live
+/// here as style parameters rather than in `MeterStyleConfiguration` (which
+/// stays untouched for source/AB compatibility with the linear styles) —
+/// `RadialProgress` forwards its `size(_:)` / `lineWidth(_:)` / `dashboard(_:)`
+/// modifiers into this init when it builds its default style.
+public struct RadialMeterStyle: MeterStyle {
+    /// Diameter of the ring, in points.
+    public var size: CGFloat
+    /// Stroke width of both rings.
+    public var lineWidth: CGFloat
+    /// Dashboard (gapped) variant — leaves a quarter of the circle open at the
+    /// bottom (Ant Progress type="dashboard").
+    public var dashboard: Bool
+
+    public init(size: CGFloat = 64, lineWidth: CGFloat = 6, dashboard: Bool = false) {
+        self.size = size
+        self.lineWidth = lineWidth
+        self.dashboard = dashboard
+    }
+
+    public func makeBody(configuration: MeterStyleConfiguration) -> some View {
+        RadialMeterRing(configuration: configuration, size: size, lineWidth: lineWidth, dashboard: dashboard)
+    }
+}
+
+private struct RadialMeterRing: View {
+    let configuration: MeterStyleConfiguration
+    let size: CGFloat
+    let lineWidth: CGFloat
+    let dashboard: Bool
+
+    private var gap: CGFloat { dashboard ? 0.25 : 0 }            // fraction left open
+    private var rotation: Double { dashboard ? 90 + Double(gap) * 180 : -90 }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .trim(from: 0, to: 1 - gap)
+                .stroke(configuration.track, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(rotation))
+            Circle()
+                .trim(from: 0, to: configuration.fraction * (1 - gap))
+                .stroke(configuration.fill, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(rotation))
+            if let label = configuration.label { label }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+public extension MeterStyle where Self == RadialMeterStyle {
+    /// The circular ring geometry (`RadialProgress`'s default), at the stock
+    /// 64pt / 6pt metrics. Use `RadialMeterStyle(size:lineWidth:dashboard:)`
+    /// for other metrics or the dashboard gap.
+    static var radial: RadialMeterStyle { RadialMeterStyle() }
+}
+
 // MARK: - Type erasure + environment plumbing
 
 struct AnyMeterStyle: MeterStyle {
+    /// True only on the environment key's built-in default — i.e. no
+    /// `.meterStyle(_:)` applied anywhere above. Components whose stock
+    /// geometry is *not* linear (`RadialProgress`) read this to keep their own
+    /// default drawing while still honoring an explicitly set custom style.
+    /// `ProgressBar` never reads it: its stock geometry *is* the default
+    /// `LinearMeterStyle`, so the flag changes nothing there.
+    let isDefault: Bool
     private let _makeBody: @MainActor (MeterStyleConfiguration) -> AnyView
-    init<S: MeterStyle>(_ style: sending S) {
+    init<S: MeterStyle>(_ style: sending S, isDefault: Bool = false) {
+        self.isDefault = isDefault
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: MeterStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct MeterStyleKey: EnvironmentKey {
-    static let defaultValue = AnyMeterStyle(LinearMeterStyle())
+    static let defaultValue = AnyMeterStyle(LinearMeterStyle(), isDefault: true)
 }
 
 extension EnvironmentValues {

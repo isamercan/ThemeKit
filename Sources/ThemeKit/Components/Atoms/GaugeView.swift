@@ -2,6 +2,10 @@
 //  GaugeView.swift
 //  ThemeKit
 //
+//  MeterStyle exception: this atom wraps SwiftUI's native `Gauge`, whose
+//  geometry is drawn by the system `GaugeStyle` — there is no ThemeKit-drawn
+//  track/fill to hand to a `MeterStyle`, so it intentionally does not adopt it.
+//
 
 import SwiftUI
 
