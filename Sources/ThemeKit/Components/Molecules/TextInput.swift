@@ -126,7 +126,7 @@ public struct TextInputModel {
 ///     TextInput("Email", text: $email)
 ///         .icon(leading: "envelope").clearable()
 ///         .keyboard(.emailAddress, contentType: .emailAddress)
-///         .errorText(invalid ? "Required" : nil)
+///         .validate([.required(), .email()], on: .editingEnd)   // daisyUI Validator
 ///         .disabled(!editable)            // native — R3
 public struct TextInput: View {
     @Environment(\.theme) private var theme
@@ -144,6 +144,15 @@ public struct TextInput: View {
     private var helperText: String?
     private var errorText: String?
     private var warningText: String?
+
+    // Declarative validation (daisyUI Validator, see `ValidationRule.swift`):
+    // rules run at `validationTrigger` and their first failure is merged into
+    // `messages`, driving the existing error styling automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationCheck: ((String) -> String?)?
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
     @State private var reveal = false
@@ -164,7 +173,7 @@ public struct TextInput: View {
     private var floating: Bool { isFocused || !text.isEmpty }
     /// `infoMessages` plus the helper/error/warning conveniences (computed merge).
     private var messages: [InfoMessage] {
-        var messages = model.infoMessages
+        var messages = model.infoMessages + validationMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
         if let warningText { messages.append(InfoMessage(warningText, kind: .warning)) }
         if let helperText { messages.append(InfoMessage(helperText, kind: .info)) }
@@ -195,6 +204,22 @@ public struct TextInput: View {
     static func isOverLimit(count: Int, maxLength: Int?) -> Bool {
         guard let maxLength else { return false }
         return count > maxLength
+    }
+
+    // MARK: Declarative validation (daisyUI Validator)
+
+    private var hasValidation: Bool { !validationRules.isEmpty || validationCheck != nil }
+
+    /// Runs the declared rules (first failure only, via `Validator`), then the
+    /// closure check; publishes the result and reports validity.
+    private func runValidation(_ value: String) {
+        guard hasValidation else { return }
+        var failures = Validator.validate(value, validationRules)
+        if failures.isEmpty, let validationCheck, let message = validationCheck(value) {
+            failures = [InfoMessage(message, kind: .error)]
+        }
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
     }
 
     private var fieldContent: some View {
@@ -287,12 +312,16 @@ public struct TextInput: View {
             if let formatter = model.formatter { v = formatter(v) }
             if model.hardLimit, let maxLength = model.maxLength, v.count > maxLength { v = String(v.prefix(maxLength)) }
             if v != text { text = v }
+            // `.live` validates every change; other triggers re-validate once a
+            // failure is visible so the error clears as the user fixes it.
+            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(v) }
         }
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !isFocused { isFocused = true }
         }
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
         }
     }
 
@@ -317,7 +346,10 @@ public struct TextInput: View {
         .textInputTraits(keyboard: model.keyboardType,
                          contentType: model.textContentType,
                          capitalization: model.autocapitalization)
-        .onSubmit { model.onSubmit?() }
+        .onSubmit {
+            runValidation(text)   // submit is the strongest trigger — always validate
+            model.onSubmit?()
+        }
         .accessibilityLabel(model.label)
         .accessibilityValue(model.isSecure ? "" : text)
     }
@@ -415,6 +447,27 @@ public extension TextInput {
 
     /// Validation / info messages rendered under the field (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.model.infoMessages = messages } }
+
+    /// Declarative validation (daisyUI Validator): evaluates `rules` at
+    /// `trigger` and feeds the first failure into the message list / error
+    /// styling automatically — no hand-managed `infoMessages`.
+    ///
+    ///     TextInput("Email", text: $email)
+    ///         .validate([.required(), .email()], on: .editingEnd)
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Closure form of `validate(_:on:)` for dynamic failure messages:
+    /// return the error text, or `nil` when the value passes. Runs after the
+    /// rule array (if both are declared).
+    func validate(on trigger: ValidationTrigger = .editingEnd, _ check: @escaping (String) -> String?) -> Self {
+        copy { $0.validationCheck = check; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity rule failed (e.g. to gate a submit button).
+    func onValidation(_ handler: ((Bool) -> Void)?) -> Self { copy { $0.onValidation = handler } }
 
     /// Drive focus from outside (e.g. `FormValidator.focusBinding`).
     func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }

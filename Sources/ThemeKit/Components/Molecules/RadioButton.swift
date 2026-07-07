@@ -59,6 +59,7 @@ public struct RadioButton: View {
     private var style: RadioButtonStyle = .plain
     private var gap: RadioButtonPadding = .small
     private var backgroundColor: Color?
+    private var accent: SemanticColor?
     private var verticalAlignment: VerticalAlignment = .center
     private var accessibilityID: String?
 
@@ -76,7 +77,12 @@ public struct RadioButton: View {
 
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
     private var filled: Bool { isSelected && type == .check && style == .plain }
-    private var fillColor: Color { backgroundColor ?? theme.background(isEnabled ? .bgHero : .bgSecondary) }
+    /// Raw override wins, then the semantic accent (enabled only), then the hero token.
+    private var fillColor: Color {
+        if let backgroundColor { return backgroundColor }
+        if isEnabled, let accent { return accent.solid }
+        return theme.background(isEnabled ? .bgHero : .bgSecondary)
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -115,7 +121,8 @@ public struct RadioButton: View {
         if !isEnabled { return theme.border(.borderPrimary) }
         if dominant == .error { return theme.border(.systemcolorsBorderError) }
         if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
-        return (isSelected) ? theme.border(.borderHero) : theme.border(.borderPrimary)
+        guard isSelected else { return theme.border(.borderPrimary) }
+        return accent?.border ?? theme.border(.borderHero)
     }
 
     @ViewBuilder
@@ -127,7 +134,7 @@ public struct RadioButton: View {
             case (.check, .plain):
                 Image(systemName: "checkmark")
                     .font(.system(size: controlSize.checkboxSide * 0.55, weight: .bold))
-                    .foregroundStyle(theme.foreground(.fgSecondary))
+                    .foregroundStyle((isEnabled && backgroundColor == nil) ? (accent?.onSolid ?? theme.foreground(.fgSecondary)) : theme.foreground(.fgSecondary))
             case (.check, .inner):
                 ZStack {
                     Circle().fill(theme.background(.bgWhite))
@@ -171,8 +178,13 @@ public extension RadioButton {
     /// Gap between the radio and its label: small / medium / large.
     func gap(_ p: RadioButtonPadding) -> Self { copy { $0.gap = p } }
 
-    /// Override the selected-fill color (defaults to the `.bgHero` token, R4).
+    /// Override the selected-fill color (defaults to the `.bgHero` token, R4);
+    /// prefer the token-fed `accent(_:)`. Wins over `accent`.
     func fillColor(_ c: Color?) -> Self { copy { $0.backgroundColor = c } }
+
+    /// Semantic tint for the selected fill/border (glyph auto-contrasts); `nil`
+    /// (default) uses the hero tokens. (daisyUI `radio-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
     /// Validation / info messages rendered under the control (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
@@ -198,6 +210,8 @@ public extension RadioButton {
         RadioButton(isSelected: .constant(true)).controlSize(.small)
         RadioButton(isSelected: .constant(true)).disabled(true)
         RadioButton("Remember me", isSelected: .constant(true)).type(.check).radioStyle(.inner).gap(.medium)
+        RadioButton("Success accent", isSelected: .constant(true)).accent(.success)
+        RadioButton("Error accent", isSelected: .constant(true)).type(.check).accent(.error)
     }
     .padding()
 }

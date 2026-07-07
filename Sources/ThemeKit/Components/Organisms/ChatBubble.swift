@@ -22,6 +22,7 @@ public struct ChatBubble: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var side: ChatSide = .incoming
     private var avatarSystemImage: String?
+    private var accent: SemanticColor?
 
     public init(_ text: String, author: String? = nil, time: String? = nil) {   // R1
         self.text = text
@@ -43,16 +44,26 @@ public struct ChatBubble: View {
                 }
                 Text(text)
                     .textStyle(.bodyBase400)
-                    .foregroundStyle(side == .incoming ? theme.text(.textPrimary) : theme.foreground(.fgSecondary))
+                    .foregroundStyle(bubbleForeground)
                     .padding(.horizontal, Theme.SpacingKey.md.value)
                     .padding(.vertical, Theme.SpacingKey.sm.value)
-                    .background(side == .incoming ? theme.background(.bgElevatorTertiary) : theme.background(.bgHero),
+                    .background(bubbleFill,
                                in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
             }
 
             if side == .incoming { Spacer(minLength: Theme.SpacingKey.xl4.value) }
             if side == .outgoing { avatar }
         }
+    }
+
+    /// Accent tint wins over the side defaults (daisyUI `chat-bubble-{color}`).
+    private var bubbleFill: Color {
+        if let accent { return accent.solid }
+        return side == .incoming ? theme.background(.bgElevatorTertiary) : theme.background(.bgHero)
+    }
+    private var bubbleForeground: Color {
+        if let accent { return accent.onSolid }
+        return side == .incoming ? theme.text(.textPrimary) : theme.foreground(.fgSecondary)
     }
 
     @ViewBuilder
@@ -72,6 +83,10 @@ public extension ChatBubble {
     /// Leading/trailing avatar SF Symbol (positioned by `side`).
     func icon(_ systemImage: String?) -> Self { copy { $0.avatarSystemImage = systemImage } }
 
+    /// Semantic tint for the bubble fill (foreground auto-contrasts); `nil`
+    /// (default) keeps the side-based look. (daisyUI `chat-bubble-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -83,6 +98,8 @@ public extension ChatBubble {
     VStack(spacing: 12) {
         ChatBubble("Hello! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming).icon("person.fill")
         ChatBubble("Thanks, great!", time: "09:25").side(.outgoing).icon("person.fill")
+        ChatBubble("Payment received.").side(.outgoing).accent(.success)
+        ChatBubble("Gate changed to B12.").side(.incoming).accent(.warning)
     }
     .padding()
 }

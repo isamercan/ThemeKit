@@ -28,7 +28,9 @@ public struct MultiLineTextInput: View {
     private var characterLimit: Int?
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
-    private var minHeight: CGFloat = 120
+    private var size: TextInputSize = .medium
+    private var minHeightOverride: CGFloat?
+    private var countStyle: TextInputCountStyle = .count
     private var accessibilityID: String?
 
     @FocusState private var isFocused: Bool
@@ -49,6 +51,17 @@ public struct MultiLineTextInput: View {
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
+
+    /// An explicit `minHeight(_:)` wins over the `size(_:)` preset (order-free).
+    private var minHeight: CGFloat {
+        if let minHeightOverride { return minHeightOverride }
+        switch size {
+        case .xsmall: return 80
+        case .small: return 100
+        case .medium: return 120   // default — original metric
+        case .large: return 160
+        }
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -92,7 +105,7 @@ public struct MultiLineTextInput: View {
                     .a11y(A11yElement.Field.message, in: accessibilityID)
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 if let characterLimit {
-                    Text("\(text.count)/\(characterLimit)")
+                    Text(TextInput.counterText(count: text.count, maxLength: characterLimit, style: countStyle))
                         .textStyle(.bodySm400)
                         .foregroundStyle(theme.text(.textTertiary))
                 }
@@ -137,14 +150,22 @@ public extension MultiLineTextInput {
     /// Caps the input length and shows a `count/limit` counter.
     func characterLimit(_ limit: Int?) -> Self { copy { $0.characterLimit = limit } }
 
+    /// How the character counter reads: `12/50` (`.count`, default) or `38 left`
+    /// (`.remaining`) — TextInput parity.
+    func countStyle(_ style: TextInputCountStyle) -> Self { copy { $0.countStyle = style } }
+
+    /// Editor-height preset (`.xsmall` 80 … `.large` 160; defaults to `.medium`,
+    /// 120). An explicit `minHeight(_:)` wins regardless of order.
+    func size(_ s: TextInputSize) -> Self { copy { $0.size = s } }
+
     /// Convenience error message appended as an `.error` `InfoMessage`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
 
     /// Validation / hint messages rendered beneath the editor.
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
-    /// Minimum editor height (defaults to 120, R4).
-    func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeight = height } }
+    /// Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
+    func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeightOverride = height } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
@@ -161,9 +182,13 @@ public extension MultiLineTextInput {
     struct Demo: View {
         @State var text = ""
         var body: some View {
-            MultiLineTextInput("Notes", text: $text)
-                .placeholder("Write something…").characterLimit(200)
-                .padding()
+            VStack(spacing: 16) {
+                MultiLineTextInput("Notes", text: $text)
+                    .placeholder("Write something…").characterLimit(200)
+                MultiLineTextInput("Short note", text: $text)
+                    .size(.xsmall).characterLimit(80).countStyle(.remaining)
+            }
+            .padding()
         }
     }
     return Demo()

@@ -53,6 +53,7 @@ public struct Checkbox: View {
     private var type: CheckboxType = .plain
     private var isIndeterminate: Bool = false
     private var alignment: VerticalAlignment = .center
+    private var accent: SemanticColor?
     private var accessibilityID: String?
 
     @Environment(\.microAnimations) private var micro
@@ -70,6 +71,17 @@ public struct Checkbox: View {
     private var side: CGFloat { customSize ?? controlSize.checkboxSide }
     private var selected: Bool { isChecked || isIndeterminate }
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
+
+    /// Selected fill — the semantic accent when set (and enabled), else the hero token.
+    private var selectedFill: Color {
+        if isEnabled, let accent { return accent.solid }
+        return theme.background(isEnabled ? .bgHero : .bgSecondary)
+    }
+    /// Glyph tint on top of the selected fill (auto-contrasts against an accent).
+    private var glyphColor: Color {
+        if isEnabled, let accent { return accent.onSolid }
+        return theme.foreground(.fgSecondary)
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -121,7 +133,7 @@ public struct Checkbox: View {
             guard selected else { return .clear }
             // `.inner` keeps the outer box transparent; the inset square is the fill.
             if case .inner = type { return .clear }
-            return theme.background(isEnabled ? .bgHero : .bgSecondary)
+            return selectedFill
         }
     }
 
@@ -130,7 +142,8 @@ public struct Checkbox: View {
         if !isEnabled { return theme.border(.borderPrimary) }
         if dominant == .error { return theme.border(.systemcolorsBorderError) }
         if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
-        return selected ? theme.border(.borderHero) : theme.border(.borderPrimary)
+        guard selected else { return theme.border(.borderPrimary) }
+        return accent?.border ?? theme.border(.borderHero)
     }
 
     @ViewBuilder
@@ -138,20 +151,20 @@ public struct Checkbox: View {
         if case .inner = type {
             if selected {
                 RoundedRectangle(cornerRadius: max(radius - 2, 1), style: .continuous)
-                    .fill(theme.background(isEnabled ? .bgHero : .bgSecondary))
+                    .fill(selectedFill)
                     .padding(side * 0.2)
                     .overlay {
                         if isIndeterminate {
                             Image(systemName: "minus")
                                 .font(.system(size: side * 0.34, weight: .bold))
-                                .foregroundStyle(theme.foreground(.fgSecondary))
+                                .foregroundStyle(glyphColor)
                         }
                     }
             }
         } else if selected {
             Image(systemName: isIndeterminate ? "minus" : "checkmark")
                 .font(.system(size: side * 0.6, weight: .bold))
-                .foregroundStyle(theme.foreground(.fgSecondary))
+                .foregroundStyle(glyphColor)
         }
     }
 }
@@ -170,6 +183,10 @@ public extension Checkbox {
 
     /// Overrides the box side length, bypassing the native `.controlSize` metric.
     func customSize(_ side: CGFloat?) -> Self { copy { $0.customSize = side } }
+
+    /// Semantic tint for the selected fill/border (glyph auto-contrasts); `nil`
+    /// (default) uses the hero tokens. (daisyUI `checkbox-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
     /// Validation / info messages rendered under the control (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
@@ -192,6 +209,8 @@ public extension Checkbox {
         Checkbox(isChecked: .constant(true)).indeterminate()
         Checkbox(isChecked: .constant(true)).controlSize(.small)
         Checkbox(isChecked: .constant(true)).disabled(true)
+        Checkbox("Success accent", isChecked: .constant(true)).accent(.success)
+        Checkbox("Warning accent", isChecked: .constant(true)).accent(.warning)
     }
     .padding()
 }

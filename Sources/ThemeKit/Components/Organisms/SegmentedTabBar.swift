@@ -20,8 +20,8 @@ public struct TabItem {
     }
 }
 
-/// Visual style of `SegmentedTabBar` (Ant Tabs `type`).
-public enum SegmentedTabBarStyle { case underline, card }
+/// Visual style of `SegmentedTabBar` (Ant Tabs `type`; `.pill` = daisyUI `tabs-box`).
+public enum SegmentedTabBarStyle { case underline, card, pill }
 
 /// Tab bar with a selection binding and an animated underline. Tabs can carry an
 /// icon, a count badge and a disabled state. (Ant Tabs parity.)
@@ -68,12 +68,16 @@ public struct SegmentedTabBar: View {
     }
 
     private var bar: some View {
-        HStack(spacing: style == .card ? Theme.SpacingKey.sm.value : (scrollable ? Theme.SpacingKey.lg.value : 0)) {
+        HStack(spacing: barSpacing) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 Group {
-                    if style == .card {
+                    switch style {
+                    case .card:
                         cardTab(index: index, item: item)
-                    } else {
+                    case .pill:
+                        pillTab(index: index, item: item)
+                            .frame(maxWidth: scrollable ? nil : .infinity)
+                    case .underline:
                         tab(index: index, item: item)
                             .frame(maxWidth: scrollable ? nil : .infinity)
                     }
@@ -91,8 +95,59 @@ public struct SegmentedTabBar: View {
                 .buttonStyle(.plain)
             }
         }
+        .padding(style == .pill ? Theme.SpacingKey.xs.value : 0)
+        .background {
+            if style == .pill {
+                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+                    .fill(theme.background(.bgElevatorTertiary))
+            }
+        }
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(items.indices.contains(selection) ? items[selection].title : "")
+    }
+
+    private var barSpacing: CGFloat {
+        switch style {
+        case .card: return Theme.SpacingKey.sm.value
+        case .pill: return Theme.SpacingKey.xs.value
+        case .underline: return scrollable ? Theme.SpacingKey.lg.value : 0
+        }
+    }
+
+    /// daisyUI `tabs-box`: the active tab is a filled pill sliding inside a boxed track.
+    private func pillTab(index: Int, item: TabItem) -> some View {
+        let isActive = index == selection
+        return Button {
+            withAnimation(motion) { selection = index }
+        } label: {
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                if let icon = item.systemImage {
+                    Image(systemName: icon).font(.system(size: 13, weight: .semibold))
+                }
+                Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
+                if let badge = item.badge {
+                    Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
+                        .padding(.horizontal, 5).padding(.vertical, 1)
+                        .background(theme.background(.systemcolorsBgError), in: Capsule())
+                }
+            }
+            .foregroundStyle(item.isEnabled
+                             ? (isActive ? theme.foreground(.fgSecondary) : theme.text(.textSecondary))
+                             : theme.text(.textDisabled))
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .frame(maxWidth: scrollable ? nil : .infinity)
+            .background {
+                if isActive {
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                        .fill(theme.background(.bgHero))
+                        .matchedGeometryEffect(id: "pill", in: underline)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!item.isEnabled)
     }
 
     private func cardTab(index: Int, item: TabItem) -> some View {
@@ -197,6 +252,7 @@ public struct SegmentedTabBar: View {
                                  TabItem("Reviews", badge: "12"),
                                  TabItem("Archived", isEnabled: false)], selection: $sel)
                 SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
+                SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
             }
             .padding()
         }
@@ -210,7 +266,7 @@ public extension SegmentedTabBar {
     /// Let the bar scroll horizontally instead of distributing tabs evenly.
     func scrollable(_ on: Bool = true) -> Self { copy { $0.scrollable = on } }
 
-    /// Visual treatment: underline / card.
+    /// Visual treatment: underline / card / pill (boxed track, filled active tab).
     func tabStyle(_ s: SegmentedTabBarStyle) -> Self { copy { $0.style = s } }
 
     /// Sets the accessibility-identifier namespace for this component (its
