@@ -367,7 +367,8 @@ swift = ['//',
          '',
          emit_enum("TextColorKey", "text", TEXT),
          '',
-         emit_enum("PaletteColorKey", "palette", {k: None for k in build_palette("056bfd")}),
+         emit_enum("PaletteColorKey", "palette",
+                   {k: None for k in build_palette("056bfd") if not k.startswith("neutral-raw/")}),
          '}',
          '']
 with open(os.path.join(GEN, "ColorTokens.generated.swift"), "w") as f:

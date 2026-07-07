@@ -290,7 +290,8 @@ enum ThemeGenerator {
                 colors.append(.init(name: name, hex: hex))
             }
         }
-        for (key, hex) in palette {
+        for (key, hex) in palette where !key.hasPrefix("neutral-raw/") {
+            // neutral-raw is resolution-only plumbing (untinted bg-base source).
             colors.append(.init(name: "palette." + key.replacingOccurrences(of: "/", with: "."), hex: hex))
         }
 
