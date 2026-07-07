@@ -11,20 +11,28 @@ public struct ScoreBadge: View {
     @Environment(\.theme) private var theme
 
     private let score: Double
-    private let large: Bool
+
+    // Appearance — mutated only through the modifiers below (R2).
+    private var large: Bool
+    private var accent: SemanticColor?
 
     public init(_ score: Double, large: Bool = false) {
         self.score = score
         self.large = large
     }
 
+    /// Fill — the accent's solid role when set, else the stock turquoise token.
+    private var fill: Color { accent.map { $0.solid } ?? theme.background(.bgTurquoise) }
+    /// Content on the fill — auto-contrasting on a custom accent.
+    private var content: Color { accent.map { $0.onSolid } ?? theme.foreground(.fgSecondary) }
+
     public var body: some View {
         Text(String(format: "%.1f", score))
             .textStyle(large ? .labelMd700 : .labelSm700)
-            .foregroundStyle(theme.foreground(.fgSecondary))
+            .foregroundStyle(content)
             .padding(.horizontal, large ? Theme.SpacingKey.sm.value : Theme.SpacingKey.xs.value)
             .frame(minWidth: large ? 40 : 32, minHeight: large ? 32 : 24)
-            .background(theme.background(.bgTurquoise),
+            .background(fill,
                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
             // Give the bare number context: VoiceOver reads "Score: 9.0".
             .accessibilityElement(children: .ignore)
@@ -33,11 +41,29 @@ public struct ScoreBadge: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension ScoreBadge {
+    /// Larger box + type — the chainable twin of the init's `large:` flag.
+    func large(_ on: Bool = true) -> Self { copy { $0.large = on } }
+    /// Token-fed fill override (content auto-contrasts); `nil` keeps the
+    /// stock turquoise token.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     HStack {
         ScoreBadge(9.0)
         ScoreBadge(8.5)
         ScoreBadge(9.8, large: true)
+        ScoreBadge(7.4).accent(.warning)
+        ScoreBadge(9.2).large().accent(.success)
     }
     .padding()
 }
