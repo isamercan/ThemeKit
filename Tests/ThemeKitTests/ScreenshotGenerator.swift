@@ -454,6 +454,12 @@ final class ScreenshotGenerator: XCTestCase {
         } after: {
             Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
         }.frame(width: 320, height: 140))
+        organismsTravel()
+    }
+
+    /// The travel-wave organisms — split out to keep `organisms()` under the
+    /// linter's function-body ceiling.
+    private func organismsTravel() {
         shot("AgentPriceRow", AgentPriceRow("Skytrip") {}
             .rating(4.5).badge("Cheapest").subtitle("Free cancellation within 24h")
             .original(452).price(429, currencyCode: "USD").cta("Go to site").recommended()
