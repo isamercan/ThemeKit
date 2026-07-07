@@ -145,7 +145,11 @@ enum ThemeGenerator {
         for (family, base) in paletteBases {
             let shades: [String]
             if family == "neutral" {
-                shades = tintNeutral(dark ? neutralDark : neutralLight, primaryBase, tint)
+                let raw = dark ? neutralDark : neutralLight
+                // The UNTINTED ladder stays addressable: base-100 surfaces must
+                // remain true neutral on a re-skin (no accent wash on cards).
+                for (step, hex) in zip(steps, raw) { table["neutral-raw/\(step)"] = hex }
+                shades = tintNeutral(raw, primaryBase, tint)
             } else {
                 let seed = (family == "primary" || family == "info") ? primaryBase : base
                 shades = dark ? antGenerateDark(seed) : antGenerate(seed)
@@ -174,7 +178,7 @@ enum ThemeGenerator {
         ("systemcolors/fg-warning", .d("warning", 500)), ("systemcolors/fg-info", .d("info", 500)),
     ]
     private static let background: [(String, Tok)] = [
-        ("bg-white", .a("ffffff", "181c24")), ("bg-base", .d("neutral", 50)), ("bg-hero", .d("primary", 500)),
+        ("bg-white", .a("ffffff", "181c24")), ("bg-base", .d("neutral-raw", 50)), ("bg-hero", .d("primary", 500)),
         ("bg-elevator-primary", .d("neutral", 50)), ("bg-elevator-tertiary", .d("primary", 50)),
         ("bg-secondary", .d("neutral", 300)), ("bg-secondary-light", .d("neutral", 100)),
         ("bg-tertiary", .a("000929", "3a4150")),
