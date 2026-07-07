@@ -1893,3 +1893,79 @@ struct IconTileDemo: View {
         }
     }
 }
+
+// MARK: - FlightListItem
+
+struct FlightListItemDemo: View {
+    @State private var styleIdx = 1
+    @State private var stops = 0.0
+    @State private var badge = true
+    @State private var deal = true
+    @State private var priced = true
+    @State private var expanded = true
+    @State private var selected = false
+
+    private let dep = Date()
+    private let styles: [(String, AnyFlightListItemStyleBox)] = [
+        ("Compact", .init(.compact)), ("Timeline", .init(.timeline)), ("Fare board", .init(.fareBoard)),
+        ("Deal", .init(.deal)), ("Ticket", .init(.ticket)), ("Journey", .init(.journey)),
+        ("Slices", .init(.slices)), ("Timetable", .init(.timetable)),
+    ]
+
+    var body: some View {
+        ComponentStage("FlightListItem", inspector: [
+            ("style", styles[styleIdx].0), ("stops", "\(Int(stops))"), ("selected", "\(selected)"),
+        ]) {
+            item
+                .modifier(styles[styleIdx].1)
+                .frame(maxWidth: 380)
+        } knobs: {
+            Picker("Style", selection: $styleIdx) {
+                ForEach(Array(styles.enumerated()), id: \.offset) { i, s in Text(s.0).tag(i) }
+            }
+            HStack { Text("Stops"); SwiftUI.Slider(value: $stops, in: 0...2, step: 1) }
+            Toggle("Badge", isOn: $badge)
+            Toggle("Deal signal", isOn: $deal)
+            Toggle("Price", isOn: $priced)
+            Toggle("Expanded (Journey)", isOn: $expanded)
+            Toggle("Selected", isOn: $selected)
+            Text("All 8 styles render the same data — swap with .flightListItemStyle(_:).")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private var item: FlightListItem {
+        let out = FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                            departure: dep, arrival: dep.addingTimeInterval(245 * 60),
+                            stops: Int(stops), layover: stops > 0 ? "1h 40m layover in Vienna" : nil)
+        let back = FlightLeg(airline: "Skyline Air", from: "LHR", to: "IST",
+                             departure: dep.addingTimeInterval(6 * 86400),
+                             arrival: dep.addingTimeInterval(6 * 86400 + 230 * 60))
+        var item = FlightListItem(legs: [out, back])
+            .flightNo("SK 1123").cabin("Economy")
+            .sliceLabels(["Outbound · Fri", "Return · Thu"])
+            .fares([FlightFare("Eco Fly", price: 214, perks: ["bag.badge.questionmark"]),
+                    FlightFare("Eco Flex", price: 262, perks: ["suitcase.fill", "arrow.uturn.backward"]),
+                    FlightFare("Business", price: 590, perks: ["suitcase.fill", "sofa.fill"])])
+            .departures([0, 130, 265, 400, 545, 660, 790].map { dep.addingTimeInterval($0 * 60) },
+                        note: "Nonstop · 4h 05m · every ~2h")
+            .amenities(["wifi", "powerplug", "play.tv"])
+            .trend([0.82, 0.78, 0.9, 0.66, 0.52, 0.44])
+            .selected(selected)
+            .expanded($expanded)
+            .onSelect { }
+        if priced { item = item.price(214, currencyCode: "USD", caption: "from").original(deal ? 276 : nil) }
+        if badge { item = item.badge("Best") }
+        if deal { item = item.deal("23% below typical", tone: .success) }
+        return item
+    }
+}
+
+/// Boxes a concrete style so the demo's Picker can hold a heterogeneous list.
+struct AnyFlightListItemStyleBox: ViewModifier {
+    private let apply: (AnyView) -> AnyView
+    init<S: FlightListItemStyle>(_ style: S) {
+        apply = { AnyView($0.flightListItemStyle(style)) }
+    }
+    func body(content: Content) -> some View { apply(AnyView(content)) }
+}

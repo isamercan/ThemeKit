@@ -487,6 +487,9 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/StickyBookingBar.png" width="240" alt="StickyBookingBar"><br><sub><b>StickyBookingBar</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/TicketStub.png" width="240" alt="TicketStub"><br><sub><b>TicketStub</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FlightListItem.png" width="240" alt="FlightListItem"><br><sub><b>FlightListItem</b></sub></td>
+</tr>
+<tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/WindowFrame.png" width="240" alt="WindowFrame"><br><sub><b>WindowFrame</b></sub></td>
 </tr>
 </table>

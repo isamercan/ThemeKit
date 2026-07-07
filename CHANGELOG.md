@@ -5,6 +5,21 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.17.0] - 2026-07-08
+
+### Added
+- **FlightListItem** (organism) — a style-driven flight search-result list item.
+  The component owns the typed data (legs, fares, price, deal signals, schedule);
+  the entire layout is delegated to a new **`FlightListItemStyle`** protocol —
+  the most data-rich style hook in the library. Eight built-in styles cover the
+  industry's list-item archetypes (researched across Skyscanner, Google Flights,
+  Kayak, Hopper, Delta/THY, Kiwi, Expedia):
+  `.compact`, `.timeline` (default), `.fareBoard`, `.deal`, `.ticket`,
+  `.journey` (expandable, `expanded(_:)`-drivable), `.slices`, `.timetable`.
+  Plus a **FlightFare** model for fare-family shopping and modifiers for
+  deal signals (`deal(_:tone:)`, `trend(_:)`), schedules (`departures(_:note:)`)
+  and slices (`sliceLabels(_:)`).
+
 ## [0.16.0] - 2026-07-07
 
 ### Changed — flexibility wave 6: naming sweep, raw-type cleanup, grade-1 floor lift
