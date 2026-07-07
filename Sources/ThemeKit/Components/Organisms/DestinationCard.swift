@@ -7,6 +7,11 @@
 //  score row. Token-bound. Composes the atoms (RemoteImage, PriceTag, ScoreBadge,
 //  Tag) into one richly-configurable card, in the spirit of ``ListRow``.
 //
+//  The outer shell (surface fill, corner clipping, border, elevation shadow) is drawn
+//  by the active `CardStyle` from the environment — `.surface()` and `.elevation()`
+//  feed the `CardStyleConfiguration`, so `.cardStyle(_:)` can swap in a completely
+//  different shell. `.media {}` replaces the image; `.overlay {}` layers over it.
+//
 
 import SwiftUI
 
@@ -21,6 +26,7 @@ import SwiftUI
 public struct DestinationCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     // Required content (R1).
     private let title: String
@@ -40,6 +46,7 @@ public struct DestinationCard: View {
     private var overlayTitle = false
     private var onTap: (() -> Void)?
     private var mediaSlot: AnyView?
+    private var overlaySlot: AnyView?
     private var footerSlot: AnyView?
     private var elevation: CardElevation = .soft
 
@@ -49,22 +56,28 @@ public struct DestinationCard: View {
     }
 
     public var body: some View {
-        let card = VStack(alignment: .leading, spacing: 0) {
-            mediaSection
-            infoSection
-        }
-        .background(theme.background(surfaceKey))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-                .stroke(theme.border(.borderPrimary), lineWidth: 0.5)
-        )
-        .modifier(DestinationElevation(elevation: elevation))
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate.
+        let card = cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            isSelected: false,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
 
         if let onTap {
             Button(action: onTap) { card }.buttonStyle(.plain)
         } else {
             card
+        }
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            mediaSection
+            infoSection
         }
     }
 
@@ -74,6 +87,8 @@ public struct DestinationCard: View {
         mediaContent
             .frame(maxWidth: .infinity)
             .clipped()
+            // Custom overlay sits above the media, below the ribbon/heart/title bar.
+            .overlay { if let overlaySlot { overlaySlot } }
             .overlay(alignment: .topLeading) { if let ribbon { ribbonTag(ribbon) } }
             .overlay(alignment: .topTrailing) { if let favorite { heartButton(favorite) } }
             .overlay(alignment: .bottomLeading) { if overlayTitle { overlayTitleBar } }
@@ -190,6 +205,9 @@ public extension DestinationCard {
     func onTap(_ action: (() -> Void)?) -> Self { copy { $0.onTap = action } }
     /// Replace the media with custom content (a carousel, a map…).
     func media<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.mediaSlot = AnyView(content()) } }
+    /// Layer custom content over the media section. The ribbon, favourite heart and
+    /// overlay title bar keep their position above it.
+    func overlay<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.overlaySlot = AnyView(content()) } }
     /// A footer slot under the price row — a CTA, an amenity strip…
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
     /// Surface elevation: none / soft / elevated.
@@ -199,17 +217,6 @@ public extension DestinationCard {
         var c = self
         mutate(&c)
         return c
-    }
-}
-
-private struct DestinationElevation: ViewModifier {
-    let elevation: CardElevation
-    @ViewBuilder func body(content: Content) -> some View {
-        switch elevation {
-        case .none: content
-        case .soft: content.themeShadow(.soft)
-        case .elevated: content.themeShadow(.elevated)
-        }
     }
 }
 
@@ -226,4 +233,26 @@ private struct DestinationElevation: ViewModifier {
         .padding()
     }
     .background(theme.background(.bgSecondary))
+}
+
+#Preview("Outlined style + overlay slot") {
+    @Previewable @Environment(\.theme) var theme
+    ScrollView {
+        DestinationCard("Cappadocia Balloon Escape")
+            .media {
+                LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
+            }
+            .overlay {
+                Text("Members only").textStyle(.labelSm700)
+                    .foregroundStyle(theme.text(.textSecondaryInverse))
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(.black.opacity(0.35), in: Capsule())
+            }
+            .subtitle("Türkiye").rating(4.9).price(9_800)
+            .tags(["Adventure"])
+            .cardStyle(.outlined)
+            .padding()
+    }
 }

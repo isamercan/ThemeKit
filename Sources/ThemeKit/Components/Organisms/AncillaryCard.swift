@@ -11,12 +11,18 @@
 //      .price(450).quantity($bags, range: 0...4)
 //  ```
 //
+//  The outer shell (surface fill, corner clipping, border, elevation shadow) is drawn
+//  by the active `CardStyle` from the environment — `.surface()/.cornerRadius()` and
+//  the added/quantity "active" state (as `isSelected`) feed the
+//  `CardStyleConfiguration`, so `.cardStyle(_:)` can swap in a different shell.
+//
 
 import SwiftUI
 
 public struct AncillaryCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let title: String
     // Content/appearance — mutated only through the modifiers below (R2).
@@ -44,6 +50,23 @@ public struct AncillaryCard: View {
     private var isActive: Bool { (added?.wrappedValue ?? false) || ((quantity?.wrappedValue ?? 0) > 0) }
 
     public var body: some View {
+        // The shell (fill, corner clipping, border, shadow) is drawn by the active
+        // `CardStyle` — built-ins and custom styles go through the same gate. The
+        // added/quantity "active" state feeds `isSelected`, so the selected border is
+        // the style's to draw (the default style uses the hero border token). `.none`
+        // elevation reproduces today's flat look: a 1pt hairline border, no shadow.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: .none,
+            isSelected: isActive,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: radiusRole))
+            .contentShape(shape)
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             leading
             VStack(alignment: .leading, spacing: 2) {
@@ -58,9 +81,6 @@ public struct AncillaryCard: View {
             control
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
-        .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(isActive ? accentSemantic.base : theme.border(.borderPrimary), lineWidth: isActive ? 1.5 : 1))
-        .contentShape(shape)
     }
 
     @ViewBuilder private var leading: some View {
@@ -169,4 +189,14 @@ public extension AncillaryCard {
         }
     }
     return Demo()
+}
+
+#Preview("Outlined style") {
+    @Previewable @State var seat = true
+    VStack(spacing: 10) {
+        AncillaryCard("Seat selection").icon("carseat.left.fill").subtitle("Extra legroom").price(350).added($seat)
+        AncillaryCard("Priority boarding").icon("figure.walk").price(90).added(.constant(false))
+    }
+    .cardStyle(.outlined)
+    .padding()
 }
