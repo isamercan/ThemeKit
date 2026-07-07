@@ -84,6 +84,11 @@ struct BarChromeOverrides {
     /// When `false`, suppresses the style's edge hairline (also used when a
     /// progress line replaces the divider).
     var showsHairline = true
+    /// When non-`nil`, gates the style's own shadow (`StickyBookingBar
+    /// .showsShadow(_:)`). `nil` = the style decides. It can only suppress a
+    /// shadow the style already draws — styles without one (e.g.
+    /// ``DefaultBarStyle``) ignore `true`.
+    var showsShadow: Bool? = nil
 }
 
 private struct BarChromeOverridesKey: EnvironmentKey {
@@ -186,11 +191,23 @@ private struct FloatingBarChrome: View {
     }
 
     var body: some View {
+        box
+            .modifier(OptionalBarShadow(on: overrides.showsShadow ?? true))
+            .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
+    }
+
+    private var box: some View {
         BarSlotRow(configuration: configuration)
             .clipShape(shape)   // keeps a progress line inside the rounded corners
             .background(theme.background(overrides.surface ?? .bgWhite), in: shape)
-            .themeShadow(.soft)
-            .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
+    }
+}
+
+/// Applies the style's shadow token unless a component override turned it off.
+private struct OptionalBarShadow: ViewModifier {
+    let on: Bool
+    @ViewBuilder func body(content: Content) -> some View {
+        if on { content.themeShadow(.soft) } else { content }
     }
 }
 
@@ -210,14 +227,22 @@ public extension BarStyle where Self == FloatingBarStyle {
 
 struct AnyBarStyle: BarStyle {
     private let _makeBody: @MainActor (BarStyleConfiguration) -> AnyView
-    init<S: BarStyle>(_ style: sending S) {
+    /// `true` only for the environment's stock value — i.e. no `.barStyle(_:)`
+    /// anywhere up the tree. Bars whose *stock* chrome cannot be produced by
+    /// ``DefaultBarStyle`` (the capsule tab bar, the shadowed booking bar) key
+    /// off this to keep their default look pixel-identical while still routing
+    /// through any explicitly set style. `SheetHeader` (whose stock chrome *is*
+    /// `DefaultBarStyle`) ignores it.
+    let isDefault: Bool
+    init<S: BarStyle>(_ style: sending S, isDefault: Bool = false) {
+        self.isDefault = isDefault
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
     func makeBody(configuration: BarStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct BarStyleKey: EnvironmentKey {
-    static let defaultValue = AnyBarStyle(DefaultBarStyle())
+    static let defaultValue = AnyBarStyle(DefaultBarStyle(), isDefault: true)
 }
 
 extension EnvironmentValues {

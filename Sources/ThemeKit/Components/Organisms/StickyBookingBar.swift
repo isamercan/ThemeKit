@@ -7,6 +7,14 @@
 //  left and a primary action on the right. Token-bound; pin it with
 //  `.safeAreaInset(edge: .bottom) { StickyBookingBar(…) }`.
 //
+//  Chrome is style-driven: set a ``BarStyle`` with `.barStyle(_:)` and the bar
+//  hands its price + CTA row to the style as a `.bottom`-edge
+//  ``BarStyleConfiguration`` (`surface(_:)` / `showsShadow(_:)` still win over
+//  the style's own fill/shadow). With no style set, the original chrome — flat
+//  fill, top hairline overlay, tab-bar shadow — renders pixel-identically
+//  (that shadowed chrome cannot be produced by the stock `DefaultBarStyle`,
+//  so the untouched default keeps the legacy look).
+//
 //  ```swift
 //  StickyBookingBar("Book now") { checkout() }
 //      .price(9_600).original(12_000).discountBadge("-20%").note("2 rooms · 4 nights")
@@ -18,6 +26,7 @@ import SwiftUI
 public struct StickyBookingBar: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.barStyle) private var barStyle
 
     private let ctaTitle: String
     private let action: () -> Void
@@ -30,8 +39,12 @@ public struct StickyBookingBar: View {
     private var ctaIcon: String?
     private var isEnabled = true
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
-    private var showsShadow = true
+    /// `nil` = the active `BarStyle` picks its own fill (both the legacy chrome
+    /// and the default style use `.bgWhite`); set via `surface(_:)`.
+    private var surfaceOverride: Theme.BackgroundColorKey?
+    /// `nil` = unset — legacy chrome shows its tab-bar shadow, a custom style
+    /// keeps its own shadow; set via `showsShadow(_:)`, which wins over both.
+    private var showsShadowOverride: Bool?
     private var leadingSlot: AnyView?
 
     public init(_ ctaTitle: String, action: @escaping () -> Void) {   // R1
@@ -43,6 +56,28 @@ public struct StickyBookingBar: View {
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
 
     public var body: some View {
+        if barStyle.isDefault {
+            // No `.barStyle(_:)` set — the original flat fill + top hairline
+            // overlay + tab-bar shadow.
+            row
+                .background(theme.background(surfaceOverride ?? .bgWhite))
+                .overlay(alignment: .top) { Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1) }
+                .modifier(BarShadow(on: showsShadowOverride ?? true))
+        } else {
+            // The whole price + CTA row is the configuration's content — both
+            // blocks are far wider than the 44pt accessory slots the built-in
+            // styles overlay, so neither maps to leading/trailing.
+            barStyle.makeBody(configuration: BarStyleConfiguration(leading: nil,
+                                                                   content: AnyView(row),
+                                                                   trailing: nil,
+                                                                   edge: .bottom))
+                .environment(\.barChromeOverrides,
+                             BarChromeOverrides(surface: surfaceOverride,
+                                                showsShadow: showsShadowOverride))
+        }
+    }
+
+    private var row: some View {
         HStack(alignment: .center, spacing: density.scale(Theme.SpacingKey.md.value)) {
             if let leadingSlot {
                 leadingSlot
@@ -55,9 +90,6 @@ public struct StickyBookingBar: View {
         .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
         .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
         .frame(maxWidth: .infinity)
-        .background(theme.background(surfaceKey))
-        .overlay(alignment: .top) { Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1) }
-        .modifier(BarShadow(on: showsShadow))
     }
 
     @ViewBuilder private var priceBlock: some View {
@@ -99,8 +131,13 @@ public extension StickyBookingBar {
     func ctaIcon(_ systemName: String?) -> Self { copy { $0.ctaIcon = systemName } }
     func enabled(_ on: Bool) -> Self { copy { $0.isEnabled = on } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
-    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
-    func showsShadow(_ on: Bool) -> Self { copy { $0.showsShadow = on } }
+    /// Surface fill (background token key). Wins over the fill the active
+    /// `BarStyle` would draw; when unset, the style picks its own (`.bgWhite`
+    /// for both the legacy chrome and the built-in styles).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceOverride = key } }
+    /// Show the bar's shadow (default on). Wins over the shadow the active
+    /// `BarStyle` would draw — `false` also suppresses a custom style's shadow.
+    func showsShadow(_ on: Bool) -> Self { copy { $0.showsShadowOverride = on } }
     /// Replace the left price block with fully custom content.
     func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.leadingSlot = AnyView(content()) } }
 
@@ -116,5 +153,9 @@ public extension StickyBookingBar {
         Spacer()
         StickyBookingBar("Book now") { }
             .note("2 rooms · 4 nights").original(12_000).discountBadge("-20%").price(9_600).ctaIcon("arrow.right")
+        StickyBookingBar("Book now") { }
+            .note("BarStyle demo").price(9_600)
+            .barStyle(.floating)
+            .padding(.top, 24)
     }
 }
