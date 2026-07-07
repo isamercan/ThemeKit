@@ -288,6 +288,21 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/ShareButton.png" width="146" alt="ShareButton"><br><sub><b>ShareButton</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Aura.png" width="240" alt="Aura"><br><sub><b>Aura</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/CodeBlock.png" width="240" alt="CodeBlock"><br><sub><b>CodeBlock</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Confetti.png" width="240" alt="Confetti"><br><sub><b>Confetti</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FareFeatureRow.png" width="240" alt="FareFeatureRow"><br><sub><b>FareFeatureRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FlightStatusBadge.png" width="240" alt="FlightStatusBadge"><br><sub><b>FlightStatusBadge</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/IconTile.png" width="188" alt="IconTile"><br><sub><b>IconTile</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SearchBadge.png" width="240" alt="SearchBadge"><br><sub><b>SearchBadge</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SwapButton.png" width="168" alt="SwapButton"><br><sub><b>SwapButton</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TiltCard.png" width="240" alt="TiltCard"><br><sub><b>TiltCard</b></sub></td>
 </tr>
 </table>
 
@@ -352,6 +367,42 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Calendar.png" width="240" alt="Calendar"><br><sub><b>Calendar</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/ColorField.png" width="240" alt="ColorField"><br><sub><b>ColorField</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/DatePriceCard.png" width="152" alt="DatePriceCard"><br><sub><b>DatePriceCard</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/DatePriceStrip.png" width="240" alt="DatePriceStrip"><br><sub><b>DatePriceStrip</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Dropdown.png" width="100" alt="Dropdown"><br><sub><b>Dropdown</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FieldButton.png" width="240" alt="FieldButton"><br><sub><b>FieldButton</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FilterRow.png" width="240" alt="FilterRow"><br><sub><b>FilterRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FlightRoute.png" width="240" alt="FlightRoute"><br><sub><b>FlightRoute</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/InstallmentPicker.png" width="240" alt="InstallmentPicker"><br><sub><b>InstallmentPicker</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/LayoverRow.png" width="240" alt="LayoverRow"><br><sub><b>LayoverRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MapPriceMarker.png" width="75" alt="MapPriceMarker"><br><sub><b>MapPriceMarker</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PassengerRow.png" width="240" alt="PassengerRow"><br><sub><b>PassengerRow</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PaymentCardField.png" width="240" alt="PaymentCardField"><br><sub><b>PaymentCardField</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PriceBreakdown.png" width="240" alt="PriceBreakdown"><br><sub><b>PriceBreakdown</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PriceTrendChart.png" width="240" alt="PriceTrendChart"><br><sub><b>PriceTrendChart</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RecentSearchRow.png" width="240" alt="RecentSearchRow"><br><sub><b>RecentSearchRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/ScrubGallery.png" width="240" alt="ScrubGallery"><br><sub><b>ScrubGallery</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SearchField.png" width="240" alt="SearchField"><br><sub><b>SearchField</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SmartSuggestion.png" width="240" alt="SmartSuggestion"><br><sub><b>SmartSuggestion</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SortSummaryBar.png" width="240" alt="SortSummaryBar"><br><sub><b>SortSummaryBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SortTab.png" width="116" alt="SortTab"><br><sub><b>SortTab</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/StepperRow.png" width="240" alt="StepperRow"><br><sub><b>StepperRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SuggestionRow.png" width="240" alt="SuggestionRow"><br><sub><b>SuggestionRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TripTypeToggle.png" width="240" alt="TripTypeToggle"><br><sub><b>TripTypeToggle</b></sub></td>
 </tr>
 </table>
 
@@ -406,6 +457,37 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Footer.png" width="240" alt="Footer"><br><sub><b>Footer</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/Diff.png" width="240" alt="Diff"><br><sub><b>Diff</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/AgentPriceRow.png" width="240" alt="AgentPriceRow"><br><sub><b>AgentPriceRow</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/AncillaryCard.png" width="240" alt="AncillaryCard"><br><sub><b>AncillaryCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/BoardingPass.png" width="240" alt="BoardingPass"><br><sub><b>BoardingPass</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/BrowserFrame.png" width="240" alt="BrowserFrame"><br><sub><b>BrowserFrame</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/DestinationCard.png" width="240" alt="DestinationCard"><br><sub><b>DestinationCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FareFamilyCard.png" width="240" alt="FareFamilyCard"><br><sub><b>FareFamilyCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FilterBar.png" width="240" alt="FilterBar"><br><sub><b>FilterBar</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FilterList.png" width="240" alt="FilterList"><br><sub><b>FilterList</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FlightResultRow.png" width="240" alt="FlightResultRow"><br><sub><b>FlightResultRow</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/FlightTicketCard.png" width="240" alt="FlightTicketCard"><br><sub><b>FlightTicketCard</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/HotelResultCard.png" width="240" alt="HotelResultCard"><br><sub><b>HotelResultCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/MapCallout.png" width="240" alt="MapCallout"><br><sub><b>MapCallout</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PhoneFrame.png" width="240" alt="PhoneFrame"><br><sub><b>PhoneFrame</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/PriceAlertCard.png" width="240" alt="PriceAlertCard"><br><sub><b>PriceAlertCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/RoomCard.png" width="240" alt="RoomCard"><br><sub><b>RoomCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SheetHeader.png" width="240" alt="SheetHeader"><br><sub><b>SheetHeader</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/StickyBookingBar.png" width="240" alt="StickyBookingBar"><br><sub><b>StickyBookingBar</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/TicketStub.png" width="240" alt="TicketStub"><br><sub><b>TicketStub</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/WindowFrame.png" width="240" alt="WindowFrame"><br><sub><b>WindowFrame</b></sub></td>
 </tr>
 </table>
 
@@ -425,24 +507,6 @@ _Entrance previews rendered from the live components. SelectBox, BottomSheet, To
 </tr>
 </table>
 <!-- GALLERY:END -->
-
-> **Pending screenshots.** The travel-booking suite and the daisyUI parity sweep
-> (0.7.0–0.16.0) added 50 components that don't have a rendered tile above yet —
-> `make screenshots` needs a macOS run to catch them up. They're all live in the
-> [Demo app](#demo) and documented with a usage snippet in the
-> [Pages component reference](https://isamercan.github.io/ThemeKit/components/atoms/)
-> today: `Aura`, `CodeBlock`, `Confetti`, `FareFeatureRow`, `FlightStatusBadge`,
-> `IconTile`, `SearchBadge`, `SwapButton`, `TiltCard`; `DatePriceCard`,
-> `DatePriceStrip`, `Dropdown`, `FieldButton`, `FilterRow`, `FlightRoute`,
-> `InstallmentPicker`, `LayoverRow`, `MapPriceMarker`, `PassengerRow`,
-> `PaymentCardField`, `PriceBreakdown`, `PriceTrendChart`, `RecentSearchRow`,
-> `ScrubGallery`, `SearchField`, `SmartSuggestion`, `SortSummaryBar`, `SortTab`,
-> `StepperRow`, `SuggestionRow`, `TripTypeToggle`; `AgentPriceRow`,
-> `AncillaryCard`, `BoardingPass`, `BrowserFrame`, `DestinationCard`,
-> `FareFamilyCard`, `FilterBar`, `FilterList`, `FlightResultRow`,
-> `FlightTicketCard`, `HotelResultCard`, `MapCallout`, `PhoneFrame`,
-> `PriceAlertCard`, `RoomCard`, `SheetHeader`, `StickyBookingBar`, `TicketStub`,
-> `WindowFrame`.
 
 ## Token system
 

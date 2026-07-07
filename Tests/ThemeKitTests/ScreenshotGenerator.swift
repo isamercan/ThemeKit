@@ -164,6 +164,68 @@ final class ScreenshotGenerator: XCTestCase {
             GaugeView(value: 0.4, label: "Disk").gaugeStyle(.linear).frame(width: 140)
         }, hosted: true)
         shot("ShareButton", ShareButton(item: "https://github.com/isamercan/ThemeKit"), hosted: true)
+        shot("Aura", HStack(spacing: 40) {
+            Aura().accent(.turquoise).size(90)
+            Text("Featured Deal")
+                .textStyle(.labelMd600)
+                .foregroundStyle(Theme.shared.text(.textPrimary))
+                .padding(24)
+                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 16))
+                .aura(.purple, radius: 28, intensity: 0.7)
+        }.padding(32))
+        shot("CodeBlock", CodeBlock([
+            CodeLine("swift build", prefix: "$"),
+            CodeLine("Compiling ThemeKit...", prefix: ">"),
+            CodeLine("Warning: 1 deprecated API", prefix: ">", highlight: .warning),
+            CodeLine("Build complete!", prefix: ">", highlight: .success),
+        ]).copyable().frame(width: 320))
+        shot("Confetti", ZStack {
+            VStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgSuccess))
+                Text("Booking confirmed!")
+                    .textStyle(.headingSm)
+                    .foregroundStyle(Theme.shared.text(.textPrimary))
+            }
+            Confetti().pieceCount(60)   // animated: freezes at first frame offscreen
+        }.frame(width: 300, height: 200))
+        shot("FareFeatureRow", VStack(alignment: .leading, spacing: 8) {
+            FareFeatureRow("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm")
+            FareFeatureRow("Checked bag", systemImage: "suitcase.fill", detail: "1 × 20 kg", status: .included)
+            FareFeatureRow("Non-refundable", systemImage: "nosign", status: .excluded)
+            FareFeatureRow("Priority boarding", systemImage: "figure.walk").icon("hare.fill").accent(.purple)
+        }.frame(width: 280))
+        shot("FlightStatusBadge", HStack(spacing: 8) {
+            FlightStatusBadge(.onTime).time("13:15")
+            FlightStatusBadge(.boarding)
+            FlightStatusBadge(.delayed).time("+35m").solid()
+        })
+        shot("IconTile", HStack(spacing: 12) {
+            IconTile("airplane")
+            IconTile("suitcase.fill").accent(.turquoise)
+            IconTile("bell.fill").accent(.warning).size(40)
+        })
+        shot("SearchBadge", HStack(spacing: 8) {
+            SearchBadge("SAW")
+            SearchBadge("23 Jul '26")
+            SearchBadge("4 Guests")
+            SearchBadge("Direct").colors(background: .badgeBgPurple, foreground: .textPurple).icon("bolt.fill")
+        })
+        shot("SwapButton", HStack(spacing: 16) {
+            Text("IST").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+            SwapButton {}
+            Text("AYT").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+        })
+        shot("TiltCard", TiltCard {   // animated: renders at rest pose offscreen
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Premium Cabin").textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+                Text("Lie-flat seats on long-haul routes").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+            .padding(24)
+            .frame(width: 260)
+            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+        }.maxAngle(.degrees(12)).shine())
     }
 
     // MARK: Molecules
@@ -241,6 +303,62 @@ final class ScreenshotGenerator: XCTestCase {
                                                 selectedName: .constant("oceanTheme")).frame(width: 320))
         shot("Calendar", CalendarView(selection: .constant(nil)).frame(width: 320))
         shot("ColorField", ColorField("Brand color", selection: .constant(Theme.shared.foreground(.fgHero))).frame(width: 280), hosted: true)
+        shot("DatePriceCard", DatePriceCard(DatePriceItem("18 Jul", price: 129.99), isSelected: true, action: {}).currency("USD").frame(width: 120))
+        shot("DatePriceStrip", DatePriceStrip([DatePriceItem("17 Jul", price: 149.99),
+                                               DatePriceItem("18 Jul", price: 119.99),
+                                               DatePriceItem("19 Jul", price: 174.50),
+                                               DatePriceItem("20 Jul", price: 132.00),
+                                               DatePriceItem("21 Jul", price: 128.75),
+                                               DatePriceItem("22 Jul", price: 156.25)],
+                                              selection: .constant(1)).columns(3).currency("USD").highlightCheapest().frame(width: 360))
+        shot("Dropdown", Dropdown(items: [DropdownItem("Rename", systemImage: "pencil"),
+                                          DropdownItem("Duplicate", systemImage: "plus.square.on.square"),
+                                          .divider,
+                                          DropdownItem("Delete", systemImage: "trash", role: .destructive)]) {
+            Label("Actions", systemImage: "chevron.down")
+        })
+        shot("FieldButton", FieldButton("Istanbul (IST)", action: {}).label("From").icon("airplane.departure").frame(width: 300))
+        shot("FilterRow", FilterRow("Direct flights only", isOn: .constant(true)).count(42).icon("airplane").frame(width: 320))
+        shot("FlightRoute", FlightRoute(from: "IST", to: "JFK",
+                                        departure: Date(timeIntervalSince1970: 1_760_000_000),
+                                        arrival: Date(timeIntervalSince1970: 1_760_000_000 + 37_800)).stops(1).frame(width: 340))
+        shot("InstallmentPicker", InstallmentPicker([InstallmentOption(count: 1, total: 900),
+                                                     InstallmentOption(count: 3, total: 930, monthly: 310),
+                                                     InstallmentOption(count: 6, total: 960, monthly: 160)],
+                                                    selection: .constant(1)).currency("USD").frame(width: 340))
+        shot("LayoverRow", LayoverRow(duration: "2h 15m", airport: "Vienna (VIE)").warning("Short connection").frame(width: 340))
+        shot("MapPriceMarker", MapPriceMarker("$129").selected())
+        shot("PassengerRow", PassengerRow("Emma Johnson", action: {}).type("Adult").subtitle("Passport U1234567").seat("14A").status("Checked in").accessory(.chevron).frame(width: 360))
+        shot("PaymentCardField", PaymentCardField(number: .constant("4111 1111 1111 1111"),
+                                                  expiry: .constant("12/28"),
+                                                  cvv: .constant("123")).holder(.constant("EMMA JOHNSON")).frame(width: 340), hosted: true)
+        shot("PriceBreakdown", PriceBreakdown(249.99, currencyCode: "USD").original(299.99).discountBadge("-17%").unit("per night").note("Includes taxes and fees").frame(width: 280))
+        shot("PriceTrendChart", PriceTrendChart([PriceTrendPoint("14", sublabel: "Mon", price: 129),
+                                                 PriceTrendPoint("15", sublabel: "Tue", price: 99),
+                                                 PriceTrendPoint("16", sublabel: "Wed", price: 142),
+                                                 PriceTrendPoint("17", sublabel: "Thu", price: 118),
+                                                 PriceTrendPoint("18", sublabel: "Fri", price: 175),
+                                                 PriceTrendPoint("19", sublabel: "Sat", price: 160)],
+                                                selection: .constant(1)).title("July").currency("USD").frame(width: 360))
+        shot("RecentSearchRow", RecentSearchRow(from: "Istanbul", to: "Rome", action: {}).roundTrip().dates("18 Jul - 25 Jul").passengers("2 adults").onRemove({}).frame(width: 340))
+        shot("ScrubGallery", ScrubGallery(count: 3) { i in
+            ZStack {
+                Rectangle().fill([SemanticColor.primary, .purple, .turquoise][i].soft)
+                Text("Photo \(i + 1)").font(.headline)
+            }
+        }.indicator().frame(width: 320, height: 180))
+        shot("SearchField", SearchField("Where from?", action: {}).value(code: "IST", title: "Istanbul", subtitle: "All airports").icon("airplane.departure").frame(width: 340))
+        shot("SmartSuggestion", SmartSuggestion("Fly on Tuesday and save $42").label("Tip").icon("sparkles").action("Apply", perform: {}).frame(width: 340))
+        shot("SortSummaryBar", SortSummaryBar([SortOption("Best", value: "$277", subtitle: "1h 07m", icon: "star.fill"),
+                                               SortOption("Cheapest", value: "$219", subtitle: "2h 30m"),
+                                               SortOption("Fastest", value: "$342", subtitle: "55m")],
+                                              selection: .constant(0)).onMore(action: {}).frame(width: 360))
+        shot("SortTab", SortTab(SortOption("Cheapest", value: "$219", subtitle: "2h 30m", icon: "arrow.down"), isSelected: true, action: {}))
+        shot("StepperRow", StepperRow("Adults", value: .constant(2)).subtitle("12 years and older").range(1...9).icon("person.fill").frame(width: 320))
+        shot("SuggestionRow", SuggestionRow("Rome", action: {}).code("FCO").subtitle("Leonardo da Vinci Airport, Italy").icon("airplane").accessory(.chevron).frame(width: 340))
+        shot("TripTypeToggle", TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: .constant(1))
+            .icons(["arrow.right", "arrow.left.arrow.right", "point.topleft.down.curvedto.point.bottomright.up"])
+            .frame(width: 340))
     }
 
     // MARK: Organisms
@@ -336,6 +454,160 @@ final class ScreenshotGenerator: XCTestCase {
         } after: {
             Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
         }.frame(width: 320, height: 140))
+        shot("AgentPriceRow", AgentPriceRow("Skytrip") {}
+            .rating(4.5).badge("Cheapest").subtitle("Free cancellation within 24h")
+            .original(452).price(429, currencyCode: "USD").cta("Go to site").recommended()
+            .frame(width: 340))
+        shot("AncillaryCard", AncillaryCard("Checked baggage")
+            .icon("suitcase.fill").subtitle("23 kg").badge("Popular")
+            .price(60, currencyCode: "USD", suffix: "/ bag")
+            .quantity(.constant(1), range: 0...4)
+            .frame(width: 340))
+        shot("BoardingPass", BoardingPass(passenger: "Emily Carter", from: "IST", to: "JFK")
+            .airline("Skyline Air").flightNo("SK 1123").cabin("Economy")
+            .cities(from: "Istanbul", to: "New York").times(departure: "09:40", arrival: "13:25").date("12 Sep")
+            .gate("B22", seat: "14C", boarding: "09:05", terminal: "1")
+            .bookingRef("PNR: A7K2QF").barcode("SK1123ISTJFK14C")
+            .frame(width: 340))
+        shot("BrowserFrame", BrowserFrame(url: "https://skylineair.com/deals") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Summer fares to London").textStyle(.headingSm)
+                Text("Fly IST to LHR from $189 round trip.")
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+            .padding()
+        }
+        .elevation(.soft)
+        .frame(width: 320))
+        shot("DestinationCard", DestinationCard("Santorini Sunset Escape")
+            .media {
+                LinearGradient(colors: [Theme.shared.background(.bgHero), Theme.shared.background(.bgTurquoise)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
+            }
+            .subtitle("Greece").ribbon("Top #1")
+            .price(899, currencyCode: "EUR").rating(4.8).favorite(.constant(true))
+            .tags(["Beach", "Culture"])
+            .frame(width: 320))
+        shot("FareFamilyCard", FareFamilyCard("Comfort Flex", price: 249.99)
+            .currency("USD").accent(.purple)
+            .features([FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
+                       FareFeature("Checked bag", systemImage: "suitcase.fill", detail: "1 × 23 kg", status: .included),
+                       FareFeature("Free rebooking", systemImage: "arrow.uturn.backward", status: .included),
+                       FareFeature("Non-refundable", systemImage: "nosign", status: .excluded)])
+            .onSelect {}
+            .frame(width: 320))
+        shot("FilterBar", FilterBar([QuickFilter("8+ rating"), QuickFilter("Seafront"), QuickFilter("Pool"),
+                                     QuickFilter("Free cancellation"), QuickFilter("Breakfast")],
+                                    selection: .constant(["8+ rating"]))
+            .onFilter {}.onSort {}
+            .frame(width: 380))
+        shot("FilterList", FilterList([FilterOption("Direct", count: 128),
+                                       FilterOption("1 stop", count: 64),
+                                       FilterOption("2+ stops", count: 12)],
+                                      selection: .constant(["Direct"]))
+            .title("Stops").bordered().selectAll("All")
+            .frame(width: 320))
+        shot("FlightResultRow", FlightResultRow(airline: "Skyline Air", from: "IST", to: "LHR",
+                                                departure: Date(timeIntervalSince1970: 1_781_000_000),
+                                                arrival: Date(timeIntervalSince1970: 1_781_014_700))
+            .flightNo("SK 1123").cabin("Economy")
+            .price(429.99, currencyCode: "USD").baggage("23 kg").badge("Best")
+            .onSelect("Select") {}.onDetails {}
+            .frame(width: 380))
+        shot("FlightTicketCard", FlightTicketCard(from: "IST", to: "LHR")
+            .cities(from: "Istanbul", to: "London").duration("4h 05m")
+            .times(departure: "09:40", arrival: "12:45")
+            .airline("Skyline Air").price(219, currencyCode: "USD")
+            .favorite(.constant(true)).accent(.info)
+            .frame(width: 320))
+        shot("HotelResultCard", HotelResultCard(name: "Harbor View Resort")
+            .media {
+                LinearGradient(colors: [Theme.shared.background(.bgHero), Theme.shared.background(.bgTurquoise)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+            .location("Santorini, Greece")
+            .score(9.2, label: "Exceptional", reviews: 1_284)
+            .features(["All-inclusive", "Seafront"])
+            .promos(["Members save 10%", "Free airport shuttle"])
+            .stay("2 guests | 4 nights")
+            .original(1_450).discountBadge("-18%").price(1_189, currencyCode: "EUR")
+            .badge("Deal").favorite(.constant(true)).onSelect {}
+            .frame(width: 360))
+        shot("MapCallout", MapCallout(title: "Harbor View Resort")
+            .subtitle("Santorini, Greece").score(9.2)
+            .price(189, currencyCode: "EUR").onSelect {}
+            .frame(width: 280))
+        shot("PhoneFrame", PhoneFrame {
+            VStack(spacing: 8) {
+                Spacer()
+                Text("Skyline Air").textStyle(.headingSm)
+                Text("Your gate is now B22")
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(Theme.shared.text(.textSecondary))
+                Spacer()
+            }
+        }
+        .notch(.island)
+        .frame(width: 260))
+        shot("PriceAlertCard", PriceAlertCard("Get price alerts", isOn: .constant(true))
+            .subtitle("We'll notify you when IST-JFK fares change")
+            .price(429, currencyCode: "USD").trend(.down, "-8%")
+            .frame(width: 360))
+        shot("RoomCard", RoomCard(name: "Deluxe Room, Sea View")
+            .board("All-inclusive").occupancy("2 adults, 1 child")
+            .features([FareFeature("Free cancellation", systemImage: "checkmark.circle", status: .included),
+                       FareFeature("Breakfast included", systemImage: "cup.and.saucer", status: .included)])
+            .original(240).discountBadge("-20%").price(192, currencyCode: "EUR").unit("/ night")
+            .badge("Last 2").onSelect {}
+            .frame(width: 360))
+        shot("SheetHeader", SheetHeader("Passengers")
+            .subtitle("Step 2 of 4").onBack {}.onClose {}.progress(0.5)
+            .frame(width: 360))
+        shot("StickyBookingBar", StickyBookingBar("Book now") {}
+            .note("2 travellers | Round trip")
+            .original(1_480).discountBadge("-16%").price(1_240, currencyCode: "USD")
+            .ctaIcon("arrow.right")
+            .frame(width: 380))
+        shot("TicketStub", TicketStub {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("SKYLINE AIR").textStyle(.labelMd700)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("09:40").textStyle(.headingSm)
+                        Text("IST").textStyle(.labelSm600)
+                    }
+                    Spacer()
+                    Image(systemName: "airplane").foregroundStyle(Theme.shared.foreground(.fgHero))
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text("12:45").textStyle(.headingSm)
+                        Text("LHR").textStyle(.labelSm600)
+                    }
+                }
+            }
+        }
+        .stub {
+            HStack {
+                Text("Booking").textStyle(.bodySm400)
+                Spacer()
+                Text("SKY4H8Q2").textStyle(.labelSm700)
+            }
+        }
+        .elevation(.elevated)
+        .frame(width: 340))
+        shot("WindowFrame", WindowFrame("Trip Planner") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Istanbul to London").textStyle(.headingSm)
+                Text("3 flights saved for September.")
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(Theme.shared.text(.textSecondary))
+            }
+            .padding()
+        }
+        .accent(.info)
+        .frame(width: 320))
     }
 
     // MARK: Render
@@ -365,8 +637,8 @@ final class ScreenshotGenerator: XCTestCase {
         return VStack(spacing: 16) {
             HStack(spacing: 16) {
                 card { VStack(alignment: .leading, spacing: 6) {
-                    Text("117").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
-                    tiny("COMPONENTS"); sub("29 atoms · 45 molecules · 43 organisms")
+                    Text("175").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    tiny("COMPONENTS"); sub("44 atoms · 64 molecules · 67 organisms")
                 }}.frame(width: 330)
                 card { VStack(alignment: .leading, spacing: 6) { heading("Zero deps", t.text(.textPrimary)); sub("native SwiftUI core") }}
                 card(t.background(.systemcolorsBgSuccessLight)) { VStack(alignment: .leading, spacing: 6) {
@@ -390,7 +662,7 @@ final class ScreenshotGenerator: XCTestCase {
                 VStack(spacing: 10) {
                     Text("ThemeKit").font(.system(size: 50, weight: .black)).foregroundStyle(t.text(.textPrimary))
                     sub("Native SwiftUI design system")
-                    Badge("v0.2.0 · iOS 17+").badgeStyle(.info).icon("swift")
+                    Badge("v0.16.0 · iOS 17+").badgeStyle(.info).icon("swift")
                     HStack(spacing: 12) {
                         RadialProgress(0.72).size(52).showsLabel(false)
                         ProgressBar(value: 0.62).frame(width: 130)
