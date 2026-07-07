@@ -52,6 +52,7 @@ public struct ToastAction {
 /// status banner (complements the light-surface InfoBanner).
 public struct AlertToast: View {
     @Environment(\.theme) private var theme
+    @Environment(\.toastStyle) private var style
 
     private let title: String
     // Appearance/state — mutated only through the modifiers below (R2).
@@ -67,6 +68,28 @@ public struct AlertToast: View {
     }
 
     public var body: some View {
+        // Shell chrome is delegated to the active `ToastStyle`. When no
+        // `.toastStyle(_:)` is set anywhere up the tree we keep the original
+        // inline shell, so the stock look stays pixel-identical by construction;
+        // an explicitly set style (including `.default`) routes through
+        // `makeBody` with the pre-composed content row.
+        if style.isDefault {
+            row
+                .foregroundStyle(type.foreground(theme))
+                .padding(.vertical, 12)
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .background(type.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        } else {
+            style.makeBody(configuration: ToastStyleConfiguration(
+                content: AnyView(row), variant: type, isLoading: isLoading
+            ))
+        }
+    }
+
+    /// The content row a style receives: leading icon/spinner, title + message,
+    /// and the trailing action/close block. Chrome-free — the shell (tint, fill,
+    /// padding, shape) is the style's job.
+    private var row: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             // Leading accessory: an activity spinner while loading, otherwise the
             // status icon (a caller override falls back to the type's default).
@@ -98,10 +121,6 @@ public struct AlertToast: View {
                 .buttonStyle(.plain)
             }
         }
-        .foregroundStyle(type.foreground(theme))
-        .padding(.vertical, 12)
-        .padding(.horizontal, Theme.SpacingKey.md.value)
-        .background(type.background(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }
 
@@ -141,6 +160,30 @@ public extension AlertToast {
         AlertToast("New update available").variant(.info)
         AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {}
         AlertToast("Uploading…").variant(.info).loading()
+    }
+    .padding()
+}
+
+#Preview("Toast styles") {
+    /// A light-surface toast — an example custom `ToastStyle`.
+    struct SoftToastStyle: ToastStyle {
+        func makeBody(configuration: ToastStyleConfiguration) -> some View {
+            configuration.content
+                .padding(.vertical, 12)
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+                    .strokeBorder(configuration.variant.background(Theme.shared), lineWidth: 1.5))
+        }
+    }
+
+    return VStack(spacing: 12) {
+        AlertToast("Saved successfully").variant(.success).onClose {}
+            .toastStyle(.capsule)
+        AlertToast("Copied to clipboard").variant(.info)
+            .toastStyle(.capsule)
+        AlertToast("Something went wrong").message("Try again in a moment.").variant(.danger).onClose {}
+            .toastStyle(SoftToastStyle())
     }
     .padding()
 }
