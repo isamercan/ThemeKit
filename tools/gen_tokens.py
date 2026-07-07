@@ -29,7 +29,7 @@ FOREGROUND = {
 }
 BACKGROUND = {
     "bg-white": ("a", "ffffff", "181c24"),         # pure white (overlays, modals)
-    "bg-base": ("d", "neutral", 50),               # base-100 surface (page + component backgrounds)
+    "bg-base": ("d", "neutral-raw", 50),           # base-100 surface — TRUE neutral, exempt from re-skin tint
     "bg-hero": ("d", "primary", 500),
     "bg-elevator-primary": ("d", "neutral", 50),   # page background
     "bg-elevator-tertiary": ("d", "primary", 50),  # soft primary container
@@ -258,6 +258,10 @@ def build_palette(primary_base, dark=False, tint=0.0):
     for family, base in PALETTE_BASES.items():
         if family == "neutral":
             raw = NEUTRAL_DARK if dark else NEUTRAL_LIGHT
+            # The UNTINTED ladder stays addressable: base-100 surfaces must remain
+            # true neutral on a re-skin, or every card gets washed in the accent.
+            for step, hexv in zip(STEPS, raw):
+                table["neutral-raw/%d" % step] = hexv
             shades = _tint_neutral(raw, primary_base, tint)
         else:
             # `info`/`link`/`selected` track the theme accent on a full re-skin.
@@ -297,8 +301,11 @@ def build_theme(primary_base="056bfd", dark=False, tint=0.0,
             if (cat, sub) in SURFACE_TINT_KEYS and surface_tint > 0:
                 hexv = _mix(hexv, primary_base, surface_tint * 100)
             colors.append({"name": json_name(cat, sub), "hex": hexv})
-    # The primitive 50..900 ladders themselves.
+    # The primitive 50..900 ladders themselves. `neutral-raw` is resolution-only
+    # plumbing (the untinted ramp bg-base reads from) — not a public ladder.
     for sub, hexv in palette.items():
+        if sub.startswith("neutral-raw/"):
+            continue
         colors.append({"name": json_name("palette", sub), "hex": hexv})
     radius = [{"name": k, "radius": round(v * radius_scale)} for k, v in RADIUS.items()]
     spacing = [{"name": k, "spacing": round(v * spacing_scale)} for k, v in SPACING.items()]
@@ -360,7 +367,8 @@ swift = ['//',
          '',
          emit_enum("TextColorKey", "text", TEXT),
          '',
-         emit_enum("PaletteColorKey", "palette", {k: None for k in build_palette("056bfd")}),
+         emit_enum("PaletteColorKey", "palette",
+                   {k: None for k in build_palette("056bfd") if not k.startswith("neutral-raw/")}),
          '}',
          '']
 with open(os.path.join(GEN, "ColorTokens.generated.swift"), "w") as f:
