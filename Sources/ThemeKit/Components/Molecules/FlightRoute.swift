@@ -41,7 +41,13 @@ public struct FlightRoute: View {
             timeColumn(arrival, code: destination, alignment: .trailing, marker: nextDay ? "+1" : nil)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(origin) \(departure.formatted(date: .omitted, time: .shortened)) to \(destination) \(arrival.formatted(date: .omitted, time: .shortened)), \(durationText), \(stopsAccessibility)")
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let departs = departure.formatted(date: .omitted, time: .shortened)
+        let arrives = arrival.formatted(date: .omitted, time: .shortened)
+        return "\(origin) \(departs) to \(destination) \(arrives), \(durationText), \(stopsAccessibility)"
     }
 
     private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment, marker: String?) -> some View {
