@@ -5,6 +5,26 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.15.0] - 2026-07-07
+
+### Added — flexibility wave 5: presenter content slots + container state slots
+
+- **`ToastStyle`** (new protocol; `.default` / `.capsule`): `AlertToast` bridges via
+  `isDefault` — `feedbackHost` toasts inherit the hook. `.toast(isPresented:
+  autoDismiss:content:)` presents fully custom toasts through the same
+  presentation modifier.
+- **Presenters:** `Dialog` gains a free-form card overload; `Feedback` gains
+  `toast{}` / `notify{}` builder overloads; `Tour` gains `tourHost(stepCard:)`
+  with a public `TourStepContext` (step/index/count + next/prev/skip).
+  `BottomSheet` / `Drawer` were already ViewBuilder-slotted. CardStyle adoption
+  deliberately skipped for floating presenter chrome (documented in-file).
+- **Containers:** `ListView` and `DataTable` gain `.empty{}` / `.loadingView{}`
+  (DataTable also `.header{}` / `.footer{}` outside the column strip); `Gallery`
+  gains `.empty{}`.
+- **`CardStack`** gets its modifier layer: `.maxVisible`, token-typed
+  `.peekOffset`, `.rotation` (fanned-deck scatter). No swipe axis — the deck has
+  no gesture behaviour to bind; empty-deck negative padding clamped.
+
 ## [0.14.0] - 2026-07-07
 
 ### Changed — flexibility wave 4: chip, bar and meter families bridge into their archetype styles
