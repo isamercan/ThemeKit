@@ -1,0 +1,111 @@
+//
+//  PriceAlertCard.swift
+//  ThemeKit
+//
+//  Organism. A "get price alerts" card — a bell icon, a title + subtitle, an optional
+//  current price with a trend indicator, and a toggle bound to the caller. Token-bound.
+//
+//  ```swift
+//  PriceAlertCard("Get price alerts", isOn: $alerts)
+//      .subtitle("We'll email you when the price changes").price(3_538).trend(.down, "-8%")
+//  ```
+//
+
+import SwiftUI
+
+/// Direction of a ``PriceAlertCard`` trend indicator.
+public enum PriceTrend: Sendable { case up, down, flat }
+
+public struct PriceAlertCard: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+
+    private let title: String
+    @Binding private var isOn: Bool
+    // Content/appearance — mutated only through the modifiers below (R2).
+    private var subtitle: String?
+    private var systemImage = "bell.fill"
+    private var price: Decimal?
+    private var currencyCode = "TRY"
+    private var trend: PriceTrend?
+    private var trendText: String?
+    private var accent: SemanticColor?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgElevatorPrimary
+    private var radiusRole: Theme.RadiusRole = .box
+
+    public init(_ title: String, isOn: Binding<Bool>) {   // R1
+        self.title = title
+        self._isOn = isOn
+    }
+
+    @Environment(\.componentDefaults) private var defaults
+    private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
+    private var trendColor: Color {
+        switch trend { case .down: theme.foreground(.systemcolorsFgSuccess); case .up: theme.foreground(.systemcolorsFgError); default: theme.text(.textSecondary) }
+    }
+    private var trendIcon: String {
+        switch trend { case .down: "arrow.down.right"; case .up: "arrow.up.right"; default: "arrow.right" }
+    }
+
+    public var body: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            IconTile(systemImage).size(44).accent(accentSemantic)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
+                if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(2) }
+                if price != nil || trend != nil { priceTrend }
+            }
+            Spacer(minLength: 6)
+            Toggle("", isOn: $isOn).labelsHidden().tint(accentSemantic.base)
+        }
+        .padding(density.scale(Theme.SpacingKey.md.value))
+        .background(theme.background(surfaceKey), in: shape)
+        .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    private var priceTrend: some View {
+        HStack(spacing: 6) {
+            if let price { PriceTag(price, currencyCode: currencyCode).size(.small).fractionDigits(0) }
+            if trend != nil {
+                HStack(spacing: 2) {
+                    Image(systemName: trendIcon).font(.system(size: 10, weight: .bold))
+                    if let trendText { Text(trendText).textStyle(.overline500) }
+                }
+                .foregroundStyle(trendColor)
+            }
+        }
+    }
+}
+
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension PriceAlertCard {
+    func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
+    func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
+    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func trend(_ direction: PriceTrend?, _ text: String? = nil) -> Self { copy { $0.trend = direction; $0.trendText = text } }
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+#Preview {
+    struct Demo: View {
+        @State private var on = true
+        var body: some View {
+            PriceAlertCard("Get price alerts", isOn: $on)
+                .subtitle("We'll notify you when this route's price changes").price(3_538).trend(.down, "-8%").padding()
+        }
+    }
+    return Demo()
+}
