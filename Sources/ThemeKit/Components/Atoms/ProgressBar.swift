@@ -21,8 +21,21 @@ public enum ProgressStatus {
 /// Linear determinate progress with status colors, an optional ladder gradient,
 /// a segmented (steps) variant and a custom format label. (Ant Progress parity.)
 /// Plus a segmented `StepIndicator`.
+///
+/// Drawing is delegated to the ``MeterStyle`` in the environment (set with
+/// `.meterStyle(_:)`; default ``LinearMeterStyle`` reproduces the original bar
+/// pixel-for-pixel). The component keeps the DATA: it clamps the fraction,
+/// resolves the fill (explicit `colors(fill:)` override > status gradient >
+/// status solid), reads the track token, caps the success segment at the
+/// current value, and builds the percentage/checkmark label. The label is
+/// passed through `MeterStyleConfiguration.label` (not drawn here) so styles
+/// control its placement — the default style trails it after the bar in the
+/// same `HStack` as before, preserving today's layout exactly. Accessibility
+/// (element, label, value, traits) and the value animation stay on the
+/// component, so they apply uniformly to every style.
 public struct ProgressBar: View {
     @Environment(\.theme) private var theme
+    @Environment(\.meterStyle) private var meterStyle
 
     private let value: Double
     // Appearance/config — mutated only through the modifiers below (R2).
@@ -65,51 +78,50 @@ public struct ProgressBar: View {
     }
 
     public var body: some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            if let steps {
-                HStack(spacing: 4) {
-                    ForEach(0..<max(steps, 1), id: \.self) { i in
-                        Capsule()
-                            .fill(Double(i) < value * Double(steps) ? AnyShapeStyle(fillStyle) : AnyShapeStyle(trackColor))
-                            .frame(height: height)
-                    }
-                }
-            } else {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(trackColor)
-                        Capsule().fill(fillStyle).frame(width: geo.size.width * value)
-                        if let successSegment {
-                            Capsule().fill(SemanticColor.success.solid)
-                                .frame(width: geo.size.width * min(successSegment, value))
-                        }
-                    }
-                }
-                .frame(height: height)
-            }
-
-            label
-        }
-        // The bar's fill is purely visual; expose the progress to VoiceOver as a
-        // spoken percentage. `.updatesFrequently` tells VoiceOver to re-read it
-        // while an active task advances.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
-        .accessibilityValue(Text(percentText))
-        .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
-        .animation(motion, value: value)
+        meterStyle.makeBody(configuration: configuration)
+            // The bar's fill is purely visual; expose the progress to VoiceOver as a
+            // spoken percentage. `.updatesFrequently` tells VoiceOver to re-read it
+            // while an active task advances.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
+            .accessibilityValue(Text(percentText))
+            .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
+            .animation(motion, value: value)
     }
 
-    @ViewBuilder
-    private var label: some View {
+    /// The resolved inputs handed to the active ``MeterStyle`` — data here,
+    /// geometry there. `successFraction` is pre-capped at the current value
+    /// (the original `min(successSegment, value)` overlay width rule).
+    private var configuration: MeterStyleConfiguration {
+        MeterStyleConfiguration(
+            fraction: value,
+            status: status,
+            steps: steps,
+            height: height,
+            fill: fillStyle,
+            track: trackColor,
+            successFraction: successSegment.map { min($0, value) },
+            label: labelView
+        )
+    }
+
+    /// The trailing label block: success checkmark once complete, else the
+    /// (optionally custom-formatted) percentage; nil when neither applies.
+    private var labelView: AnyView? {
         if status == .success && value >= 1 {
-            Icon(systemName: "checkmark.circle.fill").size(.sm).color(status.semantic.accent)
-        } else if showPercentage {
-            Text(percentText)
-                .textStyle(.labelSm600)
-                .foregroundStyle(theme.text(.textPrimary))
-                .frame(minWidth: 40, alignment: .trailing)
+            return AnyView(
+                Icon(systemName: "checkmark.circle.fill").size(.sm).color(status.semantic.accent)
+            )
         }
+        if showPercentage {
+            return AnyView(
+                Text(percentText)
+                    .textStyle(.labelSm600)
+                    .foregroundStyle(theme.text(.textPrimary))
+                    .frame(minWidth: 40, alignment: .trailing)
+            )
+        }
+        return nil
     }
 
     private var fillStyle: AnyShapeStyle {
@@ -205,6 +217,8 @@ public struct StepIndicator: View {
         ProgressBar(value: 0.5).showsPercentage().status(.exception)
         ProgressBar(value: 1.0).showsPercentage().status(.success)
         ProgressBar(value: 0.6).steps(5)
+        ProgressBar(value: 0.65).showsPercentage().meterStyle(.striped)
+        ProgressBar(value: 0.6).steps(5).meterStyle(.striped)
         StepIndicator(current: 2, total: 5)
     }
     .padding()
