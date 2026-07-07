@@ -43,6 +43,7 @@ public struct OTPInput: View {
     }
 
     private var hasError: Bool { messages.dominantKind == .error }
+    private var hasWarning: Bool { messages.dominantKind == .warning }
 
     /// Keeps only digits and caps the length (extracted for testing).
     static func sanitize(_ raw: String, digitCount: Int) -> String {
@@ -57,8 +58,8 @@ public struct OTPInput: View {
                         OTPDigitBox(
                             digit: digit(at: index),
                             isActive: isFocused && code.count == index,
-                            isFilled: index < code.count,
                             hasError: hasError,
+                            hasWarning: hasWarning,
                             isEnabled: isEnabled,
                             isSecure: isSecure
                         )
@@ -160,13 +161,20 @@ private extension View {
     }
 }
 
+/// One digit cell — a mini-field. Its chrome (fill + border) is delegated to the
+/// active ``FieldStyle`` per cell: the caret cell maps to `isFocused: true`, every
+/// other cell to `false`, and the component's error/warning state fans out to all
+/// cells. `size` is `.medium` — the cell's fixed 56pt height is exactly the
+/// `.medium` field height, and OTP has no `TextInputSize` axis of its own.
 private struct OTPDigitBox: View {
     @Environment(\.theme) private var theme
+    /// The cell chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     let digit: String
     let isActive: Bool
-    let isFilled: Bool
     let hasError: Bool
+    let hasWarning: Bool
     let isEnabled: Bool
     let isSecure: Bool
 
@@ -174,17 +182,20 @@ private struct OTPDigitBox: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                .fill(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                        .strokeBorder(borderColor, lineWidth: isActive || hasError ? 1.5 : 1)
-                )
-                // Fixed height: the box is a square cell in a fixed-width grid;
-                // Dynamic Type is capped at the container via dynamicTypeClamp().
-                .frame(height: 56)
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(cellContent),
+            isFocused: isActive,      // only the caret cell reads as focused
+            isEnabled: isEnabled,
+            hasError: hasError,       // validation fans out to every cell
+            hasWarning: hasWarning,
+            size: .medium             // 56pt cell == `.medium` field height
+        ))
+    }
 
+    /// The cell's glyph layer (caret / digit / mask dot), sized — everything the
+    /// ``FieldStyle`` receives as `configuration.content`.
+    private var cellContent: some View {
+        ZStack {
             if digit.isEmpty {
                 if isActive {
                     Rectangle()
@@ -203,13 +214,10 @@ private struct OTPDigitBox: View {
                     .foregroundStyle(textColor)
             }
         }
+        // Fixed height: the box is a square cell in a fixed-width grid;
+        // Dynamic Type is capped at the container via dynamicTypeClamp().
+        .frame(height: 56)
         .frame(maxWidth: .infinity)
-    }
-
-    private var borderColor: Color {
-        if hasError { return theme.border(.systemcolorsBorderError) }
-        if isActive || isFilled { return theme.border(.borderHero) }
-        return theme.border(.borderPrimary)
     }
 
     private var textColor: Color {
@@ -229,6 +237,8 @@ private struct OTPDigitBox: View {
                 Text("Completed: \(lastComplete)").textStyle(.bodySm400)
                 OTPInput(code: .constant("4321")).digitCount(4).secure()
                 OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code")
+                // Swapped chrome: every digit cell picks up the underlined style.
+                OTPInput(code: .constant("98")).digitCount(4).fieldStyle(.underlined)
             }
             .padding()
         }

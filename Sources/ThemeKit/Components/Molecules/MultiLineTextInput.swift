@@ -11,6 +11,8 @@ import SwiftUI
 /// Per the modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init
 /// takes only its label and the `text` binding; every other axis is a chainable,
 /// order-free modifier. `disabled` is native (`@Environment(\.isEnabled)`, R3).
+/// The editor chrome (fill + border) is a swappable ``FieldStyle`` set with
+/// `.fieldStyle(_:)`; the default reproduces the original look.
 ///
 ///     MultiLineTextInput("Notes", text: $text)
 ///         .placeholder("Write something…").characterLimit(200)
@@ -18,6 +20,8 @@ import SwiftUI
 ///         .disabled(!editable)            // native — R3
 public struct MultiLineTextInput: View {
     @Environment(\.theme) private var theme
+    /// The editor chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     @Binding private var text: String
     private let label: String
@@ -70,35 +74,7 @@ public struct MultiLineTextInput: View {
                 .foregroundStyle(labelColor)
                 .a11y(A11yElement.Field.label, in: accessibilityID)
 
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: editorBinding)
-                    .focused($isFocused)
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
-                    .tint(theme.foreground(.fgHero))
-                    .scrollContentBackground(.hidden)
-                    .padding(8)
-                    .disabled(!isEnabled)
-                    .a11y(A11yElement.Field.field, in: accessibilityID)
-                    .accessibilityLabel(label)
-                    .accessibilityValue(text)
-
-                if text.isEmpty {
-                    Text(placeholder)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textTertiary))
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 16)
-                        .allowsHitTesting(false)
-                }
-            }
-            .frame(minHeight: minHeight)
-            .background(theme.background(isEnabled ? .bgWhite : .bgSecondaryLight),
-                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: isFocused || hasError || hasWarning ? 1.5 : 1)
-            )
+            editorBox
 
             HStack(alignment: .firstTextBaseline) {
                 InfoMessageList(messages)
@@ -111,6 +87,52 @@ public struct MultiLineTextInput: View {
                 }
             }
         }
+    }
+
+    /// The editor + placeholder overlay, sized to `minHeight` — everything the
+    /// ``FieldStyle`` receives as `configuration.content` (the height stays in
+    /// the content; the style only wraps the chrome).
+    private var editorCore: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: editorBinding)
+                .focused($isFocused)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+                .tint(theme.foreground(.fgHero))
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .disabled(!isEnabled)
+                .a11y(A11yElement.Field.field, in: accessibilityID)
+                .accessibilityLabel(label)
+                .accessibilityValue(text)
+
+            if text.isEmpty {
+                Text(placeholder)
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textTertiary))
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 16)
+                    .allowsHitTesting(false)
+            }
+        }
+        .frame(minHeight: minHeight)
+    }
+
+    /// The editor wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// `size` forwards the component's own `TextInputSize` preset (which keys the
+    /// editor's *minHeight* here rather than a fixed row height); an explicit
+    /// `minHeight(_:)` override changes the content height but still reports the
+    /// declared preset to the style.
+    @ViewBuilder
+    private var editorBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(editorCore),
+            isFocused: isFocused,
+            isEnabled: isEnabled,
+            hasError: hasError,
+            hasWarning: hasWarning,
+            size: size
+        ))
     }
 
     private var editorBinding: Binding<String> {
@@ -131,13 +153,6 @@ public struct MultiLineTextInput: View {
         if hasWarning { return theme.foreground(.systemcolorsFgWarning) }
         if isFocused { return theme.text(.textHero) }
         return theme.text(.textTertiary)
-    }
-
-    private var borderColor: Color {
-        if hasError { return theme.border(.systemcolorsBorderError) }
-        if hasWarning { return theme.border(.systemcolorsBorderWarning) }
-        if isFocused { return theme.border(.borderHero) }
-        return theme.border(.borderPrimary)
     }
 }
 
@@ -187,6 +202,10 @@ public extension MultiLineTextInput {
                     .placeholder("Write something…").characterLimit(200)
                 MultiLineTextInput("Short note", text: $text)
                     .size(.xsmall).characterLimit(80).countStyle(.remaining)
+                // Swapped chrome: underlined editor, same behavior.
+                MultiLineTextInput("Underlined", text: $text)
+                    .placeholder("No border, just a rule")
+                    .fieldStyle(.underlined)
             }
             .padding()
         }
