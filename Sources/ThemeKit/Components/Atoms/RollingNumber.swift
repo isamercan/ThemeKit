@@ -47,7 +47,11 @@ public extension RollingNumber {
     /// Font weight of the rolling digits.
     func weight(_ w: Font.Weight) -> Self { copy { $0.weight = w } }
 
-    /// Override the digit color (defaults to `textPrimary`).
+    /// Semantic digit color; `nil` (default) uses `textPrimary`.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color?.base } }
+
+    /// Raw digit color override (back-compat); prefer `accent(_:)`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func color(_ c: Color?) -> Self { copy { $0.color = c } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

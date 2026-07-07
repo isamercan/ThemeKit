@@ -140,6 +140,7 @@ public extension RadialProgress {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.semantic = color } }
 
     /// Raw ring fill override (back-compat); prefer `accent(_:)`. Wins over `accent`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func ringColor(_ c: Color?) -> Self { copy { $0.tint = c } }
 
     /// Spoken VoiceOver label for the ring (the value is announced separately).

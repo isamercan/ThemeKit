@@ -54,8 +54,16 @@ public extension Icon {
     /// Size tier: xs / sm / md / lg / xl (12/16/20/24/32 pt).
     func size(_ s: IconSize) -> Self { copy { $0.size = s } }
 
-    /// Tint color; `nil` (default) inherits the surrounding `foregroundStyle`.
-    func color(_ c: Color?) -> Self { copy { $0.color = c } }
+    /// Semantic tint; `nil` (default) inherits the surrounding `foregroundStyle`.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color?.base } }
+
+    /// Raw tint override (back-compat); prefer `accent(_:)`.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
+    func color(_ c: Color?) -> Self { colorOverride(c) }
+
+    /// Module-internal raw tint, so in-package call sites stay off the
+    /// deprecated `color(_:)` without changing behavior.
+    internal func colorOverride(_ c: Color?) -> Self { copy { $0.color = c } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -65,10 +73,9 @@ public extension Icon {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
     HStack(spacing: 12) {
         ForEach(IconSize.allCases, id: \.self) { s in
-            Icon(systemName: "star.fill").size(s).color(theme.foreground(.fgHero))
+            Icon(systemName: "star.fill").size(s).accent(.primary)
         }
     }
     .padding()

@@ -25,7 +25,7 @@ public enum ProgressStatus {
 /// Drawing is delegated to the ``MeterStyle`` in the environment (set with
 /// `.meterStyle(_:)`; default ``LinearMeterStyle`` reproduces the original bar
 /// pixel-for-pixel). The component keeps the DATA: it clamps the fraction,
-/// resolves the fill (explicit `colors(fill:)` override > status gradient >
+/// resolves the fill (explicit `accent(_:)` override > status gradient >
 /// status solid), reads the track token, caps the success segment at the
 /// current value, and builds the percentage/checkmark label. The label is
 /// passed through `MeterStyleConfiguration.label` (not drawn here) so styles
@@ -60,7 +60,7 @@ public struct ProgressBar: View {
     /// stepped variant, color overrides, a success segment, a custom label
     /// formatter, the VoiceOver name — is set via chainable modifiers:
     /// `.showsPercentage(_:) .status(_:) .barHeight(_:) .gradient(_:) .steps(_:)
-    /// .colors(fill:track:) .successSegment(_:) .valueFormat(_:) .progressLabel(_:)`.
+    /// .accent(_:) .successSegment(_:) .valueFormat(_:) .progressLabel(_:)`.
     public init(value: Double) {   // R1
         self.value = min(max(value, 0), 1)
     }
@@ -110,7 +110,7 @@ public struct ProgressBar: View {
     private var labelView: AnyView? {
         if status == .success && value >= 1 {
             return AnyView(
-                Icon(systemName: "checkmark.circle.fill").size(.sm).color(status.semantic.accent)
+                Icon(systemName: "checkmark.circle.fill").size(.sm).colorOverride(status.semantic.accent)
             )
         }
         if showPercentage {
@@ -146,7 +146,11 @@ public extension ProgressBar {
     func gradient(_ on: Bool = true) -> Self { copy { $0.gradient = on } }
     /// Render as a segmented (stepped) bar with this many segments.
     func steps(_ count: Int?) -> Self { copy { $0.steps = count } }
-    /// Overrides the fill color and/or the track color (otherwise status-derived).
+    /// Semantic fill override; `nil` (default) keeps the status-derived fill.
+    /// Drives only the fill — the track keeps its token default.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.strokeColor = color?.base } }
+    /// Raw fill/track overrides (back-compat); prefer `accent(_:)` for the fill.
+    @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func colors(fill: Color? = nil, track: Color? = nil) -> Self {
         copy {
             if let fill { $0.strokeColor = fill }
