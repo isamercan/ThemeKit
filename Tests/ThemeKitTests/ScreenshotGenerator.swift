@@ -454,6 +454,12 @@ final class ScreenshotGenerator: XCTestCase {
         } after: {
             Theme.shared.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
         }.frame(width: 320, height: 140))
+        organismsTravel()
+    }
+
+    /// The travel-wave organisms — split out to keep `organisms()` under the
+    /// linter's function-body ceiling.
+    private func organismsTravel() {
         shot("AgentPriceRow", AgentPriceRow("Skytrip") {}
             .rating(4.5).badge("Cheapest").subtitle("Free cancellation within 24h")
             .original(452).price(429, currencyCode: "USD").cta("Go to site").recommended()
@@ -597,6 +603,25 @@ final class ScreenshotGenerator: XCTestCase {
         }
         .elevation(.elevated)
         .frame(width: 340))
+        shot("FlightListItem", VStack(spacing: 14) {
+            FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
+                           departure: Date(timeIntervalSince1970: 1_781_000_000),
+                           arrival: Date(timeIntervalSince1970: 1_781_014_700))
+                .flightNo("SK 1123").price(214, currencyCode: "USD", caption: "from").badge("Best")
+                .onSelect { }
+            FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
+                           departure: Date(timeIntervalSince1970: 1_781_000_000),
+                           arrival: Date(timeIntervalSince1970: 1_781_014_700))
+                .price(164, currencyCode: "USD").original(214)
+                .deal("23% below typical", tone: .success)
+                .trend([0.82, 0.78, 0.9, 0.66, 0.52, 0.44])
+                .flightListItemStyle(.deal)
+            FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
+                           departure: Date(timeIntervalSince1970: 1_781_000_000),
+                           arrival: Date(timeIntervalSince1970: 1_781_014_700))
+                .flightNo("SK 1123").cabin("Economy").price(214, currencyCode: "USD")
+                .flightListItemStyle(.ticket)
+        }.frame(width: 360))
         shot("WindowFrame", WindowFrame("Trip Planner") {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Istanbul to London").textStyle(.headingSm)

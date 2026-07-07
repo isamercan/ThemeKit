@@ -99,7 +99,7 @@ enum ComponentRegistry {
         .knob("IconTile", .atoms, demo: IconTileDemo(), usage: ##"IconTile("suitcase.fill").accent(.turquoise).size(46)   // shared leading tile"##),
         .static("Aura", .atoms, usage: ##"card.aura(.primary)   // breathing glow halo · Aura().color(.purple).size(120).intensity(0.7)"##) {
             HStack(spacing: 48) {
-                Aura().color(.primary).size(90)
+                Aura().accent(.primary).size(90)
                 Card { Text("Featured").padding(28) }.aura(.purple)
             }
             .padding(.vertical, 32)
@@ -275,6 +275,7 @@ enum ComponentRegistry {
         .knob("DestinationCard", .organisms, demo: DestinationCardDemo(), usage: #"DestinationCard("Bali & 3-Days", image: url).ribbon("Top #1").price(1_450).rating(4.8).favorite($fav).tags(["Beach", "Culture"]).onTap { }"#),
         .knob("FareFamilyCard", .organisms, demo: FareFamilyCardDemo(), usage: ##"FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([FareFeature("Cabin bag", systemImage: "handbag")]).selection($picked)"##),
         .knob("FlightResultRow", .organisms, demo: FlightResultRowDemo(), usage: ##"FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: arr).flightNo("TK 2434").price(3_538.99).baggage("15 kg").badge("Cheapest").returnLeg(from: "AYT", to: "IST", departure: d2, arrival: a2).onSelect { }"##),
+        .knob("FlightListItem", .organisms, demo: FlightListItemDemo(), usage: ##"FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr).price(214, currencyCode: "USD", caption: "from").badge("Best").onSelect { }.flightListItemStyle(.timeline)   // 8 styles: .compact/.timeline/.fareBoard/.deal/.ticket/.journey/.slices/.timetable"##),
         .knob("DateRangePicker", .organisms, demo: DateRangePickerDemo(), usage: ##"DateRangePicker(.hotel) { result in … }.display(.month/.week/.year/.browse).daySelection(.rounded).accent(.turquoise).day { ctx in HeatCell(ctx) }.holiday(on: days, color: .error, name: "…")   // or someView.dateRangePicker(isPresented: $show) { … }"##),
         .knob("SheetHeader", .organisms, demo: SheetHeaderDemo(), usage: ##"SheetHeader("Passengers").onBack { }.onClose { }.progress(0.4)   // modal header (not the tab NavigationBar)"##),
         .knob("Calendar Designer", .organisms, demo: CalendarDesignerDemo(), usage: ##"CalendarStyleConfigurator(style: $style)   // live design playground → style.generatedSwiftCode (Almanac)"##),

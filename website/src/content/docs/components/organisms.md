@@ -251,6 +251,19 @@ A flight search result row, with an optional return leg.
 FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: arr).flightNo("TK 2434").price(3_538.99).baggage("15 kg").badge("Cheapest").returnLeg(from: "AYT", to: "IST", departure: d2, arrival: a2).onSelect { }
 ```
 
+### FlightListItem {#flightlistitem}
+
+A style-driven flight search-result list item: the component holds the data (legs, fares, price, deal signals, schedule) and a `FlightListItemStyle` owns the entire layout. Eight built-in styles cover the industry archetypes — `.compact` (one-line row), `.timeline` (route-track card, default), `.fareBoard` (fare-family chips), `.deal` (price judgment + sparkline), `.ticket` (perforated pass), `.journey` (expandable leg timeline), `.slices` (round-trip/multi-city card), `.timetable` (carrier departure chips) — and custom styles receive the same typed configuration.
+
+```swift
+FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
+    .flightNo("SK 1123")
+    .price(214, currencyCode: "USD", caption: "from")
+    .badge("Best")
+    .onSelect { }
+    .flightListItemStyle(.deal)   // or .compact, .ticket, .journey, …
+```
+
 ### FlightTicketCard {#flightticketcard}
 
 A compact flight ticket summary card.
