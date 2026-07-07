@@ -5,13 +5,17 @@
 //  Molecule. A form-field-styled tappable trigger — a label, a value and a
 //  trailing chevron — that runs an action instead of editing text. Use it to open
 //  a picker/sheet (passengers, cabin class, a date summary…). Token-bound. Unlike
-//  ``SelectBox`` (native options menu) it opens whatever you want.
+//  ``SelectBox`` (native options menu) it opens whatever you want. The field
+//  chrome (fill + border) is a swappable ``FieldStyle`` set with `.fieldStyle(_:)`.
 //
 
 import SwiftUI
 
 public struct FieldButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
+    @Environment(\.fieldStyle) private var fieldStyle
 
     private let value: String
     private let action: () -> Void
@@ -26,36 +30,55 @@ public struct FieldButton: View {
         self.action = action
     }
 
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
-
     public var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: fieldLabel != nil ? 2 : 0) {
-                if let fieldLabel {
-                    Text(fieldLabel).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
-                }
-                HStack(spacing: 8) {
-                    if let systemImage {
-                        Image(systemName: systemImage).font(.system(size: 14)).foregroundStyle(theme.text(.textSecondary))
-                    }
-                    Text(value).textStyle(.bodyBase400)
-                        .foregroundStyle(isPlaceholder ? theme.text(.textTertiary) : theme.text(.textPrimary))
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    if let trailingSystemImage {
-                        Image(systemName: trailingSystemImage).font(.system(size: 12)).foregroundStyle(theme.text(.textTertiary))
-                    }
-                }
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(height: fieldLabel != nil ? 56 : 48)
-            .frame(maxWidth: .infinity)
-            .background(theme.background(.bgElevatorPrimary), in: shape)
-            .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
+            fieldBox
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(fieldLabel.map { $0 + ", " } ?? "")\(value)")
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// The composed trigger row (label + value + accessories), sized —
+    /// everything the active ``FieldStyle`` receives as `configuration.content`.
+    private var fieldCore: some View {
+        VStack(alignment: .leading, spacing: fieldLabel != nil ? 2 : 0) {
+            if let fieldLabel {
+                Text(fieldLabel).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
+            }
+            HStack(spacing: 8) {
+                if let systemImage {
+                    Image(systemName: systemImage).font(.system(size: 14)).foregroundStyle(theme.text(.textSecondary))
+                }
+                Text(value).textStyle(.bodyBase400)
+                    .foregroundStyle(isPlaceholder ? theme.text(.textTertiary) : theme.text(.textPrimary))
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if let trailingSystemImage {
+                    Image(systemName: trailingSystemImage).font(.system(size: 12)).foregroundStyle(theme.text(.textTertiary))
+                }
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .frame(height: fieldLabel != nil ? 56 : 48)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// The trigger row wrapped in the active ``FieldStyle`` chrome (fill + border).
+    /// Configuration mapping: FieldButton has no focus / open-popover state and no
+    /// validation axis, so `isFocused` / `hasError` / `hasWarning` are always
+    /// false; `isEnabled` comes from the environment (`.disabled(_:)`). `size` is
+    /// nominal `.medium` — FieldButton has no `TextInputSize` axis; its 48/56pt
+    /// (labelled) height stays carried by the content.
+    private var fieldBox: some View {
+        fieldStyle.makeBody(configuration: FieldStyleConfiguration(
+            content: AnyView(fieldCore),
+            isFocused: false,
+            isEnabled: isEnabled,
+            hasError: false,
+            hasWarning: false,
+            size: .medium
+        ))
     }
 }
 
@@ -82,6 +105,8 @@ public extension FieldButton {
     VStack(spacing: 10) {
         FieldButton("2 Passengers · Economy") { }.label("Passengers").icon("person.2.fill")
         FieldButton("Select a date") { }.icon("calendar").placeholder()
+        // Underlined chrome via the shared FieldStyle hook.
+        FieldButton("Business class") { }.label("Cabin").fieldStyle(.underlined)
     }
     .padding()
 }
