@@ -78,8 +78,13 @@ public struct ListRowInfo: Identifiable {
 /// selector. Trailing: chevron / value / toggle / checkmark / bound checkbox /
 /// inline button / price block / status text. Plus a per-row meta line (rating,
 /// sentiment, comment count), an active-selected background and an info button.
+/// Fully custom `leading { }` / `trailing { }` slots override the built-in
+/// accessories, and the row chrome (layout, padding, selected background) is
+/// styleable via ``ListRowStyle`` / `.listRowStyle(_:)`.
 public struct ListRow: View {
     @Environment(\.theme) private var theme
+    @Environment(\.listRowStyle) private var style
+    @Environment(\.isEnabled) private var isEnabled
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var subtitle: String?
@@ -96,6 +101,8 @@ public struct ListRow: View {
     private var multilineTitle = false
     private var infoAction: (() -> Void)?
     private var trailing: ListRowTrailing = .chevron
+    private var leadingSlot: AnyView?
+    private var trailingSlot: AnyView?
 
     private let title: String
     private let action: (() -> Void)?
@@ -109,28 +116,56 @@ public struct ListRow: View {
         Button {
             action?()
         } label: {
-            HStack(spacing: Theme.SpacingKey.md.value) {
-                leadingView
-                centerView
-                Spacer(minLength: Theme.SpacingKey.sm.value)
-                if let infoAction {
-                    Button(action: infoAction) {
-                        Icon(systemName: "info.circle").size(.sm).color(theme.text(.textTertiary))
-                    }
-                    .buttonStyle(.plain)
-                }
-                trailingView
-            }
-            .padding(.vertical, Theme.SpacingKey.sm.value)
-            .padding(.horizontal, isSelected ? Theme.SpacingKey.md.value : 0)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .fill(isSelected ? theme.background(.bgHero).opacity(0.08) : .clear)
-            )
-            .contentShape(Rectangle())
+            style.makeBody(configuration: configuration)
+                .contentShape(Rectangle())
         }
         .buttonStyle(RowPressStyle(cornerRadius: Theme.RadiusKey.sm.value))
-        .disabled(action == nil && !isInteractiveTrailing && leadingSelection == nil)
+        .disabled(action == nil && !isInteractiveTrailing && leadingSelection == nil
+                  && leadingSlot == nil && trailingSlot == nil)
+    }
+
+    /// The zones + state handed to the active ``ListRowStyle``. Slots win over
+    /// the built-in leading/trailing renders; empty zones are passed as `nil`.
+    private var configuration: ListRowStyleConfiguration {
+        ListRowStyleConfiguration(
+            leading: resolvedLeading,
+            content: AnyView(centerView),
+            trailing: resolvedTrailing,
+            isSelected: isSelected,
+            isEnabled: isEnabled,
+            size: size
+        )
+    }
+
+    private var resolvedLeading: AnyView? {
+        if let leadingSlot { return leadingSlot }
+        guard leadingSelection != nil || leadingImageURL != nil || number != nil || leadingSystemImage != nil else {
+            return nil
+        }
+        return AnyView(leadingView)
+    }
+
+    private var resolvedTrailing: AnyView? {
+        if trailingSlot == nil, infoAction == nil, case .none = trailing { return nil }
+        return AnyView(trailingGroup)
+    }
+
+    /// Info button + (custom slot, or the enum accessory), spaced like the row.
+    @ViewBuilder
+    private var trailingGroup: some View {
+        HStack(spacing: Theme.SpacingKey.md.value) {
+            if let infoAction {
+                Button(action: infoAction) {
+                    Icon(systemName: "info.circle").size(.sm).color(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+            }
+            if let trailingSlot {
+                trailingSlot
+            } else {
+                trailingView
+            }
+        }
     }
 
     private var isInteractiveTrailing: Bool {
@@ -348,6 +383,12 @@ public extension ListRow {
     /// Trailing accessory: chevron / value / toggle / checkmark / checkbox / button / price / status.
     func trailing(_ t: ListRowTrailing) -> Self { copy { $0.trailing = t } }
 
+    /// A fully custom leading view (replaces the icon / image / number / radio).
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.leadingSlot = AnyView(content()) } }
+
+    /// A fully custom trailing view (replaces the enum accessory).
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.trailingSlot = AnyView(content()) } }
+
     /// Trailing info button with its own action.
     func onInfo(_ action: (() -> Void)?) -> Self { copy { $0.infoAction = action } }
 
@@ -398,6 +439,22 @@ public struct ListSectionHeader: View {
                         .trailing(.status("Available", systemImage: "checkmark.seal.fill"))
                     DividerView().size(.small)
                     ListRow("Update payment").trailing(.button("Edit", action: {}))
+
+                    // Inset card style + custom slots.
+                    VStack(spacing: Theme.SpacingKey.sm.value) {
+                        ListRow("Inset card row", action: {})
+                            .subtitle("Bordered, field radius").icon("creditcard")
+                        ListRow("Custom slots", action: {})
+                            .leading {
+                                Image(systemName: "sparkles").font(.system(size: 20))
+                            }
+                            .trailing {
+                                Badge("NEW").badgeStyle(.info).variant(.soft).size(.small)
+                            }
+                            .selected(true)
+                    }
+                    .listRowStyle(.inset)
+                    .padding(.top, Theme.SpacingKey.md.value)
                 }
                 .padding()
             }
