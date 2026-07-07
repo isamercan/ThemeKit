@@ -8,6 +8,7 @@ import SwiftUI
 
 private struct SelectionCard<Control: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.cardStyle) private var cardStyle
 
     let title: String
     let description: String?
@@ -17,37 +18,48 @@ private struct SelectionCard<Control: View>: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                control()
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .textStyle(.labelBase600)
-                        .foregroundStyle(theme.text(.textPrimary))
-                    if let description {
-                        Text(description)
-                            .textStyle(.bodySm400)
-                            .foregroundStyle(theme.text(.textSecondary))
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(Theme.SpacingKey.md.value)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? theme.background(.bgElevatorTertiary) : theme.background(.bgWhite),
-                       in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .strokeBorder(isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
-                                  lineWidth: isSelected ? 1.5 : 1)
-            )
-            .contentShape(Rectangle())
+            // The shell is drawn by the active `CardStyle`: selection flows through
+            // `Configuration.isSelected` (default style → 1.5pt hero frame) and the
+            // selected surface tint travels through `surfaceKey`. Flat card →
+            // `.none` elevation keeps the classic 1pt hairline. `.box` resolves to
+            // the same radius as the previous `RadiusKey.md` in bundled themes.
+            cardStyle.makeBody(configuration: CardStyleConfiguration(
+                content: AnyView(cardContent),
+                elevation: .none,
+                isSelected: isSelected,
+                isPressed: false,
+                surfaceKey: isSelected ? .bgElevatorTertiary : .bgWhite,
+                radius: .box))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
+        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            control()
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textPrimary))
+                if let description {
+                    Text(description)
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 /// Organisms. Card-shaped selectable controls (radio / checkbox) — selected
 /// state raises a hero border + tinted surface. State owned by the caller.
+/// The shell (surface, hairline, selected frame) is drawn by the active
+/// `CardStyle`, so `.cardStyle(_:)` reskins both cards in one place.
 public struct RadioCard: View {
     private let title: String
     private let isSelected: Bool
@@ -127,6 +139,26 @@ public extension CheckboxCard {
                 CheckboxCard("Add checked bag", isChecked: bag) { bag.toggle() }
                     .description("+$250")
             }
+            .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("Selected + outlined style") {
+    struct Demo: View {
+        @State var radio = "std"
+        @State var bag = true
+        var body: some View {
+            VStack(spacing: 12) {
+                RadioCard("Standard", isSelected: radio == "std") { radio = "std" }
+                    .description("Free delivery in 3–5 days")
+                RadioCard("Express", isSelected: radio == "exp") { radio = "exp" }
+                    .description("Next-day delivery")
+                CheckboxCard("Add checked bag", isChecked: bag) { bag.toggle() }
+                    .description("+$250")
+            }
+            .cardStyle(.outlined)
             .padding()
         }
     }

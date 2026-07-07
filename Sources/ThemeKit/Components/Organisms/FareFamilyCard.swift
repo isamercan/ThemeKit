@@ -7,6 +7,13 @@
 //  price + radio row (selectable set). Token-bound; the accent colour brands the
 //  tier. Composes the FareFeatureRow atom, PriceTag, RadioButton and ThemeButton.
 //
+//  The outer shell (surface fill, hairline, selected hero frame) is drawn by the
+//  active `CardStyle` from the environment: `.surface()` and the selection state
+//  (`.selected()` / `.selection()`) feed the `CardStyleConfiguration`, so
+//  `.cardStyle(_:)` can reskin the shell and restyle the selected frame in one
+//  place. The card is flat (no shadow), so it reports `.none` elevation and the
+//  default style draws the classic 1pt hairline.
+//
 
 import SwiftUI
 
@@ -20,8 +27,8 @@ import SwiftUI
 ///     .onSelect { book() }
 /// ```
 public struct FareFamilyCard: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     // Required content (R1).
     private let name: String
@@ -42,9 +49,27 @@ public struct FareFamilyCard: View {
     }
 
     private var active: Bool { selection?.wrappedValue ?? isSelected }
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous) }
 
     public var body: some View {
+        // The shell (fill, hairline, selected hero frame) is drawn by the active
+        // `CardStyle`; selection flows through `Configuration.isSelected`, so a
+        // custom style restyles the selected frame too. Flat card → `.none`
+        // elevation keeps the classic hairline (no shadow), as in HotelResultCard.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: .none,
+            isSelected: active,
+            isPressed: false,
+            surfaceKey: surfaceKey,
+            radius: .box))
+            .contentShape(Rectangle())
+            .onTapGesture { if selection != nil { select() } }
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(active ? .isSelected : [])
+    }
+
+    /// The card's inner layout — everything inside the shell.
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Text(name.uppercased())
                 .textStyle(.labelSm700)
@@ -66,12 +91,6 @@ public struct FareFamilyCard: View {
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(active ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: active ? 2 : 1))
-        .contentShape(Rectangle())
-        .onTapGesture { if selection != nil { select() } }
-        .accessibilityElement(children: .contain)
-        .accessibilityAddTraits(active ? .isSelected : [])
     }
 
     @ViewBuilder private var footer: some View {
@@ -138,4 +157,19 @@ public extension FareFamilyCard {
             ]).onSelect { }
         }.padding()
     }
+}
+
+#Preview("Selected + outlined style") {
+    @Previewable @State var picked = true
+    return VStack(spacing: 12) {
+        FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([
+            FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
+            FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
+        ]).selection($picked)
+        FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple).features([
+            FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
+        ]).selected()
+    }
+    .cardStyle(.outlined)
+    .padding()
 }

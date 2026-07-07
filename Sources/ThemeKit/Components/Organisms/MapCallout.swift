@@ -6,6 +6,16 @@
 //  (thumbnail + name + subtitle + score + price + CTA) with an optional downward
 //  pointer. Map-agnostic (no MapKit dependency); place it over your map. Token-bound.
 //
+//  The bubble's shell (surface fill, corner clipping, soft shadow, border) is drawn
+//  by the active `CardStyle` from the environment; `.surface()` feeds the
+//  `CardStyleConfiguration`. Two deliberate exceptions:
+//  · The pointer triangle sits *outside* the shell — it keeps the component's
+//    `theme.background(surfaceKey)` fill, so a custom style cannot recolour it
+//    (known limit; keep the pointer's fill in sync via `.surface(_:)`).
+//  · An `accent` border has no channel in `CardStyleConfiguration`, so when
+//    `accent != nil` the component keeps drawing today's 1.5pt accent overlay
+//    itself; with `accent == nil` the border comes from the style.
+//
 //  ```swift
 //  MapCallout(title: "Mirage Park Resort").image(url).score(8.9).price(9_600).onSelect { }
 //  ```
@@ -16,6 +26,7 @@ import SwiftUI
 public struct MapCallout: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.cardStyle) private var cardStyle
 
     private let title: String
     // Content — mutated only through the modifiers below (R2).
@@ -36,6 +47,8 @@ public struct MapCallout: View {
     public var body: some View {
         VStack(spacing: 0) {
             card
+            // Known limit: the pointer sits outside the `CardStyle` shell, so it
+            // keeps the component's surface fill — a custom style can't recolour it.
             if showsPointer { Triangle().fill(theme.background(surfaceKey)).frame(width: 14, height: 8).themeShadow(.soft) }
         }
         .frame(maxWidth: 280)
@@ -43,34 +56,49 @@ public struct MapCallout: View {
 
     private var card: some View {
         Button { onSelect?() } label: {
-            HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                if let imageURL {
-                    RemoteImage(imageURL).contentMode(.fill).frame(width: 56, height: 56)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            // The shell (fill, corner clipping, soft shadow, border) is drawn by
+            // the active `CardStyle`. `CardStyleConfiguration` has no accent
+            // channel, so when `accent != nil` the component keeps today's 1.5pt
+            // accent frame as its own overlay; when nil the style owns the border.
+            cardStyle.makeBody(configuration: CardStyleConfiguration(
+                content: AnyView(cardContent),
+                elevation: .soft,
+                isSelected: false,
+                isPressed: false,
+                surfaceKey: surfaceKey,
+                radius: .box))
+                .overlay {
+                    if let accent { shape.stroke(accent.base, lineWidth: 1.5) }
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                    if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
-                    HStack(spacing: 6) {
-                        if let score { ScoreBadge(score) }
-                        if let price { PriceTag(price, currencyCode: currencyCode).size(.small).emphasis(.hero).fractionDigits(0) }
-                    }
-                }
-                Spacer(minLength: 4)
-                if onSelect != nil {
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(accent.map { $0.base } ?? theme.text(.textTertiary)).mirrorsInRTL()
-                }
-            }
-            .padding(density.scale(Theme.SpacingKey.sm.value))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.background(surfaceKey), in: shape)
-            .overlay(shape.stroke(accent.map { $0.base } ?? theme.border(.borderPrimary), lineWidth: accent == nil ? 1 : 1.5))
-            .themeShadow(.soft)
-            .contentShape(shape)
+                .contentShape(shape)
         }
         .buttonStyle(.plain)
         .disabled(onSelect == nil)
         .accessibilityElement(children: .combine)
+    }
+
+    /// The bubble's inner layout — everything inside the shell.
+    private var cardContent: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            if let imageURL {
+                RemoteImage(imageURL).contentMode(.fill).frame(width: 56, height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
+                if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
+                HStack(spacing: 6) {
+                    if let score { ScoreBadge(score) }
+                    if let price { PriceTag(price, currencyCode: currencyCode).size(.small).emphasis(.hero).fractionDigits(0) }
+                }
+            }
+            Spacer(minLength: 4)
+            if onSelect != nil {
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(accent.map { $0.base } ?? theme.text(.textTertiary)).mirrorsInRTL()
+            }
+        }
+        .padding(density.scale(Theme.SpacingKey.sm.value))
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -109,4 +137,16 @@ public extension MapCallout {
     MapCallout(title: "Mirage Park Resort")
         .subtitle("Kemer, Antalya").score(8.9).price(9_600).onSelect { }
         .padding()
+}
+
+#Preview("Accent + outlined style") {
+    VStack(spacing: 16) {
+        // Accent frame stays component-drawn, layered over the custom shell.
+        MapCallout(title: "Mirage Park Resort")
+            .subtitle("Kemer, Antalya").score(8.9).price(9_600).accent(.success).onSelect { }
+        MapCallout(title: "Fable Boutique Hotel")
+            .subtitle("Göcek, Muğla").score(9.4).price(12_400).onSelect { }
+    }
+    .cardStyle(.outlined)
+    .padding()
 }
