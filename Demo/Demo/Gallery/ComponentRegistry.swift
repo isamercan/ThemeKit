@@ -127,6 +127,8 @@ enum ComponentRegistry {
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete("Destination", text: $text, suggestions: items)\n// async: Autocomplete(text: $text, suggest: { await api.search($0) })"#),
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue") { }"#),
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
+        .knob("Space", .molecules, demo: SpaceDemo(), usage: #"Space { Button("Save"){}; Button("Cancel"){} }.size(.large).wrap()"#),
+        .knob("Affix", .molecules, demo: AffixDemo(), usage: #"ScrollView { Affix(offsetTop: 0) { Toolbar() }.onChange { affixed = $0 }; … }"#),
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save") { }.color(.success).variant(.soft).size(.medium).shape(.pill)"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on).accent(.success).infoMessages(error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
