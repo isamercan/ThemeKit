@@ -25,10 +25,13 @@ public struct RecentSearchRow: View {
     private var roundTrip = false
     private var dates: String?
     private var passengers: String?
-    private var systemImage = "clock.arrow.circlepath"
+    private var systemImage: String? = "clock.arrow.circlepath"
     private var onRemove: (() -> Void)?
+    private var onSearch: (() -> Void)?
+    private var searchAccent: SemanticColor = .neutral
     private var accent: SemanticColor?
     private var bordered = false
+    private var pill = false
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     public init(from: String, to: String, action: @escaping () -> Void = {}) {   // R1
@@ -37,7 +40,11 @@ public struct RecentSearchRow: View {
         self.action = action
     }
 
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
+    private var shape: AnyShape {
+        pill
+            ? AnyShape(Capsule(style: .continuous))
+            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+    }
     private var caption: String? {
         [dates, passengers].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
     }
@@ -45,7 +52,7 @@ public struct RecentSearchRow: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                IconTile(systemImage).size(40).iconSize(16).accent(accent)
+                if let systemImage { IconTile(systemImage).size(40).iconSize(16).accent(accent) }
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(from).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
@@ -59,8 +66,8 @@ public struct RecentSearchRow: View {
             }
             .padding(density.scale(Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(bordered ? theme.background(surfaceKey) : .clear, in: shape)
-            .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
+            .background((bordered || pill) ? theme.background(surfaceKey) : .clear, in: shape)
+            .overlay { if bordered && !pill { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -68,7 +75,14 @@ public struct RecentSearchRow: View {
     }
 
     @ViewBuilder private var trailing: some View {
-        if let onRemove {
+        if let onSearch {
+            ThemeButton(action: onSearch)
+                .icon(leading: "magnifyingglass")
+                .shape(.circle)
+                .color(searchAccent)
+                .size(.small)
+                .accessibilityLabel(String(themeKit: "Search"))
+        } else if let onRemove {
             Button { onRemove() } label: {
                 Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary))
                     .frame(width: 44, height: 44).contentShape(Rectangle())
@@ -90,14 +104,24 @@ public extension RecentSearchRow {
     func roundTrip(_ on: Bool = true) -> Self { copy { $0.roundTrip = on } }
     func dates(_ text: String?) -> Self { copy { $0.dates = text } }
     func passengers(_ text: String?) -> Self { copy { $0.passengers = text } }
-    func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
+    /// Leading icon-tile glyph, or `nil` to drop the tile (e.g. a search pill).
+    func icon(_ systemName: String?) -> Self { copy { $0.systemImage = systemName } }
     /// Adds a trailing remove (✕) button instead of the chevron.
     func onRemove(_ action: @escaping () -> Void) -> Self { copy { $0.onRemove = action } }
+    /// Trailing filled **search** button (magnifier) instead of the chevron/remove —
+    /// turns the row into a "mini search bar" summary that re-runs the search when
+    /// tapped. Takes precedence over ``onRemove(_:)``.
+    func onSearch(_ action: @escaping () -> Void) -> Self { copy { $0.onSearch = action } }
+    /// Fill color of the ``onSearch(_:)`` button (default `.neutral` ink).
+    func searchAccent(_ color: SemanticColor) -> Self { copy { $0.searchAccent = color } }
     /// Brand-tints the leading icon tile (default: neutral tile).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Wrap in a bordered surface (default off — flush list row).
     func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
-    /// Surface fill of the bordered variant (background token key, default `.bgBase`).
+    /// Fully-rounded **capsule** surface — a pill that sits on a colored band (the
+    /// search-result mini bar). Fills with ``surface(_:)`` and drops the hairline.
+    func pill(_ on: Bool = true) -> Self { copy { $0.pill = on } }
+    /// Surface fill of the bordered / pill variant (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
@@ -113,4 +137,17 @@ public extension RecentSearchRow {
         RecentSearchRow(from: "SAW", to: "ESB") { }.dates("2 Aug").passengers("1 adult").onRemove { }
     }
     .padding()
+}
+
+#Preview("Search summary pill") {
+    // A "mini search bar" — no leading tile, capsule surface on a brand band,
+    // trailing filled search button. Brand color comes from the theme, not here.
+    RecentSearchRow(from: "Istanbul", to: "Antalya") { }
+        .icon(nil)
+        .dates("14 Jan").passengers("7")
+        .pill().surface(.bgWhite)
+        .onSearch { }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(SemanticColor.primary.solid)
 }

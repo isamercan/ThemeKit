@@ -35,6 +35,7 @@ public struct DatePriceCard: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var currencyCode = "TRY"
     private var isCheapest = false
+    private var pill = false
 
     public init(_ item: DatePriceItem, isSelected: Bool, action: @escaping () -> Void) {   // R1
         self.item = item
@@ -48,20 +49,42 @@ public struct DatePriceCard: View {
 
     public var body: some View {
         Button(action: action) {
-            // The shell (fill, hairline, selected hero frame) is drawn by the
-            // active `CardStyle`; selection flows through `Configuration.isSelected`.
-            // Flat card → `.none` elevation keeps the classic 1pt hairline.
-            cardStyle.makeBody(configuration: CardStyleConfiguration(
-                content: AnyView(cardContent),
-                elevation: .none,
-                isSelected: isSelected,
-                isPressed: false,
-                surfaceKey: .bgElevatorPrimary,
-                radius: .selector))
+            if pill { pillShell } else { cardedShell }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(item.date), \(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))\(isCheapest ? ", lowest fare" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The default carded shell — drawn by the active `CardStyle` (grid layout).
+    private var cardedShell: some View {
+        // Flat card → `.none` elevation keeps the classic 1pt hairline.
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: .none,
+            isSelected: isSelected,
+            isPressed: false,
+            surfaceKey: .bgElevatorPrimary,
+            radius: .selector))
+    }
+
+    /// The pill shell — the horizontal "Timeline" strip presentation: a rounded
+    /// capsule that turns hero-soft with a 2pt hero border + semibold date when
+    /// selected. Brand color resolves from the theme.
+    private var pillShell: some View {
+        let shape = Capsule(style: .continuous)
+        return VStack(spacing: 2) {
+            Text(item.date)
+                .textStyle(isSelected ? .labelSm600 : .bodySm400)
+                .foregroundStyle(theme.text(.textPrimary))
+            Text(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))
+                .textStyle(.overline400)
+                .foregroundStyle(isCheapest ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
+        }
+        .padding(.horizontal, Theme.SpacingKey.base.value)
+        .frame(height: 40)
+        .background(isSelected ? SemanticColor.primary.soft : theme.background(.bgWhite), in: shape)
+        .overlay { if isSelected { shape.strokeBorder(theme.border(.borderHero), lineWidth: 2) } }
     }
 
     /// The card's inner layout — everything inside the shell. The 6% hero wash on
@@ -86,6 +109,8 @@ public extension DatePriceCard {
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Highlights this as the lowest fare (price shown in success green).
     func cheapest(_ on: Bool = true) -> Self { copy { $0.isCheapest = on } }
+    /// Render as a horizontal-strip pill (rounded capsule) instead of a card.
+    func pill(_ on: Bool = true) -> Self { copy { $0.pill = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
@@ -104,6 +129,7 @@ public struct DatePriceStrip: View {
     private var currencyCode = "TRY"
     private var columns = 3
     private var highlightsCheapest = true
+    private var stripLayout = false
     private var onPrev: (() -> Void)?
     private var onNext: (() -> Void)?
 
@@ -118,7 +144,9 @@ public struct DatePriceStrip: View {
     }
 
     public var body: some View {
-        if onPrev != nil || onNext != nil {
+        if stripLayout {
+            stripView
+        } else if onPrev != nil || onNext != nil {
             HStack(spacing: 8) {
                 pageButton("chevron.left", onPrev)
                 gridView.frame(maxWidth: .infinity)
@@ -126,6 +154,30 @@ public struct DatePriceStrip: View {
             }
         } else {
             gridView
+        }
+    }
+
+    /// The horizontal "Timeline" strip — scrollable pills on a surface, with the
+    /// selected pill auto-centered.
+    private var stripView: some View {
+        let cheapest = cheapestIndex
+        return ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+                        DatePriceCard(item, isSelected: i == selection) { selection = i }
+                            .currency(currencyCode)
+                            .cheapest(i == cheapest)
+                            .pill()
+                            .id(i)
+                    }
+                }
+                .padding(density.scale(Theme.SpacingKey.sm.value))
+            }
+            .background(theme.background(.bgElevatorPrimary))
+            .onChange(of: selection) { _, new in
+                withAnimation { proxy.scrollTo(new, anchor: .center) }
+            }
         }
     }
 
@@ -158,8 +210,11 @@ public struct DatePriceStrip: View {
 public extension DatePriceStrip {
     /// Currency code for the prices (default "TRY").
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
-    /// Number of columns (default 3).
+    /// Number of columns for the grid layout (default 3).
     func columns(_ count: Int) -> Self { copy { $0.columns = max(1, count) } }
+    /// Lay the dates out as a horizontal **strip** of scrollable pills (the
+    /// "Timeline" presentation) instead of the multi-column grid.
+    func strip(_ on: Bool = true) -> Self { copy { $0.stripLayout = on } }
     /// Auto-highlight the lowest fare in success green (default on).
     func highlightCheapest(_ on: Bool = true) -> Self { copy { $0.highlightsCheapest = on } }
     /// Adds prev/next paging chevrons flanking the strip.
@@ -180,7 +235,12 @@ public extension DatePriceStrip {
             DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
             DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
         ]
-        var body: some View { DatePriceStrip(items, selection: $sel).padding() }
+        var body: some View {
+            VStack(spacing: 16) {
+                DatePriceStrip(items, selection: $sel).strip()          // Timeline pills
+                DatePriceStrip(items, selection: $sel).padding()        // grid
+            }
+        }
     }
     return Demo()
 }
