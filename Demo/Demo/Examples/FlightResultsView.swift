@@ -18,17 +18,34 @@ private struct SampleFlight: Identifiable {
     let to: String
     let departure: Date
     let arrival: Date
+    var stops: Int = 0
+    var layover: String? = nil
+    var cabin: String = "Economy"
+    var carryOn: String? = "8 kg"
+    var checked: String? = nil
     let price: Decimal
+    var original: Decimal? = nil
+    var badge: String? = nil
+    var deal: String? = nil
+    var dealTone: SemanticColor = .warning
 
+    /// Deliberately varied so each `.tray` card exercises different knobs —
+    /// stops, baggage, cabin, a strikethrough discount, a badge, a deal note.
     static let all: [SampleFlight] = {
         let base = Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 3, hour: 7)) ?? Date(timeIntervalSince1970: 0)
         func at(_ h: Int, _ m: Int = 0) -> Date { base.addingTimeInterval(TimeInterval(h * 3600 + m * 60)) }
         return [
-            .init(airline: "Skyline Air", from: "SAW", to: "AYT", departure: at(0), arrival: at(3, 15), price: 12_700),
-            .init(airline: "Skyline Air", from: "SAW", to: "AYT", departure: at(2), arrival: at(5, 15), price: 12_700),
-            .init(airline: "Aegean Jet", from: "IST", to: "AYT", departure: at(4), arrival: at(6, 5), price: 13_450),
-            .init(airline: "Skyline Air", from: "SAW", to: "AYT", departure: at(6), arrival: at(9, 15), price: 12_700),
-            .init(airline: "Blue Wings", from: "IST", to: "AYT", departure: at(8), arrival: at(10, 20), price: 11_980),
+            .init(airline: "Skyline Air", from: "SAW", to: "AYT", departure: at(0), arrival: at(3, 15),
+                  checked: "20 kg", price: 12_700, original: 22_700, badge: "Best value"),
+            .init(airline: "Aegean Jet", from: "IST", to: "AYT", departure: at(2), arrival: at(6),
+                  stops: 1, layover: "SAW", carryOn: "Hand baggage", price: 13_450),
+            .init(airline: "Blue Wings", from: "IST", to: "AYT", departure: at(1), arrival: at(3, 20),
+                  price: 11_980, badge: "Cheapest"),
+            .init(airline: "Skyline Air", from: "SAW", to: "AYT", departure: at(5), arrival: at(8, 15),
+                  cabin: "Economy Plus", checked: "30 kg", price: 14_200, original: 16_000),
+            .init(airline: "Aegean Jet", from: "IST", to: "AYT", departure: at(11), arrival: at(13, 5),
+                  stops: 1, layover: "ESB", carryOn: "Hand baggage", price: 12_100,
+                  deal: "Last 2 seats", dealTone: .warning),
         ]
     }()
 }
@@ -84,10 +101,16 @@ struct FlightResultsView: View {
 
                 filterSection
 
-                ForEach(flights) { flight in
-                    FlightListItem(airline: flight.airline, from: flight.from, to: flight.to,
-                                   departure: flight.departure, arrival: flight.arrival)
-                        .price(flight.price, currencyCode: "TRY")
+                ForEach(flights) { f in
+                    FlightListItem(legs: [FlightLeg(airline: f.airline, from: f.from, to: f.to,
+                                                    departure: f.departure, arrival: f.arrival,
+                                                    stops: f.stops, layover: f.layover)])
+                        .cabin(f.cabin)
+                        .baggage(f.carryOn, checked: f.checked)
+                        .price(f.price, currencyCode: "TRY")
+                        .original(f.original)
+                        .badge(f.badge)
+                        .deal(f.deal, tone: f.dealTone)
                         .onSelect("Details") {}
                         .flightListItemStyle(.tray)
                         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -101,9 +124,11 @@ struct FlightResultsView: View {
     /// link and a chart/grid view toggle.
     private var filterSection: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
+            // FilterBar's native behaviour: icon + label Filter/Sort buttons that
+            // collapse to icons as the chips scroll left, and expand back at the start.
             FilterBar([QuickFilter("Cheapest", id: "cheapest"), QuickFilter("Fastest"),
                        QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $filters)
-                .chipStyle(.outlined).leadingShape(.circle).size(.small)
+                .chipStyle(.outlined).size(.small)
                 .onFilter {}.onSort {}
 
             HStack {
