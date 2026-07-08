@@ -13,7 +13,7 @@ export default defineConfig({
     starlight({
       title: 'ThemeKit',
       description:
-        'A themeable SwiftUI component library — 175 accessible components, design tokens, light/dark, and RTL.',
+        'A themeable SwiftUI component library — 185 accessible components, design tokens, light/dark, and RTL.',
       tagline: 'Themeable SwiftUI components, built to ship.',
       logo: {
         src: './src/assets/logo.svg',

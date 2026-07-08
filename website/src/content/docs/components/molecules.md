@@ -5,7 +5,7 @@ description: Every ThemeKit molecule, with a verified usage example for each.
 
 Small groups of atoms combined into one interactive unit — fields, pickers, rows, and the travel-booking building blocks.
 
-64 molecules. Every example below feeds modifiers with semantic color
+74 molecules. Every example below feeds modifiers with semantic color
 tokens (`SemanticColor` cases, `theme.foreground(_:)`…) — never a raw `Color` or `CGFloat`
 literal. See the [DocC reference](/ThemeKit/api/documentation/themekit/) for the full API.
 
@@ -522,4 +522,84 @@ One-way / round-trip / multi-city segmented toggle.
 
 ```swift
 TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $trip).icons([…])
+```
+
+### Space {#space}
+
+Even spacing between inline or stacked children — direction, size, align, wrap (Ant `Space`).
+
+```swift
+Space { Button("Save") { }; Button("Cancel") { } }.size(.large).wrap()
+```
+
+### Flex {#flex}
+
+A flexbox container with main-axis `justify` and cross-axis `align` distribution (Ant `Flex`).
+
+```swift
+Flex { Tag("A"); Tag("B"); Tag("C") }.justify(.spaceBetween).align(.center)
+```
+
+### AnchorNav {#anchor}
+
+A scroll-spy link rail; the active section highlights as you scroll (Ant `Anchor`).
+
+```swift
+AnchorNav(sections, active: $current).onSelect { proxy.scrollTo($0, anchor: .top) }
+```
+
+### Splitter {#splitter}
+
+Two panes separated by a draggable, clamped divider (Ant `Splitter`).
+
+```swift
+Splitter(.horizontal) { Sidebar() } second: { Detail() }.bounds(min: 0.2, max: 0.8)
+```
+
+### Cascader {#cascader}
+
+Pick a value from a multi-level option tree, one column per level (Ant `Cascader`).
+
+```swift
+Cascader(regions, selection: $path).placeholder("Region")
+```
+
+### Transfer {#transfer}
+
+Move items between a source and a target list with checkboxes + arrows (Ant `Transfer`).
+
+```swift
+Transfer(items, target: $enabled).titles("Available", "Enabled")
+```
+
+### Mentions {#mentions}
+
+A textarea where typing `@` opens a filterable mention list (Ant `Mentions`).
+
+```swift
+Mentions(text: $note, options: teammates).placeholder("Write a note…")
+```
+
+### Masonry {#masonry}
+
+A Pinterest-style grid; items flow into the shortest column (Ant `Masonry`).
+
+```swift
+Masonry { ForEach(photos) { Card($0) } }.columns(2).spacing(.sm)
+```
+
+### TreeView {#tree}
+
+A hierarchical tree with expand/collapse and optional cascade checkboxes (Ant `Tree`).
+
+```swift
+TreeView(nodes, selection: $checked).checkable()
+```
+
+### ColumnsGrid {#grid}
+
+An equal-column grid with a token gutter; fixed or responsive-adaptive (Ant `Grid`).
+
+```swift
+ColumnsGrid { ForEach(items) { Card($0) } }.columns(3).gutter(.md)
 ```

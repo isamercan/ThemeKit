@@ -13,7 +13,7 @@
 **[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
-  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 175 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 185 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
 > The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
@@ -49,7 +49,7 @@ import ThemeKit
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
-- **175 components** — Atoms / Molecules / Organisms, all token-bound.
+- **185 components** — Atoms / Molecules / Organisms, all token-bound.
 - 🧬 **Flexibility architecture** — six archetype style protocols (`CardStyle`,
   `FieldStyle`, `ChipStyle`, `BarStyle`, `MeterStyle`, `ToastStyle`,
   `ListRowStyle`) let you re-skin a whole component family with `.cardStyle(_:)`
@@ -303,6 +303,7 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 </tr>
 <tr>
 <td align="center" valign="top" width="33%"><img src="Screenshots/TiltCard.png" width="240" alt="TiltCard"><br><sub><b>TiltCard</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Watermark.png" width="240" alt="Watermark"><br><sub><b>Watermark</b></sub></td>
 </tr>
 </table>
 
@@ -403,6 +404,26 @@ BottomSheet…) and media components are best seen live in the [Demo app](#demo)
 <td align="center" valign="top" width="33%"><img src="Screenshots/StepperRow.png" width="240" alt="StepperRow"><br><sub><b>StepperRow</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/SuggestionRow.png" width="240" alt="SuggestionRow"><br><sub><b>SuggestionRow</b></sub></td>
 <td align="center" valign="top" width="33%"><img src="Screenshots/TripTypeToggle.png" width="240" alt="TripTypeToggle"><br><sub><b>TripTypeToggle</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Space.png" width="230" alt="Space"><br><sub><b>Space</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Flex.png" width="240" alt="Flex"><br><sub><b>Flex</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Anchor.png" width="232" alt="Anchor"><br><sub><b>Anchor</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Splitter.png" width="240" alt="Splitter"><br><sub><b>Splitter</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Cascader.png" width="240" alt="Cascader"><br><sub><b>Cascader</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Transfer.png" width="240" alt="Transfer"><br><sub><b>Transfer</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Mentions.png" width="240" alt="Mentions"><br><sub><b>Mentions</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Masonry.png" width="240" alt="Masonry"><br><sub><b>Masonry</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Tree.png" width="240" alt="Tree"><br><sub><b>Tree</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Grid.png" width="240" alt="Grid"><br><sub><b>Grid</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/Affix.png" width="240" alt="Affix"><br><sub><b>Affix</b></sub></td>
+<td align="center" valign="top" width="33%"><img src="Screenshots/SearchSummary.png" width="240" alt="SearchSummary"><br><sub><b>SearchSummary</b></sub></td>
 </tr>
 </table>
 
