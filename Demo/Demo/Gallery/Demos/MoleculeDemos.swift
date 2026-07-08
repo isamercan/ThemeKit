@@ -356,10 +356,15 @@ struct SegmentedControlDemo: View {
                     SegmentedControl(["17 Jul", "18 Jul", "19 Jul", "20 Jul"], selection: $outline)
                         .selectionStyle(.outline).shape(.round).fullWidth(false)
                 }
-                section("selectionStyle .tinted + .dividers() — the Figma icon toggle") {
-                    SegmentedControl([SegmentItem(icon: "chart.bar.fill"), SegmentItem(icon: "square.grid.2x2.fill"),
-                                      SegmentItem(icon: "map.fill")], selection: $tinted)
-                        .selectionStyle(.tinted).dividers().shape(.round).fullWidth(false)
+                section(".tinted() + .dividers() — icon toggle, with a base color") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SegmentedControl([SegmentItem(icon: "chart.bar.fill"), SegmentItem(icon: "square.grid.2x2.fill"),
+                                          SegmentItem(icon: "map.fill")], selection: $tinted)
+                            .tinted().dividers().shape(.round).fullWidth(false)
+                        SegmentedControl([SegmentItem(icon: "chart.bar.fill"), SegmentItem(icon: "square.grid.2x2.fill"),
+                                          SegmentItem(icon: "map.fill")], selection: $tinted)
+                            .tinted(.turquoise).dividers().shape(.round).fullWidth(false)
+                    }
                 }
             }
         }

@@ -77,6 +77,7 @@ public struct SegmentedControl: View {
     private var size: SegmentedSize = .medium
     private var shape: SegmentedShape = .default
     private var selectionStyle: SegmentedSelectionStyle = .thumb
+    private var tintColor: SemanticColor = .primary
     private var isVertical = false
     private var showsDividers = false
     private var accessibilityID: String? = nil
@@ -107,9 +108,9 @@ public struct SegmentedControl: View {
             : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
     }
 
-    /// The track fill — soft hero wash for `.tinted`, else the neutral base.
+    /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.
     private var trackFill: Color {
-        selectionStyle == .tinted ? SemanticColor.primary.soft : theme.background(.bgBase)
+        selectionStyle == .tinted ? tintColor.soft : theme.background(.bgBase)
     }
 
     public var body: some View {
@@ -204,7 +205,9 @@ public struct SegmentedControl: View {
 
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
         guard enabled else { return theme.text(.textDisabled) }
-        return isActive ? theme.text(.textHero) : theme.text(.textSecondary)
+        guard isActive else { return theme.text(.textSecondary) }
+        // The tinted style follows its base color's accent; others use the hero.
+        return selectionStyle == .tinted ? tintColor.accent : theme.text(.textHero)
     }
 }
 
@@ -222,9 +225,15 @@ public extension SegmentedControl {
     /// How the active option is drawn — the raised white `.thumb` (default), a
     /// hero-tinted `.outline` pill, or a thumbless `.tinted` soft track.
     func selectionStyle(_ s: SegmentedSelectionStyle) -> Self { copy { $0.selectionStyle = s } }
-    /// Draw a hairline between adjacent segments — pair with `.selectionStyle(.tinted)`
-    /// and `.shape(.round)` for the design-system icon toggle (chart / grid switch).
+    /// Draw a hairline between adjacent segments — pair with `.tinted()` / `.shape(.round)`
+    /// for the design-system icon toggle (chart / grid switch).
     func dividers(_ on: Bool = true) -> Self { copy { $0.showsDividers = on } }
+    /// The thumbless soft-track selection style, tinted with a base `color`
+    /// (default hero): the track uses `color.soft`, the active option `color.accent`.
+    /// Shortcut for `.selectionStyle(.tinted)` with a color.
+    func tinted(_ color: SemanticColor = .primary) -> Self {
+        copy { $0.selectionStyle = .tinted; $0.tintColor = color }
+    }
     /// Sets the accessibility-identifier namespace for this component.
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
 
