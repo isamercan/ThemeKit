@@ -5,6 +5,19 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.18.1] - 2026-07-08
+
+### Fixed
+- **FlightListItem `.tray`** now matches the Figma spec pixel-for-pixel. Two
+  flexibility upgrades on the underlying atoms/molecules made it possible
+  without bespoke drawing:
+  - `FlightRoute.track(.inline)` — the design-system track: full-width
+    hairlines flanking the duration, stops label beneath in tertiary,
+    outer-aligned 16pt time columns (stock `.path` look unchanged; time
+    strings now honor the environment locale).
+  - `PriceTag.originalBelow()` — stacks the struck compare-at price below the
+    amount (the spec's vertical price block).
+
 ## [0.18.0] - 2026-07-08
 
 ### Added
