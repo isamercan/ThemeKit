@@ -85,7 +85,7 @@ struct HotelCheckoutView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(hotel.name).textStyle(.labelMd700).foregroundStyle(Theme.shared.text(.textPrimary))
                 HStack(spacing: 6) {
-                    Icon(systemName: "calendar").size(.sm).color(Theme.shared.text(.textTertiary))
+                    Icon(systemName: "calendar").size(.sm).accent(.neutral)
                     Text("23 Jun – 26 Jun · \(nights) nights").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                 }
                 if hotel.freeCancellation { Callout("Free cancellation").variant(.success) }

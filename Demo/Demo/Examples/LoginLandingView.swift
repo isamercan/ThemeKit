@@ -152,7 +152,7 @@ struct LoginLandingView: View {
                             .foregroundStyle(theme.text(.textPrimary))
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: Theme.SpacingKey.sm.value)
-                        Icon(systemName: "chevron.right").size(.sm).color(theme.text(.textTertiary))
+                        Icon(systemName: "chevron.right").size(.sm).accent(.neutral)
                     }
                     .contentShape(Rectangle())
                 }
@@ -163,7 +163,7 @@ struct LoginLandingView: View {
                         ForEach(features) { feature in
                             Chip(feature.title, isSelected: .constant(false))
                                 .icon(feature.icon)
-                                .interactive(false)
+                                .disabled(false)
                         }
                     }
                 }

@@ -12,7 +12,7 @@ import ThemeKit
 
 struct AvatarDemo: View {
     @State private var size: AvatarSize = .md
-    @State private var background: AvatarBackground = .blue
+    @State private var accent: SemanticColor = .primary
     @State private var initials = false
     @State private var square = false
     @State private var group = false
@@ -31,9 +31,9 @@ struct AvatarDemo: View {
             if group {
                 AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).size(size).maxVisible(4)
             } else if numeric > 0 {
-                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).accent(accent).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             } else {
-                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).fillColor(background).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).accent(accent).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
             }
         } knobs: {
             Picker("Presence", selection: $presenceIdx) {
@@ -43,8 +43,8 @@ struct AvatarDemo: View {
                 ForEach(AvatarSize.allCases, id: \.self) { Text("\(Int($0.rawValue))").tag($0) }
             }.pickerStyle(.segmented).disabled(numeric > 0)
             HStack { Text("Numeric"); SwiftUI.Slider(value: $numeric, in: 0...96, step: 4) }
-            Picker("Background", selection: $background) {
-                Text("Blue").tag(AvatarBackground.blue); Text("White").tag(AvatarBackground.white); Text("Dark").tag(AvatarBackground.dark)
+            Picker("Accent", selection: $accent) {
+                Text("Primary").tag(SemanticColor.primary); Text("Neutral").tag(SemanticColor.neutral); Text("Purple").tag(SemanticColor.purple)
             }.pickerStyle(.segmented)
             Toggle("Square shape", isOn: $square)
             Toggle("Initials", isOn: $initials)
@@ -65,7 +65,7 @@ struct CountBadgeDemo: View {
                     Ribbon("New") {
                         RoundedRectangle(cornerRadius: 12).fill(Theme.shared.background(.bgElevatorTertiary)).frame(width: 96, height: 72)
                     }
-                    .color(.error)
+                    .accent(.error)
                 } else if dot {
                     Image(systemName: "bell.fill").font(.largeTitle).foregroundStyle(Theme.shared.text(.textPrimary)).dotBadge(color: .success)
                 } else {
@@ -100,7 +100,6 @@ struct BadgeDemo: View {
                 .badgeStyle(style).variant(variant).size(size)
                 .icon(icon ? "star.fill" : nil)
                 .badgeShape(pill ? .pill : .rounded)
-                .badgeColor(gradient ? Theme.shared.foreground(.fgSecondary) : nil)
                 .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)
                 .highlighted(highlighted)
         } knobs: {
@@ -138,7 +137,7 @@ struct ChipDemo: View {
                     .chipStyle(solid ? .solid : .tonal)
                     .rating(rating ? 4.6 : nil)
                     .exists(exists)
-                    .expands(expands)
+                    .fullWidth(expands)
                     .disabled(!enabled)
         } knobs: {
             Toggle("Selected", isOn: $selected)
@@ -170,8 +169,7 @@ struct ProgressBarDemo: View {
                     .status(status)
                     .gradient(gradient && !custom)
                     .steps(segmented ? 6 : nil)
-                    .colors(fill: custom ? SemanticColor.purple.base : nil,
-                            track: custom ? SemanticColor.purple.base.opacity(0.15) : nil)
+                    .accent(custom ? .purple : nil)
                     .successSegment(success ? min(value, 0.4) : nil)
                 StepIndicator(current: Int(value * 4), total: 5)
             }

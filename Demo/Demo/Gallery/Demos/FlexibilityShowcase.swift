@@ -61,7 +61,7 @@ struct FlexibilityShowcaseDemo: View {
                     }
                     labeled("Custom style (PillFieldStyle — demo-defined)") {
                         TextInput("Search destination", text: $email)
-                            .icon("magnifyingglass")
+                            .icon(leading:"magnifyingglass")
                             .fieldStyle(PillFieldStyle())
                     }
                 }
@@ -166,7 +166,7 @@ struct FlexibilityShowcaseDemo: View {
                     }
                     labeled("One custom style, whole form (PillFieldStyle)") {
                         VStack(spacing: 12) {
-                            TextInput("Search destination", text: $email).icon("magnifyingglass")
+                            TextInput("Search destination", text: $email).icon(leading: "magnifyingglass")
                             DateField("Departure", date: $when)
                         }
                         .fieldStyle(PillFieldStyle())
@@ -212,7 +212,7 @@ struct FlexibilityShowcaseDemo: View {
                                     .frame(height: 140)
                             }
                             .overlay { Ribbon("Last 2 rooms") { Color.clear.frame(height: 140) } }
-                            .footer { AmenityGrid([Amenity("Free Wi-Fi", systemImage: "wifi"), Amenity("Pool", systemImage: "figure.pool.swim")]).columns(2) }
+                            .footer { AmenityGrid([ThemeKit.Amenity("Free Wi-Fi", systemImage: "wifi"), ThemeKit.Amenity("Pool", systemImage: "figure.pool.swim")]).columns(2) }
                     }
                     labeled("Custom style (PosterCardStyle — demo-defined)") {
                         HotelResultCard(name: "Mirage Park Resort")

@@ -23,6 +23,7 @@ struct ThemesView: View {
                     livePreview
                         // Force a full rebuild of the static-leaf preview on swap.
                         .id(theme.revision)
+                    brandThemes
                     Text("\(ThemePreset.all.count) theme presets — tap to switch")
                         .textStyle(.labelSm700)
                         .foregroundStyle(theme.text(.textTertiary))
@@ -48,6 +49,29 @@ struct ThemesView: View {
                 .foregroundStyle(theme.text(.textSecondary))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Brand themes distilled from the exported Figma component-token files
+    /// (ETS / UB). Tapping one applies its full recipe — brand seeds + font +
+    /// card radius — via the generated-config path (so it persists across launch).
+    private var brandThemes: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+            Text("Brand themes — from Figma component tokens")
+                .textStyle(.labelSm700)
+                .foregroundStyle(theme.text(.textTertiary))
+            ThemePicker(
+                selection: Binding(
+                    get: { BrandTheme.matching(store.activeConfig)?.id },
+                    set: { _ in }
+                ),
+                themes: BrandTheme.presets,
+                onSelect: { preset in
+                    if let brand = BrandTheme.all.first(where: { $0.id == preset.id }) {
+                        store.applyGenerated(brand.config)
+                    }
+                }
+            )
+        }
     }
 
     /// Real ThemeKit components, painted by the *active* theme tokens.

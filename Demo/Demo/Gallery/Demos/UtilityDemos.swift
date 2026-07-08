@@ -69,7 +69,7 @@ struct InlineTextDemo: View {
     private var inline: InlineText {
         var t = InlineText(text, links: [("Terms", { flash("Terms tapped") }), ("Privacy Policy", { flash("Privacy tapped") })])
             .inlineStyle(styles[styleIdx].1)
-        if tinted { t = t.color(SemanticColor.purple.base) }
+        if tinted { t = t.accent(.purple) }
         return t
     }
 

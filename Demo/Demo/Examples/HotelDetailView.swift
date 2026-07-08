@@ -55,7 +55,7 @@ struct HotelDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                         .allowsHitTesting(false)
                         HStack(spacing: 4) {
-                            Icon(systemName: "mappin.circle").size(.sm).color(Theme.shared.text(.textTertiary))
+                            Icon(systemName: "mappin.circle").size(.sm).accent(.neutral)
                             Text(hotel.area + ", Istanbul").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
                         }
                     }

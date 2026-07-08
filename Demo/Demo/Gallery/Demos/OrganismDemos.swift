@@ -155,7 +155,7 @@ struct CouponDemo: View {
     @State private var expiry = true
 
     private var coupon: Coupon {
-        var c = Coupon(code: code, onCopy: { flash("Copied \(code)") }).couponStyle(style).size(size).block(block)
+        var c = Coupon(code: code, onCopy: { flash("Copied \(code)") }).couponStyle(style).size(size).fullWidth(block)
         if icon { c = c.icon("tag.fill") }
         if discount { c = c.discount("20% OFF") }
         if expiry && block { c = c.expiry("Valid until Dec 31, 2025") }
@@ -188,7 +188,7 @@ struct PromoBannerDemo: View {
     var body: some View {
         ComponentStage("PromoBanner", inspector: [("tint", "\(tint)")]) {
             PromoBanner("Early booking", action: cta ? { flash("PromoBanner CTA") } : nil)
-                .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle(cta ? "Explore" : nil).color(tint)
+                .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle(cta ? "Explore" : nil).accent(tint)
         } knobs: {
             Picker("Tint", selection: $tint) {
                 Text("Blue").tag(PromoBannerTint.blue); Text("Dark").tag(PromoBannerTint.dark); Text("Turquoise").tag(PromoBannerTint.turquoise)
