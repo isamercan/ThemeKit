@@ -519,3 +519,41 @@ struct AffixDemo: View {
         }
     }
 }
+
+struct FlexDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var justifyIdx = 3   // spaceBetween
+    @State private var alignIdx = 1     // center
+    @State private var vertical = false
+    @State private var wrap = false
+
+    private let justifies: [(String, FlexJustify)] = [
+        ("start", .start), ("center", .center), ("end", .end),
+        ("space-between", .spaceBetween), ("space-around", .spaceAround), ("space-evenly", .spaceEvenly),
+    ]
+    private let aligns: [(String, FlexAlign)] = [("start", .start), ("center", .center), ("end", .end), ("stretch", .stretch)]
+
+    var body: some View {
+        ComponentStage("Flex", inspector: [("justify", justifies[justifyIdx].0), ("align", aligns[alignIdx].0)]) {
+            Flex {
+                ForEach(0..<4) { Tag("Item \($0)").color(.info) }
+            }
+            .direction(vertical ? .vertical : .horizontal)
+            .justify(justifies[justifyIdx].1)
+            .align(aligns[alignIdx].1)
+            .wrap(wrap)
+            .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
+            .padding(10)
+            .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: 12))
+        } knobs: {
+            Picker("Justify", selection: $justifyIdx) {
+                ForEach(Array(justifies.enumerated()), id: \.offset) { i, j in Text(j.0).tag(i) }
+            }
+            Picker("Align", selection: $alignIdx) {
+                ForEach(Array(aligns.enumerated()), id: \.offset) { i, a in Text(a.0).tag(i) }
+            }.pickerStyle(.segmented)
+            Toggle("Vertical", isOn: $vertical)
+            Toggle("Wrap", isOn: $wrap)
+        }
+    }
+}
