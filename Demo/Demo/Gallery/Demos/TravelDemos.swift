@@ -1318,6 +1318,8 @@ struct FilterBarDemo: View {
     @State private var collapse = true
     @State private var sizeIdx = 1
     @State private var accent = false
+    @State private var outlined = false
+    @State private var circle = false
 
     private let sizes: [FilterBarSize] = [.small, .medium, .large]
     private let chips: [QuickFilter] = [
@@ -1327,6 +1329,8 @@ struct FilterBarDemo: View {
 
     private var bar: FilterBar {
         var b = FilterBar(chips, selection: $sel).collapsible(collapse).size(sizes[sizeIdx])
+            .chipStyle(outlined ? .outlined : .solid)
+            .leadingShape(circle ? .circle : .adaptive)
         if accent { b = b.accent(.turquoise) }
         if showFilter { b = b.onFilter { flash("Filters") } }
         if showSort { b = b.onSort { flash("Sort") } }
@@ -1338,11 +1342,13 @@ struct FilterBarDemo: View {
             bar
         } knobs: {
             Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Outlined chips (Figma pill)", isOn: $outlined)
+            Toggle("Circle leading buttons", isOn: $circle)
             Toggle("Filter button", isOn: $showFilter)
             Toggle("Sort button", isOn: $showSort)
             Toggle("Collapse leading on scroll", isOn: $collapse)
             Toggle("Turquoise accent (token)", isOn: $accent)
-            Text("Scroll the chips → the leading Filter/Sort buttons minimize to icons (masking the chips underneath). Tap a chip to toggle.").font(.caption).foregroundStyle(.secondary)
+            Text("Scroll the chips → leading buttons collapse. Outlined + circle = the Figma \"Filter Section\" look.").font(.caption).foregroundStyle(.secondary)
         }
     }
 }
