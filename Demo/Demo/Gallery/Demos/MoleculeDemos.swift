@@ -457,3 +457,65 @@ struct PaginationDemo: View {
         }
     }
 }
+
+struct SpaceDemo: View {
+    @State private var vertical = false
+    @State private var sizeIdx = 0
+    @State private var wrap = false
+    @State private var alignIdx = 1
+    private var size: SpaceSize { [.small, .medium, .large][sizeIdx] }
+    private var align: SpaceAlign { [.start, .center, .end, .baseline][alignIdx] }
+
+    var body: some View {
+        ComponentStage("Space", inspector: [("dir", vertical ? "vertical" : "horizontal")]) {
+            Space {
+                ForEach(0..<6) { Tag("Item \($0)") }
+            }
+            .vertical(vertical).size(size).wrap(wrap).align(align)
+            .frame(maxWidth: wrap ? 280 : nil, alignment: .leading)
+        } knobs: {
+            Toggle("Vertical", isOn: $vertical)
+            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Wrap (horizontal)", isOn: $wrap)
+            Picker("Align", selection: $alignIdx) { Text("start").tag(0); Text("center").tag(1); Text("end").tag(2); Text("base").tag(3) }.pickerStyle(.segmented)
+            Text("Even spacing between children — direction, size, wrap, cross-align.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct AffixDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var affixed = false
+
+    var body: some View {
+        ComponentStage("Affix", inspector: [("affixed", "\(affixed)")]) {
+            ScrollView {
+                VStack(spacing: 10) {
+                    Affix(offsetTop: 0) {
+                        HStack {
+                            Text("Pinned toolbar").textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
+                            Spacer()
+                            if affixed { Tag("affixed").tagStyle(.info) }
+                        }
+                        .padding(10)
+                        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
+                        .themeShadow(.soft)
+                    }
+                    .target("affixDemo")
+                    .onChange { affixed = $0 }
+                    ForEach(0..<20) { i in
+                        Text("Row \(i)").frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(theme.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                .padding(10)
+            }
+            .coordinateSpace(name: "affixDemo")
+            .frame(height: 300)
+            .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: 16))
+        } knobs: {
+            Text("Scroll the inner list → the toolbar pins to the top and 'affixed' flips.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
