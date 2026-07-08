@@ -233,17 +233,37 @@ struct TagDemo: View {
     @State private var icon = false
     @State private var styleIdx = 0   // 0 = neutral (no style)
     @State private var variant: FillVariant = .soft
+    @State private var bordered = false
+    @State private var checkA = true
+    @State private var checkB = false
 
     private let styles: [(String, BadgeStyle?)] = [
         ("Neutral", nil), ("Success", .success), ("Warning", .warning), ("Error", .error), ("Info", .info),
     ]
+    private let palette: [(String, SemanticColor)] = [
+        ("turquoise", .turquoise), ("orange", .orange), ("purple", .purple), ("pink", .pink), ("info", .info),
+    ]
 
     var body: some View {
         ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
-            Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
-                .icon(icon ? "mappin" : nil)
-                .tagStyle(styles[styleIdx].1)
-                .variant(variant)
+            VStack(spacing: 18) {
+                Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
+                    .icon(icon ? "mappin" : nil)
+                    .tagStyle(styles[styleIdx].1)
+                    .variant(variant)
+                    .bordered(bordered)
+
+                // .color(_) — the broader Ant palette
+                FlowLayout(spacing: 6, lineSpacing: 6) {
+                    ForEach(palette, id: \.0) { name, c in Tag(name).color(c) }
+                }
+
+                // CheckableTag
+                HStack(spacing: 8) {
+                    CheckableTag("Nonstop", isChecked: $checkA)
+                    CheckableTag("Morning", isChecked: $checkB).icon("sunrise")
+                }
+            }
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $styleIdx) {
@@ -254,6 +274,7 @@ struct TagDemo: View {
             }.pickerStyle(.segmented)
             Toggle("Removable", isOn: $removable)
             Toggle("Leading icon", isOn: $icon)
+            Toggle("Bordered", isOn: $bordered)
         }
     }
 }
