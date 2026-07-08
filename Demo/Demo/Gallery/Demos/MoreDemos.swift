@@ -1655,6 +1655,8 @@ struct BorderBeamDemo: View {
     @State private var duration = 4.0
     @State private var pill = false
     @State private var glow = true
+    @State private var reverse = false
+    @State private var outset = 0.0
     @State private var paletteIdx = 0   // 0 accent, 1 purple→pink, 2 sunset
 
     private var colors: [Color]? {
@@ -1673,12 +1675,15 @@ struct BorderBeamDemo: View {
                 .padding(.horizontal, pill ? 28 : 48)
                 .padding(.vertical, pill ? 14 : 44)
                 .background(Theme.shared.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: pill ? 100 : 20, style: .continuous))
-                .borderBeam(cornerRadius: pill ? 100 : 20, lineWidth: lineWidth, duration: duration, glow: glow, colors: colors)
+                .borderBeam(cornerRadius: pill ? 100 : 20, lineWidth: lineWidth, duration: duration,
+                            outset: outset, reverse: reverse, glow: glow, colors: colors)
         } knobs: {
             HStack { Text("Width"); SwiftUI.Slider(value: $lineWidth, in: 1...6, step: 1) }
             HStack { Text("Speed"); SwiftUI.Slider(value: $duration, in: 1.5...8) }
+            HStack { Text("Outset"); SwiftUI.Slider(value: $outset, in: 0...8) }
             Picker("Colors", selection: $paletteIdx) { Text("Accent").tag(0); Text("Purple→Pink").tag(1); Text("Sunset").tag(2) }.pickerStyle(.segmented)
             Toggle("Glow halo", isOn: $glow)
+            Toggle("Reverse", isOn: $reverse)
             Toggle("Pill shape", isOn: $pill)
         }
     }
