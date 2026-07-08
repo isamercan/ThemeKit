@@ -63,7 +63,9 @@ public struct FlightListItemConfiguration {
     /// Secondary "open details" action (styles with a details affordance show it).
     public let detailsTitle: String
     public let onDetails: (() -> Void)?
-    public let surfaceKey: Theme.BackgroundColorKey
+    /// Explicit surface fill, or `nil` to let the style choose its default
+    /// (resolve via ``surface(default:)``).
+    public let surfaceKey: Theme.BackgroundColorKey?
     /// The environment locale, captured by the component — use it for every
     /// date/number string so injected locales (and RTL demos) render correctly.
     public let locale: Locale
@@ -72,6 +74,11 @@ public struct FlightListItemConfiguration {
 
     /// The itinerary's first leg — every style's primary subject.
     public var leg: FlightLeg { legs[0] }
+
+    /// The explicit `surface(_:)` override, or the style's own default.
+    public func surface(default fallback: Theme.BackgroundColorKey) -> Theme.BackgroundColorKey {
+        surfaceKey ?? fallback
+    }
 
     // Shared formatting, so all styles speak one language.
     public func time(_ date: Date) -> String {
@@ -225,7 +232,7 @@ private struct Sparkline: View {
 private extension View {
     func itemShell(_ configuration: FlightListItemConfiguration, theme: Theme) -> some View {
         self
-            .background(theme.background(configuration.surfaceKey),
+            .background(theme.background(configuration.surface(default: .bgBase)),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
@@ -474,7 +481,7 @@ private struct TicketChrome: View {
             }
             .padding(Theme.SpacingKey.md.value)
         }
-        .background(theme.background(configuration.surfaceKey))
+        .background(theme.background(configuration.surface(default: .bgBase)))
         .clipShape(TicketNotchShape(stubHeight: 58, radius: 7))
         .overlay(
             TicketNotchShape(stubHeight: 58, radius: 7)
@@ -754,6 +761,20 @@ private struct TrayChrome: View {
     @Environment(\.theme) private var theme
     let configuration: FlightListItemConfiguration
 
+    // Spec radii: outer tray 24 (rd-base), inner white card 20 (= outer − the
+    // 4pt tray inset, the standard concentric-rounding relationship).
+    private var trayRadius: CGFloat { Theme.RadiusKey.base.value }
+    private var cardRadius: CGFloat { Theme.RadiusKey.base.value - Theme.SpacingKey.xs.value }
+
+    /// The tinted card-surface (spec `bg-surface` ≈ #f4f8fc). Derived, not a new
+    /// token: white blended halfway with the theme's tinted page surface
+    /// (`bgElevatorPrimary`), so it re-skins with ocean/sunset/dark. An explicit
+    /// `.surface(_:)` still wins.
+    private var traySurface: Color {
+        if let key = configuration.surfaceKey { return theme.background(key) }
+        return theme.background(.bgWhite).blended(with: theme.background(.bgElevatorPrimary), by: 0.5)
+    }
+
     var body: some View {
         let leg = configuration.leg
         VStack(spacing: Theme.SpacingKey.xs.value) {
@@ -797,7 +818,7 @@ private struct TrayChrome: View {
             .padding(Theme.SpacingKey.md.value)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(theme.background(.bgWhite),
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+                        in: RoundedRectangle(cornerRadius: cardRadius, style: .continuous))
 
             // CTA rail on the tray (spec: 12pt sides / 4pt vertical):
             // details link · caption · stacked price · circular go button.
@@ -831,12 +852,12 @@ private struct TrayChrome: View {
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.bottom, 4)
         }
-        .padding(4)
-        .background(theme.background(configuration.surfaceKey),
-                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value + 4, style: .continuous))
+        .padding(Theme.SpacingKey.xs.value)
+        .background(traySurface,
+                    in: RoundedRectangle(cornerRadius: trayRadius, style: .continuous))
         .overlay {
             if configuration.isSelected {
-                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value + 4, style: .continuous)
+                RoundedRectangle(cornerRadius: trayRadius, style: .continuous)
                     .strokeBorder(theme.border(.borderHero), lineWidth: 1.5)
             }
         }
