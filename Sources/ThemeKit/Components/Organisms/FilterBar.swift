@@ -143,8 +143,11 @@ public struct FilterBar: View {
                 .padding(.horizontal, chipHPad)
                 .frame(minHeight: controlHeight)
                 .background(chipFill(isOn: isOn, outlined: outlined), in: Capsule())
-                .overlay(Capsule().stroke(chipBorderColor(isOn: isOn, outlined: outlined),
-                                          lineWidth: outlined && isOn ? 2 : 1))
+                // strokeBorder (not stroke) insets the line fully inside the pill,
+                // so the 2pt selected border isn't clipped at the tight top/bottom
+                // curves — a centered stroke would bleed outside and look distorted.
+                .overlay(Capsule().strokeBorder(chipBorderColor(isOn: isOn, outlined: outlined),
+                                                lineWidth: outlined && isOn ? 2 : 1))
                 .fixedSize()
         }
         .buttonStyle(.plain)
