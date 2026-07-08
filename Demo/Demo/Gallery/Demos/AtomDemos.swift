@@ -278,3 +278,28 @@ struct TagDemo: View {
         }
     }
 }
+
+struct WatermarkDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var text = "SPECIMEN"
+    @State private var fontSize = 16.0
+    @State private var angle = -22.0
+
+    var body: some View {
+        ComponentStage("Watermark", inspector: [("text", text)]) {
+            VStack(spacing: 8) {
+                Text("Boarding pass").textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                Text("Istanbul → Antalya").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+                Text("Seat 14A · Gate 22").textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(40)
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+            .watermark(text.isEmpty ? " " : text, rotation: .degrees(angle), fontSize: fontSize)
+        } knobs: {
+            TextField("Text", text: $text).textFieldStyle(.roundedBorder)
+            HStack { Text("Size"); SwiftUI.Slider(value: $fontSize, in: 10...28) }
+            HStack { Text("Angle"); SwiftUI.Slider(value: $angle, in: -45...45) }
+        }
+    }
+}
