@@ -5,6 +5,24 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.18.2] - 2026-07-08
+
+### Fixed
+- **FlightListItem `.tray`** container now matches the Figma spec: a tinted
+  card-surface behind the white card (was a near-white neutral that blended in)
+  and the correct concentric radii — 24pt outer tray, 20pt inner card.
+  - The tinted surface is **derived, not a new global token**: white blended
+    halfway with the theme's tinted page surface (`bgElevatorPrimary`) via the
+    new `Color.blended(with:by:)` helper, so it re-skins under ocean/sunset/dark.
+    An explicit `.surface(_:)` still overrides it.
+- **FlightListItem.surface(_:)** is now optional per style: `surfaceKey` defaults
+  to `nil` and each style resolves its own natural surface
+  (`configuration.surface(default:)`) — cards use base-100, `.tray` its tint.
+
+### Added
+- `Color.blended(with:by:)` — sRGB blend of two colors (0…1), for deriving
+  intermediate surfaces from existing theme tokens without adding new ones.
+
 ## [0.18.1] - 2026-07-08
 
 ### Fixed

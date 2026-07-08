@@ -49,7 +49,7 @@ public struct FlightListItem: View {
     // Required content (R1).
     private let legs: [FlightLeg]
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var sliceLabels: [String] = []
     private var flightNo: String?
     private var cabin: String?
@@ -119,7 +119,9 @@ public struct FlightListItem: View {
 // MARK: - Modifiers (R2 — copy-on-write)
 
 public extension FlightListItem {
-    /// Surface fill the style draws behind the item (defaults to base-100).
+    /// Surface fill the style draws behind the item. When unset, each style
+    /// picks its own natural default (cards use base-100; `.tray` uses the
+    /// tinted card-surface).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Per-slice captions for multi-leg styles, e.g. `["Outbound · Fri, Aug 14", "Return · Sun, Aug 23"]`.
     func sliceLabels(_ labels: [String]) -> Self { copy { $0.sliceLabels = labels } }
