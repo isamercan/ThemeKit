@@ -102,23 +102,53 @@ struct FlightResultsView: View {
                 filterSection
 
                 ForEach(flights) { f in
-                    FlightListItem(legs: [FlightLeg(airline: f.airline, from: f.from, to: f.to,
-                                                    departure: f.departure, arrival: f.arrival,
-                                                    stops: f.stops, layover: f.layover)])
-                        .cabin(f.cabin)
-                        .baggage(f.carryOn, checked: f.checked)
-                        .price(f.price, currencyCode: "TRY", caption: "from")
-                        .original(f.original)
-                        .badge(f.badge)
-                        .deal(f.deal, tone: f.dealTone)
-                        .onDetails {}
-                        .onSelect {}
-                        .flightListItemStyle(.tray)
+                    flightCard(f).flightListItemStyle(.tray)
                         .padding(.horizontal, Theme.SpacingKey.md.value)
                 }
+
+                variantsSection
             }
             .padding(.vertical, Theme.SpacingKey.sm.value)
         }
+    }
+
+    /// The shared card data — the same flight, rendered by any FlightListItem style.
+    private func flightCard(_ f: SampleFlight) -> FlightListItem {
+        FlightListItem(legs: [FlightLeg(airline: f.airline, from: f.from, to: f.to,
+                                        departure: f.departure, arrival: f.arrival,
+                                        stops: f.stops, layover: f.layover)])
+            .cabin(f.cabin)
+            .baggage(f.carryOn, checked: f.checked)
+            .price(f.price, currencyCode: "TRY", caption: "from")
+            .original(f.original)
+            .badge(f.badge)
+            .deal(f.deal, tone: f.dealTone)
+            .onDetails {}
+            .onSelect {}
+    }
+
+    /// A few other FlightListItem styles rendering the same flight — swap with
+    /// `.flightListItemStyle(_:)`.
+    private var variantsSection: some View {
+        let f = flights[0]
+        return VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            Text("Other list styles")
+                .textStyle(.labelBase700).foregroundStyle(theme.text(.textSecondary))
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .padding(.top, Theme.SpacingKey.md.value)
+            styleLabel("Timeline")
+            flightCard(f).flightListItemStyle(.timeline).padding(.horizontal, Theme.SpacingKey.md.value)
+            styleLabel("Compact")
+            flightCard(f).flightListItemStyle(.compact).padding(.horizontal, Theme.SpacingKey.md.value)
+            styleLabel("Deal")
+            flightCard(f).flightListItemStyle(.deal).padding(.horizontal, Theme.SpacingKey.md.value)
+        }
+    }
+
+    private func styleLabel(_ text: String) -> some View {
+        Text(text).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.top, Theme.SpacingKey.sm.value)
     }
 
     /// The Figma "Filter Section": outlined chips + circle buttons, then an info
