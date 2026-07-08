@@ -14,9 +14,19 @@
 
 import SwiftUI
 
+/// How ``FlightRoute`` draws the segment between the two time columns.
+public enum FlightRouteTrack {
+    /// The stock look: duration over a short colored capsule, stops below.
+    case path
+    /// Design-system spec: full-width hairlines flanking the duration, the
+    /// stops label centered beneath in tertiary — no capsule, no accent.
+    case inline
+}
+
 public struct FlightRoute: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
 
     private let origin: String
     private let destination: String
@@ -26,6 +36,7 @@ public struct FlightRoute: View {
     private var stops = 0
     private var nextDay = false
     private var accentKey: Theme.ForegroundColorKey = .systemcolorsFgSuccess
+    private var track: FlightRouteTrack = .path
 
     public init(from origin: String, to destination: String, departure: Date, arrival: Date) {   // R1
         self.origin = origin
@@ -35,10 +46,13 @@ public struct FlightRoute: View {
     }
 
     public var body: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            timeColumn(departure, code: origin, alignment: .leading, marker: nil)
-            path
-            timeColumn(arrival, code: destination, alignment: .trailing, marker: nextDay ? "+1" : nil)
+        HStack(spacing: density.scale(track == .inline ? Theme.SpacingKey.lg.value : Theme.SpacingKey.sm.value)) {
+            timeColumn(departure, code: origin, alignment: track == .inline ? .trailing : .leading, marker: nil)
+            switch track {
+            case .path: path
+            case .inline: inlineTrack
+            }
+            timeColumn(arrival, code: destination, alignment: track == .inline ? .leading : .trailing, marker: nextDay ? "+1" : nil)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
@@ -51,14 +65,32 @@ public struct FlightRoute: View {
     }
 
     private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment, marker: String?) -> some View {
-        VStack(alignment: alignment, spacing: 2) {
+        let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale))
+        return VStack(alignment: alignment, spacing: track == .inline ? 0 : 2) {
             HStack(alignment: .top, spacing: 2) {
-                Text(date.formatted(date: .omitted, time: .shortened)).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
+                Text(time)
+                    .textStyle(track == .inline ? .labelMd600 : .labelBase700)
+                    .foregroundStyle(theme.text(.textPrimary))
                 if let marker { Text(marker).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary)) }
             }
-            Text(code).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary))
+            Text(code)
+                .textStyle(track == .inline ? .bodySm400 : .overline500)
+                .foregroundStyle(theme.text(.textSecondary))
         }
         .fixedSize()
+    }
+
+    /// Design-system track: hairlines flanking the duration, stops beneath.
+    private var inlineTrack: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
+                Text(durationText).textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary)).fixedSize()
+                Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
+            }
+            Text(stopsText).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var lineColor: Color { stops == 0 ? theme.foreground(accentKey) : theme.border(.borderPrimary) }
@@ -106,6 +138,9 @@ public extension FlightRoute {
     func nextDay(_ on: Bool = true) -> Self { copy { $0.nextDay = on } }
     /// Path/direct-label colour (foreground token key, default success green).
     func pathColor(_ key: Theme.ForegroundColorKey) -> Self { copy { $0.accentKey = key } }
+    /// Track presentation — the stock `.path` capsule or the design-system
+    /// `.inline` hairline layout (see ``FlightRouteTrack``).
+    func track(_ t: FlightRouteTrack) -> Self { copy { $0.track = t } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

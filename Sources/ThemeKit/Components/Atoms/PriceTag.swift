@@ -78,6 +78,7 @@ public struct PriceTag: View {
     private let currencyCode: String
     // Appearance/state — mutated only through the modifiers below (R2).
     private var original: Decimal?
+    private var originalBelow = false
     private var unit: String?
     private var size: PriceSize = .medium
     private var emphasis: PriceEmphasis = .standard
@@ -112,18 +113,24 @@ public struct PriceTag: View {
     }
 
     @ViewBuilder private var pricedContent: some View {
-        if let original, original > amount {
-            Text(formatted(original))
-                .textStyle(size.originalStyle)
-                .strikethrough()
-                .foregroundStyle(theme.text(.textTertiary))
+        if originalBelow, let original, original > amount {
+            // Design-system stacked form: amount over the struck compare-at price.
+            VStack(alignment: .trailing, spacing: 0) {
+                amountText
+                Text(formatted(original))
+                    .textStyle(size.originalStyle)
+                    .strikethrough()
+                    .foregroundStyle(theme.text(.textTertiary))
+            }
+        } else {
+            if let original, original > amount {
+                Text(formatted(original))
+                    .textStyle(size.originalStyle)
+                    .strikethrough()
+                    .foregroundStyle(theme.text(.textTertiary))
+            }
+            amountText
         }
-        Text(formatted(amount))
-            .textStyle(size.priceStyle)
-            .foregroundStyle(emphasis.color(theme))
-            .contentTransition(animatesValue && !reduceMotion
-                ? .numericText(value: (amount as NSDecimalNumber).doubleValue)
-                : .identity)
         if let unit {
             Text(unit)
                 .textStyle(size.unitStyle)
@@ -132,6 +139,15 @@ public struct PriceTag: View {
         if showsDiscountBadge, let percent = discountPercent {
             Badge("-\(percent)%").badgeStyle(.error).size(.small)
         }
+    }
+
+    private var amountText: some View {
+        Text(formatted(amount))
+            .textStyle(size.priceStyle)
+            .foregroundStyle(emphasis.color(theme))
+            .contentTransition(animatesValue && !reduceMotion
+                ? .numericText(value: (amount as NSDecimalNumber).doubleValue)
+                : .identity)
     }
 
     private func formatted(_ value: Decimal) -> String {
@@ -167,6 +183,9 @@ public struct PriceTag: View {
 public extension PriceTag {
     /// A struck-through original price shown before the current one (enables the discount badge maths).
     func original(_ amount: Decimal?) -> Self { copy { $0.original = amount } }
+    /// Stacks the struck compare-at price *below* the amount (design-system
+    /// vertical form) instead of inline before it.
+    func originalBelow(_ on: Bool = true) -> Self { copy { $0.originalBelow = on } }
     /// A per-unit suffix, e.g. `"/ night"` or `"/ person"`.
     func unit(_ text: String?) -> Self { copy { $0.unit = text } }
     /// Size tier: small / medium / large / xlarge.

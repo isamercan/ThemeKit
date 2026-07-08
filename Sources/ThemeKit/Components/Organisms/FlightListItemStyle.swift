@@ -757,9 +757,9 @@ private struct TrayChrome: View {
     var body: some View {
         let leg = configuration.leg
         VStack(spacing: Theme.SpacingKey.xs.value) {
-            // Inner white flight card: identity, route, meta.
-            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                HStack(spacing: Theme.SpacingKey.xs.value) {
+            // Inner white flight card: identity, route, meta (spec: 16pt pad, 8pt gaps).
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                HStack(spacing: 4) {
                     (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.sm).accent(.primary)))
                         .frame(width: 20, height: 20)
                     Text(leg.airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
@@ -770,20 +770,25 @@ private struct TrayChrome: View {
                 FlightRoute(from: leg.origin, to: leg.destination,
                             departure: leg.departure, arrival: leg.arrival)
                     .stops(leg.stops)
+                    .track(.inline)
                 if configuration.cabin != nil || configuration.baggage != nil {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
                         if let cabin = configuration.cabin {
                             Text(cabin).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                         }
                         if configuration.cabin != nil && configuration.baggage != nil {
-                            DividerView().axis(.vertical).frame(height: 14)
+                            DividerView().axis(.vertical).frame(height: 16)
                         }
                         if let carryOn = configuration.baggage {
-                            Icon(systemName: "suitcase.rolling").size(.xs).accent(.neutral)
-                            Text(carryOn).textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
-                            Icon(systemName: "suitcase").size(.xs).accent(.neutral)
-                            Text(configuration.checkedBaggage ?? "–")
-                                .textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                            HStack(spacing: 2) {
+                                Icon(systemName: "suitcase.rolling").size(.xs).accent(.neutral)
+                                Text(carryOn).textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                            }
+                            HStack(spacing: 2) {
+                                Icon(systemName: "cart").size(.xs).accent(.neutral)
+                                Text(configuration.checkedBaggage ?? "–")
+                                    .textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                            }
                         }
                         Spacer(minLength: 0)
                     }
@@ -794,19 +799,25 @@ private struct TrayChrome: View {
             .background(theme.background(.bgWhite),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
 
-            // CTA rail on the tray: details link · price block · go button.
+            // CTA rail on the tray (spec: 12pt sides / 4pt vertical):
+            // details link · caption · stacked price · circular go button.
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let onDetails = configuration.onDetails {
                     TextLink(configuration.detailsTitle, action: onDetails).underline(false)
                 }
                 Spacer(minLength: Theme.SpacingKey.xs.value)
                 if let caption = configuration.priceCaption {
-                    Text(caption).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                    Text(caption)
+                        .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 72, alignment: .trailing)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if let amount = configuration.priceAmount {
                     PriceTag(amount, currencyCode: configuration.currencyCode)
                         .original(configuration.originalAmount)
-                        .size(.small)
+                        .originalBelow()
+                        .size(.medium)
                 }
                 if let onSelect = configuration.onSelect {
                     ThemeButton(action: onSelect)
