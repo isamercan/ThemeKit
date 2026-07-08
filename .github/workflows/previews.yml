@@ -1,11 +1,15 @@
 name: previews
 
-# Regenerates the README component gallery (light + dark) and opens a PR with the
-# result. Triggered manually, or automatically when a component changes on main.
+# Regenerates the README component gallery (light + dark) and, when it drifted,
+# publishes a `chore/regenerate-previews` branch + a tracking issue with a
+# compare link. Triggered manually, or automatically when a component changes
+# on main.
 #
-# It opens a PR (not a direct commit) on purpose: ImageRenderer output can vary across
-# machines/OS builds, so a human should confirm a diff is a real component change and
-# not runner-specific rendering noise before merging.
+# It never merges directly, on purpose: ImageRenderer output can vary across
+# machines/OS builds, so a human confirms a diff is a real component change and
+# not runner-specific rendering noise. It also deliberately doesn't open the PR
+# itself — the default Actions token is not permitted to create PRs on this
+# repo — the issue's compare link opens one in a click instead.
 on:
   workflow_dispatch:
   push:
@@ -15,7 +19,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  issues: write
 
 jobs:
   render:
@@ -34,18 +38,32 @@ jobs:
             git checkout -- "Screenshots/$f.png" "Screenshots/$f-dark.png" 2>/dev/null || true
           done
 
-      - name: Open PR if previews changed
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: chore/regenerate-previews
-          delete-branch: true
-          title: "docs: regenerate component previews"
-          commit-message: "docs: regenerate component previews (light + dark)"
-          body: |
-            Auto-regenerated component previews (light + dark `<picture>` gallery).
+      - name: Publish refresh branch + tracking issue if previews changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add -- Screenshots/*.png README.md
+          if git diff --cached --quiet; then
+            echo "Previews are in sync — nothing to do."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B chore/regenerate-previews
+          git commit -m "docs: regenerate component previews (light + dark)"
+          git push -f origin chore/regenerate-previews
+          url="https://github.com/${{ github.repository }}/compare/main...chore/regenerate-previews?expand=1"
+          {
+            echo "## Component previews drifted"
+            echo "Refreshed renders pushed to \`chore/regenerate-previews\` — [open the PR](${url})."
+          } >> "$GITHUB_STEP_SUMMARY"
+          body="Component previews drifted after ${GITHUB_SHA}. Refreshed renders are on \`chore/regenerate-previews\` — [open the PR](${url}).
 
-            ⚠️ `ImageRenderer` output can vary across machines/OS builds — review the
-            diff and merge only **real** component changes, not runner rendering noise.
-          add-paths: |
-            Screenshots/*.png
-            README.md
+          ⚠️ \`ImageRenderer\` output can vary across machines/OS builds — review the diff and merge only **real** component changes, not runner rendering noise."
+          gh label create previews-drift --description "CI-rendered previews differ from main" --color BFD4F2 2>/dev/null || true
+          existing=$(gh issue list --label previews-drift --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "docs: regenerate component previews" --label previews-drift --body "$body"
+          fi
