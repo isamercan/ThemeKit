@@ -74,26 +74,17 @@ public struct FilterBar: View {
     private var accentFg: Color { accentColor.map { $0.onSolid } ?? theme.text(.textSecondaryInverse) }
     private var chipOffText: Color { accentColor.map { $0.base } ?? theme.foreground(.fgHero) }
     private var hasLeading: Bool { onFilter != nil || onSort != nil }
-    /// Circle leading buttons collapse away entirely on scroll (adaptive buttons
-    /// shrink text→icon in place instead).
-    private var hideLeading: Bool { leadingShapeVariant == .circle && collapsed && collapsible && hasLeading }
 
     // MARK: Body
 
     public var body: some View {
-        HStack(spacing: hideLeading ? 0 : spacing) {
+        HStack(spacing: spacing) {
             if hasLeading {
                 HStack(spacing: spacing) {
                     if let onFilter { action(filterIcon, filterTitle, onFilter) }
                     if let onSort { action(sortIcon, sortTitle, onSort) }
                 }
                 .fixedSize()
-                // Adaptive buttons shrink text→icon in place; circle buttons have
-                // nothing to shrink, so they collapse away entirely on scroll and
-                // slide back open once the first chip returns to the leading edge.
-                .frame(width: hideLeading ? 0 : nil, alignment: .leading)
-                .opacity(hideLeading ? 0 : 1)
-                .clipped()
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: spacing) {
