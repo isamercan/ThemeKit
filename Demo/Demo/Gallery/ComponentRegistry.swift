@@ -130,6 +130,8 @@ enum ComponentRegistry {
         .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
         .knob("Space", .molecules, demo: SpaceDemo(), usage: #"Space { Button("Save"){}; Button("Cancel"){} }.size(.large).wrap()"#),
         .knob("Flex", .molecules, demo: FlexDemo(), usage: #"Flex { Tag("A"); Tag("B"); Tag("C") }.justify(.spaceBetween).align(.center)"#),
+        .knob("Anchor", .molecules, demo: AnchorNavDemo(), usage: #"AnchorNav(sections, active: $current).onSelect { proxy.scrollTo($0, anchor: .top) }"#),
+        .knob("Splitter", .molecules, demo: SplitterDemo(), usage: #"Splitter(.horizontal) { Sidebar() } second: { Detail() }.bounds(min: 0.2, max: 0.8)"#),
         .knob("Affix", .molecules, demo: AffixDemo(), usage: #"ScrollView { Affix(offsetTop: 0) { Toolbar() }.onChange { affixed = $0 }; … }"#),
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save") { }.color(.success).variant(.soft).size(.medium).shape(.pill)"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on).accent(.success).infoMessages(error ? [.init("Required", kind: .error)] : [])"#),
