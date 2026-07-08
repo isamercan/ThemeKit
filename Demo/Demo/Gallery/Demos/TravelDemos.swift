@@ -1069,32 +1069,45 @@ struct PriceTrendChartDemo: View {
     }
 }
 
+/// Storybook — DatePriceStrip layouts & states.
 struct DatePriceStripDemo: View {
-    @State private var sel = 1
-    @State private var columns = 3.0
-    @State private var cheapest = true
-    @State private var paging = true
+    @State private var s1 = 1
+    @State private var s2 = 2
+    @State private var s3 = 4
+    @State private var s4 = 1
 
     private let items = [
-        DatePriceItem("17 Jul", price: 1_697.99), DatePriceItem("18 Jul", price: 1_767.99),
-        DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
-        DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
+        DatePriceItem("17 Jul", price: 1_697), DatePriceItem("18 Jul", price: 1_767),
+        DatePriceItem("19 Jul", price: 1_960), DatePriceItem("20 Jul", price: 1_914),
+        DatePriceItem("21 Jul", price: 1_474), DatePriceItem("22 Jul", price: 1_483),
     ]
 
-    private var strip: DatePriceStrip {
-        var s = DatePriceStrip(items, selection: $sel).columns(Int(columns)).currency("TRY").highlightCheapest(cheapest)
-        if paging { s = s.onPage(prev: { flash("Previous dates") }, next: { flash("Next dates") }) }
-        return s
+    var body: some View {
+        ComponentStage("DatePriceStrip") {
+            VStack(alignment: .leading, spacing: 18) {
+                section("Strip (Timeline) — horizontal pills, scrollable, auto-centers") {
+                    DatePriceStrip(items, selection: $s1).strip().currency("TRY").highlightCheapest(false)
+                }
+                section("Strip — cheapest in green") {
+                    DatePriceStrip(items, selection: $s2).strip().currency("TRY").highlightCheapest()
+                }
+                section("Grid (3 columns) — the card layout") {
+                    DatePriceStrip(items, selection: $s3).currency("TRY").highlightCheapest()
+                }
+                section("Grid + paging chevrons (‹ ›)") {
+                    DatePriceStrip(Array(items.prefix(3)), selection: $s4).currency("TRY")
+                        .onPage(prev: { flash("Previous dates") }, next: { flash("Next dates") })
+                }
+                Text("Both layouts share DatePriceCard; the selection model matches SegmentedControl.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 
-    var body: some View {
-        ComponentStage("DatePriceStrip", inspector: [("selected", items[sel].date)]) {
-            strip.frame(maxWidth: 380)
-        } knobs: {
-            HStack { Text("Columns"); SwiftUI.Slider(value: $columns, in: 2...4, step: 1); Text("\(Int(columns))").font(.caption.monospacedDigit()) }
-            Toggle("Paging chevrons (‹ ›)", isOn: $paging)
-            Toggle("Auto-highlight cheapest (green)", isOn: $cheapest)
-            Text("Cards are the reusable DatePriceCard component.").font(.caption).foregroundStyle(.secondary)
+    @ViewBuilder private func section(_ title: String, @ViewBuilder _ content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            content()
         }
     }
 }
@@ -1598,8 +1611,17 @@ struct RecentSearchRowDemo: View {
     @State private var round = true
     @State private var remove = false
     @State private var bordered = true
+    @State private var searchPill = false
 
     private var row: RecentSearchRow {
+        if searchPill {
+            // "Mini search bar" — no leading tile, capsule surface, trailing
+            // search button; meant to sit on a brand band (see below).
+            return RecentSearchRow(from: "Istanbul", to: "Antalya") { flash("Edit search") }
+                .icon(nil).dates("14 Jan").passengers("7")
+                .pill().surface(.bgWhite)
+                .onSearch { flash("Search") }
+        }
         var r = RecentSearchRow(from: "IST", to: "AYT") { flash("Re-run search") }
             .roundTrip(round).dates("18 – 27 Jul").passengers("2 adults · Economy").bordered(bordered)
         if remove { r = r.onRemove { flash("Removed") } }
@@ -1608,8 +1630,16 @@ struct RecentSearchRowDemo: View {
 
     var body: some View {
         ComponentStage("RecentSearchRow", inspector: [("trip", round ? "round" : "one-way")]) {
-            row.frame(maxWidth: 360)
+            if searchPill {
+                row.frame(maxWidth: 360)
+                    .padding(Theme.SpacingKey.md.value)
+                    .frame(maxWidth: .infinity)
+                    .background(SemanticColor.primary.solid)
+            } else {
+                row.frame(maxWidth: 360)
+            }
         } knobs: {
+            Toggle("Search pill (mini bar on band)", isOn: $searchPill)
             Toggle("Round trip (⇄ vs →)", isOn: $round)
             Toggle("Remove (✕) instead of chevron", isOn: $remove)
             Toggle("Bordered card", isOn: $bordered)

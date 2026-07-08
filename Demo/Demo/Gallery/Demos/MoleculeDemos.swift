@@ -303,35 +303,76 @@ struct RangeSliderDemo: View {
     }
 }
 
+/// Storybook — every Ant Segmented variant at a glance.
 struct SegmentedControlDemo: View {
-    @State private var selection = 0
-    @State private var icons = false
-    @State private var block = true
-    @State private var enabled = true
-    @State private var sizeIdx = 1   // 0 small, 1 medium, 2 large
-    private var size: SegmentedSize { sizeIdx == 0 ? .small : sizeIdx == 2 ? .large : .medium }
+    @State private var basic = 0
+    @State private var round = 1
+    @State private var icons = 0
+    @State private var iconOnly = 0
+    @State private var sS = 0
+    @State private var sM = 1
+    @State private var sL = 2
+    @State private var vert = 0
+    @State private var custom = 0
+    @State private var outline = 2
+    private let period = ["Daily", "Weekly", "Monthly"]
 
     var body: some View {
-        ComponentStage("SegmentedControl", inspector: [("selection", "\(selection)"), ("block", "\(block)"), ("size", sizeIdx == 0 ? "small" : sizeIdx == 2 ? "large" : "medium")]) {
-            if icons {
-                SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
-                                  SegmentItem("Grid", systemImage: "square.grid.2x2"),
-                                  SegmentItem("Map", systemImage: "map", isEnabled: false)],
-                                 selection: $selection)
-                    .fullWidth(block).size(size)
-                    .disabled(!enabled)
-            } else {
-                SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $selection)
-                    .fullWidth(block).size(size)
-                    .disabled(!enabled)
+        ComponentStage("SegmentedControl") {
+            VStack(alignment: .leading, spacing: 18) {
+                section("Basic") { SegmentedControl(period, selection: $basic) }
+                section("Round shape") { SegmentedControl(period, selection: $round).shape(.round) }
+                section("Sizes — small / medium / large") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        SegmentedControl(period, selection: $sS).size(.small).fullWidth(false)
+                        SegmentedControl(period, selection: $sM).size(.medium).fullWidth(false)
+                        SegmentedControl(period, selection: $sL).size(.large).fullWidth(false)
+                    }
+                }
+                section("Icon + label (Map disabled)") {
+                    SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
+                                      SegmentItem("Grid", systemImage: "square.grid.2x2"),
+                                      SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $icons)
+                }
+                section("Icon-only") {
+                    SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
+                                      SegmentItem(icon: "map")], selection: $iconOnly).fullWidth(false)
+                }
+                section("Vertical") {
+                    SegmentedControl(["Recommended", "Price", "Rating"], selection: $vert).vertical().fullWidth(false)
+                }
+                section("Custom content (avatar over name)") {
+                    SegmentedControl([
+                        SegmentItem { avatarTab("A", "Ada") },
+                        SegmentItem { avatarTab("B", "Bo") },
+                        SegmentItem { avatarTab("C", "Cy") },
+                    ], selection: $custom).fullWidth(false)
+                }
+                section("Disabled (whole control)") {
+                    SegmentedControl(period, selection: .constant(0)).disabled(true)
+                }
+                section("selectionStyle .outline — the DatePriceStrip look") {
+                    SegmentedControl(["17 Jul", "18 Jul", "19 Jul", "20 Jul"], selection: $outline)
+                        .selectionStyle(.outline).shape(.round).fullWidth(false)
+                }
             }
-        } knobs: {
-            Stepper("Selection: \(selection)", value: $selection, in: 0...2)
-            Toggle("Icons + disabled option", isOn: $icons)
-            Toggle("Block (full width)", isOn: $block)
-            Toggle("Enabled", isOn: $enabled)
-            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
         }
+    }
+
+    @ViewBuilder private func section(_ title: String, @ViewBuilder _ content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func avatarTab(_ initial: String, _ name: String) -> some View {
+        VStack(spacing: 4) {
+            Text(initial).font(.system(size: 13, weight: .bold)).foregroundStyle(SemanticColor.primary.onSolid)
+                .frame(width: 28, height: 28).background(Circle().fill(SemanticColor.primary.solid))
+            Text(name).textStyle(.labelSm600)
+        }
+        .padding(.vertical, 2)
     }
 }
 
