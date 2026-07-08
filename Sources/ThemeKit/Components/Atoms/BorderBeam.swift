@@ -17,9 +17,11 @@ public extension View {
     /// A comet that orbits the rounded-rectangle border with a glowing trail.
     /// - Parameters:
     ///   - cornerRadius: corner radius of the border path.
-    ///   - lineWidth: beam thickness.
-    ///   - duration: seconds for one full lap.
-    ///   - beamLength: comet length as a fraction of the perimeter (0…1).
+    ///   - lineWidth: beam thickness (Ant `lineWidth`).
+    ///   - duration: seconds for one full lap (Ant `duration`).
+    ///   - beamLength: comet length as a fraction of the perimeter (0…1) (Ant `size`).
+    ///   - outset: how far the beam sits outside the container edge; `0` clips to the edge (Ant `outset`).
+    ///   - reverse: orbit counter-clockwise (Ant `reverse`).
     ///   - glow: draw the soft neon halo behind the beam.
     ///   - colors: beam colors (head→tail). Defaults to the theme accent + turquoise.
     func borderBeam(
@@ -27,12 +29,14 @@ public extension View {
         lineWidth: CGFloat = 2,
         duration: Double = 4,
         beamLength: CGFloat = 0.22,
+        outset: CGFloat = 0,
+        reverse: Bool = false,
         glow: Bool = true,
         colors: [Color]? = nil
     ) -> some View {
         modifier(BorderBeamModifier(
             cornerRadius: cornerRadius, lineWidth: lineWidth, duration: duration,
-            beamLength: beamLength, glow: glow, colors: colors
+            beamLength: beamLength, outset: outset, reverse: reverse, glow: glow, colors: colors
         ))
     }
 }
@@ -65,6 +69,8 @@ private struct BorderBeamModifier: ViewModifier {
     let lineWidth: CGFloat
     let duration: Double
     let beamLength: CGFloat
+    let outset: CGFloat
+    let reverse: Bool
     let glow: Bool
     let colors: [Color]?
 
@@ -73,6 +79,9 @@ private struct BorderBeamModifier: ViewModifier {
     @Environment(\.theme) private var theme
 
     private let segments = 22
+
+    /// Inset of the beam path — pushed outward by `outset` (Ant `outset`).
+    private var beamInset: CGFloat { lineWidth / 2 - outset }
 
     private var palette: [Color] {
         colors ?? [theme.background(.bgHero), SemanticColor.turquoise.base]
@@ -88,7 +97,8 @@ private struct BorderBeamModifier: ViewModifier {
             } else {
                 TimelineView(.animation) { context in
                     let elapsed = context.date.timeIntervalSince(start)
-                    let head = CGFloat(elapsed.truncatingRemainder(dividingBy: duration) / duration)
+                    let progress = CGFloat(elapsed.truncatingRemainder(dividingBy: duration) / duration)
+                    let head = reverse ? 1 - progress : progress
                     ZStack {
                         // Faint persistent outline so the edge reads even between laps.
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -116,7 +126,7 @@ private struct BorderBeamModifier: ViewModifier {
                 let f0 = CGFloat(i) / CGFloat(segments)
                 let f1 = CGFloat(i + 1) / CGFloat(segments)
                 BeamTrail(
-                    cornerRadius: cornerRadius, inset: lineWidth / 2,
+                    cornerRadius: cornerRadius, inset: beamInset,
                     from: head - f1 * beamLength,
                     to: head - f0 * beamLength + 0.004
                 )
@@ -129,7 +139,7 @@ private struct BorderBeamModifier: ViewModifier {
     }
 
     private func headSpark(_ head: CGFloat) -> some View {
-        BeamTrail(cornerRadius: cornerRadius, inset: lineWidth / 2, from: head - 0.018, to: head + 0.004)
+        BeamTrail(cornerRadius: cornerRadius, inset: beamInset, from: head - 0.018, to: head + 0.004)
             .stroke(Color.white.opacity(0.95), style: StrokeStyle(lineWidth: lineWidth * 1.25, lineCap: .round))
             .blur(radius: lineWidth * 0.7)
     }
