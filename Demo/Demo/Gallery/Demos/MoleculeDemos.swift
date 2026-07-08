@@ -557,3 +557,84 @@ struct FlexDemo: View {
         }
     }
 }
+
+private struct AnchorSectionYKey: PreferenceKey {
+    static let defaultValue: [String: CGFloat] = [:]
+    static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
+struct AnchorNavDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var active = "s0"
+    private let sections = (0..<5).map { AnchorItem("s\($0)", title: "Section \($0)") }
+
+    var body: some View {
+        ComponentStage("Anchor", inspector: [("active", active)]) {
+            ScrollViewReader { proxy in
+                HStack(alignment: .top, spacing: 16) {
+                    AnchorNav(sections, active: $active)
+                        .onSelect { id in withAnimation { proxy.scrollTo(id, anchor: .top) } }
+                        .frame(width: 110)
+
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            ForEach(sections) { s in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(s.title).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                                    Text("Body content for \(s.title.lowercased()).").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+                                .padding(12)
+                                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
+                                .id(s.id)
+                                .background(GeometryReader { g in
+                                    Color.clear.preference(key: AnchorSectionYKey.self,
+                                                           value: [s.id: g.frame(in: .named("anchorScroll")).minY])
+                                })
+                            }
+                        }
+                        .padding(.trailing, 4)
+                    }
+                    .coordinateSpace(name: "anchorScroll")
+                    .frame(height: 300)
+                    .onPreferenceChange(AnchorSectionYKey.self) { ys in
+                        let current = sections.last { (ys[$0.id] ?? .infinity) <= 40 } ?? sections.first
+                        if let current, current.id != active { active = current.id }
+                    }
+                }
+            }
+        } knobs: {
+            Text("Tap a link to scroll; scrolling updates the active link (scroll-spy).").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct SplitterDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var vertical = false
+
+    var body: some View {
+        ComponentStage("Splitter", inspector: [("axis", vertical ? "vertical" : "horizontal")]) {
+            Splitter(vertical ? .vertical : .horizontal, initialFraction: 0.4) {
+                pane("Pane A", .bgElevatorPrimary)
+            } second: {
+                pane("Pane B", .bgWhite)
+            }
+            .frame(height: 320)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(theme.border(.borderPrimary), lineWidth: 1))
+        } knobs: {
+            Toggle("Vertical", isOn: $vertical)
+            Text("Drag the divider to resize the panes.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private func pane(_ title: String, _ bg: Theme.BackgroundColorKey) -> some View {
+        Text(title)
+            .textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(theme.background(bg))
+    }
+}
