@@ -253,7 +253,7 @@ FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, 
 
 ### FlightListItem {#flightlistitem}
 
-A style-driven flight search-result list item: the component holds the data (legs, fares, price, deal signals, schedule) and a `FlightListItemStyle` owns the entire layout. Eight built-in styles cover the industry archetypes — `.compact` (one-line row), `.timeline` (route-track card, default), `.fareBoard` (fare-family chips), `.deal` (price judgment + sparkline), `.ticket` (perforated pass), `.journey` (expandable leg timeline), `.slices` (round-trip/multi-city card), `.timetable` (carrier departure chips) — and custom styles receive the same typed configuration.
+A style-driven flight search-result list item: the component holds the data (legs, fares, price, deal signals, schedule, baggage) and a `FlightListItemStyle` owns the entire layout. Nine built-in styles cover the industry archetypes — `.compact` (one-line row), `.timeline` (route-track card, default), `.fareBoard` (fare-family chips), `.deal` (price judgment + sparkline), `.ticket` (perforated pass), `.journey` (expandable leg timeline), `.slices` (round-trip/multi-city card), `.timetable` (carrier departure chips), `.tray` (nested card + CTA rail, from the design-system spec) — and custom styles receive the same typed configuration.
 
 ```swift
 FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)

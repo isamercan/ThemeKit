@@ -67,9 +67,13 @@ public struct FlightListItem: View {
     private var trend: [Double] = []
     private var badge: String?
     private var amenities: [String] = []
+    private var baggage: String?
+    private var checkedBaggage: String?
     private var isSelected = false
     private var selectTitle = "Select"
     private var onSelect: (() -> Void)?
+    private var detailsTitle = "Details"
+    private var onDetails: (() -> Void)?
     private var expandedBinding: Binding<Bool>?
     @State private var internalExpanded = false
 
@@ -95,8 +99,10 @@ public struct FlightListItem: View {
             fares: fares, departures: departures, scheduleNote: scheduleNote,
             dealText: dealText, dealTone: dealTone, trend: trend,
             badge: badge, amenities: amenities,
+            baggage: baggage, checkedBaggage: checkedBaggage,
             isExpanded: expanded, isSelected: isSelected, isEnabled: isEnabled,
             selectTitle: selectTitle, onSelect: onSelect,
+            detailsTitle: detailsTitle, onDetails: onDetails,
             surfaceKey: surfaceKey,
             locale: locale,
             toggleExpand: {
@@ -147,6 +153,14 @@ public extension FlightListItem {
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
     /// SF Symbols for onboard amenities (Wi-Fi, power, …) — rich styles show them.
     func amenities(_ symbols: [String]) -> Self { copy { $0.amenities = symbols } }
+    /// Baggage allowances shown in meta rows — carry-on ("8kg") and checked bag.
+    func baggage(_ carryOn: String?, checked: String? = nil) -> Self {
+        copy { $0.baggage = carryOn; $0.checkedBaggage = checked }
+    }
+    /// Secondary "open details" action; styles with a details affordance show it.
+    func onDetails(_ title: String = "Details", perform action: @escaping () -> Void) -> Self {
+        copy { $0.detailsTitle = title; $0.onDetails = action }
+    }
     /// Marks the item as the current selection (styles accent it).
     func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
     /// Primary action; expandable styles pin it in the expanded footer.

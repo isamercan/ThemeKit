@@ -619,8 +619,10 @@ final class ScreenshotGenerator: XCTestCase {
             FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
                            departure: Date(timeIntervalSince1970: 1_781_000_000),
                            arrival: Date(timeIntervalSince1970: 1_781_014_700))
-                .flightNo("SK 1123").cabin("Economy").price(214, currencyCode: "USD")
-                .flightListItemStyle(.ticket)
+                .cabin("Economy").baggage("8kg")
+                .price(214, currencyCode: "USD", caption: "Per person").original(276)
+                .onDetails { }.onSelect { }
+                .flightListItemStyle(.tray)
         }.frame(width: 360))
         shot("WindowFrame", WindowFrame("Trip Planner") {
             VStack(alignment: .leading, spacing: 8) {

@@ -5,6 +5,17 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.18.0] - 2026-07-08
+
+### Added
+- **FlightListItem `.tray` style** — implemented from the design-system Figma
+  spec: a white flight card nested on a soft tray surface, with the actions on
+  the tray (details text-link · per-person price with compare-at strikethrough ·
+  circular go button). Composed entirely from library atoms/molecules
+  (`FlightRoute`, `PriceTag`, `TextLink`, `ThemeButton`, `DividerView`, `Icon`,
+  `Badge`). New supporting data on the component: `baggage(_:checked:)` and
+  `onDetails(_:perform:)` (available to every style via the configuration).
+
 ## [0.17.0] - 2026-07-08
 
 ### Added
