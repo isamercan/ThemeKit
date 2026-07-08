@@ -638,3 +638,54 @@ struct SplitterDemo: View {
             .background(theme.background(bg))
     }
 }
+
+struct CascaderDemo: View {
+    @State private var path: [String] = []
+    private let options = [
+        CascaderOption("tr", label: "Türkiye", children: [
+            CascaderOption("34", label: "İstanbul", children: [
+                CascaderOption("kadikoy", label: "Kadıköy"), CascaderOption("besiktas", label: "Beşiktaş")]),
+            CascaderOption("06", label: "Ankara", children: [
+                CascaderOption("cankaya", label: "Çankaya"), CascaderOption("kecioren", label: "Keçiören")])]),
+        CascaderOption("de", label: "Deutschland", children: [
+            CascaderOption("be", label: "Berlin", children: [CascaderOption("mitte", label: "Mitte")]),
+            CascaderOption("by", label: "Bayern", children: [CascaderOption("muc", label: "München")])]),
+    ]
+
+    var body: some View {
+        ComponentStage("Cascader", inspector: [("path", path.isEmpty ? "—" : path.joined(separator: "/"))]) {
+            Cascader(options, selection: $path).placeholder("Select region")
+        } knobs: {
+            Text("Pick through the columns; selecting a leaf commits the path.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct TransferDemo: View {
+    @State private var target: Set<String> = ["wifi"]
+    private let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
+                         TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
+                         TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
+
+    var body: some View {
+        ComponentStage("Transfer", inspector: [("target", "\(target.count) items")]) {
+            Transfer(items, target: $target).titles("Available", "Included")
+        } knobs: {
+            Text("Check items, then move them across with the arrows.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct MentionsDemo: View {
+    @State private var text = "Nice work "
+    private let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
+                          MentionOption("grace", label: "Grace Hopper"), MentionOption("linus", label: "Linus Torvalds")]
+
+    var body: some View {
+        ComponentStage("Mentions", inspector: [("chars", "\(text.count)")]) {
+            Mentions(text: $text, options: people).placeholder("Type @ to mention someone…")
+        } knobs: {
+            Text("Type '@' then a name → pick a suggestion; it inserts @value.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
