@@ -42,6 +42,10 @@ struct ContentView: View {
                 .tabItem { Label("Example", systemImage: "sparkles") }
                 .tag(5)
 
+            FlightResultsView()
+                .tabItem { Label("Flights", systemImage: "airplane.departure") }
+                .tag(11)
+
             NavigationStack { LoginLandingView() }
                 .tabItem { Label("Sign In", systemImage: "person.crop.circle.badge.checkmark") }
                 .tag(9)
