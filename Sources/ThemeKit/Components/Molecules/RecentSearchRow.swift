@@ -64,7 +64,13 @@ public struct RecentSearchRow: View {
                 Spacer(minLength: 6)
                 trailing
             }
-            .padding(density.scale(Theme.SpacingKey.sm.value))
+            // Uniform tap padding, except the pill "mini search bar" (no leading
+            // tile) insets its content from the left (Figma pl-24 · pr-8 · py-8).
+            .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
+            .padding(.trailing, density.scale(Theme.SpacingKey.sm.value))
+            .padding(.leading, density.scale(pill && systemImage == nil
+                                             ? Theme.SpacingKey.base.value
+                                             : Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
             .background((bordered || pill) ? theme.background(surfaceKey) : .clear, in: shape)
             .overlay { if bordered && !pill { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }

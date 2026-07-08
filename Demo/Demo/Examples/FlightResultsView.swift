@@ -107,11 +107,12 @@ struct FlightResultsView: View {
                                                     stops: f.stops, layover: f.layover)])
                         .cabin(f.cabin)
                         .baggage(f.carryOn, checked: f.checked)
-                        .price(f.price, currencyCode: "TRY")
+                        .price(f.price, currencyCode: "TRY", caption: "from")
                         .original(f.original)
                         .badge(f.badge)
                         .deal(f.deal, tone: f.dealTone)
-                        .onSelect("Details") {}
+                        .onDetails {}
+                        .onSelect {}
                         .flightListItemStyle(.tray)
                         .padding(.horizontal, Theme.SpacingKey.md.value)
                 }
