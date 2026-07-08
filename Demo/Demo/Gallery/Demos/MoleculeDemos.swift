@@ -689,3 +689,83 @@ struct MentionsDemo: View {
         }
     }
 }
+
+struct MasonryDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var cols = 2
+    private let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110, 95, 130]
+
+    var body: some View {
+        ComponentStage("Masonry", inspector: [("columns", "\(cols)")]) {
+            ScrollView {
+                Masonry {
+                    ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
+                        RoundedRectangle(cornerRadius: 12).fill(SemanticColor.primary.soft).frame(height: h)
+                            .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                    }
+                }
+                .columns(cols)
+                .padding(4)
+            }
+            .frame(height: 320)
+        } knobs: {
+            Stepper("Columns: \(cols)", value: $cols, in: 1...4)
+        }
+    }
+}
+
+struct TreeViewDemo: View {
+    @State private var checked: Set<String> = []
+    @State private var checkable = true
+    private let nodes = [
+        TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
+            TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
+            TreeNode(id: "img", "Images", systemImage: "folder", children: [
+                TreeNode(id: "a", "beach.jpg", systemImage: "photo"),
+                TreeNode(id: "b", "city.jpg", systemImage: "photo")])]),
+        TreeNode(id: "music", "Music", systemImage: "folder", children: [
+            TreeNode(id: "s1", "song.mp3", systemImage: "music.note"),
+            TreeNode(id: "s2", "album.zip", systemImage: "doc.zipper")]),
+    ]
+
+    var body: some View {
+        ComponentStage("Tree", inspector: [("checked", "\(checked.count)")]) {
+            TreeView(nodes, selection: $checked).checkable(checkable)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } knobs: {
+            Toggle("Checkable", isOn: $checkable)
+        }
+    }
+}
+
+struct ColumnsGridDemo: View {
+    @Environment(\.theme) private var theme
+    @State private var cols = 3
+    @State private var adaptive = false
+
+    var body: some View {
+        ComponentStage("Grid", inspector: [("mode", adaptive ? "adaptive ≥100" : "\(cols) cols")]) {
+            ScrollView {
+                Group {
+                    if adaptive {
+                        ColumnsGrid { cells }.adaptive(minWidth: 100).gutter(.medium)
+                    } else {
+                        ColumnsGrid { cells }.columns(cols).gutter(.medium)
+                    }
+                }
+                .padding(4)
+            }
+            .frame(height: 260)
+        } knobs: {
+            Stepper("Columns: \(cols)", value: $cols, in: 1...4).disabled(adaptive)
+            Toggle("Adaptive (min 100pt)", isOn: $adaptive)
+        }
+    }
+
+    private var cells: some View {
+        ForEach(0..<9) { i in
+            RoundedRectangle(cornerRadius: 12).fill(SemanticColor.info.soft).frame(height: 60)
+                .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)))
+        }
+    }
+}
