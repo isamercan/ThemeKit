@@ -1579,6 +1579,7 @@ struct FeedbackDemo: View {
 
 struct ResultDemo: View {
     @State private var status: ResultStatus = .success
+    @State private var customSlots = false
 
     private var copy: (String, String) {
         switch status {
@@ -1594,14 +1595,39 @@ struct ResultDemo: View {
 
     var body: some View {
         ComponentStage("Result", inspector: [("status", status.rawValue), ("code", status.codeText)]) {
-            ResultView(status, title: copy.0)
-                .message(copy.1)
-                .primaryAction("Try again", action: { flash("Result: Try again") })
-                .secondaryAction("Home", action: { flash("Result: Home") })
+            if customSlots {
+                // Ant `icon` / children / `extra` slots.
+                ResultView(status, title: copy.0)
+                    .subtitle(copy.1)
+                    .icon {
+                        Icon(systemName: "gift.fill").size(.xl).accent(.turquoise)
+                            .padding(22).background(SemanticColor.turquoise.soft, in: Circle())
+                    }
+                    .content {
+                        HStack(spacing: 16) {
+                            Text("Order").font(.caption).foregroundStyle(.secondary)
+                            Text("#A-1029").font(.caption.bold())
+                        }
+                        .padding(12).frame(maxWidth: .infinity)
+                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .extra {
+                        HStack(spacing: 8) {
+                            ThemeButton("Buy again") { flash("Buy again") }.color(.primary)
+                            OutlineButton("Invoice") { flash("Invoice") }
+                        }
+                    }
+            } else {
+                ResultView(status, title: copy.0)
+                    .message(copy.1)
+                    .primaryAction("Try again", action: { flash("Result: Try again") })
+                    .secondaryAction("Home", action: { flash("Result: Home") })
+            }
         } knobs: {
             Picker("Status", selection: $status) {
                 ForEach(ResultStatus.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
+            Toggle("Custom icon / content / extra slots", isOn: $customSlots)
         }
         .onAppear {
             // Screenshot hook: launch with `-resultStatus notFound|forbidden|serverError|error|…`.
