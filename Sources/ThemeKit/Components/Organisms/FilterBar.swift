@@ -28,6 +28,15 @@ public struct QuickFilter: Identifiable, Hashable, Sendable {
 /// Overall sizing of a ``FilterBar``.
 public enum FilterBarSize: Sendable { case small, medium, large }
 
+/// Chip selection look. `.solid` fills selected chips with the accent; `.outlined`
+/// is the design-system pill — a light hero-soft fill + a 2pt hero border when
+/// selected, a soft hairline when not (matches the Figma "Filter Section" tabs).
+public enum FilterChipStyle: Sendable { case solid, outlined }
+
+/// Leading Filter/Sort button shape. `.adaptive` shows text that collapses to an
+/// icon on scroll; `.circle` is a fixed accent circle (icon-only).
+public enum FilterLeadingShape: Sendable { case adaptive, circle }
+
 public struct FilterBar: View {
     @Environment(\.theme) private var theme
 
@@ -44,6 +53,8 @@ public struct FilterBar: View {
     private var size: FilterBarSize = .medium
     private var accentColor: SemanticColor?
     private var spacing: CGFloat = 8
+    private var chipStyleVariant: FilterChipStyle = .solid
+    private var leadingShapeVariant: FilterLeadingShape = .adaptive
 
     @State private var collapsed = false
     @State private var scrolledID: String?
@@ -97,16 +108,24 @@ public struct FilterBar: View {
         }
     }
 
-    private func action(_ icon: String, _ title: String, _ handler: @escaping () -> Void) -> some View {
+    @ViewBuilder private func action(_ icon: String, _ title: String, _ handler: @escaping () -> Void) -> some View {
         Button(action: handler) {
-            HStack(spacing: 6) {
+            if leadingShapeVariant == .circle {
+                // Fixed accent circle (icon-only) — the Figma "Filter Section" look.
                 Image(systemName: icon).font(.system(size: iconSize, weight: .semibold))
-                if !collapsed { Text(title).textStyle(chipTextStyle).fixedSize() }
+                    .foregroundStyle(accentFg)
+                    .frame(width: controlHeight, height: controlHeight)
+                    .background(accentBg, in: Circle())
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: icon).font(.system(size: iconSize, weight: .semibold))
+                    if !collapsed { Text(title).textStyle(chipTextStyle).fixedSize() }
+                }
+                .foregroundStyle(accentFg)
+                .padding(.horizontal, collapsed ? 0 : chipHPad)
+                .frame(width: collapsed ? controlHeight : nil, height: controlHeight)
+                .background(accentBg, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
             }
-            .foregroundStyle(accentFg)
-            .padding(.horizontal, collapsed ? 0 : chipHPad)
-            .frame(width: collapsed ? controlHeight : nil, height: controlHeight)
-            .background(accentBg, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
@@ -114,21 +133,37 @@ public struct FilterBar: View {
 
     private func chipView(_ chip: QuickFilter) -> some View {
         let isOn = selection.contains(chip.id)
+        let outlined = chipStyleVariant == .outlined
         return Button {
             if isOn { selection.remove(chip.id) } else { selection.insert(chip.id) }
         } label: {
             Text(chip.title)
                 .textStyle(chipTextStyle)
-                .foregroundStyle(isOn ? accentFg : chipOffText)
+                .foregroundStyle(chipTextColor(isOn: isOn, outlined: outlined))
                 .padding(.horizontal, chipHPad)
                 .frame(minHeight: controlHeight)
-                .background(isOn ? accentBg : theme.background(.bgWhite), in: Capsule())
-                .overlay(Capsule().stroke(isOn ? Color.clear : theme.border(.borderPrimary), lineWidth: 1))
+                .background(chipFill(isOn: isOn, outlined: outlined), in: Capsule())
+                .overlay(Capsule().stroke(chipBorderColor(isOn: isOn, outlined: outlined),
+                                          lineWidth: outlined && isOn ? 2 : 1))
                 .fixedSize()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(chip.title)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    // Chip colors per style (token-fed).
+    private func chipTextColor(isOn: Bool, outlined: Bool) -> Color {
+        if outlined { return theme.text(.textPrimary) }
+        return isOn ? accentFg : chipOffText
+    }
+    private func chipFill(isOn: Bool, outlined: Bool) -> Color {
+        if outlined { return isOn ? SemanticColor.primary.soft : theme.background(.bgWhite) }
+        return isOn ? accentBg : theme.background(.bgWhite)
+    }
+    private func chipBorderColor(isOn: Bool, outlined: Bool) -> Color {
+        if outlined { return isOn ? theme.border(.borderHero) : theme.background(.bgElevatorTertiary) }
+        return isOn ? Color.clear : theme.border(.borderPrimary)
     }
 }
 
@@ -147,6 +182,12 @@ public extension FilterBar {
     func collapsible(_ on: Bool = true) -> Self { copy { $0.collapsible = on } }
     /// Overall size (heights + typography): small / medium (default) / large.
     func size(_ size: FilterBarSize) -> Self { copy { $0.size = size } }
+    /// Chip selection look — `.solid` (accent fill) or `.outlined` (the
+    /// design-system light-blue + hero-border pill).
+    func chipStyle(_ style: FilterChipStyle) -> Self { copy { $0.chipStyleVariant = style } }
+    /// Leading Filter/Sort button shape — `.adaptive` (collapsing text) or
+    /// `.circle` (a fixed accent circle, icon-only).
+    func leadingShape(_ shape: FilterLeadingShape) -> Self { copy { $0.leadingShapeVariant = shape } }
     /// Token-fed accent for the leading buttons and selected chips (default hero).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
     /// Gap between controls (default 8).
@@ -173,6 +214,11 @@ public extension FilterBar {
                 .onFilter { }.onSort { }
                 FilterBar([QuickFilter("Cheapest"), QuickFilter("Fastest"), QuickFilter("Direct")], selection: $sel)
                     .size(.small).accent(.turquoise).onFilter { }
+                // Figma "Filter Section" look — outlined pills + circle buttons.
+                FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
+                           QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
+                    .chipStyle(.outlined).leadingShape(.circle).size(.small)
+                    .onFilter { }.onSort { }
             }
             .padding(.vertical)
         }
