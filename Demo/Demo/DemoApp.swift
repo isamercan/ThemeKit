@@ -16,7 +16,7 @@ struct DemoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ShowcaseView()
                 .microAnimations(microAnimations)
                 .environmentObject(themeStore)
                 .feedbackHost()       // installs the shared FeedbackPresenter + overlays
