@@ -604,22 +604,184 @@ struct NotificationDemo: View {
 }
 
 struct PageHeaderDemo: View {
-    @State private var back = true
-    @State private var subtitle = true
-    @State private var actions = true
-    @State private var tags = false
+    enum Variant: String, CaseIterable, Identifiable {
+        case iconButtons = "Header · Icon Buttons"
+        case header = "Header"
+        case tabs = "Tab"
+        case progress = "Progress"
+        case stepper = "Stepper"
+        case withButton = "with Button"
+        case withSearchBar = "With Search Bar"
+        case searchInput = "with search Input"
+        case brand = "Brand"
+        case brandNoBg = "brand-no bg"
+        case onImage = "On Image"
+        case wsbOnImage = "With Search Bar · On Image"
+        case onMap = "On Map"
+        var id: String { rawValue }
+
+        // Which of the design-system variables this style exposes (mirrors Figma).
+        var hasBackNav: Bool { ![.withButton, .brand, .brandNoBg].contains(self) }
+        var hasActions: Bool { ![.brand, .brandNoBg, .searchInput].contains(self) }
+        var hasShowTitle: Bool { [.header, .tabs, .progress, .stepper, .withButton, .onImage, .onMap].contains(self) }
+        var hasTitleField: Bool { hasShowTitle || self == .iconButtons }
+        var hasSummary: Bool { [.iconButtons, .withSearchBar, .wsbOnImage, .onMap].contains(self) }
+    }
+
+    @State private var variant: Variant = .iconButtons
+    // Common variables
+    @State private var backNav = true
+    @State private var firstAction = true
+    @State private var secAction = true
+    @State private var showTitle = true
+    @State private var titleText = "Title"
+    // Style-specific
+    @State private var progressValue = 0.5
+    @State private var tab = 0
+    @State private var query = ""
+    // Search summary variables
+    @State private var summarySelected = false
+    @State private var summaryBg = false
+    @State private var timeText = "12 – 16 Jul"
+    @State private var adults = 2
+    @State private var showChild = true
+    @State private var childCount = 1
+    @State private var showRoom = true
+    @State private var roomCount = 1
+
+    /// Builds the bound ``SearchSummary`` sub-component from the live knobs.
+    private func makeSummary(title: String? = nil, forceBoxed: Bool = false) -> SearchSummary {
+        var s = SearchSummary(time: timeText, adults: adults)
+        if let title { s = s.title(title) }
+        if showChild { s = s.children(childCount) }
+        if showRoom { s = s.rooms(roomCount) }
+        s = s.boxed(forceBoxed || summaryBg)
+        if summarySelected { s = s.prompt("Select dates for price") }   // Figma "Selected" = empty prompt
+        return s
+    }
+
+    /// Trailing actions gated by the First/Sec Action toggles (Figma order: sec, first).
+    private func actions(sec: PageHeader.Action, first: PageHeader.Action) -> [PageHeader.Action] {
+        var a: [PageHeader.Action] = []
+        if secAction { a.append(sec) }
+        if firstAction { a.append(first) }
+        return a
+    }
+    private var onBackAction: (() -> Void)? { backNav ? { flash("Back") } : nil }
+
     var body: some View {
-        ComponentStage("PageHeader") {
-            PageHeader("Search results")
-                .subtitle(subtitle ? "128 hotels" : nil)
-                .tags(tags ? [.init("Active", style: .success), .init("Beta", style: .info)] : [])
-                .onBack(back ? { flash("PageHeader: back") } : nil)
-                .actions(actions ? [.init(systemImage: "slider.horizontal.3", handler: { flash("PageHeader: filter") }), .init(systemImage: "heart", handler: { flash("PageHeader: favorite") })] : [])
+        ComponentStage("PageHeader", inspector: [("style", variant.rawValue)]) {
+            headerView(variant)
         } knobs: {
-            Toggle("Back button", isOn: $back)
-            Toggle("Subtitle", isOn: $subtitle)
-            Toggle("Status tags", isOn: $tags)
-            Toggle("Actions", isOn: $actions)
+            Picker("Variant", selection: $variant) {
+                ForEach(Variant.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.menu)
+            if variant.hasShowTitle { Toggle("Show Title", isOn: $showTitle) }
+            if variant.hasTitleField && (!variant.hasShowTitle || showTitle) {
+                LabeledContent("Title") { TextField("Title", text: $titleText).multilineTextAlignment(.trailing) }
+            }
+            if variant.hasBackNav { Toggle("Back Navigation Icon", isOn: $backNav) }
+            if variant.hasActions {
+                Toggle("First Action Items", isOn: $firstAction)
+                Toggle("Sec Action Item", isOn: $secAction)
+            }
+            if variant == .progress {
+                HStack { Text("Progress Value"); SwiftUI.Slider(value: $progressValue, in: 0...1) }
+            }
+            if variant.hasSummary {
+                Text("Search summary").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                Toggle("Selected", isOn: $summarySelected)
+                Toggle("Bg", isOn: $summaryBg)
+                LabeledContent("Time") { TextField("Time", text: $timeText).multilineTextAlignment(.trailing) }
+                Stepper("Adult Number: \(adults)", value: $adults, in: 1...30)
+                Toggle("Show child", isOn: $showChild)
+                if showChild { Stepper("Child Number: \(childCount)", value: $childCount, in: 0...20) }
+                Toggle("Show room", isOn: $showRoom)
+                if showRoom { Stepper("Room Number: \(roomCount)", value: $roomCount, in: 1...20) }
+            }
+        }
+    }
+
+    @ViewBuilder private func headerView(_ variant: Variant) -> some View {
+        let compare = PageHeader.Action(systemImage: "square.on.square", accessibilityLabel: "Compare") { flash("Compare") }
+        let search = PageHeader.Action(systemImage: "magnifyingglass", accessibilityLabel: "Search") { flash("Search") }
+        let save = PageHeader.Action(systemImage: "heart", accessibilityLabel: "Save") { flash("Save") }
+        let share = PageHeader.Action(systemImage: "square.and.arrow.up", accessibilityLabel: "Share") { flash("Share") }
+        let close = PageHeader.Action(systemImage: "xmark", accessibilityLabel: "Close") { flash("Close") }
+        switch variant {
+        case .iconButtons:
+            PageHeader(titleText)
+                .onBack(onBackAction)
+                .searchSummary(makeSummary(title: titleText))
+                .actions(actions(sec: compare, first: search))
+        case .header:
+            PageHeader(titleText).showTitle(showTitle)
+                .onBack(onBackAction)
+                .actions(actions(sec: compare, first: search))
+        case .tabs:
+            PageHeader(titleText).showTitle(showTitle)
+                .onBack(onBackAction)
+                .tabs(["Tab 1", "Tab 2", "Tab 3", "Tab 4", "Tab 5"], selected: tab) { tab = $0 }
+                .actions(actions(sec: compare, first: search))
+        case .progress:
+            PageHeader(titleText).showTitle(showTitle).onBack(onBackAction).progress(progressValue)
+                .actions(actions(sec: compare, first: search))
+        case .stepper:
+            PageHeader(titleText).showTitle(showTitle).onBack(onBackAction).stepper(current: 1, total: 3)
+                .actions(actions(sec: compare, first: search))
+        case .withButton:
+            withButtonHeader(search: search)
+        case .withSearchBar:
+            PageHeader(titleText)
+                .onBack(onBackAction)
+                .searchSummary(makeSummary(forceBoxed: true))
+                .actions(actions(sec: save, first: share))
+        case .searchInput:
+            PageHeader("Search").onBack(onBackAction)
+                .searchField(text: $query, placeholder: "Search") { flash("Submit: \(query)") }
+        case .brand:
+            PageHeader("Brand")
+                .logo(Text("etstur").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
+                .pageHeaderStyle(.brand)
+        case .brandNoBg:
+            PageHeader("Brand")
+                .logo(Text("etstur").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.accent))
+                .pageHeaderStyle(.brandNoBackground)
+        case .onImage:
+            PageHeader(titleText).showTitle(showTitle)
+                .onBack(onBackAction)
+                .actions(actions(sec: save, first: close))
+                .pageHeaderStyle(.onImage)
+                .padding(.vertical, 24)
+                .background(Color(white: 0.75))
+        case .wsbOnImage:
+            PageHeader(titleText)
+                .onBack(onBackAction)
+                .searchSummary(makeSummary(forceBoxed: true))
+                .actions(actions(sec: save, first: share))
+                .pageHeaderStyle(.onImage)
+                .padding(.vertical, 24)
+                .background(Color(white: 0.75))
+        case .onMap:
+            PageHeader(titleText)
+                .onBack(onBackAction)
+                .searchSummary(makeSummary(title: showTitle ? titleText : nil))
+                .mapFilter(systemImage: "line.3.horizontal.decrease", accessibilityLabel: "Filter") { flash("Filter") }
+                .pageHeaderStyle(.onImage)
+                .padding(.vertical, 24)
+                .background(Color(white: 0.8))
+        }
+    }
+
+    /// with Button: sec = the brand pill, first = the search icon (Figma order).
+    @ViewBuilder private func withButtonHeader(search: PageHeader.Action) -> some View {
+        let base = PageHeader(titleText).showTitle(showTitle)
+            .actions(firstAction ? [search] : [])
+        if secAction {
+            base.primaryButton("Notify me", systemImage: "megaphone.fill") { flash("Notify me") }
+        } else {
+            base
         }
     }
 }
