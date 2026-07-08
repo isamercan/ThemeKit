@@ -43,6 +43,24 @@ final class RenderSmokeTests: XCTestCase {
         ], selection: .constant("home")).width(200), "Sidebar")
     }
 
+    // The Ant-parity additions (layout, navigation, data-entry) must render too.
+    @MainActor
+    func testAntParityComponentsRender() {
+        Theme.shared.loadTheme(named: "defaultTheme")
+        renders(Text("Card").padding().watermark("SPECIMEN"), "Watermark")
+        renders(Space { Tag("A"); Tag("B") }, "Space")
+        renders(Flex { Tag("A"); Tag("B") }.justify(.spaceBetween), "Flex")
+        renders(AnchorNav([AnchorItem("a", title: "Intro"), AnchorItem("b", title: "API")], active: .constant("a")), "AnchorNav")
+        renders(Splitter(.horizontal) { Color.clear } second: { Color.clear }, "Splitter")
+        renders(Cascader([CascaderOption("a", label: "A", children: [CascaderOption("b", label: "B")])], selection: .constant([])), "Cascader")
+        renders(Transfer([TransferItem("a", title: "A"), TransferItem("b", title: "B")], target: .constant(["a"])), "Transfer")
+        renders(Mentions(text: .constant("hi @a"), options: [MentionOption("ada")]), "Mentions")
+        renders(Masonry { ForEach(0..<4) { _ in Color.clear.frame(height: 30) } }, "Masonry")
+        renders(TreeView([TreeNode(id: "a", "A", children: [TreeNode(id: "b", "B")])], selection: .constant([])).checkable(), "TreeView")
+        renders(ColumnsGrid { ForEach(0..<4) { _ in Color.clear.frame(height: 20) } }.columns(2), "ColumnsGrid")
+        renders(Affix(offsetTop: 0) { Text("Toolbar") }, "Affix")
+    }
+
     // Components must also render under a runtime-generated theme + dark mode.
     @MainActor
     func testComponentsRenderUnderGeneratedTheme() {

@@ -5,7 +5,7 @@ description: Every ThemeKit organism, with a verified usage example for each.
 
 Complete, self-contained sections — cards, overlays, and full booking-flow surfaces composed from atoms and molecules.
 
-67 organisms. Every example below feeds modifiers with semantic color
+69 organisms. Every example below feeds modifiers with semantic color
 tokens (`SemanticColor` cases, `theme.foreground(_:)`…) — never a raw `Color` or `CGFloat`
 literal. See the [DocC reference](/ThemeKit/api/documentation/themekit/) for the full API.
 

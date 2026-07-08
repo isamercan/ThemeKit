@@ -226,6 +226,11 @@ final class ScreenshotGenerator: XCTestCase {
             .frame(width: 260)
             .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
         }.maxAngle(.degrees(12)).shine())
+        shot("Watermark", Text("Boarding pass")
+            .textStyle(.headingSm).foregroundStyle(Theme.shared.text(.textPrimary))
+            .padding(28).frame(width: 260)
+            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 16))
+            .watermark("SPECIMEN", fontSize: 13))
     }
 
     // MARK: Molecules
@@ -359,6 +364,58 @@ final class ScreenshotGenerator: XCTestCase {
         shot("TripTypeToggle", TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: .constant(1))
             .icons(["arrow.right", "arrow.left.arrow.right", "point.topleft.down.curvedto.point.bottomright.up"])
             .frame(width: 340))
+        shot("Space", Space { Tag("Istanbul"); Tag("Rome"); Tag("Paris") }.size(.medium))
+        shot("Flex", Flex { Tag("Back"); Tag("Save"); Tag("Next") }.justify(.spaceBetween).frame(width: 320))
+        shot("Anchor", AnchorNav([AnchorItem("a", title: "Introduction"), AnchorItem("b", title: "Installation"),
+                                  AnchorItem("c", title: "Usage", level: 1), AnchorItem("d", title: "API")],
+                                 active: .constant("a")).frame(width: 200))
+        shot("Splitter", Splitter(.horizontal, initialFraction: 0.42) {
+            Text("Sidebar").textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
+                .frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.shared.background(.bgElevatorPrimary))
+        } second: {
+            Text("Detail").textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
+                .frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.shared.background(.bgWhite))
+        }
+        .frame(width: 320, height: 130).clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)))
+        shot("Cascader", Cascader([
+            CascaderOption("tr", label: "Türkiye", children: [
+                CascaderOption("34", label: "İstanbul", children: [CascaderOption("kadikoy", label: "Kadıköy")])])],
+            selection: .constant(["tr", "34", "kadikoy"])).frame(width: 320))
+        shot("Transfer", Transfer([TransferItem("wifi", title: "Wi-Fi"), TransferItem("pool", title: "Pool"),
+                                   TransferItem("gym", title: "Gym"), TransferItem("spa", title: "Spa")],
+                                  target: .constant(["wifi"])).titles("Available", "Included").frame(width: 360),
+             hosted: true)   // internal ScrollView → needs the real AppKit render pass
+        shot("Mentions", Mentions(text: .constant("Great work @ada — thanks!"),
+                                  options: [MentionOption("ada", label: "Ada Lovelace")]).frame(width: 320), hosted: true)
+        shot("Masonry", Masonry {
+            ForEach(Array([70.0, 110, 90, 60, 100, 80].enumerated()), id: \.offset) { _, h in
+                RoundedRectangle(cornerRadius: 10).fill(SemanticColor.primary.soft).frame(height: h)
+            }
+        }.columns(3).frame(width: 300))
+        shot("Tree", TreeView([
+            TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
+                TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
+                TreeNode(id: "img", "Images", systemImage: "folder")]),
+            TreeNode(id: "music", "Music", systemImage: "folder", children: [
+                TreeNode(id: "s", "song.mp3", systemImage: "music.note")])],
+            selection: .constant(["cv"])).checkable().frame(width: 300))
+        shot("Grid", ColumnsGrid {
+            ForEach(0..<6) { i in
+                RoundedRectangle(cornerRadius: 10).fill(SemanticColor.info.soft).frame(height: 48)
+                    .overlay(Text("\(i)").textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary)))
+            }
+        }.columns(3).gutter(.small).frame(width: 300))
+        shot("Affix", HStack {
+            Icon(systemName: "pin.fill").size(.sm).accent(.primary)
+            Text("Pinned toolbar").textStyle(.labelSm600).foregroundStyle(Theme.shared.text(.textPrimary))
+            Spacer()
+            Badge("Affixed").badgeStyle(.info)
+        }
+        .padding(12).frame(width: 300)
+        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
+        .themeShadow(.soft).padding(6))
+        shot("SearchSummary", SearchSummary(time: "2h 30m", adults: 2).frame(width: 340))
     }
 
     // MARK: Organisms
@@ -664,8 +721,8 @@ final class ScreenshotGenerator: XCTestCase {
         return VStack(spacing: 16) {
             HStack(spacing: 16) {
                 card { VStack(alignment: .leading, spacing: 6) {
-                    Text("175").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
-                    tiny("COMPONENTS"); sub("44 atoms · 64 molecules · 67 organisms")
+                    Text("185").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    tiny("COMPONENTS"); sub("42 atoms · 74 molecules · 69 organisms")
                 }}.frame(width: 330)
                 card { VStack(alignment: .leading, spacing: 6) { heading("Zero deps", t.text(.textPrimary)); sub("native SwiftUI core") }}
                 card(t.background(.systemcolorsBgSuccessLight)) { VStack(alignment: .leading, spacing: 6) {

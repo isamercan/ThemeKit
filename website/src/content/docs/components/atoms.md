@@ -5,7 +5,7 @@ description: Every ThemeKit atom, with a verified usage example for each.
 
 The smallest building blocks — a single visual idea each, with no internal composition of other ThemeKit components.
 
-44 atoms. Every example below feeds modifiers with semantic color
+42 atoms. Every example below feeds modifiers with semantic color
 tokens (`SemanticColor` cases, `theme.foreground(_:)`…) — never a raw `Color` or `CGFloat`
 literal. See the [DocC reference](/ThemeKit/api/documentation/themekit/) for the full API.
 
@@ -359,4 +359,12 @@ Section title with a subtitle and a trailing action.
 
 ```swift
 Title("Section").subtitle("Sub").action("See all", action: { })
+```
+
+### Watermark {#watermark}
+
+Tiles a faint, rotated label across a view for provenance on exports (Ant `Watermark`).
+
+```swift
+ReportCard().watermark("CONFIDENTIAL", rotation: .degrees(-22))
 ```
