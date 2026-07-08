@@ -60,8 +60,10 @@ public enum SegmentedSize {
 public enum SegmentedShape { case `default`, round }
 
 /// How the active option is drawn. `.thumb` is Ant's raised white card; `.outline`
-/// is a hero-tinted bordered pill (used by wrappers like ``DatePriceStrip``).
-public enum SegmentedSelectionStyle { case thumb, outline }
+/// is a hero-tinted bordered pill; `.tinted` drops the thumb for a soft hero-wash
+/// track (the active option just switches to the hero foreground) — pair it with
+/// `.dividers()` for the design-system icon toggle (chart / grid view switch).
+public enum SegmentedSelectionStyle { case thumb, outline, tinted }
 
 public struct SegmentedControl: View {
     @Environment(\.theme) private var theme
@@ -76,6 +78,7 @@ public struct SegmentedControl: View {
     private var shape: SegmentedShape = .default
     private var selectionStyle: SegmentedSelectionStyle = .thumb
     private var isVertical = false
+    private var showsDividers = false
     private var accessibilityID: String? = nil
 
     @State private var hovered: Int?
@@ -104,10 +107,15 @@ public struct SegmentedControl: View {
             : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
     }
 
+    /// The track fill — soft hero wash for `.tinted`, else the neutral base.
+    private var trackFill: Color {
+        selectionStyle == .tinted ? SemanticColor.primary.soft : theme.background(.bgBase)
+    }
+
     public var body: some View {
         segments
-            .padding(4)
-            .background(theme.background(.bgBase), in: trackShape)
+            .padding(selectionStyle == .tinted ? 0 : 4)
+            .background(trackFill, in: trackShape)
             .opacity(isEnabled ? 1 : 0.5)
             .a11y(A11yElement.Control.toggle, in: accessibilityID)
             .accessibilityValue(items.indices.contains(selection) ? items[selection].accessibilityText : "")
@@ -115,9 +123,25 @@ public struct SegmentedControl: View {
 
     @ViewBuilder private var segments: some View {
         if isVertical {
-            VStack(spacing: 4) { ForEach(Array(items.enumerated()), id: \.offset) { segment($0.offset, $0.element) } }
+            VStack(spacing: showsDividers ? 0 : 4) { segmentRows }
         } else {
-            HStack(spacing: 4) { ForEach(Array(items.enumerated()), id: \.offset) { segment($0.offset, $0.element) } }
+            HStack(spacing: showsDividers ? 0 : 4) { segmentRows }
+        }
+    }
+
+    @ViewBuilder private var segmentRows: some View {
+        ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+            segment(index, item)
+            if showsDividers && index < items.count - 1 { divider }
+        }
+    }
+
+    /// A hairline between adjacent segments (the design-system icon toggle).
+    @ViewBuilder private var divider: some View {
+        if isVertical {
+            Rectangle().fill(theme.background(.bgWhite)).frame(height: 1).padding(.horizontal, 6)
+        } else {
+            Rectangle().fill(theme.background(.bgWhite)).frame(width: 1).padding(.vertical, 6)
         }
     }
 
@@ -166,6 +190,8 @@ public struct SegmentedControl: View {
                 thumbShape.fill(SemanticColor.primary.soft)
                     .overlay(thumbShape.stroke(theme.border(.borderHero), lineWidth: 2))
                     .matchedGeometryEffect(id: "pill", in: pill)
+            case .tinted:
+                EmptyView()   // no thumb — the soft track + hero foreground carry selection
             }
         }
     }
@@ -193,9 +219,12 @@ public extension SegmentedControl {
     func shape(_ s: SegmentedShape) -> Self { copy { $0.shape = s } }
     /// Stack the segments vertically (Ant Segmented `vertical`).
     func vertical(_ on: Bool = true) -> Self { copy { $0.isVertical = on } }
-    /// How the active option is drawn — the raised white `.thumb` (default) or a
-    /// hero-tinted `.outline` pill (for richer wrappers).
+    /// How the active option is drawn — the raised white `.thumb` (default), a
+    /// hero-tinted `.outline` pill, or a thumbless `.tinted` soft track.
     func selectionStyle(_ s: SegmentedSelectionStyle) -> Self { copy { $0.selectionStyle = s } }
+    /// Draw a hairline between adjacent segments — pair with `.selectionStyle(.tinted)`
+    /// and `.shape(.round)` for the design-system icon toggle (chart / grid switch).
+    func dividers(_ on: Bool = true) -> Self { copy { $0.showsDividers = on } }
     /// Sets the accessibility-identifier namespace for this component.
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
 

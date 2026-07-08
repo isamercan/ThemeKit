@@ -315,6 +315,7 @@ struct SegmentedControlDemo: View {
     @State private var vert = 0
     @State private var custom = 0
     @State private var outline = 2
+    @State private var tinted = 0
     private let period = ["Daily", "Weekly", "Monthly"]
 
     var body: some View {
@@ -354,6 +355,11 @@ struct SegmentedControlDemo: View {
                 section("selectionStyle .outline — the DatePriceStrip look") {
                     SegmentedControl(["17 Jul", "18 Jul", "19 Jul", "20 Jul"], selection: $outline)
                         .selectionStyle(.outline).shape(.round).fullWidth(false)
+                }
+                section("selectionStyle .tinted + .dividers() — the Figma icon toggle") {
+                    SegmentedControl([SegmentItem(icon: "chart.bar.fill"), SegmentItem(icon: "square.grid.2x2.fill"),
+                                      SegmentItem(icon: "map.fill")], selection: $tinted)
+                        .selectionStyle(.tinted).dividers().shape(.round).fullWidth(false)
                 }
             }
         }

@@ -167,7 +167,7 @@ struct FlightResultsView: View {
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 SegmentedControl([SegmentItem(icon: "chart.bar.fill"), SegmentItem(icon: "square.grid.2x2.fill")],
                                  selection: $viewMode)
-                    .fullWidth(false).size(.small)
+                    .selectionStyle(.tinted).dividers().shape(.round).fullWidth(false).size(.small)
             }
         }
         .padding(Theme.SpacingKey.md.value)
