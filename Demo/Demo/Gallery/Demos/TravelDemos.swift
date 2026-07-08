@@ -1909,7 +1909,7 @@ struct FlightListItemDemo: View {
     private let styles: [(String, AnyFlightListItemStyleBox)] = [
         ("Compact", .init(.compact)), ("Timeline", .init(.timeline)), ("Fare board", .init(.fareBoard)),
         ("Deal", .init(.deal)), ("Ticket", .init(.ticket)), ("Journey", .init(.journey)),
-        ("Slices", .init(.slices)), ("Timetable", .init(.timetable)),
+        ("Slices", .init(.slices)), ("Timetable", .init(.timetable)), ("Tray", .init(.tray)),
     ]
 
     var body: some View {
@@ -1929,7 +1929,7 @@ struct FlightListItemDemo: View {
             Toggle("Price", isOn: $priced)
             Toggle("Expanded (Journey)", isOn: $expanded)
             Toggle("Selected", isOn: $selected)
-            Text("All 8 styles render the same data — swap with .flightListItemStyle(_:).")
+            Text("All 9 styles render the same data — swap with .flightListItemStyle(_:).")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -1950,6 +1950,8 @@ struct FlightListItemDemo: View {
             .departures([0, 130, 265, 400, 545, 660, 790].map { dep.addingTimeInterval($0 * 60) },
                         note: "Nonstop · 4h 05m · every ~2h")
             .amenities(["wifi", "powerplug", "play.tv"])
+            .baggage("8kg", checked: "20kg")
+            .onDetails { }
             .trend([0.82, 0.78, 0.9, 0.66, 0.52, 0.44])
             .selected(selected)
             .expanded($expanded)

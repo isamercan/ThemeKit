@@ -51,11 +51,18 @@ public struct FlightListItemConfiguration {
     public let trend: [Double]
     public let badge: String?
     public let amenities: [String]
+    /// Carry-on allowance ("8kg"); `nil` hides the baggage meta entirely.
+    public let baggage: String?
+    /// Checked-bag allowance; `nil` renders as "not included" next to `baggage`.
+    public let checkedBaggage: String?
     public let isExpanded: Bool
     public let isSelected: Bool
     public let isEnabled: Bool
     public let selectTitle: String
     public let onSelect: (() -> Void)?
+    /// Secondary "open details" action (styles with a details affordance show it).
+    public let detailsTitle: String
+    public let onDetails: (() -> Void)?
     public let surfaceKey: Theme.BackgroundColorKey
     /// The environment locale, captured by the component — use it for every
     /// date/number string so injected locales (and RTL demos) render correctly.
@@ -729,6 +736,102 @@ private struct TimetableChrome: View {
     }
 }
 
+// MARK: - 9. Tray — nested card with a CTA rail (design-system spec)
+
+/// A soft "tray" surface holding a white flight card, with the actions on the
+/// tray itself: a details text-link leading and a per-person price + circular
+/// go button trailing. Composed entirely from library atoms/molecules —
+/// ``FlightRoute``, ``PriceTag``, ``TextLink``, ``ThemeButton``,
+/// ``DividerView``, ``Icon``, ``Badge``.
+public struct TrayFlightListItemStyle: FlightListItemStyle {
+    public init() {}
+    public func makeBody(configuration: FlightListItemConfiguration) -> some View {
+        TrayChrome(configuration: configuration)
+    }
+}
+
+private struct TrayChrome: View {
+    @Environment(\.theme) private var theme
+    let configuration: FlightListItemConfiguration
+
+    var body: some View {
+        let leg = configuration.leg
+        VStack(spacing: Theme.SpacingKey.xs.value) {
+            // Inner white flight card: identity, route, meta.
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.sm).accent(.primary)))
+                        .frame(width: 20, height: 20)
+                    Text(leg.airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
+                    if let badge = configuration.badge {
+                        Badge(badge).badgeStyle(.info).size(.small)
+                    }
+                }
+                FlightRoute(from: leg.origin, to: leg.destination,
+                            departure: leg.departure, arrival: leg.arrival)
+                    .stops(leg.stops)
+                if configuration.cabin != nil || configuration.baggage != nil {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        if let cabin = configuration.cabin {
+                            Text(cabin).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+                        }
+                        if configuration.cabin != nil && configuration.baggage != nil {
+                            DividerView().axis(.vertical).frame(height: 14)
+                        }
+                        if let carryOn = configuration.baggage {
+                            Icon(systemName: "suitcase.rolling").size(.xs).accent(.neutral)
+                            Text(carryOn).textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                            Icon(systemName: "suitcase").size(.xs).accent(.neutral)
+                            Text(configuration.checkedBaggage ?? "–")
+                                .textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+            .padding(Theme.SpacingKey.md.value)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(theme.background(.bgWhite),
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+
+            // CTA rail on the tray: details link · price block · go button.
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                if let onDetails = configuration.onDetails {
+                    TextLink(configuration.detailsTitle, action: onDetails).underline(false)
+                }
+                Spacer(minLength: Theme.SpacingKey.xs.value)
+                if let caption = configuration.priceCaption {
+                    Text(caption).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                }
+                if let amount = configuration.priceAmount {
+                    PriceTag(amount, currencyCode: configuration.currencyCode)
+                        .original(configuration.originalAmount)
+                        .size(.small)
+                }
+                if let onSelect = configuration.onSelect {
+                    ThemeButton(action: onSelect)
+                        .icon(leading: "arrow.right")
+                        .shape(.circle)
+                        .color(.neutral)
+                        .size(.small)
+                        .accessibilityLabel(configuration.selectTitle)
+                }
+            }
+            .padding(.horizontal, Theme.SpacingKey.sm.value)
+            .padding(.bottom, 4)
+        }
+        .padding(4)
+        .background(theme.background(configuration.surfaceKey),
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value + 4, style: .continuous))
+        .overlay {
+            if configuration.isSelected {
+                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value + 4, style: .continuous)
+                    .strokeBorder(theme.border(.borderHero), lineWidth: 1.5)
+            }
+        }
+    }
+}
+
 // MARK: - Static accessors
 
 public extension FlightListItemStyle where Self == CompactFlightListItemStyle {
@@ -762,6 +865,11 @@ public extension FlightListItemStyle where Self == SlicesFlightListItemStyle {
 public extension FlightListItemStyle where Self == TimetableFlightListItemStyle {
     /// Carrier-grouped departure-time chips (Skyscanner timetable widget).
     static var timetable: TimetableFlightListItemStyle { TimetableFlightListItemStyle() }
+}
+public extension FlightListItemStyle where Self == TrayFlightListItemStyle {
+    /// Nested white card on a soft tray with a details/price/go CTA rail
+    /// (design-system spec) — built from FlightRoute, PriceTag, TextLink & co.
+    static var tray: TrayFlightListItemStyle { TrayFlightListItemStyle() }
 }
 
 // MARK: - Type erasure + environment plumbing
