@@ -19,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   render:
@@ -38,9 +37,7 @@ jobs:
             git checkout -- "Screenshots/$f.png" "Screenshots/$f-dark.png" 2>/dev/null || true
           done
 
-      - name: Publish refresh branch + tracking issue if previews changed
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Publish refresh branch if previews changed
         run: |
           git add -- Screenshots/*.png README.md
           if git diff --cached --quiet; then
@@ -53,17 +50,11 @@ jobs:
           git commit -m "docs: regenerate component previews (light + dark)"
           git push -f origin chore/regenerate-previews
           url="https://github.com/${{ github.repository }}/compare/main...chore/regenerate-previews?expand=1"
+          # Report drift in the run summary only — no tracking issue (ImageRenderer
+          # output varies across runners, so the auto-issue was pure noise).
           {
             echo "## Component previews drifted"
             echo "Refreshed renders pushed to \`chore/regenerate-previews\` — [open the PR](${url})."
+            echo ""
+            echo "⚠️ \`ImageRenderer\` output can vary across machines/OS builds — review the diff and merge only **real** component changes, not runner rendering noise."
           } >> "$GITHUB_STEP_SUMMARY"
-          body="Component previews drifted after ${GITHUB_SHA}. Refreshed renders are on \`chore/regenerate-previews\` — [open the PR](${url}).
-
-          ⚠️ \`ImageRenderer\` output can vary across machines/OS builds — review the diff and merge only **real** component changes, not runner rendering noise."
-          gh label create previews-drift --description "CI-rendered previews differ from main" --color BFD4F2 2>/dev/null || true
-          existing=$(gh issue list --label previews-drift --state open --json number --jq '.[0].number // empty')
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "$body"
-          else
-            gh issue create --title "docs: regenerate component previews" --label previews-drift --body "$body"
-          fi
