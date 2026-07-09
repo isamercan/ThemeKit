@@ -45,6 +45,11 @@ public struct InfoMessage: Identifiable, Equatable {
     /// The icon to render: the custom override if set, else the kind's default.
     var resolvedSystemImage: String? { systemImage ?? kind.systemImage }
 
+    /// Content-derived identity for list diffing: stable across re-created
+    /// instances of the same message (unlike `id`), so transitions play only
+    /// for rows whose content actually changed.
+    var diffIdentity: String { "\(kind.rawValue)|\(text)" }
+
     public static func == (a: InfoMessage, b: InfoMessage) -> Bool { a.text == b.text && a.kind == b.kind }
 }
 

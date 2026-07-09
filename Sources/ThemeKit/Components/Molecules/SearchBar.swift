@@ -52,6 +52,8 @@ public struct SearchBar: View {
 
     @Binding private var text: String
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance/config — mutated only through the modifiers below (R2); the
     // async init seeds a 0.3s debounce baseline, which `.debounce(_:)` can
@@ -142,6 +144,9 @@ public struct SearchBar: View {
 
             dropdown
         }
+        // Message rows carry the HeroUI FieldError transition; key it here so
+        // it plays (and snaps under `microAnimations(false)` / Reduce Motion).
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
         .onAppear { update(for: text) }
         .onDebouncedChange(of: text, for: effectiveDebounce) { value in
             update(for: value)

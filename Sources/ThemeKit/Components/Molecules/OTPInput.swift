@@ -14,12 +14,15 @@ public enum OTPCharacterSet: CaseIterable, Sendable {
     case letters
     case alphanumeric
 
-    /// Whether `character` is permitted by this set.
+    /// Whether `character` is permitted by this set. ASCII-only, mirroring
+    /// HeroUI's REGEXP_ONLY_DIGITS / _CHARS patterns ([0-9] / [a-zA-Z]) —
+    /// pasted non-ASCII numerals/letters must not reach `onComplete`.
     func allows(_ character: Character) -> Bool {
+        guard character.isASCII else { return false }
         switch self {
-        case .digits: character.isNumber
-        case .letters: character.isLetter
-        case .alphanumeric: character.isNumber || character.isLetter
+        case .digits: return character.isNumber
+        case .letters: return character.isLetter
+        case .alphanumeric: return character.isNumber || character.isLetter
         }
     }
 }
@@ -30,6 +33,8 @@ public struct OTPInput: View {
     @Environment(\.theme) private var theme
 
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var digitCount: Int = 6
@@ -156,6 +161,9 @@ public struct OTPInput: View {
                 resendRow(interval: resendInterval, onResend: onResend)
             }
         }
+        // Message rows carry the HeroUI FieldError transition; key it here so
+        // it plays (and snaps under `microAnimations(false)` / Reduce Motion).
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
     }
 
     @ViewBuilder

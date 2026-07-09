@@ -124,7 +124,7 @@ private struct MutedFieldChrome: View {
 
     var body: some View {
         configuration.content
-            .background(theme.background(.bgSecondaryLight),
+            .background(theme.background(configuration.isEnabled ? .bgSecondaryLight : .bgSecondary),
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
             .overlay(
