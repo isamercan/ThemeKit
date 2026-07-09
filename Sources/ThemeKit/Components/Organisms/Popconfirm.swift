@@ -288,10 +288,54 @@ public extension View {
     struct Demo: View {
         @State var show = true
         var body: some View {
+            // Default: tapping anywhere outside the card dismisses it.
             ThemeButton("Delete") { show.toggle() }.color(.error).variant(.soft)
                 .popconfirm(isPresented: $show, title: "Delete this item?", message: "This can't be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel") {}
                 .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Arrow + align + outside tap") {
+    struct Demo: View {
+        @State var arrow = true
+        @State var pinned = true
+        var body: some View {
+            VStack(spacing: 140) {
+                // Arrow pointing at the trigger; default outside-tap dismissal.
+                ThemeButton("Remove card") { arrow.toggle() }.color(.error).variant(.outline)
+                    .popconfirm(isPresented: $arrow, title: "Remove this card?",
+                                confirmTitle: "Remove", cancelTitle: "Keep",
+                                edge: .bottom, showsArrow: true) {}
+                // Start-aligned, and pinned open: outside taps don't dismiss it.
+                ThemeButton("Sign out") { pinned.toggle() }.variant(.soft)
+                    .popconfirm(isPresented: $pinned, title: "Sign out of this device?",
+                                edge: .top, align: .start, dismissOnOutsideTap: false) {}
+            }
+            .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Titled popover") {
+    struct Demo: View {
+        @State var top = true
+        @State var end = true
+        var body: some View {
+            VStack(spacing: 160) {
+                ThemeButton("What's this?") { top.toggle() }.variant(.outline)
+                    .themePopover(isPresented: $top, title: "Flexible fare",
+                                  message: "Change your flight up to 2 hours before departure at no extra cost.",
+                                  edge: .top, showsArrow: true)
+                ThemeButton("End-aligned") { end.toggle() }.variant(.soft)
+                    .themePopover(isPresented: $end, title: "Heads up",
+                                  message: "This card hangs from the trigger's trailing edge.",
+                                  edge: .bottom, align: .end)
+            }
+            .padding(80)
         }
     }
     return Demo()
