@@ -188,6 +188,11 @@ public struct DataTable<Row: Identifiable>: View {
         if column.sortKey != nil {
             Button { toggleSort(index) } label: { title }
                 .buttonStyle(.plain)
+                .accessibilityLabel(column.title)
+                .accessibilityValue(sortColumn == index
+                    ? (sortAscending ? String(themeKit: "sorted ascending") : String(themeKit: "sorted descending"))
+                    : String(themeKit: "not sorted"))
+                .accessibilityHint(String(themeKit: "Double-tap to sort"))
         } else {
             title
         }
