@@ -13,7 +13,7 @@
 **[Docs](https://isamercan.github.io/ThemeKit/) · [API (DocC)](https://isamercan.github.io/ThemeKit/api/documentation/themekit) · [Wiki](https://github.com/isamercan/ThemeKit/wiki) · [npm (MCP)](https://www.npmjs.com/package/@isamercan/themekit-mcp) · [Releases](https://github.com/isamercan/ThemeKit/releases) · [Issues](https://github.com/isamercan/ThemeKit/issues) · [Changelog](CHANGELOG.md)**
 
 <p align="center">
-  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 185 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
+  <img src="Screenshots/Banner.png" alt="ThemeKit — native SwiftUI design system: 204 components, fully tokenized, per-subtree theming, Swift 6, Liquid Glass, light + dark" width="820">
 </p>
 
 > The banner above is rendered **by ThemeKit itself** (its own tokens + components) — the same render pipeline that paints every tile in the gallery.
@@ -49,7 +49,7 @@ import ThemeKit
   whole Ant-style palette on device.
 - 📸 **Snapshot + render testing** — every component renders to a theme-aware PNG via
   `ImageRenderer`; the suite guards tokens, themes, validation and renders.
-- **185 components** — Atoms / Molecules / Organisms, all token-bound.
+- **204 components** — Atoms / Molecules / Organisms, all token-bound.
 - 🧬 **Flexibility architecture** — six archetype style protocols (`CardStyle`,
   `FieldStyle`, `ChipStyle`, `BarStyle`, `MeterStyle`, `ToastStyle`,
   `ListRowStyle`) let you re-skin a whole component family with `.cardStyle(_:)`

@@ -5,7 +5,7 @@ description: Every ThemeKit atom, with a verified usage example for each.
 
 The smallest building blocks — a single visual idea each, with no internal composition of other ThemeKit components.
 
-42 atoms. Every example below feeds modifiers with semantic color
+50 atoms. Every example below feeds modifiers with semantic color
 tokens (`SemanticColor` cases, `theme.foreground(_:)`…) — never a raw `Color` or `CGFloat`
 literal. See the [DocC reference](/ThemeKit/api/documentation/themekit/) for the full API.
 

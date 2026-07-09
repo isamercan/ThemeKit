@@ -5,7 +5,7 @@ description: Every ThemeKit molecule, with a verified usage example for each.
 
 Small groups of atoms combined into one interactive unit — fields, pickers, rows, and the travel-booking building blocks.
 
-74 molecules. Every example below feeds modifiers with semantic color
+81 molecules. Every example below feeds modifiers with semantic color
 tokens (`SemanticColor` cases, `theme.foreground(_:)`…) — never a raw `Color` or `CGFloat`
 literal. See the [DocC reference](/ThemeKit/api/documentation/themekit/) for the full API.
 
