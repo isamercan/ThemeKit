@@ -33,7 +33,6 @@ public enum ControlRowControl: Equatable {
 ///         .errorText("This field is required.")
 ///         .disabled(!editable)            // native — R3
 public struct ControlRow: View {
-    @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
     @Binding private var isOn: Bool
@@ -72,9 +71,8 @@ public struct ControlRow: View {
                             .required(isRequired)
                             .hasError(hasError)
                         if let description {
-                            Text(description)
-                                .textStyle(.bodySm400)
-                                .foregroundStyle(descriptionColor)
+                            HelperText(description)
+                                .hasError(hasError)
                         }
                     }
                     Spacer(minLength: Theme.SpacingKey.sm.value)
@@ -87,15 +85,13 @@ public struct ControlRow: View {
             .disabled(!isEnabled)
             .opacity(isEnabled ? 1 : 0.6)
             .a11y(controlElement, in: accessibilityID)
-            .accessibilityLabel(title)
+            .accessibilityLabel(isRequired ? title + ", " + String(themeKit: "required") : title)
             .accessibilityValue(isOn ? String(themeKit: "on") : String(themeKit: "off"))
             .accessibilityHint(accessibilityHint)
             .accessibilityAddTraits(isOn ? .isSelected : [])
 
             if showsError, let errorText {
-                Text(errorText)
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                InfoMessageList([InfoMessage(errorText, kind: .error)])
                     .transition(.opacity)
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
@@ -117,11 +113,6 @@ public struct ControlRow: View {
             case .radio: RadioButton(isSelected: $isOn)
             }
         }
-    }
-
-    private var descriptionColor: Color {
-        if hasError { return theme.foreground(.systemcolorsFgError) }
-        return theme.text(isEnabled ? .textSecondary : .textDisabled)
     }
 
     private var controlElement: A11yElement.Control {

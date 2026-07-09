@@ -4,11 +4,12 @@
 //  Created by İsa Mercan on 09.07.2026.
 //
 //  Coordinates many skeleton placeholders with one loading flag (HeroUI Native
-//  `SkeletonGroup`). The group publishes a small state value into a private
+//  `SkeletonGroup`). The group publishes its loading flag into a private
 //  environment key; the items are the *existing* `Skeleton` atom and the new
 //  zero-argument `.skeleton()` / `.skeleton(shape:)` overloads below, which read
-//  that key and forward to the existing `.skeleton(isLoading:)` modifier. An
-//  explicitly passed `isLoading` always overrides the group.
+//  that key and forward to the existing `.skeleton(isLoading:)` modifier — so
+//  one flag drives every placeholder, while each shimmer animates independently.
+//  An explicitly passed `isLoading` always overrides the group.
 //
 //    SkeletonGroup {
 //        Text(post.title).textStyle(.headingSm).skeleton()   // no flag — group-driven
@@ -26,32 +27,17 @@ import SwiftUI
 
 // MARK: - Group state (private environment plumbing)
 
-/// Shared reference every placeholder under one group sees — a common phase
-/// anchor, so items belonging to the same group share one identity/start point
-/// rather than each acting as an unrelated shimmer.
-fileprivate final class SkeletonGroupPhase {
-    /// The moment this group's placeholders came alive together.
-    let start = Date()
-}
-
-/// What a `SkeletonGroup` publishes to the skeletons below it.
-fileprivate struct SkeletonGroupState: Equatable {
-    var isLoading: Bool
-    var phase: SkeletonGroupPhase
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.isLoading == rhs.isLoading && lhs.phase === rhs.phase
-    }
-}
-
 private struct SkeletonGroupKey: EnvironmentKey {
     /// `nil` — not inside a `SkeletonGroup`; group-driven skeletons render
-    /// their content unchanged.
-    static let defaultValue: SkeletonGroupState? = nil
+    /// their content unchanged. Computed (not `static let`) to match
+    /// `ThemeEnvironmentKey` — Swift 6 strict concurrency house precedent.
+    static var defaultValue: Bool? { nil }
 }
 
 fileprivate extension EnvironmentValues {
-    var skeletonGroup: SkeletonGroupState? {
+    /// The nearest enclosing `SkeletonGroup`'s loading flag, or `nil` outside
+    /// any group.
+    var skeletonGroupIsLoading: Bool? {
         get { self[SkeletonGroupKey.self] }
         set { self[SkeletonGroupKey.self] = newValue }
     }
@@ -60,6 +46,8 @@ fileprivate extension EnvironmentValues {
 // MARK: - SkeletonGroup
 
 /// Drives every group-bound skeleton in `content` from one loading flag.
+/// Each placeholder's shimmer animates independently; the group synchronizes
+/// only *whether* they show, not their sweep.
 ///
 /// Items opt in with the zero-argument `.skeleton()` / `.skeleton(shape:)`
 /// modifiers (group-driven) or compose the standalone `Skeleton` atom inside a
@@ -77,9 +65,6 @@ public struct SkeletonGroup<Content: View>: View {
     private var isLoading = true
     private var isSkeletonOnly = false
 
-    /// One stable reference per group identity, shared by all items below.
-    @State private var phase = SkeletonGroupPhase()
-
     public init(@ViewBuilder content: () -> Content) {   // R1 — content only
         self.content = content()
     }
@@ -90,16 +75,32 @@ public struct SkeletonGroup<Content: View>: View {
             // resolve to nothing at all so layout wrappers collapse.
             if isLoading || !isSkeletonOnly {
                 content
-                    .environment(\.skeletonGroup, SkeletonGroupState(isLoading: isLoading, phase: phase))
-                    // One busy region while loading; ordinary children after.
-                    .accessibilityElement(children: isLoading ? .ignore : .contain)
-                    .accessibilityLabel(isLoading ? String(themeKit: "Loading") : "")
+                    .environment(\.skeletonGroupIsLoading, isLoading)
+                    .modifier(SkeletonGroupAccessibility(isLoading: isLoading))
                     .transition(.opacity)
             }
         }
         // Cross-fade the flip (and the skeleton-only removal), honoring the
         // `microAnimations` switch and Reduce Motion exactly like Skeleton does.
         .animation(MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion), value: isLoading)
+    }
+}
+
+/// One busy region labeled "Loading" while loading; a plain container of
+/// ordinary children — no label — once loaded.
+private struct SkeletonGroupAccessibility: ViewModifier {
+    let isLoading: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isLoading {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(String(themeKit: "Loading"))
+        } else {
+            content
+                .accessibilityElement(children: .contain)
+        }
     }
 }
 
@@ -127,10 +128,10 @@ public extension SkeletonGroup {
 /// Forwards the group's flag to the existing `.skeleton(isLoading:shape:)`
 /// modifier; outside a group it renders the content unchanged.
 private struct GroupSkeletonModifier: ViewModifier {
-    @Environment(\.skeletonGroup) private var group
+    @Environment(\.skeletonGroupIsLoading) private var groupIsLoading
 
     let shape: SkeletonShape
-    private var isLoading: Bool { group?.isLoading ?? false }
+    private var isLoading: Bool { groupIsLoading ?? false }
 
     func body(content: Content) -> some View {
         content

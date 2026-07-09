@@ -1282,6 +1282,17 @@
         }
       }
     },
+    "required" : {
+      "comment" : "Accessibility suffix announced for a required form field.",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zorunlu"
+          }
+        }
+      }
+    },
     "selected" : {
       "comment" : "Checkbox / radio accessibility value: selected.",
       "localizations" : {
