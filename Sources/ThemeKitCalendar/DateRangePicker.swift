@@ -18,7 +18,7 @@
 //  someView.dateRangePicker(isPresented: $show) { result in … }
 //  ```
 //
-#if os(iOS)
+#if os(iOS) && canImport(Almanac)
 import SwiftUI
 import UIKit
 import ThemeKit

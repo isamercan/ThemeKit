@@ -721,8 +721,8 @@ final class ScreenshotGenerator: XCTestCase {
         return VStack(spacing: 16) {
             HStack(spacing: 16) {
                 card { VStack(alignment: .leading, spacing: 6) {
-                    Text("185").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
-                    tiny("COMPONENTS"); sub("42 atoms · 74 molecules · 69 organisms")
+                    Text("204").font(.system(size: 46, weight: .black)).foregroundStyle(t.text(.textPrimary))
+                    tiny("COMPONENTS"); sub("50 atoms · 81 molecules · 73 organisms")
                 }}.frame(width: 330)
                 card { VStack(alignment: .leading, spacing: 6) { heading("Zero deps", t.text(.textPrimary)); sub("native SwiftUI core") }}
                 card(t.background(.systemcolorsBgSuccessLight)) { VStack(alignment: .leading, spacing: 6) {
@@ -746,7 +746,7 @@ final class ScreenshotGenerator: XCTestCase {
                 VStack(spacing: 10) {
                     Text("ThemeKit").font(.system(size: 50, weight: .black)).foregroundStyle(t.text(.textPrimary))
                     sub("Native SwiftUI design system")
-                    Badge("v0.16.0 · iOS 17+").badgeStyle(.info).icon("swift")
+                    Badge("v1.0.0 · iOS 17+").badgeStyle(.info).icon("swift")
                     HStack(spacing: 12) {
                         RadialProgress(0.72).size(52).showsLabel(false)
                         ProgressBar(value: 0.62).frame(width: 130)

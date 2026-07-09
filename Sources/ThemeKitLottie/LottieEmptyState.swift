@@ -10,6 +10,9 @@
 //  free of any Lottie dependency. Accepts a bundled or remote animation.
 //
 
+// Guarded on the "Lottie" package trait (see LottieIllustration.swift): compiles
+// to nothing when lottie-ios is not resolved, keeping the core dependency-free.
+#if canImport(Lottie)
 import SwiftUI
 import ThemeKit
 
@@ -119,3 +122,4 @@ public extension LottieEmptyState {
         return c
     }
 }
+#endif

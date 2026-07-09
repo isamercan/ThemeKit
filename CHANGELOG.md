@@ -2,8 +2,38 @@
 
 All notable changes to **ThemeKit** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
-bump the minor).
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html) — from **1.0.0** on,
+breaking changes bump the **major**.
+
+## [1.0.0] - 2026-07-09
+
+**The 1.0 stability milestone.** ThemeKit reaches **204 components** (50 atoms ·
+81 molecules · 73 organisms) with a dependency-free core, a full accessibility
+pass, and a stable public API. This is the first release under strict
+[Semantic Versioning](https://semver.org/) — from here, breaking changes bump the
+**major**. Shipping a real `1.0.0` tag also fixes Xcode's "Up to Next Major"
+resolution, which previously could not settle on a pre-1.0 version
+([#223](https://github.com/isamercan/ThemeKit/issues/223)).
+
+### Added
+- **HeroUI Native parity — four waves of new and upgraded components:**
+  - **Wave 1 — form fields** ([#220](https://github.com/isamercan/ThemeKit/pull/220)): TextInput, SearchBar, OTPInput, InputLabel.
+  - **Wave 2 — selection & controls** ([#221](https://github.com/isamercan/ThemeKit/pull/221)): Dropdown, Select, Tag, sliders and related controls.
+  - **Wave 3 — overlay & feedback** ([#222](https://github.com/isamercan/ThemeKit/pull/222)): Dialog, BottomSheet, popovers, toasts.
+  - **Wave 4 — navigation & display** ([#225](https://github.com/isamercan/ThemeKit/pull/225)): Tabs, Accordion, Card, Avatar and more.
+  - Plus the initial **HeroUI Native audit** — 6 new components and a gap-analysis document ([#216](https://github.com/isamercan/ThemeKit/pull/216)).
+- **Component gallery** now flags freshly shipped components with a **"New"** badge and adds a dedicated Showcase pod ([#226](https://github.com/isamercan/ThemeKit/pull/226)).
+
+### Accessibility
+- Two audit rounds added accessibility labels to icon-only controls and corrected sort / disclosure / selected traits across the library ([#218](https://github.com/isamercan/ThemeKit/pull/218), [#219](https://github.com/isamercan/ThemeKit/pull/219)).
+
+### Changed
+- **The optional add-ons are now behind opt-in [SwiftPM package traits](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md)**, so the core is dependency-free at *resolution* time, not just link time. A plain `.package(url: "…ThemeKit.git")` now resolves **zero** third-party packages — Lottie, Almanac and HorizonCalendar are no longer fetched unless you ask for them ([#224](https://github.com/isamercan/ThemeKit/issues/224)).
+  - Enable an add-on's dependency with the matching trait: `traits: ["Lottie"]` and/or `traits: ["Calendar"]` on the package dependency (or the **Traits** checkboxes in Xcode).
+  - Add-on sources are `#if canImport(…)` guarded, so with a trait off the module compiles to an empty module rather than failing to build.
+
+### Breaking
+- **Consumers already using `ThemeKitLottie` or `ThemeKitCalendar` must enable the corresponding trait** (`Lottie` / `Calendar`) — otherwise the add-on module resolves empty and its symbols disappear. The core `ThemeKit` product is unaffected. Traits require **Swift 6.1+** tooling on the consuming side.
 
 ## [0.19.0] - 2026-07-09
 

@@ -11,7 +11,7 @@
 //  TimeWheel(hour: $hour, minute: $minute, isAM: $am).format(.amPm)
 //  ```
 //
-#if os(iOS)
+#if os(iOS) && canImport(Almanac)
 import SwiftUI
 import ThemeKit
 import Almanac
