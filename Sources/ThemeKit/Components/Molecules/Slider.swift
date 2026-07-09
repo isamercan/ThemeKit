@@ -264,6 +264,13 @@ public extension Slider {
     }
     /// Shows a value tooltip above the thumb while dragging.
     func showsValueTooltip(_ on: Bool = true) -> Self { copy { $0.showValueTooltip = on } }
+    /// Formats the persistent value readout on the label row (e.g. "$500");
+    /// the same closure formats the drag tooltip and the accessibility value.
+    /// `nil` (default) hides the readout and keeps plain numeric formatting.
+    func valueLabel(_ format: ((Double) -> String)?) -> Self { copy { $0.valueLabel = format } }
+    /// Semantic tint for the track fill and thumb; `nil` (default) keeps the
+    /// hero tokens.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Fires with the snapped value when a drag ends (not on every step).
     func onChangeEnd(_ action: ((Double) -> Void)?) -> Self { copy { $0.onChangeEnd = action } }
 
