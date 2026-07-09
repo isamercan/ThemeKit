@@ -44,6 +44,18 @@ public enum AlertToastType {
         case .accent: return "sparkles"
         }
     }
+
+    /// Localized VoiceOver label for the status icon — the variant's meaning
+    /// is otherwise carried only by glyph + fill color.
+    var accessibilityLabel: String {
+        switch self {
+        case .success: return String(themeKit: "Success")
+        case .warning: return String(themeKit: "Warning")
+        case .danger: return String(themeKit: "Error")
+        case .info, .accent: return String(themeKit: "Information")
+        case .neutral: return String(themeKit: "Note")
+        }
+    }
 }
 
 /// An optional tappable action rendered inline in a toast (e.g. "Undo"). Its
@@ -107,6 +119,7 @@ public struct AlertToast: View {
                 Spinner().size(IconSize.sm.value).lineWidth(2).color(type.foreground(theme))
             } else {
                 Icon(systemName: systemImage ?? type.systemImage).size(.sm).color(type.foreground(theme))
+                    .accessibilityLabel(type.accessibilityLabel)
             }
 
             VStack(alignment: .leading, spacing: 2) {

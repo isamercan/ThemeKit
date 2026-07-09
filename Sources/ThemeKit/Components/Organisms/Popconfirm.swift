@@ -65,6 +65,9 @@ private struct PopconfirmPresenter<Card: View>: ViewModifier {
             let arrow = TooltipArrow(edge: edge)
                 .fill(theme.background(.bgWhite))
                 .overlay(TooltipArrow(edge: edge).stroke(theme.border(.borderPrimary), lineWidth: 1))
+                // Path apex is drawn in absolute coordinates; mirror it with
+                // the layout so it keeps pointing at the trigger under RTL.
+                .flipsForRightToLeftLayoutDirection(true)
                 .frame(width: edge.isVertical ? 14 : 7, height: edge.isVertical ? 7 : 14)
                 .zIndex(1) // Draw over the card's border along the shared base.
             switch edge {

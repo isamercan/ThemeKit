@@ -73,6 +73,13 @@ private struct DialogPresentation<Card: View>: View {
                 .offset(y: dragOffset)
                 .gesture(swipe, including: swipeToDismiss ? .all : .subviews)
                 .transition(cardTransition)
+                // Assistive-tech equivalent of the swipe/scrim dismissal —
+                // VoiceOver's two-finger scrub closes what a swipe would.
+                // Both handlers carry the caller's own gating (loading state,
+                // maskClosable), so escape can never dismiss more than touch.
+                .accessibilityAction(.escape) {
+                    if swipeToDismiss { onSwipeDismiss() } else { onScrimTap() }
+                }
         }
         .zIndex(1)
     }
