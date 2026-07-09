@@ -108,7 +108,7 @@ public struct InfoBanner: View {
             } else if showIcon {
                 Icon(systemName: iconOverride ?? type.systemImage)
                     .size(.sm)
-                    .color(type.accent(theme))
+                    .colorOverride(type.accent(theme))
                     .accessibilityLabel(type.accessibilityLabel)
             }
 

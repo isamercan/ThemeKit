@@ -120,7 +120,9 @@ private struct PopconfirmModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.modifier(PopconfirmPresenter(
             isPresented: $isPresented, edge: edge, align: align,
-            dismissOnOutsideTap: dismissOnOutsideTap, showsArrow: showsArrow, card: card
+            // While the async confirm runs the popover must stay open (Cancel
+            // is disabled for the same reason), so outside taps are ignored.
+            dismissOnOutsideTap: dismissOnOutsideTap && !loading, showsArrow: showsArrow, card: card
         ))
     }
 

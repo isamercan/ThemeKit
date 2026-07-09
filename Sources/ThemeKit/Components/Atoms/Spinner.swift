@@ -335,7 +335,7 @@ private struct SpinnerInfinity: View {
             Spinner().controlSize(.small)
             Spinner()
             Spinner().controlSize(.large)
-            Spinner().controlSize(.large).size(28)
+            Spinner().size(28).controlSize(.large)
         }
         // Custom indicator slot — spun by the shared rotation driver.
         // Under Reduce Motion every style renders static: the ring stays a
@@ -346,10 +346,11 @@ private struct SpinnerInfinity: View {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .resizable().scaledToFit()
             }
-            Spinner().controlSize(.large).indicator {
+            Spinner().indicator {
                 Image(systemName: "rays")
                     .resizable().scaledToFit()
             }
+            .controlSize(.large)
         }
     }
     .padding()
