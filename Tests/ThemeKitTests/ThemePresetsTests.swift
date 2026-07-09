@@ -1,6 +1,7 @@
 import XCTest
 import SwiftUI
 @testable import ThemeKit
+@testable import ThemeKitCore
 #if canImport(UIKit)
 import UIKit
 private typealias DaisyNativeColor = UIColor

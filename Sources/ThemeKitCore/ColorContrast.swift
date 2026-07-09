@@ -10,7 +10,11 @@
 
 import SwiftUI
 
-enum ColorContrast {
+// SPI, not public: a legibility helper the component layer (e.g. Tooltip) reuses,
+// but not part of ThemeKit's supported consumer API. `@_exported` deliberately does
+// not re-export `@_spi`, so component files that need it import it explicitly with
+// `@_spi(ThemeKitInternal) import ThemeKitCore`.
+@_spi(ThemeKitInternal) public enum ColorContrast {
     /// Near-black content for light surfaces (slightly soft, not pure `#000`).
     static let dark = Color(.sRGB, red: 0.08, green: 0.09, blue: 0.11, opacity: 1)
     /// White content for dark surfaces.
@@ -20,7 +24,7 @@ enum ColorContrast {
     private static let darkLuminance = 0.01
 
     /// The readable content color (near-white or near-black) for a background.
-    static func content(on background: Color) -> Color {
+    @_spi(ThemeKitInternal) public static func content(on background: Color) -> Color {
         contentIsDark(on: background) ? dark : light
     }
 

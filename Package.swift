@@ -19,6 +19,13 @@ let package = Package(
             name: "ThemeKit",
             targets: ["ThemeKit"]
         ),
+        // Token-only core — theme engine + design tokens + `@Environment(\.theme)`,
+        // with NO component catalog. Adopt this alone for a minimal theme layer; the
+        // full `ThemeKit` re-exports it, so existing consumers need no change.
+        .library(
+            name: "ThemeKitCore",
+            targets: ["ThemeKitCore"]
+        ),
         // Optional add-on — pulls in Lottie for vector (After Effects / JSON)
         // animations. Import ONLY if you need Lottie; the core stays dependency-free.
         .library(
@@ -64,8 +71,11 @@ let package = Package(
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
+        // Token-only core: theme engine, design tokens, `@Environment(\.theme)`,
+        // presets, generator, and the theme resource bundle. Zero components, zero
+        // third-party deps. Everything else in the package builds on top of this.
         .target(
-            name: "ThemeKit",
+            name: "ThemeKitCore",
             resources: [
                 .process("Resources"),
             ],
@@ -73,6 +83,17 @@ let package = Package(
                 // Swift 6.2 upcoming behaviours, adopted early:
                 // nonisolated async stays on the caller's actor (no hidden hops),
                 // and a @MainActor type's protocol conformances infer @MainActor.
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+            ]
+        ),
+        // Full catalog: all components, built on ThemeKitCore. Re-exports the core
+        // (`@_exported import ThemeKitCore` in CoreExports.swift), so a plain
+        // `import ThemeKit` still surfaces every token and theme symbol unchanged.
+        .target(
+            name: "ThemeKit",
+            dependencies: ["ThemeKitCore"],
+            swiftSettings: [
                 .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
                 .enableUpcomingFeature("InferIsolatedConformances"),
             ]
@@ -100,6 +121,9 @@ let package = Package(
             name: "ThemeKitTests",
             dependencies: [
                 "ThemeKit",
+                // A couple of tests reach engine internals now living in Core
+                // (`Bundle.themeKit`, `ColorContrast`) via `@testable import ThemeKitCore`.
+                "ThemeKitCore",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ]
         ),

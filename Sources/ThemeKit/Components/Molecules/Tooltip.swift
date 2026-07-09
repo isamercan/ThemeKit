@@ -13,6 +13,9 @@
 //
 
 import SwiftUI
+// ColorContrast is an @_spi legibility helper in ThemeKitCore (not re-exported by
+// ThemeKit's umbrella), so pull it in explicitly.
+@_spi(ThemeKitInternal) import ThemeKitCore
 
 /// Placement of the tooltip bubble relative to its anchor. (Ant Tooltip `placement`.)
 public enum TooltipEdge: Sendable {
