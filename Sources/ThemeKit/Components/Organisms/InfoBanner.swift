@@ -8,6 +8,8 @@ import SwiftUI
 
 public enum InfoBannerType {
     case neutral, info, success, warning, error
+    /// Brand-primary emphasis (HeroUI Alert `accent` status).
+    case accent
 
     func background(_ theme: Theme) -> Color {
         switch self {
@@ -16,6 +18,7 @@ public enum InfoBannerType {
         case .success: return theme.background(.systemcolorsBgSuccessLight)
         case .warning: return theme.background(.systemcolorsBgWarningLight)
         case .error: return theme.background(.systemcolorsBgErrorLight)
+        case .accent: return SemanticColor.primary.soft
         }
     }
 
@@ -26,6 +29,7 @@ public enum InfoBannerType {
         case .success: return theme.foreground(.systemcolorsFgSuccess)
         case .warning: return theme.foreground(.systemcolorsFgWarning)
         case .error: return theme.foreground(.systemcolorsFgError)
+        case .accent: return SemanticColor.primary.base
         }
     }
 
@@ -36,15 +40,27 @@ public enum InfoBannerType {
         case .success: return theme.border(.systemcolorsBorderSuccessLight)
         case .warning: return theme.border(.systemcolorsBorderWarningLight)
         case .error: return theme.border(.systemcolorsBorderErrorLight)
+        case .accent: return SemanticColor.primary.border
         }
     }
 
     var systemImage: String {
         switch self {
-        case .neutral, .info: return "info.circle.fill"
+        case .neutral, .info, .accent: return "info.circle.fill"
         case .success: return "checkmark.circle.fill"
         case .warning: return "exclamationmark.triangle.fill"
         case .error: return "exclamationmark.octagon.fill"
+        }
+    }
+
+    /// VoiceOver name for the stock status icon — the status itself, localized.
+    var accessibilityLabel: String {
+        switch self {
+        case .neutral: return String(themeKit: "Note")
+        case .info, .accent: return String(themeKit: "Information")
+        case .success: return String(themeKit: "Success")
+        case .warning: return String(themeKit: "Warning")
+        case .error: return String(themeKit: "Error")
         }
     }
 }
@@ -59,6 +75,9 @@ public struct InfoBanner: View {
     private var type: InfoBannerType = .info
     private var showIcon = true
     private var banner = false
+    private var iconOverride: String?
+    private var leadingView: AnyView?
+    private var trailingView: AnyView?
     private var actionTitle: String?
     private var onAction: (() -> Void)?
     private var onDismiss: (() -> Void)?

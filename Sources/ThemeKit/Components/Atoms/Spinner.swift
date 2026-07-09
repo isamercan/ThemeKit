@@ -20,31 +20,73 @@ public enum SpinnerStyle: String, CaseIterable, Sendable {
     case infinity
 }
 
+/// Default diameter/stroke presets riding the native `.controlSize(_:)` cascade.
+/// An explicit `.size(_:)` / `.lineWidth(_:)` override always wins (R5).
+private extension ControlSize {
+    var spinnerDiameter: CGFloat {
+        switch self {
+        case .mini, .small: return 16
+        case .large, .extraLarge: return 40
+        default: return 24   // .regular (default)
+        }
+    }
+
+    var spinnerStroke: CGFloat {
+        switch self {
+        case .mini, .small: return 2
+        case .large, .extraLarge: return 4
+        default: return 3    // .regular (default)
+        }
+    }
+}
+
 /// Atom. Indeterminate loading indicator (token-tinted) in five shapes:
 /// ring / dots / bars / ball / infinity. (daisyUI "Loading".)
+///
+/// Sizes ride the native `.controlSize(_:)` cascade (small ≈ 16/2, regular
+/// 24/3, large 40/4) unless `.size(_:)`/`.lineWidth(_:)` override them.
+/// `.indicator { … }` swaps the built-in shape for custom content spun by the
+/// shared rotation driver. Honors Reduce Motion: every style renders a static
+/// form (the ring becomes a fixed 270° arc with no rotation).
 public struct Spinner: View {
     @Environment(\.theme) private var theme
+    @Environment(\.controlSize) private var controlSize
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: CGFloat = 24
-    private var lineWidth: CGFloat = 3
+    private var size: CGFloat?
+    private var lineWidth: CGFloat?
     private var color: Color?
     private var semantic: SemanticColor?
     private var style: SpinnerStyle = .ring
+    private var indicator: AnyView?
 
     public init() {}   // R1
 
     /// Raw override wins, then the semantic accent, then the theme hero foreground.
     private var tint: Color { color ?? semantic?.accent ?? theme.foreground(.fgHero) }
 
+    /// Explicit override wins; else the `.controlSize(_:)` preset.
+    private var resolvedSize: CGFloat { size ?? controlSize.spinnerDiameter }
+    private var resolvedLineWidth: CGFloat { lineWidth ?? controlSize.spinnerStroke }
+
     public var body: some View {
-        switch style {
-        case .ring: SpinnerRing(tint: tint, size: size, lineWidth: lineWidth)
-        case .dots: SpinnerDots(tint: tint, size: size)
-        case .bars: SpinnerBars(tint: tint, size: size)
-        case .ball: SpinnerBall(tint: tint, size: size)
-        case .infinity: SpinnerInfinity(tint: tint, size: size, lineWidth: lineWidth)
+        Group {
+            if let indicator {
+                // Custom slot rides the shared rotor (static under Reduce Motion).
+                SpinnerRotor {
+                    indicator.frame(width: resolvedSize, height: resolvedSize)
+                }
+            } else {
+                switch style {
+                case .ring: SpinnerRing(tint: tint, size: resolvedSize, lineWidth: resolvedLineWidth)
+                case .dots: SpinnerDots(tint: tint, size: resolvedSize)
+                case .bars: SpinnerBars(tint: tint, size: resolvedSize)
+                case .ball: SpinnerBall(tint: tint, size: resolvedSize)
+                case .infinity: SpinnerInfinity(tint: tint, size: resolvedSize, lineWidth: resolvedLineWidth)
+                }
+            }
         }
+        .accessibilityLabel(String(themeKit: "Loading"))
     }
 }
 
