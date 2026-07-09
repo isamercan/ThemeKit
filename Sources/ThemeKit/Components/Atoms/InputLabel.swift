@@ -70,6 +70,9 @@ public extension InputLabel {
         InputLabel("Email")
         InputLabel("Password").required().hasInfo()
         InputLabel("Invalid").hasError()
+        InputLabel("Disabled").disabled(true)
+        InputLabel("Disabled required").required().hasInfo().disabled(true)
+        InputLabel("Disabled error").hasError().disabled(true)
     }
     .padding()
 }
