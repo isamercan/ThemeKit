@@ -239,6 +239,17 @@ public extension MultiSelect {
     /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
 
+    /// Second line rendered under each option title in the dropdown rows
+    /// (HeroUI `Select.ItemDescription`) — `.bodySm400` in the secondary text
+    /// token. Return `nil` for options without one.
+    func optionDescription(_ text: @escaping (Option) -> String?) -> Self { copy { $0.describeOption = text } }
+
+    /// Custom leading content rendered between the checkbox and the title in
+    /// each dropdown row (e.g. a `StatusDot` or `Icon`).
+    func optionLeading<V: View>(@ViewBuilder _ content: @escaping (Option) -> V) -> Self {
+        copy { $0.leadingContent = { AnyView(content($0)) } }
+    }
+
     /// Whether the dropdown shows a search field (default true).
     func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
 
@@ -265,10 +276,23 @@ public extension MultiSelect {
 #Preview {
     struct Demo: View {
         @State var picks: Set<String> = ["Istanbul"]
+        @State var channels: Set<String> = []
+        @State var channelsOpen = false
         let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
+        let channelDetails = [
+            "Email": "Daily digest to your inbox",
+            "Push": "Instant alerts on your device",
+            "SMS": "Text messages for urgent updates",
+        ]
         var body: some View {
             VStack(spacing: 16) {
                 MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+                // Descriptions + custom leading content, driven by a
+                // controlled isExpanded binding.
+                MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
+                    .optionDescription { channelDetails[$0] }
+                    .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
+                Button(channelsOpen ? "Close channels" : "Open channels") { channelsOpen.toggle() }
                 // Chrome via the shared FieldStyle axis.
                 MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
                     .fieldStyle(.underlined)

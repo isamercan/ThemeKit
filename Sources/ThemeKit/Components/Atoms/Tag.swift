@@ -228,6 +228,19 @@ public extension CheckableTag {
             Tag("Purple").color(.purple).bordered()
             Tag("Pink").color(.pink).variant(.solid)
         }
+        // Size ramp (shares Chip's ChipSize).
+        HStack {
+            Tag("Small").icon("tag")
+            Tag("Large").icon("tag").size(.large)
+            Tag("Large removable", onRemove: {}).size(.large).tagStyle(.success)
+        }
+        // Slots: leading replaces the icon shorthand; trailing renders before
+        // the remove button.
+        HStack {
+            Tag("Online").leading { StatusDot(.online) }
+            Tag("Boosted").leading { Image(systemName: "sparkles").font(.system(size: 12)) }
+            Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) }
+        }
         CheckableTagRow()
     }
     .padding()
@@ -250,6 +263,9 @@ private struct CheckableTagRow: View {
         PreviewCase("Removable") { Tag("Filter", onRemove: {}) }
         PreviewCase("With icon") { Tag("Beach").icon("beach.umbrella") }
         PreviewCase("Semantic")  { Tag("Error").tagStyle(.error).variant(.solid) }
+        PreviewCase("Large")     { Tag("Filter", onRemove: {}).size(.large) }
+        PreviewCase("Leading slot")  { Tag("Online").leading { StatusDot(.online) } }
+        PreviewCase("Trailing slot") { Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) } }
         PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
     }
 }
