@@ -151,16 +151,19 @@ private struct TooltipBubble: View {
     }
 }
 
-/// Pushes the bubble just outside the chosen edge of the anchor.
+/// Pushes the bubble just outside the chosen edge of the anchor, separated by
+/// the small spacing token.
 private struct TooltipPlacement: ViewModifier {
     let edge: TooltipEdge
 
+    private var gap: CGFloat { Theme.SpacingKey.sm.value }
+
     func body(content: Content) -> some View {
         switch edge {
-        case .top: content.offset(y: -8).alignmentGuide(.top) { $0[.bottom] }
-        case .bottom: content.offset(y: 8).alignmentGuide(.bottom) { $0[.top] }
-        case .leading: content.offset(x: -8).alignmentGuide(.leading) { $0[.trailing] }
-        case .trailing: content.offset(x: 8).alignmentGuide(.trailing) { $0[.leading] }
+        case .top: content.offset(y: -gap).alignmentGuide(.top) { $0[.bottom] }
+        case .bottom: content.offset(y: gap).alignmentGuide(.bottom) { $0[.top] }
+        case .leading: content.offset(x: -gap).alignmentGuide(.leading) { $0[.trailing] }
+        case .trailing: content.offset(x: gap).alignmentGuide(.trailing) { $0[.leading] }
         }
     }
 }

@@ -292,8 +292,8 @@ public final class FeedbackPresenter {
     /// call `dismissLoading()` when the work completes (Ant `message.loading`).
     public func loading(_ title: String = String(themeKit: "Loading…")) { activeLoading = title }
 
-    public func dismissToast(_ id: UUID) { toasts.removeAll { $0.id == id } }
-    public func dismissAllToasts() { toasts.removeAll() }
+    public func dismissToast(_ id: UUID) { removeToasts { $0.id == id } }
+    public func dismissAllToasts() { removeToasts { _ in true } }
     public func dismissConfirm() { activeConfirm = nil }
     public func dismissNotification() { activeNotification = nil }
     public func dismissLoading() { activeLoading = nil }
