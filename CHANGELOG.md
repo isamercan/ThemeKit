@@ -5,6 +5,38 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [0.19.0] - 2026-07-09
+
+The **Ant Design overview parity** release: swept ant.design/components against the
+library and built every genuine gap, plus a wave of Ant-parity upgrades to existing
+components. All additive and backward-compatible.
+
+### Added
+- **New Ant-parity components:**
+  - **Watermark** — a `.watermark(_:)` modifier tiling a faint, rotated label across a view (Canvas-drawn, theme-tinted).
+  - **Flex** — a flexbox container with main-axis `justify` (start / center / end / space-between / -around / -evenly) and cross-axis `align`, via a custom `Layout`. **Space** stays the simpler even-gap primitive.
+  - **AnchorNav** — a scroll-spy link rail with a moving hero indicator (Ant `Anchor`; renamed to avoid SwiftUI's `Anchor<Value>`).
+  - **Splitter** — two panes with a draggable, clamped divider.
+  - **Affix** — pins content to the top/bottom of a scroll container once it passes an offset (`.target(_:)` for a named container).
+  - **Cascader** — pick a value from a multi-level option tree, one column per level.
+  - **Transfer** — move items between a source and a target list via checkboxes + arrows.
+  - **Mentions** — a multi-line input where typing `@` opens a filterable suggestion list.
+  - **Masonry** — a Pinterest-style grid; items flow into the shortest column (custom `Layout`).
+  - **TreeView** — a standalone hierarchical tree with expand/collapse + optional cascade checkboxes (Ant `Tree`; reuses `TreeNode`).
+  - **ColumnsGrid** — an equal-column grid with a token gutter, fixed or responsive-adaptive (Ant `Grid`).
+  - **Space** — even spacing between inline/stacked children (direction / size / align / wrap).
+- **PageHeader** rewritten as a style-driven organism with 13 style variants, plus a reusable **SearchSummary** molecule.
+- **CheckableTag** — Ant's checkable tag (toggles a bound `Bool`).
+
+### Changed
+- **SegmentedControl** — `.selectionStyle(.tinted)` (soft joined toggle) + `.dividers()` + `.tinted(_ color:)` base color; fuller Ant Segmented parity.
+- **Tag** — `.color(_ SemanticColor)` for the broader palette, `.bordered()`, and the new `CheckableTag`.
+- **ResultView** — `.icon { }` / `.content { }` / `.extra { }` slots + `.subtitle(_)` (Ant Result parity).
+- **BorderBeam** — `outset` + `reverse` (Ant BorderBeam parity).
+- **FilterBar** — Ant "Filter Section" chip + leading styles; native icon+label collapse on scroll.
+- **DatePriceStrip** — `.strip()` horizontal timeline; **RecentSearchRow** — `.pill()` mini-search-bar variant.
+- Docs refreshed to **185 components**; README hero banner + GitHub Pages regenerated, with usage snippets for the new components.
+
 ## [0.18.2] - 2026-07-08
 
 ### Fixed
