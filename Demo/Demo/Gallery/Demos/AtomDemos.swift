@@ -279,6 +279,192 @@ struct TagDemo: View {
     }
 }
 
+struct CloseButtonDemo: View {
+    @State private var sizeIdx = 2   // 0 mini, 1 small, 2 regular
+    @State private var tintIdx = 0   // 0 muted default, 1 error, 2 primary
+    @State private var plain = false
+    @State private var chevron = false
+    @State private var enabled = true
+    @State private var overlay = false
+    @State private var taps = 0
+
+    private var size: ControlSize { sizeIdx == 0 ? .mini : sizeIdx == 1 ? .small : .regular }
+    private var tint: SemanticColor? { tintIdx == 1 ? .error : tintIdx == 2 ? .primary : nil }
+
+    var body: some View {
+        ComponentStage("CloseButton", inspector: [
+            ("controlSize", sizeIdx == 0 ? "mini" : sizeIdx == 1 ? "small" : "regular"), ("plain", "\(plain)"), ("taps", "\(taps)"),
+        ]) {
+            if overlay {
+                // The .plain() ghost glyph over a media-like surface (photo cards, hero banners).
+                ZStack(alignment: .topTrailing) {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Theme.shared.background(.bgHero))
+                        .frame(width: 220, height: 132)
+                    CloseButton { taps += 1; flash("Close tapped") }
+                        .plain()
+                        .tint(.neutral)
+                        .controlSize(.small)
+                }
+            } else {
+                CloseButton { taps += 1; flash("Close tapped") }
+                    .tint(tint)
+                    .systemImage(chevron ? "chevron.down" : "xmark")
+                    .plain(plain)
+                    .controlSize(size)
+                    .disabled(!enabled)
+            }
+        } knobs: {
+            Picker("Size", selection: $sizeIdx) { Text("Mini").tag(0); Text("Small").tag(1); Text("Regular").tag(2) }.pickerStyle(.segmented)
+            Picker("Tint", selection: $tintIdx) { Text("Muted").tag(0); Text("Error").tag(1); Text("Primary").tag(2) }.pickerStyle(.segmented)
+            Toggle("Plain (no circle fill)", isOn: $plain)
+            Toggle("Chevron glyph (sheet pull-down)", isOn: $chevron)
+            Toggle("Media overlay (plain, top-trailing)", isOn: $overlay)
+            Toggle("Enabled", isOn: $enabled)
+        }
+    }
+}
+
+struct HelperTextDemo: View {
+    @State private var error = false
+    @State private var hides = false
+    @State private var enabled = true
+
+    var body: some View {
+        ComponentStage("HelperText", inspector: [
+            ("hasError", "\(error)"), ("hidesOnError", "\(hides)"), ("isEnabled", "\(enabled)"),
+        ]) {
+            VStack(alignment: .leading, spacing: 6) {
+                InputLabel("Password").required().hasError(error)
+                Text("••••••••")
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(Theme.shared.text(.textTertiary))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.shared.border(.borderPrimary)))
+                HelperText("Min. 8 characters, one number.")
+                    .hasError(error)
+                    .hidesOnError(hides)
+                    .disabled(!enabled)
+            }
+        } knobs: {
+            Toggle("Error (red helper)", isOn: $error)
+            Toggle("Hide on error (yields to a field-error line)", isOn: $hides)
+            Toggle("Enabled", isOn: $enabled)
+        }
+    }
+}
+
+struct SurfaceViewDemo: View {
+    @State private var levelIdx = 0
+    @State private var elevationIdx = 0   // 0 none, 1 soft, 2 elevated
+    @State private var fieldRadius = false
+    @State private var smallPadding = false
+    @State private var nested = false
+
+    private let levels: [(String, SurfaceLevel)] = [
+        ("Primary", .primary), ("Secondary", .secondary), ("Tertiary", .tertiary), ("Transparent", .transparent),
+    ]
+    private var elevation: CardElevation { elevationIdx == 1 ? .soft : elevationIdx == 2 ? .elevated : .none }
+
+    var body: some View {
+        ComponentStage("Surface", inspector: [
+            ("level", levels[levelIdx].0), ("elevation", elevationIdx == 1 ? "soft" : elevationIdx == 2 ? "elevated" : "none"),
+        ]) {
+            if nested {
+                // Hierarchy from nesting: primary > secondary > tertiary.
+                SurfaceView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Primary").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                        SurfaceView {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Secondary").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                                SurfaceView {
+                                    Text("Tertiary").textStyle(.labelSm600)
+                                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .level(.tertiary)
+                            }
+                        }
+                        .level(.secondary)
+                    }
+                }
+                .elevation(elevation)
+            } else {
+                SurfaceView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Booking summary").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Text("2 guests · 3 nights").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .level(levels[levelIdx].1)
+                .elevation(elevation)
+                .radius(fieldRadius ? .field : .box)
+                .contentPadding(smallPadding ? .sm : .md)
+            }
+        } knobs: {
+            Picker("Level", selection: $levelIdx) {
+                ForEach(Array(levels.enumerated()), id: \.offset) { i, l in Text(l.0).tag(i) }
+            }.pickerStyle(.segmented).disabled(nested)
+            Picker("Elevation", selection: $elevationIdx) { Text("None").tag(0); Text("Soft").tag(1); Text("Elevated").tag(2) }.pickerStyle(.segmented)
+            Toggle("Field radius (default .box)", isOn: $fieldRadius)
+            Toggle("Small padding (default .md)", isOn: $smallPadding)
+            Toggle("Nested (primary > secondary > tertiary)", isOn: $nested)
+        }
+    }
+}
+
+struct SkeletonGroupDemo: View {
+    @State private var loading = true
+    @State private var placeholderOnly = false
+
+    var body: some View {
+        ComponentStage("SkeletonGroup", inspector: [("isLoading", "\(loading)"), ("skeletonOnly", "\(placeholderOnly)")]) {
+            if placeholderOnly {
+                // Pure placeholder — the whole group collapses once loading ends.
+                VStack(alignment: .leading, spacing: 14) {
+                    SkeletonGroup {
+                        HStack(spacing: 10) {
+                            Skeleton(.circle).size(width: 48, height: 48)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Skeleton(.capsule).size(width: 150, height: 12)
+                                Skeleton(.capsule).size(width: 100, height: 12)
+                            }
+                        }
+                    }
+                    .skeletonOnly()
+                    .loading(loading)
+                    Text("Content below moves up when the placeholder collapses.")
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                }
+            } else {
+                SkeletonGroup {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Weekend in Lisbon").textStyle(.headingSm)
+                            .foregroundStyle(Theme.shared.text(.textPrimary))
+                            .skeleton()
+                        Text("Three days of tiles, trams and pastel facades by the river.")
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                            .skeleton()
+                        Text("Updated today").textStyle(.labelSm600)
+                            .foregroundStyle(Theme.shared.text(.textTertiary))
+                            .skeleton(shape: .capsule)
+                    }
+                }
+                .loading(loading)
+            }
+        } knobs: {
+            Toggle("Loading", isOn: $loading)
+            Toggle("Skeleton-only (collapses when loaded)", isOn: $placeholderOnly)
+            Text("One .loading() flag drives every zero-argument .skeleton() below the group.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
 struct WatermarkDemo: View {
     @Environment(\.theme) private var theme
     @State private var text = "SPECIMEN"
