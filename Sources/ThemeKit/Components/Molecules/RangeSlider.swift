@@ -9,9 +9,11 @@ import SwiftUI
 /// Improved, token-bound rewrite of the reference RangeSliderView — a
 /// self-contained dual-thumb slider over a numeric range (decoupled from the
 /// reference's text-field wiring).
-/// Reference: Ant Design `Slider` (range) / MUI `Slider` — optional `marks`
-/// (labeled ticks), a disabled state, an `onChangeEnd` commit callback (fire the
-/// search on release, not on every drag tick), and VoiceOver-adjustable thumbs.
+/// Reference: Ant Design `Slider` (range) / MUI `Slider` / HeroUI `Slider` —
+/// optional `marks` (labeled ticks), a disabled state, an `onChangeEnd` commit
+/// callback (fire the search on release, not on every drag tick), tap-to-set on
+/// the track (moves the nearest thumb), a vertical axis, a semantic accent, and
+/// VoiceOver-adjustable thumbs.
 public struct RangeSlider: View {
     @Environment(\.theme) private var theme
 
@@ -23,6 +25,9 @@ public struct RangeSlider: View {
     // Opt-in presentation — set via chainable modifiers.
     private var step: Double = 1
     private var marks: [Double] = []
+    private var axis: Axis = .horizontal
+    private var verticalHeight: CGFloat = 160
+    private var accent: SemanticColor? = nil
     private var valueLabel: ((Double) -> String)? = nil
     private var onChangeEnd: ((Double, Double) -> Void)? = nil
     private var showInputs: Bool = false
@@ -32,9 +37,16 @@ public struct RangeSlider: View {
     @State private var upperText = ""
     @FocusState private var focusedField: Field?
     private enum Field { case lower, upper }
+    /// Which thumb the current track gesture is moving — chosen once at gesture
+    /// start (nearest to the touch) and kept for the rest of the drag.
+    @State private var activeThumb: Field? = nil
 
     private let thumbSize: CGFloat = 24
     private let trackHeight: CGFloat = 4
+    /// Extra tappable slop around the track so tap-to-set is easy to hit.
+    private let hitSlop: CGFloat = 8
+    /// HeroUI-style press feedback: the active thumb scales down while dragging.
+    private let pressScale: CGFloat = 0.9
 
     public init(   // R1
         lowerValue: Binding<Double>,

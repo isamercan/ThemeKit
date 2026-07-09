@@ -237,11 +237,23 @@ public struct Slider: View {
 #Preview {
     struct Demo: View {
         @State var v: Double = 4
+        @State var price: Double = 240
         var body: some View {
+            // Tap-to-set: tapping anywhere on a track jumps the thumb there.
             VStack(spacing: 32) {
                 Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip()
                 Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"])
+                Slider(value: $price, in: 0...1000, label: "Budget")
+                    .step(10)
+                    .valueLabel { "$\(Int($0))" }   // currency-style readout + tooltip
+                    .showsValueTooltip()
+                Slider(value: $v, in: 0...8, label: "Accented")
+                    .accent(.success)
+                    .valueLabel { "\(Int($0))" }
                 Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true)
+                Slider(value: $v, in: 0...8, label: "Vertical")
+                    .axis(.vertical, height: 120)
+                    .valueLabel { "\(Int($0))" }
             }
             .padding()
         }
