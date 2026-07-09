@@ -86,10 +86,10 @@ the repository URL, or add it to your `Package.swift`:
 ```swift
 dependencies: [
     // Core only — a plain install resolves ZERO third-party packages.
-    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.3.0"),
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.1.0"),
 
     // Opt into an add-on's dependency via package traits (Swift 6.1+):
-    // .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.3.0",
+    // .package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.1.0",
     //          traits: ["Lottie", "Calendar"]),
 ],
 targets: [
@@ -97,6 +97,8 @@ targets: [
         name: "MyApp",
         dependencies: [
             .product(name: "ThemeKit", package: "ThemeKit"),
+            // Or, for just the theme layer (tokens + @Environment(\.theme), no components):
+            // .product(name: "ThemeKitCore", package: "ThemeKit"),
             // Only with the matching trait enabled above:
             // .product(name: "ThemeKitLottie", package: "ThemeKit"),
             // .product(name: "ThemeKitCalendar", package: "ThemeKit"),
@@ -113,7 +115,8 @@ so without a trait enabled SwiftPM never even fetches Lottie or Almanac.
 
 | Product | Trait | Pulls | Use |
 |---|---|---|---|
-| `ThemeKit` | — (default) | **nothing** | the full design system (core) |
+| `ThemeKit` | — (default) | **nothing** | the full design system — tokens **and** all 204 components (re-exports `ThemeKitCore`) |
+| `ThemeKitCore` | — (default) | **nothing** | token-only theme engine: `Theme`, `SemanticColor`, `@Environment(\.theme)`, presets, generator — **no components**. Adopt alone for a minimal theme layer. |
 | `ThemeKitLottie` | `Lottie` | `lottie-ios` | Lottie (After Effects / JSON) animation views |
 | `ThemeKitCalendar` | `Calendar` | `Almanac` (→ `HorizonCalendar`, iOS-only) | a token-bound date-range calendar (`DateRangePicker`) that re-skins with the active theme |
 
