@@ -433,14 +433,21 @@ public extension FilterChip {
 /// A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
 public struct ChipGroup<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let title: String?
     private let options: [Option]
     @Binding private var selection: Set<Option>
     private let label: (Option) -> String
 
-    // Appearance — mutated only through the modifiers below (R2).
+    // Appearance/config — mutated only through the modifiers below (R2).
     private var selectionStyle: ChipSelectionStyle = .tonal
+    private var isOptionEnabled: ((Option) -> Bool)?
+    private var onRemove: ((Option) -> Void)?
+    private var infoMessages: [InfoMessage] = []
+    private var emptyContent: AnyView? = nil
 
     public init(   // R1
         title: String? = nil,
@@ -454,23 +461,65 @@ public struct ChipGroup<Option: Hashable>: View {
         self.label = label
     }
 
+    private func optionEnabled(_ option: Option) -> Bool { isEnabled && (isOptionEnabled?(option) ?? true) }
+
+    /// The most severe message tints the group title (RadioGroup convention).
+    private var titleColor: Color {
+        switch infoMessages.dominantKind {
+        case .error: return theme.foreground(.systemcolorsFgError)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        default: return theme.text(.textPrimary)
+        }
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
+                Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    ForEach(options, id: \.self) { option in
-                        Chip(label(option),
-                             isSelected: Binding(
-                                get: { selection.contains(option) },
-                                set: { isOn in if isOn { selection.insert(option) } else { selection.remove(option) } }
-                             ))
-                            .chipStyle(selectionStyle)
+            if options.isEmpty, let emptyContent {
+                emptyContent
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        ForEach(options, id: \.self) { option in
+                            let enabled = optionEnabled(option)
+                            chip(for: option)
+                                .disabled(!enabled)
+                                .opacity(enabled ? 1 : 0.4)
+                        }
                     }
                 }
             }
+            if !infoMessages.isEmpty {
+                InfoMessageList(infoMessages)
+            }
+        }
+        // Animate message rows in/out (their `.transition` lives in
+        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion.
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: infoMessages)
+    }
+
+    /// One selectable chip; `removable` appends a trailing remove affordance
+    /// via `Chip`'s trailing slot (HeroUI TagGroup.ItemRemoveButton parity).
+    @ViewBuilder private func chip(for option: Option) -> some View {
+        let base = Chip(label(option),
+                        isSelected: Binding(
+                           get: { selection.contains(option) },
+                           set: { isOn in if isOn { selection.insert(option) } else { selection.remove(option) } }
+                        ))
+            .chipStyle(selectionStyle)
+        if let onRemove {
+            base.trailing {
+                Button { onRemove(option) } label: {
+                    Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(theme.text(.textTertiary))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Remove \(label(option))"))
+            }
+        } else {
+            base
         }
     }
 }
@@ -480,6 +529,24 @@ public struct ChipGroup<Option: Hashable>: View {
 public extension ChipGroup {
     /// Visual style applied to every chip (matches `Chip.chipStyle`).
     func chipStyle(_ style: ChipSelectionStyle) -> Self { copy { $0.selectionStyle = style } }
+
+    /// Per-option enablement predicate (nil enables every option).
+    func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Appends a trailing remove button to every chip; the callback receives
+    /// the option to remove (HeroUI TagGroup `onRemove`). The caller owns the
+    /// options array, so removal mutates it there.
+    func removable(_ onRemove: @escaping (Option) -> Void) -> Self { copy { $0.onRemove = onRemove } }
+
+    /// Validation / info messages rendered under the chips (drive the title color).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Custom view shown instead of the chip row while `options` is empty
+    /// (HeroUI TagGroup `renderEmptyState`).
+    func emptyContent<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        let view = AnyView(content())
+        return copy { $0.emptyContent = view }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
