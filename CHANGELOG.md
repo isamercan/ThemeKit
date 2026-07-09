@@ -5,6 +5,30 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — from **1.0.0** on,
 breaking changes bump the **major**.
 
+## [1.1.0] - 2026-07-10
+
+**New `ThemeKitCore` product — the token-only theme layer.** The theme engine,
+design tokens, and `@Environment(\.theme)` now ship as a standalone
+`ThemeKitCore` library you can adopt on its own, without the 204-component
+catalog. The full `ThemeKit` product depends on it and `@_exported import`s it,
+so **existing `import ThemeKit` code is unchanged** — `Theme`, `SemanticColor`,
+`Theme.SpacingKey` and friends still resolve exactly as before.
+
+First step of the modularization from the architecture review
+([#229](https://github.com/isamercan/ThemeKit/issues/229)): a narrow, value-based
+core for apps that only want theming, with the opinionated domain organisms to
+move into later editions.
+
+### Added
+- **`ThemeKitCore`** library product — `Theme`, tokens (`SemanticColor`, `Theme.SpacingKey`, `Theme.RadiusRole`, typography), `@Environment(\.theme)`, `.themeKit()`, presets, and the theme generator, with **zero components and zero third-party dependencies**. Adopt with `import ThemeKitCore`.
+
+### Changed
+- **`ThemeKit` now re-exports `ThemeKitCore`** (`@_exported import`), so a plain `import ThemeKit` surfaces every token and theme symbol unchanged — no source changes for existing consumers.
+- The theme engine, `Localizable.xcstrings`, and the theme JSON now live in the `ThemeKitCore` target's resource bundle.
+
+### Migration (only if affected)
+- Fully-qualified references to engine symbols — e.g. `ThemeKit.Theme`, `ThemeKit.SemanticColor` — must drop the qualifier or use `ThemeKitCore.Theme`. Unqualified use (`Theme(…)`, `SemanticColor.primary`, `.textStyle(…)`) is unaffected.
+
 ## [1.0.0] - 2026-07-09
 
 **The 1.0 stability milestone.** ThemeKit reaches **204 components** (50 atoms ·
