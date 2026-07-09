@@ -559,6 +559,7 @@ public extension ChipGroup {
     struct Demo: View {
         @State var a = true; @State var b = false; @State var c = true
         @State var multi: Set<String> = ["Wifi"]
+        @State var removableOptions = ["Wifi", "Pool", "Spa"]
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -573,6 +574,18 @@ public extension ChipGroup {
                         FilterChip("4+ stars") {}.shape(.square)
                     }
                     ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
+                    // Per-option disabled: "Spa" renders dimmed + non-interactive.
+                    ChipGroup(title: "Per-option disabled", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
+                        .optionEnabled { $0 != "Spa" }
+                    // Removable: every chip gets a trailing xmark that mutates the caller's array.
+                    ChipGroup(title: "Removable", options: removableOptions, selection: $multi) { $0 }
+                        .removable { option in removableOptions.removeAll { $0 == option } }
+                    // Invalid state: messages under the chips + error-tinted title.
+                    ChipGroup(title: "With error", options: ["Wifi", "Pool"], selection: $multi) { $0 }
+                        .infoMessages([InfoMessage("Pick at least one amenity", kind: .error)])
+                    // Empty state: custom placeholder while the options collection is empty.
+                    ChipGroup(title: "Empty", options: [String](), selection: $multi) { $0 }
+                        .emptyContent { Text("No amenities available").textStyle(.bodySm400) }
                     // Custom ChipStyle via the environment: `.chipStyle(.solid)`
                     // on the container is non-default, so these molecules route
                     // through `SolidChipStyle.makeBody` (capsule chroma) instead

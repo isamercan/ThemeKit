@@ -326,6 +326,19 @@ public extension Select {
     /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
 
+    /// Second line rendered under each option title (HeroUI `Select.ItemDescription`).
+    /// Return `nil` for options without one. In the searchable panel it renders
+    /// `.bodySm400` in the secondary text token; in native-`Menu` mode it becomes
+    /// the system-styled menu subtitle (tokens can't apply inside a native menu).
+    func optionDescription(_ text: @escaping (Option) -> String?) -> Self { copy { $0.describeOption = text } }
+
+    /// Custom leading content rendered before each option title in the
+    /// **searchable panel** rows (e.g. a `StatusDot` or `Icon`). Native `Menu`
+    /// rows strip custom views, so this has no effect without `.searchable()`.
+    func optionLeading<V: View>(@ViewBuilder _ content: @escaping (Option) -> V) -> Self {
+        copy { $0.leadingContent = { AnyView(content($0)) } }
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -340,6 +353,13 @@ public extension Select {
 #Preview {
     struct Demo: View {
         @State var city: String?
+        @State var plan: String?
+        @State var planPanelOpen = false
+        let planDetails = [
+            "Basic": "Essential features for personal use",
+            "Pro": "Advanced tools for power users",
+            "Team": "Collaboration for organizations",
+        ]
         var body: some View {
             VStack(spacing: 16) {
                 Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
@@ -347,6 +367,16 @@ public extension Select {
                 Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
                        selection: $city) { $0 }
                     .searchable()
+                // Native-menu subtitles via optionDescription.
+                Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
+                    .optionDescription { planDetails[$0] }
+                // Panel rows with descriptions + custom leading content,
+                // driven by a controlled isExpanded binding.
+                Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: $planPanelOpen) { $0 }
+                    .searchable()
+                    .optionDescription { planDetails[$0] }
+                    .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
+                Button(planPanelOpen ? "Close plan panel" : "Open plan panel") { planPanelOpen.toggle() }
                 // Chrome via the shared FieldStyle axis.
                 Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
                     .fieldStyle(.underlined)
