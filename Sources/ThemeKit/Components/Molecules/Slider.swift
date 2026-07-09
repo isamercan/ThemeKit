@@ -199,11 +199,15 @@ public struct Slider: View {
     }
 
     private var fillColor: Color {
-        theme.background(isEnabled ? .bgHero : .bgSecondary)
+        guard isEnabled else { return theme.background(.bgSecondary) }
+        return accent?.solid ?? theme.background(.bgHero)
     }
 
+    /// Attached to the whole track (minimumDistance 0), so a tap anywhere sets
+    /// the value from its absolute location and a drag keeps tracking it; the
+    /// change-end callback fires on release either way.
     private func drag(usable: CGFloat) -> some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 0)
             .onChanged { g in
                 guard isEnabled else { return }
                 dragging = true
@@ -214,20 +218,19 @@ public struct Slider: View {
             .onEnded { _ in dragging = false; onChangeEnd?(value) }
     }
 
-    /// Vertical drag uses translation (up = increase) so the math stays correct
-    /// regardless of the thumb-local gesture coordinate space.
+    /// Vertical variant of the track gesture — the track is a fixed coordinate
+    /// space, so the value maps from the absolute touch location (up = increase).
     private func verticalDrag(usable: CGFloat) -> some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 0)
             .onChanged { g in
                 guard isEnabled else { return }
                 dragging = true
-                let start = dragStartValue ?? value
-                if dragStartValue == nil { dragStartValue = value }
-                let deltaRatio = Double(-g.translation.height / usable)
-                let raw = start + deltaRatio * span
+                let fromBottom = usable + thumbSize / 2 - g.location.y
+                let ratio = Double(min(max(fromBottom, 0), usable) / usable)
+                let raw = bounds.lowerBound + ratio * span
                 value = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
             }
-            .onEnded { _ in dragging = false; dragStartValue = nil; onChangeEnd?(value) }
+            .onEnded { _ in dragging = false; onChangeEnd?(value) }
     }
 }
 
