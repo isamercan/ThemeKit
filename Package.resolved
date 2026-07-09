@@ -2,33 +2,6 @@
   "originHash" : "926531112db7988e4e7d2bc47299cf409cdd17c9967ba9ef7729f1f59c597e39",
   "pins" : [
     {
-      "identity" : "almanac",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/isamercan/Almanac.git",
-      "state" : {
-        "revision" : "4ba4c199771718d71218940498f3b8fd25805602",
-        "version" : "0.2.0"
-      }
-    },
-    {
-      "identity" : "horizoncalendar",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/airbnb/HorizonCalendar.git",
-      "state" : {
-        "revision" : "a360d71a1255f0b24e378f2ee31a7a7d674a49b6",
-        "version" : "2.0.0"
-      }
-    },
-    {
-      "identity" : "lottie-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/airbnb/lottie-ios.git",
-      "state" : {
-        "revision" : "f4db77d7feacba0c2360b84a40c38a6ce8ff399d",
-        "version" : "4.6.1"
-      }
-    },
-    {
       "identity" : "swift-custom-dump",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-custom-dump",
