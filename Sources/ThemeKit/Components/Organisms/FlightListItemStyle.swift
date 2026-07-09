@@ -94,9 +94,9 @@ public struct FlightListItemConfiguration {
     }
     public func stopsText(_ leg: FlightLeg) -> String {
         switch leg.stops {
-        case 0: return String(localized: "Nonstop", bundle: .module)
-        case 1: return String(localized: "1 stop", bundle: .module)
-        default: return String(localized: "\(leg.stops) stops", bundle: .module)
+        case 0: return String(themeKit: "Nonstop")
+        case 1: return String(themeKit: "1 stop")
+        default: return String(themeKit: "\(leg.stops) stops")
         }
     }
 }

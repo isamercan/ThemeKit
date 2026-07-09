@@ -1,5 +1,6 @@
 import XCTest
 @testable import ThemeKit
+@testable import ThemeKitCore
 
 final class DesignCatalogTests: XCTestCase {
 

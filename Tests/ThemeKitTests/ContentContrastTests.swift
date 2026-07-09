@@ -9,6 +9,7 @@
 import XCTest
 import SwiftUI
 @testable import ThemeKit
+@_spi(ThemeKitInternal) @testable import ThemeKitCore   // ColorContrast now lives in Core
 
 final class ContentContrastTests: XCTestCase {
     override func tearDown() {

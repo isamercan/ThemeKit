@@ -10,6 +10,7 @@
 import XCTest
 import Foundation
 @testable import ThemeKit
+@testable import ThemeKitCore   // Bundle.themeKit now lives in Core
 
 final class LocalizationTests: XCTestCase {
     // The bundled catalog ships correct Turkish translations. (We parse the
