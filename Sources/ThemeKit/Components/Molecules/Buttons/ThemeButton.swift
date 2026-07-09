@@ -292,6 +292,62 @@ private struct RowPressBody: View {
     }
 }
 
+/// Composed scale + highlight press feedback for pressable *surfaces* (cards,
+/// tiles, list rows) — the analog of HeroUI's default `scale-highlight`
+/// PressableFeedback, so a tappable card gets the platform-standard press
+/// affordance without hand-rolling `PressFeedbackStyle` + `RowPressStyle`.
+/// While pressed it washes the background in the tint's `soft` surface (or the
+/// theme's elevated wash token when no tint is given) and gently scales down.
+/// Scale + tween are gated by `microAnimations` + Reduce Motion; the highlight
+/// (a state, not motion) always shows. Ripple feedback (HeroUI `scale-ripple`)
+/// is deliberately deferred — see HEROUI_NATIVE_AUDIT.md.
+///
+///     Button { open(item) } label: { ItemCard(item) }
+///         .buttonStyle(SurfacePressStyle())                      // default wash
+///         .buttonStyle(SurfacePressStyle(radius: .field,
+///                                        tint: .success))        // tinted row
+public struct SurfacePressStyle: ButtonStyle {
+    private let cornerRadius: CGFloat
+    private let tint: SemanticColor?
+
+    public init(radius: Theme.RadiusRole = .box, tint: SemanticColor? = nil) {
+        self.cornerRadius = radius.value
+        self.tint = tint
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        SurfacePressBody(configuration: configuration, cornerRadius: cornerRadius, tint: tint)
+    }
+}
+
+private struct SurfacePressBody: View {
+    @Environment(\.theme) private var theme
+
+    let configuration: ButtonStyleConfiguration
+    let cornerRadius: CGFloat
+    let tint: SemanticColor?
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var on: Bool { micro && !reduceMotion }
+
+    /// Wide surfaces scale less than compact controls (HeroUI adjusts its press
+    /// scale by container width for the same reason), so 0.985 here vs the 0.97
+    /// used by the button-sized styles above.
+    private static let pressedScale: CGFloat = 0.985
+
+    private var wash: Color { tint?.soft ?? theme.background(.bgElevatorTertiary) }
+
+    var body: some View {
+        configuration.label
+            .background(
+                configuration.isPressed ? wash : .clear,
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .scaleEffect(on && configuration.isPressed ? Self.pressedScale : 1)
+            .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
+    }
+}
+
 /// Fill-aware press style: swaps the background to a darker/stronger ladder shade
 /// while pressed (Ant active), paints the optional outline stroke, and adds a
 /// subtle scale. This is what gives `ThemeButton` real interaction states.

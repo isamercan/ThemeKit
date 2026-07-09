@@ -139,6 +139,9 @@ public struct SegmentedTabBar: View {
                     .fill(theme.background(.bgElevatorTertiary))
             }
         }
+        // With dividers the hairline `Rectangle`s must span the row, not stretch
+        // the bar to an unbounded proposal — size the row to its ideal height.
+        .fixedSize(horizontal: false, vertical: showsDividers)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(items.indices.contains(selection) ? items[selection].title : "")
     }

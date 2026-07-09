@@ -154,12 +154,12 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         let color = isDisabled ? theme.text(.textDisabled) : theme.text(.textTertiary)
         switch indicator {
         case .chevron:
-            Icon(systemName: "chevron.down").size(.sm).color(color)
+            Icon(systemName: "chevron.down").size(.sm).colorOverride(color)
                 .rotationEffect(.degrees(isOpen ? 180 : 0))
         case .plusMinus:
-            Icon(systemName: isOpen ? "minus" : "plus").size(.sm).color(color)
+            Icon(systemName: isOpen ? "minus" : "plus").size(.sm).colorOverride(color)
         case .custom(let expand, let collapse):
-            Icon(systemName: isOpen ? collapse : expand).size(.sm).color(color)
+            Icon(systemName: isOpen ? collapse : expand).size(.sm).colorOverride(color)
         }
     }
 

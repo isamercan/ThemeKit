@@ -239,6 +239,14 @@ public extension Avatar {
     /// Standard accent vocabulary (flexibility audit §6).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
 
+    /// Fill treatment for the semantic surface (HeroUI Avatar variants):
+    /// `.solid` (default) keeps the accent's solid shade with auto-contrast
+    /// content; `.soft` resolves the surface to the accent `SemanticColor`'s
+    /// `.soft` shade and the content to its high-contrast `.accent` foreground.
+    /// With no `.accent(_:)` set, `.soft` falls back to `.neutral`. `.outline`
+    /// and `.ghost` have no avatar archetype and resolve like `.solid`.
+    func fill(_ v: FillVariant) -> Self { copy { $0.fillVariant = v } }
+
     /// Surface fill behind the icon/initials (renamed from `background:` to avoid
     /// clashing with SwiftUI's `.background`, R5).
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
@@ -273,6 +281,7 @@ public struct AvatarGroup: View {
     private var max: Int = 4
     private var background: AvatarBackground = .blue
     private var accentColor: SemanticColor?
+    private var fillVariant: FillVariant = .solid
 
     public init(_ avatars: [AvatarContent]) {   // R1 — content only
         self.avatars = avatars
@@ -283,7 +292,7 @@ public struct AvatarGroup: View {
     public var body: some View {
         HStack(spacing: -size.dimension * 0.35) {
             ForEach(Array(avatars.prefix(max).enumerated()), id: \.offset) { _, content in
-                Avatar(content).size(size).backgroundPalette(background).accent(accentColor)
+                Avatar(content).size(size).backgroundPalette(background).accent(accentColor).fill(fillVariant)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
             }
             if overflow > 0 {

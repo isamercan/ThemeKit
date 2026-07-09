@@ -103,7 +103,7 @@ public struct Accordion<Content: View>: View {
                             .monospacedDigit()
                     }
                     if let leadingSystemImage {
-                        Icon(systemName: leadingSystemImage).size(.sm).color(titleColor)
+                        Icon(systemName: leadingSystemImage).size(.sm).colorOverride(titleColor)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
@@ -146,12 +146,12 @@ public struct Accordion<Content: View>: View {
     private var indicatorIcon: some View {
         switch indicator {
         case .chevron:
-            Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: "chevron.down").size(.sm).colorOverride(theme.text(.textTertiary))
                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
         case .plusMinus:
-            Icon(systemName: isExpanded ? "minus" : "plus").size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: isExpanded ? "minus" : "plus").size(.sm).colorOverride(theme.text(.textTertiary))
         case .custom(let expand, let collapse):
-            Icon(systemName: isExpanded ? collapse : expand).size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: isExpanded ? collapse : expand).size(.sm).colorOverride(theme.text(.textTertiary))
         }
     }
 }
