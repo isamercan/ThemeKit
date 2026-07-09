@@ -37,7 +37,12 @@ jobs:
             generate-documentation \
             --target ThemeKit \
             --transform-for-static-hosting \
-            --output-path ./docs-out
+            --output-path ./docs-out/themekit
+          swift package --disable-sandbox \
+            generate-documentation \
+            --target ThemeKitCore \
+            --transform-for-static-hosting \
+            --output-path ./docs-out/themekitcore
 
       # DocC emits operator pages whose filenames contain ':' (e.g.
       # `!=(_:_:).json`), which actions/upload-artifact rejects. Tar the site into

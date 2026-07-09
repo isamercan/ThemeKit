@@ -16,12 +16,12 @@ dependencies.
 `ThemeKit` is built in layers, bottom to top:
 
 - **Tokens** — every color, radius, spacing step, type ramp entry, and shadow is
-  a semantic token resolved from the active ``Theme``. Components never hard-code
+  a semantic token resolved from the active `Theme`. Components never hard-code
   a value; they ask the theme. Swap the theme and the whole UI re-skins.
 - **Components** — ~130 SwiftUI views grouped as Atoms (``Badge``, ``Chip``,
   ``Avatar``…), Molecules (``TextInput``, ``ThemeButton``, ``OTPInput``…), and
   Organisms (``Carousel``, ``DataTable``, ``ResultView``…). All token-bound.
-- **Theming** — recipes (``ThemeConfig``) generate a complete palette from a
+- **Theming** — recipes (`ThemeConfig`) generate a complete palette from a
   single accent color at runtime, and persist/export it. See <doc:Theming>.
 - **Validation** — a pure logic layer (``Validators`` / ``ValidationRule`` /
   ``Validator``) with a separate SwiftUI presentation layer. See <doc:FormValidation>.
@@ -64,15 +64,15 @@ views; the core library stays dependency-free.
 
 ### Theme & Tokens
 
-- ``Theme``
-- ``ThemeConfig``
-- ``ThemeContext``
-- ``TextStyle``
-- ``SemanticColor``
-- ``Theme/SpacingKey``
-- ``Theme/RadiusKey``
-- ``ShadowStyle``
-- ``Motion``
+- `Theme`
+- `ThemeConfig`
+- `ThemeContext`
+- `TextStyle`
+- `SemanticColor`
+- `Theme.SpacingKey`
+- `Theme.RadiusKey`
+- `ShadowStyle`
+- `Motion`
 
 ### Buttons
 
