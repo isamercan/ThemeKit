@@ -122,6 +122,10 @@ enum ComponentRegistry {
                 CodeLine("Done!", prefix: ">", highlight: .success)
             ]).copyable()
         },
+        .knob("CloseButton", .atoms, demo: CloseButtonDemo(), usage: #"CloseButton { dismiss() }.tint(.error).controlSize(.small)   // .plain() ghost glyph for image overlays"#),
+        .knob("HelperText", .atoms, demo: HelperTextDemo(), usage: #"HelperText("Min. 8 characters, one number.").hasError(invalid).hidesOnError()"#),
+        .knob("Surface", .atoms, demo: SurfaceViewDemo(), usage: #"SurfaceView { content }.level(.secondary).elevation(.soft).radius(.box)   // nestable; or view.surfaceChrome(.secondary)"#),
+        .knob("SkeletonGroup", .atoms, demo: SkeletonGroupDemo(), usage: #"SkeletonGroup { rows.skeleton() }.loading(isLoading)   // .skeletonOnly() collapses when loaded"#),
 
         // MARK: Molecules
         .knob("ColorField", .molecules, demo: ColorFieldDemo(), usage: #"ColorField("Brand color", selection: $color).supportsOpacity()"#),
@@ -232,6 +236,8 @@ enum ComponentRegistry {
             }
             .padding(.horizontal, 24)
         },
+        .knob("ControlRow", .molecules, demo: ControlRowDemo(), usage: #"ControlRow("I agree to the terms", isOn: $accepted).control(.checkbox).description("…").required().hasError(showErrors && !accepted).errorText("This field is required.")"#),
+        .knob("ScrollShadow", .molecules, demo: ScrollShadowDemo(), usage: #"ScrollShadow { ScrollView(.horizontal) { chipRow } }.axis(.horizontal).length(.lg).fadeColor(.bgWhite)   // .visibility(.auto/.start/.end/.both/.none)"#),
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),

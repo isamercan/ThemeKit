@@ -769,3 +769,101 @@ struct ColumnsGridDemo: View {
         }
     }
 }
+
+struct ControlRowDemo: View {
+    @State private var accepted = false
+    @State private var controlIdx = 1   // 0 toggle, 1 checkbox, 2 radio
+    @State private var description = true
+    @State private var required = true
+    @State private var validate = true
+    @State private var custom = false
+    @State private var enabled = true
+
+    private var control: ControlRowControl { controlIdx == 0 ? .toggle : controlIdx == 2 ? .radio : .checkbox }
+    private var error: Bool { validate && !accepted }
+
+    var body: some View {
+        ComponentStage("ControlRow", inspector: [
+            ("isOn", "\(accepted)"), ("control", controlIdx == 0 ? "toggle" : controlIdx == 2 ? "radio" : "checkbox"), ("hasError", "\(error)"),
+        ]) {
+            if custom {
+                // Custom trailing indicator — the whole row still toggles isOn.
+                ControlRow("Star this trip", isOn: $accepted)
+                    .description("Saved trips appear on your profile.")
+                    .indicator {
+                        Image(systemName: accepted ? "star.fill" : "star")
+                            .foregroundStyle(Theme.shared.foreground(.fgHero))
+                    }
+            } else {
+                ControlRow("I agree to the terms", isOn: $accepted)
+                    .control(control)
+                    .description(description ? "By checking this box, you agree to our Terms of Service." : nil)
+                    .required(required)
+                    .hasError(error)
+                    .errorText("This field is required.")
+                    .disabled(!enabled)
+            }
+        } knobs: {
+            Picker("Control", selection: $controlIdx) { Text("Toggle").tag(0); Text("Checkbox").tag(1); Text("Radio").tag(2) }.pickerStyle(.segmented)
+            Toggle("Description", isOn: $description)
+            Toggle("Required asterisk", isOn: $required)
+            Toggle("Validate (error until on)", isOn: $validate)
+            Toggle("Custom indicator (star)", isOn: $custom)
+            Toggle("Enabled", isOn: $enabled)
+        }
+    }
+}
+
+struct ScrollShadowDemo: View {
+    @State private var horizontal = false
+    @State private var visibility: ScrollShadowVisibility = .auto
+    @State private var long = false
+
+    var body: some View {
+        ComponentStage("ScrollShadow", inspector: [
+            ("axis", horizontal ? "horizontal" : "vertical"), ("visibility", visibility.rawValue),
+        ]) {
+            if horizontal {
+                ScrollShadow {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(["Nonstop", "1 stop", "Morning", "Evening", "Refundable", "Baggage included", "Window seat"], id: \.self) { title in
+                                Chip(title, isSelected: .constant(false))
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                }
+                .axis(.horizontal)
+                .visibility(visibility)
+                .length(long ? .lg : .md)
+                .fadeColor(.bgWhite)
+            } else {
+                ScrollShadow {
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(1..<21) { line in
+                                Text("Terms & conditions, clause \(line)")
+                                    .textStyle(.bodySm400)
+                                    .foregroundStyle(Theme.shared.text(.textPrimary))
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .visibility(visibility)
+                .length(long ? .xl : .lg)
+                .fadeColor(.bgWhite)
+                .frame(height: 200)
+            }
+        } knobs: {
+            Picker("Visibility", selection: $visibility) {
+                ForEach(ScrollShadowVisibility.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
+            Toggle("Horizontal chip row", isOn: $horizontal)
+            Toggle("Longer fade", isOn: $long)
+            Text(".auto follows the scroll position (iOS 18+); explicit modes are always-on.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
