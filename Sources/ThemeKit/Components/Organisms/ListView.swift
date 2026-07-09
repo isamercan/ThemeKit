@@ -6,7 +6,21 @@
 
 import SwiftUI
 
-/// Ant-style List container: optional header/footer, bordered surface, row
+/// Surface variant for the ``ListView`` container (HeroUI `Surface` parity):
+/// `primary` is the default bordered card, `secondary`/`tertiary` step down the
+/// background ladder for nesting, and `transparent` removes the surface entirely.
+public enum ListSurfaceVariant: CaseIterable {
+    /// Default card surface — `bgWhite` fill with a hairline border.
+    case primary
+    /// Soft secondary surface — `bgSecondaryLight` fill, no border.
+    case secondary
+    /// Elevated tertiary surface — `bgElevatorTertiary` fill, no border.
+    case tertiary
+    /// No fill and no border; rows sit directly on the parent background.
+    case transparent
+}
+
+/// Ant-style List container: optional header/footer, surface variants, row
 /// dividers (split), and a loading (skeleton) state. Generic over the item +
 /// row content; pairs naturally with `ListRow`.
 public struct ListView<Item: Identifiable, Row: View>: View {
@@ -18,7 +32,7 @@ public struct ListView<Item: Identifiable, Row: View>: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var header: String?
     private var footer: String?
-    private var bordered = true
+    private var surfaceVariant: ListSurfaceVariant = .primary
     private var loading = false
     private var split = true
     private var emptyText: String?
@@ -82,13 +96,23 @@ public struct ListView<Item: Identifiable, Row: View>: View {
                     .padding(.vertical, Theme.SpacingKey.sm.value)
             }
         }
-        .background(bordered ? theme.background(.bgWhite) : .clear,
-                   in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        .background(surfaceFill,
+                   in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .overlay {
-            if bordered {
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+            // Only the bordered primary card draws the hairline stroke.
+            if surfaceVariant == .primary {
+                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
                     .stroke(theme.border(.borderPrimary), lineWidth: 1)
             }
+        }
+    }
+
+    private var surfaceFill: Color {
+        switch surfaceVariant {
+        case .primary: return theme.background(.bgWhite)
+        case .secondary: return theme.background(.bgSecondaryLight)
+        case .tertiary: return theme.background(.bgElevatorTertiary)
+        case .transparent: return .clear
         }
     }
 
@@ -125,8 +149,14 @@ public extension ListView {
     /// Footer text below the rows.
     func footer(_ text: String?) -> Self { copy { $0.footer = text } }
 
+    /// Surface variant of the list container (HeroUI `Surface` parity):
+    /// `.primary` (bordered card, default), `.secondary`, `.tertiary`, or
+    /// `.transparent`.
+    func surface(_ variant: ListSurfaceVariant) -> Self { copy { $0.surfaceVariant = variant } }
+
     /// Draw the bordered card surface around the list.
-    func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+    /// Thin alias over ``surface(_:)`` — `true` → `.primary`, `false` → `.transparent`.
+    func bordered(_ on: Bool = true) -> Self { surface(on ? .primary : .transparent) }
 
     /// Replace rows with skeleton placeholders while content loads.
     func loading(_ on: Bool = true) -> Self { copy { $0.loading = on } }
@@ -186,4 +216,42 @@ public extension ListView {
             }
     }
     .padding()
+}
+
+#Preview("Surface variants") {
+    struct Row: Identifiable { let id = UUID(); let title: String; let subtitle: String }
+    struct Demo: View {
+        @Environment(\.theme) private var theme
+        let rows = [Row(title: "My Account", subtitle: "Profile & security"),
+                    Row(title: "Notifications", subtitle: "Email & push")]
+        var body: some View {
+            ScrollView {
+                VStack(spacing: Theme.SpacingKey.base.value) {
+                    ForEach(ListSurfaceVariant.allCases, id: \.self) { variant in
+                        ListView(rows) { row in
+                            ListRow(row.title, action: {}).subtitle(row.subtitle)
+                        }
+                        .header(String(describing: variant).capitalized)
+                        .surface(variant)
+                    }
+
+                    // Nested: a primary list sitting on a secondary surface.
+                    VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                        Text("Nested on secondary")
+                            .textStyle(.labelBase600)
+                            .foregroundStyle(theme.text(.textPrimary))
+                        ListView(rows) { row in
+                            ListRow(row.title, action: {}).subtitle(row.subtitle)
+                        }
+                        .surface(.primary)
+                    }
+                    .padding(Theme.SpacingKey.md.value)
+                    .background(theme.background(.bgSecondaryLight),
+                                in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+                }
+                .padding()
+            }
+        }
+    }
+    return Demo()
 }

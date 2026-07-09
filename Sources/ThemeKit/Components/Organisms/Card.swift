@@ -25,6 +25,9 @@ public struct Card<Content: View>: View {
     private var extraTitle: String?
     private var onExtra: (() -> Void)?
     private var isLoading = false
+    private var customHeader: AnyView?
+    private var footerContent: AnyView?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     @Environment(\.theme) private var theme
     @Environment(\.cardStyle) private var cardStyle
@@ -35,10 +38,29 @@ public struct Card<Content: View>: View {
         self.content = content
     }
 
-    private var hasHeader: Bool { title != nil || subtitle != nil || (extraTitle != nil && onExtra != nil) }
+    private var hasHeader: Bool {
+        customHeader != nil || title != nil || subtitle != nil || (extraTitle != nil && onExtra != nil)
+    }
 
+    /// A custom header slot replaces the string title/subtitle header entirely;
+    /// both get the same padding treatment and divider below.
     @ViewBuilder
     private var header: some View {
+        Group {
+            if let customHeader {
+                customHeader
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                titleHeader
+            }
+        }
+        .padding(.horizontal, padding)
+        .padding(.top, padding)
+        .padding(.bottom, Theme.SpacingKey.sm.value)
+    }
+
+    @ViewBuilder
+    private var titleHeader: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
             VStack(alignment: .leading, spacing: 2) {
                 if let title {
@@ -56,9 +78,19 @@ public struct Card<Content: View>: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, padding)
-        .padding(.top, padding)
-        .padding(.bottom, Theme.SpacingKey.sm.value)
+    }
+
+    /// Footer slot below the body — divided from it, mirroring the header
+    /// treatment (same horizontal padding, `sm` gap to the divider).
+    @ViewBuilder
+    private var footer: some View {
+        if let footerContent {
+            footerContent
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, padding)
+                .padding(.top, Theme.SpacingKey.sm.value)
+                .padding(.bottom, padding)
+        }
     }
 
     @ViewBuilder
@@ -83,19 +115,27 @@ public struct Card<Content: View>: View {
             }
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
+            if footerContent != nil {
+                DividerView().size(.small)
+                footer
+            }
         }
     }
 
-    private var surface: some View {
-        cardStyle.makeBody(configuration: CardStyleConfiguration(content: AnyView(cardContent), elevation: elevation))
+    private var styledSurface: some View {
+        cardStyle.makeBody(configuration: CardStyleConfiguration(
+            content: AnyView(cardContent),
+            elevation: elevation,
+            surfaceKey: surfaceKey
+        ))
     }
 
     public var body: some View {
         if let action {
-            Button(action: action) { surface }
+            Button(action: action) { styledSurface }
                 .buttonStyle(PressFeedbackStyle())
         } else {
-            surface
+            styledSurface
         }
     }
 }
@@ -120,6 +160,26 @@ public extension Card {
     /// Replace the body with a skeleton placeholder while content loads.
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
 
+    /// Custom header slot (HeroUI `Card.Header`) — arbitrary content (icon,
+    /// badge, media…) rendered above the body with the same padding and divider
+    /// as the string header. When set it replaces the title/subtitle/extra header.
+    func header<H: View>(@ViewBuilder _ header: () -> H) -> Self {
+        copy { $0.customHeader = AnyView(header()) }
+    }
+
+    /// Footer slot (HeroUI `Card.Footer`) — bottom-aligned content such as
+    /// actions, rendered below the body inside the card chrome and divided from
+    /// it, mirroring the header treatment.
+    func footer<F: View>(@ViewBuilder _ footer: () -> F) -> Self {
+        copy { $0.footerContent = AnyView(footer()) }
+    }
+
+    /// Surface fill by background token, threaded into the active ``CardStyle``'s
+    /// configuration (HeroUI `Card` `variant`): default → `.bgWhite`,
+    /// `secondary` → `.bgSecondaryLight`, `tertiary` → `.bgTertiary`;
+    /// HeroUI `transparent` ≈ `.cardStyle(.outlined)` instead.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -140,19 +200,56 @@ struct CardShadow: ViewModifier {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 16) {
-        Card {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Card title").textStyle(.headingSm)
-                Text("Supporting body text inside a card surface.").textStyle(.bodyBase400)
+    ScrollView {
+        VStack(spacing: 16) {
+            Card {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Card title").textStyle(.headingSm)
+                    Text("Supporting body text inside a card surface.").textStyle(.bodyBase400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            Card {
+                Text("Elevated card").textStyle(.labelMd600)
+            }
+            .elevation(.elevated)
+
+            // Footer slot: bottom-aligned actions below a divider.
+            Card("Living room sofa") {
+                Text("Perfect for modern tropical spaces.").textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
             }
+            .subtitle("Collection 2026")
+            .footer {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    ThemeButton("Buy now") {}.size(.small)
+                    ThemeButton("Add to cart") {}.variant(.ghost).size(.small)
+                }
+            }
+
+            // Custom header slot: icon + badge replace the string header.
+            Card {
+                Text("Custom header replaces the title/subtitle row.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .header {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Icon(systemName: "sparkles")
+                    Text("Featured").textStyle(.labelLg600)
+                        .foregroundStyle(theme.text(.textPrimary))
+                    Spacer(minLength: 0)
+                    Badge("New").badgeStyle(.success)
+                }
+            }
+
+            // Surface-fill variant (HeroUI `secondary`).
+            Card("Secondary surface") {
+                Text("Card filled with the secondary background token.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .surface(.bgSecondaryLight)
         }
-        Card {
-            Text("Elevated card").textStyle(.labelMd600)
-        }
-        .elevation(.elevated)
+        .padding()
     }
-    .padding()
     .background(theme.background(.bgBase))
 }

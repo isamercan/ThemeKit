@@ -43,6 +43,10 @@ public struct ThemeButton: View {
 
     private let title: String?
     private let action: () -> Void
+    /// Caller-provided label content (HeroUI `Button` custom-children parity).
+    /// Set only by the `init(action:label:)` overload — the label is *content*,
+    /// so per R1 it lives in the init, not in an appearance modifier.
+    private var customLabel: AnyView?
 
     /// Scales the button's footprint with Dynamic Type, in lock-step with its
     /// label (which scales via `textStyle`), so the height/text ratio is
@@ -54,10 +58,28 @@ public struct ThemeButton: View {
         self.action = action
     }
 
+    /// Custom label slot: replaces the built-in title/icon `HStack` with
+    /// caller-provided content (compose icons, text, badges, …) while keeping
+    /// every other axis — variant/color fill, size footprint, shape, loading,
+    /// press feedback, haptics. The slot inherits the size's `textStyle` and the
+    /// variant's token foreground exactly like the built-in label, so plain
+    /// `Text`/`Image(systemName:)` children pick up the right type ramp & tint.
+    ///
+    ///     ThemeButton {
+    ///         checkout()
+    ///     } label: {
+    ///         HStack { Image(systemName: "cart"); Text("Checkout"); Badge("3") }
+    ///     }
+    public init(action: @escaping () -> Void, @ViewBuilder label: () -> some View) {   // R1
+        self.title = nil
+        self.action = action
+        self.customLabel = AnyView(label())
+    }
+
     private var isIconOnly: Bool { shape == .circle || shape == .square }
 
     public var body: some View {
-        Button {
+        let button = Button {
             guard !isLoading else { return }
             Haptics.tap()
             action()
@@ -85,14 +107,28 @@ public struct ThemeButton: View {
         ))
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
-        .accessibilityLabel(title ?? "")
         .accessibilityValue(isLoading ? String(themeKit: "Loading") : "")
+
+        // A custom label speaks for itself — overriding it with the (nil) title
+        // would silence the slot's text for VoiceOver.
+        if customLabel == nil {
+            button.accessibilityLabel(title ?? "")
+        } else {
+            button
+        }
     }
 
     @ViewBuilder
     private var content: some View {
         if isLoading {
             ProgressView().tint(foreground)
+        } else if let customLabel {
+            // Slot content gets the same environment the built-in label gets:
+            // the size's type ramp (child Texts inherit the font) and — via the
+            // shared `.foregroundStyle(foreground)` applied in `body` — the
+            // variant's token foreground.
+            customLabel
+                .textStyle(size.textStyle)
         } else if isIconOnly {
             // Icon-only: render the single provided glyph (leading takes
             // precedence), no label.
@@ -222,7 +258,16 @@ private struct PressFeedbackBody: View {
 /// analog of Ant's row hover state. Reusable by any `Button`-based component.
 public struct RowPressStyle: ButtonStyle {
     private let cornerRadius: CGFloat
+
+    /// Raw-CGFloat corner. Prefer `init(radius:)` with a `Theme.RadiusRole` so a
+    /// theme can re-round every row from one token. Not (yet) deprecated: the
+    /// zero-radius default (`RowPressStyle()`) and in-kit callers passing size
+    /// keys (`ListRow`) still route through here without a token equivalent.
     public init(cornerRadius: CGFloat = 0) { self.cornerRadius = cornerRadius }
+
+    /// Token-fed corner: resolves the semantic radius *role* (box / field /
+    /// selector) from the active theme — the preferred initializer (R4).
+    public init(radius: Theme.RadiusRole) { self.cornerRadius = radius.value }
     public func makeBody(configuration: Configuration) -> some View {
         RowPressBody(configuration: configuration, cornerRadius: cornerRadius)
     }
@@ -243,6 +288,62 @@ private struct RowPressBody: View {
                 configuration.isPressed ? theme.background(.bgElevatorTertiary) : .clear,
                 in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             )
+            .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
+    }
+}
+
+/// Composed scale + highlight press feedback for pressable *surfaces* (cards,
+/// tiles, list rows) — the analog of HeroUI's default `scale-highlight`
+/// PressableFeedback, so a tappable card gets the platform-standard press
+/// affordance without hand-rolling `PressFeedbackStyle` + `RowPressStyle`.
+/// While pressed it washes the background in the tint's `soft` surface (or the
+/// theme's elevated wash token when no tint is given) and gently scales down.
+/// Scale + tween are gated by `microAnimations` + Reduce Motion; the highlight
+/// (a state, not motion) always shows. Ripple feedback (HeroUI `scale-ripple`)
+/// is deliberately deferred — see HEROUI_NATIVE_AUDIT.md.
+///
+///     Button { open(item) } label: { ItemCard(item) }
+///         .buttonStyle(SurfacePressStyle())                      // default wash
+///         .buttonStyle(SurfacePressStyle(radius: .field,
+///                                        tint: .success))        // tinted row
+public struct SurfacePressStyle: ButtonStyle {
+    private let cornerRadius: CGFloat
+    private let tint: SemanticColor?
+
+    public init(radius: Theme.RadiusRole = .box, tint: SemanticColor? = nil) {
+        self.cornerRadius = radius.value
+        self.tint = tint
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        SurfacePressBody(configuration: configuration, cornerRadius: cornerRadius, tint: tint)
+    }
+}
+
+private struct SurfacePressBody: View {
+    @Environment(\.theme) private var theme
+
+    let configuration: ButtonStyleConfiguration
+    let cornerRadius: CGFloat
+    let tint: SemanticColor?
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var on: Bool { micro && !reduceMotion }
+
+    /// Wide surfaces scale less than compact controls (HeroUI adjusts its press
+    /// scale by container width for the same reason), so 0.985 here vs the 0.97
+    /// used by the button-sized styles above.
+    private static let pressedScale: CGFloat = 0.985
+
+    private var wash: Color { tint?.soft ?? theme.background(.bgElevatorTertiary) }
+
+    var body: some View {
+        configuration.label
+            .background(
+                configuration.isPressed ? wash : .clear,
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .scaleEffect(on && configuration.isPressed ? Self.pressedScale : 1)
             .animation(on ? Motion.instant.animation : nil, value: configuration.isPressed)
     }
 }
@@ -308,6 +409,53 @@ extension ButtonSize {
             }
             ThemeButton("Block button") {}.color(.primary).fullWidth()
             ThemeButton("Loading") {}.color(.primary).fullWidth().loading()
+
+            // Custom label slot — icon + text + badge composition; inherits the
+            // size's textStyle and the variant's foreground like the built-in label.
+            ThemeButton {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Image(systemName: "cart")
+                    Text("Checkout")
+                    Badge("3").badgeStyle(.error).size(.small)
+                }
+            }
+            .variant(.soft)
+            .color(.primary)
+            .fullWidth()
+
+            // SurfacePressStyle — scale + highlight wash on a card-like row.
+            Button {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Image(systemName: "airplane.departure")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Pressable card").textStyle(.labelMd700)
+                        Text("Scale + highlight, token wash").textStyle(.bodySm400)
+                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.forward")
+                }
+                .padding(Theme.SpacingKey.md.value)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                )
+            }
+            .buttonStyle(SurfacePressStyle())
+
+            Button {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Image(systemName: "checkmark.circle")
+                    Text("Tinted press wash").textStyle(.labelMd700)
+                    Spacer()
+                }
+                .padding(Theme.SpacingKey.md.value)
+            }
+            .buttonStyle(SurfacePressStyle(radius: .field, tint: .success))
         }
         .padding()
     }

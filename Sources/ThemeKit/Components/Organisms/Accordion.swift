@@ -55,6 +55,10 @@ public struct Accordion<Content: View>: View {
     private var showDivider: Bool = true
 
     @State private var expanded: Bool
+    /// Caller-owned expansion state (R1 — bindings belong in `init`). When
+    /// supplied, expansion is controlled/observable from outside; when `nil`,
+    /// the private `expanded` state is used (uncontrolled path).
+    private var externalExpanded: Binding<Bool>? = nil
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
@@ -69,10 +73,27 @@ public struct Accordion<Content: View>: View {
         self._expanded = State(initialValue: initiallyExpanded)
     }
 
+    public init(   // R1 — controlled expansion; the binding drives toggling
+        _ title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.content = content
+        self._expanded = State(initialValue: isExpanded.wrappedValue)
+        self.externalExpanded = isExpanded
+    }
+
+    /// Resolved expansion state — the external binding wins when one was injected.
+    private var isExpanded: Bool { externalExpanded?.wrappedValue ?? expanded }
+    private func setExpanded(_ value: Bool) {
+        if let externalExpanded { externalExpanded.wrappedValue = value } else { expanded = value }
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Button {
-                withAnimation(motion) { expanded.toggle() }
+                withAnimation(motion) { setExpanded(!isExpanded) }
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     if let number {
@@ -82,7 +103,7 @@ public struct Accordion<Content: View>: View {
                             .monospacedDigit()
                     }
                     if let leadingSystemImage {
-                        Icon(systemName: leadingSystemImage).size(.sm).color(titleColor)
+                        Icon(systemName: leadingSystemImage).size(.sm).colorOverride(titleColor)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
@@ -92,7 +113,7 @@ public struct Accordion<Content: View>: View {
                             Text(subtitle)
                                 .textStyle(.bodySm400)
                                 .foregroundStyle(theme.text(.textSecondary))
-                                .lineLimit(truncateSubtitle && !expanded ? 1 : nil)
+                                .lineLimit(truncateSubtitle && !isExpanded ? 1 : nil)
                         }
                     }
                     Spacer(minLength: Theme.SpacingKey.sm.value)
@@ -102,8 +123,10 @@ public struct Accordion<Content: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            // State-aware for VoiceOver (Dropdown's disclosure convention).
+            .accessibilityValue(isExpanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
 
-            if expanded {
+            if isExpanded {
                 content()
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
@@ -115,22 +138,24 @@ public struct Accordion<Content: View>: View {
                 DividerView().size(.small)
             }
         }
+        // Value-based so controlled (binding-driven) changes animate too.
+        .animation(motion, value: isExpanded)
     }
 
     private var titleColor: Color {
-        expanded ? theme.text(.textHero) : theme.text(.textPrimary)
+        isExpanded ? theme.text(.textHero) : theme.text(.textPrimary)
     }
 
     @ViewBuilder
     private var indicatorIcon: some View {
         switch indicator {
         case .chevron:
-            Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
-                .rotationEffect(.degrees(expanded ? 180 : 0))
+            Icon(systemName: "chevron.down").size(.sm).colorOverride(theme.text(.textTertiary))
+                .rotationEffect(.degrees(isExpanded ? 180 : 0))
         case .plusMinus:
-            Icon(systemName: expanded ? "minus" : "plus").size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: isExpanded ? "minus" : "plus").size(.sm).colorOverride(theme.text(.textTertiary))
         case .custom(let expand, let collapse):
-            Icon(systemName: expanded ? collapse : expand).size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: isExpanded ? collapse : expand).size(.sm).colorOverride(theme.text(.textTertiary))
         }
     }
 }
@@ -161,6 +186,7 @@ public extension Accordion {
 }
 
 #Preview {
+    @Previewable @State var controlledOpen = false
     ScrollView {
         VStack(spacing: 8) {
             Accordion("What is your refund policy?", initiallyExpanded: true) {
@@ -170,6 +196,14 @@ public extension Accordion {
                 Text("Email us at support@example.com.")
             }
             .icon("questionmark.circle")
+
+            // Controlled expansion — the binding drives (and observes) the row.
+            Accordion("Controlled from outside", isExpanded: $controlledOpen) {
+                Text("This row's expansion is owned by the parent view.")
+            }
+            Button(controlledOpen ? "Collapse above" : "Expand above") {
+                controlledOpen.toggle()
+            }
         }
         .padding()
     }
