@@ -231,13 +231,33 @@ public final class FeedbackPresenter {
     @discardableResult
     private func enqueue(_ item: ToastItem) -> UUID {
         toasts.append(item)
-        if toasts.count > maxVisibleToasts { toasts.removeFirst(toasts.count - maxVisibleToasts) }
+        if toasts.count > maxVisibleToasts {
+            let overflow = Set(toasts.prefix(toasts.count - maxVisibleToasts).map(\.id))
+            removeToasts { overflow.contains($0.id) }
+        }
+        item.onShow?()
         return item.id
     }
 
     private func replaceToast(_ id: UUID, with item: ToastItem) {
-        if let i = toasts.firstIndex(where: { $0.id == id }) { toasts[i] = item }
-        else { _ = enqueue(item) }
+        if let i = toasts.firstIndex(where: { $0.id == id }) {
+            toasts[i].onDismiss?()   // the old toast leaves the screen in place
+            toasts[i] = item
+            item.onShow?()
+        } else {
+            _ = enqueue(item)
+        }
+    }
+
+    /// The single removal point for toasts. Every dismissal path — the
+    /// auto-dismiss timer, swipe, the close button, `dismissToast(_:)`,
+    /// `dismissAllToasts()`, and overflow past the visible cap — funnels
+    /// through here, so each removed toast's `onDismiss` always reports.
+    private func removeToasts(where shouldRemove: (ToastItem) -> Bool) {
+        let removed = toasts.filter(shouldRemove)
+        guard !removed.isEmpty else { return }
+        toasts.removeAll(where: shouldRemove)
+        removed.forEach { $0.onDismiss?() }
     }
 
     /// Present a modal confirmation dialog with a primary (and optional secondary) action.

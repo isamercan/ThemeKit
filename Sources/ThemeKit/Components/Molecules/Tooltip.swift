@@ -58,31 +58,57 @@ public enum PopoverAlign: Sendable {
 }
 
 /// A triangle whose apex points toward the anchor for the given edge.
-private struct TooltipArrow: Shape {
+/// The path runs base-corner → apex → base-corner and is left *open* along the
+/// base: `fill` closes it implicitly (same triangle as before), while `stroke`
+/// draws a hairline on the two exposed sides only — exactly what a bordered
+/// card arrow needs (HeroUI Popover.Arrow's fill + open stroke path). Internal
+/// so `Popconfirm` can compose the same arrow onto its card.
+struct TooltipArrow: Shape {
     let edge: TooltipEdge
 
     func path(in rect: CGRect) -> Path {
         var p = Path()
         switch edge {
         case .top: // bubble above the anchor → point down
-            p.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
         case .bottom: // bubble below → point up
-            p.move(to: CGPoint(x: rect.midX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         case .leading: // bubble to the left → point right
-            p.move(to: CGPoint(x: rect.maxX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
             p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         case .trailing: // bubble to the right → point left
-            p.move(to: CGPoint(x: rect.minX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         }
-        p.closeSubpath()
         return p
+    }
+}
+
+/// A transparent, effectively screen-covering hit target placed *behind* an
+/// anchored bubble/card so a tap anywhere outside it dismisses the popover
+/// (HeroUI Popover overlay `closeOnPress`). Only mounted while presented, so
+/// the anchor stays fully interactive when nothing is shown. Internal — shared
+/// by the self-managed tooltip and the Popconfirm/ThemePopover presenter.
+struct PopoverTapCatcher: View {
+    let onTap: () -> Void
+
+    /// Fixed catch radius around the anchor — a genuine dimension with no
+    /// semantic token; generous enough to cover any window from any anchor.
+    private static let side: CGFloat = 10_000
+
+    var body: some View {
+        Color.clear
+            .frame(width: Self.side, height: Self.side)
+            .contentShape(Rectangle())
+            .ignoresSafeArea()
+            .onTapGesture(perform: onTap)
+            .accessibilityHidden(true)
     }
 }
 
