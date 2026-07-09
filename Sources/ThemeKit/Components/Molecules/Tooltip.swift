@@ -173,6 +173,7 @@ private struct BindingTooltip: ViewModifier {
     let text: String
     @Binding var isPresented: Bool
     let edge: TooltipEdge
+    let align: PopoverAlign
     let style: BadgeStyle?
     let color: SemanticColor?
     let maxWidth: CGFloat?
@@ -182,7 +183,7 @@ private struct BindingTooltip: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(alignment: edge.alignment) {
+            .overlay(alignment: edge.alignment(align)) {
                 if isPresented {
                     TooltipBubble(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth)
                         .fixedSize(horizontal: maxWidth == nil, vertical: true)
