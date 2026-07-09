@@ -366,12 +366,24 @@ public struct RangeSlider: View {
     struct Demo: View {
         @State var lo: Double = 200
         @State var hi: Double = 800
+        @State var vLo: Double = 2
+        @State var vHi: Double = 6
         var body: some View {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
-                .step(50)
-                .marks([0, 250, 500, 750, 1000])
-                .valueLabel { "\(Int($0)) $" }
-                .padding()
+            // Tap-to-set: tapping anywhere on a track moves the nearest thumb.
+            VStack(spacing: 32) {
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
+                    .marks([0, 250, 500, 750, 1000])
+                    .valueLabel { "\(Int($0)) $" }
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
+                    .accent(.success)
+                    .valueLabel { "$\(Int($0))" }   // currency-style readout
+                RangeSlider(lowerValue: $vLo, upperValue: $vHi, in: 0...8)
+                    .axis(.vertical, height: 140)
+                    .valueLabel { "\(Int($0))" }
+            }
+            .padding()
         }
     }
     return Demo()
@@ -384,8 +396,15 @@ public extension RangeSlider {
 
     /// Snap increment for dragging, typed input and VoiceOver adjustments (default 1).
     func step(_ step: Double) -> Self { copy { $0.step = step } }
-    /// Labeled tick marks at the given values.
+    /// Labeled tick marks at the given values (horizontal axis only).
     func marks(_ marks: [Double]) -> Self { copy { $0.marks = marks } }
+    /// Lays the slider out vertically with the given track height (default 160).
+    func axis(_ axis: Axis, height: CGFloat = 160) -> Self {
+        copy { $0.axis = axis; $0.verticalHeight = height }
+    }
+    /// Semantic tint for the range fill and thumb rings; `nil` (default) keeps
+    /// the hero tokens.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Shows linked numeric min/max input fields above the track.
     func inputs(_ on: Bool = true, titles: (min: String, max: String) = (String(themeKit: "Min"), String(themeKit: "Max"))) -> Self {
         copy { $0.showInputs = on; $0.inputTitles = titles }
