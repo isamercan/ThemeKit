@@ -43,6 +43,7 @@ struct ShowcaseView: View {
                 TravelPage().tag(1)
                 ContentPage().tag(2)
                 DashboardPage().tag(3)
+                FormsPage().tag(4)
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
@@ -713,6 +714,78 @@ private struct DashboardPage: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(label).font(.caption).foregroundStyle(.secondary)
             ProgressBar(value: v).showsPercentage().status(status)
+        }
+    }
+}
+
+// MARK: - Page 4 · FORMS & LISTS (grouped inputs · multi-select · passenger rows)
+
+private struct FormsPage: View {
+    @State private var email = ""
+    @State private var newsletter = true
+    @State private var interests: Set<String> = ["Design", "Code"]
+    @State private var cities: Set<String> = ["Istanbul", "Rome"]
+
+    var body: some View {
+        PageScaffold(title: "Forms & lists",
+                     subtitle: "Grouped inputs, multi-select, amenities and passenger rows — all live.") {
+            HStack(alignment: .top, spacing: 16) {
+                VStack(spacing: 16) { fieldsetCard; checkboxGroupCard }
+                VStack(spacing: 16) { multiSelectCard; amenitiesCard }
+                VStack(spacing: 16) { passengersCard }
+            }
+        }
+    }
+
+    private var fieldsetCard: some View {
+        CollageCard("Fieldset") {
+            Fieldset("Contact") {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextInput("Email", text: $email).placeholder("antd@email.com").icon(leading: "envelope")
+                    Checkbox("Subscribe to the newsletter", isChecked: $newsletter)
+                }
+            }
+            .helper("We'll only email booking updates.")
+        }
+    }
+
+    private var checkboxGroupCard: some View {
+        CollageCard("CheckboxGroup") {
+            CheckboxGroup(title: "Interests",
+                          options: ["Design", "Code", "Travel", "Music"],
+                          selection: $interests) { $0 }
+        }
+    }
+
+    private var multiSelectCard: some View {
+        CollageCard("MultiSelect") {
+            MultiSelect("Cities",
+                        options: ["Istanbul", "Rome", "Paris", "Tokyo", "Berlin"],
+                        selection: $cities) { $0 }
+                .placeholder("Select")
+        }
+    }
+
+    private var amenitiesCard: some View {
+        CollageCard("Amenities") {
+            AmenityGrid([
+                ThemeKit.Amenity("Free Wi-Fi", systemImage: "wifi"),
+                ThemeKit.Amenity("Breakfast", systemImage: "cup.and.saucer.fill"),
+                ThemeKit.Amenity("Pool", systemImage: "figure.pool.swim"),
+                ThemeKit.Amenity("Parking", systemImage: "parkingsign"),
+            ])
+            .columns(2)
+            .highlighted(["Free Wi-Fi"])
+        }
+    }
+
+    private var passengersCard: some View {
+        CollageCard("Passengers") {
+            VStack(spacing: 8) {
+                PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345").seat("14C").status("Checked in").onEdit { }
+                PassengerRow("Ada Lovelace").type("Adult").subtitle("Passport · UK88231").seat("14D").onEdit { }
+                PassengerRow("Kid Mercan").type("Child").subtitle("12 years").seat("14E").onEdit { }
+            }
         }
     }
 }
