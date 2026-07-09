@@ -64,6 +64,15 @@ public struct SearchBar: View {
     private var debounce: TimeInterval = 0
     private var maxResults: Int = 6
     private var accessibilityID: String? = nil
+    private var leadingSystemImage: String = "magnifyingglass"
+    private var leadingIconColorKey: Theme.TextColorKey = .textTertiary
+
+    // Convenience helper/error strings + structured messages — merged into the
+    // rendered message list at render time (see `messages`), mirroring
+    // `TextInput`; the dominant severity drives the `FieldStyle` border.
+    private var helperText: String?
+    private var errorText: String?
+    private var infoMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -88,6 +97,24 @@ public struct SearchBar: View {
         self.debounce = 0.3   // async baseline; `.debounce(_:)` overrides
     }
 
+    /// `infoMessages` plus the helper/error conveniences (computed merge, same
+    /// idiom as `TextInput`). The helper hides while the field is invalid
+    /// (hideOnInvalid, as in the HeroUI reference) so the error replaces it.
+    private var messages: [InfoMessage] {
+        var messages = infoMessages
+        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        if let helperText, !isInvalid { messages.append(InfoMessage(helperText, kind: .info)) }
+        return messages
+    }
+    /// Whether the field is in an error state (an `errorText` or an
+    /// error-severity `InfoMessage`) — gates the helper line.
+    private var isInvalid: Bool {
+        errorText != nil || infoMessages.contains { $0.kind == .error }
+    }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
+    private var hasError: Bool { dominant == .error }
+    private var hasWarning: Bool { dominant == .warning }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -100,6 +127,11 @@ public struct SearchBar: View {
                 }
 
                 fieldBox
+            }
+
+            if !messages.isEmpty {
+                InfoMessageList(messages)
+                    .a11y(A11yElement.Field.message, in: accessibilityID)
             }
 
             dropdown
@@ -116,7 +148,7 @@ public struct SearchBar: View {
     /// The fixed 44pt control height is layout, not chrome, so it stays here.
     private var fieldCore: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: leadingSystemImage).size(.sm).color(theme.text(leadingIconColorKey))
 
             TextField(placeholder, text: $text)
                 .textStyle(.bodyBase400)
