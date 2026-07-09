@@ -54,6 +54,7 @@ public struct TreeView: View {
             }
             .buttonStyle(.plain)
             .disabled(!hasChildren)
+            .accessibilityLabel(expanded.contains(node.id) ? String(themeKit: "Collapse") : String(themeKit: "Expand"))
 
             // Row body (checkbox + icon + title)
             Button { checkable ? toggleChecked(node) : toggleExpanded(node) } label: {
@@ -74,6 +75,7 @@ public struct TreeView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityAddTraits(checkable && isOn ? .isSelected : [])
         }
         .padding(.vertical, 5)
         .padding(.leading, CGFloat(depth) * Theme.SpacingKey.md.value)

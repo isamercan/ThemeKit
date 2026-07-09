@@ -186,6 +186,7 @@ public struct MultiSelect<Option: Hashable>: View {
                     .buttonStyle(RowPressStyle())
                     .disabled(!enabled)
                     .opacity(enabled ? 1 : 0.4)
+                    .accessibilityAddTraits(selection.contains(opt) ? .isSelected : [])
                     if opt != filtered.last { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
                 }
             }

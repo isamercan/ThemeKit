@@ -175,6 +175,7 @@ public struct TreeSelect: View {
                         .mirrorsInRTL()
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(expanded.contains(node.id) ? String(themeKit: "Collapse") : String(themeKit: "Expand"))
             }
             Button { toggleSelect(node) } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -193,6 +194,7 @@ public struct TreeSelect: View {
             .buttonStyle(RowPressStyle())
             .disabled(!enabled)
             .opacity(enabled ? 1 : 0.4)
+            .accessibilityAddTraits(checkState(node) == .on ? .isSelected : [])
         }
         .padding(.leading, CGFloat(depth) * 18 + Theme.SpacingKey.md.value)
         .padding(.trailing, Theme.SpacingKey.md.value)
