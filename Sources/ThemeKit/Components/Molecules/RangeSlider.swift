@@ -63,43 +63,28 @@ public struct RangeSlider: View {
             if showInputs {
                 inputFields
             } else if let valueLabel {
-                HStack {
-                    Text(valueLabel(lowerValue))
-                    Spacer()
-                    Text(valueLabel(upperValue))
+                if axis == .vertical {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        Text(valueLabel(lowerValue))
+                        Text(verbatim: "–")
+                        Text(valueLabel(upperValue))
+                    }
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textPrimary))
+                } else {
+                    HStack {
+                        Text(valueLabel(lowerValue))
+                        Spacer()
+                        Text(valueLabel(upperValue))
+                    }
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textPrimary))
                 }
-                .textStyle(.labelBase600)
-                .foregroundStyle(theme.text(.textPrimary))
             }
 
-            GeometryReader { geo in
-                let usable = max(geo.size.width - thumbSize, 1)
-                let span = bounds.upperBound - bounds.lowerBound
-                let lowerX = CGFloat((lowerValue - bounds.lowerBound) / span) * usable
-                let upperX = CGFloat((upperValue - bounds.lowerBound) / span) * usable
+            if axis == .vertical { verticalTrack } else { horizontalTrack }
 
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(theme.border(.borderPrimary))
-                        .frame(height: trackHeight)
-                    Capsule()
-                        .fill(theme.background(isEnabled ? .bgHero : .bgSecondaryLight))
-                        .frame(width: max(upperX - lowerX, 0), height: trackHeight)
-                        .offset(x: lowerX + thumbSize / 2)
-
-                    thumb(value: lowerValue, title: inputTitles.min, isLower: true)
-                        .offset(x: lowerX)
-                        .gesture(drag(usable: usable, span: span, isLower: true))
-                    thumb(value: upperValue, title: inputTitles.max, isLower: false)
-                        .offset(x: upperX)
-                        .gesture(drag(usable: usable, span: span, isLower: false))
-                }
-                .frame(height: thumbSize)
-            }
-            .frame(height: thumbSize)
-            .opacity(isEnabled ? 1 : 0.6)
-
-            if !marks.isEmpty {
+            if axis == .horizontal, !marks.isEmpty {
                 GeometryReader { geo in
                     marksRow(usable: max(geo.size.width - thumbSize, 1),
                              span: bounds.upperBound - bounds.lowerBound)
@@ -117,6 +102,86 @@ public struct RangeSlider: View {
             if new != .lower { commitLower() }
             if new != .upper { commitUpper() }
         }
+    }
+
+    // MARK: Track
+
+    private var horizontalTrack: some View {
+        GeometryReader { geo in
+            let usable = max(geo.size.width - thumbSize, 1)
+            let span = bounds.upperBound - bounds.lowerBound
+            let lowerX = CGFloat((lowerValue - bounds.lowerBound) / span) * usable
+            let upperX = CGFloat((upperValue - bounds.lowerBound) / span) * usable
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(theme.border(.borderPrimary))
+                    .frame(height: trackHeight)
+                Capsule()
+                    .fill(fillColor)
+                    .frame(width: max(upperX - lowerX, 0), height: trackHeight)
+                    .offset(x: lowerX + thumbSize / 2)
+
+                thumb(value: lowerValue, title: inputTitles.min, isLower: true)
+                    .offset(x: lowerX)
+                thumb(value: upperValue, title: inputTitles.max, isLower: false)
+                    .offset(x: upperX)
+            }
+            .frame(height: thumbSize)
+            // Tap-to-set: the whole (slop-enlarged) track accepts the drag and
+            // moves the thumb nearest to the touch.
+            .contentShape(Rectangle().inset(by: -hitSlop))
+            .gesture(drag(usable: usable, span: span))
+        }
+        .frame(height: thumbSize)
+        .opacity(isEnabled ? 1 : 0.6)
+    }
+
+    /// Vertical layout — same approach as `Slider.axis(.vertical)`: a fixed-height
+    /// bottom-aligned track whose gesture maps the absolute touch location to a
+    /// value (up = increase).
+    private var verticalTrack: some View {
+        GeometryReader { geo in
+            let usable = max(geo.size.height - thumbSize, 1)
+            let span = bounds.upperBound - bounds.lowerBound
+            let lowerY = CGFloat((lowerValue - bounds.lowerBound) / span) * usable
+            let upperY = CGFloat((upperValue - bounds.lowerBound) / span) * usable
+
+            ZStack(alignment: .bottom) {
+                Capsule()
+                    .fill(theme.border(.borderPrimary))
+                    .frame(width: trackHeight)
+                Capsule()
+                    .fill(fillColor)
+                    .frame(width: trackHeight, height: max(upperY - lowerY, 0))
+                    .offset(y: -(lowerY + thumbSize / 2))
+
+                thumb(value: lowerValue, title: inputTitles.min, isLower: true)
+                    .offset(y: -lowerY)
+                thumb(value: upperValue, title: inputTitles.max, isLower: false)
+                    .offset(y: -upperY)
+            }
+            .frame(maxWidth: .infinity)
+            // Tap-to-set, vertical flavor — see `horizontalTrack`.
+            .contentShape(Rectangle().inset(by: -hitSlop))
+            .gesture(verticalDrag(usable: usable, span: span))
+        }
+        .frame(width: thumbSize, height: verticalHeight)
+        .opacity(isEnabled ? 1 : 0.6)
+    }
+
+    // MARK: Colors
+
+    /// Track-fill shade — the accent's solid shade when set, else the hero token.
+    private var fillColor: Color {
+        guard isEnabled else { return theme.background(.bgSecondaryLight) }
+        return accent?.solid ?? theme.background(.bgHero)
+    }
+
+    /// Thumb-ring shade — the accent's solid shade when set, else the hero border.
+    private var thumbRingColor: Color {
+        guard isEnabled else { return theme.border(.borderPrimary) }
+        return accent?.solid ?? theme.border(.borderHero)
     }
 
     // MARK: Marks
@@ -204,12 +269,11 @@ public struct RangeSlider: View {
     private func thumb(value: Double, title: String, isLower: Bool) -> some View {
         Circle()
             .fill(theme.background(.bgWhite))
-            .overlay(
-                Circle().strokeBorder(isEnabled ? theme.border(.borderHero)
-                                                : theme.border(.borderPrimary), lineWidth: 2)
-            )
+            .overlay(Circle().strokeBorder(thumbRingColor, lineWidth: 2))
             .frame(width: thumbSize, height: thumbSize)
             .themeShadow(.soft)
+            // Press feedback while dragging — gated on microAnimations + Reduce Motion.
+            .microPressScale(activeThumb == (isLower ? .lower : .upper), scale: pressScale)
             .accessibilityElement()
             .accessibilityLabel(title)
             .accessibilityValue(markLabel(value))
