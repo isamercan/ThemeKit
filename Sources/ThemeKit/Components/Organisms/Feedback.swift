@@ -161,6 +161,14 @@ public final class FeedbackPresenter {
     /// Show a transient toast. Multiple toasts stack (the oldest drops past the
     /// visible cap). Pass `duration: nil` for a sticky toast — e.g. one with an
     /// `action` the user must reach (Undo). Returns the id for manual dismissal.
+    ///
+    /// - Parameters:
+    ///   - position: which edge this toast anchors to; `nil` (default) uses the
+    ///     host's `toastPosition`.
+    ///   - onShow: called when the toast is presented.
+    ///   - onDismiss: called when the toast leaves, on every dismissal path —
+    ///     auto-dismiss timer, swipe, close button, `dismissToast(_:)` /
+    ///     `dismissAllToasts()`, or being pushed past the visible cap.
     @discardableResult
     public func toast(
         _ title: String,
@@ -168,23 +176,33 @@ public final class FeedbackPresenter {
         kind: FeedbackKind = .success,
         systemImage: String? = nil,
         action: ToastAction? = nil,
-        duration: Double? = 2.5
+        duration: Double? = 2.5,
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil
     ) -> UUID {
         enqueue(ToastItem(title: title, message: message, kind: kind,
-                          systemImage: systemImage, isLoading: false, action: action, duration: duration))
+                          systemImage: systemImage, isLoading: false, action: action,
+                          duration: duration, position: position,
+                          onShow: onShow, onDismiss: onDismiss))
     }
 
     /// Show a transient toast with fully custom content. Same stacking, cap,
-    /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow and
-    /// swipe-to-dismiss as `toast(_:)` — only the row's visuals are yours.
+    /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow,
+    /// swipe-to-dismiss, per-toast `position` and lifecycle callbacks as
+    /// `toast(_:)` — only the row's visuals are yours.
     /// Returns the id for manual dismissal via `dismissToast(_:)`.
     @discardableResult
     public func toast<Content: View>(
         duration: Double? = 2.5,
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) -> UUID {
         enqueue(ToastItem(title: "", message: nil, kind: .info, systemImage: nil,
                           isLoading: false, action: nil, duration: duration,
+                          position: position, onShow: onShow, onDismiss: onDismiss,
                           custom: AnyView(content())))
     }
 

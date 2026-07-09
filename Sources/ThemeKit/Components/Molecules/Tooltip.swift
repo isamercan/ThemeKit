@@ -22,14 +22,39 @@ public enum TooltipEdge: Sendable {
     var isVertical: Bool { self == .top || self == .bottom }
 
     /// The overlay alignment that pins the bubble to this edge of the anchor.
-    var alignment: Alignment {
-        switch self {
-        case .top: return .top
-        case .bottom: return .bottom
-        case .leading: return .leading
-        case .trailing: return .trailing
+    var alignment: Alignment { alignment(.center) }
+
+    /// Overlay alignment for this edge with `align` choosing where along that
+    /// edge the bubble/card anchors (leading/top for `.start`, centered, or
+    /// trailing/bottom for `.end`). `.center` reproduces `alignment`.
+    func alignment(_ align: PopoverAlign) -> Alignment {
+        if isVertical {
+            let horizontal: HorizontalAlignment
+            switch align {
+            case .start: horizontal = .leading
+            case .center: horizontal = .center
+            case .end: horizontal = .trailing
+            }
+            return Alignment(horizontal: horizontal, vertical: self == .top ? .top : .bottom)
+        } else {
+            let vertical: VerticalAlignment
+            switch align {
+            case .start: vertical = .top
+            case .center: vertical = .center
+            case .end: vertical = .bottom
+            }
+            return Alignment(horizontal: self == .leading ? .leading : .trailing, vertical: vertical)
         }
     }
+}
+
+/// Cross-axis alignment of an anchored bubble or card along its edge —
+/// `.start` lines up the leading (or top) edges, `.end` the trailing (or
+/// bottom) edges, `.center` keeps the historical centered placement.
+/// (HeroUI Popover `align`.) Shared by `.tooltip`, `.popconfirm` and
+/// `.themePopover`.
+public enum PopoverAlign: Sendable {
+    case start, center, end
 }
 
 /// A triangle whose apex points toward the anchor for the given edge.
