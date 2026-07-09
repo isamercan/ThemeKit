@@ -51,6 +51,7 @@ public struct ColorField: View {
             Spacer(minLength: 0)
             ColorPicker("", selection: $selection, supportsOpacity: supportsOpacity)
                 .labelsHidden()
+                .accessibilityLabel(label)
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .frame(height: 52)

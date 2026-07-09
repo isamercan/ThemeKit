@@ -145,6 +145,8 @@ private struct InlineVideo: View {
                     .onTapGesture {
                         if let onTap { onTap() } else { toggle() }
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel(isPlaying ? String(themeKit: "Pause") : String(themeKit: "Play"))
                 if !isPlaying {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 56))
@@ -172,6 +174,7 @@ private struct InlineVideo: View {
                                 .background(.black.opacity(0.4), in: Circle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(isMuted ? String(themeKit: "Unmute") : String(themeKit: "Mute"))
                         .padding(Theme.SpacingKey.md.value)
                     }
                 }
@@ -263,3 +266,17 @@ private struct SimpleVideoPlayer: NSViewRepresentable {
     func updateNSView(_ view: AVPlayerView, context: Context) {}
 }
 #endif
+
+#Preview {
+    // No bundled sample asset — the nil-URL placeholder stands in for the player
+    // (a live AVPlayer can't render in a static preview anyway).
+    VStack(spacing: 16) {
+        VideoPlayerView(nil)
+            .frame(width: 320, height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        VideoPlayerView(nil).muteToggle().tapToToggle()
+            .frame(width: 320, height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    .padding()
+}

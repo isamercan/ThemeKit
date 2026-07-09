@@ -67,7 +67,7 @@ public struct FloatingActionButton: View {
                                 .background(theme.background(.bgWhite), in: Capsule())
                                 .themeShadow(.soft)
                         }
-                        miniButton(item.systemImage) { item.action(); expanded = false }
+                        miniButton(item.systemImage, label: item.label ?? item.systemImage) { item.action(); expanded = false }
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -86,10 +86,13 @@ public struct FloatingActionButton: View {
                     .countBadge(badge ?? 0)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(actions.isEmpty
+                ? String(themeKit: "Action")
+                : (expanded ? String(themeKit: "Collapse actions") : String(themeKit: "Expand actions")))
         }
     }
 
-    private func miniButton(_ name: String, action: @escaping () -> Void) -> some View {
+    private func miniButton(_ name: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name)
                 .font(.system(size: 16, weight: .semibold))
@@ -99,6 +102,7 @@ public struct FloatingActionButton: View {
                 .themeShadow(.soft)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 }
 

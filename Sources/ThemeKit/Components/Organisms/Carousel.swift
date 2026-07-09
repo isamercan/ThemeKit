@@ -97,9 +97,9 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
 
                 if showsArrows && count > 1 {
                     HStack {
-                        arrow("chevron.left") { advance(-1) }
+                        arrow("chevron.left", label: String(themeKit: "Previous")) { advance(-1) }
                         Spacer()
-                        arrow("chevron.right") { advance(1) }
+                        arrow("chevron.right", label: String(themeKit: "Next")) { advance(1) }
                     }
                     .padding(.horizontal, Theme.SpacingKey.sm.value)
                 }
@@ -170,7 +170,7 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
         }
     }
 
-    private func arrow(_ systemName: String, action: @escaping () -> Void) -> some View {
+    private func arrow(_ systemName: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Icon(systemName: systemName).size(.sm).color(theme.foreground(.fgSecondary))
                 .frame(width: 32, height: 32)
@@ -178,6 +178,7 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
                 .background(theme.background(.bgTertiary).opacity(0.5), in: Circle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 }
 

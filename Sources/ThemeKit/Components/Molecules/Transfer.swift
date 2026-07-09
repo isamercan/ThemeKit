@@ -46,8 +46,8 @@ public struct Transfer: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             listBox(titles.0, items: source)
             VStack(spacing: Theme.SpacingKey.sm.value) {
-                arrow("chevron.right", enabled: checkedInSource, action: moveToTarget)
-                arrow("chevron.left", enabled: checkedInTarget, action: moveToSource)
+                arrow("chevron.right", label: String(themeKit: "Move to \(titles.1)"), enabled: checkedInSource, action: moveToTarget)
+                arrow("chevron.left", label: String(themeKit: "Move to \(titles.0)"), enabled: checkedInTarget, action: moveToSource)
             }
             listBox(titles.1, items: targeted)
         }
@@ -100,7 +100,7 @@ public struct Transfer: View {
         .buttonStyle(.plain)
     }
 
-    private func arrow(_ systemImage: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func arrow(_ systemImage: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .semibold))
@@ -111,6 +111,7 @@ public struct Transfer: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .accessibilityLabel(label)
     }
 
     private func moveToTarget() {

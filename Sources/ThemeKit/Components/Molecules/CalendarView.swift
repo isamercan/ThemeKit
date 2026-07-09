@@ -50,17 +50,17 @@ public struct CalendarView: View {
 
     private var header: some View {
         HStack {
-            navButton("chevron.left", months: -1)
+            navButton("chevron.left", label: String(themeKit: "Previous month"), months: -1)
             Spacer()
             Text(displayed.formatted(.dateTime.month(.wide).year().locale(locale)))
                 .textStyle(.labelMd700)
                 .foregroundStyle(theme.text(.textPrimary))
             Spacer()
-            navButton("chevron.right", months: 1)
+            navButton("chevron.right", label: String(themeKit: "Next month"), months: 1)
         }
     }
 
-    private func navButton(_ name: String, months: Int) -> some View {
+    private func navButton(_ name: String, label: String, months: Int) -> some View {
         Button {
             if let d = calendar.date(byAdding: .month, value: months, to: monthStart) {
                 withAnimation(Motion.fast.animation) { displayed = d }
@@ -71,6 +71,7 @@ public struct CalendarView: View {
                 .mirrorsInRTL()
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     private var weekdayRow: some View {
