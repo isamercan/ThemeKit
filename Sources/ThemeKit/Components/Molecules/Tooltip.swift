@@ -196,18 +196,27 @@ private struct BindingTooltip: ViewModifier {
     }
 }
 
-/// Wraps an anchor so a tap toggles its own tooltip — no external binding needed.
+/// Wraps an anchor so a tap toggles its own tooltip — no external binding
+/// needed. While shown (and unless opted out), a transparent tap-catcher sits
+/// behind the bubble so tapping anywhere else dismisses it.
 private struct SelfTooltip: ViewModifier {
     let text: String
     let edge: TooltipEdge
+    let align: PopoverAlign
     let style: BadgeStyle?
     let color: SemanticColor?
     let maxWidth: CGFloat?
+    let dismissOnOutsideTap: Bool
     @State private var shown = false
 
     func body(content: Content) -> some View {
         content
-            .tooltip(text, isPresented: $shown, edge: edge, style: style, color: color, maxWidth: maxWidth)
+            .overlay { // Declared before the bubble's overlay so it stays behind it.
+                if shown && dismissOnOutsideTap {
+                    PopoverTapCatcher { shown = false }
+                }
+            }
+            .tooltip(text, isPresented: $shown, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth)
             .contentShape(Rectangle())
             .onTapGesture { shown.toggle() }
             .accessibilityHint(Text(text))
@@ -216,30 +225,38 @@ private struct SelfTooltip: ViewModifier {
 
 public extension View {
     /// Binding-driven tooltip. `edge` chooses which side of the anchor it points
-    /// from; `style` recolors the bubble (nil keeps the dark default); `color`
-    /// tints it with any semantic color and wins over `style` (daisyUI
-    /// `tooltip-{color}`); `maxWidth` lets long text wrap.
+    /// from; `align` slides the bubble along that edge (HeroUI Popover `align`;
+    /// `.center` keeps the historical placement); `style` recolors the bubble
+    /// (nil keeps the dark default); `color` tints it with any semantic color
+    /// and wins over `style` (daisyUI `tooltip-{color}`); `maxWidth` lets long
+    /// text wrap.
     func tooltip(
         _ text: String,
         isPresented: Binding<Bool>,
         edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
         style: BadgeStyle? = nil,
         color: SemanticColor? = nil,
         maxWidth: CGFloat? = nil
     ) -> some View {
-        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, style: style, color: color, maxWidth: maxWidth))
+        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth))
     }
 
     /// Self-managed tooltip: tap the anchor to toggle it (tap again to dismiss).
-    /// No external state required — use for simple hint glyphs.
+    /// No external state required — use for simple hint glyphs. While shown, a
+    /// tap anywhere outside the bubble also dismisses it (HeroUI Popover
+    /// `closeOnPress`); pass `dismissOnOutsideTap: false` to require tapping
+    /// the anchor again.
     func tooltip(
         _ text: String,
         edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
         style: BadgeStyle? = nil,
         color: SemanticColor? = nil,
-        maxWidth: CGFloat? = nil
+        maxWidth: CGFloat? = nil,
+        dismissOnOutsideTap: Bool = true
     ) -> some View {
-        modifier(SelfTooltip(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth))
+        modifier(SelfTooltip(text: text, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth, dismissOnOutsideTap: dismissOnOutsideTap))
     }
 }
 
@@ -260,6 +277,28 @@ public extension View {
                 }
                 Icon(systemName: "star.circle").size(.md).color(theme.foreground(.fgHero))
                     .tooltip("Primary-tinted tooltip", edge: .bottom, color: .primary)
+            }
+            .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Align start / end") {
+    struct Demo: View {
+        @State var start = true
+        @State var end = true
+        var body: some View {
+            VStack(spacing: 72) {
+                // .start lines the bubble's leading edge up with the anchor's.
+                ThemeButton("Align start") { start.toggle() }.variant(.outline)
+                    .tooltip("Leading edges aligned", isPresented: $start, edge: .top, align: .start)
+                // .end lines the trailing edges up instead.
+                ThemeButton("Align end") { end.toggle() }.variant(.outline)
+                    .tooltip("Trailing edges aligned", isPresented: $end, edge: .bottom, align: .end, style: .info)
+                // Self-managed: tap the glyph to show; tap anywhere else to dismiss.
+                Icon(systemName: "hand.tap").size(.md)
+                    .tooltip("Tap outside to dismiss", edge: .trailing, align: .start)
             }
             .padding(80)
         }
