@@ -725,6 +725,8 @@ private struct FormsPage: View {
     @State private var newsletter = true
     @State private var interests: Set<String> = ["Design", "Code"]
     @State private var cities: Set<String> = ["Istanbul", "Rome"]
+    @State private var nickname = ""
+    @State private var priceAlerts = true
 
     var body: some View {
         PageScaffold(title: "Forms & lists",
@@ -732,7 +734,7 @@ private struct FormsPage: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(spacing: 16) { fieldsetCard; checkboxGroupCard }
                 VStack(spacing: 16) { multiSelectCard; amenitiesCard }
-                VStack(spacing: 16) { passengersCard }
+                VStack(spacing: 16) { passengersCard; whatsNewCard }
             }
         }
     }
@@ -785,6 +787,71 @@ private struct FormsPage: View {
                 PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345").seat("14C").status("Checked in").onEdit { }
                 PassengerRow("Ada Lovelace").type("Adult").subtitle("Passport · UK88231").seat("14D").onEdit { }
                 PassengerRow("Kid Mercan").type("Child").subtitle("12 years").seat("14E").onEdit { }
+            }
+        }
+    }
+
+    /// Compact tour of the six freshly-shipped components: CloseButton,
+    /// HelperText, SurfaceView, SkeletonGroup, ControlRow and ScrollShadow.
+    private var whatsNewCard: some View {
+        CollageCard {
+            VStack(alignment: .leading, spacing: 12) {
+                // Title row — Badge-tagged, with a CloseButton in the corner.
+                HStack(spacing: 8) {
+                    Text("Just shipped").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+                    Badge("New").badgeStyle(.success).size(.small)
+                    Spacer()
+                    CloseButton { }.controlSize(.mini)
+                }
+
+                // HelperText under a mock field.
+                VStack(alignment: .leading, spacing: 4) {
+                    TextInput("Nickname", text: $nickname).placeholder("e.g. skywalker")
+                    HelperText("Visible only to your travel group.")
+                }
+
+                // ControlRow with a checkbox control.
+                ControlRow("Email me price drops", isOn: $priceAlerts)
+                    .control(.checkbox)
+                    .description("One email per route, max.")
+
+                // Horizontal chip row fading at the edges via ScrollShadow.
+                ScrollShadow {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(["Nonstop", "Morning", "Refundable", "Baggage", "Window seat"], id: \.self) { title in
+                                Chip(title, isSelected: .constant(false))
+                            }
+                        }
+                    }
+                }
+                .axis(.horizontal)
+                .length(.md)
+                .fadeColor(.bgWhite)
+
+                // Nested SurfaceView levels wrapping a skeleton-only SkeletonGroup.
+                SurfaceView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Surface · secondary").font(.caption).foregroundStyle(.secondary)
+                        SurfaceView {
+                            SkeletonGroup {
+                                HStack(spacing: 8) {
+                                    Skeleton(.circle).size(width: 28, height: 28)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Skeleton(.capsule).size(width: 120, height: 8)
+                                        Skeleton(.capsule).size(width: 80, height: 8)
+                                    }
+                                }
+                            }
+                            .skeletonOnly()
+                            .loading(true)
+                        }
+                        .level(.tertiary)
+                        .contentPadding(.sm)
+                    }
+                }
+                .level(.secondary)
+                .contentPadding(.sm)
             }
         }
     }

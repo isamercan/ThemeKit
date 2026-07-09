@@ -23,7 +23,14 @@ struct CatalogView: View {
                     if !entries.isEmpty {
                         Section("\(category.rawValue) · \(entries.count)") {
                             ForEach(entries) { entry in
-                                NavigationLink(value: entry.name) { Text(entry.name) }
+                                NavigationLink(value: entry.name) {
+                                    HStack(spacing: 8) {
+                                        Text(entry.name)
+                                        if entry.isNew {
+                                            Badge("New").badgeStyle(.success).size(.small)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
