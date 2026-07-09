@@ -85,27 +85,37 @@ the repository URL, or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
+    // Core only — a plain install resolves ZERO third-party packages.
     .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.3.0"),
+
+    // Opt into an add-on's dependency via package traits (Swift 6.1+):
+    // .package(url: "https://github.com/isamercan/ThemeKit.git", from: "0.3.0",
+    //          traits: ["Lottie", "Calendar"]),
 ],
 targets: [
     .target(
         name: "MyApp",
         dependencies: [
             .product(name: "ThemeKit", package: "ThemeKit"),
-            // Optional — only if you need Lottie-backed animations:
+            // Only with the matching trait enabled above:
             // .product(name: "ThemeKitLottie", package: "ThemeKit"),
+            // .product(name: "ThemeKitCalendar", package: "ThemeKit"),
         ]
     ),
 ]
 ```
 
-### Products
+### Products & traits
 
-| Product | Dependencies | Use |
-|---|---|---|
-| `ThemeKit` | none | the full design system (core) |
-| `ThemeKitLottie` | `lottie-ios` | adds Lottie (After Effects / JSON) animation views; pulls Lottie **only** if imported |
-| `ThemeKitCalendar` | `Almanac` (→ `HorizonCalendar`, iOS-only) | a token-bound date-range calendar (`DateRangePicker`) that re-skins with the active theme; pulls Almanac **only** if imported |
+The core is dependency-free **at resolution time**: the add-ons live behind opt-in
+[package traits](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md),
+so without a trait enabled SwiftPM never even fetches Lottie or Almanac.
+
+| Product | Trait | Pulls | Use |
+|---|---|---|---|
+| `ThemeKit` | — (default) | **nothing** | the full design system (core) |
+| `ThemeKitLottie` | `Lottie` | `lottie-ios` | Lottie (After Effects / JSON) animation views |
+| `ThemeKitCalendar` | `Calendar` | `Almanac` (→ `HorizonCalendar`, iOS-only) | a token-bound date-range calendar (`DateRangePicker`) that re-skins with the active theme |
 
 ## Quick start
 

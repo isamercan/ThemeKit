@@ -36,13 +36,22 @@ jobs:
         with:
           cache-key: spm
 
-      - name: Build
-        run: swift build --build-tests
+      # Default traits = empty, so this proves the zero-dependency CORE (plus the
+      # `#if canImport`-guarded, now-empty add-on modules) still compiles with no
+      # third-party packages resolved — the guarantee the "zero dependencies" claim
+      # rests on. See docs/guides/installation for the opt-in add-on traits.
+      - name: Build (core — default traits, zero third-party dependencies)
+        run: swift build
 
-      - name: Test
+      # Opt every trait back on to actually exercise the ThemeKitLottie add-on and
+      # run the full logic/theme/validation suite with the add-ons present.
+      # (ThemeKitCalendar/Almanac is iOS-only, so it stays empty on macOS and is
+      # compiled on the iOS lane below.)
+      - name: Build & test (all traits — add-ons enabled)
         run: |
           set -o pipefail
-          swift test --skip-build 2>&1 | tee test.log
+          swift build --enable-all-traits --build-tests
+          swift test --skip-build --enable-all-traits 2>&1 | tee test.log
           PASSED=$(grep -oE 'Executed [0-9]+ tests' test.log | tail -1 || echo 'tests run')
           echo "### ✅ SPM (macOS) — $PASSED" >> "$GITHUB_STEP_SUMMARY"
 
@@ -65,7 +74,11 @@ jobs:
           cache-key: ios
 
       # The *-Package scheme is the one configured for the test action (the plain
-      # ThemeKit scheme builds only the library product).
+      # ThemeKit scheme builds only the library product). This validates the core on
+      # iOS. NOTE: xcodebuild can't toggle SwiftPM package traits, so the trait-gated
+      # ThemeKitCalendar/ThemeKitLottie add-ons compile empty here; their iOS code is
+      # exercised by the Demo app (open it and enable the Calendar trait) — see
+      # Demo/…/CalendarDemos.swift. Coverage-restore for this lane is tracked separately.
       - name: Build for iOS Simulator
         run: |
           xcodebuild build-for-testing \

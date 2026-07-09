@@ -14,6 +14,10 @@
 //  dotLottie (`init(dotLottieURL:)`).
 //
 
+// Guarded on the "Lottie" package trait: with the trait off, lottie-ios is not
+// resolved, `canImport(Lottie)` is false, and this file compiles to nothing — so
+// the core install stays dependency-free while the module still exists (empty).
+#if canImport(Lottie)
 import SwiftUI
 import Lottie
 
@@ -92,3 +96,4 @@ public extension LottieIllustration {
         return c
     }
 }
+#endif

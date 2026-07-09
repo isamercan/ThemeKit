@@ -10,6 +10,14 @@
 
 import SwiftUI
 import ThemeKit
+
+// The ThemeKitCalendar add-on is behind the package's "Calendar" trait (default
+// OFF, so a plain checkout resolves zero third-party deps). Enable it in Xcode via
+// *Package Dependencies ▸ ThemeKit ▸ Traits ▸ Calendar* to resolve Almanac. This
+// `canImport` guard lets the Demo compile either way: with the trait on you get the
+// real add-on demos; with it off the same knob types render a short "enable it" note
+// (see the `#else` stubs) so the gallery still builds and lists them.
+#if canImport(Almanac)
 import ThemeKitCalendar
 
 struct DateRangePickerDemo: View {
@@ -126,3 +134,25 @@ struct CalendarDesignerDemo: View {
         }
     }
 }
+#else
+// Calendar trait OFF → Almanac isn't resolved. These stubs keep the gallery
+// compiling and still list the calendar knobs, each showing how to enable them.
+private struct CalendarTraitDisabledNote: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.largeTitle).foregroundStyle(.secondary)
+            Text("ThemeKitCalendar add-on disabled")
+                .font(.headline)
+            Text("Enable the **Calendar** trait — *Package Dependencies ▸ ThemeKit ▸ Traits ▸ Calendar* — to resolve Almanac and load these demos.")
+                .font(.caption).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: 390)
+    }
+}
+struct DateRangePickerDemo: View { var body: some View { CalendarTraitDisabledNote() } }
+struct TimeWheelDemo: View { var body: some View { CalendarTraitDisabledNote() } }
+struct CalendarDesignerDemo: View { var body: some View { CalendarTraitDisabledNote() } }
+#endif
