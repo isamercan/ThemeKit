@@ -25,6 +25,8 @@ public struct MultiSelect<Option: Hashable>: View {
     private var placeholder: String = String(themeKit: "Select")
     private var infoMessages: [InfoMessage] = []
     private var isOptionEnabled: ((Option) -> Bool)? = nil
+    private var describeOption: ((Option) -> String?)? = nil
+    private var leadingContent: ((Option) -> AnyView)? = nil
     private var searchable: Bool = true
     private var allowClear: Bool = true
     private var maxTagCount: Int? = nil
@@ -34,17 +36,30 @@ public struct MultiSelect<Option: Hashable>: View {
 
     @State private var open = false
     @State private var query = ""
+    /// Caller-owned open state (R1 — bindings belong in `init`). When supplied,
+    /// the dropdown panel's visibility is controlled/observable from outside;
+    /// when `nil`, the private `open` state is used. MultiSelect is always
+    /// panel-presented, so the binding applies unconditionally.
+    private var externalExpanded: Binding<Bool>? = nil
 
     public init(   // R1
         _ label: String? = nil,
         options: [Option],
         selection: Binding<Set<Option>>,
+        isExpanded: Binding<Bool>? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
         self.options = options
         self._selection = selection
+        self.externalExpanded = isExpanded
         self.optionTitle = optionTitle
+    }
+
+    /// Resolved open state — the external binding wins when one was injected.
+    private var isOpen: Bool { externalExpanded?.wrappedValue ?? open }
+    private func setOpen(_ value: Bool) {
+        if let externalExpanded { externalExpanded.wrappedValue = value } else { open = value }
     }
 
     private var hasError: Bool { infoMessages.dominantKind == .error }
@@ -73,9 +88,9 @@ public struct MultiSelect<Option: Hashable>: View {
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
-            if open { panel }
+            if isOpen { panel }
         }
-        .animation(Motion.fast.animation, value: open)
+        .animation(Motion.fast.animation, value: isOpen)
     }
 
     /// The trigger wrapped in the active ``FieldStyle`` chrome. Configuration
@@ -85,11 +100,11 @@ public struct MultiSelect<Option: Hashable>: View {
     /// field's own 56pt min-height, which stays in the content).
     private var field: some View {
         Button {
-            if isEnabled { open.toggle() }
+            if isEnabled { setOpen(!isOpen) }
         } label: {
             fieldStyle.makeBody(configuration: FieldStyleConfiguration(
                 content: AnyView(fieldContent),
-                isFocused: open,
+                isFocused: isOpen,
                 isEnabled: isEnabled,
                 hasError: hasError,
                 hasWarning: hasWarning,
@@ -133,7 +148,7 @@ public struct MultiSelect<Option: Hashable>: View {
             if isLoading {
                 Spinner().size(IconSize.sm.value).lineWidth(2)
             } else {
-                Icon(systemName: open ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
+                Icon(systemName: isOpen ? "chevron.up" : "chevron.down").size(.sm).colorOverride(theme.text(.textTertiary))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -174,9 +189,17 @@ public struct MultiSelect<Option: Hashable>: View {
                             Checkbox(isChecked: .constant(selection.contains(opt)))
                                 .controlSize(.small)
                                 .allowsHitTesting(false)
-                            Text(optionTitle(opt))
-                                .textStyle(.bodyBase400)
-                                .foregroundStyle(theme.text(.textPrimary))
+                            if let leadingContent { leadingContent(opt) }
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(optionTitle(opt))
+                                    .textStyle(.bodyBase400)
+                                    .foregroundStyle(theme.text(.textPrimary))
+                                if let description = describeOption?(opt) {
+                                    Text(description)
+                                        .textStyle(.bodySm400)
+                                        .foregroundStyle(theme.text(.textSecondary))
+                                }
+                            }
                             Spacer()
                         }
                         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -216,6 +239,17 @@ public extension MultiSelect {
     /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
 
+    /// Second line rendered under each option title in the dropdown rows
+    /// (HeroUI `Select.ItemDescription`) — `.bodySm400` in the secondary text
+    /// token. Return `nil` for options without one.
+    func optionDescription(_ text: @escaping (Option) -> String?) -> Self { copy { $0.describeOption = text } }
+
+    /// Custom leading content rendered between the checkbox and the title in
+    /// each dropdown row (e.g. a `StatusDot` or `Icon`).
+    func optionLeading<V: View>(@ViewBuilder _ content: @escaping (Option) -> V) -> Self {
+        copy { $0.leadingContent = { AnyView(content($0)) } }
+    }
+
     /// Whether the dropdown shows a search field (default true).
     func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
 
@@ -242,10 +276,23 @@ public extension MultiSelect {
 #Preview {
     struct Demo: View {
         @State var picks: Set<String> = ["Istanbul"]
+        @State var channels: Set<String> = []
+        @State var channelsOpen = false
         let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
+        let channelDetails = [
+            "Email": "Daily digest to your inbox",
+            "Push": "Instant alerts on your device",
+            "SMS": "Text messages for urgent updates",
+        ]
         var body: some View {
             VStack(spacing: 16) {
                 MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+                // Descriptions + custom leading content, driven by a
+                // controlled isExpanded binding.
+                MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
+                    .optionDescription { channelDetails[$0] }
+                    .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
+                Button(channelsOpen ? "Close channels" : "Open channels") { channelsOpen.toggle() }
                 // Chrome via the shared FieldStyle axis.
                 MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
                     .fieldStyle(.underlined)

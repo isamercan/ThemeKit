@@ -20,6 +20,9 @@ public struct RadioGroup<Option: Hashable>: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var infoMessages: [InfoMessage] = []
     private var isOptionEnabled: ((Option) -> Bool)?
+    private var description: (Option) -> String? = { _ in nil }
+    private var accent: SemanticColor?
+    private var axis: Axis = .vertical
     private var accessibilityID: String? = nil
 
     public init(
@@ -49,30 +52,54 @@ public struct RadioGroup<Option: Hashable>: View {
             if let title {
                 Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
-            ForEach(Array(options.enumerated()), id: \.element) { index, option in
-                let enabled = optionEnabled(option)
-                Button {
-                    selection = option
-                } label: {
-                    HStack(spacing: Theme.SpacingKey.sm.value) {
-                        RadioButton(isSelected: .constant(selection == option))
-                        Text(label(option))
-                            .textStyle(.bodyBase400)
-                            .foregroundStyle(theme.text(.textPrimary))
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!enabled)
-                .opacity(enabled ? 1 : 0.4)
-                .a11y("option.\(index)", in: accessibilityID)
-                .accessibilityLabel(label(option))
-                .accessibilityAddTraits(selection == option ? .isSelected : [])
-            }
+            optionsContainer
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
+        }
+    }
+
+    /// Lays the option rows out along `axis` (HStack/VStack mirror for RTL automatically).
+    @ViewBuilder private var optionsContainer: some View {
+        switch axis {
+        case .horizontal:
+            HStack(alignment: .top, spacing: Theme.SpacingKey.md.value) { optionRows }
+        case .vertical:
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) { optionRows }
+        }
+    }
+
+    private var optionRows: some View {
+        ForEach(Array(options.enumerated()), id: \.element) { index, option in
+            let enabled = optionEnabled(option)
+            let description = description(option)
+            Button {
+                selection = option
+            } label: {
+                // Top-align the radio against the label block when supporting text is present.
+                HStack(alignment: description == nil ? .center : .top, spacing: Theme.SpacingKey.sm.value) {
+                    RadioButton(isSelected: .constant(selection == option))
+                        .accent(accent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(label(option))
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textPrimary))
+                        if let description {
+                            Text(description)
+                                .textStyle(.bodySm400)
+                                .foregroundStyle(theme.text(.textSecondary))
+                        }
+                    }
+                    if axis == .vertical { Spacer() }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!enabled)
+            .opacity(enabled ? 1 : 0.4)
+            .a11y("option.\(index)", in: accessibilityID)
+            .accessibilityLabel(label(option))
+            .accessibilityAddTraits(selection == option ? .isSelected : [])
         }
     }
 }
@@ -168,6 +195,14 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         var body: some View {
             VStack(spacing: 24) {
                 RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                RadioGroup(title: "Class + descriptions", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .optionDescription {
+                        ["Economy": "Standard seat and cabin baggage.",
+                         "Business": "Priority boarding, lounge access and flat bed."][$0]
+                    }
+                    .accent(.success)
+                RadioGroup(title: "Horizontal", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .axis(.horizontal)
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                     .groupStyle(.outline).fullWidth()
@@ -186,6 +221,17 @@ public extension RadioGroup {
 
     /// Per-option enablement predicate (nil enables every option).
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
+
+    /// Supporting text rendered under each row's label (return nil for none).
+    func optionDescription(_ description: @escaping (Option) -> String?) -> Self { copy { $0.description = description } }
+
+    /// Semantic tint forwarded to every radio's selected fill/border; `nil`
+    /// (default) uses the hero tokens. (HeroUI item variant / daisyUI `radio-{color}`.)
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    /// Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
+    /// (HeroUI RadioGroup `orientation`.)
+    func axis(_ a: Axis) -> Self { copy { $0.axis = a } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`). Replaces the `accessibilityID:` init param.

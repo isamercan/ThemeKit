@@ -39,6 +39,8 @@ public struct Select<Option: Hashable>: View {
     private var infoMessages: [InfoMessage] = []
     private var isLoading: Bool = false
     private var isOptionEnabled: ((Option) -> Bool)? = nil
+    private var describeOption: ((Option) -> String?)? = nil
+    private var leadingContent: ((Option) -> AnyView)? = nil
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
 
@@ -50,26 +52,41 @@ public struct Select<Option: Hashable>: View {
 
     @State private var open = false
     @State private var query = ""
+    /// Caller-owned open state (R1 — bindings belong in `init`). When supplied,
+    /// the searchable panel's visibility is controlled/observable from outside;
+    /// when `nil`, the private `open` state is used. Native-`Menu` mode manages
+    /// its own presentation (SwiftUI exposes no `isPresented` for `Menu`), so
+    /// the binding is honored only together with `.searchable()`.
+    private var externalExpanded: Binding<Bool>? = nil
 
     public init(   // R1
         _ label: String,
         options: [Option],
         selection: Binding<Option?>,
+        isExpanded: Binding<Bool>? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
-        self.init(label, sections: [Section(nil, options)], selection: selection, optionTitle: optionTitle)
+        self.init(label, sections: [Section(nil, options)], selection: selection, isExpanded: isExpanded, optionTitle: optionTitle)
     }
 
     public init(   // R1
         _ label: String,
         sections: [Section],
         selection: Binding<Option?>,
+        isExpanded: Binding<Bool>? = nil,
         optionTitle: @escaping (Option) -> String
     ) {
         self.label = label
         self.sections = sections
         self._selection = selection
+        self.externalExpanded = isExpanded
         self.optionTitle = optionTitle
+    }
+
+    /// Resolved open state — the external binding wins when one was injected.
+    private var isOpen: Bool { externalExpanded?.wrappedValue ?? open }
+    private func setOpen(_ value: Bool) {
+        if let externalExpanded { externalExpanded.wrappedValue = value } else { open = value }
     }
 
     private var hasValue: Bool { selection != nil }
@@ -81,7 +98,7 @@ public struct Select<Option: Hashable>: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             ZStack(alignment: .trailing) {
                 if searchable {
-                    Button { if isEnabled { open.toggle() } } label: { field }
+                    Button { if isEnabled { setOpen(!isOpen) } } label: { field }
                         .buttonStyle(.plain)
                         .disabled(!isEnabled)
                 } else {
@@ -94,12 +111,12 @@ public struct Select<Option: Hashable>: View {
             .accessibilityLabel(label)
             .accessibilityValue(selection.map(optionTitle) ?? "")
 
-            if searchable && open { panel }
+            if searchable && isOpen { panel }
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
-        .animation(Motion.fast.animation, value: open)
+        .animation(Motion.fast.animation, value: isOpen)
     }
 
     // MARK: Trigger field
@@ -122,7 +139,7 @@ public struct Select<Option: Hashable>: View {
             if isLoading {
                 Spinner().size(IconSize.sm.value).lineWidth(2)
             } else {
-                Icon(systemName: open ? "chevron.up" : "chevron.down")
+                Icon(systemName: isOpen ? "chevron.up" : "chevron.down")
                     .size(.sm)
                     .color(showsClear ? .clear : theme.text(.textTertiary))
             }
@@ -144,7 +161,7 @@ public struct Select<Option: Hashable>: View {
         if selectStyle.isDefault {
             fieldStyle.makeBody(configuration: FieldStyleConfiguration(
                 content: AnyView(fieldContent),
-                isFocused: open,
+                isFocused: isOpen,
                 isEnabled: isEnabled,
                 hasError: infoMessages.dominantKind == .error,
                 hasWarning: infoMessages.dominantKind == .warning,
@@ -153,7 +170,7 @@ public struct Select<Option: Hashable>: View {
         } else {
             selectStyle.makeBody(configuration: SelectStyleConfiguration(
                 content: AnyView(fieldContent),
-                isOpen: open,
+                isOpen: isOpen,
                 isEnabled: isEnabled,
                 hasError: infoMessages.dominantKind == .error,
                 hasWarning: infoMessages.dominantKind == .warning
@@ -185,14 +202,24 @@ public struct Select<Option: Hashable>: View {
         }
     }
 
+    /// Native menu rows. A second `Text` in a menu button's label renders as the
+    /// system subtitle line — that's how `optionDescription` reaches this mode.
+    /// The system styles menu rows itself (theme tokens can't apply inside a
+    /// native `Menu`); `optionLeading` views are likewise stripped by the menu,
+    /// so custom leading content appears only in the searchable panel.
     @ViewBuilder
     private func rows(_ options: [Option]) -> some View {
         ForEach(options, id: \.self) { option in
             Button {
                 selection = option
             } label: {
-                if selection == option { Label(optionTitle(option), systemImage: "checkmark") }
-                else { Text(optionTitle(option)) }
+                Text(optionTitle(option))
+                if let description = describeOption?(option) {
+                    Text(description)
+                }
+                if selection == option {
+                    Image(systemName: "checkmark")
+                }
             }
             .disabled(!optionEnabled(option))
         }
@@ -241,9 +268,15 @@ public struct Select<Option: Hashable>: View {
                         }
                         ForEach(opts, id: \.self) { option in
                             let enabled = optionEnabled(option)
-                            Button { selection = option; open = false; query = "" } label: {
-                                HStack {
-                                    Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
+                            Button { selection = option; setOpen(false); query = "" } label: {
+                                HStack(spacing: Theme.SpacingKey.sm.value) {
+                                    if let leadingContent { leadingContent(option) }
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
+                                        if let description = describeOption?(option) {
+                                            Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                                        }
+                                    }
                                     Spacer()
                                     if selection == option {
                                         Icon(systemName: "checkmark").size(.sm).color(theme.foreground(.fgHero))
@@ -255,6 +288,7 @@ public struct Select<Option: Hashable>: View {
                             .buttonStyle(RowPressStyle())
                             .disabled(!enabled)
                             .opacity(enabled ? 1 : 0.4)
+                            .accessibilityAddTraits(selection == option ? .isSelected : [])
                         }
                     }
                 }
@@ -293,6 +327,19 @@ public extension Select {
     /// Per-option enable predicate; disabled rows are shown greyed and unselectable.
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
 
+    /// Second line rendered under each option title (HeroUI `Select.ItemDescription`).
+    /// Return `nil` for options without one. In the searchable panel it renders
+    /// `.bodySm400` in the secondary text token; in native-`Menu` mode it becomes
+    /// the system-styled menu subtitle (tokens can't apply inside a native menu).
+    func optionDescription(_ text: @escaping (Option) -> String?) -> Self { copy { $0.describeOption = text } }
+
+    /// Custom leading content rendered before each option title in the
+    /// **searchable panel** rows (e.g. a `StatusDot` or `Icon`). Native `Menu`
+    /// rows strip custom views, so this has no effect without `.searchable()`.
+    func optionLeading<V: View>(@ViewBuilder _ content: @escaping (Option) -> V) -> Self {
+        copy { $0.leadingContent = { AnyView(content($0)) } }
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -307,6 +354,13 @@ public extension Select {
 #Preview {
     struct Demo: View {
         @State var city: String?
+        @State var plan: String?
+        @State var planPanelOpen = false
+        let planDetails = [
+            "Basic": "Essential features for personal use",
+            "Pro": "Advanced tools for power users",
+            "Team": "Collaboration for organizations",
+        ]
         var body: some View {
             VStack(spacing: 16) {
                 Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
@@ -314,6 +368,16 @@ public extension Select {
                 Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
                        selection: $city) { $0 }
                     .searchable()
+                // Native-menu subtitles via optionDescription.
+                Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
+                    .optionDescription { planDetails[$0] }
+                // Panel rows with descriptions + custom leading content,
+                // driven by a controlled isExpanded binding.
+                Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: $planPanelOpen) { $0 }
+                    .searchable()
+                    .optionDescription { planDetails[$0] }
+                    .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
+                Button(planPanelOpen ? "Close plan panel" : "Open plan panel") { planPanelOpen.toggle() }
                 // Chrome via the shared FieldStyle axis.
                 Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
                     .fieldStyle(.underlined)

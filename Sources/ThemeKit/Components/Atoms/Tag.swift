@@ -10,7 +10,9 @@ import SwiftUI
 /// Chip (selectable): Tag represents an applied keyword/filter.
 /// An optional semantic `.tagStyle` + `.variant` colors the tag (Ant Tag colors),
 /// reusing Badge's `BadgeStyle` / `FillVariant`. With no style it keeps the
-/// original neutral keyword look.
+/// original neutral keyword look. `.size(.small/.large)` shares Chip's ramp,
+/// and `.leading { } / .trailing { }` inject custom content around the text
+/// (HeroUI Chip start/end slots).
 public struct Tag: View {
     private let text: String
     private let onRemove: (() -> Void)?
@@ -21,6 +23,9 @@ public struct Tag: View {
     private var semantic: SemanticColor?   // .color(_) — the broader Ant palette
     private var variant: FillVariant = .soft
     private var bordered = false
+    private var size: ChipSize = .small
+    private var leadingSlot: AnyView?
+    private var trailingSlot: AnyView?
 
     @Environment(\.theme) private var theme
 
@@ -31,24 +36,46 @@ public struct Tag: View {
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            if let leadingSystemImage {
-                Image(systemName: leadingSystemImage).font(.system(size: 12))
+            if let leadingSlot {
+                leadingSlot
+            } else if let leadingSystemImage {
+                Image(systemName: leadingSystemImage).font(.system(size: iconGlyphSize))
             }
-            Text(text).textStyle(.labelSm600)
+            Text(text).textStyle(labelStyle)
+            if let trailingSlot {
+                trailingSlot
+            }
             if let onRemove {
                 Button(action: onRemove) {
-                    Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
+                    Image(systemName: "xmark").font(.system(size: removeGlyphSize, weight: .semibold))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Remove \(text)"))
             }
         }
         .foregroundStyle(foreground)
-        .padding(.horizontal, Theme.SpacingKey.sm.value)
-        .frame(height: 28)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
         .background(background, in: Capsule())
         .overlay(Capsule().strokeBorder(border, lineWidth: border == .clear ? 0 : 1))
     }
+
+    // MARK: Size ramp — reuses Chip's `ChipSize`. Paddings derive from spacing
+    // tokens (no fixed height), so Dynamic Type grows the capsule instead of
+    // clipping the label.
+
+    private var labelStyle: TextStyle {
+        size == .small ? .labelSm600 : .labelBase600
+    }
+    private var horizontalPadding: CGFloat {
+        size == .small ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
+    }
+    private var verticalPadding: CGFloat {
+        size == .small ? Theme.SpacingKey.xs.value : Theme.SpacingKey.sm.value
+    }
+    // Fixed glyph constants for the icon/remove shorthands (no semantic token).
+    private var iconGlyphSize: CGFloat { size == .small ? 12 : 14 }
+    private var removeGlyphSize: CGFloat { size == .small ? 10 : 12 }
 
     private var foreground: Color {
         if let semantic {
@@ -93,8 +120,25 @@ public struct Tag: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Tag {
+    /// Control size: small / large (shares Chip's ``ChipSize`` ramp) — drives
+    /// the text style and token-derived paddings.
+    func size(_ s: ChipSize) -> Self { copy { $0.size = s } }
+
     /// Leading SF Symbol.
     func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }
+
+    /// A custom leading view before the text; when set, it replaces the
+    /// `icon` shorthand.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        let view = AnyView(content())
+        return copy { $0.leadingSlot = view }
+    }
+
+    /// A custom trailing view after the text, before the built-in remove button.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        let view = AnyView(content())
+        return copy { $0.trailingSlot = view }
+    }
 
     /// Semantic color treatment (Ant Tag colors). `nil` keeps the neutral keyword look.
     func tagStyle(_ s: BadgeStyle?) -> Self { copy { $0.style = s } }
@@ -144,7 +188,7 @@ public struct CheckableTag: View {
             }
             .foregroundStyle(isChecked ? color.onSolid : theme.text(.textSecondary))
             .padding(.horizontal, Theme.SpacingKey.sm.value)
-            .frame(height: 28)
+            .padding(.vertical, Theme.SpacingKey.xs.value)   // padding-derived height — Dynamic Type never clips
             .background(isChecked ? color.solid : theme.background(.bgElevatorTertiary), in: Capsule())
             .contentShape(Capsule())
         }
@@ -184,6 +228,19 @@ public extension CheckableTag {
             Tag("Purple").color(.purple).bordered()
             Tag("Pink").color(.pink).variant(.solid)
         }
+        // Size ramp (shares Chip's ChipSize).
+        HStack {
+            Tag("Small").icon("tag")
+            Tag("Large").icon("tag").size(.large)
+            Tag("Large removable", onRemove: {}).size(.large).tagStyle(.success)
+        }
+        // Slots: leading replaces the icon shorthand; trailing renders before
+        // the remove button.
+        HStack {
+            Tag("Online").leading { StatusDot(.online) }
+            Tag("Boosted").leading { Image(systemName: "sparkles").font(.system(size: 12)) }
+            Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) }
+        }
         CheckableTagRow()
     }
     .padding()
@@ -206,6 +263,9 @@ private struct CheckableTagRow: View {
         PreviewCase("Removable") { Tag("Filter", onRemove: {}) }
         PreviewCase("With icon") { Tag("Beach").icon("beach.umbrella") }
         PreviewCase("Semantic")  { Tag("Error").tagStyle(.error).variant(.solid) }
+        PreviewCase("Large")     { Tag("Filter", onRemove: {}).size(.large) }
+        PreviewCase("Leading slot")  { Tag("Online").leading { StatusDot(.online) } }
+        PreviewCase("Trailing slot") { Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) } }
         PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
     }
 }

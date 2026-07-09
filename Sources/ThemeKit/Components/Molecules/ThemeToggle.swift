@@ -16,6 +16,9 @@ public struct ThemeToggle: View {
     private var isLoading = false
     private var onSystemImage: String?
     private var offSystemImage: String?
+    private var trackOnSymbol: String?
+    private var trackOffSymbol: String?
+    private var customThumb: ((Bool) -> AnyView)?
     private var accent: SemanticColor?
     private var accessibilityID: String? = nil
 
@@ -44,13 +47,14 @@ public struct ThemeToggle: View {
             Capsule()
                 .fill(track)
                 .frame(width: trackWidth, height: trackHeight)
+                .overlay(trackSymbol)   // under the knob so it never overlaps it mid-slide
                 .overlay(
                     knob
                         .padding(2)
                         .frame(maxWidth: .infinity, alignment: isOn ? .trailing : .leading)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressFeedbackStyle())   // subtle press scale, gated by microAnimations + Reduce Motion
         .disabled(!interactive)
         .opacity(isEnabled ? 1 : 0.6)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
@@ -58,6 +62,7 @@ public struct ThemeToggle: View {
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
+    /// Knob content precedence: loading spinner > custom `thumbContent` > `symbols` glyph.
     private var knob: some View {
         Circle()
             .fill(theme.foreground(.fgSecondary))
@@ -67,12 +72,40 @@ public struct ThemeToggle: View {
                     ProgressView()
                         .controlSize(.mini)
                         .tint(theme.foreground(.fgHero))
+                } else if let customThumb {
+                    customThumb(isOn)
+                        .frame(width: knobSize, height: knobSize)
+                        .clipShape(Circle())
                 } else if let glyph = isOn ? onSystemImage : offSystemImage {
                     Image(systemName: glyph)
                         .font(.system(size: knobSize * 0.55, weight: .bold))
                         .foregroundStyle(isOn ? theme.text(.textHero) : theme.text(.textTertiary))
                 }
             }
+    }
+
+    /// On-track glyph rendered on the side the knob vacated (HeroUI
+    /// `Switch.StartContent` / `Switch.EndContent` parity): on-symbol at the
+    /// leading edge while on, off-symbol at the trailing edge while off.
+    @ViewBuilder private var trackSymbol: some View {
+        if let glyph = isOn ? trackOnSymbol : trackOffSymbol {
+            Image(systemName: glyph)
+                .font(.system(size: knobSize * 0.55, weight: .bold))
+                .foregroundStyle(trackSymbolColor)
+                .frame(width: knobSize, height: knobSize)   // centered in the knob-sized vacated zone
+                .padding(2)
+                .frame(maxWidth: .infinity, alignment: isOn ? .leading : .trailing)
+                .transition(.opacity)
+                .id(glyph)   // crossfade between on/off glyphs under the file's motion
+        }
+    }
+
+    /// Contrast-correct color for the visible track glyph: it sits on `track`,
+    /// which is the accent/hero solid only when on **and** enabled, otherwise
+    /// the secondary background.
+    private var trackSymbolColor: Color {
+        guard isOn, isEnabled else { return theme.text(.textTertiary) }
+        return accent?.onSolid ?? theme.text(.textHero)
     }
 
     private var track: Color {
@@ -83,6 +116,7 @@ public struct ThemeToggle: View {
 }
 
 #Preview {
+    @Previewable @State var live = true   // interactive rows: slide + press-scale feedback
     VStack(alignment: .leading, spacing: 16) {
         ThemeToggle(isOn: .constant(true))
         ThemeToggle(isOn: .constant(false))
@@ -92,6 +126,17 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true)).disabled(true)
         ThemeToggle(isOn: .constant(true)).accent(.success)
         ThemeToggle(isOn: .constant(true)).accent(.error).controlSize(.small)
+        // Track symbols (HeroUI start/end content) — tap to see the crossfade + press scale.
+        ThemeToggle(isOn: $live).trackSymbols(on: "sun.max.fill", off: "moon.fill")
+        ThemeToggle(isOn: .constant(false)).trackSymbols(on: "sun.max.fill", off: "moon.fill")
+        ThemeToggle(isOn: .constant(true)).trackSymbols(on: "sun.max.fill", off: "moon.fill").disabled(true)
+        ThemeToggle(isOn: .constant(true)).trackSymbols(on: "checkmark").accent(.success).controlSize(.small)
+        // Custom thumb content (HeroUI Switch.Thumb children); spinner still wins while loading.
+        ThemeToggle(isOn: $live).thumbContent { on in
+            Image(systemName: on ? "sun.max.fill" : "moon.fill")
+                .font(.system(size: 10, weight: .bold))
+        }
+        ThemeToggle(isOn: .constant(true)).thumbContent { _ in Text("A").font(.system(size: 10, weight: .bold)) }.loading()
     }
     .padding()
 }
@@ -105,6 +150,21 @@ public extension ThemeToggle {
     /// Optional SF Symbols shown inside the knob for the on / off states.
     func symbols(on: String? = nil, off: String? = nil) -> Self {
         copy { $0.onSystemImage = on; $0.offSystemImage = off }
+    }
+
+    /// Optional SF Symbols shown inside the *track*, on the side opposite the
+    /// knob — the on-symbol while on, the off-symbol while off (HeroUI
+    /// `Switch.StartContent`/`EndContent`). Distinct from `symbols(on:off:)`,
+    /// which decorates the knob itself; both may be combined.
+    func trackSymbols(on: String? = nil, off: String? = nil) -> Self {
+        copy { $0.trackOnSymbol = on; $0.trackOffSymbol = off }
+    }
+
+    /// Custom view rendered inside the knob (receives `isOn`), replacing the
+    /// `symbols(on:off:)` glyph (HeroUI `Switch.Thumb` children). The loading
+    /// spinner keeps priority: spinner > `thumbContent` > `symbols`.
+    func thumbContent<C: View>(@ViewBuilder _ content: @escaping (Bool) -> C) -> Self {
+        copy { $0.customThumb = { AnyView(content($0)) } }
     }
 
     /// Semantic tint for the on-state track; `nil` (default) uses the hero

@@ -7,8 +7,9 @@
 import SwiftUI
 
 /// Molecule. Single-thumb value slider with optional labeled marks, a drag
-/// value tooltip and a disabled state. (Ant Slider parity.) Shares the visual
-/// language of RangeSlider (token track / fill / thumb).
+/// value tooltip, tap-to-set on the track, a persistent formatted value readout,
+/// a semantic accent and a disabled state. (Ant / HeroUI Slider parity.) Shares
+/// the visual language of RangeSlider (token track / fill / thumb).
 public struct Slider: View {
     @Environment(\.theme) private var theme
 
@@ -23,13 +24,18 @@ public struct Slider: View {
     private var axis: Axis = .horizontal
     private var verticalHeight: CGFloat = 160
     private var showValueTooltip: Bool = false
+    private var valueLabel: ((Double) -> String)? = nil
+    private var accent: SemanticColor? = nil
     private var onChangeEnd: ((Double) -> Void)? = nil
 
     @State private var dragging = false
-    @State private var dragStartValue: Double?
 
     private let thumbSize: CGFloat = 24
     private let trackHeight: CGFloat = 4
+    /// Extra tappable slop around the track so tap-to-set is easy to hit.
+    private let hitSlop: CGFloat = 8
+    /// HeroUI-style press feedback: the thumb scales down while dragging.
+    private let pressScale: CGFloat = 0.9
 
     public init(   // R1
         value: Binding<Double>,
@@ -51,8 +57,11 @@ public struct Slider: View {
 
     private var span: Double { bounds.upperBound - bounds.lowerBound }
 
+    /// One formatting point for the label row, the drag tooltip and the
+    /// accessibility value — the `valueLabel` closure wins when provided.
     private func valueText(_ v: Double) -> String {
-        step.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.1f", v)
+        if let valueLabel { return valueLabel(v) }
+        return step.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.1f", v)
     }
 
     public var body: some View {
@@ -61,8 +70,13 @@ public struct Slider: View {
 
     private var verticalBody: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
-            if let label {
-                Text(label).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+            if label != nil || valueLabel != nil {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    if let label { Text(label) }
+                    if valueLabel != nil { Text(valueText(value)) }
+                }
+                .textStyle(.labelBase600)
+                .foregroundStyle(theme.text(.textPrimary))
             }
             GeometryReader { geo in
                 let usable = max(geo.size.height - thumbSize, 1)
@@ -70,11 +84,13 @@ public struct Slider: View {
                 ZStack(alignment: .bottom) {
                     Capsule().fill(theme.border(.borderPrimary)).frame(width: trackHeight)
                     Capsule().fill(fillColor).frame(width: trackHeight, height: y + thumbSize / 2)
-                    thumb
-                        .offset(y: -y)
-                        .gesture(verticalDrag(usable: usable))
+                    thumb.offset(y: -y)
                 }
                 .frame(maxWidth: .infinity)
+                // Tap-to-set: the whole (slop-enlarged) track accepts the drag,
+                // so a tap anywhere jumps the thumb to that value.
+                .contentShape(Rectangle().inset(by: -hitSlop))
+                .gesture(verticalDrag(usable: usable))
             }
             .frame(width: thumbSize, height: verticalHeight)
         }
@@ -94,10 +110,14 @@ public struct Slider: View {
 
     private var horizontalBody: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            if let label {
-                Text(label)
-                    .textStyle(.labelBase600)
-                    .foregroundStyle(theme.text(.textPrimary))
+            if label != nil || valueLabel != nil {
+                HStack {
+                    if let label { Text(label) }
+                    Spacer()
+                    if valueLabel != nil { Text(valueText(value)) }
+                }
+                .textStyle(.labelBase600)
+                .foregroundStyle(theme.text(.textPrimary))
             }
             GeometryReader { geo in
                 let usable = max(geo.size.width - thumbSize, 1)
@@ -118,9 +138,12 @@ public struct Slider: View {
                     thumb
                         .offset(x: x)
                         .overlay(alignment: .top) { tooltip.offset(x: x, y: -thumbSize) }
-                        .gesture(drag(usable: usable))
                 }
                 .frame(height: thumbSize)
+                // Tap-to-set: the whole (slop-enlarged) track accepts the drag,
+                // so a tap anywhere jumps the thumb to that value.
+                .contentShape(Rectangle().inset(by: -hitSlop))
+                .gesture(drag(usable: usable))
             }
             .frame(height: thumbSize)
 
@@ -158,6 +181,8 @@ public struct Slider: View {
             .overlay(Circle().strokeBorder(theme.foreground(.fgSecondary), lineWidth: 2))
             .frame(width: thumbSize, height: thumbSize)
             .themeShadow(.soft)
+            // Press feedback while dragging — gated on microAnimations + Reduce Motion.
+            .microPressScale(dragging, scale: pressScale)
     }
 
     @ViewBuilder
@@ -174,11 +199,15 @@ public struct Slider: View {
     }
 
     private var fillColor: Color {
-        theme.background(isEnabled ? .bgHero : .bgSecondary)
+        guard isEnabled else { return theme.background(.bgSecondary) }
+        return accent?.solid ?? theme.background(.bgHero)
     }
 
+    /// Attached to the whole track (minimumDistance 0), so a tap anywhere sets
+    /// the value from its absolute location and a drag keeps tracking it; the
+    /// change-end callback fires on release either way.
     private func drag(usable: CGFloat) -> some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 0)
             .onChanged { g in
                 guard isEnabled else { return }
                 dragging = true
@@ -189,31 +218,42 @@ public struct Slider: View {
             .onEnded { _ in dragging = false; onChangeEnd?(value) }
     }
 
-    /// Vertical drag uses translation (up = increase) so the math stays correct
-    /// regardless of the thumb-local gesture coordinate space.
+    /// Vertical variant of the track gesture — the track is a fixed coordinate
+    /// space, so the value maps from the absolute touch location (up = increase).
     private func verticalDrag(usable: CGFloat) -> some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 0)
             .onChanged { g in
                 guard isEnabled else { return }
                 dragging = true
-                let start = dragStartValue ?? value
-                if dragStartValue == nil { dragStartValue = value }
-                let deltaRatio = Double(-g.translation.height / usable)
-                let raw = start + deltaRatio * span
+                let fromBottom = usable + thumbSize / 2 - g.location.y
+                let ratio = Double(min(max(fromBottom, 0), usable) / usable)
+                let raw = bounds.lowerBound + ratio * span
                 value = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
             }
-            .onEnded { _ in dragging = false; dragStartValue = nil; onChangeEnd?(value) }
+            .onEnded { _ in dragging = false; onChangeEnd?(value) }
     }
 }
 
 #Preview {
     struct Demo: View {
         @State var v: Double = 4
+        @State var price: Double = 240
         var body: some View {
+            // Tap-to-set: tapping anywhere on a track jumps the thumb there.
             VStack(spacing: 32) {
                 Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip()
                 Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"])
+                Slider(value: $price, in: 0...1000, label: "Budget")
+                    .step(10)
+                    .valueLabel { "$\(Int($0))" }   // currency-style readout + tooltip
+                    .showsValueTooltip()
+                Slider(value: $v, in: 0...8, label: "Accented")
+                    .accent(.success)
+                    .valueLabel { "\(Int($0))" }
                 Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true)
+                Slider(value: $v, in: 0...8, label: "Vertical")
+                    .axis(.vertical, height: 120)
+                    .valueLabel { "\(Int($0))" }
             }
             .padding()
         }
@@ -236,6 +276,13 @@ public extension Slider {
     }
     /// Shows a value tooltip above the thumb while dragging.
     func showsValueTooltip(_ on: Bool = true) -> Self { copy { $0.showValueTooltip = on } }
+    /// Formats the persistent value readout on the label row (e.g. "$500");
+    /// the same closure formats the drag tooltip and the accessibility value.
+    /// `nil` (default) hides the readout and keeps plain numeric formatting.
+    func valueLabel(_ format: ((Double) -> String)?) -> Self { copy { $0.valueLabel = format } }
+    /// Semantic tint for the track fill and thumb; `nil` (default) keeps the
+    /// hero tokens.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Fires with the snapped value when a drag ends (not on every step).
     func onChangeEnd(_ action: ((Double) -> Void)?) -> Self { copy { $0.onChangeEnd = action } }
 
