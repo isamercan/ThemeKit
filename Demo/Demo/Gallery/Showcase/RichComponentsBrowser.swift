@@ -199,9 +199,14 @@ private struct ShelfCard: View {
             Text(entry.category.rawValue.uppercased())
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(accent)
-            Text(entry.name)
-                .font(.title3.weight(.bold))
-                .lineLimit(1)
+            HStack(spacing: 8) {
+                Text(entry.name)
+                    .font(.title3.weight(.bold))
+                    .lineLimit(1)
+                if entry.isNew {
+                    Badge("New").badgeStyle(.success).size(.small)
+                }
+            }
 
             if let usage = entry.usage, !usage.isEmpty {
                 Text(usage)

@@ -24,14 +24,15 @@ struct ComponentEntry: Identifiable {
     let name: String
     let category: ComponentCategory
     let usage: String?
+    let isNew: Bool
     let make: () -> AnyView
 
-    static func knob<D: View>(_ name: String, _ category: ComponentCategory, demo: @escaping @autoclosure () -> D, usage: String? = nil) -> ComponentEntry {
-        ComponentEntry(name: name, category: category, usage: usage) { AnyView(demo()) }
+    static func knob<D: View>(_ name: String, _ category: ComponentCategory, demo: @escaping @autoclosure () -> D, usage: String? = nil, isNew: Bool = false) -> ComponentEntry {
+        ComponentEntry(name: name, category: category, usage: usage, isNew: isNew) { AnyView(demo()) }
     }
 
-    static func `static`<P: View>(_ name: String, _ category: ComponentCategory, usage: String? = nil, @ViewBuilder preview: @escaping () -> P) -> ComponentEntry {
-        ComponentEntry(name: name, category: category, usage: usage) { AnyView(ComponentStage(name) { preview() }) }
+    static func `static`<P: View>(_ name: String, _ category: ComponentCategory, usage: String? = nil, isNew: Bool = false, @ViewBuilder preview: @escaping () -> P) -> ComponentEntry {
+        ComponentEntry(name: name, category: category, usage: usage, isNew: isNew) { AnyView(ComponentStage(name) { preview() }) }
     }
 }
 
@@ -122,10 +123,10 @@ enum ComponentRegistry {
                 CodeLine("Done!", prefix: ">", highlight: .success)
             ]).copyable()
         },
-        .knob("CloseButton", .atoms, demo: CloseButtonDemo(), usage: #"CloseButton { dismiss() }.tint(.error).controlSize(.small)   // .plain() ghost glyph for image overlays"#),
-        .knob("HelperText", .atoms, demo: HelperTextDemo(), usage: #"HelperText("Min. 8 characters, one number.").hasError(invalid).hidesOnError()"#),
-        .knob("Surface", .atoms, demo: SurfaceViewDemo(), usage: #"SurfaceView { content }.level(.secondary).elevation(.soft).radius(.box)   // nestable; or view.surfaceChrome(.secondary)"#),
-        .knob("SkeletonGroup", .atoms, demo: SkeletonGroupDemo(), usage: #"SkeletonGroup { rows.skeleton() }.loading(isLoading)   // .skeletonOnly() collapses when loaded"#),
+        .knob("CloseButton", .atoms, demo: CloseButtonDemo(), usage: #"CloseButton { dismiss() }.tint(.error).controlSize(.small)   // .plain() ghost glyph for image overlays"#, isNew: true),
+        .knob("HelperText", .atoms, demo: HelperTextDemo(), usage: #"HelperText("Min. 8 characters, one number.").hasError(invalid).hidesOnError()"#, isNew: true),
+        .knob("Surface", .atoms, demo: SurfaceViewDemo(), usage: #"SurfaceView { content }.level(.secondary).elevation(.soft).radius(.box)   // nestable; or view.surfaceChrome(.secondary)"#, isNew: true),
+        .knob("SkeletonGroup", .atoms, demo: SkeletonGroupDemo(), usage: #"SkeletonGroup { rows.skeleton() }.loading(isLoading)   // .skeletonOnly() collapses when loaded"#, isNew: true),
 
         // MARK: Molecules
         .knob("ColorField", .molecules, demo: ColorFieldDemo(), usage: #"ColorField("Brand color", selection: $color).supportsOpacity()"#),
@@ -236,8 +237,8 @@ enum ComponentRegistry {
             }
             .padding(.horizontal, 24)
         },
-        .knob("ControlRow", .molecules, demo: ControlRowDemo(), usage: #"ControlRow("I agree to the terms", isOn: $accepted).control(.checkbox).description("…").required().hasError(showErrors && !accepted).errorText("This field is required.")"#),
-        .knob("ScrollShadow", .molecules, demo: ScrollShadowDemo(), usage: #"ScrollShadow { ScrollView(.horizontal) { chipRow } }.axis(.horizontal).length(.lg).fadeColor(.bgWhite)   // .visibility(.auto/.start/.end/.both/.none)"#),
+        .knob("ControlRow", .molecules, demo: ControlRowDemo(), usage: #"ControlRow("I agree to the terms", isOn: $accepted).control(.checkbox).description("…").required().hasError(showErrors && !accepted).errorText("This field is required.")"#, isNew: true),
+        .knob("ScrollShadow", .molecules, demo: ScrollShadowDemo(), usage: #"ScrollShadow { ScrollView(.horizontal) { chipRow } }.axis(.horizontal).length(.lg).fadeColor(.bgWhite)   // .visibility(.auto/.start/.end/.both/.none)"#, isNew: true),
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
