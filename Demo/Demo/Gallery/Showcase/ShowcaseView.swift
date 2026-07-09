@@ -20,6 +20,15 @@ import ThemeKit
 struct ShowcaseView: View {
     @EnvironmentObject private var themeStore: DemoThemeStore
 
+    // The Showcase owns an ISOLATED theme instance: the global theme (themeStore /
+    // Theme.shared) never changes the wall, and the wall's preset row never changes
+    // the global. It re-skins only when the user taps the top-right row (or auto-cycle).
+    @State private var localTheme: Theme = {
+        let t = Theme(); t.loadTheme(named: DemoTheme.default.resourceName, dark: false); return t
+    }()
+    @State private var preset: DemoTheme = .default
+    @State private var isDark = false
+
     @State private var page = UserDefaults.standard.integer(forKey: "startPage")
     @State private var autoCycle = false
     @State private var showBrowser = UserDefaults.standard.bool(forKey: "openBrowser")
@@ -27,7 +36,7 @@ struct ShowcaseView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Theme.shared.background(.bgBase).ignoresSafeArea()
+            localTheme.background(.bgBase).ignoresSafeArea()
 
             TabView(selection: $page) {
                 OverviewPage().tag(0)
@@ -40,17 +49,26 @@ struct ShowcaseView: View {
 
             topBar
         }
+        .theme(localTheme)   // isolate the whole wall on the Showcase's own theme
         .environment(\.locale, Locale(identifier: "en_US"))
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
+        .onChange(of: preset) { _, _ in applyTheme() }
+        .onChange(of: isDark) { _, _ in applyTheme() }
         .onReceive(ticker) { _ in if autoCycle { advanceTheme() } }
         .fullScreenCover(isPresented: $showBrowser) {
-            RichComponentsBrowser()
+            RichComponentsBrowser(theme: localTheme, preset: $preset, isDark: $isDark)
+                .theme(localTheme)
                 .environmentObject(themeStore)
                 .feedbackHost()
                 .sheetHost()
                 .drawerHost()
         }
+    }
+
+    /// Load the selected preset into the Showcase's own theme (never `Theme.shared`).
+    private func applyTheme() {
+        localTheme.loadTheme(named: preset.resourceName, dark: isDark)
     }
 
     private var topBar: some View {
@@ -62,18 +80,18 @@ struct ShowcaseView: View {
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
-                    .background(Theme.shared.background(.bgWhite), in: Capsule())
-                    .overlay(Capsule().stroke(Theme.shared.border(.borderPrimary), lineWidth: 0.5))
+                    .background(localTheme.background(.bgWhite), in: Capsule())
+                    .overlay(Capsule().stroke(localTheme.border(.borderPrimary), lineWidth: 0.5))
             }
             .buttonStyle(.plain)
 
             Spacer()
 
-            ThemePresetRow(autoCycle: $autoCycle)
+            ThemePresetRow(theme: localTheme, preset: $preset, isDark: $isDark, autoCycle: $autoCycle)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(Theme.shared.background(.bgWhite), in: Capsule())
-                .overlay(Capsule().stroke(Theme.shared.border(.borderPrimary), lineWidth: 0.5))
+                .background(localTheme.background(.bgWhite), in: Capsule())
+                .overlay(Capsule().stroke(localTheme.border(.borderPrimary), lineWidth: 0.5))
         }
         .padding(.horizontal, 24)
         .padding(.top, 14)
@@ -81,10 +99,10 @@ struct ShowcaseView: View {
 
     private func advanceTheme() {
         let cases = DemoTheme.allCases
-        guard let idx = cases.firstIndex(of: themeStore.current) else { return }
+        guard let idx = cases.firstIndex(of: preset) else { return }
         let next = (idx + 1) % cases.count
-        themeStore.select(cases[next])
-        if next == 0 { themeStore.setDark(!themeStore.isDark) }
+        preset = cases[next]                 // onChange(of:) applies it to localTheme
+        if next == 0 { isDark.toggle() }
     }
 }
 
@@ -726,6 +744,7 @@ private struct PageScaffold<Content: View>: View {
 // MARK: - Titled collage container (Ant-style rounded card)
 
 struct CollageCard<Content: View>: View {
+    @Environment(\.theme) private var theme
     private let title: String?
     @ViewBuilder private let content: () -> Content
 
@@ -743,10 +762,10 @@ struct CollageCard<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Theme.shared.border(.borderPrimary), lineWidth: 0.5)
+                .stroke(theme.border(.borderPrimary), lineWidth: 0.5)
         )
     }
 }
@@ -754,27 +773,29 @@ struct CollageCard<Content: View>: View {
 // MARK: - Theme preset row (swatches + dark toggle + auto-cycle)
 
 struct ThemePresetRow: View {
-    @EnvironmentObject private var themeStore: DemoThemeStore
+    let theme: Theme                 // the Showcase's own theme (for chrome tint)
+    @Binding var preset: DemoTheme   // drives the local theme via the parent's onChange
+    @Binding var isDark: Bool
     @Binding var autoCycle: Bool
 
     var body: some View {
         HStack(spacing: 12) {
-            ForEach(DemoTheme.allCases) { theme in
-                Button { themeStore.select(theme) } label: {
+            ForEach(DemoTheme.allCases) { p in
+                Button { preset = p } label: {
                     Circle()
-                        .fill(swatch(theme))
+                        .fill(swatch(p))
                         .frame(width: 22, height: 22)
-                        .overlay(Circle().stroke(Color.primary.opacity(themeStore.current == theme ? 0.9 : 0), lineWidth: 2))
+                        .overlay(Circle().stroke(Color.primary.opacity(preset == p ? 0.9 : 0), lineWidth: 2))
                         .overlay(Circle().stroke(.white.opacity(0.5), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(theme.label)
+                .accessibilityLabel(p.label)
             }
 
             Divider().frame(height: 18)
 
-            Button { themeStore.setDark(!themeStore.isDark) } label: {
-                Image(systemName: themeStore.isDark ? "moon.fill" : "sun.max.fill")
+            Button { isDark.toggle() } label: {
+                Image(systemName: isDark ? "moon.fill" : "sun.max.fill")
                     .font(.system(size: 15, weight: .semibold))
             }
             .buttonStyle(.plain)
@@ -783,7 +804,7 @@ struct ThemePresetRow: View {
             Button { autoCycle.toggle() } label: {
                 Image(systemName: autoCycle ? "pause.circle.fill" : "play.circle.fill")
                     .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(Theme.shared.foreground(.systemcolorsFgInfo))
+                    .foregroundStyle(theme.foreground(.systemcolorsFgInfo))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(autoCycle ? "Pause auto theme cycle" : "Start auto theme cycle")

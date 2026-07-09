@@ -17,11 +17,18 @@ import ThemeKit
 
 struct RichComponentsBrowser: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themeStore: DemoThemeStore
+
+    // Shares the Showcase's isolated theme — the same instance, never Theme.shared.
+    let theme: Theme
+    @Binding var preset: DemoTheme
+    @Binding var isDark: Bool
 
     @State private var selected: ComponentEntry?
     @State private var autoCycle = false
     private let ticker = Timer.publish(every: 4.5, on: .main, in: .common).autoconnect()
+
+    /// Load the selected preset into the shared Showcase theme.
+    private func applyTheme() { theme.loadTheme(named: preset.resourceName, dark: isDark) }
 
     private enum ShelfItem: Identifiable {
         case marker(ComponentCategory, Int)
@@ -51,7 +58,7 @@ struct RichComponentsBrowser: View {
             let cardW = min(max(geo.size.width * 0.32, 360), 480)
 
             ZStack(alignment: .top) {
-                Theme.shared.background(.bgBase).ignoresSafeArea()
+                theme.background(.bgBase).ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     header
@@ -66,6 +73,8 @@ struct RichComponentsBrowser: View {
         .environment(\.locale, Locale(identifier: "en_US"))
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
+        .onChange(of: preset) { _, _ in applyTheme() }
+        .onChange(of: isDark) { _, _ in applyTheme() }
         .onReceive(ticker) { _ in if autoCycle { advanceTheme() } }
         .sheet(item: $selected) { entry in
             NavigationStack {
@@ -87,11 +96,11 @@ struct RichComponentsBrowser: View {
     private var header: some View {
         HStack(spacing: 16) {
             Spacer()
-            ThemePresetRow(autoCycle: $autoCycle)
+            ThemePresetRow(theme: theme, preset: $preset, isDark: $isDark, autoCycle: $autoCycle)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(Theme.shared.background(.bgWhite), in: Capsule())
-                .overlay(Capsule().stroke(Theme.shared.border(.borderPrimary), lineWidth: 0.5))
+                .background(theme.background(.bgWhite), in: Capsule())
+                .overlay(Capsule().stroke(theme.border(.borderPrimary), lineWidth: 0.5))
             Button { dismiss() } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 26))
@@ -140,16 +149,17 @@ struct RichComponentsBrowser: View {
 
     private func advanceTheme() {
         let cases = DemoTheme.allCases
-        guard let idx = cases.firstIndex(of: themeStore.current) else { return }
+        guard let idx = cases.firstIndex(of: preset) else { return }
         let next = (idx + 1) % cases.count
-        themeStore.select(cases[next])
-        if next == 0 { themeStore.setDark(!themeStore.isDark) }
+        preset = cases[next]                 // onChange(of:) applies it to the shared theme
+        if next == 0 { isDark.toggle() }
     }
 }
 
 // MARK: - One big shelf card: clean live preview on top, info + code below
 
 private struct ShelfCard: View {
+    @Environment(\.theme) private var theme
     let entry: ComponentEntry
     let width: CGFloat
     let height: CGFloat
@@ -160,7 +170,7 @@ private struct ShelfCard: View {
     // component fully inside the card (no cropping / overflow), while the theme
     // bar / properties below stay clipped off.
     private let previewHeight: CGFloat = 224
-    private var accent: Color { Theme.shared.foreground(.systemcolorsFgInfo) }
+    private var accent: Color { theme.foreground(.systemcolorsFgInfo) }
 
     var body: some View {
         Button(action: onTap) {
@@ -172,13 +182,13 @@ private struct ShelfCard: View {
 
                 infoFooter
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(Theme.shared.background(.bgWhite))
+                    .background(theme.background(.bgWhite))
             }
             .frame(width: width, height: height)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Theme.shared.border(.borderPrimary), lineWidth: 0.5)
+                    .stroke(theme.border(.borderPrimary), lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)
@@ -220,6 +230,7 @@ private struct ShelfCard: View {
 // MARK: - Slim in-row category marker
 
 private struct CategoryMarker: View {
+    @Environment(\.theme) private var theme
     let category: ComponentCategory
     let count: Int
     let height: CGFloat
@@ -229,7 +240,7 @@ private struct CategoryMarker: View {
             Spacer()
             Text("\(count)")
                 .font(.system(size: 44, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.shared.foreground(.systemcolorsFgInfo))
+                .foregroundStyle(theme.foreground(.systemcolorsFgInfo))
             Text(category.rawValue.uppercased())
                 .font(.headline)
                 .foregroundStyle(.secondary)
