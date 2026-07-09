@@ -33,8 +33,21 @@ let package = Package(
             targets: ["ThemeKitCalendar"]
         ),
     ],
+    // Opt-in traits keep the core resolution truly dependency-free. The DEFAULT
+    // set is EMPTY, so a plain `.package(url: "…ThemeKit.git")` resolves the core
+    // ONLY — Lottie, Almanac and HorizonCalendar are never fetched. Enable a trait
+    // to pull the matching add-on's dependency at resolution time:
+    //   .package(url: "…ThemeKit.git", from: "…", traits: ["Lottie"])    // + lottie-ios
+    //   .package(url: "…ThemeKit.git", from: "…", traits: ["Calendar"])  // + Almanac (iOS)
+    // The add-on SOURCES are `#if canImport(...)` guarded, so with a trait off the
+    // add-on module simply compiles to nothing rather than failing to build.
+    traits: [
+        .trait(name: "Lottie", description: "Enable the ThemeKitLottie add-on (pulls lottie-ios)."),
+        .trait(name: "Calendar", description: "Enable the ThemeKitCalendar add-on (pulls Almanac / HorizonCalendar, iOS-only)."),
+        .default(enabledTraits: []),
+    ],
     dependencies: [
-        // Used solely by the ThemeKitLottie add-on target.
+        // Used solely by the ThemeKitLottie add-on target (behind the "Lottie" trait).
         .package(url: "https://github.com/airbnb/lottie-ios.git", from: "4.4.0"),
         // Used solely by the ThemeKitCalendar add-on target (iOS-only; pulls
         // HorizonCalendar transitively). A conditional dependency keeps it off
@@ -70,7 +83,7 @@ let package = Package(
             name: "ThemeKitLottie",
             dependencies: [
                 "ThemeKit",
-                .product(name: "Lottie", package: "lottie-ios"),
+                .product(name: "Lottie", package: "lottie-ios", condition: .when(traits: ["Lottie"])),
             ]
         ),
         // Calendar add-on: core + Almanac. The Almanac product is linked ONLY on
@@ -80,7 +93,7 @@ let package = Package(
             name: "ThemeKitCalendar",
             dependencies: [
                 "ThemeKit",
-                .product(name: "Almanac", package: "Almanac", condition: .when(platforms: [.iOS])),
+                .product(name: "Almanac", package: "Almanac", condition: .when(platforms: [.iOS], traits: ["Calendar"])),
             ]
         ),
         .testTarget(

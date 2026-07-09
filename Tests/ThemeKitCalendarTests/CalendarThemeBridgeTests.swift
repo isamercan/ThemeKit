@@ -3,9 +3,11 @@
 //  ThemeKitCalendarTests
 //
 //  Verifies the ThemeKit → Almanac calendar bridge. iOS-only (Almanac is UIKit /
-//  HorizonCalendar based); on macOS this file is empty and the target passes.
+//  HorizonCalendar based) and gated on the "Calendar" package trait; on macOS, or
+//  with the trait off, this file is empty and the target passes. CI exercises it
+//  via the iOS lane with the trait enabled (see .github/workflows/ci.yml).
 //
-#if os(iOS)
+#if os(iOS) && canImport(Almanac)
 import XCTest
 import SwiftUI
 import ThemeKit

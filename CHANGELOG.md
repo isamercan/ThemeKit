@@ -5,6 +5,16 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
 bump the minor).
 
+## [Unreleased]
+
+### Changed
+- **The optional add-ons are now behind opt-in [SwiftPM package traits](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md)**, so the core is dependency-free at *resolution* time, not just link time. A plain `.package(url: "…ThemeKit.git")` now resolves **zero** third-party packages — Lottie, Almanac and HorizonCalendar are no longer fetched unless you ask for them ([#224](https://github.com/isamercan/ThemeKit/issues/224)).
+  - Enable an add-on's dependency with the matching trait: `traits: ["Lottie"]` and/or `traits: ["Calendar"]` on the package dependency (or the **Traits** checkboxes in Xcode).
+  - Add-on sources are `#if canImport(…)` guarded, so with a trait off the module compiles to an empty module rather than failing to build.
+
+### Breaking
+- **Consumers already using `ThemeKitLottie` or `ThemeKitCalendar` must enable the corresponding trait** (`Lottie` / `Calendar`) — otherwise the add-on module resolves empty and its symbols disappear. The core `ThemeKit` product is unaffected. Traits require **Swift 6.1+** tooling on the consuming side.
+
 ## [0.19.0] - 2026-07-09
 
 The **Ant Design overview parity** release: swept ant.design/components against the

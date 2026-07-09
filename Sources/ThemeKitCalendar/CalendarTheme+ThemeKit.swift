@@ -6,7 +6,7 @@
 //  so a calendar re-skins with the active `Theme` — including theme presets and
 //  per-subtree `.theme(_:)` injection — instead of carrying its own palette.
 //
-#if os(iOS)
+#if os(iOS) && canImport(Almanac)
 import SwiftUI
 import ThemeKit
 import Almanac
