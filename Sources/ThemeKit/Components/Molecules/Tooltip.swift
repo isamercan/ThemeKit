@@ -5,9 +5,11 @@
 //
 //  Molecule. A small bubble with an arrow, attached to one of four edges of an
 //  anchor via the `.tooltip(...)` modifier. Defaults to the original dark bubble;
-//  an optional semantic `style` recolors it (Ant Tooltip `color`), and `maxWidth`
-//  lets the text wrap onto multiple lines. Two entry points: a binding-driven
-//  modifier and a self-managed tap-to-toggle convenience. (Ant Tooltip parity.)
+//  an optional semantic `style` recolors it (Ant Tooltip `color`), `maxWidth`
+//  lets the text wrap onto multiple lines, and `align` slides the bubble along
+//  the anchored edge (HeroUI Popover `align`). Two entry points: a binding-driven
+//  modifier and a self-managed tap-to-toggle convenience that also dismisses on
+//  an outside tap. (Ant Tooltip / HeroUI Popover parity.)
 //
 
 import SwiftUI
@@ -20,42 +22,93 @@ public enum TooltipEdge: Sendable {
     var isVertical: Bool { self == .top || self == .bottom }
 
     /// The overlay alignment that pins the bubble to this edge of the anchor.
-    var alignment: Alignment {
-        switch self {
-        case .top: return .top
-        case .bottom: return .bottom
-        case .leading: return .leading
-        case .trailing: return .trailing
+    var alignment: Alignment { alignment(.center) }
+
+    /// Overlay alignment for this edge with `align` choosing where along that
+    /// edge the bubble/card anchors (leading/top for `.start`, centered, or
+    /// trailing/bottom for `.end`). `.center` reproduces `alignment`.
+    func alignment(_ align: PopoverAlign) -> Alignment {
+        if isVertical {
+            let horizontal: HorizontalAlignment
+            switch align {
+            case .start: horizontal = .leading
+            case .center: horizontal = .center
+            case .end: horizontal = .trailing
+            }
+            return Alignment(horizontal: horizontal, vertical: self == .top ? .top : .bottom)
+        } else {
+            let vertical: VerticalAlignment
+            switch align {
+            case .start: vertical = .top
+            case .center: vertical = .center
+            case .end: vertical = .bottom
+            }
+            return Alignment(horizontal: self == .leading ? .leading : .trailing, vertical: vertical)
         }
     }
 }
 
+/// Cross-axis alignment of an anchored bubble or card along its edge —
+/// `.start` lines up the leading (or top) edges, `.end` the trailing (or
+/// bottom) edges, `.center` keeps the historical centered placement.
+/// (HeroUI Popover `align`.) Shared by `.tooltip`, `.popconfirm` and
+/// `.themePopover`.
+public enum PopoverAlign: Sendable {
+    case start, center, end
+}
+
 /// A triangle whose apex points toward the anchor for the given edge.
-private struct TooltipArrow: Shape {
+/// The path runs base-corner → apex → base-corner and is left *open* along the
+/// base: `fill` closes it implicitly (same triangle as before), while `stroke`
+/// draws a hairline on the two exposed sides only — exactly what a bordered
+/// card arrow needs (HeroUI Popover.Arrow's fill + open stroke path). Internal
+/// so `Popconfirm` can compose the same arrow onto its card.
+struct TooltipArrow: Shape {
     let edge: TooltipEdge
 
     func path(in rect: CGRect) -> Path {
         var p = Path()
         switch edge {
         case .top: // bubble above the anchor → point down
-            p.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
         case .bottom: // bubble below → point up
-            p.move(to: CGPoint(x: rect.midX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         case .leading: // bubble to the left → point right
-            p.move(to: CGPoint(x: rect.maxX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
             p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         case .trailing: // bubble to the right → point left
-            p.move(to: CGPoint(x: rect.minX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
             p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         }
-        p.closeSubpath()
         return p
+    }
+}
+
+/// A transparent, effectively screen-covering hit target placed *behind* an
+/// anchored bubble/card so a tap anywhere outside it dismisses the popover
+/// (HeroUI Popover overlay `closeOnPress`). Only mounted while presented, so
+/// the anchor stays fully interactive when nothing is shown. Internal — shared
+/// by the self-managed tooltip and the Popconfirm/ThemePopover presenter.
+struct PopoverTapCatcher: View {
+    let onTap: () -> Void
+
+    /// Fixed catch radius around the anchor — a genuine dimension with no
+    /// semantic token; generous enough to cover any window from any anchor.
+    private static let side: CGFloat = 10_000
+
+    var body: some View {
+        Color.clear
+            .frame(width: Self.side, height: Self.side)
+            .contentShape(Rectangle())
+            .ignoresSafeArea()
+            .onTapGesture(perform: onTap)
+            .accessibilityHidden(true)
     }
 }
 
@@ -98,16 +151,19 @@ private struct TooltipBubble: View {
     }
 }
 
-/// Pushes the bubble just outside the chosen edge of the anchor.
+/// Pushes the bubble just outside the chosen edge of the anchor, separated by
+/// the small spacing token.
 private struct TooltipPlacement: ViewModifier {
     let edge: TooltipEdge
 
+    private var gap: CGFloat { Theme.SpacingKey.sm.value }
+
     func body(content: Content) -> some View {
         switch edge {
-        case .top: content.offset(y: -8).alignmentGuide(.top) { $0[.bottom] }
-        case .bottom: content.offset(y: 8).alignmentGuide(.bottom) { $0[.top] }
-        case .leading: content.offset(x: -8).alignmentGuide(.leading) { $0[.trailing] }
-        case .trailing: content.offset(x: 8).alignmentGuide(.trailing) { $0[.leading] }
+        case .top: content.offset(y: -gap).alignmentGuide(.top) { $0[.bottom] }
+        case .bottom: content.offset(y: gap).alignmentGuide(.bottom) { $0[.top] }
+        case .leading: content.offset(x: -gap).alignmentGuide(.leading) { $0[.trailing] }
+        case .trailing: content.offset(x: gap).alignmentGuide(.trailing) { $0[.leading] }
         }
     }
 }
@@ -117,6 +173,7 @@ private struct BindingTooltip: ViewModifier {
     let text: String
     @Binding var isPresented: Bool
     let edge: TooltipEdge
+    let align: PopoverAlign
     let style: BadgeStyle?
     let color: SemanticColor?
     let maxWidth: CGFloat?
@@ -126,7 +183,7 @@ private struct BindingTooltip: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(alignment: edge.alignment) {
+            .overlay(alignment: edge.alignment(align)) {
                 if isPresented {
                     TooltipBubble(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth)
                         .fixedSize(horizontal: maxWidth == nil, vertical: true)
@@ -139,18 +196,27 @@ private struct BindingTooltip: ViewModifier {
     }
 }
 
-/// Wraps an anchor so a tap toggles its own tooltip — no external binding needed.
+/// Wraps an anchor so a tap toggles its own tooltip — no external binding
+/// needed. While shown (and unless opted out), a transparent tap-catcher sits
+/// behind the bubble so tapping anywhere else dismisses it.
 private struct SelfTooltip: ViewModifier {
     let text: String
     let edge: TooltipEdge
+    let align: PopoverAlign
     let style: BadgeStyle?
     let color: SemanticColor?
     let maxWidth: CGFloat?
+    let dismissOnOutsideTap: Bool
     @State private var shown = false
 
     func body(content: Content) -> some View {
         content
-            .tooltip(text, isPresented: $shown, edge: edge, style: style, color: color, maxWidth: maxWidth)
+            .overlay { // Declared before the bubble's overlay so it stays behind it.
+                if shown && dismissOnOutsideTap {
+                    PopoverTapCatcher { shown = false }
+                }
+            }
+            .tooltip(text, isPresented: $shown, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth)
             .contentShape(Rectangle())
             .onTapGesture { shown.toggle() }
             .accessibilityHint(Text(text))
@@ -159,30 +225,38 @@ private struct SelfTooltip: ViewModifier {
 
 public extension View {
     /// Binding-driven tooltip. `edge` chooses which side of the anchor it points
-    /// from; `style` recolors the bubble (nil keeps the dark default); `color`
-    /// tints it with any semantic color and wins over `style` (daisyUI
-    /// `tooltip-{color}`); `maxWidth` lets long text wrap.
+    /// from; `align` slides the bubble along that edge (HeroUI Popover `align`;
+    /// `.center` keeps the historical placement); `style` recolors the bubble
+    /// (nil keeps the dark default); `color` tints it with any semantic color
+    /// and wins over `style` (daisyUI `tooltip-{color}`); `maxWidth` lets long
+    /// text wrap.
     func tooltip(
         _ text: String,
         isPresented: Binding<Bool>,
         edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
         style: BadgeStyle? = nil,
         color: SemanticColor? = nil,
         maxWidth: CGFloat? = nil
     ) -> some View {
-        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, style: style, color: color, maxWidth: maxWidth))
+        modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth))
     }
 
     /// Self-managed tooltip: tap the anchor to toggle it (tap again to dismiss).
-    /// No external state required — use for simple hint glyphs.
+    /// No external state required — use for simple hint glyphs. While shown, a
+    /// tap anywhere outside the bubble also dismisses it (HeroUI Popover
+    /// `closeOnPress`); pass `dismissOnOutsideTap: false` to require tapping
+    /// the anchor again.
     func tooltip(
         _ text: String,
         edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
         style: BadgeStyle? = nil,
         color: SemanticColor? = nil,
-        maxWidth: CGFloat? = nil
+        maxWidth: CGFloat? = nil,
+        dismissOnOutsideTap: Bool = true
     ) -> some View {
-        modifier(SelfTooltip(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth))
+        modifier(SelfTooltip(text: text, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth, dismissOnOutsideTap: dismissOnOutsideTap))
     }
 }
 
@@ -203,6 +277,28 @@ public extension View {
                 }
                 Icon(systemName: "star.circle").size(.md).color(theme.foreground(.fgHero))
                     .tooltip("Primary-tinted tooltip", edge: .bottom, color: .primary)
+            }
+            .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Align start / end") {
+    struct Demo: View {
+        @State var start = true
+        @State var end = true
+        var body: some View {
+            VStack(spacing: 72) {
+                // .start lines the bubble's leading edge up with the anchor's.
+                ThemeButton("Align start") { start.toggle() }.variant(.outline)
+                    .tooltip("Leading edges aligned", isPresented: $start, edge: .top, align: .start)
+                // .end lines the trailing edges up instead.
+                ThemeButton("Align end") { end.toggle() }.variant(.outline)
+                    .tooltip("Trailing edges aligned", isPresented: $end, edge: .bottom, align: .end, style: .info)
+                // Self-managed: tap the glyph to show; tap anywhere else to dismiss.
+                Icon(systemName: "hand.tap").size(.md)
+                    .tooltip("Tap outside to dismiss", edge: .trailing, align: .start)
             }
             .padding(80)
         }

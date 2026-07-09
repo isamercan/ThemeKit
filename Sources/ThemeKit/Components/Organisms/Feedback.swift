@@ -30,6 +30,9 @@ import SwiftUI
 /// Semantic intent shared by every feedback surface (maps to the token system).
 public enum FeedbackKind: String, CaseIterable {
     case success, info, warning, error
+    /// Low-emphasis message on a muted surface (HeroUI's "default" toast),
+    /// and a brand-tinted accent fed by the theme's primary color.
+    case neutral, accent
 
     var toastType: AlertToastType {
         switch self {
@@ -37,6 +40,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return .info
         case .warning: return .warning
         case .error: return .danger
+        case .neutral: return .neutral
+        case .accent: return .accent
         }
     }
 
@@ -47,6 +52,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return .primary
         case .warning: return .warning
         case .error: return .error
+        case .neutral: return .neutral
+        case .accent: return .primary   // accent surfaces are fed by the brand primary
         }
     }
 
@@ -57,6 +64,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return "info.circle.fill"
         case .warning: return "exclamationmark.triangle.fill"
         case .error: return "xmark.octagon.fill"
+        case .neutral: return "bell.fill"
+        case .accent: return "sparkles"
         }
     }
 }
@@ -78,12 +87,21 @@ public final class FeedbackPresenter {
         let isLoading: Bool
         let action: ToastAction?
         let duration: Double?
+        /// Per-toast edge override; `nil` falls back to the host's default.
+        let position: ToastPosition?
+        /// Fired when the toast is presented.
+        let onShow: (() -> Void)?
+        /// Fired when the toast leaves, whatever the dismissal path (timer,
+        /// swipe, close button, programmatic dismissal, overflow past the cap).
+        let onDismiss: (() -> Void)?
         /// When set, the row renders this instead of the stock `AlertToast`
         /// (custom content slot); the presentation infrastructure is shared.
         let custom: AnyView?
 
         init(title: String, message: String?, kind: FeedbackKind, systemImage: String?,
-             isLoading: Bool, action: ToastAction?, duration: Double?, custom: AnyView? = nil) {
+             isLoading: Bool, action: ToastAction?, duration: Double?,
+             position: ToastPosition? = nil, onShow: (() -> Void)? = nil,
+             onDismiss: (() -> Void)? = nil, custom: AnyView? = nil) {
             self.title = title
             self.message = message
             self.kind = kind
@@ -91,6 +109,9 @@ public final class FeedbackPresenter {
             self.isLoading = isLoading
             self.action = action
             self.duration = duration
+            self.position = position
+            self.onShow = onShow
+            self.onDismiss = onDismiss
             self.custom = custom
         }
     }
@@ -140,6 +161,14 @@ public final class FeedbackPresenter {
     /// Show a transient toast. Multiple toasts stack (the oldest drops past the
     /// visible cap). Pass `duration: nil` for a sticky toast — e.g. one with an
     /// `action` the user must reach (Undo). Returns the id for manual dismissal.
+    ///
+    /// - Parameters:
+    ///   - position: which edge this toast anchors to; `nil` (default) uses the
+    ///     host's `toastPosition`.
+    ///   - onShow: called when the toast is presented.
+    ///   - onDismiss: called when the toast leaves, on every dismissal path —
+    ///     auto-dismiss timer, swipe, close button, `dismissToast(_:)` /
+    ///     `dismissAllToasts()`, or being pushed past the visible cap.
     @discardableResult
     public func toast(
         _ title: String,
@@ -147,23 +176,33 @@ public final class FeedbackPresenter {
         kind: FeedbackKind = .success,
         systemImage: String? = nil,
         action: ToastAction? = nil,
-        duration: Double? = 2.5
+        duration: Double? = 2.5,
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil
     ) -> UUID {
         enqueue(ToastItem(title: title, message: message, kind: kind,
-                          systemImage: systemImage, isLoading: false, action: action, duration: duration))
+                          systemImage: systemImage, isLoading: false, action: action,
+                          duration: duration, position: position,
+                          onShow: onShow, onDismiss: onDismiss))
     }
 
     /// Show a transient toast with fully custom content. Same stacking, cap,
-    /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow and
-    /// swipe-to-dismiss as `toast(_:)` — only the row's visuals are yours.
+    /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow,
+    /// swipe-to-dismiss, per-toast `position` and lifecycle callbacks as
+    /// `toast(_:)` — only the row's visuals are yours.
     /// Returns the id for manual dismissal via `dismissToast(_:)`.
     @discardableResult
     public func toast<Content: View>(
         duration: Double? = 2.5,
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) -> UUID {
         enqueue(ToastItem(title: "", message: nil, kind: .info, systemImage: nil,
                           isLoading: false, action: nil, duration: duration,
+                          position: position, onShow: onShow, onDismiss: onDismiss,
                           custom: AnyView(content())))
     }
 
@@ -192,13 +231,33 @@ public final class FeedbackPresenter {
     @discardableResult
     private func enqueue(_ item: ToastItem) -> UUID {
         toasts.append(item)
-        if toasts.count > maxVisibleToasts { toasts.removeFirst(toasts.count - maxVisibleToasts) }
+        if toasts.count > maxVisibleToasts {
+            let overflow = Set(toasts.prefix(toasts.count - maxVisibleToasts).map(\.id))
+            removeToasts { overflow.contains($0.id) }
+        }
+        item.onShow?()
         return item.id
     }
 
     private func replaceToast(_ id: UUID, with item: ToastItem) {
-        if let i = toasts.firstIndex(where: { $0.id == id }) { toasts[i] = item }
-        else { _ = enqueue(item) }
+        if let i = toasts.firstIndex(where: { $0.id == id }) {
+            toasts[i].onDismiss?()   // the old toast leaves the screen in place
+            toasts[i] = item
+            item.onShow?()
+        } else {
+            _ = enqueue(item)
+        }
+    }
+
+    /// The single removal point for toasts. Every dismissal path — the
+    /// auto-dismiss timer, swipe, the close button, `dismissToast(_:)`,
+    /// `dismissAllToasts()`, and overflow past the visible cap — funnels
+    /// through here, so each removed toast's `onDismiss` always reports.
+    private func removeToasts(where shouldRemove: (ToastItem) -> Bool) {
+        let removed = toasts.filter(shouldRemove)
+        guard !removed.isEmpty else { return }
+        toasts.removeAll(where: shouldRemove)
+        removed.forEach { $0.onDismiss?() }
     }
 
     /// Present a modal confirmation dialog with a primary (and optional secondary) action.
@@ -233,8 +292,8 @@ public final class FeedbackPresenter {
     /// call `dismissLoading()` when the work completes (Ant `message.loading`).
     public func loading(_ title: String = String(themeKit: "Loading…")) { activeLoading = title }
 
-    public func dismissToast(_ id: UUID) { toasts.removeAll { $0.id == id } }
-    public func dismissAllToasts() { toasts.removeAll() }
+    public func dismissToast(_ id: UUID) { removeToasts { $0.id == id } }
+    public func dismissAllToasts() { removeToasts { _ in true } }
     public func dismissConfirm() { activeConfirm = nil }
     public func dismissNotification() { activeNotification = nil }
     public func dismissLoading() { activeLoading = nil }
@@ -244,20 +303,30 @@ public final class FeedbackPresenter {
 
 private struct FeedbackHostModifier: ViewModifier {
     @Environment(\.theme) private var theme
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var presenter: FeedbackPresenter
-    private let toastEdge: Edge
+    private let defaultPosition: ToastPosition
+
+    /// HeroUI-style stack depth: each toast behind the newest peeks out by a few
+    /// points and recedes at ~0.97 scale per depth step. Fixed chrome constants
+    /// (no semantic token exists for a stack-depth transform).
+    private let stackPeek: CGFloat = 6
+    private let stackScale: CGFloat = 0.97
+    private var depthOn: Bool { micro && !reduceMotion }
 
     init(maxVisibleToasts: Int, toastPosition: ToastPosition) {
         _presenter = State(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
-        toastEdge = toastPosition == .top ? .top : .bottom
+        defaultPosition = toastPosition
     }
 
     func body(content: Content) -> some View {
         content
             .environment(presenter)
             .overlay(alignment: .top) { notificationLayer }
-            .overlay(alignment: toastEdge == .top ? .top : .bottom) { toastLayer }
+            .overlay(alignment: .top) { toastLayer(.top) }
+            .overlay(alignment: .bottom) { toastLayer(.bottom) }
             .overlay { confirmLayer }
             .overlay { loadingLayer }
             .animation(Motion.base.spring, value: presenter.toasts.map(\.id))
@@ -316,16 +385,31 @@ private struct FeedbackHostModifier: ViewModifier {
         }
     }
 
-    private var toastLayer: some View {
-        // Newest nearest the anchored edge: bottom keeps array order, top reverses.
-        let ordered = toastEdge == .top ? Array(presenter.toasts.reversed()) : presenter.toasts
-        return VStack(spacing: Theme.SpacingKey.sm.value) {
-            ForEach(ordered) { item in
-                FeedbackToastRow(item: item, edge: toastEdge) { presenter.dismissToast(item.id) }
+    /// The toast stack anchored to one edge. Items route by their *effective*
+    /// position — the per-toast override, falling back to the host default.
+    @ViewBuilder
+    private func toastLayer(_ position: ToastPosition) -> some View {
+        let stack = presenter.toasts.filter { ($0.position ?? defaultPosition) == position }
+        if !stack.isEmpty {
+            let edge: Edge = position == .top ? .top : .bottom
+            // Newest nearest the anchored edge: bottom keeps array order, top reverses.
+            let ordered = position == .top ? Array(stack.reversed()) : stack
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                ForEach(Array(ordered.enumerated()), id: \.element.id) { index, item in
+                    // Depth 0 = the newest toast; ones behind it recede with a
+                    // subtle scale + peek offset toward the anchored edge.
+                    // Static (flat stack) under Reduce Motion / micro-animations off.
+                    let depth = position == .top ? index : ordered.count - 1 - index
+                    FeedbackToastRow(item: item, edge: edge) { presenter.dismissToast(item.id) }
+                        .scaleEffect(depthOn ? pow(stackScale, CGFloat(depth)) : 1,
+                                     anchor: position == .top ? .top : .bottom)
+                        .offset(y: depthOn ? CGFloat(depth) * stackPeek * (position == .top ? -1 : 1) : 0)
+                        .zIndex(Double(-depth))   // newest draws above what it overlaps
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(Theme.SpacingKey.md.value)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(Theme.SpacingKey.md.value)
     }
 
     @ViewBuilder
@@ -419,7 +503,8 @@ public extension View {
     ///
     /// - Parameters:
     ///   - maxVisibleToasts: how many stacked toasts stay on screen (oldest drops).
-    ///   - toastPosition: which edge the toast stack anchors to (default `.bottom`).
+    ///   - toastPosition: the default edge the toast stack anchors to (default
+    ///     `.bottom`); a toast can override it per-call via `toast(position:)`.
     func feedbackHost(maxVisibleToasts: Int = 3, toastPosition: ToastPosition = .bottom) -> some View {
         modifier(FeedbackHostModifier(maxVisibleToasts: maxVisibleToasts, toastPosition: toastPosition))
     }
@@ -433,6 +518,17 @@ public extension View {
                 ThemeButton("Stack ×3") {
                     for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: .success) }
                 }
+                ThemeButton("Neutral / accent") {
+                    feedback.toast("Notifications paused", kind: .neutral)
+                    feedback.toast("Pro features unlocked", kind: .accent)
+                }
+                .variant(.outline)
+                ThemeButton("Top override + callbacks") {
+                    feedback.toast("Heads up", kind: .info, position: .top,
+                                   onShow: { print("shown") },
+                                   onDismiss: { print("dismissed") })
+                }
+                .variant(.outline)
                 ThemeButton("Undo (sticky + action)") {
                     feedback.toast("Message deleted", kind: .info,
                                    action: ToastAction("Undo") {}, duration: nil)

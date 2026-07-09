@@ -648,6 +648,50 @@
         }
       }
     },
+    "Information" : {
+      "comment" : "Accessibility label for an informational status icon.",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilgi"
+          }
+        }
+      }
+    },
+    "Note" : {
+      "comment" : "Accessibility label for a neutral status icon.",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not"
+          }
+        }
+      }
+    },
+    "Success" : {
+      "comment" : "Accessibility label for a success status icon.",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başarılı"
+          }
+        }
+      }
+    },
+    "Warning" : {
+      "comment" : "Accessibility label for a warning status icon.",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uyarı"
+          }
+        }
+      }
+    },
     "Excellent" : {
       "comment" : "Rating: default sentiment for the top score band.",
       "localizations" : {

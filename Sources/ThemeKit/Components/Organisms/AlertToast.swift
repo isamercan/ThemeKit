@@ -8,6 +8,10 @@ import SwiftUI
 
 public enum AlertToastType {
     case success, warning, danger, info
+    /// Low-emphasis message on a muted surface (HeroUI's "default" variant).
+    case neutral
+    /// Brand-tinted toast fed by `SemanticColor.primary` (HeroUI's "accent").
+    case accent
 
     func background(_ theme: Theme) -> Color {
         switch self {
@@ -15,14 +19,18 @@ public enum AlertToastType {
         case .warning: return theme.background(.systemcolorsBgWarning)
         case .danger: return theme.background(.systemcolorsBgError)
         case .info: return theme.background(.systemcolorsBgInfo)
+        case .neutral: return theme.background(.bgTertiary)
+        case .accent: return SemanticColor.primary.solid
         }
     }
 
-    /// Warning uses dark text for contrast on the bright amber fill.
+    /// Warning uses dark text for contrast on the bright amber fill; accent
+    /// auto-contrasts against whatever the brand's solid primary resolves to.
     func foreground(_ theme: Theme) -> Color {
         switch self {
         case .warning: return theme.text(.textPrimary)
-        case .success, .danger, .info: return theme.foreground(.fgSecondary)
+        case .success, .danger, .info, .neutral: return theme.foreground(.fgSecondary)
+        case .accent: return SemanticColor.primary.onSolid
         }
     }
 
@@ -32,6 +40,20 @@ public enum AlertToastType {
         case .warning: return "exclamationmark.triangle.fill"
         case .danger: return "exclamationmark.octagon.fill"
         case .info: return "info.circle.fill"
+        case .neutral: return "bell.fill"
+        case .accent: return "sparkles"
+        }
+    }
+
+    /// Localized VoiceOver label for the status icon — the variant's meaning
+    /// is otherwise carried only by glyph + fill color.
+    var accessibilityLabel: String {
+        switch self {
+        case .success: return String(themeKit: "Success")
+        case .warning: return String(themeKit: "Warning")
+        case .danger: return String(themeKit: "Error")
+        case .info, .accent: return String(themeKit: "Information")
+        case .neutral: return String(themeKit: "Note")
         }
     }
 }
@@ -97,6 +119,7 @@ public struct AlertToast: View {
                 Spinner().size(IconSize.sm.value).lineWidth(2).color(type.foreground(theme))
             } else {
                 Icon(systemName: systemImage ?? type.systemImage).size(.sm).color(type.foreground(theme))
+                    .accessibilityLabel(type.accessibilityLabel)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -130,7 +153,8 @@ public extension AlertToast {
     /// Secondary line under the title.
     func message(_ text: String?) -> Self { copy { $0.message = text } }
 
-    /// Status treatment: success / warning / danger / info (drives fill + icon).
+    /// Status treatment: success / warning / danger / info / neutral / accent
+    /// (drives fill + icon).
     func variant(_ v: AlertToastType) -> Self { copy { $0.type = v } }
 
     /// Override the leading status glyph (otherwise derived from the variant).
@@ -158,6 +182,8 @@ public extension AlertToast {
         AlertToast("Check your input").message("One field needs attention.").variant(.warning)
         AlertToast("Something went wrong").variant(.danger).onClose {}
         AlertToast("New update available").variant(.info)
+        AlertToast("Notifications paused").variant(.neutral).onClose {}
+        AlertToast("Pro features unlocked").message("Enjoy the upgrade.").variant(.accent).onClose {}
         AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {}
         AlertToast("Uploading…").variant(.info).loading()
     }
