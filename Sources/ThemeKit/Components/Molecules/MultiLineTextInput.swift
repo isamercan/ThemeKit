@@ -26,6 +26,8 @@ public struct MultiLineTextInput: View {
     @Binding private var text: String
     private let label: String
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance / validation — mutated only through the modifiers below (R2).
     private var placeholder: String = ""
@@ -36,6 +38,10 @@ public struct MultiLineTextInput: View {
     private var minHeightOverride: CGFloat?
     private var countStyle: TextInputCountStyle = .count
     private var accessibilityID: String?
+
+    /// Marks the editor as required: asterisk after the header label + ", required"
+    /// appended to the accessibility label (HeroUI `isRequired`, TextInput parity).
+    private var isRequired = false
 
     @FocusState private var isFocused: Bool
 
@@ -69,10 +75,18 @@ public struct MultiLineTextInput: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            Text(label)
-                .textStyle(.labelSm600)
-                .foregroundStyle(labelColor)
-                .a11y(A11yElement.Field.label, in: accessibilityID)
+            HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
+                Text(label)
+                    .foregroundStyle(labelColor)
+                if isRequired {
+                    // Same treatment as `InputLabel.required()` — error-token asterisk.
+                    Text(verbatim: "*")
+                        .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                        .accessibilityHidden(true)   // spoken via the editor's label suffix
+                }
+            }
+            .textStyle(.labelSm600)
+            .a11y(A11yElement.Field.label, in: accessibilityID)
 
             editorBox
 
@@ -87,6 +101,9 @@ public struct MultiLineTextInput: View {
                 }
             }
         }
+        // Animate message rows in/out (their `.transition` lives in
+        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion.
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
     }
 
     /// The editor + placeholder overlay, sized to `minHeight` — everything the
@@ -98,12 +115,13 @@ public struct MultiLineTextInput: View {
                 .focused($isFocused)
                 .textStyle(.bodyBase400)
                 .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
-                .tint(theme.foreground(.fgHero))
+                // Caret / selection tint follows the validation state (HeroUI invalid caret).
+                .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .disabled(!isEnabled)
                 .a11y(A11yElement.Field.field, in: accessibilityID)
-                .accessibilityLabel(label)
+                .accessibilityLabel(isRequired ? label + ", " + String(themeKit: "required") : label)
                 .accessibilityValue(text)
 
             if text.isEmpty {
@@ -173,6 +191,11 @@ public extension MultiLineTextInput {
     /// 120). An explicit `minHeight(_:)` wins regardless of order.
     func size(_ s: TextInputSize) -> Self { copy { $0.size = s } }
 
+    /// Marks the editor as required: renders an error-token asterisk after the
+    /// header label (the `InputLabel` treatment) and appends ", required" to the
+    /// editor's accessibility label (HeroUI `isRequired`, TextInput parity).
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
     /// Convenience error message appended as an `.error` `InfoMessage`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
 
@@ -196,6 +219,8 @@ public extension MultiLineTextInput {
 #Preview {
     struct Demo: View {
         @State var text = ""
+        @State var feedback = ""
+        @State var showError = false
         var body: some View {
             VStack(spacing: 16) {
                 MultiLineTextInput("Notes", text: $text)
@@ -206,6 +231,14 @@ public extension MultiLineTextInput {
                 MultiLineTextInput("Underlined", text: $text)
                     .placeholder("No border, just a rule")
                     .fieldStyle(.underlined)
+                // Required header + muted on-surface chrome, with an animated
+                // error toggle (message rows fade + slide in/out).
+                MultiLineTextInput("Feedback", text: $feedback)
+                    .placeholder("Required, on-surface")
+                    .required()
+                    .errorText(showError ? "This field is required." : nil)
+                    .fieldStyle(.muted)
+                Button(showError ? "Hide error" : "Show error") { showError.toggle() }
             }
             .padding()
         }

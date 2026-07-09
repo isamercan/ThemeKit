@@ -4,7 +4,13 @@
 //  Created by İsa Mercan on 23.06.2026.
 //
 //  Improved, token-bound rewrite of the reference SearchView. Magnifying-glass
-//  leading icon, clear button, optional back / trailing actions.
+//  leading icon (replaceable via `.leadingIcon(_:)` / `.leadingIconColor(_:)`),
+//  clear button, optional back / trailing actions.
+//
+//  Validation, like `TextInput`: `.errorText(_:)`, `.infoMessages(_:)` and
+//  `.helperText(_:)` render an `InfoMessageList` under the field; the dominant
+//  severity drives the ambient `FieldStyle`'s error / warning border, and the
+//  helper hides while the field is invalid (hideOnInvalid).
 //
 //  Optional typeahead: pass a static `.suggestions(_:)` list or an async
 //  `suggest` provider (init) to get a results dropdown (debounced, with a
@@ -46,6 +52,8 @@ public struct SearchBar: View {
 
     @Binding private var text: String
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance/config — mutated only through the modifiers below (R2); the
     // async init seeds a 0.3s debounce baseline, which `.debounce(_:)` can
@@ -64,6 +72,15 @@ public struct SearchBar: View {
     private var debounce: TimeInterval = 0
     private var maxResults: Int = 6
     private var accessibilityID: String? = nil
+    private var leadingSystemImage: String = "magnifyingglass"
+    private var leadingIconColorKey: Theme.TextColorKey = .textTertiary
+
+    // Convenience helper/error strings + structured messages — merged into the
+    // rendered message list at render time (see `messages`), mirroring
+    // `TextInput`; the dominant severity drives the `FieldStyle` border.
+    private var helperText: String?
+    private var errorText: String?
+    private var infoMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -88,6 +105,24 @@ public struct SearchBar: View {
         self.debounce = 0.3   // async baseline; `.debounce(_:)` overrides
     }
 
+    /// `infoMessages` plus the helper/error conveniences (computed merge, same
+    /// idiom as `TextInput`). The helper hides while the field is invalid
+    /// (hideOnInvalid, as in the HeroUI reference) so the error replaces it.
+    private var messages: [InfoMessage] {
+        var messages = infoMessages
+        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        if let helperText, !isInvalid { messages.append(InfoMessage(helperText, kind: .info)) }
+        return messages
+    }
+    /// Whether the field is in an error state (an `errorText` or an
+    /// error-severity `InfoMessage`) — gates the helper line.
+    private var isInvalid: Bool {
+        errorText != nil || infoMessages.contains { $0.kind == .error }
+    }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
+    private var hasError: Bool { dominant == .error }
+    private var hasWarning: Bool { dominant == .warning }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -102,8 +137,16 @@ public struct SearchBar: View {
                 fieldBox
             }
 
+            if !messages.isEmpty {
+                InfoMessageList(messages)
+                    .a11y(A11yElement.Field.message, in: accessibilityID)
+            }
+
             dropdown
         }
+        // Message rows carry the HeroUI FieldError transition; key it here so
+        // it plays (and snaps under `microAnimations(false)` / Reduce Motion).
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
         .onAppear { update(for: text) }
         .onDebouncedChange(of: text, for: effectiveDebounce) { value in
             update(for: value)
@@ -116,7 +159,7 @@ public struct SearchBar: View {
     /// The fixed 44pt control height is layout, not chrome, so it stays here.
     private var fieldCore: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
+            Icon(systemName: leadingSystemImage).size(.sm).color(theme.text(leadingIconColorKey))
 
             TextField(placeholder, text: $text)
                 .textStyle(.bodyBase400)
@@ -137,19 +180,19 @@ public struct SearchBar: View {
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: `isFocused` ← the field's `@FocusState`;
-    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` are `false`
-    /// (SearchBar has no validation concept); `size` is `.small` — SearchBar has
-    /// no `TextInputSize` axis, but its fixed 44pt control height (kept in the
-    /// content) exactly matches `TextInputSize.small`, so size-keyed styles see
-    /// the truthful preset.
+    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` ← the dominant
+    /// severity of the merged message list (same derivation as `TextInput`);
+    /// `size` is `.small` — SearchBar has no `TextInputSize` axis, but its fixed
+    /// 44pt control height (kept in the content) exactly matches
+    /// `TextInputSize.small`, so size-keyed styles see the truthful preset.
     @ViewBuilder
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
             isFocused: isFocused,
             isEnabled: isEnabled,
-            hasError: false,
-            hasWarning: false,
+            hasError: hasError,
+            hasWarning: hasWarning,
             size: .small
         ))
     }
@@ -393,6 +436,25 @@ public extension SearchBar {
         copy { $0.trailingSystemImage = systemName; $0.onTrailing = action }
     }
 
+    /// Replaces the leading SF Symbol (defaults to `"magnifyingglass"`).
+    func leadingIcon(_ systemName: String) -> Self { copy { $0.leadingSystemImage = systemName } }
+
+    /// Token key for the leading icon's color (defaults to `.textTertiary`).
+    func leadingIconColor(_ key: Theme.TextColorKey) -> Self { copy { $0.leadingIconColorKey = key } }
+
+    /// Convenience hint rendered under the field as an `.info` `InfoMessage`;
+    /// hidden while the field is invalid (an `errorText` or an error-severity
+    /// `infoMessages` entry is active).
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Convenience error appended to the message list as an `.error`
+    /// `InfoMessage`; also flips the ambient `FieldStyle` into its error border.
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Validation / info messages rendered under the field (their dominant
+    /// severity drives the `FieldStyle` error / warning border, as in `TextInput`).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
     /// Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s).
     func debounce(_ interval: TimeInterval) -> Self { copy { $0.debounce = interval } }
 
@@ -421,6 +483,36 @@ public extension SearchBar {
                 SearchBar(text: $b).backButton()
                 // Same bar, underlined chrome via the ambient FieldStyle.
                 SearchBar(text: $c).fieldStyle(.underlined)
+            }
+            .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("Validation + custom icon") {
+    struct Demo: View {
+        @State var a = "b@d query"
+        @State var b = ""
+        @State var c = ""
+        @State var d = "coffee"
+        var body: some View {
+            VStack(spacing: 16) {
+                // Error message flips the ambient FieldStyle into its error border.
+                SearchBar(text: $a)
+                    .errorText("Query contains unsupported characters")
+                // Helper line (an .info InfoMessage, like TextInput's helperText)…
+                SearchBar(text: $b)
+                    .helperText("Search by name, code or city")
+                // …suppressed while an error is active (hideOnInvalid).
+                SearchBar(text: $c)
+                    .helperText("Search by name, code or city")
+                    .errorText("Something went wrong")
+                // Structured messages + a replaceable, token-colored leading icon.
+                SearchBar(text: $d)
+                    .leadingIcon("location.magnifyingglass")
+                    .leadingIconColor(.textHero)
+                    .infoMessages([InfoMessage("Searching nearby only", kind: .warning)])
             }
             .padding()
         }

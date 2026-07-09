@@ -29,7 +29,11 @@ public struct InfoMessageList: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(messages) { message in
+            // Keyed on content (kind + text), not the per-instance UUID id:
+            // fields rebuild convenience messages every render, and a fresh
+            // UUID would make ForEach remove+insert unchanged rows, replaying
+            // the transition on lines that didn't change.
+            ForEach(messages, id: \.diffIdentity) { message in
                 HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
                     if let icon = message.resolvedSystemImage {
                         Image(systemName: icon).font(.system(size: 11)).foregroundStyle(message.kind.color)
@@ -40,6 +44,11 @@ public struct InfoMessageList: View {
                         InlineText(message.text, links: message.links).color(message.kind.color)
                     }
                 }
+                // Animated appearance/disappearance (HeroUI FieldError parity).
+                // Plays only when the owning field animates the change — fields
+                // key a `MicroMotion`-gated animation on their message list, so
+                // `microAnimations(false)` / Reduce Motion snap instantly.
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }

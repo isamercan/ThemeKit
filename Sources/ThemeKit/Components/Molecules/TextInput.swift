@@ -142,7 +142,13 @@ public struct TextInput: View {
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var accessibilityID: String? = nil
+
+    /// Marks the field as required: asterisk after the label + ", required"
+    /// appended to the accessibility label (HeroUI `isRequired`).
+    private var isRequired = false
 
     // Custom slot views placed in the field row, before / after the text.
     // Additive to `icon` / `addons` — those APIs are untouched.
@@ -241,11 +247,19 @@ public struct TextInput: View {
             if let leadingContent { leadingContent }
 
             ZStack(alignment: .leading) {
-                Text(model.label)
-                    .textStyle(floating ? .labelSm600 : .bodyBase400)
-                    .foregroundStyle(labelColor)
-                    .offset(y: floating ? -11 : 0)
-                    .a11y(A11yElement.Field.label, in: accessibilityID)
+                HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
+                    Text(model.label)
+                        .foregroundStyle(labelColor)
+                    if isRequired {
+                        // Same treatment as `InputLabel.required()` — error-token asterisk.
+                        Text(verbatim: "*")
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the field's label suffix
+                    }
+                }
+                .textStyle(floating ? .labelSm600 : .bodyBase400)
+                .offset(y: floating ? -11 : 0)
+                .a11y(A11yElement.Field.label, in: accessibilityID)
 
                 field
                     .opacity(floating ? 1 : 0)
@@ -330,6 +344,9 @@ public struct TextInput: View {
                 }
             }
         }
+        // Animate message rows in/out (their `.transition` lives in
+        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion.
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
         .onChange(of: text) { _, newValue in
             var v = newValue
             if let formatter = model.formatter { v = formatter(v) }
@@ -362,7 +379,8 @@ public struct TextInput: View {
         .focused($isFocused)
         .textStyle(.bodyBase400)
         .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
-        .tint(theme.foreground(.fgHero))
+        // Caret / selection tint follows the validation state (HeroUI invalid caret).
+        .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
         .disabled(!isEnabled)
         .submitLabel(model.submitLabel)
         .autocorrectionDisabled(model.autocorrectionDisabled)
@@ -373,7 +391,7 @@ public struct TextInput: View {
             runValidation(text)   // submit is the strongest trigger — always validate
             model.onSubmit?()
         }
-        .accessibilityLabel(model.label)
+        .accessibilityLabel(isRequired ? model.label + ", " + String(themeKit: "required") : model.label)
         .accessibilityValue(model.isSecure ? "" : text)
     }
 
@@ -439,6 +457,11 @@ public extension TextInput {
     func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
         copy { $0.trailingContent = AnyView(content()) }
     }
+
+    /// Marks the field as required: renders an error-token asterisk after the
+    /// label (the `InputLabel` treatment) and appends ", required" to the
+    /// field's accessibility label (HeroUI `isRequired`).
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
 
     /// Masks input as a password field with a reveal toggle.
     func secure(_ on: Bool = true) -> Self { copy { $0.model.isSecure = on } }
@@ -603,6 +626,9 @@ private extension TextInputCapitalization {
         @State var pass = ""
         @State var bio = ""
         @State var amount = ""
+        @State var name = ""
+        @State var nickname = ""
+        @State var showError = false
         private var emailMessages: [InfoMessage] {
             Validator.validate(email, [.required(), .email()])
         }
@@ -629,6 +655,16 @@ private extension TextInputCapitalization {
                     .trailing { Text("USD").textStyle(.labelSm600) }
                     .keyboard(.decimalPad)
                     .fieldStyle(.underlined)
+                // Required indicator on a muted, on-surface field.
+                TextInput("Full name", text: $name)
+                    .required()
+                    .fieldStyle(.muted)
+                // Required + error, with an animated message toggle
+                // (rows fade + slide via the MicroMotion-gated animation).
+                TextInput("Nickname", text: $nickname)
+                    .required()
+                    .errorText(showError ? "This field is required." : nil)
+                Button(showError ? "Hide error" : "Show error") { showError.toggle() }
             }
             .padding()
         }

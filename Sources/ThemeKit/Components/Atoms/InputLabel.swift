@@ -10,6 +10,7 @@ import SwiftUI
 /// glyph. Shared by the input components.
 public struct InputLabel: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)` (R5)
 
     // Appearance/state — mutated only through the modifiers below (R2).
     private var isRequired = false
@@ -26,14 +27,22 @@ public struct InputLabel: View {
         HStack(spacing: 4) {
             Text(text)
                 .textStyle(.labelSm600)
-                .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textPrimary))
+                .foregroundStyle(textColor)
             if isRequired {
-                Text("*").textStyle(.labelSm600).foregroundStyle(theme.foreground(.systemcolorsFgError))
+                Text("*").textStyle(.labelSm600)
+                    .foregroundStyle(isEnabled ? theme.foreground(.systemcolorsFgError) : theme.text(.textDisabled))
             }
             if hasInfo {
-                Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(theme.text(.textTertiary))
+                Image(systemName: "info.circle").font(.system(size: 11))
+                    .foregroundStyle(isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled))
             }
         }
+    }
+
+    private var textColor: Color {
+        if hasError { return theme.foreground(.systemcolorsFgError) }
+        if !isEnabled { return theme.text(.textDisabled) }
+        return theme.text(.textPrimary)
     }
 }
 
@@ -61,6 +70,9 @@ public extension InputLabel {
         InputLabel("Email")
         InputLabel("Password").required().hasInfo()
         InputLabel("Invalid").hasError()
+        InputLabel("Disabled").disabled(true)
+        InputLabel("Disabled required").required().hasInfo().disabled(true)
+        InputLabel("Disabled error").hasError().disabled(true)
     }
     .padding()
 }
