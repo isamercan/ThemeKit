@@ -655,6 +655,16 @@ private extension TextInputCapitalization {
                     .trailing { Text("USD").textStyle(.labelSm600) }
                     .keyboard(.decimalPad)
                     .fieldStyle(.underlined)
+                // Required indicator on a muted, on-surface field.
+                TextInput("Full name", text: $name)
+                    .required()
+                    .fieldStyle(.muted)
+                // Required + error, with an animated message toggle
+                // (rows fade + slide via the MicroMotion-gated animation).
+                TextInput("Nickname", text: $nickname)
+                    .required()
+                    .errorText(showError ? "This field is required." : nil)
+                Button(showError ? "Hide error" : "Show error") { showError.toggle() }
             }
             .padding()
         }
