@@ -23,6 +23,22 @@ public struct TabItem {
 /// Visual style of `SegmentedTabBar` (Ant Tabs `type`; `.pill` = daisyUI `tabs-box`).
 public enum SegmentedTabBarStyle { case underline, card, pill }
 
+/// Where a scrollable bar parks the selected tab after a selection change
+/// (HeroUI Tabs.ScrollView `scrollAlign`). `.none` disables auto-scrolling.
+public enum TabScrollAlignment {
+    case start, center, end, none
+
+    /// The `ScrollViewProxy` anchor for this alignment, or `nil` for `.none`.
+    var anchor: UnitPoint? {
+        switch self {
+        case .start: return UnitPoint(x: 0, y: 0.5)
+        case .center: return .center
+        case .end: return UnitPoint(x: 1, y: 0.5)
+        case .none: return nil
+        }
+    }
+}
+
 /// Tab bar with a selection binding and an animated underline. Tabs can carry an
 /// icon, a count badge and a disabled state. (Ant Tabs parity.)
 public struct SegmentedTabBar: View {
@@ -36,6 +52,8 @@ public struct SegmentedTabBar: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var scrollable: Bool = false
     private var style: SegmentedTabBarStyle = .underline
+    private var scrollAlignment: TabScrollAlignment = .center
+    private var showsDividers: Bool = false
     private var accessibilityID: String? = nil
 
     @Namespace private var underline
@@ -61,9 +79,24 @@ public struct SegmentedTabBar: View {
 
     public var body: some View {
         if scrollable || style == .card {
-            ScrollView(.horizontal, showsIndicators: false) { bar }
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) { bar }
+                    .onAppear { scrollToSelection(proxy, animated: false) }
+                    .onChange(of: selection) { _, _ in scrollToSelection(proxy) }
+            }
         } else {
             bar
+        }
+    }
+
+    /// Brings the selected tab into view at `scrollAlignment` (HeroUI Tabs
+    /// `scrollAlign`). No motion when micro-animations are off or Reduce Motion is on.
+    private func scrollToSelection(_ proxy: ScrollViewProxy, animated: Bool = true) {
+        guard let anchor = scrollAlignment.anchor, items.indices.contains(selection) else { return }
+        if animated, let motion {
+            withAnimation(motion) { proxy.scrollTo(selection, anchor: anchor) }
+        } else {
+            proxy.scrollTo(selection, anchor: anchor)
         }
     }
 
@@ -81,6 +114,10 @@ public struct SegmentedTabBar: View {
                         tab(index: index, item: item)
                             .frame(maxWidth: scrollable ? nil : .infinity)
                     }
+                }
+                .id(index)   // ScrollViewReader target for auto-scroll
+                if showsDividers && index < items.count - 1 {
+                    divider(after: index)
                 }
             }
             if style == .card, let onAdd {
@@ -240,6 +277,19 @@ public struct SegmentedTabBar: View {
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
         guard enabled else { return theme.text(.textDisabled) }
         return isActive ? theme.text(.textPrimary) : theme.text(.textSecondary)
+    }
+
+    /// A hairline between adjacent tabs (HeroUI Tabs.Separator). Fades out when
+    /// either neighbor is the selected tab, honoring the micro-motion gates.
+    private func divider(after index: Int) -> some View {
+        let touchesSelection = index == selection || index + 1 == selection
+        return Rectangle()
+            .fill(theme.border(.borderPrimary))
+            .frame(width: 1)
+            .padding(.vertical, Theme.SpacingKey.xs.value)
+            .opacity(touchesSelection ? 0 : 1)
+            .animation(motion, value: selection)
+            .accessibilityHidden(true)
     }
 }
 

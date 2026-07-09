@@ -41,6 +41,27 @@ public enum AvatarContent {
     case icon(String)        // SF Symbol
     case initials(String)
     case image(Image)
+    /// Remote image with an explicit fallback (HeroUI `Avatar.Image` +
+    /// `Avatar.Fallback` parity): skeleton while loading, fade-in on success,
+    /// and the fallback content — rendered through the normal token path —
+    /// on failure or a `nil` URL. `indirect` carries the recursive payload;
+    /// nested `.remote` fallbacks are flattened to their terminal static
+    /// content (fallback chains don't re-fetch).
+    indirect case remote(URL?, fallback: AvatarContent)
+
+    /// Remote image with the default person-icon fallback (HeroUI's
+    /// `DefaultFallbackIcon` parity).
+    public static func remote(_ url: URL?) -> AvatarContent {
+        .remote(url, fallback: .icon("person.fill"))
+    }
+
+    /// Unwraps `.remote` chains to the terminal static content (icon /
+    /// initials / image), for failure rendering and accessibility.
+    var terminal: AvatarContent {
+        var c = self
+        while case .remote(_, let fallback) = c { c = fallback }
+        return c
+    }
 }
 
 /// Atom. Represents a person/business as an icon, initials or image, in a circle
@@ -48,6 +69,8 @@ public enum AvatarContent {
 /// (Ant Avatar parity.) Figma sizes 24/32/40/48.
 public struct Avatar: View {
     @Environment(\.theme) private var theme
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let content: AvatarContent
     // Appearance/state — mutated only through the modifiers below (R2).
@@ -55,6 +78,7 @@ public struct Avatar: View {
     private var customDimension: CGFloat?
     private var background: AvatarBackground = .blue
     private var accentColor: SemanticColor?
+    private var fillVariant: FillVariant = .solid
     private var shape: AvatarShape = .circle
     private var presence: StatusKind?
     private var presencePulse: Bool = false
@@ -72,14 +96,29 @@ public struct Avatar: View {
         }
     }
 
+    /// The semantic color driving the surface. An explicit `.accent(_:)` always
+    /// wins; `.fill(.soft)` with no accent falls back to `.neutral` (HeroUI's
+    /// `default` soft look), so the soft variant is visible on its own.
+    private var effectiveAccent: SemanticColor? {
+        accentColor ?? (fillVariant == .soft ? .neutral : nil)
+    }
+
     /// Semantic accent (when set) wins over the `AvatarBackground` palette (R4).
-    private var surfaceFill: Color { accentColor?.solid ?? background.fill(theme) }
-    private var contentColor: Color { accentColor?.onSolid ?? background.foreground(theme) }
+    /// `.soft` maps to the SemanticColor's soft surface + accent foreground;
+    /// every other `FillVariant` resolves like `.solid` (documented on `fill(_:)`).
+    private var surfaceFill: Color {
+        guard let accent = effectiveAccent else { return background.fill(theme) }
+        return fillVariant == .soft ? accent.soft : accent.solid
+    }
+    private var contentColor: Color {
+        guard let accent = effectiveAccent else { return background.foreground(theme) }
+        return fillVariant == .soft ? accent.accent : accent.onSolid
+    }
 
     public var body: some View {
         ZStack {
             clip.fill(surfaceFill)
-            if accentColor == nil && background.hasBorder {
+            if effectiveAccent == nil && background.hasBorder {
                 clip.stroke(theme.border(.borderPrimary), lineWidth: 2)
             }
             contentView
@@ -87,6 +126,18 @@ public struct Avatar: View {
         .frame(width: dim, height: dim)
         .clipShape(clip)
         .overlay(alignment: .bottomTrailing) { presenceDot }
+        // One element for VoiceOver; callers override with `.accessibilityLabel`.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(defaultAccessibilityLabel)
+    }
+
+    /// Default VoiceOver label: the (displayed) initials when the terminal
+    /// content is `.initials`, else a localized "Avatar".
+    private var defaultAccessibilityLabel: String {
+        if case .initials(let text) = content.terminal {
+            return String(text.prefix(2)).uppercased()
+        }
+        return String(themeKit: "Avatar")
     }
 
     /// Corner presence dot (online / away / busy …), ringed in the surface color so
@@ -109,6 +160,19 @@ public struct Avatar: View {
     @ViewBuilder
     private var contentView: some View {
         switch content {
+        case .remote(let url, let fallback):
+            remoteContent(url: url, fallback: fallback.terminal)
+        default:
+            staticContent(content.terminal)
+        }
+    }
+
+    /// Renders terminal (non-remote) content; `staticContent` is only ever fed
+    /// pre-flattened content, so `.remote` is unreachable here (kept exhaustive
+    /// without recursive opaque types).
+    @ViewBuilder
+    private func staticContent(_ content: AvatarContent) -> some View {
+        switch content {
         case .icon(let name):
             Image(systemName: name)
                 .font(.system(size: dim * 0.5))
@@ -119,7 +183,45 @@ public struct Avatar: View {
                 .foregroundStyle(contentColor)
         case .image(let image):
             image.resizable().scaledToFill()
+        case .remote:
+            EmptyView()   // unreachable — callers pass `.terminal` content
         }
+    }
+
+    /// Remote avatar image (HeroUI `Avatar.Image`): Skeleton atom while loading,
+    /// fade-in via the house motion token (`microAnimations` + Reduce Motion
+    /// gated) on success, token-path fallback content on failure / `nil` URL.
+    /// `RemoteImage` isn't reused here: its failure state is a fixed photo
+    /// placeholder, while the avatar must fall back to initials/icon through
+    /// the normal `contentColor` path.
+    @ViewBuilder
+    private func remoteContent(url: URL?, fallback: AvatarContent) -> some View {
+        if let url {
+            AsyncImage(
+                url: url,
+                transaction: Transaction(animation: MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion))
+            ) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().scaledToFill()
+                case .failure:
+                    staticContent(fallback)
+                case .empty:
+                    loadingSkeleton
+                @unknown default:
+                    loadingSkeleton
+                }
+            }
+            .frame(width: dim, height: dim)
+        } else {
+            staticContent(fallback)
+        }
+    }
+
+    /// Loading placeholder matching the avatar's clip outline.
+    private var loadingSkeleton: some View {
+        Skeleton(shape == .circle ? .circle : .rounded(dim * 0.28))
+            .size(width: dim, height: dim)
     }
 }
 
