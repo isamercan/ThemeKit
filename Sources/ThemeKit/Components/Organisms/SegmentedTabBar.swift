@@ -29,11 +29,15 @@ public enum TabScrollAlignment {
     case start, center, end, none
 
     /// The `ScrollViewProxy` anchor for this alignment, or `nil` for `.none`.
-    var anchor: UnitPoint? {
+    /// `UnitPoint` is physical and `scrollTo` doesn't mirror, so start/end
+    /// resolve against the layout direction — `.start` always means the
+    /// leading edge (the visual right under RTL).
+    func anchor(_ direction: LayoutDirection) -> UnitPoint? {
+        let rtl = direction == .rightToLeft
         switch self {
-        case .start: return UnitPoint(x: 0, y: 0.5)
+        case .start: return UnitPoint(x: rtl ? 1 : 0, y: 0.5)
         case .center: return .center
-        case .end: return UnitPoint(x: 1, y: 0.5)
+        case .end: return UnitPoint(x: rtl ? 0 : 1, y: 0.5)
         case .none: return nil
         }
     }
@@ -59,6 +63,7 @@ public struct SegmentedTabBar: View {
     @Namespace private var underline
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(_ items: [TabItem], selection: Binding<Int>,
@@ -92,7 +97,7 @@ public struct SegmentedTabBar: View {
     /// Brings the selected tab into view at `scrollAlignment` (HeroUI Tabs
     /// `scrollAlign`). No motion when micro-animations are off or Reduce Motion is on.
     private func scrollToSelection(_ proxy: ScrollViewProxy, animated: Bool = true) {
-        guard let anchor = scrollAlignment.anchor, items.indices.contains(selection) else { return }
+        guard let anchor = scrollAlignment.anchor(layoutDirection), items.indices.contains(selection) else { return }
         if animated, let motion {
             withAnimation(motion) { proxy.scrollTo(selection, anchor: anchor) }
         } else {

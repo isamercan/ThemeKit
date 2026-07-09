@@ -114,6 +114,9 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                 }
                 .buttonStyle(RowPressStyle())
                 .disabled(isDisabled)
+                // State-aware for VoiceOver (Dropdown's disclosure convention);
+                // essential for icon-only custom headers with no textual cue.
+                .accessibilityValue(isOpen ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
 
                 if isOpen {
                     content(item)

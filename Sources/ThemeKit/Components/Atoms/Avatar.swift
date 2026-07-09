@@ -90,10 +90,14 @@ public struct Avatar: View {
 
     private var dim: CGFloat { customDimension ?? size.dimension }
 
+    /// Rounding of the `.square` shape — shared by the clip outline and the
+    /// remote-loading skeleton so the two can never drift apart.
+    private var squareCornerRadius: CGFloat { dim * 0.28 }
+
     private var clip: AnyShape {
         switch shape {
         case .circle: return AnyShape(Circle())
-        case .square: return AnyShape(RoundedRectangle(cornerRadius: dim * 0.28, style: .continuous))
+        case .square: return AnyShape(RoundedRectangle(cornerRadius: squareCornerRadius, style: .continuous))
         }
     }
 
@@ -128,15 +132,19 @@ public struct Avatar: View {
         .clipShape(clip)
         .overlay(alignment: .bottomTrailing) { presenceDot }
         // One element for VoiceOver; callers override with `.accessibilityLabel`.
+        // The presence dot's spoken status survives the collapse as the value,
+        // so state is never conveyed by color alone.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(defaultAccessibilityLabel)
+        .accessibilityValue(presence?.accessibleName ?? "")
     }
 
-    /// Default VoiceOver label: the (displayed) initials when the terminal
-    /// content is `.initials`, else a localized "Avatar".
+    /// Default VoiceOver label: the initials when the terminal content is
+    /// `.initials` (untruncated — speech doesn't need the visual clamp), else
+    /// a localized "Avatar".
     private var defaultAccessibilityLabel: String {
         if case .initials(let text) = content.terminal {
-            return String(text.prefix(2)).uppercased()
+            return text.uppercased()
         }
         return String(themeKit: "Avatar")
     }
@@ -221,7 +229,7 @@ public struct Avatar: View {
 
     /// Loading placeholder matching the avatar's clip outline.
     private var loadingSkeleton: some View {
-        Skeleton(shape == .circle ? .circle : .rounded(dim * 0.28))
+        Skeleton(shape == .circle ? .circle : .rounded(squareCornerRadius))
             .size(width: dim, height: dim)
     }
 }
@@ -299,6 +307,9 @@ public struct AvatarGroup: View {
             if overflow > 0 {
                 Avatar(.initials("+\(overflow)")).size(size).backgroundPalette(.dark)
                     .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 2))
+                    // The visual bubble clamps to two glyphs; speech gets the
+                    // real count.
+                    .accessibilityLabel(String(themeKit: "\(overflow) more"))
             }
         }
     }

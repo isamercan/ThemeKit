@@ -123,6 +123,8 @@ public struct Accordion<Content: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            // State-aware for VoiceOver (Dropdown's disclosure convention).
+            .accessibilityValue(isExpanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
 
             if isExpanded {
                 content()
