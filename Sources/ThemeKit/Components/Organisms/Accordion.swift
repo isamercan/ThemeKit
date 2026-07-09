@@ -136,6 +136,8 @@ public struct Accordion<Content: View>: View {
                 DividerView().size(.small)
             }
         }
+        // Value-based so controlled (binding-driven) changes animate too.
+        .animation(motion, value: isExpanded)
     }
 
     private var titleColor: Color {
