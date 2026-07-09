@@ -30,6 +30,9 @@ import SwiftUI
 /// Semantic intent shared by every feedback surface (maps to the token system).
 public enum FeedbackKind: String, CaseIterable {
     case success, info, warning, error
+    /// Low-emphasis message on a muted surface (HeroUI's "default" toast),
+    /// and a brand-tinted accent fed by the theme's primary color.
+    case neutral, accent
 
     var toastType: AlertToastType {
         switch self {
@@ -37,6 +40,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return .info
         case .warning: return .warning
         case .error: return .danger
+        case .neutral: return .neutral
+        case .accent: return .accent
         }
     }
 
@@ -47,6 +52,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return .primary
         case .warning: return .warning
         case .error: return .error
+        case .neutral: return .neutral
+        case .accent: return .primary   // accent surfaces are fed by the brand primary
         }
     }
 
@@ -57,6 +64,8 @@ public enum FeedbackKind: String, CaseIterable {
         case .info: return "info.circle.fill"
         case .warning: return "exclamationmark.triangle.fill"
         case .error: return "xmark.octagon.fill"
+        case .neutral: return "bell.fill"
+        case .accent: return "sparkles"
         }
     }
 }
@@ -78,12 +87,21 @@ public final class FeedbackPresenter {
         let isLoading: Bool
         let action: ToastAction?
         let duration: Double?
+        /// Per-toast edge override; `nil` falls back to the host's default.
+        let position: ToastPosition?
+        /// Fired when the toast is presented.
+        let onShow: (() -> Void)?
+        /// Fired when the toast leaves, whatever the dismissal path (timer,
+        /// swipe, close button, programmatic dismissal, overflow past the cap).
+        let onDismiss: (() -> Void)?
         /// When set, the row renders this instead of the stock `AlertToast`
         /// (custom content slot); the presentation infrastructure is shared.
         let custom: AnyView?
 
         init(title: String, message: String?, kind: FeedbackKind, systemImage: String?,
-             isLoading: Bool, action: ToastAction?, duration: Double?, custom: AnyView? = nil) {
+             isLoading: Bool, action: ToastAction?, duration: Double?,
+             position: ToastPosition? = nil, onShow: (() -> Void)? = nil,
+             onDismiss: (() -> Void)? = nil, custom: AnyView? = nil) {
             self.title = title
             self.message = message
             self.kind = kind
@@ -91,6 +109,9 @@ public final class FeedbackPresenter {
             self.isLoading = isLoading
             self.action = action
             self.duration = duration
+            self.position = position
+            self.onShow = onShow
+            self.onDismiss = onDismiss
             self.custom = custom
         }
     }

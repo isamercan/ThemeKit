@@ -5,9 +5,11 @@
 //
 //  Molecule. A small bubble with an arrow, attached to one of four edges of an
 //  anchor via the `.tooltip(...)` modifier. Defaults to the original dark bubble;
-//  an optional semantic `style` recolors it (Ant Tooltip `color`), and `maxWidth`
-//  lets the text wrap onto multiple lines. Two entry points: a binding-driven
-//  modifier and a self-managed tap-to-toggle convenience. (Ant Tooltip parity.)
+//  an optional semantic `style` recolors it (Ant Tooltip `color`), `maxWidth`
+//  lets the text wrap onto multiple lines, and `align` slides the bubble along
+//  the anchored edge (HeroUI Popover `align`). Two entry points: a binding-driven
+//  modifier and a self-managed tap-to-toggle convenience that also dismisses on
+//  an outside tap. (Ant Tooltip / HeroUI Popover parity.)
 //
 
 import SwiftUI

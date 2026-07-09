@@ -8,6 +8,8 @@ import SwiftUI
 
 public enum CalloutType {
     case neutral, info, success, warning, error
+    /// Brand-primary emphasis (HeroUI Alert `accent` status).
+    case accent
 
     func accent(_ theme: Theme) -> Color {
         switch self {
@@ -16,6 +18,7 @@ public enum CalloutType {
         case .success: return theme.foreground(.systemcolorsFgSuccess)
         case .warning: return theme.foreground(.systemcolorsFgWarning)
         case .error: return theme.foreground(.systemcolorsFgError)
+        case .accent: return SemanticColor.primary.base
         }
     }
     func soft(_ theme: Theme) -> Color {
@@ -25,14 +28,26 @@ public enum CalloutType {
         case .success: return theme.background(.systemcolorsBgSuccessLight)
         case .warning: return theme.background(.systemcolorsBgWarningLight)
         case .error: return theme.background(.systemcolorsBgErrorLight)
+        case .accent: return SemanticColor.primary.soft
         }
     }
     var systemImage: String {
         switch self {
-        case .neutral, .info: return "info.circle"
+        case .neutral, .info, .accent: return "info.circle"
         case .success: return "checkmark.circle"
         case .warning: return "exclamationmark.triangle"
         case .error: return "exclamationmark.circle"
+        }
+    }
+
+    /// VoiceOver name for the stock status icon — the status itself, localized.
+    var accessibilityLabel: String {
+        switch self {
+        case .neutral: return String(themeKit: "Note")
+        case .info, .accent: return String(themeKit: "Information")
+        case .success: return String(themeKit: "Success")
+        case .warning: return String(themeKit: "Warning")
+        case .error: return String(themeKit: "Error")
         }
     }
 }
@@ -52,6 +67,7 @@ public struct Callout: View {
     private var type: CalloutType = .info
     private var style: CalloutStyle = .plain
     private var showIcon = true
+    private var iconOverride: String?
     private var actionTitle: String?
     private var onAction: (() -> Void)?
     private var onClose: (() -> Void)?
@@ -68,8 +84,9 @@ public struct Callout: View {
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
             if showIcon {
-                Image(systemName: type.systemImage)
+                Image(systemName: iconOverride ?? type.systemImage)
                     .font(.system(size: 14))
+                    .accessibilityLabel(type.accessibilityLabel)
             }
             Text(text)
                 .textStyle(.bodySm400)
@@ -104,7 +121,7 @@ public struct Callout: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Callout {
-    /// Semantic status: neutral / info / success / warning / error (drives accent + icon).
+    /// Semantic status: neutral / info / success / warning / error / accent (drives accent + icon).
     func variant(_ t: CalloutType) -> Self { copy { $0.type = t } }
 
     /// Surface treatment: plain (transparent) or soft (light tinted surface).
@@ -112,6 +129,10 @@ public extension Callout {
 
     /// Show or hide the leading status icon.
     func showsIcon(_ on: Bool = true) -> Self { copy { $0.showIcon = on } }
+
+    /// Override the leading status glyph (otherwise derived from the variant);
+    /// `nil` restores the variant's default.
+    func icon(_ systemName: String?) -> Self { copy { $0.iconOverride = systemName } }
 
     /// Trailing inline action button (title + handler).
     func action(_ title: String, onAction: @escaping () -> Void) -> Self {
@@ -135,6 +156,8 @@ public extension Callout {
         Callout("Lorem ipsum placeholder text.").variant(.info)
         Callout("Lorem ipsum placeholder text.").variant(.warning).calloutStyle(.soft)
         Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft)
+        Callout("Brand-primary emphasis.").variant(.accent).calloutStyle(.soft)
+        Callout("Custom glyph via icon override.").variant(.info).icon("bell.badge")
     }
     .padding()
 }

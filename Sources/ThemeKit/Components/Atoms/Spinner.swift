@@ -96,11 +96,19 @@ public extension Spinner {
     /// Loading shape: ring (default) / dots / bars / ball / infinity.
     func style(_ s: SpinnerStyle) -> Self { copy { $0.style = s } }
 
-    /// Diameter in points (default 24).
+    /// Diameter in points; unset (default) follows `.controlSize(_:)` (regular = 24).
     func size(_ points: CGFloat) -> Self { copy { $0.size = points } }
 
-    /// Stroke thickness in points (default 3) — used by the ring and infinity shapes.
+    /// Stroke thickness in points, used by the ring and infinity shapes;
+    /// unset (default) follows `.controlSize(_:)` (regular = 3).
     func lineWidth(_ width: CGFloat) -> Self { copy { $0.lineWidth = width } }
+
+    /// Custom indicator content spun in place of the built-in shape, framed to
+    /// the resolved diameter. Rides the same continuous-rotation driver as the
+    /// ring — and renders static (no rotation) under Reduce Motion.
+    func indicator<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.indicator = AnyView(content()) }
+    }
 
     /// Semantic tint; `nil` (default) uses the theme's hero foreground.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.semantic = color } }
@@ -116,34 +124,60 @@ public extension Spinner {
     }
 }
 
-// MARK: - Shapes
+// MARK: - Rotation driver
 
-/// Rotating open ring — the original `Spinner` body.
-private struct SpinnerRing: View {
-    let tint: Color
-    let size: CGFloat
-    let lineWidth: CGFloat
+/// Continuous-rotation driver shared by the ring shape and the custom
+/// indicator slot. Honors Reduce Motion (house pattern, see `SkeletonShimmer`):
+/// the content renders static — no rotation is ever started.
+private struct SpinnerRotor<Content: View>: View {
+    let duration: Double
+    let content: Content
     @State private var rotating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(duration: Double = 0.8, @ViewBuilder content: () -> Content) {
+        self.duration = duration
+        self.content = content()
+    }
 
     var body: some View {
-        Circle()
-            .trim(from: 0, to: 0.75)
-            .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-            .frame(width: size, height: size)
+        content
             .rotationEffect(.degrees(rotating ? 360 : 0))
             .onAppear {
-                withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                guard !reduceMotion else { return }
+                withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
                     rotating = true
                 }
             }
     }
 }
 
-/// Three dots bouncing in sequence.
+// MARK: - Shapes
+
+/// Rotating open ring — the original `Spinner` body. Under Reduce Motion the
+/// rotor never spins, leaving the fixed 270° arc as the static fallback.
+private struct SpinnerRing: View {
+    let tint: Color
+    let size: CGFloat
+    let lineWidth: CGFloat
+
+    var body: some View {
+        SpinnerRotor {
+            Circle()
+                .trim(from: 0, to: 0.75)
+                .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .frame(width: size, height: size)
+        }
+    }
+}
+
+/// Three dots bouncing in sequence. Under Reduce Motion: three static,
+/// vertically centered dots.
 private struct SpinnerDots: View {
     let tint: Color
     let size: CGFloat
     @State private var bouncing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: size * 0.12) {
@@ -151,25 +185,31 @@ private struct SpinnerDots: View {
                 Circle()
                     .fill(tint)
                     .frame(width: size * 0.26, height: size * 0.26)
-                    .offset(y: bouncing ? -size * 0.16 : size * 0.16)
+                    .offset(y: reduceMotion ? 0 : (bouncing ? -size * 0.16 : size * 0.16))
                     .animation(
                         .easeInOut(duration: 0.4)
                             .repeatForever(autoreverses: true)
-                            .delay(Double(index) * 0.13),
+                            .delay(Double(index) * 0.13)
+                            .ifMotionAllowed(reduceMotion),
                         value: bouncing
                     )
             }
         }
         .frame(width: size, height: size)
-        .onAppear { bouncing = true }
+        .onAppear {
+            guard !reduceMotion else { return }
+            bouncing = true
+        }
     }
 }
 
-/// Three vertical bars scaling in sequence.
+/// Three vertical bars scaling in sequence. Under Reduce Motion: three static
+/// full-height bars.
 private struct SpinnerBars: View {
     let tint: Color
     let size: CGFloat
     @State private var scaled = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: size * 0.14) {
@@ -177,34 +217,48 @@ private struct SpinnerBars: View {
                 RoundedRectangle(cornerRadius: size * 0.09, style: .continuous)
                     .fill(tint)
                     .frame(width: size * 0.18, height: size)
-                    .scaleEffect(y: scaled ? 1 : 0.4, anchor: .center)
+                    .scaleEffect(y: reduceMotion ? 1 : (scaled ? 1 : 0.4), anchor: .center)
                     .animation(
                         .easeInOut(duration: 0.45)
                             .repeatForever(autoreverses: true)
-                            .delay(Double(index) * 0.15),
+                            .delay(Double(index) * 0.15)
+                            .ifMotionAllowed(reduceMotion),
                         value: scaled
                     )
             }
         }
         .frame(width: size, height: size)
-        .onAppear { scaled = true }
+        .onAppear {
+            guard !reduceMotion else { return }
+            scaled = true
+        }
     }
 }
 
-/// A single ball bouncing up and down.
+/// A single ball bouncing up and down. Under Reduce Motion: one static,
+/// vertically centered ball.
 private struct SpinnerBall: View {
     let tint: Color
     let size: CGFloat
     @State private var up = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Circle()
             .fill(tint)
             .frame(width: size * 0.5, height: size * 0.5)
-            .offset(y: up ? -size * 0.25 : size * 0.25)
-            .animation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true), value: up)
+            .offset(y: reduceMotion ? 0 : (up ? -size * 0.25 : size * 0.25))
+            .animation(
+                .easeInOut(duration: 0.4)
+                    .repeatForever(autoreverses: true)
+                    .ifMotionAllowed(reduceMotion),
+                value: up
+            )
             .frame(width: size, height: size)
-            .onAppear { up = true }
+            .onAppear {
+                guard !reduceMotion else { return }
+                up = true
+            }
     }
 }
 
@@ -229,23 +283,27 @@ private struct InfinityShape: Shape {
     }
 }
 
-/// A comet segment sweeping along a faint figure-eight track.
+/// A comet segment sweeping along a faint figure-eight track. Under Reduce
+/// Motion: the track plus a fixed quarter segment, no sweep.
 private struct SpinnerInfinity: View {
     let tint: Color
     let size: CGFloat
     let lineWidth: CGFloat
     @State private var phase: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
             InfinityShape()
                 .stroke(tint.opacity(0.25), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
             InfinityShape()
-                .trim(from: phase * 0.75, to: phase)
+                .trim(from: reduceMotion ? 0 : phase * 0.75,
+                      to: reduceMotion ? 0.25 : phase)
                 .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
         }
         .frame(width: size * 1.7, height: size)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
                 phase = 1
             }
@@ -270,6 +328,28 @@ private struct SpinnerInfinity: View {
             Spinner().style(.dots).accent(.success).size(32)
             Spinner().style(.bars).accent(.warning).size(32)
             Spinner().style(.infinity).accent(.error).size(32)
+        }
+        // Native size cascade — small ≈ 16/2, regular 24/3, large 40/4;
+        // an explicit .size(_:)/.lineWidth(_:) always wins over the preset.
+        HStack(spacing: 24) {
+            Spinner().controlSize(.small)
+            Spinner()
+            Spinner().controlSize(.large)
+            Spinner().controlSize(.large).size(28)
+        }
+        // Custom indicator slot — spun by the shared rotation driver.
+        // Under Reduce Motion every style renders static: the ring stays a
+        // fixed 270° arc (no rotation), dots/bars/ball settle centered, the
+        // infinity keeps a fixed segment, and this slot does not rotate.
+        HStack(spacing: 24) {
+            Spinner().indicator {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .resizable().scaledToFit()
+            }
+            Spinner().controlSize(.large).indicator {
+                Image(systemName: "rays")
+                    .resizable().scaledToFit()
+            }
         }
     }
     .padding()

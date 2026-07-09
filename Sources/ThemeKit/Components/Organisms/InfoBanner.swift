@@ -100,8 +100,16 @@ public struct InfoBanner: View {
 
     public var body: some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-            if showIcon {
-                Icon(systemName: type.systemImage).size(.sm).color(type.accent(theme))
+            // Leading indicator: a custom view replaces the stock icon entirely
+            // (HeroUI Alert.Indicator children); otherwise the status glyph,
+            // optionally overridden per-instance via `icon(_:)`.
+            if let leadingView {
+                leadingView
+            } else if showIcon {
+                Icon(systemName: iconOverride ?? type.systemImage)
+                    .size(.sm)
+                    .color(type.accent(theme))
+                    .accessibilityLabel(type.accessibilityLabel)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -119,6 +127,12 @@ public struct InfoBanner: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Custom trailing accessory (e.g. a small ThemeButton) — richer than
+            // the lightweight `action(_:onAction:)` text link below.
+            if let trailingView {
+                trailingView
+            }
 
             if let actionTitle, let onAction {
                 Button(action: onAction) {
@@ -141,6 +155,9 @@ public struct InfoBanner: View {
             RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .stroke(type.border(theme), lineWidth: banner ? 0 : 1)
         )
+        // One VoiceOver element: "<status>, <title>, <message>"; child button
+        // actions surface as custom accessibility actions.
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -151,6 +168,14 @@ public struct InfoBanner: View {
         InfoBanner("Please double-check this field.").variant(.warning)
         InfoBanner("Something went wrong.").variant(.error).onDismiss {}
         InfoBanner("A neutral note.").variant(.neutral)
+        InfoBanner("Brand-primary emphasis.", title: "New feature").variant(.accent)
+        InfoBanner("Custom glyph via icon override.").variant(.info).icon("bell.badge")
+        InfoBanner("Uploading your document…", title: "Processing")
+            .variant(.accent)
+            .leading { Spinner().size(IconSize.sm.value).lineWidth(2).accent(.primary) }
+        InfoBanner("A new version is available.", title: "Update")
+            .variant(.info)
+            .trailing { ThemeButton("Install") {}.size(.small).color(.info) }
     }
     .padding()
 }
@@ -158,12 +183,30 @@ public struct InfoBanner: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension InfoBanner {
-    /// Semantic type: neutral / info / success / warning / error — drives the
-    /// surface, accent, border and leading icon.
+    /// Semantic type: neutral / info / success / warning / error / accent —
+    /// drives the surface, accent, border and leading icon.
     func variant(_ t: InfoBannerType) -> Self { copy { $0.type = t } }
 
     /// Show or hide the type's leading icon.
     func showsIcon(_ on: Bool = true) -> Self { copy { $0.showIcon = on } }
+
+    /// Override the leading status glyph (otherwise derived from the variant);
+    /// `nil` restores the variant's default.
+    func icon(_ systemName: String?) -> Self { copy { $0.iconOverride = systemName } }
+
+    /// Replace the stock status icon with a custom leading view — e.g. a
+    /// `Spinner` for an in-progress alert (HeroUI `Alert.Indicator` children).
+    /// Wins over `icon(_:)` and `showsIcon(_:)`.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingView = AnyView(content()) }
+    }
+
+    /// Custom trailing accessory rendered after the text block — e.g. a small
+    /// `ThemeButton`. The lightweight `action(_:onAction:)` text link stays the
+    /// default for simple cases.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.trailingView = AnyView(content()) }
+    }
 
     /// Edge-to-edge banner treatment: stretch to full width and drop the
     /// rounded corners / border (Ant Alert `banner`).
