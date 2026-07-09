@@ -14,8 +14,12 @@
 //  Scroll detection: on iOS 18 / macOS 15+ the component observes the wrapped
 //  scroll view with `onScrollGeometryChange`, so `.auto` shows the start scrim
 //  once the content is scrolled away from its start (offset > 0) and the end
-//  scrim while more content remains (offset + viewport < content size). On the
-//  package's minimum OSes (iOS 17 / macOS 14) that observation API does not
+//  scrim while more content remains (offset + viewport < content size). For a
+//  horizontal axis the physical offset is normalized to logical-start
+//  coordinates under right-to-left layout, so "start" always means the leading
+//  edge — the visual right in RTL.
+//
+//  On the package's minimum OSes (iOS 17 / macOS 14) that observation API does not
 //  exist, so `.auto` degrades to always-on scrims at both edges (`.both`
 //  behavior); the explicit `.start` / `.end` / `.both` / `.none` modes are
 //  position-independent and behave identically on every supported OS.
@@ -65,6 +69,7 @@ public enum ScrollShadowVisibility: String, CaseIterable, Sendable {
 /// system Reduce Motion setting (or `.microAnimations(false)`) is active.
 public struct ScrollShadow<Content: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -102,9 +107,10 @@ public struct ScrollShadow<Content: View>: View {
 
     @available(iOS 18.0, macOS 15.0, *)
     private var observed: some View {
-        let axis = axis   // capture the value, not the view struct
+        let axis = axis                         // capture the values, not the view struct
+        let layoutDirection = layoutDirection
         return content.onScrollGeometryChange(for: ScrollShadowEdgeState.self) { geometry in
-            ScrollShadowEdgeState(geometry: geometry, axis: axis)
+            ScrollShadowEdgeState(geometry: geometry, axis: axis, layoutDirection: layoutDirection)
         } action: { _, state in
             isScrolledFromStart = state.isScrolledFromStart
             hasTrailingOverflow = state.hasTrailingOverflow
@@ -207,7 +213,7 @@ private struct ScrollShadowEdgeState: Equatable {
     var isScrolledFromStart: Bool
     var hasTrailingOverflow: Bool
 
-    init(geometry: ScrollGeometry, axis: Axis) {
+    init(geometry: ScrollGeometry, axis: Axis, layoutDirection: LayoutDirection) {
         let epsilon: CGFloat = 1   // sub-point jitter shouldn't flicker the scrims
         let offset: CGFloat
         let viewport: CGFloat
@@ -218,9 +224,18 @@ private struct ScrollShadowEdgeState: Equatable {
             viewport = geometry.containerSize.height
             contentLength = geometry.contentSize.height
         case .horizontal:
-            offset = geometry.contentOffset.x + geometry.contentInsets.leading
             viewport = geometry.containerSize.width
             contentLength = geometry.contentSize.width
+            if layoutDirection == .rightToLeft {
+                // `contentOffset` is physical: a right-to-left horizontal
+                // scroller *rests* at its maximum x (content starts at the
+                // visual right), so normalize to logical-start coordinates —
+                // distance scrolled away from the leading (right) edge.
+                offset = contentLength + geometry.contentInsets.leading
+                    - viewport - geometry.contentOffset.x
+            } else {
+                offset = geometry.contentOffset.x + geometry.contentInsets.leading
+            }
         }
         isScrolledFromStart = offset > epsilon
         hasTrailingOverflow = offset + viewport < contentLength - epsilon
