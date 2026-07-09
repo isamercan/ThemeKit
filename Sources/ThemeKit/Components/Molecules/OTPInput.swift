@@ -6,6 +6,24 @@
 
 import SwiftUI
 
+/// The characters an ``OTPInput`` accepts. Mirrors HeroUI's
+/// `REGEXP_ONLY_DIGITS` / `REGEXP_ONLY_CHARS` / `REGEXP_ONLY_DIGITS_AND_CHARS`
+/// patterns; letters keep the case the user typed (HeroUI does not capitalize).
+public enum OTPCharacterSet: CaseIterable, Sendable {
+    case digits
+    case letters
+    case alphanumeric
+
+    /// Whether `character` is permitted by this set.
+    func allows(_ character: Character) -> Bool {
+        switch self {
+        case .digits: character.isNumber
+        case .letters: character.isLetter
+        case .alphanumeric: character.isNumber || character.isLetter
+        }
+    }
+}
+
 /// Improved, token-bound rewrite of the reference OTPInputView. A row of digit
 /// boxes backed by a single hidden field, with focus caret + error state.
 public struct OTPInput: View {
@@ -15,6 +33,9 @@ public struct OTPInput: View {
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var digitCount: Int = 6
+    private var characterSet: OTPCharacterSet = .digits
+    private var groupSizes: [Int]?
+    private var placeholderText: String?
     private var isSecure = false
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
@@ -45,24 +66,48 @@ public struct OTPInput: View {
     private var hasError: Bool { messages.dominantKind == .error }
     private var hasWarning: Bool { messages.dominantKind == .warning }
 
-    /// Keeps only digits and caps the length (extracted for testing).
-    static func sanitize(_ raw: String, digitCount: Int) -> String {
-        String(raw.filter(\.isNumber).prefix(digitCount))
+    /// Keeps only the characters allowed by `characters` (digits by default)
+    /// and caps the length (extracted for testing).
+    static func sanitize(_ raw: String, digitCount: Int, characters: OTPCharacterSet = .digits) -> String {
+        String(raw.filter(characters.allows).prefix(digitCount))
+    }
+
+    /// Slot indices split into visual groups. Falls back to a single group when
+    /// no `groups(_:)` were set — or when the sizes are invalid (non-positive
+    /// entries, or a sum that doesn't match `digitCount`).
+    private var resolvedGroups: [Range<Int>] {
+        guard let groupSizes, !groupSizes.isEmpty,
+              groupSizes.allSatisfy({ $0 > 0 }),
+              groupSizes.reduce(0, +) == digitCount
+        else { return [0..<digitCount] }
+        var ranges: [Range<Int>] = []
+        var start = 0
+        for size in groupSizes {
+            ranges.append(start..<(start + size))
+            start += size
+        }
+        return ranges
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             ZStack {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    ForEach(0..<digitCount, id: \.self) { index in
-                        OTPDigitBox(
-                            digit: digit(at: index),
-                            isActive: isFocused && code.count == index,
-                            hasError: hasError,
-                            hasWarning: hasWarning,
-                            isEnabled: isEnabled,
-                            isSecure: isSecure
-                        )
+                    ForEach(Array(resolvedGroups.enumerated()), id: \.offset) { groupIndex, range in
+                        // HeroUI Group/Separator anatomy: a decorative dash
+                        // between groups, spaced by the row's `sm` gap.
+                        if groupIndex > 0 { OTPGroupSeparator() }
+                        ForEach(range, id: \.self) { index in
+                            OTPDigitBox(
+                                digit: digit(at: index),
+                                placeholder: placeholderChar(at: index),
+                                isActive: isFocused && code.count == index,
+                                hasError: hasError,
+                                hasWarning: hasWarning,
+                                isEnabled: isEnabled,
+                                isSecure: isSecure
+                            )
+                        }
                     }
                 }
                 .contentShape(Rectangle())
@@ -77,12 +122,12 @@ public struct OTPInput: View {
 
                 TextField("", text: $code)
                     .focused($isFocused)
-                    .otpKeyboard()
+                    .otpKeyboard(for: characterSet)
                     .opacity(0.001)
                     .frame(width: 1, height: 1)
                     .disabled(!isEnabled)
                     .onChange(of: code) { _, newValue in
-                        let sanitized = Self.sanitize(newValue, digitCount: digitCount)
+                        let sanitized = Self.sanitize(newValue, digitCount: digitCount, characters: characterSet)
                         if sanitized != code { code = sanitized }
                         if sanitized.count == digitCount {
                             // Fire once per completion; re-arms after an edit.
@@ -147,17 +192,46 @@ public struct OTPInput: View {
         guard index < code.count else { return "" }
         return String(Array(code)[index])
     }
+
+    /// The placeholder glyph for the cell at `index` — one character of the
+    /// `placeholder(_:)` string per slot position ("" past its end).
+    private func placeholderChar(at index: Int) -> String {
+        guard let placeholderText else { return "" }
+        let characters = Array(placeholderText)
+        guard index < characters.count else { return "" }
+        return String(characters[index])
+    }
 }
 
 private extension View {
-    /// Applies numeric / one-time-code keyboard traits (iOS only).
+    /// Applies keyboard + one-time-code traits for the character set (iOS only):
+    /// digits get the number pad; letters/alphanumeric get an ASCII keyboard
+    /// with capitalization and autocorrection off (matching HeroUI, which keeps
+    /// letters as typed).
     @ViewBuilder
-    func otpKeyboard() -> some View {
+    func otpKeyboard(for characters: OTPCharacterSet) -> some View {
         #if os(iOS)
-        self.keyboardType(.numberPad).textContentType(.oneTimeCode)
+        self.keyboardType(characters == .digits ? .numberPad : .asciiCapable)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .textContentType(.oneTimeCode)
         #else
         self
         #endif
+    }
+}
+
+/// The dash between slot groups — HeroUI's `InputOTP.Separator` (a short
+/// rounded bar in a muted tone). Purely decorative; the surrounding `HStack`'s
+/// `sm` spacing provides the gap on both sides.
+private struct OTPGroupSeparator: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Capsule()
+            .fill(theme.text(.textTertiary))
+            .frame(width: 8, height: 2)
+            .accessibilityHidden(true)
     }
 }
 
@@ -172,6 +246,7 @@ private struct OTPDigitBox: View {
     @Environment(\.fieldStyle) private var fieldStyle
 
     let digit: String
+    let placeholder: String
     let isActive: Bool
     let hasError: Bool
     let hasWarning: Bool
@@ -180,6 +255,11 @@ private struct OTPDigitBox: View {
 
     @State private var caretOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.microAnimations) private var micro
+
+    /// Digit-entry motion plays only when the library switch is on *and*
+    /// Reduce Motion is off — same gate the caret blink uses.
+    private var motionOn: Bool { micro && !reduceMotion }
 
     var body: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
@@ -207,13 +287,24 @@ private struct OTPDigitBox: View {
                             guard !reduceMotion else { return }
                             withAnimation(Motion.slower.animation.repeatForever()) { caretOn = true }
                         }
+                } else if !placeholder.isEmpty {
+                    // HeroUI SlotPlaceholder: shown only while the cell is
+                    // empty and not the caret cell, in the muted text tone.
+                    Text(placeholder)
+                        .textStyle(.headingBase)
+                        .foregroundStyle(theme.text(.textTertiary))
                 }
             } else {
                 Text(isSecure ? "●" : digit)
                     .textStyle(.headingBase)
                     .foregroundStyle(textColor)
+                    // Entry pop (HeroUI SlotValue): scale+fade in; edits to an
+                    // already-filled cell roll via the numeric transition.
+                    .transition(motionOn ? .scale(scale: 0.8).combined(with: .opacity) : .identity)
+                    .contentTransition(motionOn ? .numericText() : .identity)
             }
         }
+        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: digit)
         // Fixed height: the box is a square cell in a fixed-width grid;
         // Dynamic Type is capped at the container via dynamicTypeClamp().
         .frame(height: 56)
@@ -230,6 +321,8 @@ private struct OTPDigitBox: View {
 #Preview {
     struct Demo: View {
         @State var code = "123"
+        @State var grouped = "12"
+        @State var alpha = "A1"
         @State var lastComplete = "—"
         var body: some View {
             VStack(spacing: 24) {
@@ -239,6 +332,12 @@ private struct OTPDigitBox: View {
                 OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code")
                 // Swapped chrome: every digit cell picks up the underlined style.
                 OTPInput(code: .constant("98")).digitCount(4).fieldStyle(.underlined)
+                // HeroUI Group/Separator anatomy: 3 + 3 with a dash between.
+                OTPInput(code: $grouped).groups([3, 3])
+                // Letters + digits: ASCII keyboard, `.oneTimeCode` kept.
+                OTPInput(code: $alpha).characters(.alphanumeric)
+                // Per-slot placeholder in the tertiary text tone.
+                OTPInput(code: .constant("7")).digitCount(4).placeholder("0000")
             }
             .padding()
         }
@@ -251,6 +350,21 @@ private struct OTPDigitBox: View {
 public extension OTPInput {
     /// Number of digit boxes (default 6).
     func digitCount(_ n: Int) -> Self { copy { $0.digitCount = n } }
+
+    /// Which characters the field accepts (default `.digits`). Also switches
+    /// the iOS keyboard: number pad for digits, ASCII keyboard otherwise —
+    /// `.oneTimeCode` autofill stays on either way.
+    func characters(_ set: OTPCharacterSet) -> Self { copy { $0.characterSet = set } }
+
+    /// Splits the boxes into visual groups separated by a small dash, e.g.
+    /// `.groups([3, 3])` for `123 - 456`. Sizes must be positive and sum to
+    /// `digitCount`; invalid sizes are ignored (single group). The separator is
+    /// decorative only — entry still flows through one field.
+    func groups(_ sizes: [Int]) -> Self { copy { $0.groupSizes = sizes } }
+
+    /// Per-slot placeholder: each empty, non-caret box shows the character at
+    /// its position (e.g. `"------"` or `"000000"`) in the tertiary text tone.
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderText = text } }
 
     /// Mask the entered digits (password-style dots) instead of showing them.
     func secure(_ on: Bool = true) -> Self { copy { $0.isSecure = on } }

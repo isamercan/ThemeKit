@@ -40,6 +40,11 @@ public struct InfoMessageList: View {
                         InlineText(message.text, links: message.links).color(message.kind.color)
                     }
                 }
+                // Animated appearance/disappearance (HeroUI FieldError parity).
+                // Plays only when the owning field animates the change — fields
+                // key a `MicroMotion`-gated animation on their message list, so
+                // `microAnimations(false)` / Reduce Motion snap instantly.
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
