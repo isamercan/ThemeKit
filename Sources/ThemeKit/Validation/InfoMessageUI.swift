@@ -11,19 +11,22 @@
 import SwiftUI
 
 extension InfoMessage.Kind {
-    /// Theme-bound severity color (UI layer — depends on the active `Theme`).
-    var color: Color {
+    /// Theme-bound severity color (UI layer — resolved against the passed `Theme`,
+    /// matching `StatusDot.Kind.color(_:)`). Value-type accessors can't read the
+    /// SwiftUI environment, so the owning view hands its active theme in.
+    func color(_ theme: Theme) -> Color {
         switch self {
-        case .info: return Theme.shared.text(.textTertiary)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
+        case .info: return theme.text(.textTertiary)
+        case .success: return theme.foreground(.systemcolorsFgSuccess)
+        case .warning: return theme.foreground(.systemcolorsFgWarning)
+        case .error: return theme.foreground(.systemcolorsFgError)
         }
     }
 }
 
 /// Renders a list of `InfoMessage`s (icon + colored text) under a field.
 public struct InfoMessageList: View {
+    @Environment(\.theme) private var theme
     private let messages: [InfoMessage]
     public init(_ messages: [InfoMessage]) { self.messages = messages }
 
@@ -36,12 +39,12 @@ public struct InfoMessageList: View {
             ForEach(messages, id: \.diffIdentity) { message in
                 HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
                     if let icon = message.resolvedSystemImage {
-                        Image(systemName: icon).font(.system(size: 11)).foregroundStyle(message.kind.color)
+                        Image(systemName: icon).font(.system(size: 11)).foregroundStyle(message.kind.color(theme))
                     }
                     if message.links.isEmpty {
-                        Text(message.text).textStyle(.bodySm400).foregroundStyle(message.kind.color)
+                        Text(message.text).textStyle(.bodySm400).foregroundStyle(message.kind.color(theme))
                     } else {
-                        InlineText(message.text, links: message.links).color(message.kind.color)
+                        InlineText(message.text, links: message.links).color(message.kind.color(theme))
                     }
                 }
                 // Animated appearance/disappearance (HeroUI FieldError parity).

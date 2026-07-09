@@ -30,6 +30,8 @@ public struct LottieEmptyState: View {
         case url(URL)
     }
 
+    @Environment(\.theme) private var theme
+
     private let media: Media
     private let title: String?
 
@@ -80,13 +82,13 @@ public struct LottieEmptyState: View {
                 if let title {
                     Text(title)
                         .textStyle(.headingBase)
-                        .foregroundStyle(Theme.shared.text(.textPrimary))
+                        .foregroundStyle(theme.text(.textPrimary))
                         .multilineTextAlignment(.center)
                 }
                 if let message {
                     Text(message)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(Theme.shared.text(.textSecondary))
+                        .foregroundStyle(theme.text(.textSecondary))
                         .multilineTextAlignment(.center)
                 }
             }
