@@ -5,6 +5,7 @@
 //
 
 import SwiftUI
+import UIKit
 import ThemeKit
 
 @main
@@ -16,7 +17,7 @@ struct DemoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            rootView
                 .microAnimations(microAnimations)
                 .environmentObject(themeStore)
                 .feedbackHost()       // installs the shared FeedbackPresenter + overlays
@@ -25,6 +26,16 @@ struct DemoApp: App {
                 // env-only (no root rebuild) so the in-session Configurator sheet
                 // isn't torn down mid-edit; screens observe Theme via @ThemeContext.
                 .themeKit(reactToRuntimeChanges: false)
+        }
+    }
+
+    /// The Showcase collage is a wide-canvas (iPad) experience; on iPhone the Demo
+    /// keeps its original tabbed catalog (``ContentView``).
+    @ViewBuilder private var rootView: some View {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            ShowcaseView()
+        } else {
+            ContentView()
         }
     }
 }
