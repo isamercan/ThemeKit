@@ -4,8 +4,8 @@
 //
 //  The `ButtonStyle`-shaped styling hook for `TextInput`'s field. The field's
 //  *chrome* (fill, border, shape) lives in a `FieldStyle` you set with
-//  `.fieldStyle(_:)`, so the field can be reskinned — bordered, underlined —
-//  without editing `TextInput`. The interactive content (floating label, editor,
+//  `.fieldStyle(_:)`, so the field can be reskinned — bordered, underlined,
+//  muted — without editing `TextInput`. The interactive content (floating label, editor,
 //  icons/addons/clear/reveal and custom slots) stays in `TextInput` and arrives
 //  composed; the style only wraps it. Helper/error text and the character counter
 //  render *below* the field and are not part of the style. The default reproduces
@@ -99,9 +99,50 @@ private struct UnderlinedFieldChrome: View {
     }
 }
 
+/// A muted, on-surface field (HeroUI Input `variant="secondary"`): secondary-light
+/// fill, no shadow, and a border that stays transparent until it has something to
+/// say — hero on focus, error/warning tokens on validation. For fields sitting on
+/// a white card where the stock white fill + resting border would disappear.
+public struct MutedFieldStyle: FieldStyle {
+    public init() {}
+    public func makeBody(configuration: FieldStyleConfiguration) -> some View {
+        MutedFieldChrome(configuration: configuration)
+    }
+}
+
+private struct MutedFieldChrome: View {
+    let configuration: FieldStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    /// Transparent at rest; recolors only for focus / validation.
+    private var borderColor: Color {
+        if configuration.hasError { return theme.border(.systemcolorsBorderError) }
+        if configuration.hasWarning { return theme.border(.systemcolorsBorderWarning) }
+        if configuration.isFocused { return theme.border(.borderHero) }
+        return .clear
+    }
+
+    var body: some View {
+        configuration.content
+            .background(theme.background(.bgSecondaryLight),
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+                    .strokeBorder(borderColor,
+                                  lineWidth: configuration.isFocused || configuration.hasError || configuration.hasWarning ? 1.5 : 1)
+            )
+    }
+}
+
 public extension FieldStyle where Self == DefaultFieldStyle {
     /// The stock bordered field (white fill + state-driven border).
     static var `default`: DefaultFieldStyle { DefaultFieldStyle() }
+}
+
+public extension FieldStyle where Self == MutedFieldStyle {
+    /// A muted on-surface field: secondary-light fill, border only on focus / validation.
+    static var muted: MutedFieldStyle { MutedFieldStyle() }
 }
 
 public extension FieldStyle where Self == UnderlinedFieldStyle {
