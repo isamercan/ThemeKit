@@ -293,22 +293,59 @@ public struct RangeSlider: View {
         onChangeEnd?(lowerValue, upperValue)
     }
 
-    private func drag(usable: CGFloat, span: Double, isLower: Bool) -> some Gesture {
-        DragGesture()
+    /// Attached to the whole track (minimumDistance 0), so a tap anywhere moves
+    /// the nearest thumb to that value and a drag keeps moving the same thumb;
+    /// the change-end callback fires on release either way.
+    private func drag(usable: CGFloat, span: Double) -> some Gesture {
+        DragGesture(minimumDistance: 0)
             .onChanged { gesture in
                 guard isEnabled else { return }
                 let ratio = Double(min(max(gesture.location.x - thumbSize / 2, 0), usable) / usable)
-                let stepped = Self.snap(bounds.lowerBound + ratio * span, step: step)
-                if isLower {
-                    lowerValue = min(max(bounds.lowerBound, stepped), upperValue)
-                } else {
-                    upperValue = max(min(bounds.upperBound, stepped), lowerValue)
-                }
+                move(toward: bounds.lowerBound + ratio * span)
             }
             .onEnded { _ in
+                activeThumb = nil
                 guard isEnabled else { return }
                 onChangeEnd?(lowerValue, upperValue)
             }
+    }
+
+    /// Vertical variant of the track gesture (up = increase).
+    private func verticalDrag(usable: CGFloat, span: Double) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { gesture in
+                guard isEnabled else { return }
+                let fromBottom = usable + thumbSize / 2 - gesture.location.y
+                let ratio = Double(min(max(fromBottom, 0), usable) / usable)
+                move(toward: bounds.lowerBound + ratio * span)
+            }
+            .onEnded { _ in
+                activeThumb = nil
+                guard isEnabled else { return }
+                onChangeEnd?(lowerValue, upperValue)
+            }
+    }
+
+    /// Moves the gesture's thumb — chosen once per gesture as the one nearest to
+    /// the touched value — keeping the pair ordered (lower never crosses upper).
+    private func move(toward raw: Double) {
+        let stepped = Self.snap(raw, step: step)
+        let target = activeThumb ?? nearestThumb(to: stepped)
+        activeThumb = target
+        if target == .lower {
+            lowerValue = min(max(bounds.lowerBound, stepped), upperValue)
+        } else {
+            upperValue = max(min(bounds.upperBound, stepped), lowerValue)
+        }
+    }
+
+    private func nearestThumb(to value: Double) -> Field {
+        let lowerDistance = abs(value - lowerValue)
+        let upperDistance = abs(value - upperValue)
+        // Tie (including coincident thumbs): move lower when the touch is below
+        // it, upper otherwise, so a stacked pair can always be pulled apart.
+        if lowerDistance == upperDistance { return value < lowerValue ? .lower : .upper }
+        return lowerDistance < upperDistance ? .lower : .upper
     }
 
     // MARK: - Pure helpers (extracted for testing)
