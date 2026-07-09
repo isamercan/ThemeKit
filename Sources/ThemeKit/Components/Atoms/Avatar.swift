@@ -64,9 +64,10 @@ public enum AvatarContent {
     }
 }
 
-/// Atom. Represents a person/business as an icon, initials or image, in a circle
-/// or square, plus an `AvatarGroup` that stacks avatars with a +N overflow.
-/// (Ant Avatar parity.) Figma sizes 24/32/40/48.
+/// Atom. Represents a person/business as an icon, initials, image, or a remote
+/// URL with a token-path fallback, in a circle or square, plus an `AvatarGroup`
+/// that stacks avatars with a +N overflow. (Ant Avatar + HeroUI Native
+/// Image/Fallback parity.) Figma sizes 24/32/40/48.
 public struct Avatar: View {
     @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
@@ -317,6 +318,11 @@ public extension AvatarGroup {
     /// bubble keeps its dark palette for contrast. Matches Avatar's `.accent(_:)`.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
 
+    /// Fill treatment for every member avatar's semantic surface (`.solid`
+    /// default · `.soft`); the "+N" overflow bubble keeps its dark palette.
+    /// Matches Avatar's `.fill(_:)`.
+    func fill(_ v: FillVariant) -> Self { copy { $0.fillVariant = v } }
+
     /// Surface fill behind the avatars' icon/initials (matches Avatar's `.fillColor`, R5).
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func fillColor(_ b: AvatarBackground) -> Self { copy { $0.background = b } }
@@ -335,7 +341,28 @@ public extension AvatarGroup {
             Avatar(.initials("AB")).accent(.neutral).shape(.square)
             Avatar(.icon("building.2.fill")).shape(.square)
         }
+        // Remote: skeleton while loading → fade-in; the invalid host falls back
+        // to initials/icon through the token path.
+        HStack(spacing: 12) {
+            Avatar(.remote(URL(string: "https://i.pravatar.cc/96")))
+            Avatar(.remote(URL(string: "https://invalid.invalid/broken.png"), fallback: .initials("FB")))
+                .accent(.warning)
+            Avatar(.remote(nil, fallback: .icon("person.crop.circle.badge.exclamationmark")))
+                .shape(.square)
+        }
+        // Soft fill: accent's .soft surface + high-contrast accent foreground.
+        HStack(spacing: 12) {
+            Avatar(.initials("SO")).accent(.success).fill(.soft)
+            Avatar(.icon("person.fill")).accent(.info).fill(.soft)
+            Avatar(.initials("NE")).fill(.soft)   // no accent → neutral soft
+            Avatar(.initials("SO")).accent(.success)   // solid, for contrast
+        }
         AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).maxVisible(4)
+        AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF")]).accent(.info).fill(.soft)
+        // a11y: each avatar is one VoiceOver element — initials are spoken when
+        // present ("AB"), else the localized "Avatar"; callers override with the
+        // native `.accessibilityLabel(_:)`.
+        Avatar(.initials("VO")).accessibilityLabel("Profile photo of Vera Osman")
     }
     .padding()
 }
@@ -345,6 +372,9 @@ public extension AvatarGroup {
         PreviewCase("Icon")     { Avatar(.icon("person.fill")) }
         PreviewCase("Initials") { Avatar(.initials("AB")).accent(.neutral).shape(.square) }
         PreviewCase("Building") { Avatar(.icon("building.2.fill")).shape(.square) }
+        PreviewCase("Remote")   { Avatar(.remote(URL(string: "https://i.pravatar.cc/96"))) }
+        PreviewCase("Remote fallback") { Avatar(.remote(URL(string: "https://invalid.invalid/broken.png"), fallback: .initials("FB"))).accent(.warning) }
+        PreviewCase("Soft fill") { Avatar(.initials("SO")).accent(.success).fill(.soft) }
         PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")]).maxVisible(3) }
     }
 }

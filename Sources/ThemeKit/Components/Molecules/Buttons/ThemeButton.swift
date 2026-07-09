@@ -409,6 +409,53 @@ extension ButtonSize {
             }
             ThemeButton("Block button") {}.color(.primary).fullWidth()
             ThemeButton("Loading") {}.color(.primary).fullWidth().loading()
+
+            // Custom label slot — icon + text + badge composition; inherits the
+            // size's textStyle and the variant's foreground like the built-in label.
+            ThemeButton {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Image(systemName: "cart")
+                    Text("Checkout")
+                    Badge("3").badgeStyle(.error).size(.small)
+                }
+            }
+            .variant(.soft)
+            .color(.primary)
+            .fullWidth()
+
+            // SurfacePressStyle — scale + highlight wash on a card-like row.
+            Button {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Image(systemName: "airplane.departure")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Pressable card").textStyle(.labelMd700)
+                        Text("Scale + highlight, token wash").textStyle(.bodySm400)
+                            .foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.forward")
+                }
+                .padding(Theme.SpacingKey.md.value)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                )
+            }
+            .buttonStyle(SurfacePressStyle())
+
+            Button {
+            } label: {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Image(systemName: "checkmark.circle")
+                    Text("Tinted press wash").textStyle(.labelMd700)
+                    Spacer()
+                }
+                .padding(Theme.SpacingKey.md.value)
+            }
+            .buttonStyle(SurfacePressStyle(radius: .field, tint: .success))
         }
         .padding()
     }

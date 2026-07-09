@@ -299,15 +299,36 @@ public struct SegmentedTabBar: View {
 #Preview {
     struct Demo: View {
         @State var sel = 0
+        @State var scrollSel = 6
+        @State var paneSel = 0
         var body: some View {
-            VStack(spacing: 24) {
-                SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
-                                 TabItem("Reviews", badge: "12"),
-                                 TabItem("Archived", isEnabled: false)], selection: $sel)
-                SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
-                SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
+            ScrollView {
+                VStack(spacing: 24) {
+                    SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
+                                     TabItem("Reviews", badge: "12"),
+                                     TabItem("Archived", isEnabled: false)], selection: $sel)
+                    SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
+                    SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
+
+                    // Inter-tab dividers — hairlines fade out next to the selection.
+                    SegmentedTabBar(["Day", "Week", "Month", "Year"], selection: $sel).dividers()
+
+                    // Scrollable auto-scroll: the selected tab is kept centered.
+                    SegmentedTabBar((1...12).map { "Month \($0)" }, selection: $scrollSel)
+                        .scrollable()
+                        .scrollAlign(.center)
+
+                    // Content panes — cross-fade below the bar on selection change.
+                    SegmentedTabBar(["Details", "Reviews", "FAQ"], selection: $paneSel)
+                        .tabStyle(.pill)
+                        .content { index in
+                            Text("Pane \(index + 1)")
+                                .textStyle(.bodyBase400)
+                                .frame(maxWidth: .infinity, minHeight: 80)
+                        }
+                }
+                .padding()
             }
-            .padding()
         }
     }
     return Demo()
@@ -322,6 +343,25 @@ public extension SegmentedTabBar {
     /// Visual treatment: underline / card / pill (boxed track, filled active tab).
     func tabStyle(_ s: SegmentedTabBarStyle) -> Self { copy { $0.style = s } }
 
+    /// Where a scrollable bar parks the selected tab on selection change
+    /// (HeroUI Tabs `scrollAlign`; default `.center`). `.none` turns auto-scroll
+    /// off. Only applies when the bar scrolls (`.scrollable()` / `.tabStyle(.card)`).
+    func scrollAlign(_ a: TabScrollAlignment) -> Self { copy { $0.scrollAlignment = a } }
+
+    /// Draw a hairline in the border token between adjacent tabs (HeroUI
+    /// Tabs.Separator). Dividers touching the selected tab fade out.
+    func dividers(_ on: Bool = true) -> Self { copy { $0.showsDividers = on } }
+
+    /// Pair the bar with switching content panes: `pane(selection)` renders below
+    /// the bar and cross-fades on selection change (HeroUI Tabs.Content), honoring
+    /// the micro-motion gates. Terminal — place it last in the modifier chain.
+    ///
+    ///     SegmentedTabBar(["A", "B"], selection: $sel).tabStyle(.pill)
+    ///         .content { index in Text("Pane \(index)") }
+    func content<Content: View>(@ViewBuilder _ pane: @escaping (Int) -> Content) -> some View {
+        SegmentedTabView(bar: self, selection: _selection, pane: pane)
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -330,5 +370,35 @@ public extension SegmentedTabBar {
         var c = self
         mutate(&c)
         return c
+    }
+}
+
+/// The bar + switching panes (HeroUI Tabs root + Tabs.Content). Built by
+/// ``SegmentedTabBar/content(_:)`` — the pane for the selected index renders
+/// below the bar and cross-fades on selection change under the motion gates.
+private struct SegmentedTabView<Content: View>: View {
+    let bar: SegmentedTabBar
+    @Binding var selection: Int
+    let pane: (Int) -> Content
+
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
+    init(bar: SegmentedTabBar, selection: Binding<Int>, pane: @escaping (Int) -> Content) {
+        self.bar = bar
+        self._selection = selection
+        self.pane = pane
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+            bar
+            pane(selection)
+                .id(selection)                 // new identity per tab → transition runs
+                .transition(.opacity)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .animation(motion, value: selection)   // nil (no motion) when gated off
     }
 }
