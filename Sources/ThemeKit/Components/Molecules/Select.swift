@@ -288,6 +288,7 @@ public struct Select<Option: Hashable>: View {
                             .buttonStyle(RowPressStyle())
                             .disabled(!enabled)
                             .opacity(enabled ? 1 : 0.4)
+                            .accessibilityAddTraits(selection == option ? .isSelected : [])
                         }
                     }
                 }

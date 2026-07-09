@@ -148,7 +148,7 @@ public struct MultiSelect<Option: Hashable>: View {
             if isLoading {
                 Spinner().size(IconSize.sm.value).lineWidth(2)
             } else {
-                Icon(systemName: isOpen ? "chevron.up" : "chevron.down").size(.sm).color(theme.text(.textTertiary))
+                Icon(systemName: isOpen ? "chevron.up" : "chevron.down").size(.sm).colorOverride(theme.text(.textTertiary))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)

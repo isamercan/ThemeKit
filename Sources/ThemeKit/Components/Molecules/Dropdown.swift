@@ -39,6 +39,12 @@ public struct DropdownItem: Identifiable {
     /// Non-`nil` marks this item as a submenu trigger row (one tier deep).
     let submenuItems: [DropdownItem]?
 
+    /// Content-stable identity for state that must survive item-array
+    /// rebuilds (e.g. submenu expansion): `id` is minted per instance, so a
+    /// parent re-render (selection change with `shouldCloseOnSelect(false)`)
+    /// would otherwise orphan any state keyed on it.
+    var diffIdentity: String { "\(title)|\(systemImage ?? "")" }
+
     public init(
         _ title: String,
         subtitle: String? = nil,
@@ -229,7 +235,7 @@ public struct Dropdown<Trigger: View>: View {
     private var closesOnSelect = true
 
     @State private var internalOpen = false
-    @State private var expandedSubmenus: Set<UUID> = []
+    @State private var expandedSubmenus: Set<String> = []
 
     /// A flat menu of items. Pass `isPresented:` to own the open state
     /// (controlled); omit it for the self-managing convenience.
@@ -408,13 +414,13 @@ public struct Dropdown<Trigger: View>: View {
     /// children indented beneath it. (HeroUI SubMenu.)
     @ViewBuilder
     private func submenuRows(_ item: DropdownItem, children: [DropdownItem], reservesIndicator: Bool) -> some View {
-        let expanded = expandedSubmenus.contains(item.id)
+        let expanded = expandedSubmenus.contains(item.diffIdentity)
 
         Button {
             if expanded {
-                expandedSubmenus.remove(item.id)
+                expandedSubmenus.remove(item.diffIdentity)
             } else {
-                expandedSubmenus.insert(item.id)
+                expandedSubmenus.insert(item.diffIdentity)
             }
         } label: {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -429,8 +435,9 @@ public struct Dropdown<Trigger: View>: View {
                     .foregroundStyle(theme.text(.textPrimary))
                     .lineLimit(1)
                 Spacer(minLength: Theme.SpacingKey.md.value)
-                Icon(systemName: "chevron.forward").size(.xs).colorOverride(theme.text(.textTertiary))
+                Icon(systemName: "chevron.right").size(.xs).colorOverride(theme.text(.textTertiary))
                     .rotationEffect(.degrees(expanded ? 90 : 0))
+                    .mirrorsInRTL()
             }
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.vertical, Theme.SpacingKey.sm.value)
