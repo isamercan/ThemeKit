@@ -12,7 +12,7 @@ re-skins.
 ### 1. Install the theme
 
 Apply `themeKit(reactToRuntimeChanges:)` once, at the top of your scene. It
-loads the default theme, bundles the type ramp, and makes the active ``Theme``
+loads the default theme, bundles the type ramp, and makes the active `Theme`
 available to every component below it.
 
 ```swift
@@ -64,8 +64,8 @@ struct SignInView: View {
 
 ### 3. Switch light / dark or re-skin at runtime
 
-The active ``Theme`` is a singleton you can drive imperatively — flip the color
-scheme, or generate a whole palette from one accent color with ``ThemeConfig``.
+The active `Theme` is a singleton you can drive imperatively — flip the color
+scheme, or generate a whole palette from one accent color with `ThemeConfig`.
 
 ```swift
 Theme.shared.setColorScheme(dark: true)                 // light ⇄ dark
@@ -86,7 +86,7 @@ Theme.shared.apply(ThemeConfig(primaryHex: "#7C3AED"))  // re-skin from an accen
 
 ### Essentials
 
-- ``Theme``
-- ``TextStyle``
+- `Theme`
+- `TextStyle`
 - ``ThemeButton``
 - ``TextInput``

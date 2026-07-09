@@ -95,6 +95,12 @@ export default defineConfig({
               attrs: { target: '_blank', rel: 'noopener' },
               badge: { text: 'Swift', variant: 'note' },
             },
+            {
+              label: 'ThemeKitCore (tokens) ↗',
+              link: '/api-core/documentation/themekitcore/',
+              attrs: { target: '_blank', rel: 'noopener' },
+              badge: { text: 'Core', variant: 'tip' },
+            },
           ],
         },
       ],

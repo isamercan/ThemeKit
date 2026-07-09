@@ -2,10 +2,16 @@
 
 Drive the entire UI from a single accent color, then persist or export the recipe.
 
+> Note: The theme engine and design tokens (`Theme`, `SemanticColor`, `TextStyle`, …)
+> live in the standalone **ThemeKitCore** module — adopt it alone with
+> `import ThemeKitCore` for a token-only theme layer, no components. Its full API is
+> in the [ThemeKitCore reference](/ThemeKit/api-core/documentation/themekitcore/).
+> `import ThemeKit` re-exports all of it, so the examples below work unchanged.
+
 ## Overview
 
 Every component reads its colors, radii, spacing, type, and shadows from the
-active ``Theme``. There are two ways to set one.
+active `Theme`. There are two ways to set one.
 
 ### Built-in themes
 
@@ -18,7 +24,7 @@ Theme.shared.loadTheme(named: "defaultTheme", dark: true)
 
 ### Generated themes (recipe → full palette)
 
-A ``ThemeConfig`` is a small, `Codable` recipe. Applying it regenerates a
+A `ThemeConfig` is a small, `Codable` recipe. Applying it regenerates a
 complete Ant-style 50–900 palette from your accent color at runtime — primary,
 info, the neutral ramp, surfaces, borders, and text all re-tint toward the hue,
 while success / warning / error keep their meaning.
@@ -66,14 +72,14 @@ WindowGroup { RootView().themeKit() }
 
 ### Core
 
-- ``Theme``
-- ``ThemeConfig``
-- ``ThemeContext``
+- `Theme`
+- `ThemeConfig`
+- `ThemeContext`
 
 ### Token namespaces
 
-- ``TextStyle``
-- ``SemanticColor``
-- ``Theme/SpacingKey``
-- ``Theme/RadiusKey``
-- ``ShadowStyle``
+- `TextStyle`
+- `SemanticColor`
+- `Theme.SpacingKey`
+- `Theme.RadiusKey`
+- `ShadowStyle`
