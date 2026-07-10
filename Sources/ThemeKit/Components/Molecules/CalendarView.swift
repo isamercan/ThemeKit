@@ -19,6 +19,15 @@ public struct CalendarView: View {
     private var accent: SemanticColor?
     private var showsWeekdayHeader = true
     private var firstWeekdayOverride: Int?
+    private var yearPickerEnabled = false
+
+    /// The navigation stage of the interior grid. Only ever leaves `.days` when
+    /// `.yearPicker()` makes the header tappable, so default calendars are
+    /// unaffected.
+    private enum Stage { case days, months, years }
+    @State private var stage: Stage = .days
+    /// Top-left year of the year-stage page.
+    @State private var yearPageStart: Int = 0
 
     /// Tracks the environment locale so month titles, weekday symbols, and the
     /// first day of the week follow the app's language (and mirror correctly for
@@ -40,31 +49,76 @@ public struct CalendarView: View {
     public var body: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
             header
-            if showsWeekdayHeader { weekdayRow }
-            grid
+            // A fixed interior height only when the year picker can swap stages,
+            // so the card doesn't pump between the 6-row day grid and the 4-row
+            // year/month grids. Default calendars keep their natural height.
+            if yearPickerEnabled {
+                stageContent.frame(height: 312, alignment: .top)
+            } else {
+                stageContent
+            }
         }
         .padding(Theme.SpacingKey.md.value)
         .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
     }
 
-    private var header: some View {
-        HStack {
-            navButton("chevron.left", label: String(themeKit: "Previous month"), months: -1)
-            Spacer()
-            Text(displayed.formatted(.dateTime.month(.wide).year().locale(locale)))
-                .textStyle(.labelMd700)
-                .foregroundStyle(theme.text(.textPrimary))
-            Spacer()
-            navButton("chevron.right", label: String(themeKit: "Next month"), months: 1)
+    @ViewBuilder private var stageContent: some View {
+        switch stage {
+        case .days:
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                if showsWeekdayHeader { weekdayRow }
+                grid
+            }
+        case .years:
+            yearGrid
+        case .months:
+            monthGrid
         }
     }
 
-    private func navButton(_ name: String, label: String, months: Int) -> some View {
+    private var header: some View {
+        HStack {
+            navButton("chevron.left", direction: -1)
+            Spacer()
+            titleView
+            Spacer()
+            navButton("chevron.right", direction: 1)
+        }
+    }
+
+    /// The month/year title. When `.yearPicker()` is on it becomes a button that
+    /// walks the stages; otherwise it is the same static label as before.
+    @ViewBuilder private var titleView: some View {
+        if yearPickerEnabled {
+            Button { advanceStageFromHeader() } label: { titleLabel }
+                .buttonStyle(.plain)
+                .accessibilityLabel(headerA11yLabel)
+        } else {
+            titleLabel
+        }
+    }
+
+    @ViewBuilder private var titleLabel: some View {
+        switch stage {
+        case .days:
+            Text(displayed.formatted(.dateTime.month(.wide).year().locale(locale)))
+                .textStyle(.labelMd700)
+                .foregroundStyle(theme.text(.textPrimary))
+        case .years:
+            Text(yearRangeTitle)
+                .textStyle(.labelMd700)
+                .foregroundStyle(theme.text(.textPrimary))
+        case .months:
+            Text(displayedYear.formatted(.number.grouping(.never).locale(locale)))
+                .textStyle(.labelMd700)
+                .foregroundStyle(theme.text(.textPrimary))
+        }
+    }
+
+    private func navButton(_ name: String, direction: Int) -> some View {
         Button {
-            if let d = calendar.date(byAdding: .month, value: months, to: monthStart) {
-                withAnimation(Motion.fast.animation) { displayed = d }
-            }
+            pageBy(direction)
         } label: {
             Icon(systemName: name).size(.sm).color(theme.text(.textPrimary))
                 .frame(width: 32, height: 32)
@@ -73,7 +127,32 @@ public struct CalendarView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(label)
+        .accessibilityLabel(navLabel(direction))
+    }
+
+    /// Paging is stage-aware: ±1 month on days (unchanged), ±12 years on the
+    /// year page, ±1 year on months.
+    private func pageBy(_ direction: Int) {
+        switch stage {
+        case .days:
+            if let d = calendar.date(byAdding: .month, value: direction, to: monthStart) {
+                withAnimation(Motion.fast.animation) { displayed = d }
+            }
+        case .years:
+            withAnimation(Motion.base.animation) { yearPageStart += direction * 12 }
+        case .months:
+            if let d = calendar.date(byAdding: .year, value: direction, to: monthStart) {
+                withAnimation(Motion.base.animation) { displayed = d }
+            }
+        }
+    }
+
+    private func navLabel(_ direction: Int) -> String {
+        switch stage {
+        case .days: return String(themeKit: direction < 0 ? "Previous month" : "Next month")
+        case .years: return String(themeKit: direction < 0 ? "Previous years" : "Next years")
+        case .months: return String(themeKit: direction < 0 ? "Previous year" : "Next year")
+        }
     }
 
     private var weekdayRow: some View {
@@ -124,6 +203,106 @@ public struct CalendarView: View {
     private var todayText: Color { accent?.accent ?? theme.text(.textHero) }
     private var todayRing: Color { accent?.border ?? theme.border(.borderHero) }
 
+    // MARK: - Year / month stages (opt-in via .yearPicker())
+
+    private var displayedYear: Int { calendar.component(.year, from: displayed) }
+    private var currentYear: Int { calendar.component(.year, from: Date.now) }
+
+    private var yearRangeTitle: String {
+        let lo = yearPageStart.formatted(.number.grouping(.never).locale(locale))
+        let hi = (yearPageStart + 11).formatted(.number.grouping(.never).locale(locale))
+        return "\(lo) – \(hi)"
+    }
+
+    private var headerA11yLabel: String {
+        switch stage {
+        case .days: return String(themeKit: "Choose year")
+        case .years: return String(themeKit: "Back to days")
+        case .months: return String(themeKit: "Back to years")
+        }
+    }
+
+    /// Tapping the header walks up the stages: days → years, months → years,
+    /// years → back to days.
+    private func advanceStageFromHeader() {
+        withAnimation(Motion.base.animation) {
+            switch stage {
+            case .days, .months:
+                yearPageStart = displayedYear - 6   // keep the shown year near the page middle
+                stage = .years
+            case .years:
+                stage = .days
+            }
+        }
+    }
+
+    private var yearGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: Theme.SpacingKey.sm.value) {
+            ForEach(0..<12, id: \.self) { offset in
+                yearCell(yearPageStart + offset)
+            }
+        }
+    }
+
+    private func yearCell(_ year: Int) -> some View {
+        let isSelected = year == displayedYear
+        let isCurrent = year == currentYear
+        return Button {
+            selectYear(year)
+        } label: {
+            Text(year.formatted(.number.grouping(.never).locale(locale)))
+                .textStyle(.bodyBase400)
+                .foregroundStyle(isSelected ? selectedContent : (isCurrent ? todayText : theme.text(.textPrimary)))
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(isSelected ? selectedFill : .clear, in: Capsule())
+                .overlay { if isCurrent && !isSelected { Capsule().stroke(todayRing, lineWidth: 1) } }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var monthGrid: some View {
+        let symbols = calendar.shortMonthSymbols
+        let selectedMonth = calendar.component(.month, from: displayed)
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: Theme.SpacingKey.sm.value) {
+            ForEach(Array(symbols.enumerated()), id: \.offset) { index, symbol in
+                monthCell(index: index, symbol: symbol, isSelected: index + 1 == selectedMonth)
+            }
+        }
+    }
+
+    private func monthCell(index: Int, symbol: String, isSelected: Bool) -> some View {
+        Button {
+            selectMonth(index + 1)
+        } label: {
+            Text(symbol)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(isSelected ? selectedContent : theme.text(.textPrimary))
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(isSelected ? selectedFill : .clear, in: Capsule())
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func selectYear(_ year: Int) {
+        var comps = calendar.dateComponents([.year, .month, .day], from: displayed)
+        comps.year = year
+        if let d = calendar.date(from: comps) {
+            withAnimation(Motion.base.animation) { displayed = d; stage = .months }
+        }
+    }
+
+    private func selectMonth(_ month: Int) {
+        var comps = calendar.dateComponents([.year, .month], from: displayed)
+        comps.month = month
+        if let d = calendar.date(from: comps) {
+            withAnimation(Motion.base.animation) { displayed = d; stage = .days }
+        }
+    }
+
     // MARK: - Date math
 
     private var monthStart: Date {
@@ -162,6 +341,11 @@ public extension CalendarView {
     /// (clamped); `nil` (default) follows the locale's convention.
     func firstWeekday(_ day: Int?) -> Self { copy { $0.firstWeekdayOverride = day } }
 
+    /// Make the month-year header tappable to jump across months and years:
+    /// day grid → year grid → month grid, then back to the chosen month. Off by
+    /// default, so existing calendars are visually and behaviorally unchanged.
+    func yearPicker(_ enabled: Bool = true) -> Self { copy { $0.yearPickerEnabled = enabled } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -173,10 +357,14 @@ public extension CalendarView {
     struct Demo: View {
         @State var date: Date? = .now
         @State var compact: Date? = .now
+        @State var jumped: Date? = .now
         var body: some View {
             ScrollView {
                 VStack(spacing: Theme.SpacingKey.md.value) {
                     CalendarView(selection: $date)
+                    CalendarView(selection: $jumped)
+                        .yearPicker()      // tap the header to jump years/months
+                        .accent(.purple)
                     CalendarView(selection: $compact)
                         .accent(.success)
                         .firstWeekday(2)   // Monday first
