@@ -120,3 +120,32 @@ extension Theme {
         public var value: CGFloat { Theme.shared.spacing(self) }
     }
 }
+
+// MARK: - Radius capping (HeroUI `min()` cap + concentric nesting)
+
+private extension CGFloat {
+    /// Shared math for both radius enums: never more than half the element height.
+    func radiusCapped(for height: CGFloat) -> CGFloat { Swift.min(self, height / 2) }
+    /// Shared math for both radius enums: outer radius minus the inset, floored at 0.
+    func radiusConcentric(inset: Theme.SpacingKey) -> CGFloat { Swift.max(self - inset.value, 0) }
+}
+
+public extension Theme.RadiusKey {
+    /// The key's radius, capped so a small element never over-rounds (HeroUI `min()`):
+    /// the result is never more than half the element's `height`.
+    func value(cappedFor height: CGFloat) -> CGFloat { value.radiusCapped(for: height) }
+
+    /// Concentric inner radius: this radius minus the `inset` spacing, floored at 0 —
+    /// the standard nested-corner relationship for a card inset inside a rounded tray.
+    func concentric(inset: Theme.SpacingKey) -> CGFloat { value.radiusConcentric(inset: inset) }
+}
+
+public extension Theme.RadiusRole {
+    /// The role's radius, capped so a small element never over-rounds (HeroUI `min()`):
+    /// the result is never more than half the element's `height`.
+    func value(cappedFor height: CGFloat) -> CGFloat { value.radiusCapped(for: height) }
+
+    /// Concentric inner radius: the outer role's radius minus the `inset` spacing,
+    /// floored at 0 — the standard nested-corner relationship.
+    func concentric(inset: Theme.SpacingKey) -> CGFloat { value.radiusConcentric(inset: inset) }
+}

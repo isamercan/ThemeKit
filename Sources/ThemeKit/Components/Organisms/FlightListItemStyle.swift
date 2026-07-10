@@ -764,7 +764,7 @@ private struct TrayChrome: View {
     // Spec radii: outer tray 24 (rd-base), inner white card 20 (= outer − the
     // 4pt tray inset, the standard concentric-rounding relationship).
     private var trayRadius: CGFloat { Theme.RadiusKey.base.value }
-    private var cardRadius: CGFloat { Theme.RadiusKey.base.value - Theme.SpacingKey.xs.value }
+    private var cardRadius: CGFloat { Theme.RadiusKey.base.concentric(inset: .xs) }
 
     /// The tinted card-surface (spec `bg-surface` ≈ #f4f8fc). Derived, not a new
     /// token: white blended halfway with the theme's tinted page surface
