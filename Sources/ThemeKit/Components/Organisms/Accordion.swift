@@ -54,11 +54,10 @@ public struct Accordion<Content: View>: View {
     private var truncateSubtitle: Bool = false
     private var showDivider: Bool = true
 
-    @State private var expanded: Bool
-    /// Caller-owned expansion state (R1 — bindings belong in `init`). When
-    /// supplied, expansion is controlled/observable from outside; when `nil`,
-    /// the private `expanded` state is used (uncontrolled path).
-    private var externalExpanded: Binding<Bool>? = nil
+    /// Expansion state — uncontrolled (`initiallyExpanded:` seeds @State) or
+    /// controlled (the caller's `isExpanded:` binding drives it), unified by
+    /// `ControllableState` (ADR-4).
+    @ControllableState private var expanded: Bool
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
@@ -70,7 +69,7 @@ public struct Accordion<Content: View>: View {
     ) {
         self.title = title
         self.content = content
-        self._expanded = State(initialValue: initiallyExpanded)
+        self._expanded = ControllableState(wrappedValue: initiallyExpanded)
     }
 
     public init(   // R1 — controlled expansion; the binding drives toggling
@@ -80,20 +79,13 @@ public struct Accordion<Content: View>: View {
     ) {
         self.title = title
         self.content = content
-        self._expanded = State(initialValue: isExpanded.wrappedValue)
-        self.externalExpanded = isExpanded
-    }
-
-    /// Resolved expansion state — the external binding wins when one was injected.
-    private var isExpanded: Bool { externalExpanded?.wrappedValue ?? expanded }
-    private func setExpanded(_ value: Bool) {
-        if let externalExpanded { externalExpanded.wrappedValue = value } else { expanded = value }
+        self._expanded = ControllableState(wrappedValue: false, external: isExpanded)
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Button {
-                withAnimation(motion) { setExpanded(!isExpanded) }
+                withAnimation(motion) { expanded.toggle() }
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     if let number {
@@ -113,7 +105,7 @@ public struct Accordion<Content: View>: View {
                             Text(subtitle)
                                 .textStyle(.bodySm400)
                                 .foregroundStyle(theme.text(.textSecondary))
-                                .lineLimit(truncateSubtitle && !isExpanded ? 1 : nil)
+                                .lineLimit(truncateSubtitle && !expanded ? 1 : nil)
                         }
                     }
                     Spacer(minLength: Theme.SpacingKey.sm.value)
@@ -124,9 +116,9 @@ public struct Accordion<Content: View>: View {
             }
             .buttonStyle(.plain)
             // State-aware for VoiceOver (Dropdown's disclosure convention).
-            .accessibilityValue(isExpanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
+            .accessibilityValue(expanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
 
-            if isExpanded {
+            if expanded {
                 content()
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
@@ -139,23 +131,24 @@ public struct Accordion<Content: View>: View {
             }
         }
         // Value-based so controlled (binding-driven) changes animate too.
-        .animation(motion, value: isExpanded)
+        .animation(motion, value: expanded)
     }
 
+    @MainActor
     private var titleColor: Color {
-        isExpanded ? theme.text(.textHero) : theme.text(.textPrimary)
+        expanded ? theme.text(.textHero) : theme.text(.textPrimary)
     }
 
-    @ViewBuilder
+    @MainActor @ViewBuilder
     private var indicatorIcon: some View {
         switch indicator {
         case .chevron:
             Icon(systemName: "chevron.down").size(.sm).colorOverride(theme.text(.textTertiary))
-                .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                .rotationEffect(.degrees(expanded ? 180 : 0))
         case .plusMinus:
-            Icon(systemName: isExpanded ? "minus" : "plus").size(.sm).colorOverride(theme.text(.textTertiary))
+            Icon(systemName: expanded ? "minus" : "plus").size(.sm).colorOverride(theme.text(.textTertiary))
         case .custom(let expand, let collapse):
-            Icon(systemName: isExpanded ? collapse : expand).size(.sm).colorOverride(theme.text(.textTertiary))
+            Icon(systemName: expanded ? collapse : expand).size(.sm).colorOverride(theme.text(.textTertiary))
         }
     }
 }
