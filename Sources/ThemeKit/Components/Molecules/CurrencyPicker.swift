@@ -125,6 +125,8 @@ public struct CurrencyPicker: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(currency.name), \(currency.code)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

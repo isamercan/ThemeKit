@@ -44,6 +44,20 @@ public struct RatingSummary: View {
                 .disabled(onReviews == nil)
             }
         }
+        // Fold the score badge, qualitative label, and review-count link into one
+        // VoiceOver element so the rating is announced as a single phrase.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(String(themeKit: "Rating")))
+        .accessibilityValue(Text(accessibilityValueText))
+    }
+
+    /// Spoken value — the numeric score, then the qualitative label and review
+    /// count when present (e.g. "9.0, Excellent, 1200 reviews").
+    private var accessibilityValueText: String {
+        var parts: [String] = [String(format: "%.1f", score)]
+        if let label { parts.append(label) }
+        if let reviewCount { parts.append(String(themeKit: "\(reviewCount) reviews")) }
+        return parts.joined(separator: ", ")
     }
 }
 
