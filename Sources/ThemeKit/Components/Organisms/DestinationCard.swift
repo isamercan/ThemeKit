@@ -116,7 +116,7 @@ public struct DestinationCard: View {
             .padding(.vertical, 4)
             .background(ribbonColor.solid, in: Capsule())
             .padding(Theme.SpacingKey.sm.value)
-            .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+            .themeShadow(.soft)
     }
 
     private func heartButton(_ fav: Binding<Bool>) -> some View {

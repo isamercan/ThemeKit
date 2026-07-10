@@ -149,7 +149,7 @@ private struct Tilt3DModifier: ViewModifier {
         .padding(32)
         .frame(width: 260)
         .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .black.opacity(0.15), radius: 18, y: 10)
+        .themeShadow(.elevated)
         .tilt3D(shine: true)
 
         TiltCard {
