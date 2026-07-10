@@ -57,20 +57,20 @@ public struct InstallmentSelector: View {
                     .foregroundStyle(selected ? theme.foreground(.fgHero) : theme.text(.textTertiary))
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
-                        Text(count <= 1 ? "Single payment" : "\(count) installments")
+                        Text(count <= 1 ? String(themeKit: "Single payment") : String(themeKit: "\(count) installments"))
                             .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                         if count == recommendedCount {
-                            Badge("Recommended").badgeStyle(.success).size(.small)
+                            Badge(String(themeKit: "Recommended")).badgeStyle(.success).size(.small)
                         }
                     }
                     if interestFree {
-                        Text("Interest-free").textStyle(.bodySm400).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
+                        Text(String(themeKit: "Interest-free")).textStyle(.bodySm400).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
                     }
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     if count > 1 {
-                        Text("\(formatted(planTotal / Decimal(count)))/mo")
+                        Text(String(themeKit: "\(formatted(planTotal / Decimal(count)))/mo"))
                             .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     }
                     Text(formatted(planTotal)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))

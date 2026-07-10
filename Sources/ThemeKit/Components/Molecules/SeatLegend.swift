@@ -30,8 +30,8 @@ public struct SeatLegend: View {
             let c = palette.colors(for: tier, theme: theme)
             return Entry(fill: c.fill, border: c.stroke, label: tier.label)
         }
-        e.append(Entry(fill: theme.foreground(.fgHero), border: theme.foreground(.fgHero), label: "Selected"))
-        e.append(Entry(fill: theme.background(.bgSecondary), border: theme.border(.borderPrimary), label: "Occupied"))
+        e.append(Entry(fill: theme.foreground(.fgHero), border: theme.foreground(.fgHero), label: String(themeKit: "Selected")))
+        e.append(Entry(fill: theme.background(.bgSecondary), border: theme.border(.borderPrimary), label: String(themeKit: "Occupied")))
         return e
     }
 

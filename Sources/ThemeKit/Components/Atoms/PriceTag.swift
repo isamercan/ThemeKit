@@ -102,9 +102,9 @@ public struct PriceTag: View {
             switch state {
             case .priced: pricedContent
             case .free:
-                Text("Free").textStyle(size.priceStyle).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
+                Text(String(themeKit: "Free")).textStyle(size.priceStyle).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
             case .soldOut:
-                Text("Sold out").textStyle(size.priceStyle).foregroundStyle(theme.text(.textTertiary))
+                Text(String(themeKit: "Sold out")).textStyle(size.priceStyle).foregroundStyle(theme.text(.textTertiary))
             }
             if let trailingSlot { trailingSlot }
         }
@@ -165,14 +165,14 @@ public struct PriceTag: View {
 
     private var accessibilityText: String {
         switch state {
-        case .free: return "Free"
-        case .soldOut: return "Sold out"
+        case .free: return String(themeKit: "Free")
+        case .soldOut: return String(themeKit: "Sold out")
         case .priced:
             var parts: [String] = []
             if let prefixText { parts.append(prefixText) }
             parts.append(formatted(amount))
             if let unit { parts.append(unit) }
-            if let percent = discountPercent { parts.append("\(percent)% off") }
+            if let percent = discountPercent { parts.append(String(themeKit: "\(percent)% off")) }
             return parts.joined(separator: " ")
         }
     }
@@ -203,7 +203,7 @@ public extension PriceTag {
     /// Prefixes the price, e.g. "from ₺1.299".
     func prefix(_ text: String) -> Self { copy { $0.prefixText = text } }
     /// Shorthand for `.prefix("from")` — a "lead-in" price.
-    func from() -> Self { copy { $0.prefixText = "from" } }
+    func from() -> Self { copy { $0.prefixText = String(themeKit: "from") } }
     /// Animates digit changes (numeric-text transition); no-op under Reduce Motion.
     /// Wrap the value change in `withAnimation` at the call site to drive it.
     func animatesValue(_ on: Bool = true) -> Self { copy { $0.animatesValue = on } }

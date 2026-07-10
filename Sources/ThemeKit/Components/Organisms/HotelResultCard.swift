@@ -31,7 +31,7 @@ public struct HotelResultCard: View {
     private var score: Double?
     private var scoreLabel: String?
     private var reviews: Int?
-    private var reviewsSuffix = "reviews"
+    private var reviewsSuffix = String(themeKit: "reviews")
     private var features: [String] = []
     private var promos: [String] = []
     private var price: Decimal?
@@ -143,7 +143,7 @@ public struct HotelResultCard: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Favourite")
+        .accessibilityLabel(String(themeKit: "Favourite"))
     }
 
     // MARK: Content
@@ -219,7 +219,7 @@ public struct HotelResultCard: View {
                         .overlay(Circle().stroke(accentColor, lineWidth: 1.5))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Select")
+                .accessibilityLabel(String(themeKit: "Select"))
             }
         }
         .padding(density.scale(Theme.SpacingKey.sm.value))
