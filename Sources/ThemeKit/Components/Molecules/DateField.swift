@@ -34,6 +34,9 @@ public struct DateField: View {
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let label: String?
     @Binding private var date: Date?
@@ -67,6 +70,14 @@ public struct DateField: View {
     private var displayText: String? {
         date.map { Self.text(for: $0, style: style, locale: locale, components: components) }
     }
+    /// DateField has no `TextInputSize` modifier of its own; the subtree
+    /// `FieldDefaults.size` maps onto its control height (nil keeps the
+    /// component's classic scaled 48pt / nominal `.medium`).
+    private var effectiveSize: TextInputSize? { fieldDefaults.size }
+    /// Message rows animate only when the subtree `FieldDefaults.messagesAnimated`
+    /// opts in (DateField historically snaps) — still gated by `microAnimations`
+    /// + Reduce Motion.
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? false) }
 
     // MARK: - Body
 
@@ -92,6 +103,9 @@ public struct DateField: View {
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
+        // Message rows animate only when `fieldDefaults(messagesAnimated: true)`
+        // opts this field family in; `microAnimations` + Reduce Motion still win.
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: infoMessages)
     }
 
     /// The composed field row (icon + value + trailing accessory), sized —
@@ -108,7 +122,7 @@ public struct DateField: View {
             trailing
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(48)
+        .scaledControlHeight(effectiveSize?.height ?? 48)
         .frame(maxWidth: .infinity)
     }
 
@@ -116,7 +130,8 @@ public struct DateField: View {
     /// Configuration mapping: the open popover reads as `isFocused`; the dominant
     /// `infoMessages` kind drives `hasError` / `hasWarning`. `size` is nominal
     /// `.medium` — `DateField` has no `TextInputSize` axis; its height stays the
-    /// component's own scaled 48pt, carried by the content.
+    /// component's own scaled 48pt, carried by the content — unless the subtree
+    /// `FieldDefaults.size` remaps both the height and the reported preset.
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
@@ -124,7 +139,7 @@ public struct DateField: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 

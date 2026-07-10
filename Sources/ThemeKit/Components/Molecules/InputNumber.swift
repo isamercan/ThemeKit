@@ -29,12 +29,15 @@ public struct InputNumber: View {
     private var hint: String?
     private var errorText: String?
     private var accessibilityID: String?
-    private var large: Bool = false
+    /// Set only by the `.large(_:)` modifier — an explicit choice wins over the
+    /// subtree `FieldDefaults.size` default (`nil` falls back to it).
+    private var large: Bool?
     private var editable: Bool = true
     private var hasInfo: Bool = false
     private var onChange: ((Int) -> Void)?
 
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     @FocusState private var isFocused: Bool
     @State private var textValue: String
@@ -51,7 +54,11 @@ public struct InputNumber: View {
     }
 
     private var hasError: Bool { errorText != nil }
-    private var height: CGFloat { large ? 48 : 40 }
+    /// InputNumber's size axis is binary (regular 40pt / large 48pt); the
+    /// subtree `FieldDefaults.size == .large` maps onto the large height when
+    /// `.large(_:)` wasn't set explicitly.
+    private var isLarge: Bool { large ?? (fieldDefaults.size == .large) }
+    private var height: CGFloat { isLarge ? 48 : 40 }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -112,7 +119,8 @@ public struct InputNumber: View {
     /// `errorText` drives `hasError` (InputNumber has no warning axis, so
     /// `hasWarning` is always false). `size` is nominal `.medium` — InputNumber
     /// has no `TextInputSize` axis; its 40/48pt (`large`) height stays carried by
-    /// the content.
+    /// the content. The subtree `FieldDefaults.size` is reported when set, so
+    /// size-keyed styles stay consistent across a defaulted form.
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
@@ -120,7 +128,7 @@ public struct InputNumber: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: false,
-            size: .medium
+            size: fieldDefaults.size ?? .medium
         ))
     }
 
@@ -247,7 +255,8 @@ public extension InputNumber {
     /// Error text + error styling; takes precedence over `hint`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
 
-    /// Use the larger (48pt) field height.
+    /// Use the larger (48pt) field height. An explicit choice wins over the
+    /// subtree `FieldDefaults.size` default (`.large` maps onto this height).
     func large(_ on: Bool = true) -> Self { copy { $0.large = on } }
 
     /// Whether the value can be typed (default true); `false` shows it read-only
