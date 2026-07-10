@@ -97,6 +97,8 @@ public struct Upload: View {
             if let onRetry, case .failed = file.status {
                 Button { onRetry(file) } label: {
                     Icon(systemName: "arrow.clockwise").size(.sm).color(theme.foreground(.fgHero))
+                        .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays .sm
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Retry"))
@@ -104,6 +106,8 @@ public struct Upload: View {
 
             Button { onRemove(file) } label: {
                 Icon(systemName: "trash").size(.sm).color(theme.text(.textTertiary))
+                    .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays .sm
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
