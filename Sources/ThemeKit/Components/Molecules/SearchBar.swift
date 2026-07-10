@@ -83,6 +83,13 @@ public struct SearchBar: View {
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
 
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`) —
+    /// bridged to the field's `@FocusState`, TextInput parity.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the field loses focus.
+    private var onEditingEnd: ((String) -> Void)?
+
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
     @State private var isLoading = false
@@ -161,6 +168,15 @@ public struct SearchBar: View {
         .onDebouncedChange(of: text, for: effectiveDebounce) { value in
             update(for: value)
             onSearch?(value)
+        }
+        // External focus bridge (TextInput parity): a `true` write focuses the
+        // field; blurring resets the external binding so the owner stays in sync.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !isFocused { isFocused = true }
+        }
+        .onChange(of: isFocused) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
     }
 
@@ -466,6 +482,13 @@ public extension SearchBar {
     /// Validation / info messages rendered under the field (their dominant
     /// severity drives the `FieldStyle` error / warning border, as in `TextInput`).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`) — TextInput parity.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the field loses focus.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s).
     func debounce(_ interval: TimeInterval) -> Self { copy { $0.debounce = interval } }

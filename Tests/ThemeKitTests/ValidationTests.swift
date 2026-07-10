@@ -64,4 +64,25 @@ final class ValidationTests: XCTestCase {
         _ = form.validateAll([.a: "ok", .b: "x@y.z", .c: "ok"])
         XCTAssertTrue(form.isValid)
     }
+
+    func testFormValidatorSubmit() {
+        enum Field { case email, password }
+        let form = FormValidator<Field>([
+            .email: [.required(), .email()],
+            .password: [.required(), .minLength(8)],
+        ])
+
+        // Invalid form: action must not run; first invalid field gets focus.
+        var ran = false
+        XCTAssertFalse(form.submit([.email: "nope", .password: "longenough"]) { ran = true })
+        XCTAssertFalse(ran)
+        XCTAssertEqual(form.focusedField, .email)
+        XCTAssertFalse(form.messages(for: .email).isEmpty)
+
+        // Clean form: action runs and submit reports true.
+        XCTAssertTrue(form.submit([.email: "a@b.co", .password: "longenough"]) { ran = true })
+        XCTAssertTrue(ran)
+        XCTAssertNil(form.focusedField)
+        XCTAssertTrue(form.isValid)
+    }
 }

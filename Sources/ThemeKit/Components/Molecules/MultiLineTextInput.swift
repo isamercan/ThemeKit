@@ -46,6 +46,13 @@ public struct MultiLineTextInput: View {
     /// appended to the accessibility label (HeroUI `isRequired`, TextInput parity).
     private var isRequired = false
 
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`) —
+    /// bridged to the editor's `@FocusState`, TextInput parity.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the editor loses focus.
+    private var onEditingEnd: ((String) -> Void)?
+
     @FocusState private var isFocused: Bool
 
     public init(
@@ -117,6 +124,15 @@ public struct MultiLineTextInput: View {
         // `InfoMessageList`); gated by `microAnimations` + Reduce Motion, and
         // by the subtree `FieldDefaults.messagesAnimated` default.
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
+        // External focus bridge (TextInput parity): a `true` write focuses the
+        // editor; blurring resets the external binding so the owner stays in sync.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !isFocused { isFocused = true }
+        }
+        .onChange(of: isFocused) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
+        }
     }
 
     /// The editor + placeholder overlay, sized to `minHeight` — everything the
@@ -218,6 +234,13 @@ public extension MultiLineTextInput {
 
     /// Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
     func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeightOverride = height } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`) — TextInput parity.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the editor loses focus.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).

@@ -176,6 +176,9 @@ public struct TextInput: View {
     private var validationCheck: ((String) -> String?)?
     private var validationTrigger: ValidationTrigger = .editingEnd
     private var onValidation: ((Bool) -> Void)?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the field loses focus — regardless of the component's own validation setup.
+    private var onEditingEnd: ((String) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
@@ -379,6 +382,7 @@ public struct TextInput: View {
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
     }
 
@@ -538,6 +542,12 @@ public extension TextInput {
 
     /// Drive focus from outside (e.g. `FormValidator.focusBinding`).
     func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the field loses focus. Fires
+    /// with the current text; independent of `validate(_:on:)`, which only runs
+    /// the field's *own inline* rules.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Keyboard / autofill / return-key / capitalization traits (iOS; ignored on macOS).
     func keyboard(_ type: TextInputKeyboard = .default,
