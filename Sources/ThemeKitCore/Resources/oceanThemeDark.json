@@ -73,6 +73,10 @@
       "hex": "394553"
     },
     {
+      "name": "background.bg-backdrop",
+      "hex": "0000008c"
+    },
+    {
       "name": "background.bg-turquoise",
       "hex": "2ba89e"
     },

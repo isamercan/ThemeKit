@@ -182,6 +182,7 @@ enum ThemeGenerator {
         ("bg-elevator-primary", .d("neutral", 50)), ("bg-elevator-tertiary", .d("primary", 50)),
         ("bg-secondary", .d("neutral", 300)), ("bg-secondary-light", .d("neutral", 100)),
         ("bg-tertiary", .a("000929", "3a4150")),
+        ("bg-backdrop", .a("00000066", "0000008c")),   // modal scrim: black @ 40% light / 55% dark
         ("bg-turquoise", .d("turquoise", 500)), ("bg-turquoise-light", .d("turquoise", 50)), ("bg-orange", .d("orange", 500)),
         ("badge/bg-maximumpink-base", .d("pink", 500)), ("badge/bg-maximumpink-light", .d("pink", 50)),
         ("badge/bg-purple", .d("purple", 50)), ("badge/bg-orange", .d("orange", 50)), ("badge/bg-turquoise-light", .d("turquoise", 100)),

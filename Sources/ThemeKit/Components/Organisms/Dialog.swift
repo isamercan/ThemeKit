@@ -29,7 +29,6 @@ import SwiftUI
 /// micro-animations are off or Reduce Motion is on, the card transition
 /// collapses to a plain fade and the drag spring-back snaps instantly.
 private struct DialogPresentation<Card: View>: View {
-    @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -45,8 +44,6 @@ private struct DialogPresentation<Card: View>: View {
     @State private var cardHeight: CGFloat = 0
 
     // Internal swipe tuning (mirrors FeedbackToastRow's drag feel).
-    /// Resting scrim dim opacity.
-    private static var scrimOpacity: Double { 0.4 }
     /// Drag distance before the swipe gesture engages.
     private static var minimumDragDistance: CGFloat { 8 }
     /// Fraction of the card height a drag must pass to dismiss on release.
@@ -56,8 +53,7 @@ private struct DialogPresentation<Card: View>: View {
 
     var body: some View {
         ZStack {
-            theme.background(.bgTertiary).opacity(Self.scrimOpacity * scrimFade)
-                .ignoresSafeArea()
+            Backdrop(fade: scrimFade)
                 .onTapGesture(perform: onScrimTap)
                 .transition(.opacity)   // Scrim always fades only.
 

@@ -32,6 +32,7 @@ extension Theme {
         case bgSecondary = "background.bg-secondary"
         case bgSecondaryLight = "background.bg-secondary-light"
         case bgTertiary = "background.bg-tertiary"
+        case bgBackdrop = "background.bg-backdrop"
         case bgTurquoise = "background.bg-turquoise"
         case bgTurquoiseLight = "background.bg-turquoise-light"
         case bgOrange = "background.bg-orange"

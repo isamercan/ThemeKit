@@ -53,6 +53,43 @@ final class ThemeIntegrityTests: XCTestCase {
         }
     }
 
+    // MARK: - Backdrop token + fallback (ADR-6)
+
+    /// Every bundled theme (light + dark) defines the modal scrim token, and the
+    /// `backdrop` accessor serves it directly.
+    func testBackdropTokenResolvesForEveryThemeAndVariant() {
+        let t = Theme()
+        for name in bundledThemes {
+            for dark in [false, true] {
+                t.loadTheme(named: name, dark: dark)
+                let tag = "\(name)\(dark ? "Dark" : "")"
+                XCTAssertNotEqual(t.background(.bgBackdrop), .clear, "\(tag) bgBackdrop")
+                XCTAssertEqual(t.backdrop, t.background(.bgBackdrop), "\(tag) backdrop accessor")
+            }
+        }
+    }
+
+    /// Runtime-generated themes (`apply(ThemeConfig)`) emit the token too.
+    func testGeneratedThemeEmitsBackdropToken() {
+        let t = Theme()
+        t.apply(ThemeConfig(primaryHex: "7C3AED"))
+        XCTAssertNotEqual(t.background(.bgBackdrop), .clear, "generated theme bgBackdrop")
+    }
+
+    /// A consumer theme that predates `background.bg-backdrop` must still get a
+    /// visible scrim: `backdrop` falls back to `bg-tertiary` @ 40% instead of the
+    /// `.clear` that `background(_:)` returns for a missing key.
+    func testBackdropFallsBackWhenTokenMissing() {
+        let legacy = """
+        {"colors": [{"name": "background.bg-tertiary", "hex": "000929"}]}
+        """
+        let t = Theme()
+        t.setTheme(jsonData: Data(legacy.utf8))
+        XCTAssertEqual(t.background(.bgBackdrop), .clear, "precondition: token absent")
+        XCTAssertNotEqual(t.backdrop, .clear, "missing bg-backdrop must never yield an invisible scrim")
+        XCTAssertEqual(t.backdrop, t.background(.bgTertiary).opacity(0.4), "fallback mirrors the legacy dim")
+    }
+
     func testDarkVariantDiffersFromLight() {
         let t = Theme()
         t.loadTheme(named: "defaultTheme", dark: false)

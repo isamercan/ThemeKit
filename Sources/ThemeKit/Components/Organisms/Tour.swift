@@ -100,10 +100,6 @@ public extension View {
         modifier(TourHostModifier(controller: controller, steps: steps,
                                   stepCard: { AnyView(stepCard($0)) }))
     }
-
-    fileprivate func reverseMask<M: View>(@ViewBuilder _ mask: () -> M) -> some View {
-        self.mask { Rectangle().overlay { mask().blendMode(.destinationOut) } }
-    }
 }
 
 private struct TourHostModifier: ViewModifier {
@@ -121,16 +117,16 @@ private struct TourHostModifier: ViewModifier {
                     let step = steps[controller.index]
                     let rect = anchors[step.id].map { proxy[$0] }
                     ZStack {
-                        theme.background(.bgTertiary).opacity(0.6)
-                            .reverseMask {
-                                if let rect {
-                                    RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-                                        .frame(width: rect.width + 12, height: rect.height + 12)
-                                        .position(x: rect.midX, y: rect.midY)
-                                }
+                        // Standard backdrop token strength (was a hand-rolled
+                        // 0.6 dim — converged on the shared scrim, ADR-6).
+                        Backdrop {
+                            if let rect {
+                                RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                                    .frame(width: rect.width + 12, height: rect.height + 12)
+                                    .position(x: rect.midX, y: rect.midY)
                             }
-                            .ignoresSafeArea()
-                            .onTapGesture { controller.stop() }
+                        }
+                        .onTapGesture { controller.stop() }
 
                         if let rect {
                             RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)

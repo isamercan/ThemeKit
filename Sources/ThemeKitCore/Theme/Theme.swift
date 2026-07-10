@@ -244,6 +244,13 @@ public final class Theme: @unchecked Sendable {
     public func border(_ key: BorderColorKey) -> Color { border[key] ?? .clear }
     public func text(_ key: TextColorKey) -> Color { text[key] ?? .primary }
 
+    /// The modal scrim color (`background.bg-backdrop`), used by every presenter
+    /// (Dialog, Drawer, Tour) via the `Backdrop` atom. Themes that predate the
+    /// token fall back to a neutral 40% dim derived from `bg-tertiary` — mirroring
+    /// the `RadiusRole` fallback — so a consumer theme can never render an
+    /// invisible scrim (`background(_:)` would return `.clear` for the missing key).
+    public var backdrop: Color { background[.bgBackdrop] ?? background(.bgTertiary).opacity(0.4) }
+
     /// Primitive 50..900 ladder color (Ant-style). `step 500` is the base.
     public func palette(_ key: PaletteColorKey) -> Color { palette[key] ?? .clear }
 
