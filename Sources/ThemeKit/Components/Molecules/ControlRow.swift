@@ -40,6 +40,7 @@ public struct ControlRow: View {
 
     // Appearance/validation — mutated only through the modifiers below (R2).
     private var description: String?
+    private var descriptionLinks: [(substring: String, action: () -> Void)] = []
     private var control: ControlRowControl = .toggle
     private var customIndicator: AnyView?
     private var isRequired = false
@@ -109,6 +110,7 @@ public struct ControlRow: View {
             if let description {
                 HelperText(description)
                     .hasError(hasError)
+                    .links(descriptionLinks)
             }
         }
     }
@@ -154,6 +156,12 @@ public struct ControlRow: View {
 public extension ControlRow {
     /// Supporting text rendered under the label.
     func description(_ text: String?) -> Self { copy { $0.description = text } }
+
+    /// Supporting text with inline tappable links — e.g.
+    /// `.description("By checking this you accept the Terms.", links: [("Terms", openTerms)])`.
+    func description(_ text: String?, links: [(substring: String, action: () -> Void)]) -> Self {
+        copy { $0.description = text; $0.descriptionLinks = links }
+    }
 
     /// Which boolean control renders: `.toggle` (default), `.checkbox`, or
     /// `.radio`. Ignored when a custom `indicator` is set.

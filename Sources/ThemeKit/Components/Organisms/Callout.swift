@@ -73,6 +73,7 @@ public struct Callout: View {
     private var onClose: (() -> Void)?
 
     private let text: String
+    private var links: [(substring: String, action: () -> Void)] = []
 
     public init(_ text: String) {   // R1
         self.text = text
@@ -88,8 +89,13 @@ public struct Callout: View {
                     .font(.system(size: 14))
                     .accessibilityLabel(type.accessibilityLabel)
             }
-            Text(text)
-                .textStyle(.bodySm400)
+            Group {
+                if links.isEmpty {
+                    Text(text).textStyle(.bodySm400)
+                } else {
+                    InlineText(text, links: links).inlineStyle(.bodySm400)
+                }
+            }
             if hasTrailing {
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 if let actionTitle, let onAction {
@@ -123,6 +129,10 @@ public struct Callout: View {
 public extension Callout {
     /// Semantic status: neutral / info / success / warning / error / accent (drives accent + icon).
     func variant(_ t: CalloutType) -> Self { copy { $0.type = t } }
+
+    /// Turn substrings of the body into inline tappable links (rendered via
+    /// `InlineText`) — API symmetry with `InfoBanner`, which already supports it.
+    func links(_ links: [(substring: String, action: () -> Void)]) -> Self { copy { $0.links = links } }
 
     /// Surface treatment: plain (transparent) or soft (light tinted surface).
     func calloutStyle(_ s: CalloutStyle) -> Self { copy { $0.style = s } }

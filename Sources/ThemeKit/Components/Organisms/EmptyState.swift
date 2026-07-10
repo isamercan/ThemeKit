@@ -28,6 +28,7 @@ public struct EmptyState: View {
 
     // Appearance/content/actions — mutated only through the modifiers below (R2).
     private var message: String?
+    private var messageLinks: [(substring: String, action: () -> Void)] = []
     private var imageMaxHeight: CGFloat = 160
     private var iconForeground: Color?
     private var iconBackground: Color?
@@ -89,10 +90,18 @@ public struct EmptyState: View {
                         .multilineTextAlignment(.center)
                 }
                 if let message {
-                    Text(message)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textSecondary))
-                        .multilineTextAlignment(.center)
+                    Group {
+                        if messageLinks.isEmpty {
+                            Text(message)
+                                .textStyle(.bodyBase400)
+                                .foregroundStyle(theme.text(.textSecondary))
+                        } else {
+                            InlineText(message, links: messageLinks)
+                                .inlineStyle(.bodyBase400)
+                                .color(theme.text(.textSecondary))
+                        }
+                    }
+                    .multilineTextAlignment(.center)
                 }
             }
 
@@ -119,6 +128,12 @@ public extension EmptyState {
 
     /// Secondary message under the title.
     func message(_ s: String?) -> Self { copy { $0.message = s } }
+
+    /// Message with inline tappable links (rendered via `InlineText`) — e.g.
+    /// `.message("Read the docs.", links: [("docs", openDocs)])`.
+    func message(_ s: String?, links: [(substring: String, action: () -> Void)]) -> Self {
+        copy { $0.message = s; $0.messageLinks = links }
+    }
 
     /// Max height of the custom/animated illustration.
     func imageMaxHeight(_ h: CGFloat) -> Self { copy { $0.imageMaxHeight = h } }

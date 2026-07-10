@@ -16,6 +16,7 @@ public struct InputLabel: View {
     private var isRequired = false
     private var hasInfo = false
     private var hasError = false
+    private var links: [(substring: String, action: () -> Void)] = []
 
     private let text: String
 
@@ -25,9 +26,13 @@ public struct InputLabel: View {
 
     public var body: some View {
         HStack(spacing: 4) {
-            Text(text)
-                .textStyle(.labelSm600)
-                .foregroundStyle(textColor)
+            Group {
+                if links.isEmpty {
+                    Text(text).textStyle(.labelSm600).foregroundStyle(textColor)
+                } else {
+                    InlineText(text, links: links).inlineStyle(.labelSm600).color(textColor)
+                }
+            }
             if isRequired {
                 Text("*").textStyle(.labelSm600)
                     .foregroundStyle(isEnabled ? theme.foreground(.systemcolorsFgError) : theme.text(.textDisabled))
@@ -51,6 +56,10 @@ public struct InputLabel: View {
 public extension InputLabel {
     /// Append a required asterisk after the label text.
     func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
+    /// Turn substrings of the label into inline tappable links (rendered via
+    /// `InlineText`) — e.g. a labeled consent with a linked policy name.
+    func links(_ links: [(substring: String, action: () -> Void)]) -> Self { copy { $0.links = links } }
 
     /// Show a trailing info glyph.
     func hasInfo(_ on: Bool = true) -> Self { copy { $0.hasInfo = on } }
