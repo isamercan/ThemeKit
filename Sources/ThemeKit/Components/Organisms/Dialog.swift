@@ -73,6 +73,9 @@ private struct DialogPresentation<Card: View>: View {
                 .offset(y: dragOffset)
                 .gesture(swipe, including: swipeToDismiss ? .all : .subviews)
                 .transition(cardTransition)
+                // Modal presenter: VoiceOver ignores the dimmed scrim and the
+                // background content behind the card while the dialog is up.
+                .accessibilityAddTraits(.isModal)
                 // Assistive-tech equivalent of the swipe/scrim dismissal —
                 // VoiceOver's two-finger scrub closes what a swipe would.
                 // Both handlers carry the caller's own gating (loading state,

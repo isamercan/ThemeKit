@@ -47,6 +47,9 @@ private struct DrawerContainer<DrawerContent: View>: View {
                 .offset(x: dragX)
                 .gesture(dragGesture)
                 .transition(.move(edge: edge == .leading ? .leading : .trailing))
+                // Modal: hide the dimmed background from VoiceOver; scrub-to-dismiss.
+                .accessibilityAddTraits(.isModal)
+                .accessibilityAction(.escape) { onDismiss() }
         }
         .zIndex(1)
     }

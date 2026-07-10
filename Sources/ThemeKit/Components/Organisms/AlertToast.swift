@@ -90,11 +90,20 @@ public struct AlertToast: View {
     }
 
     public var body: some View {
-        // Shell chrome is delegated to the active `ToastStyle`. When no
-        // `.toastStyle(_:)` is set anywhere up the tree we keep the original
-        // inline shell, so the stock look stays pixel-identical by construction;
-        // an explicitly set style (including `.default`) routes through
-        // `makeBody` with the pre-composed content row.
+        presentation
+            // VoiceOver gets no signal that a toast surfaced, so announce its
+            // content when it appears. Uses the cross-platform SwiftUI API
+            // (no UIKit `UIAccessibility.post`) so the macOS build stays green.
+            .onAppear { AccessibilityNotification.Announcement(announcementText).post() }
+    }
+
+    /// The composed shell. Chrome is delegated to the active `ToastStyle`. When
+    /// no `.toastStyle(_:)` is set anywhere up the tree we keep the original
+    /// inline shell, so the stock look stays pixel-identical by construction;
+    /// an explicitly set style (including `.default`) routes through `makeBody`
+    /// with the pre-composed content row.
+    @ViewBuilder
+    private var presentation: some View {
         if style.isDefault {
             row
                 .foregroundStyle(type.foreground(theme))
@@ -106,6 +115,13 @@ public struct AlertToast: View {
                 content: AnyView(row), variant: type, isLoading: isLoading
             ))
         }
+    }
+
+    /// What VoiceOver reads aloud when the toast surfaces — the title, plus the
+    /// secondary line when present.
+    private var announcementText: String {
+        if let message { return "\(title), \(message)" }
+        return title
     }
 
     /// The content row a style receives: leading icon/spinner, title + message,
