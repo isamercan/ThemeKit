@@ -29,19 +29,24 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # Static-hosting transform (no base path) → a self-contained, browsable
-      # site. Download the artifact and serve it, e.g. `python3 -m http.server`.
+      # Static-hosting transform for two modules under one artifact. Each site
+      # lives in its own subdir, so it needs a matching --hosting-base-path or DocC
+      # emits absolute /js//css asset URLs that 404 under the subpath. Download the
+      # artifact, serve `docs-out` (e.g. `python3 -m http.server`), and open
+      # `/themekit/` or `/themekitcore/`.
       - name: Build DocC (static hosting)
         run: |
           swift package --disable-sandbox \
             generate-documentation \
             --target ThemeKit \
             --transform-for-static-hosting \
+            --hosting-base-path themekit \
             --output-path ./docs-out/themekit
           swift package --disable-sandbox \
             generate-documentation \
             --target ThemeKitCore \
             --transform-for-static-hosting \
+            --hosting-base-path themekitcore \
             --output-path ./docs-out/themekitcore
 
       # DocC emits operator pages whose filenames contain ':' (e.g.
