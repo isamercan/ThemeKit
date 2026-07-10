@@ -25,8 +25,8 @@ public struct Card<Content: View>: View {
     private var extraTitle: String?
     private var onExtra: (() -> Void)?
     private var isLoading = false
-    private var customHeader: AnyView?
-    private var footerContent: AnyView?
+    private var customHeader: SlotContent?
+    private var footerContent: SlotContent?
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     @Environment(\.theme) private var theme
@@ -164,14 +164,14 @@ public extension Card {
     /// badge, media…) rendered above the body with the same padding and divider
     /// as the string header. When set it replaces the title/subtitle/extra header.
     func header<H: View>(@ViewBuilder _ header: () -> H) -> Self {
-        copy { $0.customHeader = AnyView(header()) }
+        copy { $0.customHeader = SlotContent(header) }
     }
 
     /// Footer slot (HeroUI `Card.Footer`) — bottom-aligned content such as
     /// actions, rendered below the body inside the card chrome and divided from
     /// it, mirroring the header treatment.
     func footer<F: View>(@ViewBuilder _ footer: () -> F) -> Self {
-        copy { $0.footerContent = AnyView(footer()) }
+        copy { $0.footerContent = SlotContent(footer) }
     }
 
     /// Surface fill by background token, threaded into the active ``CardStyle``'s

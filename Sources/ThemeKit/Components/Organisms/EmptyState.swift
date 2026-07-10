@@ -123,13 +123,15 @@ public extension EmptyState {
     /// Max height of the custom/animated illustration.
     func imageMaxHeight(_ h: CGFloat) -> Self { copy { $0.imageMaxHeight = h } }
 
-    /// Override the icon glyph color (defaults to the `.fgHero` token, R4).
+    /// Raw glyph-color override (back-compat); prefer the token-bound overload.
+    @available(*, deprecated, message: "Use iconForeground(_: Theme.ForegroundColorKey) — the token-bound overload.")
     func iconForeground(_ c: Color?) -> Self { copy { $0.iconForeground = c } }
 
     /// Token-bound overload — glyph uses a theme foreground key, resolved against the environment theme.
     func iconForeground(_ key: Theme.ForegroundColorKey) -> Self { copy { $0.iconForegroundKey = key } }
 
-    /// Override the icon circle fill (defaults to the `.bgElevatorTertiary` token, R4).
+    /// Raw circle-fill override (back-compat); prefer the token-bound overload.
+    @available(*, deprecated, message: "Use iconBackground(_: Theme.BackgroundColorKey) — the token-bound overload.")
     func iconBackground(_ c: Color?) -> Self { copy { $0.iconBackground = c } }
 
     /// Token-bound overload — circle fill uses a theme background key, resolved against the environment theme.

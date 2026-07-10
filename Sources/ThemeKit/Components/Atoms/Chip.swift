@@ -51,8 +51,8 @@ public struct Chip: View {
     private var selectionStyle: ChipSelectionStyle? = nil   // nil → environment style
     private var leadingSystemImage: String? = nil
     private var rating: Double? = nil
-    private var leadingSlot: AnyView? = nil
-    private var trailingSlot: AnyView? = nil
+    private var leadingSlot: SlotContent? = nil
+    private var trailingSlot: SlotContent? = nil
     private var isExist: Bool = true
     private var isInteractive: Bool = true
     private var expandsHorizontally: Bool = false
@@ -134,13 +134,11 @@ public extension Chip {
     /// A custom leading view before the title; when set, it replaces the
     /// `icon`/`rating` shorthands.
     func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
-        let view = AnyView(content())
-        return copy { $0.leadingSlot = view }
+        copy { $0.leadingSlot = SlotContent(content) }
     }
     /// A custom trailing view after the title.
     func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
-        let view = AnyView(content())
-        return copy { $0.trailingSlot = view }
+        copy { $0.trailingSlot = SlotContent(content) }
     }
     /// Whether the represented item still exists; `false` strikes through and dims
     /// the chip (e.g. a sold-out filter).

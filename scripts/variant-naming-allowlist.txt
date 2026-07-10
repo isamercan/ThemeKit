@@ -1,0 +1,30 @@
+# variant-naming-allowlist.txt — sanctioned exceptions to the variant-matrix
+# naming gate (scripts/check-variant-naming.sh, ADR-3).
+#
+# Format: <file-basename>:<funcName> — one per line, comments start with #.
+# Every entry needs a rationale. Two sanctioned categories:
+#   • genuine dimension — a raw point size with no semantic token (diameters,
+#     block sizes, gaps); the skill's "fixed 22×22 logo frame" rule.
+#   • color-math / decorative utility — operates ON colors or defaults to a
+#     token with a documented raw escape hatch (candidates for a future
+#     deprecate-and-forward wave, tracked in HEROUI_INFRA_PLAN.md T3).
+
+# --- genuine dimensions (size(_: CGFloat) is the component's content geometry,
+# --- not a control-size axis; token/enum overloads exist where sensible) -----
+Space.swift:size            # gap in points; SpaceSize + Theme.SpacingKey overloads are the primary path
+Spinner.swift:size          # diameter; unset follows native .controlSize (documented)
+SwapButton.swift:size       # glyph-button diameter
+Skeleton.swift:size         # placeholder block width/height in points
+Aura.swift:size             # decorative glow diameter
+StatusDot.swift:size        # dot diameter
+Swap.swift:size             # swap-icon frame
+QRCode.swift:size           # rendered code edge length
+IconTile.swift:size         # tile edge length
+RadialProgress.swift:size   # ring diameter
+RollingNumber.swift:size    # digit font point size
+
+# --- color-math / decorative utilities --------------------------------------
+Color+Extensions.swift:blended   # color *arithmetic* on two theme tokens — Color is the domain, not an axis
+Effects.swift:edgeBorder         # nil → borderPrimary token; raw override is the documented escape hatch
+Effects.swift:fadeEdge           # nil → bgWhite token; raw override is the documented escape hatch
+Watermark.swift:watermark        # one-shot decorative overlay; nil → token default (future token-overload candidate)

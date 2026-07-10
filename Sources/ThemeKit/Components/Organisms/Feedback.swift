@@ -531,7 +531,8 @@ private struct FeedbackHostModifier: ViewModifier {
 }
 
 /// One stacked toast row: a solid AlertToast with elevation, auto-dismiss, and a
-/// drag-toward-the-edge swipe-to-dismiss gesture.
+/// drag-toward-the-edge swipe-to-dismiss gesture (the shared `dismissDrag`,
+/// ADR-7 — 60pt release threshold, fading over 120pt, the row's historical feel).
 private struct FeedbackToastRow: View {
     let item: FeedbackPresenter.ToastItem
     let edge: Edge
@@ -542,7 +543,9 @@ private struct FeedbackToastRow: View {
     /// effective duration at this host layer.
     @Environment(\.feedbackDefaults) private var feedbackDefaults
 
-    @State private var offset: CGFloat = 0
+    /// 0…1 dismissal progress reported by `dismissDrag` — fades the row out as
+    /// it is dragged toward its anchored edge.
+    @State private var dragProgress: Double = 0
 
     /// Explicit `duration:` (including `nil` = sticky) wins; the omitted-argument
     /// overloads fall back to `FeedbackDefaults.toastDuration`, then the stock 2.5s.
@@ -553,9 +556,12 @@ private struct FeedbackToastRow: View {
     var body: some View {
         row
             .themeShadow(.elevated)
-            .offset(y: offset)
-            .opacity(dragOpacity)
-            .gesture(swipe)
+            .dismissDrag(edge: edge,
+                         threshold: .points(60),
+                         progressSpan: 120,
+                         progress: $dragProgress,
+                         onDismiss: onDismiss)
+            .opacity(1 - dragProgress)
             .transition(.move(edge: edge).combined(with: .opacity))
             .task(id: item.id) {
                 guard let duration = effectiveDuration else { return }   // nil = sticky
@@ -580,27 +586,6 @@ private struct FeedbackToastRow: View {
         }
     }
 
-    /// Fade the row out as it is dragged toward its anchored edge.
-    private var dragOpacity: Double {
-        let towardEdge = (edge == .bottom && offset > 0) || (edge == .top && offset < 0)
-        guard towardEdge else { return 1 }
-        return max(0, 1 - Double(abs(offset)) / 120)
-    }
-
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 8)
-            .onChanged { value in
-                let dy = value.translation.height
-                if (edge == .bottom && dy > 0) || (edge == .top && dy < 0) { offset = dy }
-            }
-            .onEnded { _ in
-                if abs(offset) > 60 {
-                    onDismiss()
-                } else {
-                    withAnimation(Motion.fast.animation) { offset = 0 }
-                }
-            }
-    }
 }
 
 public extension View {

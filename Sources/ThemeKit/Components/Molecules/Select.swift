@@ -50,14 +50,14 @@ public struct Select<Option: Hashable>: View {
     /// The shared form-field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
 
-    @State private var open = false
+    /// Open state of the searchable panel (R1 — bindings belong in `init`) —
+    /// uncontrolled (internal `@State`) or controlled (the caller's
+    /// `isExpanded:` binding drives it), unified by `ControllableState`
+    /// (ADR-4). Native-`Menu` mode manages its own presentation (SwiftUI
+    /// exposes no `isPresented` for `Menu`), so the binding is honored only
+    /// together with `.searchable()`.
+    @ControllableState private var open: Bool
     @State private var query = ""
-    /// Caller-owned open state (R1 — bindings belong in `init`). When supplied,
-    /// the searchable panel's visibility is controlled/observable from outside;
-    /// when `nil`, the private `open` state is used. Native-`Menu` mode manages
-    /// its own presentation (SwiftUI exposes no `isPresented` for `Menu`), so
-    /// the binding is honored only together with `.searchable()`.
-    private var externalExpanded: Binding<Bool>? = nil
 
     public init(   // R1
         _ label: String,
@@ -79,14 +79,8 @@ public struct Select<Option: Hashable>: View {
         self.label = label
         self.sections = sections
         self._selection = selection
-        self.externalExpanded = isExpanded
+        self._open = ControllableState(wrappedValue: false, external: isExpanded)
         self.optionTitle = optionTitle
-    }
-
-    /// Resolved open state — the external binding wins when one was injected.
-    private var isOpen: Bool { externalExpanded?.wrappedValue ?? open }
-    private func setOpen(_ value: Bool) {
-        if let externalExpanded { externalExpanded.wrappedValue = value } else { open = value }
     }
 
     private var hasValue: Bool { selection != nil }
@@ -98,7 +92,7 @@ public struct Select<Option: Hashable>: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             ZStack(alignment: .trailing) {
                 if searchable {
-                    Button { if isEnabled { setOpen(!isOpen) } } label: { field }
+                    Button { if isEnabled { open.toggle() } } label: { field }
                         .buttonStyle(.plain)
                         .disabled(!isEnabled)
                 } else {
@@ -111,16 +105,17 @@ public struct Select<Option: Hashable>: View {
             .accessibilityLabel(label)
             .accessibilityValue(selection.map(optionTitle) ?? "")
 
-            if searchable && isOpen { panel }
+            if searchable && open { panel }
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
-        .animation(Motion.fast.animation, value: isOpen)
+        .animation(Motion.fast.animation, value: open)
     }
 
     // MARK: Trigger field
 
+    @MainActor
     private var fieldContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             ZStack(alignment: .leading) {
@@ -139,7 +134,7 @@ public struct Select<Option: Hashable>: View {
             if isLoading {
                 Spinner().size(IconSize.sm.value).lineWidth(2)
             } else {
-                Icon(systemName: isOpen ? "chevron.up" : "chevron.down")
+                Icon(systemName: open ? "chevron.up" : "chevron.down")
                     .size(.sm)
                     .color(showsClear ? .clear : theme.text(.textTertiary))
             }
@@ -156,12 +151,12 @@ public struct Select<Option: Hashable>: View {
     /// ``FieldStyle`` via `\.fieldStyle`: the open state maps to `isFocused`, and
     /// `size` maps 1:1 (Select's size axis is already a `TextInputSize`). If a
     /// custom `SelectStyle` *was* injected, the legacy path renders unchanged.
-    @ViewBuilder
+    @MainActor @ViewBuilder
     private var field: some View {
         if selectStyle.isDefault {
             fieldStyle.makeBody(configuration: FieldStyleConfiguration(
                 content: AnyView(fieldContent),
-                isFocused: isOpen,
+                isFocused: open,
                 isEnabled: isEnabled,
                 hasError: infoMessages.dominantKind == .error,
                 hasWarning: infoMessages.dominantKind == .warning,
@@ -170,7 +165,7 @@ public struct Select<Option: Hashable>: View {
         } else {
             selectStyle.makeBody(configuration: SelectStyleConfiguration(
                 content: AnyView(fieldContent),
-                isOpen: isOpen,
+                isOpen: open,
                 isEnabled: isEnabled,
                 hasError: infoMessages.dominantKind == .error,
                 hasWarning: infoMessages.dominantKind == .warning
@@ -243,6 +238,7 @@ public struct Select<Option: Hashable>: View {
         .padding(.vertical, Theme.SpacingKey.sm.value)
     }
 
+    @MainActor
     private var panel: some View {
         VStack(spacing: 0) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -268,7 +264,7 @@ public struct Select<Option: Hashable>: View {
                         }
                         ForEach(opts, id: \.self) { option in
                             let enabled = optionEnabled(option)
-                            Button { selection = option; setOpen(false); query = "" } label: {
+                            Button { selection = option; open = false; query = "" } label: {
                                 HStack(spacing: Theme.SpacingKey.sm.value) {
                                     if let leadingContent { leadingContent(option) }
                                     VStack(alignment: .leading, spacing: 0) {

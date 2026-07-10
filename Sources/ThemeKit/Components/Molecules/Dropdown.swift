@@ -224,8 +224,6 @@ public struct Dropdown<Trigger: View>: View {
 
     private let sections: [DropdownSection]
     private let trigger: Trigger
-    /// Caller-owned open state; `nil` falls back to the internal `@State`.
-    private let externalOpen: Binding<Bool>?
 
     // Appearance/config — mutated only through the modifiers below (R2).
     private var edge: DropdownEdge = .bottomLeading
@@ -234,7 +232,10 @@ public struct Dropdown<Trigger: View>: View {
     private var indicatorStyle: DropdownIndicator = .checkmark
     private var closesOnSelect = true
 
-    @State private var internalOpen = false
+    /// Open state — uncontrolled (internal `@State`) or controlled (the
+    /// caller's `isPresented:` binding drives it), unified by
+    /// `ControllableState` (ADR-4).
+    @ControllableState private var open: Bool
     @State private var expandedSubmenus: Set<String> = []
 
     /// A flat menu of items. Pass `isPresented:` to own the open state
@@ -245,7 +246,7 @@ public struct Dropdown<Trigger: View>: View {
         @ViewBuilder trigger: () -> Trigger
     ) {   // R1
         self.sections = [DropdownSection(items: items)]
-        self.externalOpen = isPresented
+        self._open = ControllableState(wrappedValue: false, external: isPresented)
         self.trigger = trigger()
     }
 
@@ -257,25 +258,15 @@ public struct Dropdown<Trigger: View>: View {
         @ViewBuilder trigger: () -> Trigger
     ) {   // R1
         self.sections = sections
-        self.externalOpen = isPresented
+        self._open = ControllableState(wrappedValue: false, external: isPresented)
         self.trigger = trigger()
     }
 
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    private var open: Bool { externalOpen?.wrappedValue ?? internalOpen }
-
-    private func setOpen(_ newValue: Bool) {
-        if let externalOpen {
-            externalOpen.wrappedValue = newValue
-        } else {
-            internalOpen = newValue
-        }
-    }
-
     public var body: some View {
         Button {
-            setOpen(!open)
+            open.toggle()
         } label: {
             trigger.contentShape(Rectangle())
         }
@@ -288,7 +279,7 @@ public struct Dropdown<Trigger: View>: View {
                 Color.clear
                     .contentShape(Rectangle())
                     .frame(width: 10_000, height: 10_000)
-                    .onTapGesture { setOpen(false) }
+                    .onTapGesture { open = false }
                     .accessibilityHidden(true)
             }
         }
@@ -306,7 +297,7 @@ public struct Dropdown<Trigger: View>: View {
         }
         .accessibilityAddTraits(.isButton)
         .accessibilityValue(open ? Text(String(themeKit: "Expanded")) : Text(String(themeKit: "Collapsed")))
-        .accessibilityAction(.escape) { setOpen(false) }
+        .accessibilityAction(.escape) { open = false }
     }
 
     // MARK: Panel
@@ -315,6 +306,7 @@ public struct Dropdown<Trigger: View>: View {
         RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
     }
 
+    @MainActor
     private var panel: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(sections.enumerated()), id: \.element.id) { index, section in
@@ -337,7 +329,7 @@ public struct Dropdown<Trigger: View>: View {
 
     // MARK: Section
 
-    @ViewBuilder
+    @MainActor @ViewBuilder
     private func sectionRows(_ section: DropdownSection) -> some View {
         if let heading = section.heading {
             headingRow(heading)
@@ -369,13 +361,14 @@ public struct Dropdown<Trigger: View>: View {
 
     // MARK: Rows
 
+    @MainActor
     private func row(_ item: DropdownItem, reservesIndicator: Bool, indented: Bool = false) -> some View {
         let destructive = item.role == .destructive
         let titleColor = destructive ? SemanticColor.error.accent : theme.text(.textPrimary)
         let iconColor = destructive ? SemanticColor.error.accent : theme.text(.textSecondary)
 
         return Button {
-            if closesOnSelect { setOpen(false) }
+            if closesOnSelect { open = false }
             item.action()
         } label: {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -412,7 +405,7 @@ public struct Dropdown<Trigger: View>: View {
 
     /// Inline expandable submenu — a disclosure row plus, when expanded, its
     /// children indented beneath it. (HeroUI SubMenu.)
-    @ViewBuilder
+    @MainActor @ViewBuilder
     private func submenuRows(_ item: DropdownItem, children: [DropdownItem], reservesIndicator: Bool) -> some View {
         let expanded = expandedSubmenus.contains(item.diffIdentity)
 
