@@ -56,7 +56,7 @@ public struct RecentSearchRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(from).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-                        Image(systemName: roundTrip ? "arrow.left.arrow.right" : "arrow.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary))
+                        Image(systemName: roundTrip ? "arrow.left.arrow.right" : "arrow.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
                         Text(to).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
                     }
                     if let caption { Text(caption).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }

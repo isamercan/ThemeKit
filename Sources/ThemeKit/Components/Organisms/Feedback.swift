@@ -426,7 +426,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var loadingLayer: some View {
         if let title = presenter.activeLoading {
             ZStack {
-                theme.background(.bgTertiary).opacity(0.3).ignoresSafeArea()
+                Backdrop(fade: 0.7).ignoresSafeArea()   // shared themable scrim (bgBackdrop token)
                 VStack(spacing: Theme.SpacingKey.sm.value) {
                     Spinner().size(28).lineWidth(3)
                     Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
@@ -509,7 +509,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var confirmLayer: some View {
         if let confirm = presenter.activeConfirm {
             ZStack {
-                theme.background(.bgTertiary).opacity(0.4)
+                Backdrop()
                     .ignoresSafeArea()
                     .onTapGesture { presenter.dismissConfirm() }
                 DialogCard(
@@ -565,7 +565,16 @@ private struct FeedbackToastRow: View {
             .transition(.move(edge: edge).combined(with: .opacity))
             .task(id: item.id) {
                 guard let duration = effectiveDuration else { return }   // nil = sticky
-                try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+                // Pause the auto-dismiss countdown while the user is dragging the
+                // toast (reading / inspecting it) — Ant `pauseOnHover` semantics.
+                // Previously the fixed sleep fired mid-drag and dismissed the toast.
+                let tick = 0.05
+                var remaining = duration
+                while remaining > 0 {
+                    try? await Task.sleep(nanoseconds: UInt64(tick * 1_000_000_000))
+                    if Task.isCancelled { return }
+                    if dragProgress == 0 { remaining -= tick }
+                }
                 onDismiss()
             }
     }

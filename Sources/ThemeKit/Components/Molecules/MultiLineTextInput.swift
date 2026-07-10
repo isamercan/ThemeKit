@@ -34,6 +34,8 @@ public struct MultiLineTextInput: View {
     private var placeholder: String = ""
     private var characterLimit: Int?
     private var errorText: String?
+    private var helperText: String?
+    private var warningText: String?
     private var infoMessages: [InfoMessage] = []
     /// Set only by the `.size(_:)` modifier — an explicit size wins over the
     /// subtree `FieldDefaults.size` default (`explicitSize ?? fieldDefaults.size ?? .medium`).
@@ -66,6 +68,8 @@ public struct MultiLineTextInput: View {
     private var messages: [InfoMessage] {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        if let warningText { messages.append(InfoMessage(warningText, kind: .warning)) }
+        if let helperText { messages.append(InfoMessage(helperText, kind: .info)) }
         return messages
     }
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
@@ -228,6 +232,14 @@ public extension MultiLineTextInput {
 
     /// Convenience error message appended as an `.error` `InfoMessage`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Convenience hint appended to the message list as an `.info` `InfoMessage`
+    /// (parity with `TextInput.helperText`).
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Convenience warning appended to the message list as a `.warning` `InfoMessage`
+    /// (parity with `TextInput.warningText`).
+    func warningText(_ text: String?) -> Self { copy { $0.warningText = text } }
 
     /// Validation / hint messages rendered beneath the editor.
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }

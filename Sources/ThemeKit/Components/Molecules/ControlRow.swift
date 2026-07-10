@@ -46,7 +46,9 @@ public struct ControlRow: View {
     private var hasError = false
     private var errorText: String?
     private var accessibilityID: String?
+    private var controlPlacement: HorizontalEdge = .trailing
 
+    @Environment(\.fieldDefaults) private var fieldDefaults
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
@@ -66,18 +68,15 @@ public struct ControlRow: View {
                 withAnimation(motion) { isOn.toggle() }
             } label: {
                 HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                    VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-                        InputLabel(title)
-                            .required(isRequired)
-                            .hasError(hasError)
-                        if let description {
-                            HelperText(description)
-                                .hasError(hasError)
-                        }
+                    if controlPlacement == .leading {
+                        indicator.accessibilityHidden(true)   // the row is the single a11y element
+                        labelBlock
+                        Spacer(minLength: 0)
+                    } else {
+                        labelBlock
+                        Spacer(minLength: Theme.SpacingKey.sm.value)
+                        indicator.accessibilityHidden(true)
                     }
-                    Spacer(minLength: Theme.SpacingKey.sm.value)
-                    indicator
-                        .accessibilityHidden(true)   // the row is the single a11y element
                 }
                 .contentShape(Rectangle())
             }
@@ -99,9 +98,26 @@ public struct ControlRow: View {
         .animation(motion, value: showsError)
     }
 
-    /// Trailing boolean control: the custom slot when set, else the archetype
-    /// from `control(_:)` — all driven by the same `isOn` binding, so a tap on
-    /// the indicator and a tap on the row stay in sync.
+    /// The label + optional description column. The required asterisk is gated
+    /// by the subtree `FieldDefaults.requiredIndicator` default (F4) — the field
+    /// stays required for a11y/validation even when the glyph is suppressed.
+    private var labelBlock: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            InputLabel(title)
+                .required(showsRequiredIndicator)
+                .hasError(hasError)
+            if let description {
+                HelperText(description)
+                    .hasError(hasError)
+            }
+        }
+    }
+
+    private var showsRequiredIndicator: Bool { isRequired && (fieldDefaults.requiredIndicator ?? true) }
+
+    /// The boolean control: the custom slot when set, else the archetype from
+    /// `control(_:)` — all driven by the same `isOn` binding, so a tap on the
+    /// indicator and a tap on the row stay in sync.
     @ViewBuilder
     private var indicator: some View {
         if let customIndicator {
@@ -139,9 +155,13 @@ public extension ControlRow {
     /// Supporting text rendered under the label.
     func description(_ text: String?) -> Self { copy { $0.description = text } }
 
-    /// Which boolean control renders in the trailing slot: `.toggle` (default),
-    /// `.checkbox`, or `.radio`. Ignored when a custom `indicator` is set.
+    /// Which boolean control renders: `.toggle` (default), `.checkbox`, or
+    /// `.radio`. Ignored when a custom `indicator` is set.
     func control(_ kind: ControlRowControl) -> Self { copy { $0.control = kind } }
+
+    /// Which side the control sits on: `.trailing` (default, switch-row style)
+    /// or `.leading` (control-first, checkbox/radio style).
+    func controlPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.controlPlacement = edge } }
 
     /// Replaces the built-in control with a custom trailing indicator view.
     /// The row press still toggles `isOn`; keep the slot purely visual.
@@ -190,6 +210,10 @@ public extension ControlRow {
                     .a11yID("terms")
                 ControlRow("Remember me", isOn: $remember)
                     .control(.radio)
+                ControlRow("Leading checkbox", isOn: $marketing)
+                    .control(.checkbox)
+                    .controlPlacement(.leading)   // A1 — control on the left
+                    .description("The control sits on the leading edge, checkbox/radio style.")
                 ControlRow("Marketing emails", isOn: $marketing)
                     .description("Occasional product updates and offers.")
                     .disabled(true)

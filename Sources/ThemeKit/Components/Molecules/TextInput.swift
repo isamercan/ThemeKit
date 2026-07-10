@@ -326,7 +326,9 @@ public struct TextInput: View {
                 fieldContent
             }
         }
-        .frame(height: effectiveSize.height)
+        // Scales with Dynamic Type (matches the rest of the field family) instead
+        // of a raw fixed height that clips the floating label + value at large sizes.
+        .scaledControlHeight(effectiveSize.height)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).

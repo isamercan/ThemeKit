@@ -128,6 +128,7 @@ public struct PriceTrendChart: View {
     private func chevron(_ name: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name).font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.foreground(.fgHero))
+                .mirrorsInRTL()
                 .frame(width: 28, height: 28).background(theme.background(.bgSecondaryLight), in: Circle())
         }.buttonStyle(.plain)
     }

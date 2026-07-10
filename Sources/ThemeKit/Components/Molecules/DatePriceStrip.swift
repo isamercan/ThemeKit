@@ -196,6 +196,7 @@ public struct DatePriceStrip: View {
         Button { action?() } label: {
             Image(systemName: name).font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(theme.foreground(.fgHero))
+                .mirrorsInRTL()
                 .frame(width: 30, height: 30)
                 .background(theme.background(.bgSecondaryLight), in: Circle())
         }
