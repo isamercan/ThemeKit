@@ -153,6 +153,7 @@ enum ComponentRegistry {
         .knob("Breadcrumbs", .molecules, demo: BreadcrumbsDemo(), usage: #"Breadcrumbs([.init("Home", action: { }), .init("Current")], maxItems: 4)"#),
         .knob("Calendar", .molecules, demo: CalendarDemo(), usage: #"CalendarView(selection: $date)"#),
         .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField("Check-in", date: $date).style(.custom("EEE, d MMM")).clearable()"##),
+        .knob("TimeField", .molecules, demo: TimeFieldDemo(), usage: #"TimeField("Pickup", time: $time).hourCycle(.h24).minuteInterval(5).clearable()"#),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact") { inputs }.helper("…")"#),
         .knob("Form", .molecules, demo: FormDemo(), usage: ##"@State var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
         .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput("Passport") { pick() }.fileName(name)"#),
