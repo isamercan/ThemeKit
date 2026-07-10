@@ -46,13 +46,15 @@ public struct Pagination: View {
                     .padding(.trailing, Theme.SpacingKey.xs.value)
             }
 
-            arrow(systemName: "chevron.left", enabled: isEnabled && current > 1) { current = max(1, current - 1) }
+            arrow(systemName: "chevron.left", label: String(themeKit: "Previous page"), enabled: isEnabled && current > 1) { current = max(1, current - 1) }
 
             if simple {
                 Text("\(current) / \(total)")
                     .textStyle(.labelBase600)
                     .foregroundStyle(theme.text(.textPrimary))
                     .frame(minWidth: 48)
+                    .accessibilityLabel(String(themeKit: "Page"))
+                    .accessibilityValue(String(themeKit: "\(current) of \(total)"))
             } else {
                 ForEach(Array(pages.enumerated()), id: \.offset) { _, page in
                     if page == -1 {
@@ -63,7 +65,7 @@ public struct Pagination: View {
                 }
             }
 
-            arrow(systemName: "chevron.right", enabled: isEnabled && current < total) { current = min(total, current + 1) }
+            arrow(systemName: "chevron.right", label: String(themeKit: "Next page"), enabled: isEnabled && current < total) { current = min(total, current + 1) }
 
             if showJumper { jumper }
         }
@@ -122,9 +124,11 @@ public struct Pagination: View {
         .buttonStyle(.plain)
         .disabled(!isEnabled)
         .accessibilityLabel(String(themeKit: "Page \(page)"))
+        .accessibilityValue(isCurrent ? String(themeKit: "\(current) of \(total)") : "")
+        .accessibilityAddTraits(isCurrent ? .isSelected : [])
     }
 
-    private func arrow(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func arrow(systemName: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Icon(systemName: systemName)
                 .size(.sm)
@@ -134,6 +138,7 @@ public struct Pagination: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .accessibilityLabel(label)
     }
 
     // MARK: - Pure windowing (extracted for testing)

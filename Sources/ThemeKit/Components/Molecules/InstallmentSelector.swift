@@ -83,10 +83,22 @@ public struct InstallmentSelector: View {
                 .stroke(selected ? theme.foreground(.fgHero) : theme.border(.borderPrimary), lineWidth: selected ? 1.5 : 1))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel(count, planTotal: planTotal, interestFree: interestFree))
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     /// The plan's grand total — base plus any per-plan surcharge (interest).
     private func effectiveTotal(_ count: Int) -> Decimal { total + (surcharge[count] ?? 0) }
+
+    /// Spoken description of a plan row — the visible content combined into one label.
+    private func accessibilityLabel(_ count: Int, planTotal: Decimal, interestFree: Bool) -> String {
+        var parts = [count <= 1 ? String(themeKit: "Single payment") : String(themeKit: "\(count) installments")]
+        if count == recommendedCount { parts.append(String(themeKit: "Recommended")) }
+        if interestFree { parts.append(String(themeKit: "Interest-free")) }
+        if count > 1 { parts.append(String(themeKit: "\(formatted(planTotal / Decimal(count))) per month")) }
+        parts.append(String(themeKit: "\(formatted(planTotal)) total"))
+        return parts.joined(separator: ", ")
+    }
 
     private func formatted(_ value: Decimal) -> String {
         value.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))

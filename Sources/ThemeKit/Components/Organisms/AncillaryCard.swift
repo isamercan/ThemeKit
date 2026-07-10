@@ -110,12 +110,12 @@ public struct AncillaryCard: View {
 
     private func stepper(_ qty: Binding<Int>) -> some View {
         HStack(spacing: 0) {
-            stepButton("minus", enabled: qty.wrappedValue > quantityRange.lowerBound) {
+            stepButton("minus", label: String(themeKit: "Decrease"), value: qty.wrappedValue, enabled: qty.wrappedValue > quantityRange.lowerBound) {
                 qty.wrappedValue = max(quantityRange.lowerBound, qty.wrappedValue - 1)
             }
             Text("\(qty.wrappedValue)").textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
                 .frame(minWidth: 28).monospacedDigit()
-            stepButton("plus", enabled: qty.wrappedValue < quantityRange.upperBound) {
+            stepButton("plus", label: String(themeKit: "Increase"), value: qty.wrappedValue, enabled: qty.wrappedValue < quantityRange.upperBound) {
                 qty.wrappedValue = min(quantityRange.upperBound, qty.wrappedValue + 1)
             }
         }
@@ -123,7 +123,7 @@ public struct AncillaryCard: View {
         .background(theme.background(.bgSecondary), in: Capsule())
     }
 
-    private func stepButton(_ icon: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+    private func stepButton(_ icon: String, label: String, value: Int, enabled: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon).font(.system(size: 13, weight: .bold))
                 .foregroundStyle(enabled ? accentSemantic.base : theme.text(.textDisabled))
@@ -131,6 +131,8 @@ public struct AncillaryCard: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .accessibilityLabel(label)
+        .accessibilityValue("\(value)")
     }
 
     private func addButton(_ added: Binding<Bool>) -> some View {

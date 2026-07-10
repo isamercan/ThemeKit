@@ -182,6 +182,7 @@ public struct FlightCard: View {
                 legPath(leg)
                 timeColumn(leg.arrival, code: leg.destination, alignment: .trailing)
             }
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -223,6 +224,7 @@ public struct FlightCard: View {
             pathView
             timeColumn(arrival, code: destination, alignment: .trailing)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment) -> some View {

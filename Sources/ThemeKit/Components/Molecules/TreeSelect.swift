@@ -140,6 +140,8 @@ public struct TreeSelect: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityLabel(label ?? placeholder)
+        .accessibilityValue(summary)
     }
 
     /// The composed trigger row (summary + chevron) — everything a `FieldStyle`
