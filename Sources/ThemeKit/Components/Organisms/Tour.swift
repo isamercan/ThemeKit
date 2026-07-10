@@ -174,6 +174,7 @@ private struct TourHostModifier: ViewModifier {
                 Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary)).padding(Theme.SpacingKey.sm.value)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Close"))
         }
         .position(x: proxy.size.width / 2, y: max(90, min(y, proxy.size.height - 90)))
     }

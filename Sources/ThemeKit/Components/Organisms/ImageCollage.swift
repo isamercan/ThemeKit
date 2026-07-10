@@ -63,6 +63,10 @@ public struct ImageCollage: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { onTap?(index) }
+        .accessibilityAddTraits(onTap != nil ? .isButton : [])
+        .accessibilityLabel(overlayExtra > 0
+            ? String(themeKit: "View more photos")
+            : String(themeKit: "Photo"))
     }
 
     private var placeholder: some View {

@@ -159,6 +159,7 @@ public struct ListRow: View {
                     Icon(systemName: "info.circle").size(.sm).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Info"))
             }
             if let trailingSlot {
                 trailingSlot
