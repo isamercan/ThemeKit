@@ -109,6 +109,8 @@ public struct Transfer: View {
                 .frame(width: 32, height: 32)
                 .background(enabled ? SemanticColor.primary.solid : theme.background(.bgElevatorTertiary),
                             in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

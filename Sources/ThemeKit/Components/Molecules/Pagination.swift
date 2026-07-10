@@ -122,6 +122,8 @@ public struct Pagination: View {
                 )
         }
         .buttonStyle(.plain)
+        .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays 36pt
+        .contentShape(Rectangle())
         .disabled(!isEnabled)
         .accessibilityLabel(String(themeKit: "Page \(page)"))
         .accessibilityValue(isCurrent ? String(themeKit: "\(current) of \(total)") : "")
@@ -137,6 +139,8 @@ public struct Pagination: View {
                 .mirrorsInRTL()
         }
         .buttonStyle(.plain)
+        .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays 36pt
+        .contentShape(Rectangle())
         .disabled(!enabled)
         .accessibilityLabel(label)
     }

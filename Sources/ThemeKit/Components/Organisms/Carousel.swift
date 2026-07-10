@@ -176,6 +176,10 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
                 .background(theme.background(.bgTertiary).opacity(0.5), in: Circle())
+                // A11y: keep the 32pt circle glyph but grow the tap target to the
+                // 44pt WCAG 2.5.5 / HIG minimum via transparent padding.
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

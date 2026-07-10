@@ -168,6 +168,7 @@ private struct DiagonalStripes: View {
                 }
             }
             .stroke(Color.white.opacity(0.35), lineWidth: lineWidth)
+            .flipsForRightToLeftLayoutDirection(true)
         }
         .allowsHitTesting(false)
     }

@@ -69,6 +69,8 @@ public struct CalendarView: View {
             Icon(systemName: name).size(.sm).color(theme.text(.textPrimary))
                 .frame(width: 32, height: 32)
                 .mirrorsInRTL()
+                .frame(minWidth: 44, minHeight: 44)   // A11y: ≥44pt tap target (glyph stays 32)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -91,7 +93,7 @@ public struct CalendarView: View {
                 if let date {
                     dayCell(date)
                 } else {
-                    Color.clear.frame(height: 36)
+                    Color.clear.frame(height: 44)
                 }
             }
         }
@@ -109,6 +111,8 @@ public struct CalendarView: View {
                 .frame(width: 36, height: 36)
                 .background(isSelected ? selectedFill : .clear, in: Circle())
                 .overlay { if isToday && !isSelected { Circle().stroke(todayRing, lineWidth: 1) } }
+                .frame(maxWidth: .infinity, minHeight: 44)   // A11y: ≥44pt tap target (circle stays 36)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

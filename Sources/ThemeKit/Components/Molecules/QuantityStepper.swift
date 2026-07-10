@@ -56,6 +56,9 @@ public struct QuantityStepper: View {
                 .size(.sm)
                 .color(enabled && isEnabled ? theme.text(.textHero) : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
+                // Glyph stays 32pt; expand the hit area to the 44pt WCAG 2.5.5 / HIG minimum.
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!enabled || !isEnabled)
