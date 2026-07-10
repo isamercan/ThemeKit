@@ -22,9 +22,11 @@ public enum ShadowStyle: String, CaseIterable {
     private static let shadow5 = Color(hex: "3352a40d")
     private static let shadow8 = Color(hex: "3352a414")
 
-    /// Resolved layers from the active theme; falls back to the in-code spec.
-    var layers: [Theme.ResolvedShadowLayer] {
-        Theme.shared.shadow(self) ?? fallbackLayers
+    /// Resolved layers from a specific theme; falls back to the in-code spec.
+    /// Takes the theme explicitly so the modifier can pass the *environment* theme
+    /// (respecting per-subtree `.theme(_:)`) rather than always reading `Theme.shared`.
+    func layers(from theme: Theme) -> [Theme.ResolvedShadowLayer] {
+        theme.shadow(self) ?? fallbackLayers
     }
 
     private var fallbackLayers: [Theme.ResolvedShadowLayer] {
@@ -44,10 +46,11 @@ public enum ShadowStyle: String, CaseIterable {
 }
 
 private struct ThemeShadowModifier: ViewModifier {
+    @Environment(\.theme) private var theme
     let style: ShadowStyle
 
     func body(content: Content) -> some View {
-        style.layers.reduce(AnyView(content)) { view, layer in
+        style.layers(from: theme).reduce(AnyView(content)) { view, layer in
             AnyView(view.shadow(color: layer.color, radius: layer.radius, x: layer.x, y: layer.y))
         }
     }

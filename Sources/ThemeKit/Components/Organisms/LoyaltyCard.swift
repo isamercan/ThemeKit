@@ -71,7 +71,9 @@ public struct LoyaltyCard: View {
             withAnimation(Animation.spring(.smooth).ifMotionAllowed(reduceMotion)) { flipped.toggle() }
         }
         .accessibilityAddTraits(flippable && membership != nil ? .isButton : [])
-        .accessibilityHint(flippable && membership != nil ? String(themeKit: "Double-tap to \(flipped ? "show card" : "show membership code")") : "")
+        .accessibilityHint(flippable && membership != nil
+            ? (flipped ? String(themeKit: "Double-tap to show card") : String(themeKit: "Double-tap to show membership code"))
+            : "")
     }
 
     private var frontFace: some View {
