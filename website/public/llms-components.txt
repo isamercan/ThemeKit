@@ -1098,6 +1098,7 @@ init(_ label: String? = nil, date: Binding<Date?>)
 - `.components` — Which components the field shows and the picker edits (date / dateAndTime / time).
 - `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
 - `.clearable` — Show a trailing clear button when a date is set.
+- `.externalFocus` — Drive focus from outside (e.g.
 - `.icon` — Leading SF Symbol shown inside the field.
 - `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
 
@@ -1370,6 +1371,7 @@ init(_ label: String, text: Binding<String>)
 - `.errorText` — Convenience error message appended as an `.error` `InfoMessage`.
 - `.infoMessages` — Validation / hint messages rendered beneath the editor.
 - `.minHeight` — Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
+- `.externalFocus` — Drive focus from outside (e.g.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## MultiSelect
@@ -1695,6 +1697,7 @@ init(text: Binding<String>)
 - `.helperText` — Convenience hint rendered under the field as an `.info` `InfoMessage`; hidden while the field is invalid (an `errorText` or an error-severity `infoMessages` entry is active).
 - `.errorText` — Convenience error appended to the message list as an `.error` `InfoMessage`; also flips the ambient `FieldStyle` into its error border.
 - `.infoMessages` — Validation / info messages rendered under the field (their dominant severity drives the `FieldStyle` error / warning border, as in `TextInput`).
+- `.externalFocus` — Drive focus from outside (e.g.
 - `.debounce` — Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s).
 - `.maxResults` — Caps the number of suggestion rows (default 6).
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
@@ -1804,6 +1807,8 @@ init(_ label: String? = nil, options: [Option], selection: Binding<Option?>, opt
 - `.placeholder` — Placeholder shown while no option is selected.
 - `.hint` — Helper text rendered under the field (hidden while an error is shown).
 - `.errorText` — Error message rendered under the field (drives the error border / label color).
+- `.infoMessages` — Validation / info messages rendered under the field as an `InfoMessageList` (their dominant severity drives the `FieldStyle` error / warning border, as in `TextInput`).
+- `.externalFocus` — Drive focus from outside (e.g.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## Slider
@@ -2431,8 +2436,8 @@ init(_ title: String? = nil)
 - `.icon` — Leading SF Symbol shown in the faded circle (symbol-media only).
 - `.message` — Secondary message under the title.
 - `.imageMaxHeight` — Max height of the custom/animated illustration.
-- `.iconForeground` — Override the icon glyph color (defaults to the `.fgHero` token, R4).
-- `.iconBackground` — Override the icon circle fill (defaults to the `.bgElevatorTertiary` token, R4).
+- `.iconForeground` — Raw glyph-color override (back-compat); prefer the token-bound overload.
+- `.iconBackground` — Raw circle-fill override (back-compat); prefer the token-bound overload.
 - `.iconCircleSize` — Diameter of the icon circle.
 - `.primaryAction` — Primary call-to-action button (title + handler).
 - `.secondaryAction` — Secondary call-to-action button (title + handler).

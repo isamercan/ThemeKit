@@ -256,7 +256,7 @@ public extension LocationCard {
             Text("Map preview unavailable").textStyle(.labelSm700)
                 .foregroundStyle(theme.text(.textSecondaryInverse))
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(.black.opacity(0.35), in: Capsule())
+                .background(MediaScrim.solid, in: Capsule())
         }
         .subtitle("Kordon Cd. No:12, İzmir")
         .distance("1.2 km to center")

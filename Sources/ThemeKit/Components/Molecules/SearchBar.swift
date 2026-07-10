@@ -54,6 +54,7 @@ public struct SearchBar: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     // Appearance/config — mutated only through the modifiers below (R2); the
     // async init seeds a 0.3s debounce baseline, which `.debounce(_:)` can
@@ -81,6 +82,13 @@ public struct SearchBar: View {
     private var helperText: String?
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
+
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`) —
+    /// bridged to the field's `@FocusState`, TextInput parity.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the field loses focus.
+    private var onEditingEnd: ((String) -> Void)?
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -123,6 +131,14 @@ public struct SearchBar: View {
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
 
+    /// SearchBar has no `TextInputSize` modifier of its own; the subtree
+    /// `FieldDefaults.size` maps onto its control height (the classic fixed
+    /// 44pt equals `.small`, which stays the default).
+    private var effectiveSize: TextInputSize { fieldDefaults.size ?? .small }
+    /// Message rows animate when micro-animations are on and the subtree default
+    /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -145,18 +161,29 @@ public struct SearchBar: View {
             dropdown
         }
         // Message rows carry the HeroUI FieldError transition; key it here so
-        // it plays (and snaps under `microAnimations(false)` / Reduce Motion).
-        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
+        // it plays (and snaps under `microAnimations(false)` / Reduce Motion /
+        // `fieldDefaults(messagesAnimated: false)`).
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         .onAppear { update(for: text) }
         .onDebouncedChange(of: text, for: effectiveDebounce) { value in
             update(for: value)
             onSearch?(value)
         }
+        // External focus bridge (TextInput parity): a `true` write focuses the
+        // field; blurring resets the external binding so the owner stays in sync.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !isFocused { isFocused = true }
+        }
+        .onChange(of: isFocused) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
+        }
     }
 
     /// The composed field row (search icon + editor + trailing control), padded
     /// and sized — everything a `FieldStyle` receives as `configuration.content`.
-    /// The fixed 44pt control height is layout, not chrome, so it stays here.
+    /// The control height is layout, not chrome, so it stays here — the classic
+    /// 44pt (`.small`) unless the subtree `FieldDefaults.size` remaps it.
     private var fieldCore: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             Icon(systemName: leadingSystemImage).size(.sm).color(theme.text(leadingIconColorKey))
@@ -175,16 +202,17 @@ public struct SearchBar: View {
             trailingControl
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(44)
+        .scaledControlHeight(effectiveSize.height)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: `isFocused` ← the field's `@FocusState`;
     /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` ← the dominant
     /// severity of the merged message list (same derivation as `TextInput`);
-    /// `size` is `.small` — SearchBar has no `TextInputSize` axis, but its fixed
-    /// 44pt control height (kept in the content) exactly matches
-    /// `TextInputSize.small`, so size-keyed styles see the truthful preset.
+    /// `size` is the effective preset — SearchBar has no `TextInputSize` axis of
+    /// its own, so it reports `.small` (its classic 44pt height) unless the
+    /// subtree `FieldDefaults.size` remaps it. Size-keyed styles always see the
+    /// preset that matches the rendered control height.
     @ViewBuilder
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
@@ -193,7 +221,7 @@ public struct SearchBar: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: .small
+            size: effectiveSize
         ))
     }
 
@@ -454,6 +482,13 @@ public extension SearchBar {
     /// Validation / info messages rendered under the field (their dominant
     /// severity drives the `FieldStyle` error / warning border, as in `TextInput`).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`) — TextInput parity.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the field loses focus.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Debounce interval for typeahead / `onSearch` (async init defaults to 0.3s).
     func debounce(_ interval: TimeInterval) -> Self { copy { $0.debounce = interval } }

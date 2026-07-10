@@ -34,6 +34,9 @@ public struct DateField: View {
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let label: String?
     @Binding private var date: Date?
@@ -48,6 +51,15 @@ public struct DateField: View {
     private var allowClear = false
     private var leadingSystemImage: String?
     private var accessibilityID: String?
+
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
+    /// DateField's focus analog is its picker popover: a `true` write opens the
+    /// picker (`showPicker` already reads as `isFocused` in the `FieldStyle`
+    /// configuration); dismissing it resets the binding.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the displayed value
+    /// (empty when no date is set) when the picker is dismissed.
+    private var onEditingEnd: ((String) -> Void)?
 
     @Environment(\.locale) private var environmentLocale
     @State private var showPicker = false
@@ -67,6 +79,14 @@ public struct DateField: View {
     private var displayText: String? {
         date.map { Self.text(for: $0, style: style, locale: locale, components: components) }
     }
+    /// DateField has no `TextInputSize` modifier of its own; the subtree
+    /// `FieldDefaults.size` maps onto its control height (nil keeps the
+    /// component's classic scaled 48pt / nominal `.medium`).
+    private var effectiveSize: TextInputSize? { fieldDefaults.size }
+    /// Message rows animate only when the subtree `FieldDefaults.messagesAnimated`
+    /// opts in (DateField historically snaps) — still gated by `microAnimations`
+    /// + Reduce Motion.
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? false) }
 
     // MARK: - Body
 
@@ -92,6 +112,18 @@ public struct DateField: View {
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
+        // Message rows animate only when `fieldDefaults(messagesAnimated: true)`
+        // opts this field family in; `microAnimations` + Reduce Motion still win.
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: infoMessages)
+        // External focus bridge (TextInput parity, popover-flavored): a `true`
+        // write opens the picker; dismissing it resets the external binding.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !showPicker && isEnabled { showPicker = true }
+        }
+        .onChange(of: showPicker) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
+        }
     }
 
     /// The composed field row (icon + value + trailing accessory), sized —
@@ -108,7 +140,7 @@ public struct DateField: View {
             trailing
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(48)
+        .scaledControlHeight(effectiveSize?.height ?? 48)
         .frame(maxWidth: .infinity)
     }
 
@@ -116,7 +148,8 @@ public struct DateField: View {
     /// Configuration mapping: the open popover reads as `isFocused`; the dominant
     /// `infoMessages` kind drives `hasError` / `hasWarning`. `size` is nominal
     /// `.medium` — `DateField` has no `TextInputSize` axis; its height stays the
-    /// component's own scaled 48pt, carried by the content.
+    /// component's own scaled 48pt, carried by the content — unless the subtree
+    /// `FieldDefaults.size` remaps both the height and the reported preset.
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
@@ -124,7 +157,7 @@ public struct DateField: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -245,6 +278,16 @@ public extension DateField {
 
     /// Show a trailing clear button when a date is set.
     func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`). DateField's
+    /// focus analog is its picker popover: a `true` write opens the picker (which
+    /// also renders the `FieldStyle` focus border); dismissal resets the binding.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate when the picker is dismissed. Fires with the displayed value
+    /// (locale-formatted; empty when no date is set — pair with `.required()`-style rules).
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Leading SF Symbol shown inside the field.
     func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }

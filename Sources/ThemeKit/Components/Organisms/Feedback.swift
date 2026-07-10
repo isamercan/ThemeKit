@@ -87,6 +87,11 @@ public final class FeedbackPresenter {
         let isLoading: Bool
         let action: ToastAction?
         let duration: Double?
+        /// Whether `duration` was passed explicitly at the call site. `false`
+        /// (the omitted-argument `toast(...)` overloads) lets the host layer
+        /// substitute `FeedbackDefaults.toastDuration` when one is set —
+        /// `duration: nil` already means *sticky*, so omission needs its own bit.
+        let hasExplicitDuration: Bool
         /// Per-toast edge override; `nil` falls back to the host's default.
         let position: ToastPosition?
         /// Fired when the toast is presented.
@@ -100,6 +105,7 @@ public final class FeedbackPresenter {
 
         init(title: String, message: String?, kind: FeedbackKind, systemImage: String?,
              isLoading: Bool, action: ToastAction?, duration: Double?,
+             hasExplicitDuration: Bool = true,
              position: ToastPosition? = nil, onShow: (() -> Void)? = nil,
              onDismiss: (() -> Void)? = nil, custom: AnyView? = nil) {
             self.title = title
@@ -109,6 +115,7 @@ public final class FeedbackPresenter {
             self.isLoading = isLoading
             self.action = action
             self.duration = duration
+            self.hasExplicitDuration = hasExplicitDuration
             self.position = position
             self.onShow = onShow
             self.onDismiss = onDismiss
@@ -133,15 +140,20 @@ public final class FeedbackPresenter {
         let message: String?
         let kind: FeedbackKind
         let duration: Double
+        /// Whether `duration` was passed explicitly at the call site — `false`
+        /// lets the host substitute `FeedbackDefaults.toastDuration` when set.
+        let hasExplicitDuration: Bool
         /// When set, the card body renders this instead of the stock icon +
         /// title / message layout; the card chrome and dismissal are shared.
         let custom: AnyView?
 
-        init(title: String, message: String?, kind: FeedbackKind, duration: Double, custom: AnyView? = nil) {
+        init(title: String, message: String?, kind: FeedbackKind, duration: Double,
+             hasExplicitDuration: Bool = true, custom: AnyView? = nil) {
             self.title = title
             self.message = message
             self.kind = kind
             self.duration = duration
+            self.hasExplicitDuration = hasExplicitDuration
             self.custom = custom
         }
     }
@@ -152,7 +164,10 @@ public final class FeedbackPresenter {
     var activeNotification: NotificationItem?
     var activeLoading: String?
 
-    private let maxVisibleToasts: Int
+    /// Stack cap (oldest drops past it). Internal setter so the `.feedbackHost`
+    /// overlay can sync it from `FeedbackDefaults.maxVisibleToasts` — callers
+    /// still size it via `feedbackHost(maxVisibleToasts:)` / this class's init.
+    var maxVisibleToasts: Int
 
     public init(maxVisibleToasts: Int = 3) {
         self.maxVisibleToasts = max(1, maxVisibleToasts)
@@ -187,6 +202,28 @@ public final class FeedbackPresenter {
                           onShow: onShow, onDismiss: onDismiss))
     }
 
+    /// `toast(_:)` without the `duration:` argument — the toast auto-dismisses
+    /// after the subtree default (`.feedbackDefaults(toastDuration:)` when set
+    /// on the host's environment, else 2.5s). `duration: nil` already means
+    /// *sticky*, so omission is its own overload; pass `duration:` explicitly
+    /// (including `nil`) to pin a toast against the defaults.
+    @discardableResult
+    public func toast(
+        _ title: String,
+        message: String? = nil,
+        kind: FeedbackKind = .success,
+        systemImage: String? = nil,
+        action: ToastAction? = nil,
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil
+    ) -> UUID {
+        enqueue(ToastItem(title: title, message: message, kind: kind,
+                          systemImage: systemImage, isLoading: false, action: action,
+                          duration: 2.5, hasExplicitDuration: false, position: position,
+                          onShow: onShow, onDismiss: onDismiss))
+    }
+
     /// Show a transient toast with fully custom content. Same stacking, cap,
     /// auto-dismiss (pass `duration: nil` for sticky), elevation shadow,
     /// swipe-to-dismiss, per-toast `position` and lifecycle callbacks as
@@ -203,6 +240,24 @@ public final class FeedbackPresenter {
         enqueue(ToastItem(title: "", message: nil, kind: .info, systemImage: nil,
                           isLoading: false, action: nil, duration: duration,
                           position: position, onShow: onShow, onDismiss: onDismiss,
+                          custom: AnyView(content())))
+    }
+
+    /// Custom-content `toast {}` without the `duration:` argument — auto-dismisses
+    /// after the subtree default (`.feedbackDefaults(toastDuration:)` when set,
+    /// else 2.5s). Pass `duration:` explicitly (including `nil` for sticky) to
+    /// pin the toast against the defaults.
+    @discardableResult
+    public func toast<Content: View>(
+        position: ToastPosition? = nil,
+        onShow: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> UUID {
+        enqueue(ToastItem(title: "", message: nil, kind: .info, systemImage: nil,
+                          isLoading: false, action: nil, duration: 2.5,
+                          hasExplicitDuration: false, position: position,
+                          onShow: onShow, onDismiss: onDismiss,
                           custom: AnyView(content())))
     }
 
@@ -281,11 +336,26 @@ public final class FeedbackPresenter {
         activeNotification = NotificationItem(title: title, message: message, kind: kind, duration: duration)
     }
 
+    /// `notify(_:)` without the `duration:` argument — the card auto-dismisses
+    /// after the subtree default (`.feedbackDefaults(toastDuration:)` when set
+    /// on the host's environment, else 4s).
+    public func notify(_ title: String, message: String? = nil, kind: FeedbackKind = .info) {
+        activeNotification = NotificationItem(title: title, message: message, kind: kind,
+                                              duration: 4, hasExplicitDuration: false)
+    }
+
     /// Present a notification card with fully custom body content. Same top-edge
     /// card chrome, close button, transition and auto-dismiss as `notify(_:)`.
     public func notify<Content: View>(duration: Double = 4, @ViewBuilder content: () -> Content) {
         activeNotification = NotificationItem(title: "", message: nil, kind: .info,
                                               duration: duration, custom: AnyView(content()))
+    }
+
+    /// Custom-content `notify {}` without the `duration:` argument — auto-dismisses
+    /// after the subtree default (`.feedbackDefaults(toastDuration:)` when set, else 4s).
+    public func notify<Content: View>(@ViewBuilder content: () -> Content) {
+        activeNotification = NotificationItem(title: "", message: nil, kind: .info, duration: 4,
+                                              hasExplicitDuration: false, custom: AnyView(content()))
     }
 
     /// Show a blocking loading indicator (spinner + text). Does not auto-dismiss —
@@ -305,9 +375,20 @@ private struct FeedbackHostModifier: ViewModifier {
     @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Subtree house defaults (`.feedbackDefaults(...)` applied around the host);
+    /// they sit between a per-toast argument and the host's own parameters.
+    @Environment(\.feedbackDefaults) private var feedbackDefaults
 
     @State private var presenter: FeedbackPresenter
     private let defaultPosition: ToastPosition
+    private let defaultCap: Int
+
+    /// Effective default edge: `FeedbackDefaults.toastPosition` when set, else
+    /// the `feedbackHost(toastPosition:)` parameter. A per-toast `position:`
+    /// still wins over both.
+    private var effectiveDefaultPosition: ToastPosition {
+        feedbackDefaults.toastPosition ?? defaultPosition
+    }
 
     /// HeroUI-style stack depth: each toast behind the newest peeks out by a few
     /// points and recedes at ~0.97 scale per depth step. Fixed chrome constants
@@ -319,6 +400,7 @@ private struct FeedbackHostModifier: ViewModifier {
     init(maxVisibleToasts: Int, toastPosition: ToastPosition) {
         _presenter = State(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
         defaultPosition = toastPosition
+        defaultCap = maxVisibleToasts
     }
 
     func body(content: Content) -> some View {
@@ -333,6 +415,11 @@ private struct FeedbackHostModifier: ViewModifier {
             .animation(Motion.base.animation, value: presenter.activeConfirm?.id)
             .animation(Motion.base.animation, value: presenter.activeNotification?.id)
             .animation(Motion.fast.animation, value: presenter.activeLoading)
+            // The presenter is constructed in `init`, where the environment isn't
+            // readable — sync the stack cap from `FeedbackDefaults` here instead.
+            .onChange(of: feedbackDefaults.maxVisibleToasts, initial: true) { _, cap in
+                presenter.maxVisibleToasts = max(1, cap ?? defaultCap)
+            }
     }
 
     @ViewBuilder
@@ -380,17 +467,22 @@ private struct FeedbackHostModifier: ViewModifier {
             .padding(Theme.SpacingKey.md.value)
             .transition(.move(edge: .top).combined(with: .opacity))
             .task(id: note.id) {
-                try? await Task.sleep(nanoseconds: UInt64(note.duration * 1_000_000_000))
+                // Omitted-duration `notify(...)` falls back to the subtree default.
+                let duration = note.hasExplicitDuration
+                    ? note.duration
+                    : (feedbackDefaults.toastDuration ?? note.duration)
+                try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
                 if presenter.activeNotification?.id == note.id { presenter.dismissNotification() }
             }
         }
     }
 
     /// The toast stack anchored to one edge. Items route by their *effective*
-    /// position — the per-toast override, falling back to the host default.
+    /// position — the per-toast override, then `FeedbackDefaults.toastPosition`,
+    /// then the host's `toastPosition:` parameter.
     @ViewBuilder
     private func toastLayer(_ position: ToastPosition) -> some View {
-        let stack = presenter.toasts.filter { ($0.position ?? defaultPosition) == position }
+        let stack = presenter.toasts.filter { ($0.position ?? effectiveDefaultPosition) == position }
         if !stack.isEmpty {
             let edge: Edge = position == .top ? .top : .bottom
             // Newest nearest the anchored edge: bottom keeps array order, top reverses.
@@ -439,23 +531,40 @@ private struct FeedbackHostModifier: ViewModifier {
 }
 
 /// One stacked toast row: a solid AlertToast with elevation, auto-dismiss, and a
-/// drag-toward-the-edge swipe-to-dismiss gesture.
+/// drag-toward-the-edge swipe-to-dismiss gesture (the shared `dismissDrag`,
+/// ADR-7 — 60pt release threshold, fading over 120pt, the row's historical feel).
 private struct FeedbackToastRow: View {
     let item: FeedbackPresenter.ToastItem
     let edge: Edge
     let onDismiss: () -> Void
 
-    @State private var offset: CGFloat = 0
+    /// Read here (inside the view tree) because `FeedbackPresenter.toast(...)`
+    /// is called from outside it — the omitted-duration overloads resolve their
+    /// effective duration at this host layer.
+    @Environment(\.feedbackDefaults) private var feedbackDefaults
+
+    /// 0…1 dismissal progress reported by `dismissDrag` — fades the row out as
+    /// it is dragged toward its anchored edge.
+    @State private var dragProgress: Double = 0
+
+    /// Explicit `duration:` (including `nil` = sticky) wins; the omitted-argument
+    /// overloads fall back to `FeedbackDefaults.toastDuration`, then the stock 2.5s.
+    private var effectiveDuration: Double? {
+        item.hasExplicitDuration ? item.duration : (feedbackDefaults.toastDuration ?? item.duration)
+    }
 
     var body: some View {
         row
             .themeShadow(.elevated)
-            .offset(y: offset)
-            .opacity(dragOpacity)
-            .gesture(swipe)
+            .dismissDrag(edge: edge,
+                         threshold: .points(60),
+                         progressSpan: 120,
+                         progress: $dragProgress,
+                         onDismiss: onDismiss)
+            .opacity(1 - dragProgress)
             .transition(.move(edge: edge).combined(with: .opacity))
             .task(id: item.id) {
-                guard let duration = item.duration else { return }   // nil = sticky
+                guard let duration = effectiveDuration else { return }   // nil = sticky
                 try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
                 onDismiss()
             }
@@ -477,27 +586,6 @@ private struct FeedbackToastRow: View {
         }
     }
 
-    /// Fade the row out as it is dragged toward its anchored edge.
-    private var dragOpacity: Double {
-        let towardEdge = (edge == .bottom && offset > 0) || (edge == .top && offset < 0)
-        guard towardEdge else { return 1 }
-        return max(0, 1 - Double(abs(offset)) / 120)
-    }
-
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 8)
-            .onChanged { value in
-                let dy = value.translation.height
-                if (edge == .bottom && dy > 0) || (edge == .top && dy < 0) { offset = dy }
-            }
-            .onEnded { _ in
-                if abs(offset) > 60 {
-                    onDismiss()
-                } else {
-                    withAnimation(Motion.fast.animation) { offset = 0 }
-                }
-            }
-    }
 }
 
 public extension View {
@@ -508,6 +596,10 @@ public extension View {
     ///   - maxVisibleToasts: how many stacked toasts stay on screen (oldest drops).
     ///   - toastPosition: the default edge the toast stack anchors to (default
     ///     `.bottom`); a toast can override it per-call via `toast(position:)`.
+    ///
+    /// Subtree house defaults set with `.feedbackDefaults(...)` *around* this
+    /// host sit between a per-toast argument and these parameters: per-call →
+    /// `FeedbackDefaults` → `feedbackHost(...)` parameter.
     func feedbackHost(maxVisibleToasts: Int = 3, toastPosition: ToastPosition = .bottom) -> some View {
         modifier(FeedbackHostModifier(maxVisibleToasts: maxVisibleToasts, toastPosition: toastPosition))
     }

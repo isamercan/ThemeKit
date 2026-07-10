@@ -67,6 +67,52 @@ Reads left-to-right: `Badge("Sale").badgeStyle(.error).variant(.solid).size(.sma
 If a raw-value escape hatch must exist, **`@available(*, deprecated,…)` it toward
 the token path** instead of promoting it. Full annotated struct → `references/patterns.md §1`.
 
+## Slots (optional content areas)
+
+Required content is a generic `@ViewBuilder` **init** parameter (type-preserved).
+**Optional** slots are always copy-on-write modifiers — never extra init
+overloads — storing the internal `SlotContent` helper
+(`Sources/ThemeKit/Extensions/SlotContent.swift`): type-erased, `nil` = "use the
+built-in". `SlotContent` is a `View`, so store it and render it directly:
+
+```swift
+private var customHeader: SlotContent?              // nil → built-in header
+
+func header<H: View>(@ViewBuilder _ header: () -> H) -> Self {
+    copy { $0.customHeader = SlotContent(header) }
+}
+
+// body:
+if let customHeader { customHeader } else { titleHeader }
+```
+
+No `sending` is needed — the slot closure is non-escaping and evaluated
+immediately during the parent's body construction (the style-erasure inits need
+`sending` only because they store an *escaping* closure in the environment).
+
+**Canonical slot vocabulary** — a component uses these names or none:
+
+| Slot name | Meaning | Precedent |
+|---|---|---|
+| `.header { }` | replaces the built-in title header | `Card` |
+| `.footer { }` | bottom-aligned accessory area | `Card` |
+| `.leading { }` / `.trailing { }` | before/after the main content (RTL-safe by name) | `Chip` |
+| `.label { }` | replaces a control's built-in text label | planned `ThemeButton` |
+| `.indicator { }` | replaces a state glyph (spinner, chevron, thumb) | `Spinner`; planned Accordion |
+| `.emptyContent { }` | shown when a collection component has no items | planned ChipGroup |
+
+Slot content must render correctly with **zero configuration** — it inherits
+`textStyle` and the surrounding chrome's foreground token from the environment
+(as Card's header slot does). `TextInput.addons(before:after:)` keeps its domain
+name (an input-group concept, not a generic slot).
+
+**Slot-type stability (the `.id` rule):** `AnyView` diffs by the *wrapped
+concrete type*. A slot re-erased on every parent render keeps `@State` and
+transitions as long as it wraps the same type — but an `if/else` of two
+*different* view types directly in a slot loses branch identity (cross-fade
+instead of insert/remove). Wrap alternating slot content in `.id(_:)` to keep
+insert/remove semantics.
+
 ## Token vocabulary (use these, never literals)
 
 - **Read the theme:** `@Environment(\.theme) private var theme`.

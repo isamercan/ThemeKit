@@ -13,26 +13,23 @@
 
 import SwiftUI
 
-/// Shared scrim + sliding panel with drag-to-dismiss; the scrim fades as the
-/// panel is dragged away. Used by both the declarative modifier and the host.
+/// Shared scrim + sliding panel with drag-to-dismiss (the shared `dismissDrag`,
+/// ADR-7); the scrim fades as the panel is dragged away. Used by both the
+/// declarative modifier and the host.
 private struct DrawerContainer<DrawerContent: View>: View {
-    @Environment(\.theme) private var theme
-
     let edge: HorizontalEdge
     let width: CGFloat
     let dismissOnScrimTap: Bool
     let onDismiss: () -> Void
     @ViewBuilder let content: () -> DrawerContent
 
-    @State private var dragX: CGFloat = 0
-    @Environment(\.microAnimations) private var micro
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+    /// 0…1 dismissal progress reported by `dismissDrag`: 0 at rest, 1 when the
+    /// panel is dragged a full width toward its edge.
+    @State private var dragProgress: Double = 0
 
     var body: some View {
         ZStack(alignment: edge == .leading ? .leading : .trailing) {
-            theme.background(.bgTertiary).opacity(0.4 * scrimFactor)
-                .ignoresSafeArea()
+            Backdrop(fade: 1 - dragProgress)
                 .onTapGesture { if dismissOnScrimTap { onDismiss() } }
                 .accessibilityLabel(String(themeKit: "Close"))
                 .accessibilityAddTraits(dismissOnScrimTap ? .isButton : [])
@@ -44,35 +41,19 @@ private struct DrawerContainer<DrawerContent: View>: View {
                 // Side-panel chrome → Liquid Glass on OS 26+, Material below, opaque under Reduce Transparency.
                 .glassChrome(in: Rectangle())
                 .ignoresSafeArea()
-                .offset(x: dragX)
-                .gesture(dragGesture)
+                // Only dragging toward the panel's own edge (i.e. to close)
+                // engages; releasing past a third of the width dismisses.
+                .dismissDrag(edge: edge == .leading ? .leading : .trailing,
+                             threshold: .fraction(0.33),
+                             minimumDragDistance: 10,   // DragGesture's stock distance, the historical tuning
+                             progress: $dragProgress,
+                             onDismiss: onDismiss)
                 .transition(.move(edge: edge == .leading ? .leading : .trailing))
                 // Modal: hide the dimmed background from VoiceOver; scrub-to-dismiss.
                 .accessibilityAddTraits(.isModal)
                 .accessibilityAction(.escape) { onDismiss() }
         }
         .zIndex(1)
-    }
-
-    /// Scrim opacity multiplier: 1 at rest, 0 when dragged a full width away.
-    private var scrimFactor: Double {
-        1 - min(abs(dragX) / width, 1)
-    }
-
-    private var dragGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                let dx = value.translation.width
-                // Only allow dragging toward the panel's own edge (i.e. to close).
-                dragX = edge == .leading ? min(0, dx) : max(0, dx)
-            }
-            .onEnded { _ in
-                if abs(dragX) > width * 0.33 {
-                    onDismiss()
-                } else {
-                    withAnimation(motion) { dragX = 0 }
-                }
-            }
     }
 }
 

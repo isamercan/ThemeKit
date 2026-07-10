@@ -55,7 +55,7 @@ public struct ImageCollage: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             if overlayExtra > 0 {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(Color.black.opacity(0.45))
+                    .fill(MediaScrim.solid)
                 Text("+\(overlayExtra)")
                     .textStyle(.headingBase)
                     .foregroundStyle(.white)

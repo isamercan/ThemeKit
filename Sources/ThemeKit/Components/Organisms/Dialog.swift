@@ -25,11 +25,11 @@ import SwiftUI
 
 /// Scrim + card presentation shared by every `.dialog(...)` overload: a dimmed
 /// fade-only scrim, a scale+fade card transition (HeroUI Dialog feel), and an
-/// optional swipe-down-to-dismiss drag (HeroUI `isSwipeable`). When
+/// optional swipe-down-to-dismiss drag (HeroUI `isSwipeable`) via the shared
+/// `dismissDrag` (ADR-7 — this presentation is its reference feel). When
 /// micro-animations are off or Reduce Motion is on, the card transition
 /// collapses to a plain fade and the drag spring-back snaps instantly.
 private struct DialogPresentation<Card: View>: View {
-    @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -41,37 +41,26 @@ private struct DialogPresentation<Card: View>: View {
     let onSwipeDismiss: () -> Void
     @ViewBuilder let card: () -> Card
 
-    @State private var dragOffset: CGFloat = 0
-    @State private var cardHeight: CGFloat = 0
-
-    // Internal swipe tuning (mirrors FeedbackToastRow's drag feel).
-    /// Resting scrim dim opacity.
-    private static var scrimOpacity: Double { 0.4 }
-    /// Drag distance before the swipe gesture engages.
-    private static var minimumDragDistance: CGFloat { 8 }
-    /// Fraction of the card height a drag must pass to dismiss on release.
-    private static var dismissFraction: CGFloat { 1 / 3 }
+    /// 0…1 dismissal progress reported by `dismissDrag` — fades the scrim as
+    /// the card is dragged toward dismissal.
+    @State private var dragProgress: Double = 0
 
     private var motionEnabled: Bool { micro && !reduceMotion }
 
     var body: some View {
         ZStack {
-            theme.background(.bgTertiary).opacity(Self.scrimOpacity * scrimFade)
-                .ignoresSafeArea()
+            Backdrop(fade: 1 - dragProgress)
                 .onTapGesture(perform: onScrimTap)
                 .transition(.opacity)   // Scrim always fades only.
 
             card()
-                .background(GeometryReader { geo in
-                    Color.clear
-                        .onAppear { cardHeight = geo.size.height }
-                        .onChange(of: geo.size.height) { cardHeight = $1 }
-                })
-                // Drag tracking is direct manipulation, so it always follows the
-                // finger; only the animated parts (transition, spring-back) are
-                // motion-gated.
-                .offset(y: dragOffset)
-                .gesture(swipe, including: swipeToDismiss ? .all : .subviews)
+                // Downward drag offsets the card with the finger; releasing past
+                // a third of the card height dismisses, anything less springs
+                // back (instantly when motion is gated off).
+                .dismissDrag(edge: .bottom,
+                             isEnabled: swipeToDismiss,
+                             progress: $dragProgress,
+                             onDismiss: onSwipeDismiss)
                 .transition(cardTransition)
                 // Modal presenter: VoiceOver ignores the dimmed scrim and the
                 // background content behind the card while the dialog is up.
@@ -91,29 +80,6 @@ private struct DialogPresentation<Card: View>: View {
     /// micro-animations are off or Reduce Motion is on.
     private var cardTransition: AnyTransition {
         motionEnabled ? .opacity.combined(with: .scale(scale: 0.96)) : .opacity
-    }
-
-    /// Fade the scrim proportionally as the card is dragged toward dismissal.
-    private var scrimFade: Double {
-        guard dragOffset > 0, cardHeight > 0 else { return 1 }
-        return max(0, 1 - Double(dragOffset / cardHeight))
-    }
-
-    /// Downward drag offsets the card with the finger; releasing past
-    /// `dismissFraction` of the card height dismisses, anything less springs
-    /// back (instantly when motion is gated off).
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: Self.minimumDragDistance)
-            .onChanged { value in
-                dragOffset = max(0, value.translation.height)
-            }
-            .onEnded { _ in
-                if cardHeight > 0, dragOffset > cardHeight * Self.dismissFraction {
-                    onSwipeDismiss()
-                } else {
-                    withAnimation(motionEnabled ? Motion.fast.spring : nil) { dragOffset = 0 }
-                }
-            }
     }
 }
 

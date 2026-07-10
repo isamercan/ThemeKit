@@ -139,11 +139,19 @@ public struct TextInput: View {
     @Binding private var text: String
     // Config — mutated only through the modifiers below (R2).
     private var model: TextInputModel
+    /// Set only by the `.size(_:)` modifier. Detects "explicitly sized" so the
+    /// subtree `FieldDefaults.size` can fill the default without overriding an
+    /// explicit choice: `explicitSize ?? fieldDefaults.size ?? model.size`.
+    /// The (init-era, MODIFIERS_PLAN-legacy) `TextInputModel.size` init
+    /// parameter is indistinguishable from the `.medium` default, so it yields
+    /// to `FieldDefaults`; use `.size(_:)` to pin a size against the defaults.
+    private var explicitSize: TextInputSize?
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.fieldDefaults) private var fieldDefaults
     private var accessibilityID: String? = nil
 
     /// Marks the field as required: asterisk after the label + ", required"
@@ -168,6 +176,9 @@ public struct TextInput: View {
     private var validationCheck: ((String) -> String?)?
     private var validationTrigger: ValidationTrigger = .editingEnd
     private var onValidation: ((Bool) -> Void)?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the field loses focus — regardless of the component's own validation setup.
+    private var onEditingEnd: ((String) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
@@ -187,6 +198,14 @@ public struct TextInput: View {
     }
 
     private var floating: Bool { isFocused || !text.isEmpty }
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the model's default.
+    private var effectiveSize: TextInputSize { explicitSize ?? fieldDefaults.size ?? model.size }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    /// Message rows animate when micro-animations are on and the subtree default
+    /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
     /// `infoMessages` plus the helper/error/warning conveniences (computed merge).
     private var messages: [InfoMessage] {
         var messages = model.infoMessages + validationMessages
@@ -250,7 +269,7 @@ public struct TextInput: View {
                 HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
                     Text(model.label)
                         .foregroundStyle(labelColor)
-                    if isRequired {
+                    if isRequired && showsRequiredIndicator {
                         // Same treatment as `InputLabel.required()` — error-token asterisk.
                         Text(verbatim: "*")
                             .foregroundStyle(theme.foreground(.systemcolorsFgError))
@@ -307,7 +326,7 @@ public struct TextInput: View {
                 fieldContent
             }
         }
-        .frame(height: model.size.height)
+        .frame(height: effectiveSize.height)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
@@ -320,7 +339,7 @@ public struct TextInput: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: model.size
+            size: effectiveSize
         ))
         .contentShape(Rectangle())
         .onTapGesture { if isEnabled { isFocused = true } }
@@ -345,8 +364,9 @@ public struct TextInput: View {
             }
         }
         // Animate message rows in/out (their `.transition` lives in
-        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion.
-        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
+        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion, and
+        // by the subtree `FieldDefaults.messagesAnimated` default.
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         .onChange(of: text) { _, newValue in
             var v = newValue
             if let formatter = model.formatter { v = formatter(v) }
@@ -362,6 +382,7 @@ public struct TextInput: View {
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
     }
 
@@ -410,7 +431,7 @@ public struct TextInput: View {
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.clear, in: accessibilityID)
-            .accessibilityLabel("Temizle")
+            .accessibilityLabel(String(themeKit: "Clear"))
         } else if let suffixSystemImage = model.suffixSystemImage {
             Icon(systemName: suffixSystemImage).size(.sm).color(iconColor)
         }
@@ -479,8 +500,9 @@ public extension TextInput {
         copy { $0.model.showCount = on; $0.model.countStyle = style }
     }
 
-    /// Control height preset (defaults to `.medium`, R4).
-    func size(_ size: TextInputSize) -> Self { copy { $0.model.size = size } }
+    /// Control height preset (defaults to `.medium`, R4). An explicit size wins
+    /// over the subtree `FieldDefaults.size` default.
+    func size(_ size: TextInputSize) -> Self { copy { $0.model.size = size; $0.explicitSize = size } }
 
     /// Live input formatter applied on every change (e.g. phone masks).
     func formatter(_ formatter: TextInputFormatter?) -> Self { copy { $0.model.formatter = formatter } }
@@ -520,6 +542,12 @@ public extension TextInput {
 
     /// Drive focus from outside (e.g. `FormValidator.focusBinding`).
     func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the field loses focus. Fires
+    /// with the current text; independent of `validate(_:on:)`, which only runs
+    /// the field's *own inline* rules.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Keyboard / autofill / return-key / capitalization traits (iOS; ignored on macOS).
     func keyboard(_ type: TextInputKeyboard = .default,

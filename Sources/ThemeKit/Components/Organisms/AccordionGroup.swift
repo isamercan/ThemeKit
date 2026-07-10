@@ -29,11 +29,10 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     private var isCollapsible: Bool = true
     private var isItemDisabled: ((Item) -> Bool)? = nil
 
-    @State private var expanded: Set<Item.ID> = []
-    /// Caller-owned expansion state (R1 — bindings belong in `init`). When
-    /// supplied, toggling is driven through the binding; when `nil`, the
-    /// private `expanded` state is used (uncontrolled path).
-    private var externalExpanded: Binding<Set<Item.ID>>? = nil
+    /// Open-row ids — uncontrolled (`initiallyExpanded:` seeds @State) or
+    /// controlled (the caller's `expanded:` binding drives toggling), unified
+    /// by `ControllableState` (ADR-4).
+    @ControllableState private var expanded: Set<Item.ID>
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
@@ -48,7 +47,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         self.title = title
         self.header = nil
         self.content = content
-        self._expanded = State(initialValue: initiallyExpanded)
+        self._expanded = ControllableState(wrappedValue: initiallyExpanded)
     }
 
     public init(   // R1 — controlled expansion; toggling goes through the binding
@@ -61,8 +60,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         self.title = title
         self.header = nil
         self.content = content
-        self._expanded = State(initialValue: expanded.wrappedValue)
-        self.externalExpanded = expanded
+        self._expanded = ControllableState(wrappedValue: [], external: expanded)
     }
 
     public init<Header: View>(   // R1 — custom header (item + isExpanded) replaces the title text
@@ -75,7 +73,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         self.title = nil
         self.header = { AnyView(header($0, $1)) }
         self.content = content
-        self._expanded = State(initialValue: initiallyExpanded)
+        self._expanded = ControllableState(wrappedValue: initiallyExpanded)
     }
 
     public init<Header: View>(   // R1 — controlled expansion + custom header
@@ -88,20 +86,13 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         self.title = nil
         self.header = { AnyView(header($0, $1)) }
         self.content = content
-        self._expanded = State(initialValue: expanded.wrappedValue)
-        self.externalExpanded = expanded
-    }
-
-    /// Resolved open set — the external binding wins when one was injected.
-    private var openIDs: Set<Item.ID> { externalExpanded?.wrappedValue ?? expanded }
-    private func setOpenIDs(_ ids: Set<Item.ID>) {
-        if let externalExpanded { externalExpanded.wrappedValue = ids } else { expanded = ids }
+        self._expanded = ControllableState(wrappedValue: [], external: expanded)
     }
 
     public var body: some View {
         VStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                let isOpen = openIDs.contains(item.id)
+                let isOpen = expanded.contains(item.id)
                 let isDisabled = isItemDisabled?(item) ?? false
                 Button { toggle(item.id) } label: {
                     HStack {
@@ -137,7 +128,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
             RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
                 .stroke(theme.border(.borderPrimary), lineWidth: showSurface ? 1 : 0)
         )
-        .animation(motion, value: openIDs)
+        .animation(motion, value: expanded)
     }
 
     @ViewBuilder
@@ -166,8 +157,9 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         }
     }
 
+    @MainActor
     private func toggle(_ id: Item.ID) {
-        var ids = openIDs
+        var ids = expanded
         if ids.contains(id) {
             // Non-collapsible single mode keeps the sole open item open.
             if mode == .single && !isCollapsible { return }
@@ -175,7 +167,7 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
         } else {
             if mode == .single { ids = [id] } else { ids.insert(id) }
         }
-        setOpenIDs(ids)
+        expanded = ids
     }
 }
 

@@ -35,6 +35,7 @@ public struct OTPInput: View {
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var digitCount: Int = 6
@@ -70,6 +71,14 @@ public struct OTPInput: View {
 
     private var hasError: Bool { messages.dominantKind == .error }
     private var hasWarning: Bool { messages.dominantKind == .warning }
+
+    /// OTPInput has no `TextInputSize` modifier of its own; the subtree
+    /// `FieldDefaults.size` maps onto the digit-cell height (`nil` keeps the
+    /// classic 56pt `.medium` cell).
+    private var effectiveSize: TextInputSize { fieldDefaults.size ?? .medium }
+    /// Message rows animate when micro-animations are on and the subtree default
+    /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
 
     /// Keeps only the characters allowed by `characters` (digits by default)
     /// and caps the length (extracted for testing).
@@ -110,7 +119,8 @@ public struct OTPInput: View {
                                 hasError: hasError,
                                 hasWarning: hasWarning,
                                 isEnabled: isEnabled,
-                                isSecure: isSecure
+                                isSecure: isSecure,
+                                size: effectiveSize
                             )
                         }
                     }
@@ -162,8 +172,9 @@ public struct OTPInput: View {
             }
         }
         // Message rows carry the HeroUI FieldError transition; key it here so
-        // it plays (and snaps under `microAnimations(false)` / Reduce Motion).
-        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
+        // it plays (and snaps under `microAnimations(false)` / Reduce Motion /
+        // `fieldDefaults(messagesAnimated: false)`).
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
     }
 
     @ViewBuilder
@@ -246,8 +257,9 @@ private struct OTPGroupSeparator: View {
 /// One digit cell — a mini-field. Its chrome (fill + border) is delegated to the
 /// active ``FieldStyle`` per cell: the caret cell maps to `isFocused: true`, every
 /// other cell to `false`, and the component's error/warning state fans out to all
-/// cells. `size` is `.medium` — the cell's fixed 56pt height is exactly the
-/// `.medium` field height, and OTP has no `TextInputSize` axis of its own.
+/// cells. `size` defaults to `.medium` — the classic 56pt cell height is exactly
+/// the `.medium` field height; the subtree `FieldDefaults.size` remaps it (OTP
+/// has no `TextInputSize` modifier of its own).
 private struct OTPDigitBox: View {
     @Environment(\.theme) private var theme
     /// The cell chrome (fill + border), swappable via `.fieldStyle(_:)`.
@@ -260,6 +272,7 @@ private struct OTPDigitBox: View {
     let hasWarning: Bool
     let isEnabled: Bool
     let isSecure: Bool
+    let size: TextInputSize
 
     @State private var caretOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -276,7 +289,7 @@ private struct OTPDigitBox: View {
             isEnabled: isEnabled,
             hasError: hasError,       // validation fans out to every cell
             hasWarning: hasWarning,
-            size: .medium             // 56pt cell == `.medium` field height
+            size: size                // classic 56pt cell == `.medium` field height
         ))
     }
 
@@ -315,7 +328,7 @@ private struct OTPDigitBox: View {
         .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: digit)
         // Fixed height: the box is a square cell in a fixed-width grid;
         // Dynamic Type is capped at the container via dynamicTypeClamp().
-        .frame(height: 56)
+        .frame(height: size.height)
         .frame(maxWidth: .infinity)
     }
 

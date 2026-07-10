@@ -136,6 +136,24 @@ jobs:
             swiftlint lint --reporter github-actions-logging
 
   # ---------------------------------------------------------------------------
+  # Variant-matrix naming gate (ADR-3): public modifier signatures must feed
+  # their color/variant/size axes tokens (SemanticColor / enums), never raw
+  # Color/CGFloat. Pure grep → Linux (1× minutes), PR-only, and informational —
+  # the same policy as the api-breakage job (drift becomes a ::warning, not a
+  # red build; deprecate-and-forward or allowlist to clear it).
+  # ---------------------------------------------------------------------------
+  variant-naming:
+    name: Variant-matrix naming
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check modifier signatures against the variant-matrix contract
+        run: |
+          scripts/check-variant-naming.sh \
+            || echo "::warning::Variant-matrix naming drift — a color/variant/size axis takes a raw Color/CGFloat. Token-feed it, deprecate-and-forward, or allowlist a documented genuine dimension (scripts/check-variant-naming.sh, ADR-3)."
+
+  # ---------------------------------------------------------------------------
   # Public-API breakage detection. PR-only (diffs against the PR base) and
   # informational — a public-API change is often intended. See docs/API-STABILITY.md.
   # ---------------------------------------------------------------------------

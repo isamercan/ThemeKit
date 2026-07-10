@@ -59,6 +59,7 @@ views; the core library stays dependency-free.
 - <doc:GettingStarted>
 - <doc:Installation>
 - <doc:Theming>
+- <doc:GlobalDefaults>
 - <doc:Accessibility>
 - <doc:FormValidation>
 

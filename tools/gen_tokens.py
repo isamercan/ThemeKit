@@ -4,8 +4,8 @@ Etstur/MAF Figma design system. Token NAMES are semantic (brand-agnostic)."""
 import json, os, sys
 
 ROOT = sys.argv[1]
-RES = os.path.join(ROOT, "Sources/ThemeKit/Resources")
-GEN = os.path.join(ROOT, "Sources/ThemeKit/Theme")
+RES = os.path.join(ROOT, "Sources/ThemeKitCore/Resources")
+GEN = os.path.join(ROOT, "Sources/ThemeKitCore/Theme")
 os.makedirs(RES, exist_ok=True)
 
 # ---- Semantic color tokens — Ant-style ALIAS layer DERIVED from the palette.
@@ -36,6 +36,7 @@ BACKGROUND = {
     "bg-secondary": ("d", "neutral", 300),
     "bg-secondary-light": ("d", "neutral", 100),
     "bg-tertiary": ("a", "000929", "3a4150"),      # neutral solid fill (white text on it)
+    "bg-backdrop": ("a", "00000066", "0000008c"),  # modal scrim (Backdrop atom): black @ 40% light / 55% dark
     "bg-turquoise": ("d", "turquoise", 500),
     "bg-turquoise-light": ("d", "turquoise", 50),
     "bg-orange": ("d", "orange", 500),

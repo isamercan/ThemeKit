@@ -210,7 +210,11 @@ private struct SelfTooltip: ViewModifier {
     let color: SemanticColor?
     let maxWidth: CGFloat?
     let dismissOnOutsideTap: Bool
-    @State private var shown = false
+    /// Self-managed (uncontrolled) presentation state on the library-standard
+    /// `ControllableState` (ADR-4); its projected binding feeds the
+    /// binding-driven `.tooltip` below, so both entry points share one
+    /// presentation path.
+    @ControllableState private var shown = false
 
     func body(content: Content) -> some View {
         content

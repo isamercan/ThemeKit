@@ -171,7 +171,7 @@ private struct InlineVideo: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .padding(8)
-                                .background(.black.opacity(0.4), in: Circle())
+                                .background(MediaScrim.solid, in: Circle())
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(isMuted ? String(themeKit: "Unmute") : String(themeKit: "Mute"))

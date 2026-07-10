@@ -39,7 +39,21 @@ public extension View {
         }
     }
 
-    /// Overlays a small status dot at a corner.
+    /// Overlays a small status dot at a corner, in the error token — the
+    /// classic notification dot.
+    func indicatorDot(position: IndicatorPosition = .topTrailing) -> some View {
+        indicator(position) { IndicatorDot(color: nil) }
+    }
+
+    /// Overlays a small status dot at a corner, tinted by a semantic color
+    /// (e.g. `.success` for an online dot).
+    func indicatorDot(_ accent: SemanticColor, position: IndicatorPosition = .topTrailing) -> some View {
+        indicator(position) { IndicatorDot(color: accent.base) }
+    }
+
+    /// Raw dot tint (back-compat); prefer the `SemanticColor` overload —
+    /// or `indicatorDot(position:)` for the error-token default.
+    @available(*, deprecated, message: "Use indicatorDot(_: SemanticColor, position:) — the token-fed overload.")
     func indicatorDot(_ color: Color? = nil, position: IndicatorPosition = .topTrailing) -> some View {
         indicator(position) { IndicatorDot(color: color) }
     }
@@ -61,9 +75,11 @@ private struct IndicatorDot: View {
 #Preview {
     @Previewable @Environment(\.theme) var theme
     HStack(spacing: 32) {
-        Icon(systemName: "bell").size(.lg).color(theme.text(.textPrimary))
+        Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
             .indicatorDot()
-        Icon(systemName: "envelope").size(.lg).color(theme.text(.textPrimary))
+        Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
+            .indicatorDot(.success)
+        Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
             .indicator { Badge("3").badgeStyle(.error).size(.small) }
     }
     .padding()

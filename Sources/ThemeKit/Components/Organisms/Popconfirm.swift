@@ -5,7 +5,9 @@
 //
 //  A lightweight confirmation popover anchored to its trigger element — unlike
 //  the full-screen modal `Dialog`, it points at what you're confirming.
-//  (Ant Popconfirm.) Apply with `.popconfirm(...)`. Anchors to any of the four
+//  (Ant Popconfirm.) Apply with `.popconfirm(...)` — controlled via an
+//  `isPresented:` binding, or uncontrolled (omit the binding: tapping the
+//  anchor presents it, via `ControllableState`). Anchors to any of the four
 //  edges (reusing `TooltipEdge`), slides along that edge with `align`, dismisses
 //  on an outside tap (HeroUI Popover `closeOnPress`; opt out with
 //  `dismissOnOutsideTap: false`), and can point at the trigger with
@@ -166,6 +168,37 @@ private struct PopconfirmModifier: ViewModifier {
     }
 }
 
+/// Self-managed (uncontrolled) Popconfirm: the anchor tap presents the card,
+/// no external binding needed (ADR-4). `ControllableState`'s projected binding
+/// feeds the controlled `.popconfirm` path, so both entry points share one
+/// presentation implementation — mirroring `SelfTooltip` over `BindingTooltip`.
+private struct SelfPopconfirmModifier: ViewModifier {
+    let title: String
+    let message: String?
+    let confirmTitle: String
+    let cancelTitle: String
+    let confirmKind: FeedbackKind
+    let edge: TooltipEdge
+    let align: PopoverAlign
+    let dismissOnOutsideTap: Bool
+    let showsArrow: Bool
+    let onConfirm: () async -> Void
+    let onCancel: (() -> Void)?
+
+    @ControllableState private var isPresented = false
+
+    func body(content: Content) -> some View {
+        content
+            .contentShape(Rectangle())
+            .onTapGesture { isPresented.toggle() }
+            .popconfirm(isPresented: $isPresented, title: title, message: message,
+                        confirmTitle: confirmTitle, cancelTitle: cancelTitle,
+                        confirmKind: confirmKind, edge: edge, align: align,
+                        dismissOnOutsideTap: dismissOnOutsideTap, showsArrow: showsArrow,
+                        onConfirm: onConfirm, onCancel: onCancel)
+    }
+}
+
 /// Pushes the confirm card just outside the chosen edge of its trigger,
 /// separated by the small spacing token.
 private struct PopconfirmPlacement: ViewModifier {
@@ -249,6 +282,35 @@ public extension View {
         ))
     }
 
+    /// Self-managed confirmation popover — tapping the anchor presents it, so
+    /// no external state is needed (the uncontrolled counterpart of
+    /// `popconfirm(isPresented:...)`; ADR-4). Everything else matches the
+    /// controlled overload: outside taps dismiss (unless opted out), tapping
+    /// the anchor again toggles it closed when `dismissOnOutsideTap` is off,
+    /// and an async `onConfirm` keeps the card open with a spinner until it
+    /// resolves. To *observe or drive* the state from outside, use the
+    /// `isPresented:` overload instead — the `Binding` is the change channel.
+    func popconfirm(
+        title: String,
+        message: String? = nil,
+        confirmTitle: String = String(themeKit: "Yes"),
+        cancelTitle: String = String(themeKit: "No"),
+        confirmKind: FeedbackKind = .error,
+        edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
+        dismissOnOutsideTap: Bool = true,
+        showsArrow: Bool = false,
+        onConfirm: @escaping () async -> Void,
+        onCancel: (() -> Void)? = nil
+    ) -> some View {
+        modifier(SelfPopconfirmModifier(
+            title: title, message: message,
+            confirmTitle: confirmTitle, cancelTitle: cancelTitle, confirmKind: confirmKind,
+            edge: edge, align: align, dismissOnOutsideTap: dismissOnOutsideTap,
+            showsArrow: showsArrow, onConfirm: onConfirm, onCancel: onCancel
+        ))
+    }
+
     /// Anchored popover with fully custom content in place of the stock
     /// title/message/buttons layout. The card shell (white surface, hairline,
     /// elevated shadow, 260pt width) and the presentation (edge placement,
@@ -309,6 +371,21 @@ public extension View {
         }
     }
     return Demo()
+}
+
+#Preview("Self-managed (uncontrolled)") {
+    // No binding: tapping the anchor presents the card; tapping outside (or
+    // Cancel / confirm) dismisses it. Use the `isPresented:` overload to
+    // observe or drive the state from outside.
+    VStack(spacing: 140) {
+        ThemeButton("Clear history") {}.color(.error).variant(.soft)
+            .popconfirm(title: "Clear browsing history?",
+                        message: "This removes it from every signed-in device.",
+                        confirmTitle: "Clear", cancelTitle: "Keep") {}
+        Icon(systemName: "trash")
+            .popconfirm(title: "Delete draft?", edge: .bottom, showsArrow: true) {}
+    }
+    .padding(80)
 }
 
 #Preview("Arrow + align + outside tap") {

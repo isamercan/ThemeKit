@@ -28,13 +28,16 @@ public struct MultiLineTextInput: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     // Appearance / validation — mutated only through the modifiers below (R2).
     private var placeholder: String = ""
     private var characterLimit: Int?
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
-    private var size: TextInputSize = .medium
+    /// Set only by the `.size(_:)` modifier — an explicit size wins over the
+    /// subtree `FieldDefaults.size` default (`explicitSize ?? fieldDefaults.size ?? .medium`).
+    private var explicitSize: TextInputSize?
     private var minHeightOverride: CGFloat?
     private var countStyle: TextInputCountStyle = .count
     private var accessibilityID: String?
@@ -42,6 +45,13 @@ public struct MultiLineTextInput: View {
     /// Marks the editor as required: asterisk after the header label + ", required"
     /// appended to the accessibility label (HeroUI `isRequired`, TextInput parity).
     private var isRequired = false
+
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`) —
+    /// bridged to the editor's `@FocusState`, TextInput parity.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the current text when
+    /// the editor loses focus.
+    private var onEditingEnd: ((String) -> Void)?
 
     @FocusState private var isFocused: Bool
 
@@ -62,6 +72,15 @@ public struct MultiLineTextInput: View {
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
 
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → `.medium`.
+    private var size: TextInputSize { explicitSize ?? fieldDefaults.size ?? .medium }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    /// Message rows animate when micro-animations are on and the subtree default
+    /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
+    private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
+
     /// An explicit `minHeight(_:)` wins over the `size(_:)` preset (order-free).
     private var minHeight: CGFloat {
         if let minHeightOverride { return minHeightOverride }
@@ -78,7 +97,7 @@ public struct MultiLineTextInput: View {
             HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
                 Text(label)
                     .foregroundStyle(labelColor)
-                if isRequired {
+                if isRequired && showsRequiredIndicator {
                     // Same treatment as `InputLabel.required()` — error-token asterisk.
                     Text(verbatim: "*")
                         .foregroundStyle(theme.foreground(.systemcolorsFgError))
@@ -102,8 +121,18 @@ public struct MultiLineTextInput: View {
             }
         }
         // Animate message rows in/out (their `.transition` lives in
-        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion.
-        .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: messages)
+        // `InfoMessageList`); gated by `microAnimations` + Reduce Motion, and
+        // by the subtree `FieldDefaults.messagesAnimated` default.
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
+        // External focus bridge (TextInput parity): a `true` write focuses the
+        // editor; blurring resets the external binding so the owner stays in sync.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !isFocused { isFocused = true }
+        }
+        .onChange(of: isFocused) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
+        }
     }
 
     /// The editor + placeholder overlay, sized to `minHeight` — everything the
@@ -188,8 +217,9 @@ public extension MultiLineTextInput {
     func countStyle(_ style: TextInputCountStyle) -> Self { copy { $0.countStyle = style } }
 
     /// Editor-height preset (`.xsmall` 80 … `.large` 160; defaults to `.medium`,
-    /// 120). An explicit `minHeight(_:)` wins regardless of order.
-    func size(_ s: TextInputSize) -> Self { copy { $0.size = s } }
+    /// 120). An explicit `minHeight(_:)` wins regardless of order, and an
+    /// explicit size wins over the subtree `FieldDefaults.size` default.
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Marks the editor as required: renders an error-token asterisk after the
     /// header label (the `InputLabel` treatment) and appends ", required" to the
@@ -204,6 +234,13 @@ public extension MultiLineTextInput {
 
     /// Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
     func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeightOverride = height } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`) — TextInput parity.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate against the form's rules when the editor loses focus.
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
