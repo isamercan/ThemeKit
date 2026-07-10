@@ -48,7 +48,7 @@ This is an architecture deliverable. No implementation ships from this document 
 | Fact | Where verified |
 |---|---|
 | SPM: products `ThemeKit`, `ThemeKitCore`, `ThemeKitLottie`, `ThemeKitCalendar`; traits `Lottie`/`Calendar` with **empty default set**; zero-dep core | `Package.swift:16–55` |
-| `ControllableState` shipped (HeroUI infra unit 1, commit `4116df6`), `@MainActor` accessors, dual-init pattern | `Sources/ThemeKitCore/ControllableState.swift` |
+| `ControllableState` shipped on branch `feat/heroui-infra-sprint-1` (HeroUI infra unit 1, commit `4116df6`) — **not yet on `main`; a hard F0 prerequisite (see §12)** — `@MainActor` accessors, dual-init pattern | `Sources/ThemeKitCore/ControllableState.swift` |
 | `ComponentDefaults` env (radius/elevation/accent; explicit-wins merge via `transformEnvironment`) | `Sources/ThemeKit/ComponentDefaults.swift` |
 | `FlightLeg` (Codable, content-derived id) is **declared inside `FlightCard.swift:19–41`** and consumed by FlightCard, FlightResultRow, FlightListItem(+Style) | `grep FlightLeg` — 4 files |
 | `FlightFare` is declared inside `FlightListItem.swift:28–41`; `FareLine` inside `FareSummary.swift:15`; `QuickFilter` inside `FilterBar.swift:19`; Seat family in `SeatMapModels.swift` (the one existing `<X>Models.swift` precedent) | source |
@@ -79,6 +79,8 @@ The plan was pressure-tested against source with `swiftc -swift-version 6` execu
 7. **OQ-4 → NEUTRAL:** `PhoneField` + `DialCode` land in **`Sources/ThemeKit/Components/Molecules/`** (PaymentCardField precedent), not the edition — every checkout/contact form needs a phone field. F1.1 sheds its F0.1/F0.4 dependency (only `DialCode` moves off the edition-models list). **OQ-5 → SKIP:** drop the `FareFamilyCard(_: FlightFare)` convenience from F0.2 — `FlightFare.perks` are SF-symbol names, `FareFeature` needs text; the bridge renders garbage, and name+price is a one-line manual call.
 
 **Go/no-go:** F0.3, F1.1, F1.2, F1.3 **all GO** with the revisions above.
+
+**Codex review follow-ups (PR #248, 2026-07-10):** (i) `ControllableState` and the field-family primitives live on the **unmerged** `feat/heroui-infra-sprint-1` branch — a hard F0 prerequisite; the HeroUI infra sprint must merge to `main` before any F0 code lands (§1.2, §12). (ii) `DialCode` lands **neutral** with `PhoneField` in `ThemeKit/Molecules`, NOT the F0.4 edition models — §12 F1.1 no longer depends on F0.4 for it (else neutral `PhoneField` couldn't reference an edition type, forbidden by ADR-F1). (iii) F0.4 adds `Codable` to the neutral `CardBrand` enum (String-raw → one line, additive) so `SavedCard`'s `Codable` synthesizes.
 
 ---
 
@@ -323,7 +325,7 @@ public struct PaymentMethodOption: Identifiable, Sendable, Equatable {
 
 public struct SavedCard: Identifiable, Sendable, Equatable, Codable {
     public let id: String
-    public let brand: CardBrand           // REUSED from PaymentCardField.swift (already public)
+    public let brand: CardBrand           // REUSED from PaymentCardField.swift; F0.4 adds Codable to it (String-raw enum, one line, additive) so SavedCard's Codable synthesizes
     public let last4: String
     public var holder: String?
     public var expiryMonth: Int?          // 1…12; formatted by the component with the env locale
@@ -344,7 +346,9 @@ public struct FlightStatusInfo: Sendable, Equatable {
     public init(leg: FlightLeg, status: FlightStatus, …all optional…)
 }
 
-/// PhoneModels.swift  (arguably neutral — see OQ-4)
+/// PhoneModels.swift — RESOLVED NEUTRAL (OQ-4 / §1.4): DialCode + PhoneField land in
+/// `Sources/ThemeKit/Components/Molecules/`, NOT the edition. Listed here for completeness;
+/// it is NOT an edition model (it must be neutral so the neutral PhoneField can reference it).
 public struct DialCode: Identifiable, Sendable, Hashable, Codable {
     public var id: String { region }
     public let region: String             // ISO 3166-1 alpha-2, "GB"
@@ -509,7 +513,7 @@ Sources/ThemeKitTravel/
 │   └── FlightStatusModels.swift      // FlightStatusInfo
 ├── Components/
 │   ├── Atoms/                        // (Phase B: FlightStatusBadge, FareFeatureRow, SeatCell)
-│   ├── Molecules/                    // PhoneField, CabinClassSelector, LanguageSwitcher*  (*see 9.12)
+│   ├── Molecules/                    // CabinClassSelector  (PhoneField* + LanguageSwitcher* land NEUTRAL in ThemeKit — see §1.4 / §9.12)
 │   └── Organisms/                    // PassengerForm, PaymentMethodSelector, AirportPicker,
 │                                     //   TripSearchCard, TransportCrossSellCard, FlightTracker,
 │                                     //   SavedCardsList, CheckInFlow
@@ -1051,7 +1055,7 @@ House rules 6 + skill sections apply wholesale; this section adds the *edition-s
 
 PR-per-unit (house rule), phases gated. Every unit lands with: `#Preview` covering all variants (light + dark/themed), Demo/Gallery entry + `-openDemo "<Name>"` verification, snapshot + a11y + RTL enrollment, and skill/llms regeneration when public surface changes. Effort tags: **low** ≤ ½ day, **medium** ~1 day, **high** 2+ days.
 
-**Prerequisites from HEROUI_INFRA_PLAN (already sequenced there):** `ControllableState` ✅ shipped (`4116df6`); unit 2 (Backdrop) in flight on this branch — no dependency; unit 5 (FieldDefaults) and units 13a/13b (form wiring) are *soft* dependencies noted per-unit below — nothing here blocks on them.
+**Prerequisites from HEROUI_INFRA_PLAN (already sequenced there):** these primitives live on the **unmerged** `feat/heroui-infra-sprint-1` branch, **not on `main`** — the HeroUI infra sprint must merge to main before any F0 code lands (Codex review, PR #248). `ControllableState` ✅ shipped there (`4116df6`) is the **hard F0 prerequisite** for every stateful component (FlightListItem / PhoneField / CheckInFlow); unit 2 (Backdrop) — no dependency; unit 5 (FieldDefaults) and units 13a/13b (form wiring) are *soft* dependencies noted per-unit below.
 
 ### Phase F0 — Foundations (unblocks everything)
 
@@ -1060,7 +1064,7 @@ PR-per-unit (house rule), phases gated. Every unit lands with: `#Preview` coveri
 | F0.1 | **Packaging:** `ThemeKitTravel` target + product; Tests + Demo wiring; `gen_skill.py` learns the second module; edition string catalog + `String(themeKitTravel:)` | medium | `Package.swift`, `Sources/ThemeKitTravel/` skeleton, `Demo.xcodeproj`, `tools/gen_skill.py` | `swift build` all products; Demo builds; llms counts correct |
 | F0.2 | **Model consolidation (neutral):** `FlightModels.swift` — move `FlightLeg`/`FlightFare`/`FareLine`/`FareFeature`(+Status)/`FlightStatus` out of component files; authoring-skill "model = vocabulary, configuration = slice" section | low | `Organisms/FlightModels.swift`, 5 component files, skill | api-gate green (same-module move); snapshots unchanged |
 | F0.3 | **`FormatDefaults` env + currency sweep** (§10): overload pairs + optional storage + resolution chain across ~20 components; captured-locale fix in FlightCard/FlightResultRow time columns | high | new `FormatDefaults.swift` + ~20 component files | Q3-style overload-resolution probe repeated once; full snapshot run (catches every silent TRY reliance); CHANGELOG migration note |
-| F0.4 | **Edition models + `FlightDefaults` env** (§3, §4.2) | medium | `ThemeKitTravel/Models/*`, `FlightDefaults.swift` | unit tests: PassengerCount/date clamps, `SavedCard.isExpired`, `DialCode.flag`, `TripSearchDraft.swapRoute` |
+| F0.4 | **Edition models + `FlightDefaults` env** (§3, §4.2); add `Codable` to neutral `CardBrand` (SavedCard reuse) | medium | `ThemeKitTravel/Models/*`, `FlightDefaults.swift`, `PaymentCardField.swift` | unit tests: PassengerCount/date clamps, `SavedCard.isExpired` + Codable round-trip, `TripSearchDraft.swapRoute` (`DialCode` moves to F1.1) |
 
 *F0.3 is the only unit with consumer-visible behavior change — land it early in a minor release so the edition's own components are born onto the final resolution chain.*
 
@@ -1068,7 +1072,7 @@ PR-per-unit (house rule), phases gated. Every unit lands with: `#Preview` coveri
 
 | # | Unit | Effort | Depends on | Notes |
 |---|---|---|---|---|
-| F1.1 | **PhoneField** | medium | F0.4 (`DialCode`) | resolve OQ-2 (interactive `addons(before:)`) first — it decides the internal shape; benefits later from HEROUI unit 5 (FieldDefaults) with zero API change |
+| F1.1 | **PhoneField** (+ `DialCode`, both **neutral** `ThemeKit/Molecules`) | medium | — (DialCode ships in this unit) | composition point is `.leading {}`, not `addons(before:)` (§1.4); run the Menu-tap sim probe before freezing internals; benefits later from HEROUI unit 5 (FieldDefaults) with zero API change |
 | F1.2 | **PassengerForm** (+ domain `ValidationRule` pack) | high | F0.4, F1.1 pattern | ships against existing per-field APIs; upgrades transparently when 13a/13b land (§7); demo page exercises validator + first-invalid focus |
 | F1.3 | **PaymentMethodSelector** | medium | F0.4 (`PaymentMethodOption`) | installments composes existing InstallmentPicker; currency via F0.3 chain |
 
