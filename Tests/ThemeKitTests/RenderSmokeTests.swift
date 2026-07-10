@@ -70,4 +70,46 @@ final class RenderSmokeTests: XCTestCase {
         renders(Rating(value: 3.0), "Rating/generated")
         Theme.shared.loadTheme(named: "defaultTheme")   // restore
     }
+
+    // The HeroUI catalog-gap components (Waves 1-3) must render too.
+    @MainActor
+    func testHeroUIGapComponentsRender() {
+        struct SmokeTask: Identifiable, Equatable { let id: Int; let title: String }
+        Theme.shared.loadTheme(named: "defaultTheme")
+        let hsba = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
+        let swatches = [ColorSwatchItem(.red, label: "Red"), ColorSwatchItem(.blue, label: "Blue")]
+        let series = [ChartSeries("A", [ChartPoint("Jan", 3), ChartPoint("Feb", 6), ChartPoint("Mar", 4)])]
+        let slices = [ChartSlice("X", 60), ChartSlice("Y", 40)]
+
+        // Wave 1
+        renders(TrendChip(.up("+12%")), "TrendChip")
+        renders(ColorSwatch(.red, label: "Red").selected(), "ColorSwatch")
+        renders(ColorSwatchPicker(swatches, selection: .constant(nil)), "ColorSwatchPicker")
+        renders(ColorSlider(.hue, color: .constant(hsba)), "ColorSlider")
+        renders(ColorArea(color: .constant(hsba)), "ColorArea")
+        renders(CalendarYearPicker(selection: .constant(2026)), "CalendarYearPicker")
+        renders(Text("Anchor").themePopover(isPresented: .constant(true)) { Text("Popover") }, "Popover")
+
+        // Wave 2
+        renders(LineChart(series), "LineChart")
+        renders(AreaChart(series), "AreaChart")
+        renders(BarChart(series), "BarChart")
+        renders(DonutChart(slices), "DonutChart")
+        renders(Text("Hover").hoverCard { Text("Preview") }, "HoverCard")
+        renders(Color.clear.commandPalette(isPresented: .constant(false), sections: [CommandSection("A", items: [CommandItem("Go") {}])]), "CommandPalette")
+
+        // Wave 3
+        renders(EmojiReactionButton("👍", count: 12), "EmojiReactionButton")
+        renders(Text("Menu").themeContextMenu([MenuAction("Open") {}]), "ThemeContextMenu")
+        renders(TableToggleCell(isOn: .constant(true), label: "Active"), "TableToggleCell")
+        renders(TableSelectCell(["Low", "High"], selection: .constant("Low"), label: "Priority"), "TableSelectCell")
+        renders(TableSliderCell(value: .constant(0.5), in: 0...1, label: "Amount"), "TableSliderCell")
+        renders(TableColorCell(selection: .constant(.blue), label: "Color"), "TableColorCell")
+        renders(ActionBar(count: 3, actions: [ActionBarAction("Delete", systemImage: "trash", role: .destructive) {}], onClear: {}), "ActionBar")
+        renders(Agenda([AgendaEvent("Standup", start: .now, end: .now, accent: .primary)]), "Agenda")
+        renders(ColorPickerPanel(color: .constant(hsba)).swatches(swatches), "ColorPickerPanel")
+        renders(KanbanBoard(columns: .constant([KanbanColumn("To do", items: [SmokeTask(id: 1, title: "Card")], accent: .primary)])) { Text($0.title) }, "KanbanBoard")
+
+        Theme.shared.loadTheme(named: "defaultTheme")
+    }
 }

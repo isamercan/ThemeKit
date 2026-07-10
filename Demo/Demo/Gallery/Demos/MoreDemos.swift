@@ -1220,11 +1220,423 @@ struct CardStackDemo: View {
 
 struct CalendarDemo: View {
     @State private var date: Date? = .now
+    @State private var yearPicker = false
     var body: some View {
-        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
-            CalendarView(selection: $date)
+        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil"), ("yearPicker", "\(yearPicker)")]) {
+            if yearPicker {
+                CalendarView(selection: $date).yearPicker()
+            } else {
+                CalendarView(selection: $date)
+            }
         } knobs: {
+            Toggle("Tappable header (.yearPicker)", isOn: $yearPicker)
             Button("Clear") { date = nil }
+        }
+    }
+}
+
+// MARK: - HeroUI catalog-gap components (Wave 1)
+
+struct TrendChipDemo: View {
+    enum Dir: String, CaseIterable { case up, down }
+    @State private var dir: Dir = .up
+    @State private var size: TrendChipSize = .medium
+    @State private var showsIcon = true
+    @State private var positiveIsUp = true
+    private var trend: StatTrend { dir == .up ? .up("+12%") : .down("-8%") }
+    var body: some View {
+        ComponentStage("TrendChip", inspector: [("dir", dir.rawValue), ("positiveIsUp", "\(positiveIsUp)")]) {
+            TrendChip(trend).size(size).showsIcon(showsIcon).positiveIsUp(positiveIsUp)
+        } knobs: {
+            Picker("Direction", selection: $dir) { ForEach(Dir.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) { Text("Small").tag(TrendChipSize.small); Text("Medium").tag(TrendChipSize.medium) }.pickerStyle(.segmented)
+            Toggle("Shows icon", isOn: $showsIcon)
+            Toggle("Positive is up (down = red)", isOn: $positiveIsUp)
+        }
+    }
+}
+
+struct ColorSwatchDemo: View {
+    enum Shape: String, CaseIterable { case square, circle }
+    @State private var shape: Shape = .square
+    @State private var size: ColorSwatchSize = .medium
+    @State private var selected = true
+    private var swatchShape: ColorSwatchShape { shape == .square ? .square : .circle }
+    var body: some View {
+        ComponentStage("ColorSwatch", inspector: [("shape", shape.rawValue), ("selected", "\(selected)")]) {
+            HStack(spacing: 16) {
+                ColorSwatch(.red, label: "Red").shape(swatchShape).size(size).selected(selected)
+                ColorSwatch(.blue, label: "Blue").shape(swatchShape).size(size)
+                ColorSwatch(.green.opacity(0.4), label: "Faded green").shape(swatchShape).size(size)
+            }
+        } knobs: {
+            Picker("Shape", selection: $shape) { ForEach(Shape.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) { Text("S").tag(ColorSwatchSize.small); Text("M").tag(ColorSwatchSize.medium); Text("L").tag(ColorSwatchSize.large) }.pickerStyle(.segmented)
+            Toggle("First selected", isOn: $selected)
+        }
+    }
+}
+
+struct ColorSwatchPickerDemo: View {
+    private let palette: [ColorSwatchItem] = [
+        .init(.red, label: "Red"), .init(.orange, label: "Orange"), .init(.yellow, label: "Yellow"),
+        .init(.green, label: "Green"), .init(.mint, label: "Mint"), .init(.teal, label: "Teal"),
+        .init(.blue, label: "Blue"), .init(.indigo, label: "Indigo"), .init(.purple, label: "Purple"),
+        .init(.pink, label: "Pink"), .init(.brown, label: "Brown"), .init(.gray, label: "Gray"),
+    ]
+    @State private var selection: ColorSwatchItem?
+    @State private var circle = false
+    @State private var useGrid = true
+    var body: some View {
+        ComponentStage("ColorSwatchPicker", inspector: [("selection", selection?.label ?? "nil")]) {
+            Group {
+                if useGrid {
+                    ColorSwatchPicker(palette, selection: $selection).columns(6).swatchShape(circle ? .circle : .square)
+                } else {
+                    ColorSwatchPicker(palette, selection: $selection).swatchShape(circle ? .circle : .square)
+                }
+            }
+        } knobs: {
+            Toggle("Circle swatches", isOn: $circle)
+            Toggle("Fixed 6-column grid", isOn: $useGrid)
+            Button("Clear") { selection = nil }
+        }
+    }
+}
+
+struct ColorSliderDemo: View {
+    @State private var color = HSBAColor(hue: 0.58, saturation: 0.85, brightness: 0.9)
+    @State private var compactAlpha = true
+    var body: some View {
+        ComponentStage("ColorSlider", inspector: [("hue", "\(Int(color.hue * 360))°"), ("alpha", "\(Int(color.alpha * 100))%")]) {
+            VStack(spacing: 16) {
+                RoundedRectangle(cornerRadius: 12).fill(color.color).frame(height: 56)
+                ColorSlider(.hue, color: $color)
+                ColorSlider(.saturation, color: $color)
+                ColorSlider(.brightness, color: $color)
+                ColorSlider(.alpha, color: $color).trackHeight(compactAlpha ? .compact : .regular)
+            }
+        } knobs: {
+            Toggle("Compact alpha track", isOn: $compactAlpha)
+        }
+    }
+}
+
+struct ColorAreaDemo: View {
+    @State private var color = HSBAColor(hue: 0.08, saturation: 0.9, brightness: 0.95)
+    var body: some View {
+        ComponentStage("ColorArea", inspector: [("sat", "\(Int(color.saturation * 100))%"), ("bri", "\(Int(color.brightness * 100))%")]) {
+            VStack(spacing: 16) {
+                ColorArea(color: $color).cornerRadius(.box)
+                ColorSlider(.hue, color: $color)
+                RoundedRectangle(cornerRadius: 12).fill(color.color).frame(height: 44)
+            }
+        }
+    }
+}
+
+struct CalendarYearPickerDemo: View {
+    @State private var year = 2026
+    @State private var success = false
+    var body: some View {
+        ComponentStage("Calendar Year Picker", inspector: [("year", "\(year)")]) {
+            CalendarYearPicker(selection: $year).accent(success ? .success : nil)
+        } knobs: {
+            Toggle("Success accent", isOn: $success)
+            Stepper("Year: \(year)", value: $year, in: 1900...2100)
+        }
+    }
+}
+
+struct PopoverDemo: View {
+    @State private var show = false
+    @State private var showsArrow = true
+    @State private var nonstop = true
+    @State private var freeCancel = false
+    var body: some View {
+        ComponentStage("Popover", inspector: [("open", "\(show)")]) {
+            ThemeButton("Quick filters") { show.toggle() }.variant(.outline)
+                .themePopover(isPresented: $show, edge: .bottom, showsArrow: showsArrow) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Filters").textStyle(.labelBase600)
+                        Toggle("Nonstop only", isOn: $nonstop)
+                        Toggle("Free cancellation", isOn: $freeCancel)
+                    }
+                }
+                .padding(.vertical, 80)
+        } knobs: {
+            Text(".themePopover(isPresented:content:) — the anchored card with fully custom content.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Shows arrow", isOn: $showsArrow)
+            Button(show ? "Hide" : "Show") { show.toggle() }
+        }
+    }
+}
+
+// MARK: - HeroUI catalog-gap components (Wave 2 — charts & surfaces)
+
+private let demoChartSeries: [ChartSeries] = [
+    ChartSeries("2025", [ChartPoint("Jan", 12), ChartPoint("Feb", 18), ChartPoint("Mar", 15), ChartPoint("Apr", 22), ChartPoint("May", 19), ChartPoint("Jun", 26)]),
+    ChartSeries("2026", [ChartPoint("Jan", 20), ChartPoint("Feb", 16), ChartPoint("Mar", 24), ChartPoint("Apr", 21), ChartPoint("May", 28), ChartPoint("Jun", 30)]),
+]
+
+struct LineChartDemo: View {
+    @State private var selected: String?
+    @State private var curved = true
+    @State private var points = true
+    @State private var grid = true
+    @State private var single = false
+    var body: some View {
+        ComponentStage("LineChart", inspector: [("selected", selected ?? "—")]) {
+            LineChart(single ? [demoChartSeries[0]] : demoChartSeries, selection: $selected)
+                .curved(curved).showsPoints(points).showsGrid(grid)
+        } knobs: {
+            Toggle("Curved", isOn: $curved)
+            Toggle("Show points", isOn: $points)
+            Toggle("Show grid", isOn: $grid)
+            Toggle("Single series (no legend)", isOn: $single)
+        }
+    }
+}
+
+struct AreaChartDemo: View {
+    @State private var stacked = false
+    @State private var curved = true
+    var body: some View {
+        ComponentStage("AreaChart", inspector: [("stacked", "\(stacked)")]) {
+            AreaChart(demoChartSeries).stacked(stacked).curved(curved)
+        } knobs: {
+            Toggle("Stacked", isOn: $stacked)
+            Toggle("Curved", isOn: $curved)
+        }
+    }
+}
+
+struct BarChartDemo: View {
+    @State private var stacked = false
+    @State private var selected: String?
+    private let series = [
+        ChartSeries("Revenue", [ChartPoint("Q1", 120), ChartPoint("Q2", 150), ChartPoint("Q3", 138), ChartPoint("Q4", 172)]),
+        ChartSeries("Cost", [ChartPoint("Q1", 80), ChartPoint("Q2", 95), ChartPoint("Q3", 90), ChartPoint("Q4", 110)]),
+    ]
+    var body: some View {
+        ComponentStage("BarChart", inspector: [("mode", stacked ? "stacked" : "grouped")]) {
+            BarChart(series, selection: $selected).mode(stacked ? .stacked : .grouped)
+        } knobs: {
+            Toggle("Stacked", isOn: $stacked)
+        }
+    }
+}
+
+struct DonutChartDemo: View {
+    private enum Ratio: String, CaseIterable { case pie, ring, thin }
+    @State private var ratioSel: Ratio = .ring
+    private var ratio: DonutRatio { ratioSel == .pie ? .pie : (ratioSel == .ring ? .ring : .thin) }
+    private let slices = [ChartSlice("Direct", 42), ChartSlice("Search", 30), ChartSlice("Social", 18), ChartSlice("Referral", 10)]
+    var body: some View {
+        ComponentStage("DonutChart", inspector: [("hole", ratioSel.rawValue)]) {
+            DonutChart(slices).innerRadius(ratio).label {
+                VStack(spacing: 0) { Text("100").textStyle(.headingSm); Text("visits").textStyle(.overline400) }
+            }
+        } knobs: {
+            Picker("Hole", selection: $ratioSel) { ForEach(Ratio.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
+        }
+    }
+}
+
+struct HoverCardDemo: View {
+    var body: some View {
+        ComponentStage("HoverCard", inspector: [("trigger", "long-press / hover")]) {
+            VStack(spacing: 44) {
+                Text("Long-press or hover me").textStyle(.labelBase600)
+                    .hoverCard(edge: .bottom) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Ada Byron").textStyle(.labelBase600)
+                            Text("Product designer · Online").textStyle(.bodySm400)
+                        }
+                    }
+                Icon(systemName: "info.circle").size(.lg)
+                    .hoverCard(edge: .top) { Text("A contextual preview card.").textStyle(.bodySm400) }
+            }
+            .padding(.vertical, 44)
+        }
+    }
+}
+
+struct CommandPaletteDemo: View {
+    @State private var show = false
+    private var sections: [CommandSection] {
+        [
+            CommandSection("Actions", items: [
+                CommandItem("New booking", systemImage: "plus.circle", keywords: ["create", "add"], shortcut: ["⌘", "N"]) {},
+                CommandItem("Search flights", systemImage: "airplane", keywords: ["find"], shortcut: ["⌘", "F"]) {},
+            ]),
+            CommandSection("Navigation", items: [
+                CommandItem("Go to trips", systemImage: "suitcase", keywords: ["bookings"]) {},
+                CommandItem("Settings", systemImage: "gearshape", shortcut: ["⌘", ","]) {},
+            ]),
+        ]
+    }
+    var body: some View {
+        ComponentStage("CommandPalette", inspector: [("open", "\(show)")]) {
+            ThemeButton("Open ⌘K palette") { show = true }.variant(.outline)
+                .frame(maxWidth: .infinity, minHeight: 220)
+                .commandPalette(isPresented: $show, sections: sections)
+        } knobs: {
+            Text("⌘K palette: type to filter, arrow keys to navigate, Kbd shortcut chips.").font(.caption).foregroundStyle(.secondary)
+            Button("Open") { show = true }
+        }
+    }
+}
+
+// MARK: - HeroUI catalog-gap components (Wave 3 — organisms & conveniences)
+
+struct EmojiReactionButtonDemo: View {
+    @State private var liked = false
+    var body: some View {
+        ComponentStage("EmojiReactionButton", inspector: [("reacted", "\(liked)")]) {
+            HStack(spacing: 10) {
+                EmojiReactionButton("👍", count: 12, isReacted: $liked)
+                EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
+                EmojiReactionButton("🔥", count: 0)
+            }
+        } knobs: {
+            Toggle("First reacted", isOn: $liked)
+        }
+    }
+}
+
+struct ThemeContextMenuDemo: View {
+    var body: some View {
+        ComponentStage("ThemeContextMenu", inspector: [("trigger", "long-press / right-click")]) {
+            Text("Long-press me for a menu")
+                .textStyle(.labelBase600)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                .themeContextMenu([
+                    MenuAction("Share", systemImage: "square.and.arrow.up") {},
+                    MenuAction("Move", systemImage: "folder", children: [
+                        MenuAction("To Inbox") {}, MenuAction("To Archive") {},
+                    ]),
+                    MenuAction("Rename", systemImage: "pencil", isDisabled: true) {},
+                    MenuAction("Delete", systemImage: "trash", role: .destructive) {},
+                ]) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Preview").textStyle(.labelBase600)
+                        Text("A token-styled preview card.").textStyle(.bodySm400)
+                    }
+                    .padding()
+                }
+        } knobs: {
+            Text("Native menu chrome (not token-stylable) + a data model + styled preview.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct TableCellsDemo: View {
+    @State private var on = true
+    @State private var pick = "Medium"
+    @State private var amount = 0.4
+    @State private var color = Color.blue
+    var body: some View {
+        ComponentStage("Table Cells", inspector: [("toggle", "\(on)"), ("select", pick)]) {
+            VStack(alignment: .leading, spacing: 14) {
+                cellRow("Active") { TableToggleCell(isOn: $on, label: "Active") }
+                cellRow("Priority") { TableSelectCell(["Low", "Medium", "High"], selection: $pick, label: "Priority") }
+                cellRow("Amount") { TableSliderCell(value: $amount, in: 0...1, label: "Amount") }
+                cellRow("Color") { TableColorCell(selection: $color, label: "Color") }
+            }
+        } knobs: {
+            Text("Drop these into a DataTable.Column's cell builder.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+    @ViewBuilder private func cellRow<V: View>(_ label: String, @ViewBuilder _ content: () -> V) -> some View {
+        HStack { Text(label).font(.subheadline).frame(width: 90, alignment: .leading); content(); Spacer() }
+    }
+}
+
+struct ActionBarDemo: View {
+    @State private var selected: Set<Int> = [1, 2, 3]
+    var body: some View {
+        ComponentStage("ActionBar", inspector: [("selected", "\(selected.count)")]) {
+            VStack(spacing: 6) {
+                ForEach(1...5, id: \.self) { i in
+                    HStack {
+                        Image(systemName: selected.contains(i) ? "checkmark.circle.fill" : "circle")
+                        Text("Item \(i)")
+                        Spacer()
+                    }
+                    .padding(8)
+                    .contentShape(Rectangle())
+                    .onTapGesture { if selected.contains(i) { selected.remove(i) } else { selected.insert(i) } }
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, minHeight: 280, alignment: .top)
+            .actionBar(selection: $selected, actions: [
+                ActionBarAction("Archive", systemImage: "archivebox") {},
+                ActionBarAction("Share", systemImage: "square.and.arrow.up") {},
+                ActionBarAction("Delete", systemImage: "trash", role: .destructive) { selected.removeAll() },
+            ])
+        } knobs: {
+            Button("Select all") { selected = Set(1...5) }
+            Button("Clear") { selected.removeAll() }
+        }
+    }
+}
+
+struct AgendaDemo: View {
+    private func at(_ hour: Int, _ minute: Int = 0, day: Int = 0) -> Date {
+        let cal = Calendar.current
+        let base = cal.date(byAdding: .day, value: day, to: .now) ?? .now
+        return cal.date(bySettingHour: hour, minute: minute, second: 0, of: base) ?? base
+    }
+    var body: some View {
+        ComponentStage("Agenda", inspector: [("events", "5")]) {
+            ScrollView {
+                Agenda([
+                    AgendaEvent("Team standup", start: at(9, 30), end: at(10), location: "Zoom", accent: .primary),
+                    AgendaEvent("Design review", start: at(13), end: at(14), subtitle: "New components", accent: .purple),
+                    AgendaEvent("Lunch with Ada", start: at(12), end: at(13)),
+                    AgendaEvent("Company offsite", start: at(0, day: 1), isAllDay: true, accent: .success),
+                    AgendaEvent("1:1 sync", start: at(11, day: 1), end: at(11, 30)),
+                ])
+            }
+            .frame(maxHeight: 380)
+        }
+    }
+}
+
+struct ColorPickerPanelDemo: View {
+    @State private var color = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
+    var body: some View {
+        ComponentStage("ColorPickerPanel", inspector: [("hue", "\(Int(color.hue * 360))°"), ("alpha", "\(Int(color.alpha * 100))%")]) {
+            ColorPickerPanel(color: $color).swatches([
+                .init(.red, label: "Red"), .init(.orange, label: "Orange"), .init(.green, label: "Green"),
+                .init(.blue, label: "Blue"), .init(.purple, label: "Purple"), .init(.black, label: "Ink"),
+            ])
+        }
+    }
+}
+
+struct KanbanBoardDemo: View {
+    struct Task: Identifiable, Equatable { let id: Int; let title: String }
+    @State private var columns: [KanbanColumn<Task>] = [
+        .init("To do", items: [Task(id: 1, title: "Design tokens"), Task(id: 2, title: "Write docs")], accent: .neutral),
+        .init("In progress", items: [Task(id: 3, title: "Build charts")], accent: .primary, limit: 2),
+        .init("Done", items: [Task(id: 4, title: "Ship colors")], accent: .success),
+    ]
+    var body: some View {
+        ComponentStage("KanbanBoard", inspector: [("columns", "\(columns.count)")]) {
+            KanbanBoard(columns: $columns) { task in
+                Text(task.title)
+                    .font(.callout.weight(.semibold))
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+            }
+            .frame(height: 380)
         }
     }
 }
@@ -1594,6 +2006,10 @@ struct FeedbackDemo: View {
                     )
                 }
                 .color(.error).variant(.outline).fullWidth()
+
+                // Subtree house style: `.feedbackDefaults(...)` wrapped around a
+                // local host — default edge/duration with per-call overrides.
+                FeedbackDefaultsPlayground()
             }
         } knobs: {
             Picker("Kind", selection: $kind) {
@@ -1610,6 +2026,55 @@ struct FeedbackDemo: View {
                                              primaryTitle: "Cancel reservation", primaryKind: .error, secondaryTitle: "Cancel")
             default: break
             }
+        }
+    }
+}
+
+/// FeedbackDefaults playground: a *locally hosted* subtree (its own
+/// `.feedbackHost()`) wrapped in `.feedbackDefaults(...)` so the toggles
+/// re-apply live. Omitted-argument calls follow the defaults; explicit
+/// `duration:` / `position:` arguments still win.
+private struct FeedbackDefaultsPlayground: View {
+    @State private var top = true
+    @State private var slow = false
+    private var duration: Double { slow ? 6 : 1.5 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Feedback Defaults").font(.caption.bold()).foregroundStyle(.secondary)
+            Text(".feedbackDefaults(toastPosition: \(top ? ".top" : ".bottom"), toastDuration: \(duration, specifier: "%.1f"))")
+                .font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
+            FeedbackDefaultsButtons()
+            Toggle("Top edge default", isOn: $top)
+            Toggle("Slow dismiss default (6s)", isOn: $slow)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .frame(height: 320)
+        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .feedbackHost()   // local host — reads the defaults applied around it
+        .feedbackDefaults(toastPosition: top ? .top : .bottom, toastDuration: duration)
+    }
+}
+
+private struct FeedbackDefaultsButtons: View {
+    /// The *local* presenter injected by the playground's own `.feedbackHost()`.
+    @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ThemeButton("Toast (uses defaults)") {
+                feedback.toast("Follows the subtree defaults", kind: .accent)   // no duration/position args
+            }
+            .fullWidth()
+            ThemeButton("Explicit sticky (duration: nil)") {
+                feedback.toast("Explicit wins — sticky", kind: .info, duration: nil)
+            }
+            .variant(.outline).fullWidth()
+            ThemeButton("Explicit bottom (position:)") {
+                feedback.toast("Explicit wins — bottom", kind: .neutral, position: .bottom)
+            }
+            .variant(.outline).fullWidth()
         }
     }
 }
