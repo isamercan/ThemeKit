@@ -232,8 +232,10 @@ token-bound output and code that won't compile or won't re-skin.
 4. **Required content/bindings/actions go in `init`.** Everything else is a modifier —
    variants, sizes, flags, colors, callbacks.
 5. **Chain modifiers; don't add init args.** `Badge("New").badgeStyle(.info).badgeShape(.rounded)`.
-6. **Native modifiers:** `.controlSize(_:)` for size, `.disabled(_:)` for disabled,
-   `.a11yID(_:)` for the accessibility id — never `size:` / `isEnabled:` init args.
+6. **Native modifiers:** `.controlSize(_:)` for size, `.disabled(_:)` for disabled — never
+   `size:` / `isEnabled:` init args. Many components also expose `.a11yID(_:)` (check the
+   component's modifier list); it is not a global `View` modifier, so for components without
+   it use SwiftUI's native `.accessibilityIdentifier(_:)`.
 7. **No literal radius/spacing:** `Theme.RadiusRole.box.value`, `Theme.SpacingKey.md.value`.
 8. **Recolor** with `Theme.shared.applyGenerated(primaryHex:)`, `Theme.shared.apply(ThemeConfig(…))`,
    or `ThemePreset.named("…")?.apply()`; scope with `.theme(customTheme)`.
@@ -305,7 +307,8 @@ Full recipes with code are in **llms-patterns.txt**. Summary:
 - **Card layouts** — `Card` + `CardStack`; elevation via `.elevation(_:)`.
 - **Navigation** — `NavigationBar`, `Sidebar`, `SegmentedTabBar`.
 - **Data display** — `DataTable`, `KeyValueTable`, `ListRow`/`ListView`, `Timeline`, `Stat`.
-- **Accessibility** — `.a11yID(_:)` / `.a11yLabel(_:)`; 44 pt targets & RTL mirroring are built in.
+- **Accessibility** — `.a11yID(_:)` / `.a11yLabel(_:)` on components that expose them (not global;
+  use SwiftUI's `.accessibilityIdentifier(_:)` otherwise); 44 pt targets & RTL mirroring are built in.
 - **Localization** — String Catalog (English default), every string overridable via a parameter.
 
 ---

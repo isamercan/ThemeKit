@@ -19,7 +19,7 @@ This is the quick-reference index. Deeper files:
 1. **Never hardcode a color.** No `.foregroundStyle(.blue)` / `Color(hex:)`. Use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.
 2. **Read the theme from the environment:** `@Environment(\.theme) private var theme` (defaults to `Theme.shared`). **Inject once at the root:** `.environment(Theme.shared)`.
 3. **Required content/bindings/actions in `init`;** variants/sizes/flags/colors/callbacks are **chainable modifiers** — `Badge("New").badgeStyle(.info).badgeShape(.rounded)`.
-4. **Sizes** use `.controlSize(_:)`; **disabled** uses `.disabled(_:)`; every component takes `.a11yID(_:)`. Never `size:` / `isEnabled:` init args.
+4. **Sizes** use `.controlSize(_:)`; **disabled** uses `.disabled(_:)` (native, universal). Never `size:` / `isEnabled:` init args. Many components also expose `.a11yID(_:)` — check the component's modifier list; where absent use SwiftUI's `.accessibilityIdentifier(_:)`.
 5. **No hardcoded radius/spacing.** Use `Theme.RadiusRole.box.value` / `Theme.SpacingKey.md.value`.
 6. **Recolor** with `Theme.shared.applyGenerated(primaryHex:)` or `ThemePreset.named("dracula")?.apply()`. Scope to one subtree with `.theme(customTheme)`.
 7. **Don't re-implement** a Card / Sheet / Toast / field — use the existing component.
@@ -89,7 +89,7 @@ ThemePicker(selection: $activeThemeID)            // tappable grid of all preset
 ## Localization & accessibility
 
 - **Strings:** bundled String Catalog, English default (`en`); every user-facing string is also overridable via an init/modifier parameter. Add your own localizations in-app.
-- **Accessibility:** `.a11yID(_:)` / `.a11yLabel(_:)` on every component; 44 pt touch targets and RTL-directional mirroring are built in.
+- **Accessibility:** many components expose `.a11yID(_:)` / `.a11yLabel(_:)` (not global — use SwiftUI's `.accessibilityIdentifier(_:)` where a component lacks it); 44 pt touch targets and RTL-directional mirroring are built in.
 
 ## Links
 

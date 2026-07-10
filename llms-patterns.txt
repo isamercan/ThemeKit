@@ -274,7 +274,8 @@ Timeline(bookingEvents).mode(.alternate)
   ✅ Use the shipped component and restyle it via its `*Style(_:)` protocol.
 - ❌ Ignoring the style protocols and overriding a component's internals.
   ✅ Implement `CardStyle` / `FieldStyle` / … and set it with `.cardStyle(_:)` / `.fieldStyle(_:)`.
-- ❌ Omitting accessibility — no `.a11yID`/`.a11yLabel`, tap targets under 44 pt.
-  ✅ `.a11yID("screen.element")`; ThemeKit's 44 pt targets & RTL mirroring do the rest.
+- ❌ Omitting accessibility — no accessibility id, tap targets under 44 pt.
+  ✅ `.a11yID("screen.element")` on components that expose it (check the modifier list), else
+  SwiftUI's `.accessibilityIdentifier(_:)`; ThemeKit's 44 pt targets & RTL mirroring do the rest.
 - ❌ Inventing modifier names from memory.
   ✅ Look them up in **llms-components.txt** or via the MCP `get_component_api`.

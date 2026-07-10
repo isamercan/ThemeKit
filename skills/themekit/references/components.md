@@ -13,12 +13,12 @@
 - `Barcode(value)` — A token-sized (but high-contrast) Code 128 barcode with an optional caption. · modifiers: `.height()`, `.showsValue()`
 - `Chip(title, isSelected:)` — Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix. · modifiers: `.size()`, `.chipStyle()`, `.icon()`, `.rating()`, `.exists()`, `.interactive()`, `.fullWidth()`, `.expands()`
 - `CloseButton(action:)` — A circular icon-only dismiss button. · modifiers: `.tint()`, `.systemImage()`, `.plain()`, `.a11yID()`
-- `CodeBlock(text, prefix:, highlight:)` — Atom. · modifiers: `.copyable()`
+- `CodeBlock(lines)` — Atom. · modifiers: `.copyable()`
 - `Confetti` — A token-bound confetti burst. · modifiers: `.pieceCount()`, `.colors()`, `.duration()`
-- `Ribbon(text, @ViewBuilder:)` — A corner ribbon wrapping any content (Ant `Badge.Ribbon`). · modifiers: `.accent()`, `.color()`
+- `Ribbon(text, content:)` — A corner ribbon wrapping any content (Ant `Badge.Ribbon`). · modifiers: `.accent()`, `.color()`
 - `CountdownTimer(until:)` — A token-bound live countdown to `deadline`. · modifiers: `.style()`, `.format()`, `.size()`, `.showsDays()`, `.urgentBelow()`, `.onFinish()`
 - `DividerView(title)` — A theme-driven divider: horizontal / vertical, solid / dashed, with an optional inline text label (left / center / right). · modifiers: `.size()`, `.axis()`, `.dashed()`, `.titleAlign()`
-- `FareFeatureRow(text, systemImage:, detail:, status:)` · modifiers: `.icon()`, `.accent()`
+- `FareFeatureRow(feature)` · modifiers: `.icon()`, `.accent()`
 - `FlightStatusBadge(status)` · modifiers: `.time()`, `.label()`, `.showsIcon()`, `.solid()`
 - `GaugeView(value:, in:, label:)` — Atom. · modifiers: `.gaugeStyle()`, `.showsValue()`
 - `HelperText(text)` — Atom. · modifiers: `.hasError()`, `.hidesOnError()`, `.a11yID()`
@@ -26,7 +26,7 @@
 - `IconTile(systemImage)` · modifiers: `.size()`, `.iconSize()`, `.background()`, `.iconColor()`, `.accent()`, `.cornerRadius()`
 - `InlineText(text, links:)` — Atom. · modifiers: `.accent()`, `.color()`, `.inlineStyle()`
 - `InputLabel(text)` — Atom. · modifiers: `.required()`, `.hasInfo()`, `.hasError()`
-- `Join(axis, @ViewBuilder:)` — Atom.
+- `Join(axis, content:)` — Atom.
 - `Kbd(text)` — Atom. · modifiers: `.size()`
 - `PointsBadge(points)` — A token-bound loyalty-points pill. · modifiers: `.unit()`, `.style()`, `.size()`, `.icon()`, `.showsSign()`, `.animatesValue()`
 - `PriceTag(amount, currencyCode:)` — A token-bound price label. · modifiers: `.original()`, `.originalBelow()`, `.unit()`, `.size()`, `.emphasis()`, `.discountBadge()`, `.fractionDigits()`, `.free()`, `.soldOut()`, `.prefix()`, `.from()`, `.animatesValue()`
@@ -42,27 +42,27 @@
 - `SeatCell(seat, size:, isSelected:, isSelectable:, isRecommended:, assignedInitials: …)`
 - `ShareButton(title, item:)` — Atom. · modifiers: `.icon()`, `.size()`, `.accent()`
 - `Skeleton(shape)` — A standalone skeleton block of an arbitrary shape and size. · modifiers: `.size()`, `.variant()`, `.highlight()`
-- `SkeletonGroup(@ViewBuilder:)` — Drives every group-bound skeleton in `content` from one loading flag. · modifiers: `.loading()`, `.skeletonOnly()`
+- `SkeletonGroup(content:)` — Drives every group-bound skeleton in `content` from one loading flag. · modifiers: `.loading()`, `.skeletonOnly()`
 - `Spinner` — Atom. · modifiers: `.style()`, `.size()`, `.lineWidth()`, `.accent()`, `.color()`
 - `StatusDot(kind, label:)` — Atom. · modifiers: `.size()`, `.pulse()`
-- `SurfaceView(@ViewBuilder:)` — Atom. · modifiers: `.level()`, `.elevation()`, `.radius()`, `.contentPadding()`
+- `SurfaceView(content:)` — Atom. · modifiers: `.level()`, `.elevation()`, `.radius()`, `.contentPadding()`
 - `Swap(isOn:)` — Atom. · modifiers: `.symbols()`, `.size()`, `.rotate()`, `.a11yID()`
 - `SwapButton(systemImage, action:)` · modifiers: `.size()`, `.bordered()`
 - `Tag(text, onRemove:)` — Atom. · modifiers: `.size()`, `.icon()`, `.tagStyle()`, `.variant()`, `.color()`, `.bordered()`
 - `CheckableTag` — Ant's **CheckableTag** — a tag that toggles a bound boolean, like a lightweight selectable filter.
 - `TextLink(title, action:)` — Atom. · modifiers: `.underline()`, `.accent()`
 - `TextRotate(words, interval:)` — Atom. · modifiers: `.textStyle()`, `.accent()`, `.interval()`
-- `TiltCard(@ViewBuilder:)` — Atom. · modifiers: `.maxAngle()`, `.shine()`, `.radius()`
+- `TiltCard(content:)` — Atom. · modifiers: `.maxAngle()`, `.shine()`, `.radius()`
 - `Title(text)` — Atom. · modifiers: `.subtitle()`, `.eyebrow()`, `.action()`
 
 ## Molecules (88)
 
-- `Affix(offsetTop:, @ViewBuilder:)` · modifiers: `.onChange()`, `.target()`
-- `AmenityGrid(label, systemImage:)` — A token-bound amenity grid. · modifiers: `.columns()`, `.size()`, `.tint()`, `.limit()`, `.highlighted()`
-- `AnchorNav(id, title:, level:)` · modifiers: `.onSelect()`, `.direction()`
+- `Affix(offsetTop:, content:)` · modifiers: `.onChange()`, `.target()`
+- `AmenityGrid(amenities)` — A token-bound amenity grid. · modifiers: `.columns()`, `.size()`, `.tint()`, `.limit()`, `.highlighted()`
+- `AnchorNav(items, active:)` · modifiers: `.onSelect()`, `.direction()`
 - `Autocomplete(//:, text:, suggestions:, onSelect:)` — Molecule. · modifiers: `.placeholder()`, `.maxResults()`, `.debounce()`, `.suggestionEnabled()`, `.onSearch()`, `.a11yID()`
 - `Breadcrumbs(title, action:)` — Molecule. · modifiers: `.separator()`, `.accent()`
-- `ButtonGroup(axis, @ViewBuilder:)` — Molecule.
+- `ButtonGroup(axis, content:)` — Molecule.
 - `PrimaryButton(title, action:)` · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
 - `SecondaryButton`
 - `OutlineButton`
@@ -70,7 +70,7 @@
 - `LinkButton`
 - `ThemeButton(title, action:)` · modifiers: `.variant()`, `.color()`, `.size()`, `.shape()`, `.fullWidth()`, `.loading()`, `.icon()`, `.a11yID()`
 - `CalendarView(selection:)` — Molecule. · modifiers: `.accent()`, `.showsWeekdayHeader()`, `.firstWeekday()`
-- `Cascader(value, label:, children:)` · modifiers: `.placeholder()`, `.changeOnSelect()`
+- `Cascader(options, selection:)` · modifiers: `.placeholder()`, `.changeOnSelect()`
 - `Checkbox(label, isChecked:)` — Figma "Control Items" → Checkboxes. · modifiers: `.type()`, `.indeterminate()`, `.alignment()`, `.customSize()`, `.accent()`, `.infoMessages()`, `.a11yID()`
 - `CheckboxGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.infoMessages()`, `.selectAll()`, `.optionEnabled()`, `.a11yID()`
 - `ImageChip(isSelected:, url:)` — A selectable remote-image tile with a selection border. · modifiers: `.size()`, `.imageURL()`, `.rating()`, `.description()`, `.free()`, `.icon()`, `.shape()`, `.closable()`, `.chipStyle()`, `.optionEnabled()`, `.removable()`, `.infoMessages()`
@@ -79,28 +79,28 @@
 - `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
 - `ChipGroup` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
 - `ColorField(label, selection:)` — Molecule. · modifiers: `.supportsOpacity()`
-- `ColumnsGrid(@ViewBuilder:)` · modifiers: `.columns()`, `.adaptive()`, `.gutter()`
+- `ColumnsGrid(content:)` · modifiers: `.columns()`, `.adaptive()`, `.gutter()`
 - `ControlRow(title, isOn:)` — Molecule. · modifiers: `.description()`, `.control()`, `.indicator()`, `.required()`, `.hasError()`, `.errorText()`, `.a11yID()`
-- `CurrencyPicker(code:, symbol:, name:)` — A token-bound currency picker. · modifiers: `.showsName()`, `.searchable()`, `.recents()`
+- `CurrencyPicker(selection:, currencies:)` — A token-bound currency picker. · modifiers: `.showsName()`, `.searchable()`, `.recents()`
 - `DateField(label, date:)` — Molecule. · modifiers: `.placeholder()`, `.range()`, `.style()`, `.locale()`, `.components()`, `.infoMessages()`, `.clearable()`, `.icon()`, `.a11yID()`
-- `DatePriceCard(date, price:)` — A single selectable date+price card. · modifiers: `.currency()`, `.cheapest()`, `.pill()`, `.columns()`, `.strip()`, `.highlightCheapest()`, `.onPage()`
+- `DatePriceCard(item, isSelected:, action:)` — A single selectable date+price card. · modifiers: `.currency()`, `.cheapest()`, `.pill()`, `.columns()`, `.strip()`, `.highlightCheapest()`, `.onPage()`
 - `DatePriceStrip`
-- `Dropdown(title, subtitle:, systemImage:, role:, disabled:, isSelected: …)` — Molecule. · modifiers: `.edge()`, `.accent()`, `.menuWidth()`, `.indicator()`, `.shouldCloseOnSelect()`
+- `Dropdown(items:, isPresented:, trigger:)` — Molecule. · modifiers: `.edge()`, `.accent()`, `.menuWidth()`, `.indicator()`, `.shouldCloseOnSelect()`
 - `FieldButton(value, action:)` · modifiers: `.label()`, `.icon()`, `.trailing()`, `.placeholder()`
-- `Fieldset(title, @ViewBuilder:)` — Molecule. · modifiers: `.helper()`
+- `Fieldset(title, content:)` — Molecule. · modifiers: `.helper()`
 - `FileInput(label, onPick:)` — Molecule. · modifiers: `.fileName()`, `.buttonTitle()`, `.placeholder()`, `.infoMessages()`, `.onClear()`
 - `FilterGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.size()`, `.chipStyle()`, `.fullWidth()`, `.optionEnabled()`, `.infoMessages()`
 - `FilterRow(title, isOn:)` · modifiers: `.count()`, `.icon()`, `.showsSeparator()`
-- `Flex(@ViewBuilder:)` · modifiers: `.direction()`, `.vertical()`, `.gap()`, `.justify()`, `.align()`, `.wrap()`
+- `Flex(content:)` · modifiers: `.direction()`, `.vertical()`, `.gap()`, `.justify()`, `.align()`, `.wrap()`
 - `FlightRoute(from:, to:, departure:, arrival:)` · modifiers: `.stops()`, `.nextDay()`, `.pathColor()`, `.track()`
-- `GuestSelector(rooms:, adults:, children:, infants:)` — A token-bound rooms & guests picker. · modifiers: `.showsRooms()`, `.showsInfants()`, `.adultRange()`, `.childRange()`, `.infantRange()`, `.roomRange()`, `.maxTotal()`, `.onChange()`
+- `GuestSelector(selection:)` — A token-bound rooms & guests picker. · modifiers: `.showsRooms()`, `.showsInfants()`, `.adultRange()`, `.childRange()`, `.infantRange()`, `.roomRange()`, `.maxTotal()`, `.onChange()`
 - `InputNumber(label, value:, range:)` — Molecule. · modifiers: `.step()`, `.unit()`, `.hint()`, `.errorText()`, `.large()`, `.editable()`, `.hasInfo()`, `.onValueChange()`, `.a11yID()`
-- `InstallmentPicker(count:, total:, monthly:, label:)` · modifiers: `.currency()`, `.accent()`
+- `InstallmentPicker(options, selection:)` · modifiers: `.currency()`, `.accent()`
 - `InstallmentSelector(total:, options:, selection:, currencyCode:)` — A token-bound instalment plan picker. · modifiers: `.interestFreeUpTo()`, `.recommended()`, `.surcharge()`
 - `LayoverRow(duration:, airport:)` · modifiers: `.warning()`, `.layoverLabel()`, `.icon()`, `.accent()`
 - `MapPriceMarker(text)` — Chroma: while the environment carries the default ``ChipStyle`` the pill draws its own accent fill + border (pixel-identical to the pre-ChipStyle look — the built-ins don't know the marker's accent tokens). · modifiers: `.selected()`, `.accent()`, `.icon()`, `.pointer()`
-- `Masonry(@ViewBuilder:)` · modifiers: `.columns()`, `.spacing()`
-- `Mentions(value, label:)` · modifiers: `.prefix()`, `.placeholder()`
+- `Masonry(content:)` · modifiers: `.columns()`, `.spacing()`
+- `Mentions(text:, options:)` · modifiers: `.prefix()`, `.placeholder()`
 - `MultiLineTextInput(label, text:)` — Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state. · modifiers: `.placeholder()`, `.characterLimit()`, `.countStyle()`, `.size()`, `.required()`, `.errorText()`, `.infoMessages()`, `.minHeight()`, `.a11yID()`
 - `MultiSelect(//:, options:, selection:, isExpanded:, optionTitle:)` — Multiple / tags select with optional search (Ant Select mode="multiple"). · modifiers: `.placeholder()`, `.infoMessages()`, `.optionEnabled()`, `.optionDescription()`, `.searchable()`, `.clearable()`, `.maxTags()`, `.loading()`, `.a11yID()`
 - `OTPInput(code:, onComplete:)` — Improved, token-bound rewrite of the reference OTPInputView. · modifiers: `.digitCount()`, `.characters()`, `.groups()`, `.placeholder()`, `.secure()`, `.errorText()`, `.infoMessages()`, `.resend()`, `.a11yID()`
@@ -109,7 +109,7 @@
 - `PaymentCardField(number:, expiry:, cvv:)` · modifiers: `.holder()`, `.accent()`, `.surface()`, `.placeholders()`
 - `PriceBreakdown(amount, currencyCode:)` · modifiers: `.original()`, `.discountBadge()`, `.unit()`, `.note()`, `.extra()`, `.size()`, `.emphasis()`, `.align()`
 - `PriceHistogram(bins:, lowerValue:, upperValue:, in:)` — A token-bound price histogram + range filter. · modifiers: `.barHeight()`, `.accent()`, `.currency()`, `.resultCount()`, `.showsBounds()`
-- `PriceTrendChart(label, sublabel:, price:)` · modifiers: `.title()`, `.currency()`, `.accent()`, `.selectionAccent()`, `.selectionColor()`, `.barHeight()`, `.barWidth()`, `.spacing()`, `.cornerRadius()`, `.scrollable()`, `.maxDays()`, `.showsAxis()`, `.showsValues()`, `.showsWeekday()`, `.gradient()`, `.onPage()`
+- `PriceTrendChart(points, selection:)` · modifiers: `.title()`, `.currency()`, `.accent()`, `.selectionAccent()`, `.selectionColor()`, `.barHeight()`, `.barWidth()`, `.spacing()`, `.cornerRadius()`, `.scrollable()`, `.maxDays()`, `.showsAxis()`, `.showsValues()`, `.showsWeekday()`, `.gradient()`, `.onPage()`
 - `ProgressIndicator(variant:, current:, total:)` — Segmented position/progress indicator (Reference ProgressIndicator parity). · modifiers: `.size()`, `.videoProgress()`, `.stepText()`, `.cornerRadius()`
 - `QuantityStepper(//:, range:)` — A token-bound quantity stepper (− value +), bounded by a range. · modifiers: `.a11yID()`, `.step()`
 - `RadioButton(label, isSelected:)` — Figma "Control Items" → Radioboxes. · modifiers: `.type()`, `.radioStyle()`, `.gap()`, `.fillColor()`, `.accent()`, `.infoMessages()`, `.alignment()`, `.a11yID()`
@@ -117,85 +117,85 @@
 - `RadioButtonGroup` — A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.
 - `RangeSlider(//:, upperValue:, in:)` — Improved, token-bound rewrite of the reference RangeSliderView — a self-contained dual-thumb slider over a numeric range (decoupled from the reference's text-field wiring). · modifiers: `.a11yID()`, `.step()`, `.marks()`, `.axis()`, `.accent()`, `.inputs()`, `.onChangeEnd()`, `.valueLabel()`
 - `RecentSearchRow(from:, to:, action:)` · modifiers: `.roundTrip()`, `.dates()`, `.passengers()`, `.icon()`, `.onRemove()`, `.onSearch()`, `.searchAccent()`, `.accent()`, `.bordered()`, `.pill()`, `.surface()`
-- `ScrollShadow(@ViewBuilder:)` — Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`. · modifiers: `.axis()`, `.visibility()`, `.length()`, `.fadeColor()`
-- `ScrubGallery(count:, @ViewBuilder:)` — Molecule. · modifiers: `.indicator()`, `.accent()`, `.radius()`
+- `ScrollShadow(content:)` — Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`. · modifiers: `.axis()`, `.visibility()`, `.length()`, `.fadeColor()`
+- `ScrubGallery(count:, content:)` — Molecule. · modifiers: `.indicator()`, `.accent()`, `.radius()`
 - `SearchBar(text:)` — A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks. · modifiers: `.placeholder()`, `.suggestions()`, `.recent()`, `.onSearch()`, `.onSelect()`, `.onCommit()`, `.backButton()`, `.trailingIcon()`, `.leadingIcon()`, `.leadingIconColor()`, `.helperText()`, `.errorText()`, `.infoMessages()`, `.debounce()`, `.maxResults()`, `.a11yID()`
-- `SearchField(badge:, label:)` · modifiers: `.value()`, `.dateRange()`, `.passengers()`, `.icon()`, `.iconColor()`, `.trailing()`, `.onClear()`, `.background()`, `.borderColor()`, `.cornerRadius()`, `.focused()`, `.showsShadow()`, `.chipColors()`, `.titleStyle()`, `.subtitleStyle()`, `.placeholderColor()`
+- `SearchField(placeholder, action:)` · modifiers: `.value()`, `.dateRange()`, `.passengers()`, `.icon()`, `.iconColor()`, `.trailing()`, `.onClear()`, `.background()`, `.borderColor()`, `.cornerRadius()`, `.focused()`, `.showsShadow()`, `.chipColors()`, `.titleStyle()`, `.subtitleStyle()`, `.placeholderColor()`
 - `SearchSummary(time:, adults:)` · modifiers: `.title()`, `.children()`, `.rooms()`, `.boxed()`, `.prompt()`, `.onTap()`, `.icons()`
 - `SeatLegend(tiers:, palette:, perRow:)` · modifiers: `.showsPremium()`
-- `SegmentedControl(title, systemImage:, isEnabled:, tooltip:)` · modifiers: `.fullWidth()`, `.size()`, `.shape()`, `.vertical()`, `.selectionStyle()`, `.dividers()`, `.tinted()`, `.a11yID()`
+- `SegmentedControl(items, selection:)` · modifiers: `.fullWidth()`, `.size()`, `.shape()`, `.vertical()`, `.selectionStyle()`, `.dividers()`, `.tinted()`, `.a11yID()`
 - `Select(title, options)` — A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `.searchable()` is on. · modifiers: `.placeholder()`, `.clearable()`, `.searchable()`, `.size()`, `.infoMessages()`, `.loading()`, `.optionEnabled()`, `.optionDescription()`, `.a11yID()`
 - `SelectBox(//:, options:, selection:, optionTitle:)` — Molecule. · modifiers: `.placeholder()`, `.hint()`, `.errorText()`, `.a11yID()`
 - `Slider(//:, in:, label:)` — Molecule. · modifiers: `.a11yID()`, `.step()`, `.marks()`, `.axis()`, `.showsValueTooltip()`, `.valueLabel()`, `.accent()`, `.onChangeEnd()`
 - `SmartSuggestion(message)` · modifiers: `.label()`, `.icon()`, `.accent()`, `.tint()`, `.onTap()`, `.action()`, `.bordered()`
-- `SortTab(title, value:, subtitle:, icon:)` — One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline. · modifiers: `.accent()`, `.onMore()`
+- `SortTab(option, isSelected:, action:)` — One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline. · modifiers: `.accent()`, `.onMore()`
 - `SortSummaryBar`
-- `Space(@ViewBuilder:)` · modifiers: `.direction()`, `.vertical()`, `.size()`, `.align()`, `.wrap()`
-- `Splitter(axis, initialFraction:, @ViewBuilder:)` · modifiers: `.bounds()`
+- `Space(content:)` · modifiers: `.direction()`, `.vertical()`, `.size()`, `.align()`, `.wrap()`
+- `Splitter(axis, initialFraction:, first:)` · modifiers: `.bounds()`
 - `Stat(title:, value:)` — Molecule. · modifiers: `.prefix()`, `.suffix()`, `.loading()`, `.description()`, `.icon()`, `.trend()`
 - `StepperRow(label, value:)` · modifiers: `.subtitle()`, `.range()`, `.step()`, `.icon()`, `.accent()`
 - `Steps(title, description:, systemImage:, state:, percent:)` — A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate. · modifiers: `.axis()`, `.small()`, `.progressDot()`
 - `SuggestionRow(title, action:)` · modifiers: `.icon()`, `.iconColor()`, `.iconTile()`, `.code()`, `.subtitle()`, `.nested()`, `.selected()`, `.highlight()`, `.accessory()`, `.accent()`
-- `TextInput(label:, placeholder:, leadingSystemImage:, suffixSystemImage:, addonBefore:, addonAfter: …)` — Single floating-label text field. · modifiers: `.placeholder()`, `.icon()`, `.addons()`, `.required()`, `.secure()`, `.clearable()`, `.maxLength()`, `.showsCount()`, `.size()`, `.formatter()`, `.helperText()`, `.errorText()`, `.warningText()`, `.infoMessages()`, `.validate()`, `.onValidation()`, `.externalFocus()`, `.keyboard()`, `.autocorrectionDisabled()`, `.onCommit()`, `.a11yID()`
+- `TextInput(model, text:, externalFocus:)` — Single floating-label text field. · modifiers: `.placeholder()`, `.icon()`, `.addons()`, `.required()`, `.secure()`, `.clearable()`, `.maxLength()`, `.showsCount()`, `.size()`, `.formatter()`, `.helperText()`, `.errorText()`, `.warningText()`, `.infoMessages()`, `.validate()`, `.onValidation()`, `.externalFocus()`, `.keyboard()`, `.autocorrectionDisabled()`, `.onCommit()`, `.a11yID()`
 - `ThemeController(name:, label:)` — Molecule. · modifiers: `.accent()`, `.fullWidth()`
 - `ThemeToggle(isOn:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.loading()`, `.symbols()`, `.trackSymbols()`, `.accent()`, `.a11yID()`
 - `TimeField(label, time:)` — Molecule. · modifiers: `.placeholder()`, `.range()`, `.minuteInterval()`, `.hourCycle()`, `.locale()`, `.infoMessages()`, `.clearable()`, `.icon()`, `.a11yID()`
 - `ToggleGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.optionDescription()`, `.a11yID()`
-- `Transfer(key, title:)` · modifiers: `.titles()`
-- `TreeSelect(id:, title, systemImage:, children:)` — Hierarchical (nested) select with expand/collapse and multi-selection. · modifiers: `.placeholder()`, `.cascade()`, `.searchable()`, `.loading()`, `.nodeEnabled()`
+- `Transfer(items, target:)` · modifiers: `.titles()`
+- `TreeSelect(label, nodes:, selection:, initiallyExpanded:, must:)` — Hierarchical (nested) select with expand/collapse and multi-selection. · modifiers: `.placeholder()`, `.cascade()`, `.searchable()`, `.loading()`, `.nodeEnabled()`
 - `TreeView(nodes, selection:)` · modifiers: `.checkable()`
 - `TripTypeToggle(options, selection:)` · modifiers: `.icons()`, `.accent()`, `.fullWidth()`
 
 ## Organisms (68)
 
-- `Accordion(//:, so:, initiallyExpanded:, @ViewBuilder:)` — Improved, token-bound rewrite of the reference AccordionView — a single expandable row with a @ViewBuilder body instead of type-erased AnyView models. · modifiers: `.icon()`, `.subtitle()`, `.number()`, `.indicator()`, `.titleSize()`, `.density()`, `.truncateSubtitle()`, `.divider()`
+- `Accordion(//:, so:, initiallyExpanded:, content:)` — Improved, token-bound rewrite of the reference AccordionView — a single expandable row with a @ViewBuilder body instead of type-erased AnyView models. · modifiers: `.icon()`, `.subtitle()`, `.number()`, `.indicator()`, `.titleSize()`, `.density()`, `.truncateSubtitle()`, `.divider()`
 - `AccordionGroup(//:, so:, initiallyExpanded:, title:)` — A group of accordion rows with single- or multiple-open behavior (the reference `AccordionView` tracks a `Set` of open ids). · modifiers: `.mode()`, `.indicator()`, `.surface()`, `.dividers()`, `.collapsible()`, `.itemDisabled()`
 - `AgentPriceRow(provider, action:)` · modifiers: `.logo()`, `.icon()`, `.subtitle()`, `.rating()`, `.badge()`, `.warning()`, `.price()`, `.original()`, `.cta()`, `.recommended()`, `.accent()`, `.surface()`, `.cornerRadius()`
-- `AlertToast(title, handler:)` — Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner). · modifiers: `.message()`, `.variant()`, `.icon()`, `.loading()`, `.action()`, `.onClose()`
+- `AlertToast(title)` — Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner). · modifiers: `.message()`, `.variant()`, `.icon()`, `.loading()`, `.action()`, `.onClose()`
 - `AncillaryCard(title)` · modifiers: `.icon()`, `.image()`, `.subtitle()`, `.price()`, `.badge()`, `.quantity()`, `.added()`, `.accent()`, `.surface()`, `.cornerRadius()`
-- `BlogCard(title:, @ViewBuilder:)` — Organism. · modifiers: `.excerpt()`, `.compact()`, `.surface()`, `.cornerRadius()`, `.elevation()`
+- `BlogCard(title:, media:)` — Organism. · modifiers: `.excerpt()`, `.compact()`, `.surface()`, `.cornerRadius()`, `.elevation()`
 - `BoardingPass(passenger:, from:, to:)` · modifiers: `.airline()`, `.flightNo()`, `.cabin()`, `.cities()`, `.times()`, `.date()`, `.details()`, `.gate()`, `.bookingRef()`, `.passengerLabel()`, `.barcode()`, `.qr()`, `.accent()`, `.surface()`, `.elevation()`
-- `BrowserFrame(url:, @ViewBuilder:)` — Organism. · modifiers: `.elevation()`, `.accent()`
+- `BrowserFrame(url:, content:)` — Organism. · modifiers: `.elevation()`, `.accent()`
 - `Callout(text)` — Organism. · modifiers: `.variant()`, `.calloutStyle()`, `.showsIcon()`, `.icon()`, `.action()`, `.onClose()`
 - `Card(title, action:)` — Organism. · modifiers: `.subtitle()`, `.elevation()`, `.contentPadding()`, `.extraAction()`, `.loading()`, `.surface()`
-- `CardStack(items, @ViewBuilder:)` — Organism. · modifiers: `.maxVisible()`, `.peekOffset()`, `.rotation()`
-- `Carousel(items, loop:, currentIndex:, @ViewBuilder:)` — A generic paging carousel with dot indicators, optional autoplay and optional prev/next arrows. · modifiers: `.autoplay()`, `.arrows()`, `.dots()`, `.fade()`
+- `CardStack(items, content:)` — Organism. · modifiers: `.maxVisible()`, `.peekOffset()`, `.rotation()`
+- `Carousel(items, loop:, currentIndex:, content:)` — A generic paging carousel with dot indicators, optional autoplay and optional prev/next arrows. · modifiers: `.autoplay()`, `.arrows()`, `.dots()`, `.fade()`
 - `ChatBubble(text, author:, time:)` — Organism. · modifiers: `.side()`, `.icon()`, `.accent()`
 - `Counter(value:, label:)` — Organism. · modifiers: `.size()`, `.accent()`, `.separator()`
 - `Coupon(code:, label:, onCopy:)` — Organism. · modifiers: `.couponStyle()`, `.size()`, `.icon()`, `.discount()`, `.expiry()`, `.fullWidth()`, `.block()`
 - `DataTable(title, align:, sortKey:)` — Organism. · modifiers: `.striped()`, `.pageSize()`, `.loading()`, `.onRowTap()`
 - `DestinationCard(title, image:)` — A token-bound destination / favourite card. · modifiers: `.surface()`, `.subtitle()`, `.price()`, `.rating()`, `.ribbon()`, `.badge()`, `.tags()`, `.favorite()`, `.aspect()`, `.overlayTitle()`, `.onTap()`, `.elevation()`
-- `Diff(@ViewBuilder:)` — Organism. · modifiers: `.aspect()`
+- `Diff(before:)` — Organism. · modifiers: `.aspect()`
 - `EmptyState(title)` — Improved, token-bound rewrite of the reference EmptyCardView. · modifiers: `.icon()`, `.message()`, `.imageMaxHeight()`, `.iconForeground()`, `.iconBackground()`, `.iconCircleSize()`, `.primaryAction()`, `.secondaryAction()`
 - `FareFamilyCard(name, price:)` — A token-bound fare-family option card. · modifiers: `.surface()`, `.currency()`, `.accent()`, `.features()`, `.selected()`, `.selection()`, `.onSelect()`
 - `FareSummary(lines, currencyCode:)` — A token-bound fare breakdown. · modifiers: `.onInfo()`
-- `FilterBar(title, id:)` · modifiers: `.onFilter()`, `.onSort()`, `.collapsible()`, `.size()`, `.chipStyle()`, `.leadingShape()`, `.accent()`, `.spacing()`
-- `FilterList(title, count:, icon:, id:)` · modifiers: `.title()`, `.bordered()`, `.showsSeparators()`, `.selectAll()`, `.surface()`
-- `FlightCard(airline:, from:, to:, departure:, arrival:, stops: …)` — A token-bound flight card — one segment, or a multi-leg itinerary. · modifiers: `.surface()`, `.stops()`, `.price()`, `.airlineIcon()`, `.badge()`, `.onSelect()`, `.favorite()`, `.scarcity()`, `.fareBrand()`
-- `FlightListItem(name, price:, perks:)` · modifiers: `.surface()`, `.sliceLabels()`, `.flightNo()`, `.cabin()`, `.airlineIcon()`, `.price()`, `.original()`, `.fares()`, `.departures()`, `.deal()`, `.trend()`, `.badge()`, `.amenities()`, `.baggage()`, `.onDetails()`, `.selected()`, `.onSelect()`, `.expanded()`
+- `FilterBar(chips, selection:)` · modifiers: `.onFilter()`, `.onSort()`, `.collapsible()`, `.size()`, `.chipStyle()`, `.leadingShape()`, `.accent()`, `.spacing()`
+- `FilterList(options, selection:)` · modifiers: `.title()`, `.bordered()`, `.showsSeparators()`, `.selectAll()`, `.surface()`
+- `FlightCard(airline:, from:, to:, departure:, arrival:)` — A token-bound flight card — one segment, or a multi-leg itinerary. · modifiers: `.surface()`, `.stops()`, `.price()`, `.airlineIcon()`, `.badge()`, `.onSelect()`, `.favorite()`, `.scarcity()`, `.fareBrand()`
+- `FlightListItem(legs:)` · modifiers: `.surface()`, `.sliceLabels()`, `.flightNo()`, `.cabin()`, `.airlineIcon()`, `.price()`, `.original()`, `.fares()`, `.departures()`, `.deal()`, `.trend()`, `.badge()`, `.amenities()`, `.baggage()`, `.onDetails()`, `.selected()`, `.onSelect()`, `.expanded()`
 - `FlightResultRow(airline:, from:, to:, departure:, arrival:)` · modifiers: `.surface()`, `.flightNo()`, `.cabin()`, `.stops()`, `.returnLeg()`, `.addLeg()`, `.price()`, `.airlineIcon()`, `.airlineLogo()`, `.baggage()`, `.badge()`, `.favorite()`, `.bookmark()`, `.totalPrice()`, `.urgency()`, `.onSelect()`, `.onDetails()`
 - `FlightTicketCard(from:, to:)` · modifiers: `.cities()`, `.times()`, `.duration()`, `.stops()`, `.airline()`, `.airlineLogo()`, `.price()`, `.favorite()`, `.accent()`, `.elevation()`, `.surface()`
-- `FloatingActionButton(systemImage:, label:, action:)` — Organism. · modifiers: `.shape()`, `.accent()`, `.color()`, `.badge()`
+- `FloatingActionButton(systemImage:, actions:, action:)` — Organism. · modifiers: `.shape()`, `.accent()`, `.color()`, `.badge()`
 - `Footer(title, action:)` — Organism. · modifiers: `.surface()`
-- `Gallery(items, @ViewBuilder:)` — Organism. · modifiers: `.columns()`, `.aspect()`
-- `Hero(title:, @ViewBuilder:)` — Organism. · modifiers: `.subtitle()`, `.cta()`, `.dark()`
+- `Gallery(items, content:)` — Organism. · modifiers: `.columns()`, `.aspect()`
+- `Hero(title:, background:)` — Organism. · modifiers: `.subtitle()`, `.cta()`, `.dark()`
 - `HeroSurface` — The default `Hero` surface.
 - `HotelResultCard(name:)` · modifiers: `.image()`, `.images()`, `.location()`, `.score()`, `.reviewsSuffix()`, `.features()`, `.promos()`, `.price()`, `.original()`, `.discountBadge()`, `.stay()`, `.extraDiscount()`, `.badge()`, `.favorite()`, `.onSelect()`, `.accent()`, `.imageHeight()`, `.cornerRadius()`, `.elevation()`, `.surface()`, `.showsPageDots()`
 - `ImageCollage(urls, onTap:)` — A gallery collage of remote images with count-aware layouts (1 / 2 / 3 / 4+) and a "+N" overlay on the last visible tile. · modifiers: `.height()`, `.spacing()`, `.cornerRadius()`
 - `InfoBanner(message, title:, links:)` — Improved, token-bound rewrite of the reference InfoMessage. · modifiers: `.variant()`, `.showsIcon()`, `.icon()`, `.fullWidth()`, `.action()`, `.onDismiss()`
 - `KeyValueTable(label, value:, style:)` — Organism. · modifiers: `.title()`, `.bordered()`, `.surface()`
-- `ListRow(total:, each:, unit:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view. · modifiers: `.subtitle()`, `.number()`, `.size()`, `.icon()`, `.leadingImage()`, `.leadingSelection()`, `.alertCount()`, `.badge()`, `.meta()`, `.infos()`, `.selected()`, `.multilineTitle()`, `.trailing()`, `.onInfo()`, `.textStyle()`, `.accent()`
+- `ListRow(title, action:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view. · modifiers: `.subtitle()`, `.number()`, `.size()`, `.icon()`, `.leadingImage()`, `.leadingSelection()`, `.alertCount()`, `.badge()`, `.meta()`, `.infos()`, `.selected()`, `.multilineTitle()`, `.trailing()`, `.onInfo()`, `.textStyle()`, `.accent()`
 - `ListSectionHeader` — A non-interactive section-header row inside a list (Reference menu `.secondary`).
-- `ListView(items, @ViewBuilder:)` — Ant-style List container: optional header/footer, surface variants, row dividers (split), and a loading (skeleton) state. · modifiers: `.header()`, `.footer()`, `.surface()`, `.bordered()`, `.loading()`, `.split()`, `.emptyText()`
+- `ListView(items, row:)` — Ant-style List container: optional header/footer, surface variants, row dividers (split), and a loading (skeleton) state. · modifiers: `.header()`, `.footer()`, `.surface()`, `.bordered()`, `.loading()`, `.split()`, `.emptyText()`
 - `LocationCard(title:, coordinate:)` · modifiers: `.surface()`, `.subtitle()`, `.distance()`, `.mapHeight()`, `.spanMeters()`, `.onTap()`, `.pois()`, `.directions()`, `.onDirections()`, `.snapshot()`
 - `LoyaltyCard(tier:, points:)` — A token-bound loyalty membership card. · modifiers: `.surface()`, `.memberName()`, `.unit()`, `.progress()`, `.icon()`, `.gradient()`, `.animatesValue()`, `.membership()`, `.flippable()`
 - `MapCallout(title:)` · modifiers: `.image()`, `.subtitle()`, `.score()`, `.price()`, `.onSelect()`, `.accent()`, `.surface()`, `.pointer()`
 - `MenuCard(title:, subtitle:, systemImage:, action:)` — Organism. · modifiers: `.subtitle()`, `.icon()`
 - `NavigationBar(systemImage:, activeSystemImage:, label:)` — Organism.
-- `NotificationCard(title:, @ViewBuilder:)` — Organism. · modifiers: `.message()`, `.date()`, `.unread()`, `.variant()`, `.onClose()`, `.surface()`, `.cornerRadius()`, `.elevation()`
+- `NotificationCard(title:, actions:)` — Organism. · modifiers: `.message()`, `.date()`, `.unread()`, `.variant()`, `.onClose()`, `.surface()`, `.cornerRadius()`, `.elevation()`
 - `PageHeader(systemImage:, accessibilityLabel:, handler:)` — Organism. · modifiers: `.subtitle()`, `.showTitle()`, `.tags()`, `.searchSummary()`, `.searchField()`, `.logo()`, `.onBack()`, `.leading()`, `.actions()`, `.primaryButton()`, `.mapFilter()`, `.tabs()`, `.progress()`, `.stepper()`
-- `PagingCarousel(items, @ViewBuilder:)` — Custom drag-paging carousel with PEEKING neighbors + threshold snap (the reference `PagingScrollView`). · modifiers: `.peek()`, `.spacing()`, `.autoplay()`
-- `PhoneFrame(@ViewBuilder:)` — Organism. · modifiers: `.notch()`, `.bezel()`
+- `PagingCarousel(items, content:)` — Custom drag-paging carousel with PEEKING neighbors + threshold snap (the reference `PagingScrollView`). · modifiers: `.peek()`, `.spacing()`, `.autoplay()`
+- `PhoneFrame(content:)` — Organism. · modifiers: `.notch()`, `.bezel()`
 - `PriceAlertCard(title, isOn:)` · modifiers: `.subtitle()`, `.icon()`, `.price()`, `.trend()`, `.accent()`, `.surface()`, `.cornerRadius()`, `.elevation()`
 - `PromoBanner(title, action:)` — Organism. · modifiers: `.subtitle()`, `.icon()`, `.ctaTitle()`, `.accent()`, `.color()`
 - `RatingSummary(score:)` — Organism. · modifiers: `.label()`, `.reviews()`
@@ -203,19 +203,19 @@
 - `ReviewCard(author:, score:, text:)` — A token-bound single review card. · modifiers: `.surface()`, `.cornerRadius()`, `.elevation()`, `.date()`, `.title()`, `.verified()`, `.photos()`, `.stars()`, `.expandable()`, `.onPhotoTap()`
 - `RoomCard(name:)` · modifiers: `.image()`, `.board()`, `.occupancy()`, `.features()`, `.price()`, `.original()`, `.unit()`, `.discountBadge()`, `.badge()`, `.selection()`, `.onSelect()`, `.accent()`, `.cornerRadius()`, `.elevation()`, `.surface()`
 - `SeatMap(sections:, selection:)` — A generic, token-bound seat map. · modifiers: `.maxSelection()`, `.seatSize()`, `.showsLabels()`, `.legend()`, `.fuselage()`, `.showsSeatInfo()`, `.recommended()`, `.currency()`, `.seatEnabled()`, `.passengers()`, `.zoomable()`, `.seatDisplay()`, `.aisleWidth()`, `.tierColors()`
-- `SegmentedTabBar(title, caption:, systemImage:, trailingSystemImage:, badge:, isEnabled:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.scrollable()`, `.tabStyle()`, `.scrollAlign()`, `.dividers()`, `.a11yID()`
+- `SegmentedTabBar(items, selection:, onClose:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.scrollable()`, `.tabStyle()`, `.scrollAlign()`, `.dividers()`, `.a11yID()`
 - `RadioCard(title, isSelected:, action:)` — Organisms. · modifiers: `.description()`
 - `CheckboxCard`
 - `SheetHeader(title)` · modifiers: `.subtitle()`, `.onBack()`, `.onClose()`, `.progress()`, `.showsDivider()`, `.accent()`, `.surface()`
 - `Sidebar(tag:, label, systemImage:, badge:)` — Organism. · modifiers: `.header()`, `.footer()`, `.width()`, `.a11yID()`
 - `StickyBookingBar(ctaTitle, action:)` · modifiers: `.price()`, `.original()`, `.note()`, `.discountBadge()`, `.ctaIcon()`, `.enabled()`, `.accent()`, `.surface()`, `.showsShadow()`
 - `ThemePicker(selection:, themes:, onSelect:)` — A grid of `ThemePreset` preview cards. · modifiers: `.columns()`, `.spacing()`
-- `TicketStub(@ViewBuilder:)` — A token-bound ticket / boarding-pass surface. · modifiers: `.perforation()`, `.notchRadius()`, `.cornerRadius()`, `.elevation()`, `.surface()`, `.dashColor()`, `.contentPadding()`
+- `TicketStub(content:)` — A token-bound ticket / boarding-pass surface. · modifiers: `.perforation()`, `.notchRadius()`, `.cornerRadius()`, `.elevation()`, `.surface()`, `.dashColor()`, `.contentPadding()`
 - `Timeline(title:, time:, description:, systemImage:, state:, color:)` — Organism. · modifiers: `.axis()`, `.mode()`, `.reversed()`, `.pending()`
-- `Upload(id:, name:, status:)` — Organism. · modifiers: `.buttonTitle()`, `.maxCount()`, `.prompt()`
+- `Upload(prompt:, files:, onPick:)` — Organism. · modifiers: `.buttonTitle()`, `.maxCount()`, `.prompt()`
 - `UploadList` — `Upload` wired to an `UploadController` — renders its files with remove + retry.
 - `VideoPlayerView(url, progress:, isMuted:, onTap:)` — Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop, mute, aspect-fill, and active-gating (only the visible item plays). · modifiers: `.autoplay()`, `.loop()`, `.muted()`, `.muteToggle()`, `.tapToToggle()`
-- `WindowFrame(title, @ViewBuilder:)` — Organism. · modifiers: `.elevation()`, `.accent()`
+- `WindowFrame(title, content:)` — Organism. · modifiers: `.elevation()`, `.accent()`
 
 ## Chainable modifiers (all components)
 
@@ -223,4 +223,4 @@ Set styling/variants/flags AFTER the init, SwiftUI-style:
 
 `.a11yID()` `.a11yLabel()` `.accent()` `.accessory()` `.action()` `.actions()` `.adaptive()` `.addLeg()` `.added()` `.addons()` `.adultRange()` `.airline()` `.airlineIcon()` `.airlineLogo()` `.aisleWidth()` `.alertCount()` `.align()` `.alignment()` `.allowHalf()` `.amenities()` `.animatesValue()` `.arrows()` `.aspect()` `.autocorrectionDisabled()` `.autoplay()` `.avatar()` `.axis()` `.backButton()` `.background()` `.badge()` `.badgeColor()` `.badgeShape()` `.badgeStyle()` `.baggage()` `.barHeight()` `.barWidth()` `.barcode()` `.bezel()` `.block()` `.board()` `.bookingRef()` `.bookmark()` `.borderColor()` `.bordered()` `.bounds()` `.boxed()` `.buttonTitle()` `.cabin()` `.calloutStyle()` `.cascade()` `.changeOnSelect()` `.characterLimit()` `.characters()` `.cheapest()` `.checkable()` `.childRange()` `.children()` `.chipColors()` `.chipStyle()` `.circle()` `.cities()` `.clearable()` `.closable()` `.code()` `.collapsible()` `.color()` `.colors()` `.columns()` `.compact()` `.components()` `.confirmsSuccess()` `.content()` `.contentMode()` `.contentPadding()` `.control()` `.copyable()` `.cornerRadius()` `.count()` `.countLabel()` `.countStyle()` `.couponStyle()` `.cta()` `.ctaIcon()` `.ctaTitle()` `.currency()` `.customSize()` `.dark()` `.dashColor()` `.dashboard()` `.dashed()` `.date()` `.dateRange()` `.dates()` `.deal()` `.debounce()` `.density()` `.departures()` `.description()` `.details()` `.digitCount()` `.dimension()` `.direction()` `.directions()` `.discount()` `.discountBadge()` `.distance()` `.divider()` `.dividers()` `.dots()` `.duration()` `.edge()` `.editable()` `.elevation()` `.emphasis()` `.emptyText()` `.enabled()` `.errorText()` `.excerpt()` `.exists()` `.expandable()` `.expanded()` `.expands()` `.expiry()` `.externalFocus()` `.extra()` `.extraAction()` `.extraDiscount()` `.eyebrow()` `.fade()` `.fadeColor()` `.fareBrand()` `.fares()` `.favorite()` `.features()` `.fileName()` `.fill()` `.fillColor()` `.firstWeekday()` `.flightNo()` `.flippable()` `.focused()` `.footer()` `.format()` `.formatter()` `.fractionDigits()` `.free()` `.from()` `.fullWidth()` `.fuselage()` `.gap()` `.gate()` `.gaugeStyle()` `.gradient()` `.groupStyle()` `.groups()` `.gutter()` `.hasError()` `.hasInfo()` `.header()` `.height()` `.helper()` `.helperText()` `.hidesOnError()` `.highlight()` `.highlightCheapest()` `.highlighted()` `.hint()` `.holder()` `.hourCycle()` `.icon()` `.iconBackground()` `.iconCircleSize()` `.iconColor()` `.iconForeground()` `.iconSize()` `.iconTile()` `.icons()` `.image()` `.imageHeight()` `.imageMaxHeight()` `.imageURL()` `.images()` `.indeterminate()` `.indicator()` `.infantRange()` `.infoMessages()` `.infos()` `.inlineStyle()` `.inputs()` `.intensity()` `.interactive()` `.interestFreeUpTo()` `.interval()` `.itemDisabled()` `.jumper()` `.justify()` `.keyboard()` `.label()` `.large()` `.layout()` `.layoverLabel()` `.leading()` `.leadingIcon()` `.leadingIconColor()` `.leadingImage()` `.leadingSelection()` `.leadingShape()` `.legend()` `.length()` `.level()` `.limit()` `.lineWidth()` `.loading()` `.locale()` `.location()` `.logo()` `.loop()` `.mapFilter()` `.mapHeight()` `.marks()` `.maxAngle()` `.maxCount()` `.maxDays()` `.maxLength()` `.maxResults()` `.maxSelection()` `.maxTags()` `.maxTotal()` `.maxValue()` `.maxVisible()` `.memberName()` `.membership()` `.menuWidth()` `.message()` `.meta()` `.minHeight()` `.minuteInterval()` `.mode()` `.multilineTitle()` `.muteToggle()` `.muted()` `.nested()` `.nextDay()` `.nodeEnabled()` `.notch()` `.notchRadius()` `.note()` `.number()` `.occupancy()` `.onBack()` `.onChange()` `.onChangeEnd()` `.onClear()` `.onClose()` `.onCommit()` `.onDetails()` `.onDirections()` `.onDismiss()` `.onEdit()` `.onFilter()` `.onFinish()` `.onInfo()` `.onMore()` `.onPage()` `.onPhotoTap()` `.onRate()` `.onRemove()` `.onReviewTap()` `.onRowTap()` `.onSearch()` `.onSelect()` `.onSort()` `.onTap()` `.onValidation()` `.onValueChange()` `.optionDescription()` `.optionEnabled()` `.original()` `.originalBelow()` `.overlayTitle()` `.pageSize()` `.passengerLabel()` `.passengers()` `.pathColor()` `.peek()` `.peekOffset()` `.pending()` `.perforation()` `.photos()` `.pieceCount()` `.pill()` `.placeholder()` `.placeholderColor()` `.placeholders()` `.plain()` `.pointer()` `.pois()` `.prefix()` `.presence()` `.price()` `.primaryAction()` `.primaryButton()` `.progress()` `.progressDot()` `.progressLabel()` `.promos()` `.prompt()` `.pulse()` `.qr()` `.quantity()` `.radioStyle()` `.radius()` `.range()` `.rating()` `.ratio()` `.recent()` `.recents()` `.recommended()` `.removable()` `.required()` `.resend()` `.resultCount()` `.returnLeg()` `.reversed()` `.reviews()` `.reviewsSuffix()` `.ribbon()` `.ringColor()` `.roomRange()` `.rooms()` `.rotate()` `.rotation()` `.roundTrip()` `.scarcity()` `.score()` `.scrollAlign()` `.scrollable()` `.searchAccent()` `.searchField()` `.searchSummary()` `.searchable()` `.seat()` `.seatDisplay()` `.seatEnabled()` `.seatSize()` `.secondaryAction()` `.secure()` `.selectAll()` `.selected()` `.selection()` `.selectionAccent()` `.selectionColor()` `.selectionStyle()` `.sentiment()` `.separator()` `.shape()` `.shine()` `.shouldCloseOnSelect()` `.showTitle()` `.showTotal()` `.showsAxis()` `.showsBounds()` `.showsCount()` `.showsDays()` `.showsDivider()` `.showsIcon()` `.showsInfants()` `.showsLabel()` `.showsLabels()` `.showsName()` `.showsPageDots()` `.showsPercentage()` `.showsPremium()` `.showsRooms()` `.showsSeatInfo()` `.showsSeparator()` `.showsSeparators()` `.showsShadow()` `.showsSign()` `.showsValue()` `.showsValueTooltip()` `.showsValues()` `.showsWeekday()` `.showsWeekdayHeader()` `.side()` `.simple()` `.size()` `.skeletonOnly()` `.sliceLabels()` `.small()` `.snapshot()` `.soldOut()` `.solid()` `.spacing()` `.spanMeters()` `.split()` `.starSize()` `.stars()` `.status()` `.stay()` `.step()` `.stepText()` `.stepper()` `.steps()` `.stops()` `.strip()` `.striped()` `.style()` `.subtitle()` `.subtitleStyle()` `.successSegment()` `.suffix()` `.suggestionEnabled()` `.suggestions()` `.supportsOpacity()` `.surcharge()` `.surface()` `.symbol()` `.symbols()` `.systemImage()` `.tabStyle()` `.tabs()` `.tagStyle()` `.tags()` `.tapToToggle()` `.target()` `.textStyle()` `.tierColors()` `.time()` `.times()` `.tint()` `.tinted()` `.title()` `.titleAlign()` `.titleSize()` `.titleStyle()` `.titleTextStyle()` `.titles()` `.totalPrice()` `.track()` `.trackSymbols()` `.trailing()` `.trailingIcon()` `.trend()` `.truncateSubtitle()` `.type()` `.underline()` `.unit()` `.unread()` `.urgency()` `.urgentBelow()` `.validate()` `.value()` `.valueFormat()` `.valueLabel()` `.variant()` `.verified()` `.vertical()` `.videoProgress()` `.visibility()` `.warning()` `.warningText()` `.weight()` `.width()` `.window()` `.wrap()` `.zoomable()`
 
-Plus the native cross-cuts every control honors: `.disabled(_:)`, `.controlSize(_:)`, `.a11yID(_:)`.
+Plus the native cross-cuts every control honors: `.disabled(_:)`, `.controlSize(_:)`. Many components also add `.a11yID(_:)` (listed per entry); it is not a global modifier — use SwiftUI's `.accessibilityIdentifier(_:)` otherwise.

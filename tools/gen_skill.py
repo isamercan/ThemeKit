@@ -47,7 +47,7 @@ RULES = [
     "Read the theme via `@Environment(\\.theme) private var theme`; inject `.environment(Theme.shared)` once at the root.",
     "Never hardcode a color — use `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a `SemanticColor`.",
     "Put required content/bindings/actions in `init`; set variants, sizes, flags, colors and callbacks with chainable modifiers.",
-    "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)`; accessibility id uses `.a11yID(_:)`.",
+    "Sizes use `.controlSize(_:)`; disabled state uses `.disabled(_:)` (both native/universal). Many components also expose `.a11yID(_:)` (see each entry) — it is not global, so use SwiftUI's `.accessibilityIdentifier(_:)` where a component lacks it.",
     "Recolor everything with `Theme.shared.applyGenerated(primaryHex:)` or a theme preset: `ThemePreset.named(\"dracula\")?.apply()`.",
 ]
 
@@ -89,14 +89,25 @@ def split_top(body: str):
     return [p.strip() for p in out if p.strip()]
 
 
-def param_labels(swift: str) -> str:
-    m = INIT_RE.search(swift)
+def param_labels(swift: str, start: int = 0) -> str:
+    # Extract the init that belongs to THIS component struct, not the first init in
+    # the file: search from the struct's declaration (`start`) up to the next
+    # top-level `public struct` (a helper type). Without this, a file that declares a
+    # non-View helper first (e.g. `CodeLine` before `CodeBlock`, `TransferItem` before
+    # `Transfer`) would surface the helper's init and emit non-compiling call sites.
+    nxt = swift.find("\npublic struct ", start + 1)
+    region = swift[start:] if nxt == -1 else swift[start:nxt]
+    m = INIT_RE.search(region)
     if not m:
         return ""
     names = []
     for p in split_top(m.group(1)):
         head = p.split(":")[0].strip()
         parts = head.split()
+        # Drop leading parameter attributes (e.g. `@ViewBuilder content:` → `content:`)
+        # so the label, not the attribute, is shown.
+        while parts and parts[0].startswith("@"):
+            parts.pop(0)
         if not parts:
             continue
         names.append(parts[1] if parts[0] == "_" and len(parts) > 1 else parts[0] + ":")
@@ -149,18 +160,19 @@ def collect():
         for path in sorted(base.rglob("*.swift")):
             swift = path.read_text(encoding="utf-8")
             lines = swift.split("\n")
-            structs = [(m.group(1), swift[:m.start()].count("\n")) for m in STRUCT_RE.finditer(swift)]
+            # (name, char-offset) — the offset scopes init extraction to the component.
+            structs = [(m.group(1), m.start()) for m in STRUCT_RE.finditer(swift)]
             if not structs:
                 continue
             mods = parse_modifiers(swift, lines)
-            primary_params = param_labels(swift)
-            for i, (name, ln) in enumerate(structs):
+            for i, (name, off) in enumerate(structs):
                 is_primary = i == 0
+                ln = swift.count("\n", 0, off)
                 all_modifiers.update(mods.keys())
                 items.append({
                     "name": name,
                     "doc": doc_above(lines, ln),
-                    "params": primary_params if is_primary else "",
+                    "params": param_labels(swift, off) if is_primary else "",
                     "modifiers": list(mods.values()) if is_primary else [],
                 })
         out[label] = items
@@ -196,7 +208,8 @@ def render(cats, modifiers):
     lines.append(" ".join(f"`.{m}()`" for m in modifiers))
     lines.append("")
     lines.append("Plus the native cross-cuts every control honors: `.disabled(_:)`, "
-                 "`.controlSize(_:)`, `.a11yID(_:)`.")
+                 "`.controlSize(_:)`. Many components also add `.a11yID(_:)` (listed per entry); "
+                 "it is not a global modifier — use SwiftUI's `.accessibilityIdentifier(_:)` otherwise.")
     lines.append("")
     return "\n".join(lines)
 
@@ -262,8 +275,9 @@ def render_llms(cats, modifiers, themes):
         "(defaults to `Theme.shared`). **Inject once at the root:** `.environment(Theme.shared)`.",
         "3. **Required content/bindings/actions in `init`;** variants/sizes/flags/colors/callbacks are "
         "**chainable modifiers** — `Badge(\"New\").badgeStyle(.info).badgeShape(.rounded)`.",
-        "4. **Sizes** use `.controlSize(_:)`; **disabled** uses `.disabled(_:)`; every component takes "
-        "`.a11yID(_:)`. Never `size:` / `isEnabled:` init args.",
+        "4. **Sizes** use `.controlSize(_:)`; **disabled** uses `.disabled(_:)` (native, universal). "
+        "Never `size:` / `isEnabled:` init args. Many components also expose `.a11yID(_:)` — check the "
+        "component's modifier list; where absent use SwiftUI's `.accessibilityIdentifier(_:)`.",
         "5. **No hardcoded radius/spacing.** Use `Theme.RadiusRole.box.value` / `Theme.SpacingKey.md.value`.",
         "6. **Recolor** with `Theme.shared.applyGenerated(primaryHex:)` or `ThemePreset.named(\"dracula\")?"
         ".apply()`. Scope to one subtree with `.theme(customTheme)`.",
@@ -341,7 +355,8 @@ def render_llms(cats, modifiers, themes):
         "",
         "- **Strings:** bundled String Catalog, English default (`en`); every user-facing string is also "
         "overridable via an init/modifier parameter. Add your own localizations in-app.",
-        "- **Accessibility:** `.a11yID(_:)` / `.a11yLabel(_:)` on every component; 44 pt touch targets and "
+        "- **Accessibility:** many components expose `.a11yID(_:)` / `.a11yLabel(_:)` (not global — use "
+        "SwiftUI's `.accessibilityIdentifier(_:)` where a component lacks it); 44 pt touch targets and "
         "RTL-directional mirroring are built in.",
         "",
         "## Links",
@@ -399,8 +414,9 @@ def render_llms_components(cats, enrich):
         "",
         "- **Init** — required content/bindings/actions only. Everything else is a modifier.",
         "- **Modifiers** — chainable, copy-on-write; order does not matter.",
-        "- **Native modifiers apply too** — sizing is `.controlSize(_:)`, disabling is `.disabled(_:)`,",
-        "  and every component takes `.a11yID(_:)`.",
+        "- **Native modifiers apply too** — sizing is `.controlSize(_:)`, disabling is `.disabled(_:)`.",
+        "- **Accessibility ids** — many components expose `.a11yID(_:)` (shown in their modifier list);",
+        "  it is not a global modifier, so use SwiftUI's `.accessibilityIdentifier(_:)` where absent.",
         "",
         "## Golden rule for every snippet below",
         "",

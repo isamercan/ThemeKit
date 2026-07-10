@@ -10,8 +10,9 @@
 
 - **Init** — required content/bindings/actions only. Everything else is a modifier.
 - **Modifiers** — chainable, copy-on-write; order does not matter.
-- **Native modifiers apply too** — sizing is `.controlSize(_:)`, disabling is `.disabled(_:)`,
-  and every component takes `.a11yID(_:)`.
+- **Native modifiers apply too** — sizing is `.controlSize(_:)`, disabling is `.disabled(_:)`.
+- **Accessibility ids** — many components expose `.a11yID(_:)` (shown in their modifier list);
+  it is not a global modifier, so use SwiftUI's `.accessibilityIdentifier(_:)` where absent.
 
 ## Golden rule for every snippet below
 
@@ -173,7 +174,7 @@ CloseButton(action:)
 ## CodeBlock
 
 ```swift
-CodeBlock(text, prefix:, highlight:)
+CodeBlock(lines)
 ```
 
 **Modifiers**
@@ -246,7 +247,7 @@ init(_ title: String? = nil)
 ## FareFeatureRow
 
 ```swift
-FareFeatureRow(text, systemImage:, detail:, status:)
+FareFeatureRow(feature)
 ```
 
 **Modifiers**
@@ -596,7 +597,7 @@ init(_ shape: SkeletonShape = .rounded(8))
 Drives every group-bound skeleton in `content` from one loading flag.
 
 ```swift
-SkeletonGroup(@ViewBuilder:)
+SkeletonGroup(content:)
 ```
 
 **Modifiers**
@@ -636,7 +637,7 @@ init(_ kind: StatusKind, label: String? = nil)
 ## SurfaceView
 
 ```swift
-SurfaceView(@ViewBuilder:)
+SurfaceView(content:)
 ```
 
 **Modifiers**
@@ -727,7 +728,7 @@ init(_ words: [String], interval: Double = 2)
 ## TiltCard
 
 ```swift
-TiltCard(@ViewBuilder:)
+TiltCard(content:)
 ```
 
 **Modifiers**
@@ -759,7 +760,7 @@ _Compositions of atoms — inputs, buttons, selectors, small layouts._
 ## Affix
 
 ```swift
-Affix(offsetTop:, @ViewBuilder:)
+Affix(offsetTop:, content:)
 ```
 
 **Modifiers**
@@ -772,7 +773,7 @@ Affix(offsetTop:, @ViewBuilder:)
 A token-bound amenity grid.
 
 ```swift
-AmenityGrid(label, systemImage:)
+AmenityGrid(amenities)
 ```
 
 **Modifiers**
@@ -786,7 +787,7 @@ AmenityGrid(label, systemImage:)
 ## AnchorNav
 
 ```swift
-AnchorNav(id, title:, level:)
+AnchorNav(items, active:)
 ```
 
 **Modifiers**
@@ -918,7 +919,7 @@ init(selection: Binding<Date?>)
 ## Cascader
 
 ```swift
-Cascader(value, label:, children:)
+Cascader(options, selection:)
 ```
 
 **Modifiers**
@@ -1041,7 +1042,7 @@ init(_ label: String, selection: Binding<Color>)
 ## ColumnsGrid
 
 ```swift
-ColumnsGrid(@ViewBuilder:)
+ColumnsGrid(content:)
 ```
 
 **Modifiers**
@@ -1071,7 +1072,7 @@ ControlRow(title, isOn:)
 A token-bound currency picker.
 
 ```swift
-CurrencyPicker(code:, symbol:, name:)
+CurrencyPicker(selection:, currencies:)
 ```
 
 **Modifiers**
@@ -1105,7 +1106,7 @@ init(_ label: String? = nil, date: Binding<Date?>)
 A single selectable date+price card.
 
 ```swift
-DatePriceCard(date, price:)
+DatePriceCard(item, isSelected:, action:)
 ```
 
 **Modifiers**
@@ -1127,7 +1128,7 @@ DatePriceStrip()
 ## Dropdown
 
 ```swift
-Dropdown(title, subtitle:, systemImage:, role:, disabled:, isSelected: …)
+Dropdown(items:, isPresented:, trigger:)
 ```
 
 **Modifiers**
@@ -1210,7 +1211,7 @@ FilterRow(title, isOn:)
 ## Flex
 
 ```swift
-Flex(@ViewBuilder:)
+Flex(content:)
 ```
 
 **Modifiers**
@@ -1240,7 +1241,7 @@ FlightRoute(from:, to:, departure:, arrival:)
 A token-bound rooms & guests picker.
 
 ```swift
-GuestSelector(rooms:, adults:, children:, infants:)
+GuestSelector(selection:)
 ```
 
 **Modifiers**
@@ -1277,7 +1278,7 @@ init(_ label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...
 ## InstallmentPicker
 
 ```swift
-InstallmentPicker(count:, total:, monthly:, label:)
+InstallmentPicker(options, selection:)
 ```
 
 **Modifiers**
@@ -1330,7 +1331,7 @@ MapPriceMarker(text)
 ## Masonry
 
 ```swift
-Masonry(@ViewBuilder:)
+Masonry(content:)
 ```
 
 **Modifiers**
@@ -1341,7 +1342,7 @@ Masonry(@ViewBuilder:)
 ## Mentions
 
 ```swift
-Mentions(value, label:)
+Mentions(text:, options:)
 ```
 
 **Modifiers**
@@ -1497,7 +1498,7 @@ PriceHistogram(bins:, lowerValue:, upperValue:, in:)
 ## PriceTrendChart
 
 ```swift
-PriceTrendChart(label, sublabel:, price:)
+PriceTrendChart(points, selection:)
 ```
 
 **Modifiers**
@@ -1647,7 +1648,7 @@ RecentSearchRow(from:, to:, action:)
 Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`.
 
 ```swift
-ScrollShadow(@ViewBuilder:)
+ScrollShadow(content:)
 ```
 
 **Modifiers**
@@ -1660,7 +1661,7 @@ ScrollShadow(@ViewBuilder:)
 ## ScrubGallery
 
 ```swift
-ScrubGallery(count:, @ViewBuilder:)
+ScrubGallery(count:, content:)
 ```
 
 **Modifiers**
@@ -1701,7 +1702,7 @@ init(text: Binding<String>)
 ## SearchField
 
 ```swift
-SearchField(badge:, label:)
+SearchField(placeholder, action:)
 ```
 
 **Modifiers**
@@ -1845,7 +1846,7 @@ SmartSuggestion(message)
 One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline.
 
 ```swift
-SortTab(title, value:, subtitle:, icon:)
+SortTab(option, isSelected:, action:)
 ```
 
 **Modifiers**
@@ -1862,7 +1863,7 @@ SortSummaryBar()
 ## Space
 
 ```swift
-Space(@ViewBuilder:)
+Space(content:)
 ```
 
 **Modifiers**
@@ -1876,7 +1877,7 @@ Space(@ViewBuilder:)
 ## Splitter
 
 ```swift
-Splitter(axis, initialFraction:, @ViewBuilder:)
+Splitter(axis, initialFraction:, first:)
 ```
 
 **Modifiers**
@@ -2050,7 +2051,7 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 ## Transfer
 
 ```swift
-Transfer(key, title:)
+Transfer(items, target:)
 ```
 
 **Modifiers**
@@ -2246,7 +2247,7 @@ BoardingPass(passenger:, from:, to:)
 ## BrowserFrame
 
 ```swift
-BrowserFrame(url:, @ViewBuilder:)
+BrowserFrame(url:, content:)
 ```
 
 **Modifiers**
@@ -2469,7 +2470,7 @@ FareSummary(lines, currencyCode:)
 ## FilterBar
 
 ```swift
-FilterBar(title, id:)
+FilterBar(chips, selection:)
 ```
 
 **Modifiers**
@@ -2486,7 +2487,7 @@ FilterBar(title, id:)
 ## FilterList
 
 ```swift
-FilterList(title, count:, icon:, id:)
+FilterList(options, selection:)
 ```
 
 **Modifiers**
@@ -2502,7 +2503,7 @@ FilterList(title, count:, icon:, id:)
 A token-bound flight card — one segment, or a multi-leg itinerary.
 
 ```swift
-FlightCard(airline:, from:, to:, departure:, arrival:, stops: …)
+FlightCard(airline:, from:, to:, departure:, arrival:)
 ```
 
 **Modifiers**
@@ -2520,7 +2521,7 @@ FlightCard(airline:, from:, to:, departure:, arrival:, stops: …)
 ## FlightListItem
 
 ```swift
-FlightListItem(name, price:, perks:)
+FlightListItem(legs:)
 ```
 
 **Modifiers**
@@ -2932,7 +2933,7 @@ init(_ items: [Item], @ViewBuilder content: @escaping (Item) -> Content)
 ## PhoneFrame
 
 ```swift
-PhoneFrame(@ViewBuilder:)
+PhoneFrame(content:)
 ```
 
 **Modifiers**
@@ -3185,7 +3186,7 @@ init(selection: Binding<String?>, themes: [ThemePreset] = ThemePreset.all, onSel
 A token-bound ticket / boarding-pass surface.
 
 ```swift
-TicketStub(@ViewBuilder:)
+TicketStub(content:)
 ```
 
 **Modifiers**
@@ -3258,7 +3259,7 @@ init(_ url: URL?, progress: Binding<Double>? = nil, isMuted: Binding<Bool>? = ni
 ## WindowFrame
 
 ```swift
-WindowFrame(title, @ViewBuilder:)
+WindowFrame(title, content:)
 ```
 
 **Modifiers**
