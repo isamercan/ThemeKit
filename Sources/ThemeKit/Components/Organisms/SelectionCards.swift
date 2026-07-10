@@ -33,6 +33,7 @@ private struct SelectionCard<Control: View>: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     /// The card's inner layout — everything inside the shell.

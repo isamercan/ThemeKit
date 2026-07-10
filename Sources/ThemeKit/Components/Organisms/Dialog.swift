@@ -176,6 +176,7 @@ struct DialogCard: View {
                         .padding(Theme.SpacingKey.md.value)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Close"))
             }
         }
         .themeShadow(.elevated)
@@ -310,6 +311,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                                         Icon(systemName: "xmark").size(.sm).color(theme.text(.textTertiary))
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel(String(themeKit: "Close"))
                                 }
                             }
                             .padding(Theme.SpacingKey.lg.value)
@@ -408,6 +410,7 @@ private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
                                         .padding(Theme.SpacingKey.md.value)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(String(themeKit: "Close"))
                             }
                         }
                         .themeShadow(.elevated)

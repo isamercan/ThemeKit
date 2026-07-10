@@ -34,6 +34,9 @@ private struct DrawerContainer<DrawerContent: View>: View {
             theme.background(.bgTertiary).opacity(0.4 * scrimFactor)
                 .ignoresSafeArea()
                 .onTapGesture { if dismissOnScrimTap { onDismiss() } }
+                .accessibilityLabel(String(themeKit: "Close"))
+                .accessibilityAddTraits(dismissOnScrimTap ? .isButton : [])
+                .accessibilityHidden(!dismissOnScrimTap)
 
             content()
                 .frame(maxWidth: width, maxHeight: .infinity, alignment: .topLeading)

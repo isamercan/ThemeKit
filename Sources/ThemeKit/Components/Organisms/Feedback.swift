@@ -372,6 +372,7 @@ private struct FeedbackHostModifier: ViewModifier {
                     Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Close"))
             }
             .padding(Theme.SpacingKey.md.value)
             .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
