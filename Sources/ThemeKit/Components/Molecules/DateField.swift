@@ -52,6 +52,15 @@ public struct DateField: View {
     private var leadingSystemImage: String?
     private var accessibilityID: String?
 
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
+    /// DateField's focus analog is its picker popover: a `true` write opens the
+    /// picker (`showPicker` already reads as `isFocused` in the `FieldStyle`
+    /// configuration); dismissing it resets the binding.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the displayed value
+    /// (empty when no date is set) when the picker is dismissed.
+    private var onEditingEnd: ((String) -> Void)?
+
     @Environment(\.locale) private var environmentLocale
     @State private var showPicker = false
 
@@ -106,6 +115,15 @@ public struct DateField: View {
         // Message rows animate only when `fieldDefaults(messagesAnimated: true)`
         // opts this field family in; `microAnimations` + Reduce Motion still win.
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: infoMessages)
+        // External focus bridge (TextInput parity, popover-flavored): a `true`
+        // write opens the picker; dismissing it resets the external binding.
+        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+            if want && !showPicker && isEnabled { showPicker = true }
+        }
+        .onChange(of: showPicker) { _, now in
+            if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
+        }
     }
 
     /// The composed field row (icon + value + trailing accessory), sized —
@@ -260,6 +278,16 @@ public extension DateField {
 
     /// Show a trailing clear button when a date is set.
     func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`). DateField's
+    /// focus analog is its picker popover: a `true` write opens the picker (which
+    /// also renders the `FieldStyle` focus border); dismissal resets the binding.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate when the picker is dismissed. Fires with the displayed value
+    /// (locale-formatted; empty when no date is set — pair with `.required()`-style rules).
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Leading SF Symbol shown inside the field.
     func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }

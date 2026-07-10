@@ -23,7 +23,16 @@ public struct SelectBox<Option: Hashable>: View {
     private var placeholder: String = String(themeKit: "Select")
     private var hint: String? = nil
     private var errorText: String? = nil
+    private var infoMessages: [InfoMessage] = []
     private var accessibilityID: String? = nil
+    /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
+    /// The native `Menu` cannot be opened programmatically, so a `true` write
+    /// renders the `FieldStyle` focus border (drawing the eye to the field);
+    /// picking an option resets the binding.
+    private var externalFocus: Binding<Bool>?
+    /// Internal editing-end hook (form wiring): fires with the selected option's
+    /// title (empty when nothing is selected) when the selection changes.
+    private var onEditingEnd: ((String) -> Void)?
     @Environment(\.isEnabled) private var isEnabled
 
     public init(   // R1
@@ -38,7 +47,16 @@ public struct SelectBox<Option: Hashable>: View {
         self.optionTitle = optionTitle
     }
 
-    private var hasError: Bool { errorText != nil }
+    /// `infoMessages` plus the `errorText` convenience (computed merge, same
+    /// idiom as `TextInput`). Structured messages render as an `InfoMessageList`;
+    /// with none set, the legacy single hint/error line renders unchanged.
+    private var messages: [InfoMessage] {
+        var messages = infoMessages
+        if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        return messages
+    }
+    private var hasError: Bool { messages.dominantKind == .error }
+    private var hasWarning: Bool { messages.dominantKind == .warning }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -69,11 +87,21 @@ public struct SelectBox<Option: Hashable>: View {
             .accessibilityLabel(label ?? "")
             .accessibilityValue(selection.map(optionTitle) ?? "")
 
-            if let message = errorText ?? hint {
+            if !infoMessages.isEmpty {
+                // Structured messages (e.g. from `.field(_:in:)`) — family-standard list.
+                InfoMessageList(messages)
+                    .a11y(A11yElement.Field.message, in: accessibilityID)
+            } else if let message = errorText ?? hint {
                 Text(message)
                     .textStyle(.bodySm400)
                     .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
             }
+        }
+        // Selection = editing end: sync the external focus off and fire the
+        // form-wiring hook (`.field(_:in:)`) with the chosen option's title.
+        .onChange(of: selection) { _, newValue in
+            if externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
+            onEditingEnd?(newValue.map(optionTitle) ?? "")
         }
     }
 
@@ -94,18 +122,19 @@ public struct SelectBox<Option: Hashable>: View {
     }
 
     /// The trigger wrapped in the active ``FieldStyle`` chrome. Configuration
-    /// mapping: the native `Menu` exposes no open state, so `isFocused` is always
-    /// `false` (matching the old chroma, which had no focus ring either);
-    /// `hasWarning` is `false` (SelectBox models only hint/error); and — SelectBox
-    /// having no `TextInputSize` axis — `size` maps to `.medium`, purely advisory
-    /// for styles that key off it (the row keeps its own 48pt height).
+    /// mapping: the native `Menu` exposes no open state, so `isFocused` reflects
+    /// only the external focus binding (a `FormValidator` focusing this field
+    /// renders the focus border; user taps draw no ring, as before); `hasWarning`
+    /// follows the dominant message severity; and — SelectBox having no
+    /// `TextInputSize` axis — `size` maps to `.medium`, purely advisory for
+    /// styles that key off it (the row keeps its own 48pt height).
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldContent),
-            isFocused: false,
+            isFocused: externalFocus?.wrappedValue ?? false,
             isEnabled: isEnabled,
             hasError: hasError,
-            hasWarning: false,
+            hasWarning: hasWarning,
             size: .medium
         ))
     }
@@ -126,6 +155,22 @@ public extension SelectBox {
 
     /// Error message rendered under the field (drives the error border / label color).
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Validation / info messages rendered under the field as an
+    /// `InfoMessageList` (their dominant severity drives the `FieldStyle`
+    /// error / warning border, as in `TextInput`). With none set, the legacy
+    /// `hint` / `errorText` single line renders unchanged.
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Drive focus from outside (e.g. `FormValidator.focusBinding`). The native
+    /// `Menu` cannot be opened programmatically, so a `true` write renders the
+    /// `FieldStyle` focus border instead; picking an option resets the binding.
+    func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
+
+    /// Internal editing-end hook used by the form wiring (`.field(_:in:)`) to
+    /// re-validate when the selection changes. Fires with the chosen option's
+    /// title (empty when nothing is selected).
+    internal func onEditingEnd(_ handler: ((String) -> Void)?) -> Self { copy { $0.onEditingEnd = handler } }
 
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
