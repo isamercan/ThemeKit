@@ -1,0 +1,281 @@
+# ThemeKit — Patterns & Recipes
+
+> Copy-paste recipes for common ThemeKit tasks. Every snippet is token-bound: it reads the
+> theme from the environment and never hardcodes a color, radius, or spacing. Companion files:
+> **llms.txt** (index) · **llms-full.txt** (architecture + tokens) · **llms-components.txt**
+> (per-component API).
+
+**The one rule that makes all of these work:** `@Environment(\.theme) private var theme`, inject
+`.environment(Theme.shared)` once at the root, and pull tokens — `theme.text(.textPrimary)`,
+`theme.background(.bgWhite)`, `Theme.SpacingKey.md.value`, `Theme.RadiusRole.box.value`.
+
+---
+
+## Pattern: Custom theme creation
+
+Generate a whole palette from one accent, or specify a full config.
+
+```swift
+// From a single accent — ThemeGenerator expands the full Ant-style palette on-device:
+Theme.shared.applyGenerated(primaryHex: "7C3AED")
+
+// Full recipe: accent + base surface + brand secondary/accent, light or dark, tint strength:
+let config = ThemeConfig(primaryHex: "FF79C6",   // brand accent
+                         baseHex: "282A36",       // surface "paper" tone
+                         secondaryHex: "BD93F9",
+                         accentHex: "FFB86C",
+                         tint: 0.07,               // how far the accent bleeds into neutrals
+                         dark: true)
+Theme.shared.apply(config)
+```
+
+Persist the user's choice and re-apply on launch:
+
+```swift
+// Save
+UserDefaults.standard.set("dracula", forKey: "themeID")
+
+// Restore at startup (before the first view renders)
+if let id = UserDefaults.standard.string(forKey: "themeID") {
+    ThemePreset.named(id)?.apply()
+}
+```
+
+---
+
+## Pattern: Per-subtree theming
+
+`.theme(_:)` injects a theme into ONE branch of the view tree — the rest of the app keeps
+`Theme.shared`. Because components read the *environment* theme, everything below re-skins.
+
+```swift
+struct DualThemeScreen: View {
+    var body: some View {
+        VStack(spacing: Theme.SpacingKey.lg.value) {
+            BookingCard()                       // uses the app theme (Theme.shared)
+
+            let ocean = Theme()
+            ocean.applyGenerated(primaryHex: "0FB4AB")
+            PromoBanner("Summer sale")
+                .theme(ocean)                   // this branch only is teal
+        }
+    }
+}
+```
+
+Use it for preview galleries, A/B skins, or a "try this theme" card that recolors just itself.
+
+---
+
+## Pattern: Token-bound custom component
+
+When you must write your own view, read the theme and resolve tokens — never literals.
+
+```swift
+struct PriceTagView: View {
+    @Environment(\.theme) private var theme
+    let amount: String
+
+    var body: some View {
+        Text(amount)
+            .textStyle(.labelMd700)                               // typography token
+            .foregroundStyle(theme.foreground(.fgHero))           // color token
+            .padding(.horizontal, Theme.SpacingKey.sm.value)      // spacing token
+            .padding(.vertical, Theme.SpacingKey.xs.value)
+            .background(theme.background(.bgSecondary))            // surface token
+            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value,
+                                        style: .continuous))       // radius role token
+    }
+}
+```
+
+Rules: pull every color from `theme.*` (or a `SemanticColor`), size text with `.textStyle(_:)`,
+space with `Theme.SpacingKey`, round with `Theme.RadiusRole` / `Theme.RadiusKey`.
+
+---
+
+## Pattern: Token-bound custom style (flexibility architecture)
+
+The six style protocols (`CardStyle`, `FieldStyle`, `ChipStyle`, `BarStyle`, `MeterStyle`,
+`ToastStyle`) let you reskin a component family without forking it — the SwiftUI `ButtonStyle`
+shape. Implement `makeBody(configuration:)` and read tokens from the configuration + environment.
+
+```swift
+// A glass card container. The configuration carries the composed content plus chrome tokens
+// (surfaceKey, radius role, elevation, selection/press state).
+struct GlassCardStyle: CardStyle {
+    func makeBody(configuration: CardStyleConfiguration) -> some View {
+        GlassCardSurface(configuration: configuration)
+    }
+}
+
+private struct GlassCardSurface: View {
+    let configuration: CardStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: configuration.radius.value, style: .continuous)
+    }
+
+    var body: some View {
+        configuration.content
+            .background(theme.background(configuration.surfaceKey).opacity(0.65))
+            .clipShape(shape)
+            .overlay(
+                shape.stroke(
+                    theme.border(configuration.isSelected ? .borderHero : .borderPrimary),
+                    lineWidth: configuration.isSelected ? 1.5 : 1
+                )
+            )
+    }
+}
+
+// Apply it (or one of the built-ins: .default, .outlined):
+Card(title: "Booking") { bookingBody }.cardStyle(GlassCardStyle())
+Card(title: "Summary") { summaryBody }.cardStyle(.outlined)
+```
+
+Field styles work the same way — `TextInput("Email", text: $email).fieldStyle(.underlined)` or a
+custom `some FieldStyle`.
+
+---
+
+## Pattern: Form building
+
+Compose field components inside a `Card`; label with `InputLabel`, hint with `HelperText`, and
+drive state with bindings. Sizes are `.controlSize(_:)`, disabled is `.disabled(_:)`.
+
+```swift
+struct SignUpForm: View {
+    @Environment(\.theme) private var theme
+    @State private var email = ""
+    @State private var password = ""
+    @State private var agree = false
+    @State private var emailError: String?
+
+    var body: some View {
+        Card(title: "Create account") {
+            VStack(spacing: Theme.SpacingKey.md.value) {
+                TextInput("Email", text: $email)
+                    .icon(leading: "envelope")
+                    .errorText(emailError ?? "")           // non-empty → field shows the error state
+                    .a11yID("signup.email")
+
+                TextInput("Password", text: $password)
+                    .secure(true)                          // secure entry is a modifier, not an init arg
+                    .a11yID("signup.password")
+
+                Checkbox("I accept the terms", isChecked: $agree)   // init: (_ label, isChecked:)
+                    .controlSize(.small)
+
+                PrimaryButton("Create account") { submit() }
+                    .fullWidth()
+                    .disabled(!agree || email.isEmpty)
+            }
+        }
+    }
+
+    private func submit() {
+        emailError = email.contains("@") ? nil : "Enter a valid email"
+    }
+}
+```
+
+Validation: drive `.errorText(_:)` (or `.helperText(_:)` / `.warningText(_:)`) from your own
+validation state — a non-empty error string flips the field to the error token automatically. For
+richer inline messaging use `.infoMessages(_:)`.
+
+---
+
+## Pattern: Card-based layout
+
+`Card` is the container; `CardStack` maps a collection to a card per item. Elevation is a token
+via `.elevation(_:)` (`CardElevation`: `.none` / `.soft` / `.elevated`); `.cardStyle(_:)` restyles
+the shell.
+
+```swift
+// CardStack(_ items:) { item in … } — one card per element, no manual ForEach.
+CardStack(destinations) { d in
+    Card(title: d.name) {
+        RemoteImage(d.imageURL)                    // init(_ url: URL?) — positional
+        Text(d.subtitle).textStyle(.bodySm400)
+    }
+    .subtitle(d.country)
+    .elevation(.soft)
+    .cardStyle(.outlined)
+}
+```
+
+---
+
+## Pattern: Navigation
+
+```swift
+// Top header with a back action — PageHeader(_ title:)
+PageHeader("Explore")
+    .subtitle("48 destinations")
+    .onBack { dismiss() }
+
+// Sidebar (iPad / macOS) — Sidebar(items:selection:) with a String? selection binding
+Sidebar(items: sidebarItems, selection: $section)   // sidebarItems: [Sidebar.Item]
+    .width(260)
+
+// Tab-style navigation across an Int index — SegmentedTabBar(_ items:selection:)
+SegmentedTabBar(["Overview", "Reviews", "Map"], selection: $tab)
+    .tabStyle(.underline)                            // SegmentedTabBarStyle: .underline / .card
+```
+
+---
+
+## Pattern: Data display
+
+```swift
+// Tabular data — DataTable(columns:rows:). Build the columns once as [DataTable<Row>.Column].
+DataTable(columns: columns, rows: bookings)
+    .striped()
+    .onRowTap { open($0) }
+
+// Key/value summary — KeyValueTable(rows:) with [KeyValueTable.Row]
+KeyValueTable(rows: fareRows)
+    .title("Fare breakdown")
+    .bordered(true)
+
+// List — ListView(_ items:) { item in row }
+ListView(recentSearches) { item in
+    ListRow(item.title) { open(item) }               // ListRow(_ title, action:)
+        .subtitle(item.subtitle)
+        .icon(item.icon)
+}
+.header("Recent")
+
+// Metric + trend — StatTrend is .up(_:) / .down(_:)
+Stat(title: "Bookings", value: "1,284").trend(.up("+12%"))
+
+// Chronology — TimelineMode is .left / .right / .alternate
+Timeline(bookingEvents).mode(.alternate)
+```
+
+> Exact init/modifier signatures vary per component — confirm against **llms-components.txt** or
+> the MCP `get_component_api` tool before shipping.
+
+---
+
+## Anti-patterns (do NOT do these)
+
+- ❌ Hardcoded colors — `.foregroundStyle(.blue)`, `Color(hex: "FF0000")`, `Color.red`.
+  ✅ A token — `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, a `SemanticColor`.
+- ❌ Reading the theme outside the environment — `Theme.shared.text(...)` inside a subview.
+  ✅ `@Environment(\.theme) private var theme` (so per-subtree `.theme(_:)` is respected).
+- ❌ Hardcoded spacing/radius — `.padding(16)`, `cornerRadius: 12`.
+  ✅ `Theme.SpacingKey.md.value`, `Theme.RadiusRole.box.value`.
+- ❌ Size/enabled as init args — `Badge("x", size: .small)`, `Control(isEnabled: false)`.
+  ✅ Native modifiers — `Badge("x").controlSize(.small)`, `Control().disabled(true)`.
+- ❌ Re-implementing an existing component (a bespoke card/sheet/toast/field).
+  ✅ Use the shipped component and restyle it via its `*Style(_:)` protocol.
+- ❌ Ignoring the style protocols and overriding a component's internals.
+  ✅ Implement `CardStyle` / `FieldStyle` / … and set it with `.cardStyle(_:)` / `.fieldStyle(_:)`.
+- ❌ Omitting accessibility — no accessibility id, tap targets under 44 pt.
+  ✅ `.a11yID("screen.element")` on components that expose it (check the modifier list), else
+  SwiftUI's `.accessibilityIdentifier(_:)`; ThemeKit's 44 pt targets & RTL mirroring do the rest.
+- ❌ Inventing modifier names from memory.
+  ✅ Look them up in **llms-components.txt** or via the MCP `get_component_api`.
