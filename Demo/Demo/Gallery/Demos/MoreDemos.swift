@@ -1271,6 +1271,45 @@ struct DateFieldDemo: View {
     }
 }
 
+struct TimeFieldDemo: View {
+    private enum Cycle: String, CaseIterable { case locale, h12, h24 }
+    @State private var time: Date? = .now
+    @State private var cycleSel: Cycle = .locale
+    @State private var interval = 5
+    @State private var clearable = true
+    @State private var enabled = true
+    @State private var error = false
+
+    private var cycle: TimeFieldHourCycle {
+        switch cycleSel {
+        case .locale: return .locale
+        case .h12: return .h12
+        case .h24: return .h24
+        }
+    }
+    private var messages: [InfoMessage] { error ? [InfoMessage("Time is required", kind: .error)] : [] }
+
+    var body: some View {
+        ComponentStage("TimeField", inspector: [("hourCycle", cycleSel.rawValue), ("value", time.map { $0.formatted(date: .omitted, time: .shortened) } ?? "nil")]) {
+            TimeField("Time", time: $time)
+                .hourCycle(cycle)
+                .minuteInterval(interval)
+                .infoMessages(messages)
+                .clearable(clearable)
+                .icon("clock")
+                .a11yID("demoTime")
+                .disabled(!enabled)
+        } knobs: {
+            Text("hourCycle = locale / 12h / 24h. minuteInterval snaps the wheel. Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
+            Picker("Hour cycle", selection: $cycleSel) { ForEach(Cycle.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+            Stepper("Minute interval: \(interval)", value: $interval, in: 1...30, step: 5)
+            Toggle("Clearable", isOn: $clearable)
+            Toggle("Error message", isOn: $error)
+            Toggle("Enabled", isOn: $enabled)
+        }
+    }
+}
+
 struct DataTableDemo: View {
     private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: Double }
     private let rows: [Booking] = [
