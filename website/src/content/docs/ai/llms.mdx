@@ -1,0 +1,91 @@
+---
+title: llms.txt
+description: A static context layer for LLMs — index, full docs, per-component API, and patterns that any AI tool can fetch to generate correct, token-bound ThemeKit code.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+export const base = import.meta.env.BASE_URL;
+
+ThemeKit ships a **static context layer for large language models** — plain-text
+files, following the [llms.txt convention](https://llmstxt.org/), that any AI editor
+or agent can fetch to generate **correct, token-bound** ThemeKit code without guessing
+APIs or hardcoding colors.
+
+It's the drop-in companion to the [MCP server](/ThemeKit/ai/mcp/): the MCP gives your
+editor **live, on-demand tools**, while these files give **any** tool a complete
+snapshot it can attach or fetch in one shot.
+
+:::tip[Generated, never stale]
+`llms.txt` and `llms-components.txt` are generated from source by `tools/gen_skill.py`
+(`make skill`), so they can't drift from the library — currently **205 components**,
+**34 theme presets**, and **217 design tokens**.
+:::
+
+## The files
+
+<CardGrid>
+  <LinkCard
+    title="llms.txt"
+    href={`${base}llms.txt`}
+    description="Quick-reference index — philosophy, code-generation rules, token summary, the full component catalog, presets, style protocols, and links. Start here."
+  />
+  <LinkCard
+    title="llms-full.txt"
+    href={`${base}llms-full.txt`}
+    description="Full documentation — architecture, token deep-dive, runtime theming, the six style protocols, code-gen rules, patterns, and AI-native integration."
+  />
+  <LinkCard
+    title="llms-components.txt"
+    href={`${base}llms-components.txt`}
+    description="Per-component API for all 205 components — init signature, chainable modifiers, and a usage snippet."
+  />
+  <LinkCard
+    title="llms-patterns.txt"
+    href={`${base}llms-patterns.txt`}
+    description="Recipes & anti-patterns — custom themes, per-subtree theming, custom styles, forms, navigation, and data display."
+  />
+</CardGrid>
+
+## How to use
+
+Point your tool at the hosted URL, or download the file and attach it:
+
+```text
+https://isamercan.github.io/ThemeKit/llms.txt
+https://isamercan.github.io/ThemeKit/llms-full.txt
+https://isamercan.github.io/ThemeKit/llms-components.txt
+https://isamercan.github.io/ThemeKit/llms-patterns.txt
+```
+
+- **Claude · ChatGPT · Cursor · Copilot** — attach `llms.txt` as project context, then
+  ask for a screen. For deep API detail, add `llms-components.txt`.
+- **URL-fetching agents** — hand them the link above; `llms.txt` cross-links the rest.
+- **The one rule that keeps generated code correct** — read the theme from the
+  environment and never hardcode a color:
+
+```swift
+@Environment(\.theme) private var theme          // not Theme.shared inside a subview
+theme.text(.textPrimary)                          // not .foregroundStyle(.blue)
+Theme.SpacingKey.md.value                          // not .padding(16)
+Theme.RadiusRole.box.value                         // not cornerRadius: 12
+```
+
+## Prefer live tools?
+
+If your editor speaks MCP, the [ThemeKit MCP server](/ThemeKit/ai/mcp/) exposes the
+same data as **on-demand tools** (`get_component_api`, `get_design_tokens`,
+`generate_theme`, `a11y_audit`, Figma round-trip…) — focused context pulled exactly
+when the model needs it, instead of one large paste. The `llms.*` files and the MCP
+server are built from the **same source**, so they always agree.
+
+<CardGrid>
+  <Card title="Static context" icon="document">
+    One fetch or paste, works everywhere. Best for tools without MCP, or for a
+    complete snapshot in a single file.
+  </Card>
+  <Card title="Live tools (MCP)" icon="puzzle">
+    On-demand, focused API/token lookups while the model codes. Best for
+    MCP-capable editors. [Set it up →](/ThemeKit/ai/mcp/)
+  </Card>
+</CardGrid>
