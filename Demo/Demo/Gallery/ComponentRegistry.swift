@@ -240,6 +240,9 @@ enum ComponentRegistry {
         },
         .knob("ControlRow", .molecules, demo: ControlRowDemo(), usage: #"ControlRow("I agree to the terms", isOn: $accepted).control(.checkbox).description("…").required().hasError(showErrors && !accepted).errorText("This field is required.")"#, isNew: true),
         .knob("ScrollShadow", .molecules, demo: ScrollShadowDemo(), usage: #"ScrollShadow { ScrollView(.horizontal) { chipRow } }.axis(.horizontal).length(.lg).fadeColor(.bgWhite)   // .visibility(.auto/.start/.end/.both/.none)"#, isNew: true),
+        .knob("Field Defaults", .molecules, demo: FieldDefaultsDemo(), usage: #"VStack { fields }.fieldDefaults(size: .large, messagesAnimated: false, requiredIndicator: false)   // subtree house style for TextInput/SearchBar/DateField/…; a field's own .size() still wins"#, isNew: true),
+        .knob("Form Wiring", .molecules, demo: FormWiringDemo(), usage: #"@State var form = FormValidator<Field>([.email: [.required(), .email()], .password: [.required(), .minLength(8)]])\nTextInput("Email", text: $email).field(.email, in: form)   // messages + focus + live re-validate\nPrimaryButton("Submit") { form.submit(values) { logIn() } }   // focuses first invalid field"#, isNew: true),
+        .knob("Chrome", .molecules, demo: ChromeDemo(), usage: #"VStack { … }.cardChrome(elevation: .elevated)   // Card's shell, no Card anatomy\nMyRatingControl(value: $stars).fieldChrome(isFocused: focused, hasError: invalid)   // both ride .cardStyle()/.fieldStyle()"#, isNew: true),
 
         // MARK: Organisms
         .knob("Accordion", .organisms, demo: AccordionDemo(), usage: #"Accordion("Title", initiallyExpanded: false) { Text("Body") }"#),
@@ -262,6 +265,7 @@ enum ComponentRegistry {
         .knob("Coupon", .organisms, demo: CouponDemo(), usage: #"Coupon(code: "UXMUQ", onCopy: { }).couponStyle(.outlined)"#),
         .knob("EmptyState", .organisms, demo: EmptyStateDemo(), usage: #"EmptyState("Empty").icon("tray").message("…").primaryAction("Retry") { }"#),
         .knob("Feedback", .organisms, demo: FeedbackDemo(), usage: #"@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter\nfeedback.toast("Saved", kind: .success)              // stacks\nfeedback.toast("Deleted", action: ToastAction("Undo") { }, duration: nil)\nawait feedback.toastTask(loading: "Saving…", success: "Saved") { try await save() }\n// install once: .feedbackHost(maxVisibleToasts: 3, toastPosition: .bottom)"#),
+        .knob("Feedback Defaults", .organisms, demo: FeedbackDefaultsDemo(), usage: #"RootView()\n    .feedbackHost()\n    .feedbackDefaults(toastPosition: .top, toastDuration: 3, maxVisibleToasts: 2)   // subtree default; per-call toast(position:/duration:) still wins"#, isNew: true),
         .knob("Gallery", .organisms, demo: GalleryDemo(), usage: #"Gallery(items) { item in mediaView }.columns(2).aspect(.square)"#),
         .knob("ImageCollage", .organisms, demo: ImageCollageDemo(), usage: #"ImageCollage(urls) { index in open(index) }.height(220)   // 1·2·3·4+ layouts + "+N""#),
         .knob("InfoBanner", .organisms, demo: InfoBannerDemo(), usage: #"InfoBanner("Message", links: [("link", action)]).variant(.info)"#),
