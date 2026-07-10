@@ -13,6 +13,7 @@ import ImageIO
 /// (Reference AVIFAnimatedImage / animated `ImageView` role, native.)
 public struct AnimatedImage: View {
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let url: URL?
     // Appearance/config — mutated only through the modifiers below (R2).
@@ -37,7 +38,7 @@ public struct AnimatedImage: View {
 
     @ViewBuilder
     private var content: some View {
-        if frames.count > 1, total > 0 {
+        if !reduceMotion, frames.count > 1, total > 0 {
             TimelineView(.animation) { context in
                 let t = context.date.timeIntervalSince(start).truncatingRemainder(dividingBy: total)
                 Image(decorative: frame(at: t), scale: 1)
