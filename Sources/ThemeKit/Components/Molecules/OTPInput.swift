@@ -75,7 +75,8 @@ public struct OTPInput: View {
     /// OTPInput has no `TextInputSize` modifier of its own; the subtree
     /// `FieldDefaults.size` maps onto the digit-cell height (`nil` keeps the
     /// classic 56pt `.medium` cell).
-    private var effectiveSize: TextInputSize { fieldDefaults.size ?? .medium }
+    private var explicitSize: TextInputSize?
+    private var effectiveSize: TextInputSize { explicitSize ?? fieldDefaults.size ?? .medium }
     /// Message rows animate when micro-animations are on and the subtree default
     /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
@@ -386,6 +387,10 @@ public extension OTPInput {
     /// Per-slot placeholder: each empty, non-caret box shows the character at
     /// its position (e.g. `"------"` or `"000000"`) in the tertiary text tone.
     func placeholder(_ text: String) -> Self { copy { $0.placeholderText = text } }
+
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default.
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Mask the entered digits (password-style dots) instead of showing them.
     func secure(_ on: Bool = true) -> Self { copy { $0.isSecure = on } }
