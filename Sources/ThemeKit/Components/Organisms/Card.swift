@@ -198,6 +198,22 @@ struct CardShadow: ViewModifier {
     }
 }
 
+public extension View {
+    /// Applies token-bound elevation — a themed drop shadow — to **any** view, using
+    /// the same `.none / .soft / .elevated` ladder ThemeKit's surface components use.
+    /// Lift your own view to a design-system elevation without hand-rolling a raw
+    /// `.shadow(...)`, so it re-skins with the theme (and dark mode) for free:
+    ///
+    ///     myPanel.elevation(.soft)
+    ///
+    /// ThemeKit's own surfaces (``Card``, ``SurfaceView``, …) expose an
+    /// `.elevation(_:)` returning `Self`; on those the component's own modifier wins,
+    /// so this never changes their behaviour.
+    func elevation(_ elevation: CardElevation) -> some View {
+        modifier(CardShadow(elevation: elevation))
+    }
+}
+
 #Preview {
     @Previewable @Environment(\.theme) var theme
     ScrollView {

@@ -221,7 +221,7 @@ private struct BadgeHighlight: ViewModifier {
     let on: Bool
     func body(content: Content) -> some View {
         if on {
-            content.shadow(color: .black.opacity(0.22), radius: 3, x: 0, y: 2)
+            content.themeShadow(.soft)
         } else {
             content
         }

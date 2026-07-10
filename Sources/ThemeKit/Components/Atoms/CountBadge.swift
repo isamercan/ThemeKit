@@ -82,7 +82,7 @@ public struct Ribbon<Content: View>: View {
                 .background(color.solid)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .offset(x: 6, y: 8)
-                .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+                .themeShadow(.soft)
         }
     }
 }
