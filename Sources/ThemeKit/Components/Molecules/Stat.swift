@@ -68,7 +68,7 @@ public struct Stat: View {
         statStyle.makeBody(configuration: StatStyleConfiguration(
             title: title,
             value: AnyView(valueRow),
-            trend: trend.map { AnyView(trendBadge($0)) },
+            trend: trend.map { AnyView(TrendChip($0).size(.small)) },
             description: description,
             systemImage: systemImage
         ))
@@ -76,14 +76,6 @@ public struct Stat: View {
         // and turn the trend arrow glyph into spoken direction.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(accessibilityLabel))
-    }
-
-    private func trendBadge(_ trend: StatTrend) -> some View {
-        HStack(spacing: 2) {
-            Image(systemName: trend.systemImage).font(.system(size: 11, weight: .bold))
-            Text(trend.text).textStyle(.labelSm600)
-        }
-        .foregroundStyle(trend.color(theme))
     }
 
     private var valueRow: some View {
