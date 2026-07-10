@@ -49,6 +49,14 @@ private struct PopconfirmPresenter<Card: View>: ViewModifier {
                     decoratedCard
                         .modifier(PopconfirmPlacement(edge: edge))
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                        // While the card is up, keep VoiceOver inside it so the
+                        // dimmed trigger/background isn't reachable; a two-finger
+                        // scrub triggers the same dismissal as an outside tap
+                        // (and, like it, is suppressed while pinned or loading).
+                        .accessibilityAddTraits(.isModal)
+                        .accessibilityAction(.escape) {
+                            if dismissOnOutsideTap { isPresented = false }
+                        }
                         .zIndex(1)
                 }
             }

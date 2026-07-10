@@ -430,6 +430,8 @@ private struct FeedbackHostModifier: ViewModifier {
                     primaryColor: confirm.primaryKind.semanticColor
                 )
                 .padding(Theme.SpacingKey.lg.value)
+                .accessibilityAddTraits(.isModal)   // VoiceOver ignores the dimmed content behind it
+                .accessibilityAction(.escape) { presenter.dismissConfirm() }   // two-finger scrub dismisses
             }
             .transition(.opacity)
         }

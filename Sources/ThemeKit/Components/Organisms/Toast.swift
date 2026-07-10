@@ -17,6 +17,9 @@ import SwiftUI
 private struct ToastPresentationModifier<Toast: View>: ViewModifier {
     @Binding var isPresented: Bool
     let autoDismiss: Double?
+    /// Text posted to VoiceOver when the toast appears, so assistive-technology
+    /// users hear the notification. `nil` for fully custom content the caller owns.
+    let announcement: String?
     let toast: Toast
 
     @Environment(\.microAnimations) private var micro
@@ -29,6 +32,11 @@ private struct ToastPresentationModifier<Toast: View>: ViewModifier {
                 toast
                     .padding(Theme.SpacingKey.md.value)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .onAppear {
+                        if let announcement, !announcement.isEmpty {
+                            AccessibilityNotification.Announcement(announcement).post()
+                        }
+                    }
                     .task {
                         guard let autoDismiss else { return }
                         try? await Task.sleep(nanoseconds: UInt64(autoDismiss * 1_000_000_000))
@@ -51,6 +59,7 @@ public extension View {
         modifier(ToastPresentationModifier(
             isPresented: isPresented,
             autoDismiss: autoDismiss,
+            announcement: [title, message].compactMap { $0 }.joined(separator: ", "),
             toast: AlertToast(title).message(message).variant(type).onClose { isPresented.wrappedValue = false }
         ))
     }
@@ -68,6 +77,7 @@ public extension View {
         modifier(ToastPresentationModifier(
             isPresented: isPresented,
             autoDismiss: autoDismiss,
+            announcement: nil,
             toast: content()
         ))
     }
