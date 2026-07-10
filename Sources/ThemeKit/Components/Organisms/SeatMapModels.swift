@@ -64,12 +64,12 @@ public enum SeatTier: String, Sendable, Hashable, Codable, CaseIterable {
     case standard, extraLegroom, exit, premium, business, first
     public var label: String {
         switch self {
-        case .standard: return "Standard"
-        case .extraLegroom: return "Extra legroom"
-        case .exit: return "Exit row"
-        case .premium: return "Premium econ."
-        case .business: return "Business"
-        case .first: return "First"
+        case .standard: return String(themeKit: "Standard")
+        case .extraLegroom: return String(themeKit: "Extra legroom")
+        case .exit: return String(themeKit: "Exit row")
+        case .premium: return String(themeKit: "Premium econ.")
+        case .business: return String(themeKit: "Business")
+        case .first: return String(themeKit: "First")
         }
     }
     /// SF Symbol drawn on an available seat of this tier.

@@ -120,7 +120,7 @@ public struct CountdownTimer: View {
         if let expiredSlot {
             expiredSlot
         } else {
-            Text("Time's up").textStyle(size.textStyle).foregroundStyle(theme.text(.textTertiary))
+            Text(String(themeKit: "Time's up")).textStyle(size.textStyle).foregroundStyle(theme.text(.textTertiary))
         }
     }
 
@@ -205,7 +205,7 @@ public struct CountdownTimer: View {
     }
 
     private func accessibilityText(_ remaining: TimeInterval) -> String {
-        remaining <= 0 ? "Time's up" : Self.segments(remaining, showsDays: showsDays).map { "\($0.value) \($0.label)" }.joined(separator: " ")
+        remaining <= 0 ? String(themeKit: "Time's up") : Self.segments(remaining, showsDays: showsDays).map { "\($0.value) \($0.label)" }.joined(separator: " ")
     }
 }
 

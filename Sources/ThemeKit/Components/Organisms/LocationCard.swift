@@ -115,12 +115,12 @@ public struct LocationCard: View {
                     Button {
                         if let onDirectionsHandler { onDirectionsHandler() } else { openInMaps() }
                     } label: {
-                        Label("Directions", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
+                        Label(String(themeKit: "Directions"), systemImage: "arrow.triangle.turn.up.right.diamond.fill")
                             .textStyle(.labelSm600)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(theme.foreground(.fgHero))
-                    .accessibilityLabel("Directions to \(title)")
+                    .accessibilityLabel(String(themeKit: "Directions to \(title)"))
                 }
             }
             .padding(density.scale(Theme.SpacingKey.md.value))

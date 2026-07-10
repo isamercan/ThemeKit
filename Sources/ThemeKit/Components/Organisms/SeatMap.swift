@@ -357,7 +357,7 @@ private struct PassengerRail: View {
                     .background(isActive ? theme.foreground(.fgHero) : theme.background(.bgSecondaryLight), in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Passenger \(p.initials), seat \(assignment.wrappedValue[p.id] ?? "unassigned")")
+                .accessibilityLabel(String(themeKit: "Passenger \(p.initials), seat \(assignment.wrappedValue[p.id] ?? String(themeKit: "unassigned"))"))
             }
         }
     }
@@ -374,13 +374,13 @@ private struct DeckSelector: View {
             ForEach(floors, id: \.self) { floor in
                 let isActive = (active ?? floors.first) == floor
                 Button { active = floor } label: {
-                    Text("Deck \(floor)").textStyle(.labelSm600)
+                    Text(String(themeKit: "Deck \(floor)")).textStyle(.labelSm600)
                         .foregroundStyle(isActive ? theme.text(.textSecondaryInverse) : theme.text(.textPrimary))
                         .padding(.horizontal, 14).padding(.vertical, 6)
                         .background(isActive ? theme.foreground(.fgHero) : theme.background(.bgSecondaryLight), in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Deck \(floor)")
+                .accessibilityLabel(String(themeKit: "Deck \(floor)"))
                 .accessibilityAddTraits(isActive ? .isSelected : [])
             }
         }
@@ -403,13 +403,13 @@ private struct SeatSummaryBar: View {
             if let seat {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
-                        Text("Seat \(seat.id)").textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
+                        Text(String(themeKit: "Seat \(seat.id)")).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
                         tierChip(seat.tier)
                     }
                     Text(featureText(seat)).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1)
                 }
             } else {
-                Text("Select a seat to see its details").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+                Text(String(themeKit: "Select a seat to see its details")).textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
             }
             Spacer(minLength: Theme.SpacingKey.sm.value)
             VStack(alignment: .trailing, spacing: 2) {
@@ -417,7 +417,7 @@ private struct SeatSummaryBar: View {
                     Text(totalPrice.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))
                         .textStyle(.labelBase700).foregroundStyle(theme.foreground(.fgHero))
                 }
-                Text("\(selectedCount) seat\(selectedCount == 1 ? "" : "s")").textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                Text(String(themeKit: "\(selectedCount) seat\(selectedCount == 1 ? "" : "s")")).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
             }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
@@ -435,10 +435,10 @@ private struct SeatSummaryBar: View {
 
     private func featureText(_ seat: Seat) -> String {
         var parts: [String] = []
-        if let pos = position { parts.append(pos.window ? "Window" : pos.aisle ? "Aisle" : "Middle") }
-        if seat.isExtraLegroom { parts.append("Extra legroom") }
-        if seat.isExitRow { parts.append("Exit row") }
-        if let floor = seat.floor { parts.append("Deck \(floor)") }
+        if let pos = position { parts.append(pos.window ? String(themeKit: "Window") : pos.aisle ? String(themeKit: "Aisle") : String(themeKit: "Middle")) }
+        if seat.isExtraLegroom { parts.append(String(themeKit: "Extra legroom")) }
+        if seat.isExitRow { parts.append(String(themeKit: "Exit row")) }
+        if let floor = seat.floor { parts.append(String(themeKit: "Deck \(floor)")) }
         if let price = seat.price { parts.append(price.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))) }
         return parts.joined(separator: " · ")
     }
@@ -449,7 +449,7 @@ private struct ExitBand: View {
     var body: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             door; line
-            Text("EXIT").textStyle(.overline500).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
+            Text(String(themeKit: "EXIT")).textStyle(.overline500).foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
             line; door
         }
         .padding(.vertical, 2)

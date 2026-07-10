@@ -40,7 +40,7 @@ public struct LoyaltyCard: View {
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var memberName: String?
-    private var unit: String = "pts"
+    private var unit: String = String(themeKit: "pts")
     private var progress: Double?
     private var nextTier: String?
     private var systemImage: String = "seal.fill"
@@ -71,7 +71,7 @@ public struct LoyaltyCard: View {
             withAnimation(Animation.spring(.smooth).ifMotionAllowed(reduceMotion)) { flipped.toggle() }
         }
         .accessibilityAddTraits(flippable && membership != nil ? .isButton : [])
-        .accessibilityHint(flippable && membership != nil ? "Double-tap to \(flipped ? "show card" : "show membership code")" : "")
+        .accessibilityHint(flippable && membership != nil ? String(themeKit: "Double-tap to \(flipped ? "show card" : "show membership code")") : "")
     }
 
     private var frontFace: some View {
@@ -116,7 +116,7 @@ public struct LoyaltyCard: View {
 
     private var backContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            Text("MEMBERSHIP").textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
+            Text(String(themeKit: "MEMBERSHIP")).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
             codeView
             if let memberName {
                 Text(memberName).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary))
@@ -155,7 +155,7 @@ public struct LoyaltyCard: View {
             }
             .frame(height: 6)
             if let nextTier {
-                Text("\(Int((1 - min(1, max(0, value))) * 100))% to \(nextTier)")
+                Text(String(themeKit: "\(Int((1 - min(1, max(0, value))) * 100))% to \(nextTier)"))
                     .textStyle(.bodySm400).foregroundStyle(onCard.opacity(0.85))
             }
         }
