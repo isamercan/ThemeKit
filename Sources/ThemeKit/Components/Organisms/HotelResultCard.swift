@@ -138,7 +138,7 @@ public struct HotelResultCard: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(isFav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textSecondaryInverse))
                 .frame(width: 40, height: 40)
-                .background(.black.opacity(0.28), in: Circle())
+                .background(MediaScrim.solid, in: Circle())
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
         }
@@ -298,7 +298,7 @@ public extension HotelResultCard {
                 Text("Members only").textStyle(.labelSm700)
                     .foregroundStyle(theme.text(.textSecondaryInverse))
                     .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(.black.opacity(0.35), in: Capsule())
+                    .background(MediaScrim.solid, in: Capsule())
                     .padding(Theme.SpacingKey.sm.value)
             }
             .location("Göcek, Muğla")

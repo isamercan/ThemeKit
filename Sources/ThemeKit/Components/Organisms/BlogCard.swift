@@ -176,7 +176,7 @@ public extension BlogCard {
         Text("Travel").textStyle(.labelSm700)
             .foregroundStyle(theme.text(.textSecondaryInverse))
             .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(.black.opacity(0.35), in: Capsule())
+            .background(MediaScrim.solid, in: Capsule())
             .padding(Theme.SpacingKey.sm.value)
     }
     .excerpt("To some a miracle of nature, to others a fairyland…")

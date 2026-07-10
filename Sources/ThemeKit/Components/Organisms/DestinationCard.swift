@@ -126,7 +126,7 @@ public struct DestinationCard: View {
                 .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textSecondaryInverse))
                 .symbolEffect(.bounce, value: fav.wrappedValue)
                 .frame(width: 32, height: 32)
-                .background(.black.opacity(0.28), in: Circle())
+                .background(MediaScrim.solid, in: Circle())
                 .padding(Theme.SpacingKey.sm.value)
         }
         .buttonStyle(.plain)
@@ -142,9 +142,7 @@ public struct DestinationCard: View {
         }
         .padding(Theme.SpacingKey.md.value)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(colors: [.black.opacity(0), .black.opacity(0.65)], startPoint: .top, endPoint: .bottom)
-        )
+        .background(MediaScrim.gradient)
     }
 
     // MARK: Info
@@ -248,7 +246,7 @@ public extension DestinationCard {
                 Text("Members only").textStyle(.labelSm700)
                     .foregroundStyle(theme.text(.textSecondaryInverse))
                     .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(.black.opacity(0.35), in: Capsule())
+                    .background(MediaScrim.solid, in: Capsule())
             }
             .subtitle("Türkiye").rating(4.9).price(9_800)
             .tags(["Adventure"])

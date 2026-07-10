@@ -32,6 +32,30 @@ public extension View {
     }
 }
 
+// MARK: - Media scrim (always-dark, over imagery)
+
+/// Shared constants for the always-dark scrims layered **over photos and video**
+/// so overlaid glyphs, chips and labels stay legible on any imagery.
+///
+/// Deliberately raw `Color.black` and **not** a theme token: a media scrim sits
+/// on top of a photograph, so it must stay dark in dark mode and must not
+/// re-tint when the brand theme changes — theming it would wash out or tint the
+/// photo treatment. This is the sanctioned exemption from the "no raw `Color`"
+/// rule. For modal/backdrop scrims (which *do* theme), use the `Backdrop` atom /
+/// `bgBackdrop` token instead.
+public enum MediaScrim {
+    /// Solid scrim behind small controls and chips over imagery — favourite
+    /// hearts, mute buttons, capsule tags, "+N" collage counts.
+    public static let solid = Color.black.opacity(0.35)
+
+    /// Bottom-anchored legibility gradient for text over imagery: clear at the
+    /// top fading to dark at the bottom.
+    public static let gradient = LinearGradient(
+        colors: [.black.opacity(0), .black.opacity(0.65)],
+        startPoint: .top, endPoint: .bottom
+    )
+}
+
 struct EdgeBorderShape: Shape {
     let edges: [Edge]
     let width: CGFloat
