@@ -82,7 +82,7 @@
 - `ColumnsGrid(content:)` · modifiers: `.columns()`, `.adaptive()`, `.gutter()`
 - `ControlRow(title, isOn:)` — Molecule. · modifiers: `.description()`, `.control()`, `.indicator()`, `.required()`, `.hasError()`, `.errorText()`, `.a11yID()`
 - `CurrencyPicker(selection:, currencies:)` — A token-bound currency picker. · modifiers: `.showsName()`, `.searchable()`, `.recents()`
-- `DateField(label, date:)` — Molecule. · modifiers: `.placeholder()`, `.range()`, `.style()`, `.locale()`, `.components()`, `.infoMessages()`, `.clearable()`, `.icon()`, `.a11yID()`
+- `DateField(label, date:)` — Molecule. · modifiers: `.placeholder()`, `.range()`, `.style()`, `.locale()`, `.components()`, `.infoMessages()`, `.clearable()`, `.externalFocus()`, `.icon()`, `.a11yID()`
 - `DatePriceCard(item, isSelected:, action:)` — A single selectable date+price card. · modifiers: `.currency()`, `.cheapest()`, `.pill()`, `.columns()`, `.strip()`, `.highlightCheapest()`, `.onPage()`
 - `DatePriceStrip`
 - `Dropdown(items:, isPresented:, trigger:)` — Molecule. · modifiers: `.edge()`, `.accent()`, `.menuWidth()`, `.indicator()`, `.shouldCloseOnSelect()`
@@ -101,7 +101,7 @@
 - `MapPriceMarker(text)` — Chroma: while the environment carries the default ``ChipStyle`` the pill draws its own accent fill + border (pixel-identical to the pre-ChipStyle look — the built-ins don't know the marker's accent tokens). · modifiers: `.selected()`, `.accent()`, `.icon()`, `.pointer()`
 - `Masonry(content:)` · modifiers: `.columns()`, `.spacing()`
 - `Mentions(text:, options:)` · modifiers: `.prefix()`, `.placeholder()`
-- `MultiLineTextInput(label, text:)` — Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state. · modifiers: `.placeholder()`, `.characterLimit()`, `.countStyle()`, `.size()`, `.required()`, `.errorText()`, `.infoMessages()`, `.minHeight()`, `.a11yID()`
+- `MultiLineTextInput(label, text:)` — Improved, token-bound rewrite of the reference MultiLineInput — a bordered TextEditor with header label, placeholder, character counter and error state. · modifiers: `.placeholder()`, `.characterLimit()`, `.countStyle()`, `.size()`, `.required()`, `.errorText()`, `.infoMessages()`, `.minHeight()`, `.externalFocus()`, `.a11yID()`
 - `MultiSelect(//:, options:, selection:, isExpanded:, optionTitle:)` — Multiple / tags select with optional search (Ant Select mode="multiple"). · modifiers: `.placeholder()`, `.infoMessages()`, `.optionEnabled()`, `.optionDescription()`, `.searchable()`, `.clearable()`, `.maxTags()`, `.loading()`, `.a11yID()`
 - `OTPInput(code:, onComplete:)` — Improved, token-bound rewrite of the reference OTPInputView. · modifiers: `.digitCount()`, `.characters()`, `.groups()`, `.placeholder()`, `.secure()`, `.errorText()`, `.infoMessages()`, `.resend()`, `.a11yID()`
 - `Pagination(current:, total:)` — Molecule. · modifiers: `.simple()`, `.window()`, `.jumper()`, `.showTotal()`
@@ -119,13 +119,13 @@
 - `RecentSearchRow(from:, to:, action:)` · modifiers: `.roundTrip()`, `.dates()`, `.passengers()`, `.icon()`, `.onRemove()`, `.onSearch()`, `.searchAccent()`, `.accent()`, `.bordered()`, `.pill()`, `.surface()`
 - `ScrollShadow(content:)` — Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`. · modifiers: `.axis()`, `.visibility()`, `.length()`, `.fadeColor()`
 - `ScrubGallery(count:, content:)` — Molecule. · modifiers: `.indicator()`, `.accent()`, `.radius()`
-- `SearchBar(text:)` — A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks. · modifiers: `.placeholder()`, `.suggestions()`, `.recent()`, `.onSearch()`, `.onSelect()`, `.onCommit()`, `.backButton()`, `.trailingIcon()`, `.leadingIcon()`, `.leadingIconColor()`, `.helperText()`, `.errorText()`, `.infoMessages()`, `.debounce()`, `.maxResults()`, `.a11yID()`
+- `SearchBar(text:)` — A search field with optional typeahead suggestions, a recent-searches list and submit/clear callbacks. · modifiers: `.placeholder()`, `.suggestions()`, `.recent()`, `.onSearch()`, `.onSelect()`, `.onCommit()`, `.backButton()`, `.trailingIcon()`, `.leadingIcon()`, `.leadingIconColor()`, `.helperText()`, `.errorText()`, `.infoMessages()`, `.externalFocus()`, `.debounce()`, `.maxResults()`, `.a11yID()`
 - `SearchField(placeholder, action:)` · modifiers: `.value()`, `.dateRange()`, `.passengers()`, `.icon()`, `.iconColor()`, `.trailing()`, `.onClear()`, `.background()`, `.borderColor()`, `.cornerRadius()`, `.focused()`, `.showsShadow()`, `.chipColors()`, `.titleStyle()`, `.subtitleStyle()`, `.placeholderColor()`
 - `SearchSummary(time:, adults:)` · modifiers: `.title()`, `.children()`, `.rooms()`, `.boxed()`, `.prompt()`, `.onTap()`, `.icons()`
 - `SeatLegend(tiers:, palette:, perRow:)` · modifiers: `.showsPremium()`
 - `SegmentedControl(items, selection:)` · modifiers: `.fullWidth()`, `.size()`, `.shape()`, `.vertical()`, `.selectionStyle()`, `.dividers()`, `.tinted()`, `.a11yID()`
 - `Select(title, options)` — A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `.searchable()` is on. · modifiers: `.placeholder()`, `.clearable()`, `.searchable()`, `.size()`, `.infoMessages()`, `.loading()`, `.optionEnabled()`, `.optionDescription()`, `.a11yID()`
-- `SelectBox(//:, options:, selection:, optionTitle:)` — Molecule. · modifiers: `.placeholder()`, `.hint()`, `.errorText()`, `.a11yID()`
+- `SelectBox(//:, options:, selection:, optionTitle:)` — Molecule. · modifiers: `.placeholder()`, `.hint()`, `.errorText()`, `.infoMessages()`, `.externalFocus()`, `.a11yID()`
 - `Slider(//:, in:, label:)` — Molecule. · modifiers: `.a11yID()`, `.step()`, `.marks()`, `.axis()`, `.showsValueTooltip()`, `.valueLabel()`, `.accent()`, `.onChangeEnd()`
 - `SmartSuggestion(message)` · modifiers: `.label()`, `.icon()`, `.accent()`, `.tint()`, `.onTap()`, `.action()`, `.bordered()`
 - `SortTab(option, isSelected:, action:)` — One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline. · modifiers: `.accent()`, `.onMore()`
