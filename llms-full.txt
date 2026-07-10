@@ -1,0 +1,349 @@
+# ThemeKit — Full Documentation
+
+> A token-driven, brand-neutral SwiftUI design system. **205 components** (49 atoms ·
+> 88 molecules · 68 organisms), **34 theme presets**, **217 design tokens**, runtime theming,
+> and an AI-native toolchain (MCP server, agent skill, Figma round-trip). Swift 6.2 ·
+> iOS 17+ / macOS 14+ · zero core dependencies.
+
+Companion files: **llms.txt** (index) · **llms-components.txt** (per-component API) ·
+**llms-patterns.txt** (recipes).
+
+---
+
+## Overview
+
+ThemeKit is a **theme-driven, brand-neutral** SwiftUI component library. Every color,
+typography, spacing, radius and shadow is a **design token** resolved at runtime from the
+active `Theme`, so the whole UI re-skins from a single accent color — without touching
+component code. **Components never hardcode a color.**
+
+**Core principles**
+
+1. **Token-driven** — UI code references tokens, never literals. `theme.text(.textPrimary)`,
+   `Theme.SpacingKey.md.value`, `Theme.RadiusRole.box.value`.
+2. **Brand-neutral** — ships no brand; one accent hex generates a full Ant-style palette
+   on-device via `ThemeGenerator`, so any product adopts it.
+3. **Chainable & composable** — required content/bindings/actions go in `init`; every variant,
+   size, flag, color and callback is a copy-on-write chainable modifier.
+4. **Native-first** — sizing is `.controlSize(_:)`, disabling is `.disabled(_:)`; the API reads
+   like SwiftUI, not a bespoke DSL.
+5. **AI-native** — the same machine-readable data that documents the components drives an MCP
+   server, a Claude Code agent skill, and a Figma variables round-trip.
+
+## Installation
+
+Swift Package Manager. Requirements: **Swift 6.2**, **iOS 17+ / macOS 14+**.
+
+```swift
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.0.0"),
+]
+```
+
+Products (add the target dependency you need):
+
+| Product | What you get | Third-party deps |
+| --- | --- | --- |
+| `ThemeKit` | Full catalog — every component (re-exports the core) | none (core) |
+| `ThemeKitCore` | Token engine only: tokens + `@Environment(\.theme)` + presets + generator | none |
+| `ThemeKitLottie` | Optional Lottie (After Effects / JSON) animations | lottie-ios (trait) |
+| `ThemeKitCalendar` | Optional token-bound date-range calendar (iOS-only) | Almanac (trait) |
+
+**Traits.** The default trait set is **empty**, so a plain package reference resolves the core
+with **zero** dependencies. Opt into an add-on's dependency at resolution time:
+
+```swift
+.package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.0.0", traits: ["Lottie"])
+.package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.0.0", traits: ["Calendar"])
+```
+
+## Quick start
+
+```swift
+import ThemeKit
+
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(Theme.shared)   // inject the theme once at the root
+        }
+    }
+}
+
+struct ContentView: View {
+    @Environment(\.theme) private var theme
+    @State private var email = ""
+
+    var body: some View {
+        VStack(spacing: Theme.SpacingKey.md.value) {
+            Text("Sign in")
+                .textStyle(.headingSm)
+                .foregroundStyle(theme.text(.textPrimary))
+
+            TextInput("Email", text: $email)
+                .icon(leading: "envelope")
+                .a11yID("login.email")
+
+            PrimaryButton("Continue") { /* … */ }
+                .fullWidth()
+        }
+        .padding(Theme.SpacingKey.lg.value)
+        .background(theme.background(.bgWhite))
+    }
+}
+```
+
+---
+
+## Architecture
+
+### The `Theme` object
+
+`Theme` is an observable object holding the resolved token set. There is a shared singleton
+`Theme.shared`, and it is published into the SwiftUI environment under `\.theme` (default
+`Theme.shared`). Components read tokens from the **environment** theme, so a per-subtree theme
+override (`.theme(_:)`) automatically re-skins everything below it.
+
+```swift
+@Environment(\.theme) private var theme        // read tokens in any View
+theme.text(.textPrimary)                        // Color
+theme.background(.bgWhite)                       // Color
+theme.border(.borderPrimary)                     // Color
+```
+
+### Token system (217 tokens across 11 groups)
+
+| Group | Count | Accessor | Example keys |
+| --- | --- | --- | --- |
+| Foreground | 10 | `theme.foreground(_:)` | `.fgHero .fgSecondary .fgTurquoise` |
+| Background | 24 | `theme.background(_:)` | `.bgWhite .bgHero .bgElevatorPrimary .bgSecondary` |
+| Border | 12 | `theme.border(_:)` | `.borderPrimary .borderHero .borderTurquoise` |
+| Text | 7 | `theme.text(_:)` | `.textPrimary .textSecondary .textHero .textDisabled` |
+| Palette | 100 | — (backing scale) | primary/secondary/accent/neutral 50→900 ladders |
+| Semantic colors | 12 | `SemanticColor` | `.primary .success .warning .error .accent …` |
+| Radius | 8 | `Theme.RadiusKey` | `.none .xs .sm .md .base .lg .xl .xl4` |
+| Radius roles | 3 | `Theme.RadiusRole` | `.box .field .selector` |
+| Spacing | 8 | `Theme.SpacingKey` | `.none .xs .sm .md .base .lg .xl .xl4` |
+| Typography | 34 | `TextStyle` (`.textStyle(_:)`) | Display / Heading / Label / Body / Overline / Link |
+| Shadow | 3 | `ShadowStyle` | `.elevated .tabBar .soft` |
+
+**Colors — the four color-key enums**
+
+- `Theme.TextColorKey`: `textPrimary, textSecondary, textTertiary, textDisabled, textHero,
+  textPurple, textSecondaryInverse`
+- `Theme.BackgroundColorKey`: `bgWhite` (default component surface / base-100), `bgHero`,
+  `bgElevatorPrimary`, `bgElevatorTertiary`, `bgSecondary`, `bgSecondaryLight`, `bgTertiary`,
+  `bgTurquoise`, `bgTurquoiseLight`, `bgOrange`, plus badge & system tints (24 total).
+- `Theme.BorderColorKey`: `borderHero, borderPrimary, borderOrange, borderTurquoise` + system
+  success/error/warning/info (12 total).
+- `Theme.ForegroundColorKey`: `fgHero, fgSecondary, fgTurquoise` + badge/system fg (10 total).
+
+**Semantic colors** (`SemanticColor`) — the recolorable, theme-independent palette:
+`primary, secondary, accent, neutral, info, success, warning, error, turquoise, orange, purple,
+pink`. Each exposes a **50→900 shade ladder** (`.shade(.s50)….shade(.s900)`) and variant helpers.
+On configurable components, pair a `SemanticColor` with a `FillVariant` (`.solid .soft .outline
+.ghost`) so brand/accent recolor for free:
+
+```swift
+Badge("Sale").badgeStyle(.error).variant(.solid)
+ThemeButton("Save") { save() }.color(.accent).variant(.soft)
+```
+
+**Radius** — two ways to name a corner:
+- **By role** (preferred — re-rounds a whole category from one token):
+  `Theme.RadiusRole.box.value` (cards/modals/sheets/alerts), `.field.value`
+  (buttons/inputs/selects/tabs), `.selector.value` (checkboxes/toggles/badges).
+- **By size ramp**: `Theme.RadiusKey.none|xs|sm|md|base|lg|xl|xl4` (token ids `rd-xs`…`rd-4xl`).
+  A theme that omits a role token falls back to the matching size key.
+
+**Spacing** — `Theme.SpacingKey.none|xs|sm|md|base|lg|xl|xl4` (token ids `sp-xs`…`sp-4xl`).
+Resolve with `.value`: `padding(Theme.SpacingKey.lg.value)`.
+
+**Typography** — `TextStyle` is a 34-style Montserrat ramp (falls back to the system font when
+Montserrat isn't bundled). Apply with the `.textStyle(_:)` view modifier:
+- Display: `displayLg displayMd displayBase displaySm`
+- Heading: `heading2xl headingXl headingLg headingMd headingBase headingSm headingXs heading2xs heading3xs`
+- Label: `labelLg600 labelLg700 labelMd600 labelMd700 labelBase600 labelBase700 labelSm600 labelSm700`
+- Body: `bodyLg500 bodyLg400 bodyMd500 bodyMd400 bodyBase500 bodyBase400 bodySm500 bodySm400`
+- Overline: `overline400 overline500` · Link: `linkMd linkBase linkSm`
+
+**Shadows** — `ShadowStyle.elevated | .tabBar | .soft`, JSON-driven per theme (so a theme switch
+also changes elevation feel), applied through the shared `.elevation(_:)` view modifier.
+
+### Runtime theming
+
+`ThemeConfig` is the recipe; `ThemeGenerator` expands one accent into the full palette on-device.
+
+```swift
+// 1) Recolor the whole app from ONE accent (generates the full palette):
+Theme.shared.applyGenerated(primaryHex: "7C3AED")
+
+// 2) Full config — accent + base surface + brand secondary/accent, light or dark:
+Theme.shared.apply(ThemeConfig(primaryHex: "ff79c6", baseHex: "282a36",
+                               secondaryHex: "bd93f9", accentHex: "ffb86c", dark: true))
+
+// 3) A bundled preset:
+ThemePreset.named("dracula")?.apply()            // applies to Theme.shared
+Theme.shared.apply(ThemePreset.named("nord")!.config)
+
+// 4) Scope a theme to ONE subtree only (leaves the rest of the app untouched):
+let ocean = Theme(); ocean.applyGenerated(primaryHex: "0FB4AB")
+BookingCard().theme(ocean)
+```
+
+### Flexibility architecture — the 6 style protocols
+
+Six component families are **style-driven**, modeled on SwiftUI's `ButtonStyle`: a `protocol`
+with a `Configuration` (the composed content + chrome tokens) and a `makeBody(configuration:)`
+requirement. Implement one and set it with the family's `*Style(_:)` modifier to reskin the
+container **without forking the component**.
+
+| Protocol | Apply with | Covers | Built-in styles |
+| --- | --- | --- | --- |
+| `CardStyle` | `.cardStyle(_:)` | cards (Card, RadioCard, CheckboxCard, MenuCard…) | `.default`, `.outlined` |
+| `FieldStyle` | `.fieldStyle(_:)` | text fields (TextInput, DateField, ColorField, OTPInput…) | `.default`, `.muted`, `.underlined` |
+| `ChipStyle` | tonal/solid chip styles | Chip | `.tonal`, `.solid` |
+| `BarStyle` | `.barStyle(_:)` | bottom/booking bars | `.default`, `.floating` |
+| `MeterStyle` | `.meterStyle(_:)` | progress/meters (ProgressBar, RadialProgress, GaugeView) | `.linear`, `.striped`, `.radial` |
+| `ToastStyle` | `.toastStyle(_:)` | toasts (AlertToast) | `.default`, `.capsule` |
+
+```swift
+Card(title: "Booking") { body }.cardStyle(.outlined)
+TextInput("Email", text: $email).fieldStyle(.underlined)
+```
+
+See **llms-patterns.txt** for how to implement a custom `CardStyle`.
+
+---
+
+## Code generation rules
+
+Follow these when generating ThemeKit code — they are the difference between correct,
+token-bound output and code that won't compile or won't re-skin.
+
+1. **Never hardcode a color.** No `.foregroundStyle(.blue)` / `Color(hex:)` / `Color.red` in app
+   UI. Always a token: `theme.text(.textPrimary)`, `theme.background(.bgWhite)`, or a
+   `SemanticColor`.
+2. **Read the theme from the environment:** `@Environment(\.theme) private var theme`.
+3. **Inject once at the root:** `.environment(Theme.shared)`.
+4. **Required content/bindings/actions go in `init`.** Everything else is a modifier —
+   variants, sizes, flags, colors, callbacks.
+5. **Chain modifiers; don't add init args.** `Badge("New").badgeStyle(.info).badgeShape(.rounded)`.
+6. **Native modifiers:** `.controlSize(_:)` for size, `.disabled(_:)` for disabled,
+   `.a11yID(_:)` for the accessibility id — never `size:` / `isEnabled:` init args.
+7. **No literal radius/spacing:** `Theme.RadiusRole.box.value`, `Theme.SpacingKey.md.value`.
+8. **Recolor** with `Theme.shared.applyGenerated(primaryHex:)`, `Theme.shared.apply(ThemeConfig(…))`,
+   or `ThemePreset.named("…")?.apply()`; scope with `.theme(customTheme)`.
+9. **Reuse components** — don't re-implement a Card / Sheet / Toast / field.
+10. **Look up the exact API** in llms-components.txt (or the MCP `get_component_api`) before
+    inventing modifier names.
+
+---
+
+## Components reference
+
+Full per-component API (init + modifiers + usage) is in **llms-components.txt** (119 components
+documented in depth) and via the MCP `get_component_api` / `get_usage_snippet` tools. The full
+catalog is **205** components across three tiers:
+
+- **Atoms (49)** — smallest primitives: `Avatar`, `Badge`, `Chip`, `Icon`, `Rating`, `ProgressBar`,
+  `Spinner`, `Skeleton`, `Tag`, `Title`, `RollingNumber`, `QRCode`, `Barcode`, …
+- **Molecules (88)** — inputs/buttons/selectors/small layouts: `TextInput`, `Select`, `Checkbox`,
+  `RadioGroup`, `SegmentedControl`, `Slider`, `RangeSlider`, `OTPInput`, `SearchBar`, `Pagination`,
+  `PrimaryButton`/`SecondaryButton`/`OutlineButton`/`GhostButton`/`ThemeButton`, `Steps`, `Stat`, …
+- **Organisms (68)** — full sections & surfaces: `Card`, `DataTable`, `Accordion`, `Carousel`,
+  `NavigationBar`, `Sidebar`, `Timeline`, `AlertToast`, `InfoBanner`, `Hero`, `ListView`,
+  `EmptyState`, `ResultView`, `Upload`, plus travel/booking surfaces (`FlightCard`, `SeatMap`,
+  `BoardingPass`, `HotelResultCard`, `PriceBreakdown`, …).
+
+The configurable components take a `SemanticColor` + `FillVariant`, so brand/accent recolor for
+free. A few representative calls:
+
+```swift
+Badge("Sale").badgeStyle(.error).variant(.solid)
+Chip("Pool", isSelected: $on).icon("drop.fill")
+Select("Country", options: countries, selection: $country) { $0.name }
+Rating(value: 4.5).allowHalf().onRate { rating = $0 }
+ProgressBar(value: 0.6).showsPercentage().gradient()
+Card(title: "Booking") { /* content */ }.cardStyle(.outlined)
+```
+
+---
+
+## Theme presets (34)
+
+Color sets inspired by daisyUI. Each carries four signature swatches (primary / secondary /
+accent / base) and a `ThemeConfig` that reproduces it through `ThemeGenerator`.
+
+`default`, `neutral`, `light`, `dark`, `cupcake`, `bumblebee`, `emerald`, `corporate`,
+`synthwave`, `retro`, `cyberpunk`, `valentine`, `halloween`, `garden`, `forest`, `aqua`, `lofi`,
+`pastel`, `fantasy`, `wireframe`, `black`, `luxury`, `dracula`, `cmyk`, `autumn`, `business`,
+`acid`, `lemonade`, `night`, `coffee`, `winter`, `dim`, `nord`, `sunset`
+
+```swift
+ThemePreset.named("dracula")?.apply()                 // recolor Theme.shared live
+Theme.shared.apply(ThemePreset.named("nord")!.config)
+
+@State private var active: String? = "cupcake"
+ThemePicker(selection: $active)                        // tappable grid of all presets
+```
+
+---
+
+## Patterns & recipes
+
+Full recipes with code are in **llms-patterns.txt**. Summary:
+
+- **Custom theme** — build a `ThemeConfig` / `applyGenerated(primaryHex:)`; persist and re-apply.
+- **Per-subtree theming** — `.theme(customTheme)` re-skins one branch only.
+- **Token-bound custom component** — read `@Environment(\.theme)`, resolve tokens, never literals.
+- **Custom style** — implement a `CardStyle`/`FieldStyle`/… and set it with `.cardStyle(_:)` etc.
+- **Forms & validation** — field components + `HelperText`/`InputLabel`; error/helper modifiers.
+- **Card layouts** — `Card` + `CardStack`; elevation via `.elevation(_:)`.
+- **Navigation** — `NavigationBar`, `Sidebar`, `SegmentedTabBar`.
+- **Data display** — `DataTable`, `KeyValueTable`, `ListRow`/`ListView`, `Timeline`, `Stat`.
+- **Accessibility** — `.a11yID(_:)` / `.a11yLabel(_:)`; 44 pt targets & RTL mirroring are built in.
+- **Localization** — String Catalog (English default), every string overridable via a parameter.
+
+---
+
+## Integration (AI-native)
+
+### MCP server (`@isamercan/themekit-mcp`) — 22 tools
+
+Discovery & API: `usage_guide`, `list_components`, `search_components`, `get_component_api`,
+`get_variants_states`, `get_usage_snippet`, `get_design_tokens`.
+Theming: `list_themes`, `theme_colors`, `theme_snippet`, `generate_theme`,
+`design_md_to_themeconfig`.
+Authoring & verification: `scaffold_screen`, `compose_screen`, `lint_snippet`, `validate_code`,
+`a11y_audit`, `migrate_snippet`, `get_migration_guide`.
+Figma round-trip: `design_via_figma_mcp`, `export_figma_variables`, `import_figma_variables`.
+
+### Claude Code agent skill
+
+`skills/themekit/SKILL.md` gives an agent the golden rules, setup, token cheatsheet, patterns and
+anti-patterns; `references/components.md` and `references/themes.md` back it. It triggers on
+"ThemeKit", design tokens, theme switching, or "build a screen with ThemeKit".
+
+### Figma round-trip
+
+- `export_figma_variables` — emit ThemeKit tokens as Figma Variables.
+- `import_figma_variables` — pull a Figma variable collection back into a `ThemeConfig`.
+- `design_via_figma_mcp` — ThemeKit's MCP acts as a **client** of Figma's own MCP to design from
+  an existing file/component.
+
+### Design Mode
+
+Re-skin from a plain-language `design.md` brief: `design_md_to_themeconfig` parses a design spec
+into a `ThemeConfig` you apply at runtime — recolor the whole system without editing code.
+
+---
+
+## API reference
+
+DocC: **https://isamercan.github.io/ThemeKit/api/documentation/themekit**
+Docs site: **https://isamercan.github.io/ThemeKit/** · GitHub:
+**https://github.com/isamercan/ThemeKit** · Wiki: **https://github.com/isamercan/ThemeKit/wiki**

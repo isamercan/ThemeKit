@@ -35,7 +35,7 @@ screenshots: ## Render component screenshots + rebuild the README gallery
 record-gif: ## Record a Demo-app interaction → GIF (NAME=SelectBox [SECS=7]); tap the component during recording
 	@bash scripts/record-gif.sh "$(NAME)" "$(SECS)"
 
-skill: ## Regenerate the skill + llms.txt from source (skills/, llms.txt)
+skill: ## Regenerate the skill refs + llms.txt/llms-components.txt from source, and publish the llms.* set to website/public/
 	@python3 tools/gen_skill.py
 
 mcp-data: ## Rebuild the MCP data from the DocC symbol graph + tokens (mcp/data/themekit.json)
