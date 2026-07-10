@@ -58,9 +58,10 @@ export default defineConfig({
           ],
         },
         {
-          label: 'MCP Server',
+          label: 'AI Integration',
           items: [
-            { label: 'Overview', link: '/ai/mcp/', badge: { text: 'AI', variant: 'tip' } },
+            { label: 'MCP Server', link: '/ai/mcp/', badge: { text: 'AI', variant: 'tip' } },
+            { label: 'llms.txt', link: '/ai/llms/', badge: { text: 'New', variant: 'success' } },
             { label: 'Design Tokens ⇄ Figma Variables', link: '/ai/figma-variables/', badge: { text: 'New', variant: 'success' } },
           ],
         },
