@@ -33,6 +33,10 @@ public struct RollingNumber: View {
                 DigitColumn(digit: digit, size: size, weight: weight, color: color)
             }
         }
+        // Numbers always read left-to-right — pin only the digit row so an
+        // RTL environment doesn't reverse the digit order (the surrounding
+        // layout still mirrors normally).
+        .environment(\.layoutDirection, .leftToRight)
         // VoiceOver reads the value, not the 0-9 digit skeleton behind the roll.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(value.formatted(.number.locale(locale)))
@@ -112,4 +116,18 @@ private extension Text {
         }
     }
     return Demo()
+}
+
+#Preview("RTL — digits stay in LTR order") {
+    struct Demo: View {
+        @State var n = 1234
+        var body: some View {
+            VStack(spacing: 20) {
+                RollingNumber(n).size(40)
+                Button("Roll") { n = Int.random(in: 100...99999) }
+            }
+            .padding()
+        }
+    }
+    return Demo().environment(\.layoutDirection, .rightToLeft)
 }

@@ -59,8 +59,11 @@ public struct Transfer: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             listBox(titles.0, items: source, query: $sourceQuery)
             VStack(spacing: Theme.SpacingKey.sm.value) {
-                arrow("chevron.right", label: String(themeKit: "Move to \(titles.1)"), enabled: checkedInSource, action: moveToTarget)
-                arrow("chevron.left", label: String(themeKit: "Move to \(titles.0)"), enabled: checkedInTarget, action: moveToSource)
+                // `.forward`/`.backward` auto-mirror, so the arrows keep
+                // pointing at the target/source box when the HStack flips
+                // under RTL.
+                arrow("chevron.forward", label: String(themeKit: "Move to \(titles.1)"), enabled: checkedInSource, action: moveToTarget)
+                arrow("chevron.backward", label: String(themeKit: "Move to \(titles.0)"), enabled: checkedInTarget, action: moveToSource)
             }
             listBox(titles.1, items: targeted, query: $targetQuery)
         }
@@ -192,6 +195,20 @@ public extension Transfer {
         }
     }
     return Demo().environment(Theme.shared)
+}
+
+#Preview("RTL — boxes and arrows mirror") {
+    struct Demo: View {
+        @State private var target: Set<String> = ["wifi"]
+        let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
+                     TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym")]
+        var body: some View {
+            Transfer(items, target: $target).titles("Available", "Included").padding()
+        }
+    }
+    return Demo()
+        .environment(\.layoutDirection, .rightToLeft)
+        .environment(Theme.shared)
 }
 
 #Preview("Searchable + disabled items") {

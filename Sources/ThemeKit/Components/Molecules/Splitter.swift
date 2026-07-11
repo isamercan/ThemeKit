@@ -15,6 +15,7 @@ import SwiftUI
 
 public struct Splitter<First: View, Second: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
 
     private let first: First
     private let second: Second
@@ -82,11 +83,27 @@ public struct Splitter<First: View, Second: View>: View {
                 .onChanged { value in
                     if dragAnchor == nil { dragAnchor = fraction }
                     let base = dragAnchor ?? fraction
-                    let delta = axis == .horizontal ? value.translation.width : value.translation.height
+                    // Gesture translations don't auto-mirror: in RTL the first
+                    // pane sits on the RIGHT, so a leftward drag grows it —
+                    // flip the horizontal delta's sign.
+                    let raw = axis == .horizontal ? value.translation.width : value.translation.height
+                    let delta = (axis == .horizontal && layoutDirection == .rightToLeft) ? -raw : raw
                     fraction = min(maxFraction, max(minFraction, base + delta / usable))
                 }
                 .onEnded { _ in dragAnchor = nil }
         )
+        // The split is conveyed only by drag; make it VoiceOver-adjustable.
+        .accessibilityElement()
+        .accessibilityLabel(Text(String(themeKit: "Resize")))
+        .accessibilityValue(Text(String(themeKit: "\(Int((fraction * 100).rounded())) percent")))
+        .accessibilityAdjustableAction { direction in
+            let increment: CGFloat = 0.05
+            switch direction {
+            case .increment: fraction = min(maxFraction, fraction + increment)
+            case .decrement: fraction = max(minFraction, fraction - increment)
+            @unknown default: break
+            }
+        }
         #if os(iOS)
         .hoverEffect(.highlight)
         #endif
@@ -137,4 +154,19 @@ public extension Splitter {
     }
     .padding()
     .environment(Theme.shared)
+}
+
+#Preview("RTL") {
+    @Previewable @Environment(\.theme) var theme
+    // Sidebar (first pane) sits on the RIGHT; dragging the divider left grows it.
+    Splitter(.horizontal, initialFraction: 0.35) {
+        Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+    } second: {
+        Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+    }
+    .frame(height: 200)
+    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
+    .padding()
+    .environment(Theme.shared)
+    .environment(\.layoutDirection, .rightToLeft)
 }

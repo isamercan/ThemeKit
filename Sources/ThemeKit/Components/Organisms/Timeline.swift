@@ -22,6 +22,7 @@ public enum TimelineMode: Sendable {
 /// alternating around the rail; `reverse` flips the order. (Ant Timeline parity.)
 public struct Timeline: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
 
     public struct Item: Identifiable {
         public let id = UUID()
@@ -68,12 +69,15 @@ public struct Timeline: View {
 
     private var horizontalBody: some View {
         let ordered = reverse ? Array(items.reversed()) : items
+        // `.offset(x:)` doesn't auto-mirror: in RTL the next item sits to the
+        // LEFT, so the rail's half-marker nudge toward it flips sign.
+        let dir: CGFloat = layoutDirection == .rightToLeft ? -1 : 1
         return HStack(alignment: .top, spacing: 0) {
             ForEach(Array(ordered.enumerated()), id: \.element.id) { index, item in
                 VStack(spacing: Theme.SpacingKey.xs.value) {
                     ZStack {
                         if index < ordered.count - 1 {
-                            Rectangle().fill(railColor(item)).frame(height: 2).offset(x: 14)
+                            Rectangle().fill(railColor(item)).frame(height: 2).offset(x: dir * 14)
                         }
                         marker(item, index: index)
                     }
@@ -284,4 +288,20 @@ public extension Timeline {
         }
         .padding()
     }
+}
+
+#Preview("RTL — horizontal rail") {
+    let items: [Timeline.Item] = [
+        .init(title: "Booked", time: "Mon", systemImage: "cart", state: .done),
+        .init(title: "Checked in", time: "Tue", state: .active),
+        .init(title: "Flight", time: "Wed", state: .todo),
+    ]
+    // Same data twice: the rail's half-marker nudge must point toward the NEXT
+    // item in both directions (right in LTR, left in RTL).
+    VStack(spacing: 40) {
+        Timeline(items).axis(.horizontal)
+        Timeline(items).axis(.horizontal)
+            .environment(\.layoutDirection, .rightToLeft)
+    }
+    .padding()
 }

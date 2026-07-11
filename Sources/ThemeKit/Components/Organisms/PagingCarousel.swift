@@ -22,6 +22,12 @@ public struct PagingCarousel<Item: Identifiable, Content: View>: View {
     @State private var index = 0
     @State private var drag: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.layoutDirection) private var layoutDirection
+
+    /// `.offset(x:)` and gesture translations don't auto-mirror: in RTL the
+    /// strip anchors at the RIGHT edge and pages advance leftward, so the
+    /// paging offset and the swipe threshold both flip sign.
+    private var dir: CGFloat { layoutDirection == .rightToLeft ? -1 : 1 }
 
     public init(_ items: [Item], @ViewBuilder content: @escaping (Item) -> Content) {   // R1
         self.items = items
@@ -40,15 +46,19 @@ public struct PagingCarousel<Item: Identifiable, Content: View>: View {
                             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
                     }
                 }
-                .offset(x: peek - CGFloat(index) * step + drag)
+                .offset(x: dir * (peek - CGFloat(index) * step) + drag)
                 .gesture(
                     DragGesture()
+                        // Live drag follows the finger 1:1 in both directions.
                         .onChanged { drag = $0.translation.width }
                         .onEnded { value in
                             let threshold = tileWidth * 0.25
+                            // Mirror the travel so "toward the next page" is
+                            // a leftward swipe in LTR and rightward in RTL.
+                            let travel = dir * value.translation.width
                             var newIndex = index
-                            if value.translation.width < -threshold { newIndex += 1 }
-                            else if value.translation.width > threshold { newIndex -= 1 }
+                            if travel < -threshold { newIndex += 1 }
+                            else if travel > threshold { newIndex -= 1 }
                             withAnimation(Motion.base.spring) {
                                 index = min(max(newIndex, 0), items.count - 1)
                                 drag = 0
@@ -67,6 +77,17 @@ public struct PagingCarousel<Item: Identifiable, Content: View>: View {
             // Honor Reduce Motion: never auto-advance; the user still swipes manually.
             guard autoplay != nil, items.count > 1, !reduceMotion else { return }
             withAnimation(Motion.base.spring) { index = (index + 1) % items.count }
+        }
+        // Paging is conveyed only by swipe; make it VoiceOver-adjustable
+        // (swipe up/down to page — direction-agnostic, so no RTL mirroring).
+        .accessibilityElement(children: .contain)
+        .accessibilityValue(Text(String(themeKit: "Page \(index + 1) of \(max(items.count, 1))")))
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: withAnimation(Motion.base.spring) { index = min(index + 1, items.count - 1) }
+            case .decrement: withAnimation(Motion.base.spring) { index = max(index - 1, 0) }
+            @unknown default: break
+            }
         }
     }
 }
@@ -106,4 +127,18 @@ public extension PagingCarousel {
     .peek(36)
     .autoplay(2)
     .padding(.vertical)
+}
+
+#Preview("RTL") {
+    struct Slide: Identifiable { let id = UUID(); let color: Color; let title: String }
+    let slides = [Slide(color: .blue, title: "One"), Slide(color: .teal, title: "Two"),
+                  Slide(color: .orange, title: "Three"), Slide(color: .purple, title: "Four")]
+    // Page 1 starts centered with page 2 peeking on the LEFT; swiping right
+    // (and autoplay) advances leftward through the pages.
+    return PagingCarousel(slides) { s in
+        s.color.opacity(0.3).overlay(Text(s.title).font(.title))
+    }
+    .peek(36)
+    .padding(.vertical)
+    .environment(\.layoutDirection, .rightToLeft)
 }

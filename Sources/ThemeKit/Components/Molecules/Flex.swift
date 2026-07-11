@@ -20,6 +20,10 @@ public enum FlexJustify: Sendable { case start, center, end, spaceBetween, space
 public enum FlexAlign: Sendable { case start, center, end, stretch, baseline }
 
 public struct Flex<Content: View>: View {
+    // `Layout.placeSubviews` computes absolute x that does NOT auto-mirror, so
+    // the container reads the direction and hands it to the layout.
+    @Environment(\.layoutDirection) private var layoutDirection
+
     private let content: Content
     // Appearance — mutated only through the modifiers below.
     private var axis: Axis = .horizontal
@@ -34,7 +38,7 @@ public struct Flex<Content: View>: View {
         if wraps, axis == .horizontal {
             FlowLayout(spacing: spacing, lineSpacing: spacing, alignment: .leading) { content }
         } else {
-            FlexLayout(axis: axis, gap: spacing, justify: justify, alignment: alignment) { content }
+            FlexLayout(axis: axis, gap: spacing, justify: justify, alignment: alignment, layoutDirection: layoutDirection) { content }
         }
     }
 }
@@ -74,6 +78,10 @@ struct FlexLayout: Layout {
     var gap: CGFloat
     var justify: FlexJustify
     var alignment: FlexAlign
+    /// Absolute placement doesn't auto-mirror — under `.rightToLeft` every
+    /// subview's x is mirrored within `bounds` (main axis when horizontal,
+    /// cross axis when vertical).
+    var layoutDirection: LayoutDirection = .leftToRight
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
@@ -124,7 +132,13 @@ struct FlexLayout: Layout {
                 ? (axis == .horizontal ? ProposedViewSize(width: mainOf(s), height: containerCross)
                                        : ProposedViewSize(width: containerCross, height: mainOf(s)))
                 : ProposedViewSize(width: s.width, height: s.height)
-            let origin = axis == .horizontal ? CGPoint(x: mainPos, y: crossOrigin) : CGPoint(x: crossOrigin, y: mainPos)
+            var origin = axis == .horizontal ? CGPoint(x: mainPos, y: crossOrigin) : CGPoint(x: crossOrigin, y: mainPos)
+            if layoutDirection == .rightToLeft {
+                let placedWidth = axis == .horizontal
+                    ? mainOf(s)
+                    : (alignment == .stretch ? containerCross : s.width)
+                origin.x = bounds.maxX - (origin.x - bounds.minX) - placedWidth
+            }
             sub.place(at: origin, proposal: place)
             mainPos += mainOf(s) + inter
         }
@@ -145,5 +159,17 @@ struct FlexLayout: Layout {
             .align(.center).gap(.large).frame(width: 300)
     }
     .padding()
+    .environment(Theme.shared)
+}
+
+#Preview("RTL — first child starts at the trailing edge") {
+    VStack(spacing: 20) {
+        Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.frame(width: 300)
+        Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.spaceBetween).frame(width: 300)
+        Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.end).frame(width: 300)
+        Flex { Text("Start"); Text("End") }.vertical().align(.start).frame(width: 300)
+    }
+    .padding()
+    .environment(\.layoutDirection, .rightToLeft)
     .environment(Theme.shared)
 }

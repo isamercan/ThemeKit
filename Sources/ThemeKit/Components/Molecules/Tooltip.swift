@@ -155,6 +155,10 @@ private struct TooltipBubble: View {
         let arrow = TooltipArrow(edge: edge)
             .fill(bubbleColor)
             .frame(width: edge.isVertical ? 12 : 6, height: edge.isVertical ? 6 : 12)
+            // Path coordinates don't auto-mirror — flip so leading/trailing
+            // arrows keep pointing at the anchor under RTL (top/bottom arrows
+            // are symmetric, so the flip is a no-op for them).
+            .flipsForRightToLeftLayoutDirection(true)
 
         switch edge {
         case .top: VStack(spacing: -1) { bubble; arrow }
@@ -169,15 +173,19 @@ private struct TooltipBubble: View {
 /// the small spacing token.
 private struct TooltipPlacement: ViewModifier {
     let edge: TooltipEdge
+    @Environment(\.layoutDirection) private var layoutDirection
 
     private var gap: CGFloat { Theme.SpacingKey.sm.value }
+    /// `.offset(x:)` is absolute (doesn't auto-mirror) — flip the horizontal
+    /// push-out under RTL so the bubble still moves away from the anchor.
+    private var direction: CGFloat { layoutDirection == .rightToLeft ? -1 : 1 }
 
     func body(content: Content) -> some View {
         switch edge {
         case .top: content.offset(y: -gap).alignmentGuide(.top) { $0[.bottom] }
         case .bottom: content.offset(y: gap).alignmentGuide(.bottom) { $0[.top] }
-        case .leading: content.offset(x: -gap).alignmentGuide(.leading) { $0[.trailing] }
-        case .trailing: content.offset(x: gap).alignmentGuide(.trailing) { $0[.leading] }
+        case .leading: content.offset(x: -gap * direction).alignmentGuide(.leading) { $0[.trailing] }
+        case .trailing: content.offset(x: gap * direction).alignmentGuide(.trailing) { $0[.leading] }
         }
     }
 }
@@ -356,6 +364,29 @@ public extension View {
         }
     }
     return Demo()
+}
+
+#Preview("RTL — arrows point at the anchor") {
+    struct Demo: View {
+        @Environment(\.theme) private var theme
+        @State var top = true
+        @State var trailing = true
+        @State var leading = true
+        var body: some View {
+            VStack(spacing: 64) {
+                Icon(systemName: "info.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                    .tooltip("Helpful hint", isPresented: $top)
+                HStack(spacing: 56) {
+                    Icon(systemName: "questionmark.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("On the trailing side", isPresented: $trailing, edge: .trailing, style: .info)
+                    Icon(systemName: "exclamationmark.triangle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("On the leading side", isPresented: $leading, edge: .leading, style: .warning)
+                }
+            }
+            .padding(80)
+        }
+    }
+    return Demo().environment(\.layoutDirection, .rightToLeft)
 }
 
 #Preview("Align start / end") {

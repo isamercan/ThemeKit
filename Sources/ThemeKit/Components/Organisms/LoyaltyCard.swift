@@ -33,6 +33,9 @@ public struct LoyaltyCard: View {
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
+    // Canvas drawing coordinates don't auto-mirror — the progress bar branches
+    // on this to fill from the trailing edge under RTL.
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var flipped = false
 
     // Required content (R1).
@@ -151,8 +154,10 @@ public struct LoyaltyCard: View {
                     with: .color(onCard.opacity(0.25))
                 )
                 let width = max(size.height, size.width * clamped)
+                // Fill from the trailing edge under RTL (Canvas doesn't mirror).
+                let x = layoutDirection == .rightToLeft ? size.width - width : 0
                 context.fill(
-                    Path(roundedRect: CGRect(x: 0, y: 0, width: width, height: size.height), cornerRadius: radius),
+                    Path(roundedRect: CGRect(x: x, y: 0, width: width, height: size.height), cornerRadius: radius),
                     with: .color(onCard)
                 )
             }
@@ -224,6 +229,14 @@ public extension LoyaltyCard {
             .gradient([.success, .turquoise])
     }
     .padding()
+}
+
+#Preview("RTL — progress fills from the trailing edge") {
+    LoyaltyCard(tier: "Gold", points: 8_430)
+        .memberName("Elif Kaya")
+        .progress(0.62, toNextTier: "Platinum")
+        .padding()
+        .environment(\.layoutDirection, .rightToLeft)
 }
 
 #Preview("Outlined style (back face)") {
