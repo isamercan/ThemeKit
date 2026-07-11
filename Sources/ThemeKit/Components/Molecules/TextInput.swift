@@ -704,57 +704,64 @@ private extension TextInputCapitalization {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var email = ""
-        @State var pass = ""
-        @State var bio = ""
-        @State var amount = ""
-        @State var name = ""
-        @State var nickname = ""
-        @State var showError = false
-        private var emailMessages: [InfoMessage] {
-            Validator.validate(email, [.required(), .email()])
+    @Previewable @State var email = ""
+    @Previewable @State var pass = ""
+    @Previewable @State var bio = ""
+    @Previewable @State var amount = ""
+    @Previewable @State var name = ""
+    @Previewable @State var nickname = ""
+    @Previewable @State var showError = true
+    PreviewMatrix("TextInput") {
+        // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
+        PreviewCase("Email · icon + clearable + live rules") {
+            TextInput("Email", text: $email)
+                .icon(leading: "envelope").clearable()
+                .infoMessages(Validator.validate(email, [.required(), .email()]))
+                .keyboard(.emailAddress, contentType: .emailAddress, submit: .next, capitalization: .never)
+                .autocorrectionDisabled()
+                .a11yID("loginEmail")
         }
-        var body: some View {
-            VStack(spacing: 16) {
-                // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
-                TextInput("Email", text: $email)
-                    .icon(leading: "envelope").clearable()
-                    .infoMessages(emailMessages)
-                    .keyboard(.emailAddress, contentType: .emailAddress, submit: .next, capitalization: .never)
-                    .autocorrectionDisabled()
-                    .a11yID("loginEmail")
-                // Password manager autofill on a secure field (config-model entry point).
-                TextInput(TextInputModel(label: "Password", isSecure: true, maxLength: 24, showCount: true,
-                                         textContentType: .password,
-                                         submitLabel: .go), text: $pass)
-                    .a11yID("loginPass")
-                // Soft limit: can exceed 80, counter turns red instead of truncating.
-                TextInput("Bio", text: $bio)
-                    .maxLength(80, hardLimit: false).showsCount(style: .remaining)
-                // Underlined chrome + custom leading/trailing slots.
-                TextInput("Amount", text: $amount)
-                    .leading { Text("$").textStyle(.bodyBase400) }
-                    .trailing { Text("USD").textStyle(.labelSm600) }
-                    .keyboard(.decimalPad)
-                    .fieldStyle(.underlined)
-                // Required indicator on a muted, on-surface field.
-                TextInput("Full name", text: $name)
-                    .required()
-                    .fieldStyle(.muted)
-                // Required + error, with an animated message toggle
-                // (rows fade + slide via the MicroMotion-gated animation).
+        // Password manager autofill on a secure field (config-model entry point).
+        PreviewCase("Secure + counter") {
+            TextInput(TextInputModel(label: "Password", isSecure: true, maxLength: 24, showCount: true,
+                                     textContentType: .password,
+                                     submitLabel: .go), text: $pass)
+                .a11yID("loginPass")
+        }
+        // Soft limit: can exceed 80, counter turns red instead of truncating.
+        PreviewCase("Soft limit counter") {
+            TextInput("Bio", text: $bio)
+                .maxLength(80, hardLimit: false).showsCount(style: .remaining)
+        }
+        // Underlined chrome + custom leading/trailing slots.
+        PreviewCase("Underlined + slots") {
+            TextInput("Amount", text: $amount)
+                .leading { Text("$").textStyle(.bodyBase400) }
+                .trailing { Text("USD").textStyle(.labelSm600) }
+                .keyboard(.decimalPad)
+                .fieldStyle(.underlined)
+        }
+        // Required indicator on a muted, on-surface field.
+        PreviewCase("Required · muted") {
+            TextInput("Full name", text: $name)
+                .required()
+                .fieldStyle(.muted)
+        }
+        // Required + error, with an animated message toggle
+        // (rows fade + slide via the MicroMotion-gated animation).
+        PreviewCase("Error state") {
+            VStack(spacing: 8) {
                 TextInput("Nickname", text: $nickname)
                     .required()
                     .errorText(showError ? "This field is required." : nil)
                 Button(showError ? "Hide error" : "Show error") { showError.toggle() }
-                // Read-only (E1): normal chrome + value, editing / clear blocked.
-                TextInput("Confirmation code", text: .constant("BRX-4821"))
-                    .clearable()
-                    .readOnly()
             }
-            .padding()
+        }
+        // Read-only (E1): normal chrome + value, editing / clear blocked.
+        PreviewCase("Read-only") {
+            TextInput("Confirmation code", text: .constant("BRX-4821"))
+                .clearable()
+                .readOnly()
         }
     }
-    return Demo()
 }

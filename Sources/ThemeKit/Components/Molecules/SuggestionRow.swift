@@ -144,10 +144,10 @@ public extension SuggestionRow {
 }
 
 #Preview {
-    VStack(spacing: 2) {
-        SuggestionRow("Ankara, Turkey") { }.icon("airplane").code("ANK").subtitle("Any").selected().highlight("Ank")
-        SuggestionRow("Stansted") { }.icon("airplane").code("ESB").subtitle("Ankara, Turkey").nested()
-        SuggestionRow("Istanbul Airport") { }.icon("airplane").code("IST").subtitle("Istanbul, Turkey").nested().accessory(.chevron)
+    PreviewMatrix("SuggestionRow") {
+        PreviewCase("Selected + highlight") { SuggestionRow("Ankara, Turkey") { }.icon("airplane").code("ANK").subtitle("Any").selected().highlight("Ank") }
+        PreviewCase("Nested") { SuggestionRow("Stansted") { }.icon("airplane").code("ESB").subtitle("Ankara, Turkey").nested() }
+        PreviewCase("Chevron accessory") { SuggestionRow("Istanbul Airport") { }.icon("airplane").code("IST").subtitle("Istanbul, Turkey").nested().accessory(.chevron) }
+        PreviewCase("Add accessory") { SuggestionRow("London Heathrow") { }.icon("airplane").code("LHR").subtitle("London, UK").accessory(.add) }
     }
-    .padding()
 }

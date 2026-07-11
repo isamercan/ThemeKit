@@ -142,16 +142,19 @@ public extension ColorArea {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var working = HSBAColor(hue: 0.08, saturation: 0.9, brightness: 0.95)
-        var body: some View {
+    // Drag-interactive; each cell is a single frame with a constant binding —
+    // use the demo for live saturation/brightness editing.
+    let working = HSBAColor(hue: 0.08, saturation: 0.9, brightness: 0.95)
+    PreviewMatrix("ColorArea") {
+        PreviewCase("Default (.field corners)") {
+            ColorArea(color: .constant(working))
+        }
+        PreviewCase("Box corners · with hue slider + swatch") {
             VStack(spacing: Theme.SpacingKey.md.value) {
-                ColorArea(color: $working).cornerRadius(.box)
-                ColorSlider(.hue, color: $working)
+                ColorArea(color: .constant(working)).cornerRadius(.box)
+                ColorSlider(.hue, color: .constant(working))
                 RoundedRectangle(cornerRadius: 12).fill(working.color).frame(height: 44)
             }
-            .padding()
         }
     }
-    return Demo()
 }

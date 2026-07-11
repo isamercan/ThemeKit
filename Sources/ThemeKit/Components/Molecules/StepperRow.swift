@@ -89,18 +89,13 @@ public extension StepperRow {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var adults = 2
-        @State private var children = 1
-        @State private var babies = 0
-        var body: some View {
-            VStack(spacing: 12) {
-                StepperRow("Adult", value: $adults).subtitle("+12 yrs").range(1...9)
-                StepperRow("Child", value: $children).subtitle("2–11 yrs").range(0...8)
-                StepperRow("Infant", value: $babies).subtitle("0–2 yrs").range(0...4)
-            }
-            .padding()
-        }
+    @Previewable @State var adults = 2
+    @Previewable @State var children = 1
+    @Previewable @State var babies = 0
+    PreviewMatrix("StepperRow") {
+        PreviewCase("Default") { StepperRow("Adult", value: $adults).subtitle("+12 yrs").range(1...9) }
+        PreviewCase("Zero floor") { StepperRow("Child", value: $children).subtitle("2–11 yrs").range(0...8) }
+        PreviewCase("Icon + accent") { StepperRow("Infant", value: $babies).subtitle("0–2 yrs").range(0...4).icon("figure.child").accent(.success) }
+        PreviewCase("Disabled") { StepperRow("Locked", value: .constant(1)).disabled(true) }
     }
-    return Demo()
 }

@@ -142,28 +142,30 @@ public extension ScrubGallery {
 #Preview {
     @Previewable @Environment(\.theme) var theme
     let colors: [Color] = [.blue, .teal, .orange, .purple]
-    VStack(spacing: 32) {
-        ScrubGallery(count: colors.count) { i in
-            LinearGradient(colors: [colors[i], colors[i].opacity(0.5)],
-                           startPoint: .top, endPoint: .bottom)
-                .overlay(Text("\(i + 1)").font(.largeTitle.bold()).foregroundStyle(.white))
+    PreviewMatrix("ScrubGallery") {
+        PreviewCase("Gradient pages") {
+            ScrubGallery(count: colors.count) { i in
+                LinearGradient(colors: [colors[i], colors[i].opacity(0.5)],
+                               startPoint: .top, endPoint: .bottom)
+                    .overlay(Text("\(i + 1)").font(.largeTitle.bold()).foregroundStyle(.white))
+            }
+            .frame(height: 220)
         }
-        .frame(height: 220)
-
-        ScrubGallery(count: colors.count) { i in
-            colors[i].opacity(0.6)
+        PreviewCase("Accent + field radius") {
+            ScrubGallery(count: colors.count) { i in
+                colors[i].opacity(0.6)
+            }
+            .accent(.turquoise)
+            .radius(.field)
+            .frame(height: 140)
         }
-        .accent(.turquoise)
-        .radius(.field)
-        .frame(height: 140)
-
-        ScrubGallery(count: 3) { i in
-            theme.background(.bgElevatorTertiary)
-                .overlay(Icon(systemName: ["airplane", "bed.double", "car"][i]).size(.lg))
+        PreviewCase("No indicator") {
+            ScrubGallery(count: 3) { i in
+                theme.background(.bgElevatorTertiary)
+                    .overlay(Icon(systemName: ["airplane", "bed.double", "car"][i]).size(.lg))
+            }
+            .indicator(false)
+            .frame(height: 100)
         }
-        .indicator(false)
-        .frame(height: 100)
     }
-    .padding()
-    .background(theme.background(.bgTertiary))
 }

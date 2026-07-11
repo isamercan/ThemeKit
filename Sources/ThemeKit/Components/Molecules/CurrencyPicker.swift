@@ -148,14 +148,15 @@ public extension CurrencyPicker {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var code = "USD"
-        var body: some View {
+    @Previewable @State var code = "USD"
+    PreviewMatrix("CurrencyPicker") {
+        PreviewCase("Searchable + recents") {
             CurrencyPicker(selection: $code)
                 .searchable()
                 .recents([Currency(code: "USD", symbol: "$", name: "US Dollar")])
-                .padding()
+        }
+        PreviewCase("Codes only") {
+            CurrencyPicker(selection: $code).showsName(false)
         }
     }
-    return Demo()
 }

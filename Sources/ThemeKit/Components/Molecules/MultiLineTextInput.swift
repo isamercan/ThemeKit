@@ -270,35 +270,38 @@ public extension MultiLineTextInput {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var text = ""
-        @State var feedback = ""
-        @State var showError = false
-        var body: some View {
-            VStack(spacing: 16) {
-                MultiLineTextInput("Notes", text: $text)
-                    .placeholder("Write something…").characterLimit(200)
-                MultiLineTextInput("Short note", text: $text)
-                    .size(.xsmall).characterLimit(80).countStyle(.remaining)
-                // Swapped chrome: underlined editor, same behavior.
-                MultiLineTextInput("Underlined", text: $text)
-                    .placeholder("No border, just a rule")
-                    .fieldStyle(.underlined)
-                // Required header + muted on-surface chrome, with an animated
-                // error toggle (message rows fade + slide in/out).
-                MultiLineTextInput("Feedback", text: $feedback)
-                    .placeholder("Required, on-surface")
-                    .required()
-                    .errorText(showError ? "This field is required." : nil)
-                    .fieldStyle(.muted)
-                Button(showError ? "Hide error" : "Show error") { showError.toggle() }
-                // Read-only (E1): normal chrome + value, editing blocked.
-                MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
-                    .size(.xsmall)
-                    .readOnly()
-            }
-            .padding()
+    // Interactive editor — the matrix wraps representative static states
+    // (the error case is pinned on instead of the old demo's toggle button).
+    @Previewable @State var text = ""
+    @Previewable @State var feedback = ""
+    PreviewMatrix("MultiLineTextInput") {
+        PreviewCase("Default") {
+            MultiLineTextInput("Notes", text: $text)
+                .placeholder("Write something…").characterLimit(200)
+        }
+        PreviewCase("XSmall + remaining count") {
+            MultiLineTextInput("Short note", text: $text)
+                .size(.xsmall).characterLimit(80).countStyle(.remaining)
+        }
+        // Swapped chrome: underlined editor, same behavior.
+        PreviewCase("Underlined") {
+            MultiLineTextInput("Underlined", text: $text)
+                .placeholder("No border, just a rule")
+                .fieldStyle(.underlined)
+        }
+        // Required header + muted on-surface chrome + error message.
+        PreviewCase("Required + error, muted") {
+            MultiLineTextInput("Feedback", text: $feedback)
+                .placeholder("Required, on-surface")
+                .required()
+                .errorText("This field is required.")
+                .fieldStyle(.muted)
+        }
+        // Read-only (E1): normal chrome + value, editing blocked.
+        PreviewCase("Read-only") {
+            MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
+                .size(.xsmall)
+                .readOnly()
         }
     }
-    return Demo()
 }

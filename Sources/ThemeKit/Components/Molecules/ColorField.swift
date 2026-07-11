@@ -88,21 +88,17 @@ public extension ColorField {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var color: Color = .blue
-        var body: some View {
-            VStack(spacing: 16) {
-                ColorField("Brand color", selection: $color)
-                // Swapped chrome: underlined field, same behavior.
-                ColorField("Accent color", selection: $color).fieldStyle(.underlined)
-                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-                ColorField("Small", selection: $color).size(.small)
-                ColorField("Large", selection: $color).size(.large)
-                // Read-only: swatch + normal chrome, picker suppressed (E1).
-                ColorField("Theme color (read-only)", selection: $color).readOnly()
-            }
-            .padding()
-        }
+    // The system color well opens an interactive panel; each cell shows the
+    // field chrome as a single static frame.
+    PreviewMatrix("ColorField") {
+        PreviewCase("Default") { ColorField("Brand color", selection: .constant(.blue)) }
+        // Swapped chrome: underlined field, same behavior.
+        PreviewCase("Underlined chrome") { ColorField("Accent color", selection: .constant(.blue)).fieldStyle(.underlined) }
+        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+        PreviewCase("Small") { ColorField("Small", selection: .constant(.blue)).size(.small) }
+        PreviewCase("Large") { ColorField("Large", selection: .constant(.blue)).size(.large) }
+        // Read-only: swatch + normal chrome, picker suppressed (E1).
+        PreviewCase("Read-only") { ColorField("Theme color (read-only)", selection: .constant(.blue)).readOnly() }
+        PreviewCase("Disabled") { ColorField("Disabled", selection: .constant(.blue)).disabled(true) }
     }
-    return Demo()
 }

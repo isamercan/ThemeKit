@@ -101,17 +101,28 @@ struct MasonryLayout: Layout {
 #Preview {
     @Previewable @Environment(\.theme) var theme
     let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110]
-    ScrollView {
-        Masonry {
-            ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(SemanticColor.primary.soft)
-                    .frame(height: h)
-                    .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+    PreviewMatrix("Masonry") {
+        PreviewCase("3 columns") {
+            Masonry {
+                ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(SemanticColor.primary.soft)
+                        .frame(height: h)
+                        .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                }
+            }
+            .columns(3)
+        }
+        PreviewCase("2 columns (default)") {
+            Masonry {
+                ForEach(Array(heights.prefix(5).enumerated()), id: \.offset) { i, h in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(SemanticColor.primary.soft)
+                        .frame(height: h)
+                        .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                }
             }
         }
-        .columns(3)
-        .padding()
     }
     .environment(Theme.shared)
 }

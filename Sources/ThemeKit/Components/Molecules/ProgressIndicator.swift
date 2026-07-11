@@ -143,11 +143,11 @@ public extension ProgressIndicator {
 }
 
 #Preview {
-    VStack(spacing: 28) {
-        ProgressIndicator(variant: .carousel, current: 2, total: 5).stepText(.slash)
-        ProgressIndicator(variant: .video, current: 3, total: 5).videoProgress(0.5).stepText(.padded)
-        ProgressIndicator(variant: .progress, current: 7, total: 10).size(.large).stepText(.slash)
-        ProgressIndicator(variant: .carousel, current: 1, total: 4).size(.xsmall)
+    PreviewMatrix("ProgressIndicator") {
+        PreviewCase("Carousel + step text") { ProgressIndicator(variant: .carousel, current: 2, total: 5).stepText(.slash) }
+        PreviewCase("Video (half-filled)") { ProgressIndicator(variant: .video, current: 3, total: 5).videoProgress(0.5).stepText(.padded) }
+        PreviewCase("Progress, large") { ProgressIndicator(variant: .progress, current: 7, total: 10).size(.large).stepText(.slash) }
+        PreviewCase("Carousel, xsmall") { ProgressIndicator(variant: .carousel, current: 1, total: 4).size(.xsmall) }
+        PreviewCase("Square ends") { ProgressIndicator(variant: .carousel, current: 2, total: 4).cornerRadius(false) }
     }
-    .padding()
 }

@@ -130,15 +130,20 @@ public extension Breadcrumbs {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel")])
-        Breadcrumbs([
-            .init("Home", action: {}), .init("Hotels", action: {}), .init("Turkey", action: {}),
-            .init("Marmara", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel"),
-        ], maxItems: 4)
-        Breadcrumbs([.init("Home", action: {}), .init("Flights", action: {}), .init("IST → LHR")])
-            .separator("arrow.right")
-            .accent(.turquoise)
+    PreviewMatrix("Breadcrumbs") {
+        PreviewCase("Default") {
+            Breadcrumbs([.init("Home", action: {}), .init("Hotels", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel")])
+        }
+        PreviewCase("Collapsed (maxItems 4)") {
+            Breadcrumbs([
+                .init("Home", action: {}), .init("Hotels", action: {}), .init("Turkey", action: {}),
+                .init("Marmara", action: {}), .init("Istanbul", action: {}), .init("Grand Hotel"),
+            ], maxItems: 4)
+        }
+        PreviewCase("Custom separator + accent") {
+            Breadcrumbs([.init("Home", action: {}), .init("Flights", action: {}), .init("IST → LHR")])
+                .separator("arrow.right")
+                .accent(.turquoise)
+        }
     }
-    .padding()
 }

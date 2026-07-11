@@ -152,13 +152,21 @@ struct FlexLayout: Layout {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.spaceBetween).frame(width: 300)
-        Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.center).frame(width: 300)
-        Flex { Text("A").frame(height: 40); Text("B").frame(height: 24); Text("C").frame(height: 32) }
-            .align(.center).gap(.large).frame(width: 300)
+    PreviewMatrix("Flex") {
+        PreviewCase("Space between") {
+            Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.spaceBetween).frame(width: 300)
+        }
+        PreviewCase("Centered") {
+            Flex { ForEach(0..<3) { Tag("Tag \($0)") } }.justify(.center).frame(width: 300)
+        }
+        PreviewCase("Align center · large gap") {
+            Flex { Text("A").frame(height: 40); Text("B").frame(height: 24); Text("C").frame(height: 32) }
+                .align(.center).gap(.large).frame(width: 300)
+        }
+        PreviewCase("Wrapping") {
+            Flex { ForEach(0..<8) { Tag("Tag \($0)") } }.wrap().frame(width: 300)
+        }
     }
-    .padding()
     .environment(Theme.shared)
 }
 

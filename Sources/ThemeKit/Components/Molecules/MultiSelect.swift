@@ -303,34 +303,35 @@ public extension MultiSelect {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var picks: Set<String> = ["Istanbul"]
-        @State var channels: Set<String> = []
-        @State var channelsOpen = false
-        let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
-        let channelDetails = [
-            "Email": "Daily digest to your inbox",
-            "Push": "Instant alerts on your device",
-            "SMS": "Text messages for urgent updates",
-        ]
-        var body: some View {
-            VStack(spacing: 16) {
-                MultiSelect("Cities", options: cities, selection: $picks) { $0 }
-                // Selection cap (E13): at 3 picks the remaining rows disable.
-                MultiSelect("Up to 3 cities", options: cities, selection: $picks) { $0 }
-                    .maxSelection(3)
-                // Descriptions + custom leading content, driven by a
-                // controlled isExpanded binding.
-                MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
-                    .optionDescription { channelDetails[$0] }
-                    .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
-                Button(channelsOpen ? "Close channels" : "Open channels") { channelsOpen.toggle() }
-                // Chrome via the shared FieldStyle axis.
-                MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
-                    .fieldStyle(.underlined)
-            }
-            .padding()
+    // Interactive picker — the matrix wraps representative static states; the
+    // channels case renders with its panel open via the isExpanded binding.
+    @Previewable @State var picks: Set<String> = ["Istanbul"]
+    @Previewable @State var channels: Set<String> = ["Email"]
+    @Previewable @State var channelsOpen = true
+    let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
+    let channelDetails = [
+        "Email": "Daily digest to your inbox",
+        "Push": "Instant alerts on your device",
+        "SMS": "Text messages for urgent updates",
+    ]
+    PreviewMatrix("MultiSelect") {
+        PreviewCase("Default") { MultiSelect("Cities", options: cities, selection: $picks) { $0 } }
+        // Selection cap (E13): at 3 picks the remaining rows disable.
+        PreviewCase("Max selection") {
+            MultiSelect("Up to 3 cities", options: cities, selection: $picks) { $0 }
+                .maxSelection(3)
+        }
+        // Descriptions + custom leading content, driven by a
+        // controlled isExpanded binding (open here to show the panel).
+        PreviewCase("Open panel + descriptions") {
+            MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
+                .optionDescription { channelDetails[$0] }
+                .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
+        }
+        // Chrome via the shared FieldStyle axis.
+        PreviewCase("Underlined") {
+            MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
+                .fieldStyle(.underlined)
         }
     }
-    return Demo()
 }

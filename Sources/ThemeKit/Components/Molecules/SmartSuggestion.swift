@@ -97,9 +97,9 @@ public extension SmartSuggestion {
 }
 
 #Preview {
-    VStack(spacing: 10) {
-        SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.").label("Smart tip").onTap { }
-        SmartSuggestion("Add a checked bag now and save ₺150.").label("Deal").accent(.warning).action("Add") { }
+    PreviewMatrix("SmartSuggestion") {
+        PreviewCase("Tappable tip") { SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.").label("Smart tip").onTap { } }
+        PreviewCase("Warning + action") { SmartSuggestion("Add a checked bag now and save ₺150.").label("Deal").accent(.warning).action("Add") { } }
+        PreviewCase("Borderless") { SmartSuggestion("Prices for these dates are trending up.").bordered(false) }
     }
-    .padding()
 }

@@ -429,41 +429,48 @@ extension ButtonSize {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 12) {
-            ForEach(SemanticColor.allCases, id: \.self) { c in
-                HStack {
-                    ThemeButton("Solid") {}.color(c).variant(.solid).size(.small)
-                    ThemeButton("Soft") {}.color(c).variant(.soft).size(.small)
-                    ThemeButton("Outline") {}.color(c).variant(.outline).size(.small)
+    PreviewMatrix("ThemeButton") {
+        PreviewCase("Variants × colors") {
+            VStack(spacing: 12) {
+                ForEach(SemanticColor.allCases, id: \.self) { c in
+                    HStack {
+                        ThemeButton("Solid") {}.color(c).variant(.solid).size(.small)
+                        ThemeButton("Soft") {}.color(c).variant(.soft).size(.small)
+                        ThemeButton("Outline") {}.color(c).variant(.outline).size(.small)
+                    }
                 }
             }
+        }
+        PreviewCase("Shapes + link") {
             HStack {
                 ThemeButton { }.icon(leading: "heart").color(.error).shape(.circle)
                 ThemeButton { }.icon(leading: "plus").color(.primary).shape(.square)
                 ThemeButton("Pill") {}.color(.success).shape(.pill)
                 ThemeButton("Link") {}.variant(.link)
             }
-            ThemeButton("Block button") {}.color(.primary).fullWidth()
-            ThemeButton("Loading") {}.color(.primary).fullWidth().loading()
-
-            // spinnerPlacement: the label stays while loading (HeroUI
-            // spinnerPlacement / Ant loading.icon).
+        }
+        PreviewCase("Full width") { ThemeButton("Block button") {}.color(.primary).fullWidth() }
+        PreviewCase("Loading") { ThemeButton("Loading") {}.color(.primary).fullWidth().loading() }
+        // spinnerPlacement: the label stays while loading (HeroUI
+        // spinnerPlacement / Ant loading.icon).
+        PreviewCase("Spinner placement") {
             HStack {
                 ThemeButton("Saving") {}.loading().spinnerPlacement(.leading)
                 ThemeButton("Uploading") {}.variant(.soft).loading().spinnerPlacement(.trailing)
             }
-
-            // ComponentDefaults cascade: no explicit .color(_:) → the subtree
-            // accent re-tints the button; an explicit color still wins.
+        }
+        // ComponentDefaults cascade: no explicit .color(_:) → the subtree
+        // accent re-tints the button; an explicit color still wins.
+        PreviewCase("Defaults cascade") {
             HStack {
                 ThemeButton("Subtree accent") {}
                 ThemeButton("Explicit wins") {}.color(.error)
             }
             .componentDefaults(accent: .turquoise)
-
-            // Custom label slot — icon + text + badge composition; inherits the
-            // size's textStyle and the variant's foreground like the built-in label.
+        }
+        // Custom label slot — icon + text + badge composition; inherits the
+        // size's textStyle and the variant's foreground like the built-in label.
+        PreviewCase("Custom label slot") {
             ThemeButton {
             } label: {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
@@ -475,40 +482,42 @@ extension ButtonSize {
             .variant(.soft)
             .color(.primary)
             .fullWidth()
-
-            // SurfacePressStyle — scale + highlight wash on a card-like row.
-            Button {
-            } label: {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Image(systemName: "airplane.departure")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Pressable card").textStyle(.labelMd700)
-                        Text("Scale + highlight, token wash").textStyle(.bodySm400)
-                            .foregroundStyle(Theme.shared.text(.textSecondary))
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.forward")
-                }
-                .padding(Theme.SpacingKey.md.value)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-                        .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
-                )
-            }
-            .buttonStyle(SurfacePressStyle())
-
-            Button {
-            } label: {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Image(systemName: "checkmark.circle")
-                    Text("Tinted press wash").textStyle(.labelMd700)
-                    Spacer()
-                }
-                .padding(Theme.SpacingKey.md.value)
-            }
-            .buttonStyle(SurfacePressStyle(radius: .field, tint: .success))
         }
-        .padding()
+        // SurfacePressStyle — scale + highlight wash on a card-like row.
+        PreviewCase("SurfacePressStyle") {
+            VStack(spacing: 12) {
+                Button {
+                } label: {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Image(systemName: "airplane.departure")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Pressable card").textStyle(.labelMd700)
+                            Text("Scale + highlight, token wash").textStyle(.bodySm400)
+                                .foregroundStyle(Theme.shared.text(.textSecondary))
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.forward")
+                    }
+                    .padding(Theme.SpacingKey.md.value)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+                            .strokeBorder(Theme.shared.border(.borderPrimary), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(SurfacePressStyle())
+
+                Button {
+                } label: {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Image(systemName: "checkmark.circle")
+                        Text("Tinted press wash").textStyle(.labelMd700)
+                        Spacer()
+                    }
+                    .padding(Theme.SpacingKey.md.value)
+                }
+                .buttonStyle(SurfacePressStyle(radius: .field, tint: .success))
+            }
+        }
     }
 }

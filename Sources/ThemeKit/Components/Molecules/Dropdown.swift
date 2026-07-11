@@ -522,91 +522,84 @@ public extension Dropdown {
 }
 
 #Preview {
-    struct Demo: View {
-        @Environment(\.theme) private var theme
+    @Previewable @Environment(\.theme) var theme
+    @Previewable @State var sortBy = "Name"
 
-        @State private var sortBy = "Name"
-        @State private var layout = "List"
-        @State private var controlledOpen = false
+    // Overlay component — closed cells show the resting trigger; the "open"
+    // cells pin the panel with a constant `isPresented:` inside a taller frame
+    // so the floating panel stays within the matrix cell.
+    let items: [DropdownItem] = [
+        .init("Rename", systemImage: "pencil"),
+        .init("Duplicate", subtitle: "Copies into the same folder", systemImage: "plus.square.on.square"),
+        .init("Share", systemImage: "square.and.arrow.up", disabled: true),
+        .submenu("Export", systemImage: "arrow.up.doc", items: [
+            .init("PDF", systemImage: "doc.richtext"),
+            .init("PNG", systemImage: "photo"),
+            .divider,
+            .init("Plain text", systemImage: "doc.plaintext"),
+        ]),
+        .divider,
+        .init("Delete", systemImage: "trash", role: .destructive),
+    ]
 
-        var items: [DropdownItem] {
-            [
-                .init("Rename", systemImage: "pencil"),
-                .init("Duplicate", subtitle: "Copies into the same folder", systemImage: "plus.square.on.square"),
-                .init("Share", systemImage: "square.and.arrow.up", disabled: true),
-                .submenu("Export", systemImage: "arrow.up.doc", items: [
-                    .init("PDF", systemImage: "doc.richtext"),
-                    .init("PNG", systemImage: "photo"),
-                    .divider,
-                    .init("Plain text", systemImage: "doc.plaintext"),
-                ]),
-                .divider,
-                .init("Delete", systemImage: "trash", role: .destructive),
-            ]
+    let triggerLabel: (String) -> AnyView = { title in
+        AnyView(HStack(spacing: Theme.SpacingKey.xs.value) {
+            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
+            Icon(systemName: "chevron.down").size(.xs).colorOverride(theme.text(.textTertiary))
         }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+        .background(theme.background(.bgSecondaryLight),
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)))
+    }
 
-        var selectionSections: [DropdownSection] {
-            [
-                DropdownSection("Sort by", items: ["Name", "Date", "Size"].map { option in
-                    DropdownItem(option, isSelected: sortBy == option) { sortBy = option }
-                }),
-                DropdownSection("Layout", items: ["List", "Grid"].map { option in
-                    DropdownItem(option, isSelected: layout == option) { layout = option }
-                }),
-            ]
-        }
-
-        func triggerLabel(_ title: String) -> some View {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
-                Icon(systemName: "chevron.down").size(.xs).colorOverride(theme.text(.textTertiary))
+    PreviewMatrix("Dropdown") {
+        PreviewCase("Triggers (closed — tap in live preview)") {
+            HStack(spacing: Theme.SpacingKey.lg.value) {
+                Dropdown(items: items) { triggerLabel("Options") }
+                Dropdown(items: items) {
+                    Icon(systemName: "ellipsis.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                }
+                .edge(.bottomTrailing)
+                .accent(.primary)
             }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .padding(.vertical, Theme.SpacingKey.sm.value)
-            .background(theme.background(.bgSecondaryLight),
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
         }
-
-        var body: some View {
-            VStack(spacing: 160) {
-                HStack(spacing: 120) {
-                    // Actions with subtitle + inline submenu.
-                    Dropdown(items: items) {
-                        triggerLabel("Options")
-                    }
-
-                    Dropdown(items: items) {
-                        Icon(systemName: "ellipsis.circle").size(.md).colorOverride(theme.foreground(.fgHero))
-                    }
-                    .edge(.bottomTrailing)
-                    .accent(.primary)
-                }
-
-                HStack(spacing: 120) {
-                    // Sectioned selection — checkmark indicator, stays open.
-                    Dropdown(sections: selectionSections) {
-                        triggerLabel(sortBy)
-                    }
-                    .shouldCloseOnSelect(false)
-
-                    // Dot indicator variant.
-                    Dropdown(sections: selectionSections) {
-                        triggerLabel(layout)
-                    }
-                    .edge(.bottomTrailing)
-                    .indicator(.dot)
-                    .shouldCloseOnSelect(false)
-                }
-
-                // Controlled open state via `isPresented:`.
-                Dropdown(items: items, isPresented: $controlledOpen) {
-                    triggerLabel(controlledOpen ? "Close" : "Open")
-                }
-                .edge(.topLeading)
-                .menuWidth(220)
+        PreviewCase("Open panel · subtitle + submenu + destructive") {
+            VStack {
+                Dropdown(items: items, isPresented: .constant(true)) { triggerLabel("Open") }
+                    .menuWidth(220)
+                Spacer(minLength: 0)
             }
-            .padding(80)
+            .frame(height: 360)
+        }
+        PreviewCase("Open selection · checkmark indicator, stays open") {
+            VStack {
+                Dropdown(sections: [
+                    DropdownSection("Sort by", items: ["Name", "Date", "Size"].map { option in
+                        DropdownItem(option, isSelected: sortBy == option) { sortBy = option }
+                    }),
+                ], isPresented: .constant(true)) {
+                    triggerLabel(sortBy)
+                }
+                .shouldCloseOnSelect(false)
+                Spacer(minLength: 0)
+            }
+            .frame(height: 220)
+        }
+        PreviewCase("Open selection · dot indicator") {
+            VStack {
+                Dropdown(sections: [
+                    DropdownSection("Layout", items: ["List", "Grid"].map { option in
+                        DropdownItem(option, isSelected: option == "List")
+                    }),
+                ], isPresented: .constant(true)) {
+                    triggerLabel("List")
+                }
+                .indicator(.dot)
+                .shouldCloseOnSelect(false)
+                Spacer(minLength: 0)
+            }
+            .frame(height: 180)
         }
     }
-    return Demo()
 }

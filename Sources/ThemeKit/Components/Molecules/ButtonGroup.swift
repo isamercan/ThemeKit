@@ -41,15 +41,25 @@ public struct ButtonGroup<Content: View>: View {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        ButtonGroup {   // vertical CTA stack → full-width
-            PrimaryButton("Continue") {}.fullWidth()
-            SecondaryButton("Not now") {}.fullWidth()
+    PreviewMatrix("ButtonGroup") {
+        PreviewCase("Vertical CTA stack (full-width)") {
+            ButtonGroup {
+                PrimaryButton("Continue") {}.fullWidth()
+                SecondaryButton("Not now") {}.fullWidth()
+            }
         }
-        ButtonGroup(.horizontal) {   // side-by-side → content-width (default)
-            SecondaryButton("Cancel") {}
-            PrimaryButton("Confirm") {}
+        PreviewCase("Horizontal (content-width)") {
+            ButtonGroup(.horizontal) {
+                SecondaryButton("Cancel") {}
+                PrimaryButton("Confirm") {}
+            }
+        }
+        PreviewCase("Horizontal overflow wraps") {
+            ButtonGroup(.horizontal) {
+                SecondaryButton("Back") {}
+                SecondaryButton("Save draft") {}
+                PrimaryButton("Continue to payment") {}
+            }
         }
     }
-    .padding()
 }

@@ -89,20 +89,14 @@ public struct TableColorCell: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var on = true
-        @State var pick = "Medium"
-        @State var amount = 0.4
-        @State var color = Color.blue
-        var body: some View {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack { Text("Active").frame(width: 90, alignment: .leading); TableToggleCell(isOn: $on, label: "Active") }
-                HStack { Text("Priority").frame(width: 90, alignment: .leading); TableSelectCell(["Low", "Medium", "High"], selection: $pick, label: "Priority") }
-                HStack { Text("Amount").frame(width: 90, alignment: .leading); TableSliderCell(value: $amount, in: 0...1, label: "Amount") }
-                HStack { Text("Color").frame(width: 90, alignment: .leading); TableColorCell(selection: $color, label: "Color") }
-            }
-            .padding()
-        }
+    @Previewable @State var on = true
+    @Previewable @State var pick = "Medium"
+    @Previewable @State var amount = 0.4
+    @Previewable @State var color = Color.blue
+    PreviewMatrix("Table cells") {
+        PreviewCase("Toggle") { TableToggleCell(isOn: $on, label: "Active") }
+        PreviewCase("Select") { TableSelectCell(["Low", "Medium", "High"], selection: $pick, label: "Priority") }
+        PreviewCase("Slider") { TableSliderCell(value: $amount, in: 0...1, label: "Amount") }
+        PreviewCase("Color") { TableColorCell(selection: $color, label: "Color") }
     }
-    return Demo()
 }

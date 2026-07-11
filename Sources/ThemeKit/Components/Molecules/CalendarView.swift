@@ -354,25 +354,21 @@ public extension CalendarView {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var date: Date? = .now
-        @State var compact: Date? = .now
-        @State var jumped: Date? = .now
-        var body: some View {
-            ScrollView {
-                VStack(spacing: Theme.SpacingKey.md.value) {
-                    CalendarView(selection: $date)
-                    CalendarView(selection: $jumped)
-                        .yearPicker()      // tap the header to jump years/months
-                        .accent(.purple)
-                    CalendarView(selection: $compact)
-                        .accent(.success)
-                        .firstWeekday(2)   // Monday first
-                        .showsWeekdayHeader(false)
-                }
-                .padding()
-            }
+    // The calendar is paging/stage-interactive; each cell is a single month frame.
+    PreviewMatrix("CalendarView") {
+        PreviewCase("Default") {
+            CalendarView(selection: .constant(Date.now))
+        }
+        PreviewCase("Year picker + purple accent") {
+            CalendarView(selection: .constant(Date.now))
+                .yearPicker()      // tap the header to jump years/months
+                .accent(.purple)
+        }
+        PreviewCase("Monday first · no weekday header") {
+            CalendarView(selection: .constant(Date.now))
+                .accent(.success)
+                .firstWeekday(2)   // Monday first
+                .showsWeekdayHeader(false)
         }
     }
-    return Demo()
 }

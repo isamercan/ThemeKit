@@ -154,15 +154,17 @@ public extension GuestSelector {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var guests = GuestSelection(rooms: 1, adults: 2, children: 1)
-        var body: some View {
+    @Previewable @State var guests = GuestSelection(rooms: 1, adults: 2, children: 1)
+    @Previewable @State var passengers = GuestSelection(adults: 1)
+    PreviewMatrix("GuestSelector") {
+        PreviewCase("Rooms + guests · live summary") {
             VStack(alignment: .leading, spacing: 12) {
                 Text(guests.summary).textStyle(.bodyBase400)
                 GuestSelector(selection: $guests)
             }
-            .padding()
+        }
+        PreviewCase("Passengers (no rooms · max 4 guests)") {
+            GuestSelector(selection: $passengers).showsRooms(false).maxTotal(4)
         }
     }
-    return Demo()
 }

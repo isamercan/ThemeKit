@@ -556,53 +556,60 @@ public extension ChipGroup {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var a = true; @State var b = false; @State var c = true
-        @State var multi: Set<String> = ["Wifi"]
-        @State var removableOptions = ["Wifi", "Pool", "Spa"]
-        var body: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        CompactChip("Standard Room", price: "$399.90", isSelected: $a).rating(4.6)
-                        CompactChip("Suite Room", price: "$899.90", isSelected: $b)
-                    }
-                    ChoseChip("Flexible rate", isSelected: $c)
-                        .description("Free cancellation").rating(4.8).free().icon("wind")
-                    HStack {
-                        FilterChip("Istanbul") {}
-                        FilterChip("4+ stars") {}.shape(.square)
-                    }
-                    ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
-                    // Per-option disabled: "Spa" renders dimmed + non-interactive.
-                    ChipGroup(title: "Per-option disabled", options: ["Wifi", "Pool", "Spa", "Parking"], selection: $multi) { $0 }
-                        .optionEnabled { $0 != "Spa" }
-                    // Removable: every chip gets a trailing xmark that mutates the caller's array.
-                    ChipGroup(title: "Removable", options: removableOptions, selection: $multi) { $0 }
-                        .removable { option in removableOptions.removeAll { $0 == option } }
-                    // Invalid state: messages under the chips + error-tinted title.
-                    ChipGroup(title: "With error", options: ["Wifi", "Pool"], selection: $multi) { $0 }
-                        .infoMessages([InfoMessage("Pick at least one amenity", kind: .error)])
-                    // Empty state: custom placeholder while the options collection is empty.
-                    ChipGroup(title: "Empty", options: [String](), selection: $multi) { $0 }
-                        .emptyContent { Text("No amenities available").textStyle(.bodySm400) }
-                    // Custom ChipStyle via the environment: `.chipStyle(.solid)`
-                    // on the container is non-default, so these molecules route
-                    // through `SolidChipStyle.makeBody` (capsule chroma) instead
-                    // of their own default rounded-rectangle chroma.
-                    VStack(alignment: .leading, spacing: 12) {
-                        CompactChip("Solid style", price: "$120.00", isSelected: $a).rating(4.2)
-                        ChoseChip("Solid style", isSelected: $c).description("Custom chroma")
-                        HStack {
-                            FilterChip("Solid") {}
-                            ImageChip(isSelected: $a, url: nil).size(.small)
-                        }
-                    }
-                    .chipStyle(.solid)
-                }
-                .padding()
+    PreviewMatrix("Chips") {
+        PreviewCase("CompactChip · selected / unselected") {
+            HStack {
+                CompactChip("Standard Room", price: "$399.90", isSelected: .constant(true)).rating(4.6)
+                CompactChip("Suite Room", price: "$899.90", isSelected: .constant(false))
             }
         }
+        PreviewCase("ChoseChip") {
+            ChoseChip("Flexible rate", isSelected: .constant(true))
+                .description("Free cancellation").rating(4.8).free().icon("wind")
+        }
+        PreviewCase("FilterChip") {
+            HStack {
+                FilterChip("Istanbul") {}
+                FilterChip("4+ stars") {}.shape(.square)
+            }
+        }
+        PreviewCase("ChipGroup") {
+            ChipGroup(title: "Amenities", options: ["Wifi", "Pool", "Spa", "Parking"], selection: .constant(["Wifi"])) { $0 }
+        }
+        // Per-option disabled: "Spa" renders dimmed + non-interactive.
+        PreviewCase("Per-option disabled") {
+            ChipGroup(title: "Per-option disabled", options: ["Wifi", "Pool", "Spa", "Parking"], selection: .constant(["Wifi"])) { $0 }
+                .optionEnabled { $0 != "Spa" }
+        }
+        // Removable: every chip gets a trailing xmark that mutates the caller's array.
+        PreviewCase("Removable") {
+            ChipGroup(title: "Removable", options: ["Wifi", "Pool", "Spa"], selection: .constant(["Wifi"])) { $0 }
+                .removable { _ in }
+        }
+        // Invalid state: messages under the chips + error-tinted title.
+        PreviewCase("With error") {
+            ChipGroup(title: "With error", options: ["Wifi", "Pool"], selection: .constant(["Wifi"])) { $0 }
+                .infoMessages([InfoMessage("Pick at least one amenity", kind: .error)])
+        }
+        // Empty state: custom placeholder while the options collection is empty.
+        PreviewCase("Empty state") {
+            ChipGroup(title: "Empty", options: [String](), selection: .constant(["Wifi"])) { $0 }
+                .emptyContent { Text("No amenities available").textStyle(.bodySm400) }
+        }
+        // Custom ChipStyle via the environment: `.chipStyle(.solid)` on the
+        // container is non-default, so these molecules route through
+        // `SolidChipStyle.makeBody` (capsule chroma) instead of their own
+        // default rounded-rectangle chroma.
+        PreviewCase("Solid chip style") {
+            VStack(alignment: .leading, spacing: 12) {
+                CompactChip("Solid style", price: "$120.00", isSelected: .constant(true)).rating(4.2)
+                ChoseChip("Solid style", isSelected: .constant(true)).description("Custom chroma")
+                HStack {
+                    FilterChip("Solid") {}
+                    ImageChip(isSelected: .constant(true), url: nil).size(.small)
+                }
+            }
+            .chipStyle(.solid)
+        }
     }
-    return Demo()
 }

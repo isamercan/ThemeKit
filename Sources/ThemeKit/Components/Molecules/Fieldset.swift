@@ -55,17 +55,20 @@ public extension Fieldset {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var name = ""
-        @State var subscribe = true
-        var body: some View {
+    @Previewable @State var name = ""
+    @Previewable @State var subscribe = true
+    PreviewMatrix("Fieldset") {
+        PreviewCase("Legend + helper") {
             Fieldset("Contact details") {
                 TextInput("Full name", text: $name)
                 HStack { Checkbox(isChecked: $subscribe); Text("Subscribe to newsletter").textStyle(.bodyBase400); Spacer() }
             }
             .helper("We'll only use this to confirm your booking.")
-            .padding()
+        }
+        PreviewCase("No helper") {
+            Fieldset("Payment") {
+                TextInput("Cardholder name", text: $name)
+            }
         }
     }
-    return Demo()
 }

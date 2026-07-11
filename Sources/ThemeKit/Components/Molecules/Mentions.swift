@@ -143,21 +143,20 @@ public extension Mentions {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var text = "Great work "
-        let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
-                      MentionOption("grace", label: "Grace Hopper")]
-        var body: some View {
-            VStack(spacing: 16) {
-                Mentions(text: $text, options: people).placeholder("Write a note…")
-                // Larger suggestion rows via the family size ramp (C1).
-                Mentions(text: $text, options: people).size(.medium)
-                // Read-only: normal chrome + text, editing/suggestions suppressed (E1).
-                Mentions(text: .constant("Thanks @ada for the review"), options: people)
-                    .readOnly()
-            }
-            .padding()
+    // Interactive input — the matrix wraps representative static states
+    // (type an "@" in a cell to exercise the suggestion list).
+    @Previewable @State var text = "Great work "
+    let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
+                  MentionOption("grace", label: "Grace Hopper")]
+    PreviewMatrix("Mentions") {
+        PreviewCase("Default") { Mentions(text: $text, options: people).placeholder("Write a note…") }
+        // Larger suggestion rows via the family size ramp (C1).
+        PreviewCase("Medium rows") { Mentions(text: $text, options: people).size(.medium) }
+        // Read-only: normal chrome + text, editing/suggestions suppressed (E1).
+        PreviewCase("Read-only") {
+            Mentions(text: .constant("Thanks @ada for the review"), options: people)
+                .readOnly()
         }
     }
-    return Demo().environment(Theme.shared)
+    .environment(Theme.shared)
 }

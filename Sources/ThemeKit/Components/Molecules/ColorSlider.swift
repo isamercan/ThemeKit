@@ -174,18 +174,13 @@ public extension ColorSlider {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var working = HSBAColor(hue: 0.6, saturation: 0.8, brightness: 0.9)
-        var body: some View {
-            VStack(spacing: Theme.SpacingKey.md.value) {
-                RoundedRectangle(cornerRadius: 12).fill(working.color).frame(height: 60)
-                ColorSlider(.hue, color: $working)
-                ColorSlider(.saturation, color: $working)
-                ColorSlider(.brightness, color: $working)
-                ColorSlider(.alpha, color: $working).trackHeight(.compact)
-            }
-            .padding()
-        }
+    // Drag-interactive; each cell is a single frame with a constant binding —
+    // use the demo for live channel editing.
+    let working = HSBAColor(hue: 0.6, saturation: 0.8, brightness: 0.9)
+    PreviewMatrix("ColorSlider") {
+        PreviewCase("Hue") { ColorSlider(.hue, color: .constant(working)) }
+        PreviewCase("Saturation") { ColorSlider(.saturation, color: .constant(working)) }
+        PreviewCase("Brightness") { ColorSlider(.brightness, color: .constant(working)) }
+        PreviewCase("Alpha · compact track") { ColorSlider(.alpha, color: .constant(working)).trackHeight(.compact) }
     }
-    return Demo()
 }

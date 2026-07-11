@@ -162,9 +162,15 @@ public extension FlightRoute {
 
 #Preview {
     let dep = Date()
-    return VStack(spacing: 16) {
-        FlightRoute(from: "IST", to: "AYT", departure: dep, arrival: dep.addingTimeInterval(90 * 60))
-        FlightRoute(from: "AYT", to: "IST", departure: dep, arrival: dep.addingTimeInterval(230 * 60)).stops(1).nextDay()
+    PreviewMatrix("FlightRoute") {
+        PreviewCase("Direct") {
+            FlightRoute(from: "IST", to: "AYT", departure: dep, arrival: dep.addingTimeInterval(90 * 60))
+        }
+        PreviewCase("1 stop · next day") {
+            FlightRoute(from: "AYT", to: "IST", departure: dep, arrival: dep.addingTimeInterval(230 * 60)).stops(1).nextDay()
+        }
+        PreviewCase("Inline track") {
+            FlightRoute(from: "IST", to: "JFK", departure: dep, arrival: dep.addingTimeInterval(690 * 60)).stops(1).track(.inline)
+        }
     }
-    .padding()
 }

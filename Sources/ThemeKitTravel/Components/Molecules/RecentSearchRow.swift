@@ -139,11 +139,11 @@ public extension RecentSearchRow {
 }
 
 #Preview {
-    VStack(spacing: 4) {
-        RecentSearchRow(from: "IST", to: "AYT") { }.roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy")
-        RecentSearchRow(from: "SAW", to: "ESB") { }.dates("2 Aug").passengers("1 adult").onRemove { }
+    PreviewMatrix("RecentSearchRow") {
+        PreviewCase("Round trip") { RecentSearchRow(from: "IST", to: "AYT") { }.roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy") }
+        PreviewCase("Removable") { RecentSearchRow(from: "SAW", to: "ESB") { }.dates("2 Aug").passengers("1 adult").onRemove { } }
+        PreviewCase("Bordered") { RecentSearchRow(from: "IST", to: "LHR") { }.dates("5 Sep").passengers("1 adult").bordered() }
     }
-    .padding()
 }
 
 #Preview("Search summary pill") {

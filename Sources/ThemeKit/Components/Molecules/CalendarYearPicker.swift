@@ -163,16 +163,11 @@ public extension CalendarYearPicker {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var year = 2026
-        @State var ranged = 2020
-        var body: some View {
-            VStack(spacing: Theme.SpacingKey.md.value) {
-                CalendarYearPicker(selection: $year)
-                CalendarYearPicker(selection: $ranged).range(2015...2030).accent(.success)
-            }
-            .padding()
+    // Paging is interactive; each cell is a single 12-year page frame.
+    PreviewMatrix("CalendarYearPicker") {
+        PreviewCase("Default") { CalendarYearPicker(selection: .constant(2026)) }
+        PreviewCase("Ranged + success accent") {
+            CalendarYearPicker(selection: .constant(2020)).range(2015...2030).accent(.success)
         }
     }
-    return Demo()
 }

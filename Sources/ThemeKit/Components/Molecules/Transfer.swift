@@ -185,16 +185,16 @@ public extension Transfer {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var target: Set<String> = ["wifi"]
-        let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
-                     TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
-                     TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
-        var body: some View {
-            Transfer(items, target: $target).titles("Available", "Included").padding()
+    @Previewable @State var target: Set<String> = ["wifi"]
+    let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
+                 TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
+                 TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
+    PreviewMatrix("Transfer") {
+        PreviewCase("Default") {
+            Transfer(items, target: $target).titles("Available", "Included")
         }
     }
-    return Demo().environment(Theme.shared)
+    .environment(Theme.shared)
 }
 
 #Preview("RTL — boxes and arrows mirror") {

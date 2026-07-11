@@ -83,9 +83,9 @@ public extension LayoverRow {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        LayoverRow(duration: "2h 15m", airport: "Istanbul (IST)")
-        LayoverRow(duration: "0h 45m", airport: "Ankara (ESB)").warning("Short connection — 45 min")
+    PreviewMatrix("LayoverRow") {
+        PreviewCase("Default") { LayoverRow(duration: "2h 15m", airport: "Istanbul (IST)") }
+        PreviewCase("Warning") { LayoverRow(duration: "0h 45m", airport: "Ankara (ESB)").warning("Short connection — 45 min") }
+        PreviewCase("Accent + icon") { LayoverRow(duration: "5h 30m", airport: "Frankfurt (FRA)").accent(.info).icon("airplane.arrival") }
     }
-    .padding()
 }

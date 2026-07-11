@@ -160,20 +160,12 @@ public extension SearchSummary {
 }
 
 #Preview("States: data/prompt × inline/boxed") {
-    VStack(alignment: .leading, spacing: 16) {
-        Group {
-            Text("data · inline").font(.caption2).foregroundStyle(.secondary)
-            SearchSummary(time: "12 – 16 Jul", adults: 2).children(1).rooms(1)
-            Text("data · boxed").font(.caption2).foregroundStyle(.secondary)
-            SearchSummary(time: "12 – 16 Jul", adults: 2).children(1).rooms(1).boxed()
-            Text("prompt · inline").font(.caption2).foregroundStyle(.secondary)
-            SearchSummary(time: nil, adults: 0).prompt()
-            Text("prompt · boxed").font(.caption2).foregroundStyle(.secondary)
-            SearchSummary(time: nil, adults: 0).prompt().boxed()
-            Text("with title").font(.caption2).foregroundStyle(.secondary)
-            SearchSummary(time: "12 – 16 Jul", adults: 2).title("Antalya Hotels").children(1).rooms(1)
-        }
+    PreviewMatrix("SearchSummary") {
+        PreviewCase("data · inline") { SearchSummary(time: "12 – 16 Jul", adults: 2).children(1).rooms(1) }
+        PreviewCase("data · boxed") { SearchSummary(time: "12 – 16 Jul", adults: 2).children(1).rooms(1).boxed() }
+        PreviewCase("prompt · inline") { SearchSummary(time: nil, adults: 0).prompt() }
+        PreviewCase("prompt · boxed") { SearchSummary(time: nil, adults: 0).prompt().boxed() }
+        PreviewCase("with title") { SearchSummary(time: "12 – 16 Jul", adults: 2).title("Antalya Hotels").children(1).rooms(1) }
     }
-    .padding()
     .environment(Theme.shared)
 }

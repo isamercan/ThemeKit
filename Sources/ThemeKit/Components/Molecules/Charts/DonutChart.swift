@@ -102,16 +102,23 @@ public extension DonutChart {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        DonutChart([
-            ChartSlice("Direct", 42), ChartSlice("Search", 30),
-            ChartSlice("Social", 18), ChartSlice("Referral", 10),
-        ])
-        .innerRadius(.thin)
-        .label { VStack(spacing: 0) { Text("100").textStyle(.headingSm); Text("visits").textStyle(.overline400) } }
-
-        DonutChart([ChartSlice("Yes", 68, color: .success), ChartSlice("No", 32, color: .error)])
-            .innerRadius(.pie).height(.compact)
+    PreviewMatrix("DonutChart") {
+        PreviewCase("Thin ring + center label") {
+            DonutChart([
+                ChartSlice("Direct", 42), ChartSlice("Search", 30),
+                ChartSlice("Social", 18), ChartSlice("Referral", 10),
+            ])
+            .innerRadius(.thin)
+            .label { VStack(spacing: 0) { Text("100").textStyle(.headingSm); Text("visits").textStyle(.overline400) } }
+        }
+        PreviewCase("Pie · compact · semantic colors") {
+            DonutChart([ChartSlice("Yes", 68, color: .success), ChartSlice("No", 32, color: .error)])
+                .innerRadius(.pie).height(.compact)
+        }
+        // > 6 slices fold the tail into a neutral "Other" wedge.
+        PreviewCase("Folds to Other (8 slices)") {
+            DonutChart((1...8).map { ChartSlice("Slice \($0)", Double(20 - $0)) })
+                .height(.compact)
+        }
     }
-    .padding()
 }

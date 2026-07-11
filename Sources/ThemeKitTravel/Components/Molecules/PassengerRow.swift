@@ -119,9 +119,8 @@ public extension PassengerRow {
 }
 
 #Preview {
-    VStack(spacing: 4) {
-        PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345678").seat("14C").onEdit { }
-        PassengerRow("Ada Mercan").type("Child").avatar(.initials("AM")).status("Checked in").accessory(.chevron)
+    PreviewMatrix("PassengerRow") {
+        PreviewCase("Editable + seat") { PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345678").seat("14C").onEdit { } }
+        PreviewCase("Avatar + status + chevron") { PassengerRow("Ada Mercan").type("Child").avatar(.initials("AM")).status("Checked in").accessory(.chevron) }
     }
-    .padding()
 }

@@ -146,22 +146,19 @@ public extension SortSummaryBar {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var sel = 0
-        var body: some View {
-            VStack(alignment: .leading, spacing: 24) {
-                SortSummaryBar([
-                    SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"),
-                    SortOption("Cheapest", value: "₺2.178", subtitle: "6h 45m", icon: "tag.fill"),
-                    SortOption("Fastest", value: "₺2.852", subtitle: "1h 05m", icon: "bolt.fill"),
-                ], selection: $sel).onMore { }
-
-                // Standalone accented tab (custom layouts).
-                SortTab(SortOption("Cheapest", value: "₺2.178", icon: "tag.fill"), isSelected: true) {}
-                    .accent(.success)
-            }
-            .padding()
+    @Previewable @State var sel = 0
+    PreviewMatrix("SortSummaryBar") {
+        PreviewCase("Bar + more action") {
+            SortSummaryBar([
+                SortOption("Best", value: "₺2.777", subtitle: "1h 07m", icon: "star.fill"),
+                SortOption("Cheapest", value: "₺2.178", subtitle: "6h 45m", icon: "tag.fill"),
+                SortOption("Fastest", value: "₺2.852", subtitle: "1h 05m", icon: "bolt.fill"),
+            ], selection: $sel).onMore { }
+        }
+        // Standalone accented tab (custom layouts).
+        PreviewCase("Standalone accented tab") {
+            SortTab(SortOption("Cheapest", value: "₺2.178", icon: "tag.fill"), isSelected: true) {}
+                .accent(.success)
         }
     }
-    return Demo()
 }
