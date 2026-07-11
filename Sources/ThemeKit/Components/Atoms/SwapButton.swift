@@ -54,16 +54,17 @@ public extension SwapButton {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var a = "IST"
-        @State private var b = "AYT"
-        var body: some View {
+    @Previewable @State var a = "IST"
+    @Previewable @State var b = "AYT"
+    PreviewMatrix("SwapButton") {
+        PreviewCase("In context (tap to swap)") {
             HStack(spacing: 16) {
                 Text(a).textStyle(.headingSm)
                 SwapButton { swap(&a, &b) }
                 Text(b).textStyle(.headingSm)
-            }.padding()
+            }
         }
+        PreviewCase("Borderless") { SwapButton(action: {}).bordered(false) }
+        PreviewCase("Large · custom glyph") { SwapButton("arrow.left.arrow.right", action: {}).size(44) }
     }
-    return Demo()
 }

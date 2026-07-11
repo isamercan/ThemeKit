@@ -62,10 +62,9 @@ public extension IconTile {
 }
 
 #Preview {
-    HStack(spacing: 12) {
-        IconTile("airplane")
-        IconTile("suitcase.fill").accent(.turquoise)
-        IconTile("bell.fill").accent(.warning).size(40)
+    PreviewMatrix("IconTile") {
+        PreviewCase("Neutral") { IconTile("airplane") }
+        PreviewCase("Accent") { IconTile("suitcase.fill").accent(.turquoise) }
+        PreviewCase("Warning, sized") { IconTile("bell.fill").accent(.warning).size(40) }
     }
-    .padding()
 }

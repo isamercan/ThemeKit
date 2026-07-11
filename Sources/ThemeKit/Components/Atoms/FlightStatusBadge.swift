@@ -61,9 +61,15 @@ public extension FlightStatusBadge {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 8) {
-        ForEach(FlightStatus.allCases, id: \.self) { FlightStatusBadge($0) }
-        FlightStatusBadge(.delayed).time("+35m").solid()
+    PreviewMatrix("FlightStatusBadge") {
+        for status in FlightStatus.allCases {
+            PreviewCase(status.label) { FlightStatusBadge(status) }
+        }
+        PreviewCase("Solid + time") {
+            FlightStatusBadge(.delayed).time("+35m").solid()
+        }
+        PreviewCase("No icon, custom label") {
+            FlightStatusBadge(.boarding).showsIcon(false).label("Now boarding")
+        }
     }
-    .padding()
 }

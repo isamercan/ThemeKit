@@ -215,15 +215,14 @@ public struct StepIndicator: View {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        ProgressBar(value: 0.3).showsPercentage()
-        ProgressBar(value: 0.7).showsPercentage().gradient()
-        ProgressBar(value: 0.5).showsPercentage().status(.exception)
-        ProgressBar(value: 1.0).showsPercentage().status(.success)
-        ProgressBar(value: 0.6).steps(5)
-        ProgressBar(value: 0.65).showsPercentage().meterStyle(.striped)
-        ProgressBar(value: 0.6).steps(5).meterStyle(.striped)
-        StepIndicator(current: 2, total: 5)
+    PreviewMatrix("ProgressBar") {
+        PreviewCase("Default") { ProgressBar(value: 0.3).showsPercentage() }
+        PreviewCase("Gradient") { ProgressBar(value: 0.7).showsPercentage().gradient() }
+        PreviewCase("Exception") { ProgressBar(value: 0.5).showsPercentage().status(.exception) }
+        PreviewCase("Success") { ProgressBar(value: 1.0).showsPercentage().status(.success) }
+        PreviewCase("Steps") { ProgressBar(value: 0.6).steps(5) }
+        PreviewCase("Striped") { ProgressBar(value: 0.65).showsPercentage().meterStyle(.striped) }
+        PreviewCase("Striped steps") { ProgressBar(value: 0.6).steps(5).meterStyle(.striped) }
+        PreviewCase("StepIndicator") { StepIndicator(current: 2, total: 5) }
     }
-    .padding()
 }

@@ -154,16 +154,13 @@ public extension RadialProgress {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        HStack(spacing: 20) {
-            RadialProgress(0.25)
-            RadialProgress(0.7).size(80).lineWidth(8).dashboard()
-            RadialProgress(1.0).status(.success)
-            RadialProgress(0.4).status(.exception)
-            RadialProgress(0.6).accent(.purple)
-        }
+    PreviewMatrix("RadialProgress") {
+        PreviewCase("Default") { RadialProgress(0.25) }
+        PreviewCase("Dashboard") { RadialProgress(0.7).size(80).lineWidth(8).dashboard() }
+        PreviewCase("Success") { RadialProgress(1.0).status(.success) }
+        PreviewCase("Exception") { RadialProgress(0.4).status(.exception) }
+        PreviewCase("Accent") { RadialProgress(0.6).accent(.purple) }
         // An explicit custom MeterStyle replaces the ring geometry entirely.
-        RadialProgress(0.6).meterStyle(.striped)
+        PreviewCase("Custom meter style") { RadialProgress(0.6).meterStyle(.striped) }
     }
-    .padding()
 }

@@ -129,11 +129,12 @@ public extension PointsBadge {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        PointsBadge(1_250).unit("mil").style(.earn).size(.large)
-        PointsBadge(500).style(.redeem)
-        PointsBadge(8_430).unit("pts").style(.balance).icon("wallet.pass.fill")
-            .trailing { Image(systemName: "chevron.right").font(.caption2).opacity(0.5) }
+    PreviewMatrix("PointsBadge") {
+        PreviewCase("Earn") { PointsBadge(1_250).unit("mil").style(.earn).size(.large) }
+        PreviewCase("Redeem") { PointsBadge(500).style(.redeem) }
+        PreviewCase("Balance + trailing") {
+            PointsBadge(8_430).unit("pts").style(.balance).icon("wallet.pass.fill")
+                .trailing { Image(systemName: "chevron.right").font(.caption2).opacity(0.5) }
+        }
     }
-    .padding()
 }

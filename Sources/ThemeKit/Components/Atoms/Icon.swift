@@ -73,10 +73,21 @@ public extension Icon {
 }
 
 #Preview {
-    HStack(spacing: 12) {
-        ForEach(IconSize.allCases, id: \.self) { s in
-            Icon(systemName: "star.fill").size(s).accent(.primary)
+    PreviewMatrix("Icon") {
+        PreviewCase("Sizes") {
+            HStack(spacing: 12) {
+                ForEach(IconSize.allCases, id: \.self) { s in
+                    Icon(systemName: "star.fill").size(s).accent(.primary)
+                }
+            }
+        }
+        PreviewCase("Inherited tint") { Icon(systemName: "star.fill").size(.lg) }
+        PreviewCase("Semantic accents") {
+            HStack(spacing: 12) {
+                Icon(systemName: "checkmark.circle").size(.lg).accent(.success)
+                Icon(systemName: "exclamationmark.triangle").size(.lg).accent(.warning)
+                Icon(systemName: "xmark.octagon").size(.lg).accent(.error)
+            }
         }
     }
-    .padding()
 }

@@ -74,5 +74,15 @@ public extension Barcode {
 }
 
 #Preview {
-    Barcode("9824097217421298").height(56).showsValue().padding()
+    PreviewMatrix("Barcode") {
+        PreviewCase("With value caption") {
+            Barcode("9824097217421298").height(56).showsValue()
+        }
+        PreviewCase("Bars only") {
+            Barcode("9824097217421298").height(40)
+        }
+        PreviewCase("Short value") {
+            Barcode("42").height(40).showsValue()
+        }
+    }
 }

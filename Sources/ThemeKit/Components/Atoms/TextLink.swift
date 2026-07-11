@@ -51,11 +51,10 @@ public extension TextLink {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 8) {
-        TextLink("Forgot password?") {}
-        TextLink("Learn more") {}.underline(false)
-        TextLink("Delete account") {}.accent(.error)
-        TextLink("View receipt") {}.accent(.success).underline(false)
+    PreviewMatrix("TextLink") {
+        PreviewCase("Default") { TextLink("Forgot password?") {} }
+        PreviewCase("No underline") { TextLink("Learn more") {}.underline(false) }
+        PreviewCase("Error accent") { TextLink("Delete account") {}.accent(.error) }
+        PreviewCase("Success · plain") { TextLink("View receipt") {}.accent(.success).underline(false) }
     }
-    .padding()
 }

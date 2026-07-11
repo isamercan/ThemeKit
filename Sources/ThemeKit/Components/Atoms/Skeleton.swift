@@ -238,25 +238,14 @@ public extension View {
 }
 
 #Preview("Variants · highlight tint") {
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-        Text("shimmer (default)").font(.caption).foregroundStyle(.secondary)
-        Skeleton(.capsule).size(width: 200, height: 12)
-
-        Text("pulse").font(.caption).foregroundStyle(.secondary)
-        Skeleton(.capsule).variant(.pulse).size(width: 200, height: 12)
-
-        Text("none (static)").font(.caption).foregroundStyle(.secondary)
-        Skeleton(.capsule).variant(.none).size(width: 200, height: 12)
-
-        Text("highlight tint — .info soft sweep").font(.caption).foregroundStyle(.secondary)
-        Skeleton(.rounded(.field)).highlight(.info).size(width: 200, height: 32)
-
-        Text("token radius role — .box").font(.caption).foregroundStyle(.secondary)
-        Skeleton(.rounded(.box)).size(width: 200, height: 64)
-
-        Text("Modifier-applied pulse").skeleton(true, radius: .selector, variant: .pulse)
+    PreviewMatrix("Skeleton") {
+        PreviewCase("shimmer (default)") { Skeleton(.capsule).size(width: 200, height: 12) }
+        PreviewCase("pulse") { Skeleton(.capsule).variant(.pulse).size(width: 200, height: 12) }
+        PreviewCase("none (static)") { Skeleton(.capsule).variant(.none).size(width: 200, height: 12) }
+        PreviewCase("highlight tint — .info soft sweep") { Skeleton(.rounded(.field)).highlight(.info).size(width: 200, height: 32) }
+        PreviewCase("token radius role — .box") { Skeleton(.rounded(.box)).size(width: 200, height: 64) }
+        PreviewCase("Modifier-applied pulse") { Text("Modifier-applied pulse").skeleton(true, radius: .selector, variant: .pulse) }
     }
-    .padding(Theme.SpacingKey.md.value)
 }
 
 #Preview("Reveal toggle") {

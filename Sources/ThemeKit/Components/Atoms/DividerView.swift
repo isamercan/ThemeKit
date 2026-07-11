@@ -123,15 +123,16 @@ private struct LineShape: Shape {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        DividerView().size(.small)
-        DividerView().dashed()
-        DividerView("OR")
-        DividerView("Left").titleAlign(.leading)
-        HStack {
-            Text("A"); DividerView().axis(.vertical); Text("B"); DividerView().axis(.vertical).dashed(); Text("C")
+    PreviewMatrix("DividerView") {
+        PreviewCase("Solid") { DividerView().size(.small) }
+        PreviewCase("Dashed") { DividerView().dashed() }
+        PreviewCase("Titled (center)") { DividerView("OR") }
+        PreviewCase("Titled (leading)") { DividerView("Left").titleAlign(.leading) }
+        PreviewCase("Vertical") {
+            HStack {
+                Text("A"); DividerView().axis(.vertical); Text("B"); DividerView().axis(.vertical).dashed(); Text("C")
+            }
+            .frame(height: 24)
         }
-        .frame(height: 24)
     }
-    .padding()
 }

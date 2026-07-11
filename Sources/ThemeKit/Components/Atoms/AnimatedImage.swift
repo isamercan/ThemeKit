@@ -137,7 +137,19 @@ public extension AnimatedImage {
 }
 
 #Preview {
-    AnimatedImage(URL(string: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"))
-        .frame(width: 200, height: 200)
-        .padding()
+    PreviewMatrix("AnimatedImage") {
+        PreviewCase("Remote GIF") {
+            AnimatedImage(URL(string: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"))
+                .frame(width: 160, height: 160)
+        }
+        PreviewCase("Rounded (box radius)") {
+            AnimatedImage(URL(string: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"))
+                .cornerRadius(.box)
+                .frame(width: 160, height: 160)
+        }
+        PreviewCase("Failed (nil URL)") {
+            AnimatedImage(nil)
+                .frame(width: 160, height: 90)
+        }
+    }
 }

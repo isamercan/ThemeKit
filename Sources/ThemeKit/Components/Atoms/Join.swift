@@ -42,14 +42,28 @@ public struct Join<Content: View>: View {
 }
 
 #Preview {
-    Join {
-        ForEach(["Day", "Week", "Month"], id: \.self) { label in
-            Text(label)
-                .textStyle(.labelBase600)
-                .padding(.horizontal, Theme.SpacingKey.md.value)
-                .frame(height: 40)
-            DividerView().axis(.vertical)
+    PreviewMatrix("Join") {
+        PreviewCase("Horizontal") {
+            Join {
+                ForEach(["Day", "Week", "Month"], id: \.self) { label in
+                    Text(label)
+                        .textStyle(.labelBase600)
+                        .padding(.horizontal, Theme.SpacingKey.md.value)
+                        .frame(height: 40)
+                    DividerView().axis(.vertical)
+                }
+            }
+        }
+        PreviewCase("Vertical") {
+            Join(.vertical) {
+                ForEach(["Copy", "Paste", "Delete"], id: \.self) { label in
+                    Text(label)
+                        .textStyle(.labelBase600)
+                        .padding(.horizontal, Theme.SpacingKey.md.value)
+                        .frame(height: 40)
+                    DividerView()
+                }
+            }
         }
     }
-    .padding()
 }

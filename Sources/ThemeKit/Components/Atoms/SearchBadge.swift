@@ -50,11 +50,12 @@ public extension SearchBadge {
 }
 
 #Preview {
-    HStack {
-        SearchBadge("SAW")
-        SearchBadge("23 Jul '24")
-        SearchBadge("4 Guests")
-        SearchBadge("Direct").colors(background: .badgeBgPurple, foreground: .textPurple).icon("bolt.fill")
+    PreviewMatrix("SearchBadge") {
+        PreviewCase("Airport code") { SearchBadge("SAW") }
+        PreviewCase("Date") { SearchBadge("23 Jul '24") }
+        PreviewCase("Count") { SearchBadge("4 Guests") }
+        PreviewCase("Recolored · icon") {
+            SearchBadge("Direct").colors(background: .badgeBgPurple, foreground: .textPurple).icon("bolt.fill")
+        }
     }
-    .padding()
 }

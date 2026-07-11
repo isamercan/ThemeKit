@@ -89,15 +89,20 @@ private struct IndicatorDot: View {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    HStack(spacing: 32) {
-        Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicatorDot()
-        Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicatorDot(.success)
-        Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicator { Badge("3").badgeStyle(.error).size(.small) }
+    PreviewMatrix("Indicator") {
+        PreviewCase("Notification dot") {
+            Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
+                .indicatorDot()
+        }
+        PreviewCase("Status dot") {
+            Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
+                .indicatorDot(.success)
+        }
+        PreviewCase("Badge") {
+            Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
+                .indicator { Badge("3").badgeStyle(.error).size(.small) }
+        }
     }
-    .padding()
 }
 
 #Preview("RTL") {

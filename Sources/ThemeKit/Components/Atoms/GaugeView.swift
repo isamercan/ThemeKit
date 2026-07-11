@@ -83,9 +83,18 @@ public extension GaugeView {
 }
 
 #Preview {
-    HStack(spacing: 24) {
-        GaugeView(value: 0.72, label: "CPU")
-        GaugeView(value: 0.4, label: "Storage").gaugeStyle(.linear).frame(width: 160)
+    PreviewMatrix("GaugeView") {
+        PreviewCase("Circular") {
+            GaugeView(value: 0.72, label: "CPU")
+        }
+        PreviewCase("Linear") {
+            GaugeView(value: 0.4, label: "Storage").gaugeStyle(.linear).frame(width: 160)
+        }
+        PreviewCase("No value readout") {
+            GaugeView(value: 0.55, label: "Signal").showsValue(false)
+        }
+        PreviewCase("Custom range, clamped") {
+            GaugeView(value: 180, in: 0...120, label: "Speed")
+        }
     }
-    .padding()
 }

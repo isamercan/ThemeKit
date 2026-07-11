@@ -178,34 +178,47 @@ public extension Chip {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        HStack {
-            Chip("Default", isSelected: .constant(false))
-            Chip("Tonal", isSelected: .constant(true)).chipStyle(.tonal)
-            Chip("Solid", isSelected: .constant(true)).chipStyle(.solid)
+    PreviewMatrix("Chip") {
+        PreviewCase("Selection styles") {
+            HStack {
+                Chip("Default", isSelected: .constant(false))
+                Chip("Tonal", isSelected: .constant(true)).chipStyle(.tonal)
+                Chip("Solid", isSelected: .constant(true)).chipStyle(.solid)
+            }
         }
-        HStack {
-            Chip("Icon", isSelected: .constant(true)).icon("checkmark")
-            Chip("Large", isSelected: .constant(false)).size(.large)
-            Chip("Disabled", isSelected: .constant(false)).disabled(true)
+        PreviewCase("Icon / large / disabled") {
+            HStack {
+                Chip("Icon", isSelected: .constant(true)).icon("checkmark")
+                Chip("Large", isSelected: .constant(false)).size(.large)
+                Chip("Disabled", isSelected: .constant(false)).disabled(true)
+            }
         }
         // C3 — size ramp with enforced min-heights: mixed-content chips align.
-        HStack(alignment: .center) {
-            Chip("Small", isSelected: .constant(false)).size(.small)
-            Chip("Medium", isSelected: .constant(false)).size(.medium)
-            Chip("Medium + icon", isSelected: .constant(true)).size(.medium).icon("star")
-            Chip("Large", isSelected: .constant(false)).size(.large)
+        PreviewCase("Size ramp") {
+            HStack(alignment: .center) {
+                Chip("Small", isSelected: .constant(false)).size(.small)
+                Chip("Medium", isSelected: .constant(false)).size(.medium)
+                Chip("Medium + icon", isSelected: .constant(true)).size(.medium).icon("star")
+                Chip("Large", isSelected: .constant(false)).size(.large)
+            }
         }
         // Environment ChipStyle + slots: `.chipStyle(.solid)` on the container
         // resolves to `SolidChipStyle` via the `View` extension, so both chips
         // inherit it without the enum shorthand.
-        HStack {
-            Chip("Env solid", isSelected: .constant(true))
-            Chip("Slots", isSelected: .constant(false))
-                .leading { Image(systemName: "leaf.fill").font(.system(size: 12)) }
-                .trailing { Image(systemName: "chevron.down").font(.system(size: 10)) }
+        PreviewCase("Environment style + slots") {
+            HStack {
+                Chip("Env solid", isSelected: .constant(true))
+                Chip("Slots", isSelected: .constant(false))
+                    .leading { Image(systemName: "leaf.fill").font(.system(size: 12)) }
+                    .trailing { Image(systemName: "chevron.down").font(.system(size: 10)) }
+            }
+            .chipStyle(.solid)
         }
-        .chipStyle(.solid)
+        PreviewCase("Sold out / long text") {
+            HStack {
+                Chip("Sold out", isSelected: .constant(false)).exists(false)
+                Chip("a-very-long-filter-value-here", isSelected: .constant(false))
+            }
+        }
     }
-    .padding()
 }

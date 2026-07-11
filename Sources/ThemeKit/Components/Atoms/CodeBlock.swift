@@ -137,22 +137,25 @@ public extension CodeBlock {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 16) {
-        CodeBlock([
-            CodeLine("npm i themekit", prefix: "$"),
-            CodeLine("installing...", prefix: ">"),
-            CodeLine("Error! Enable maintainer mode.", prefix: ">", highlight: .warning),
-            CodeLine("Done!", prefix: ">", highlight: .success),
-        ])
-        .copyable()
-
-        CodeBlock([
-            CodeLine("import SwiftUI", prefix: "1"),
-            CodeLine("struct App: View { var body: some View { CodeBlock([]) } } // a deliberately long line to demonstrate horizontal scrolling", prefix: "2"),
-            CodeLine("#Preview { App() }", prefix: "3"),
-        ])
+    PreviewMatrix("CodeBlock") {
+        PreviewCase("Terminal + highlights (copyable)") {
+            CodeBlock([
+                CodeLine("npm i themekit", prefix: "$"),
+                CodeLine("installing...", prefix: ">"),
+                CodeLine("Error! Enable maintainer mode.", prefix: ">", highlight: .warning),
+                CodeLine("Done!", prefix: ">", highlight: .success),
+            ])
+            .copyable()
+        }
+        PreviewCase("Line numbers + long line (scrolls)") {
+            CodeBlock([
+                CodeLine("import SwiftUI", prefix: "1"),
+                CodeLine("struct App: View { var body: some View { CodeBlock([]) } } // a deliberately long line to demonstrate horizontal scrolling", prefix: "2"),
+                CodeLine("#Preview { App() }", prefix: "3"),
+            ])
+        }
+        PreviewCase("Single line, no prefix") {
+            CodeBlock([CodeLine("swift build")])
+        }
     }
-    .padding()
-    .background(theme.background(.bgSecondaryLight))
 }

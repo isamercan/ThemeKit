@@ -144,26 +144,29 @@ private struct Tilt3DModifier: ViewModifier {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 40) {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Premium Cabin").textStyle(.headingSm)
-            Text("Drag me around").textStyle(.bodySm400)
+    // Drag-driven tilt still works inside each cell; a matrix row shows the
+    // at-rest frame per form.
+    PreviewMatrix("TiltCard") {
+        PreviewCase("Modifier form · shine") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Premium Cabin").textStyle(.headingSm)
+                Text("Drag me around").textStyle(.bodySm400)
+            }
+            .padding(32)
+            .frame(width: 260)
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+            .themeShadow(.elevated)
+            .tilt3D(shine: true)
         }
-        .padding(32)
-        .frame(width: 260)
-        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-        .themeShadow(.elevated)
-        .tilt3D(shine: true)
-
-        TiltCard {
-            Text("Wrapper form")
-                .padding(40)
-                .background(theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: 16))
+        PreviewCase("Wrapper form · custom angle") {
+            TiltCard {
+                Text("Wrapper form")
+                    .padding(40)
+                    .background(theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: 16))
+            }
+            .maxAngle(.degrees(14))
+            .shine()
+            .radius(.field)
         }
-        .maxAngle(.degrees(14))
-        .shine()
-        .radius(.field)
     }
-    .padding(48)
-    .background(theme.background(.bgTertiary))
 }

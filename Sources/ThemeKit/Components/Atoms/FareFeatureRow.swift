@@ -69,14 +69,23 @@ public extension FareFeatureRow {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 8) {
-        FareFeatureRow("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm")
-        FareFeatureRow("Checked bag", systemImage: "suitcase.fill", detail: "1 × 20 kg", status: .included)
-        FareFeatureRow("Non-refundable", systemImage: "nosign", status: .excluded)
-        FareFeatureRow("Partial refund", systemImage: "arrow.uturn.backward", status: .included)
-        FareFeatureRow("Priority boarding", systemImage: "figure.walk")
-            .icon("hare.fill")
-            .accent(.purple)
+    PreviewMatrix("FareFeatureRow") {
+        PreviewCase("Info + detail") {
+            FareFeatureRow("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm")
+        }
+        PreviewCase("Included") {
+            FareFeatureRow("Checked bag", systemImage: "suitcase.fill", detail: "1 × 20 kg", status: .included)
+        }
+        PreviewCase("Excluded") {
+            FareFeatureRow("Non-refundable", systemImage: "nosign", status: .excluded)
+        }
+        PreviewCase("Icon override + accent") {
+            FareFeatureRow("Priority boarding", systemImage: "figure.walk")
+                .icon("hare.fill")
+                .accent(.purple)
+        }
+        PreviewCase("Long text") {
+            FareFeatureRow("Complimentary in-flight refreshments and beverages on all sectors", systemImage: "cup.and.saucer.fill", status: .included)
+        }
     }
-    .padding()
 }

@@ -263,18 +263,13 @@ public extension Rating {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var v = 3.5
-        var body: some View {
-            VStack(alignment: .leading, spacing: 12) {
-                Rating(value: 4.3).countLabel("(128)")                                   // continuous fill
-                Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {}  // numeric + tappable review
-                Rating(value: v).allowHalf().onRate { v = $0 }                            // interactive
-                Rating(value: v).allowClear().onRate { v = $0 }                           // re-tap current value → 0
-                Rating(value: 3).symbol("heart")
-            }
-            .padding()
-        }
+    @Previewable @State var v = 3.5
+    PreviewMatrix("Rating") {
+        PreviewCase("Stars") { Rating(value: 4.3).countLabel("(128)") }                  // continuous fill
+        PreviewCase("Number rate") { Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {} }
+        PreviewCase("Rate + sentiment") { Rating(value: 8.4).layout(.rateNumberText).maxValue(10) }
+        PreviewCase("Interactive (half)") { Rating(value: v).allowHalf().onRate { v = $0 } }
+        PreviewCase("Clear on re-tap") { Rating(value: v).allowClear().onRate { v = $0 } }  // re-tap current value → 0
+        PreviewCase("Custom symbol") { Rating(value: 3).symbol("heart") }
     }
-    return Demo()
 }

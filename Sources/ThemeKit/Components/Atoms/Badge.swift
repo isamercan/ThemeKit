@@ -237,22 +237,37 @@ private struct BadgeHighlight: ViewModifier {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        ForEach(BadgeStyle.allCases, id: \.self) { style in
-            Badge(style.rawValue.capitalized).badgeStyle(style).icon("star.fill")
+    PreviewMatrix("Badge") {
+        for style in BadgeStyle.allCases {
+            PreviewCase(style.rawValue.capitalized) {
+                Badge(style.rawValue.capitalized).badgeStyle(style).icon("star.fill")
+            }
         }
-        HStack {
-            Badge("Small").badgeStyle(.info).size(.small)
-            Badge("Medium").badgeStyle(.info).size(.medium)
-            Badge("Large").badgeStyle(.info).size(.large)
-            Badge("Rounded").badgeStyle(.success).badgeShape(.rounded)
+        PreviewCase("Sizes + rounded") {
+            HStack {
+                Badge("Small").badgeStyle(.info).size(.small)
+                Badge("Medium").badgeStyle(.info).size(.medium)
+                Badge("Large").badgeStyle(.info).size(.large)
+                Badge("Rounded").badgeStyle(.success).badgeShape(.rounded)
+            }
+        }
+        PreviewCase("Variants") {
+            HStack {
+                Badge("Solid").badgeStyle(.error).variant(.solid)
+                Badge("Outline").badgeStyle(.info).variant(.outline)
+                Badge("Ghost").badgeStyle(.success).variant(.ghost)
+            }
         }
         // G5 — token gradient twin (solid shades of semantic hues); `.solid`
         // variant keeps the on-solid foreground over the gradient fill.
-        HStack {
-            Badge("Pro").gradient([.purple, .pink]).variant(.solid)
-            Badge("Deal").gradient([.primary, .turquoise]).variant(.solid)
+        PreviewCase("Gradient (solid)") {
+            HStack {
+                Badge("Pro").gradient([.purple, .pink]).variant(.solid)
+                Badge("Deal").gradient([.primary, .turquoise]).variant(.solid)
+            }
+        }
+        PreviewCase("Long text") {
+            Badge("a-rather-long-badge-label").badgeStyle(.warning)
         }
     }
-    .padding()
 }
