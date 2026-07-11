@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1A1111111111111111111112 /* ThemeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111111 /* ThemeKit */; };
 		1A1111111111111111111122 /* ThemeKitCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111121 /* ThemeKitCalendar */; };
+		1A1111111111111111111132 /* ThemeKitTravel in Frameworks */ = {isa = PBXBuildFile; productRef = 1A1111111111111111111131 /* ThemeKitTravel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 			files = (
 				1A1111111111111111111112 /* ThemeKit in Frameworks */,
 				1A1111111111111111111122 /* ThemeKitCalendar in Frameworks */,
+				1A1111111111111111111132 /* ThemeKitTravel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +72,7 @@
 			packageProductDependencies = (
 				1A1111111111111111111111 /* ThemeKit */,
 				1A1111111111111111111121 /* ThemeKitCalendar */,
+				1A1111111111111111111131 /* ThemeKitTravel */,
 			);
 			productName = Demo;
 			productReference = 1A1111111111111111111105 /* Demo.app */;
@@ -344,6 +347,10 @@
 		1A1111111111111111111121 /* ThemeKitCalendar */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThemeKitCalendar;
+		};
+		1A1111111111111111111131 /* ThemeKitTravel */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThemeKitTravel;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

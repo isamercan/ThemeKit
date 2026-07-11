@@ -337,6 +337,8 @@ enum ComponentRegistry {
         .knob("MapCallout", .organisms, demo: MapCalloutDemo(), usage: ##"MapCallout(title: "Mirage Park Resort").image(url).score(8.9).price(9_600).onSelect { }   // over any Map, no MapKit dep"##),
         .knob("AgentPriceRow", .organisms, demo: AgentPriceRowDemo(), usage: ##"AgentPriceRow("Trip.com") { open() }.logo(url).rating(4.2).badge("Cheapest").original(4_100).price(3_538).cta("Go to site").recommended()"##),
         .knob("PriceAlertCard", .organisms, demo: PriceAlertCardDemo(), usage: ##"PriceAlertCard("Get price alerts", isOn: $alerts).subtitle("…").price(3_538).trend(.down, "-8%")"##),
+        .knob("PassengerForm", .organisms, demo: PassengerFormDemo(), usage: ##"PassengerForm("Passenger 1 · Adult", draft: $traveler).documentRequired().validator(form)   // ThemeKitTravel"##, isNew: true),
+        .knob("PaymentMethodSelector", .organisms, demo: PaymentMethodSelectorDemo(), usage: ##"PaymentMethodSelector(options, selection: $method).installments([1,3,6], selection: $months, total: fareTotal)   // ThemeKitTravel"##, isNew: true),
         .knob("PaymentCardField", .molecules, demo: PaymentCardFieldDemo(), usage: ##"PaymentCardField(number: $n, expiry: $e, cvv: $c).holder($name)   // brand auto-detect + 4-4-4-4 / MM/YY"##),
         .knob("InstallmentPicker", .molecules, demo: InstallmentPickerDemo(), usage: ##"InstallmentPicker([InstallmentOption(count: 3, total: 9_900, monthly: 3_300), …], selection: $count).currency("TRY")"##),
         .knob("MapPriceMarker", .molecules, demo: MapPriceMarkerDemo(), usage: ##"MapPriceMarker("₺1.250").selected(isActive).icon("heart.fill")   // in any Map annotation"##),
