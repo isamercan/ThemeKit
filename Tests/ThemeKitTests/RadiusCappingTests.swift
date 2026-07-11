@@ -1,5 +1,6 @@
 import XCTest
 @testable import ThemeKit
+@testable import ThemeKitTravel
 
 /// Math contract for the HeroUI-style radius helpers on `Theme.RadiusKey` and
 /// `Theme.RadiusRole`: `value(cappedFor:)` clamps to half the element height,

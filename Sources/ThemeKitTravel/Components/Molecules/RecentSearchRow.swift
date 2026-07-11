@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct RecentSearchRow: View {
     @Environment(\.theme) private var theme

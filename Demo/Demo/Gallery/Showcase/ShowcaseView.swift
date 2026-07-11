@@ -16,6 +16,7 @@
 import SwiftUI
 import Combine
 import ThemeKit
+import ThemeKitTravel
 
 struct ShowcaseView: View {
     @EnvironmentObject private var themeStore: DemoThemeStore

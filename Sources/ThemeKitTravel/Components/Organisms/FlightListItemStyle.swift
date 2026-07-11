@@ -23,6 +23,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 // MARK: - Configuration
 

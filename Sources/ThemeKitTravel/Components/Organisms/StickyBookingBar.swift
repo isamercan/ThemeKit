@@ -22,6 +22,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct StickyBookingBar: View {
     @Environment(\.theme) private var theme

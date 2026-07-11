@@ -9,6 +9,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// One date/price option in a ``DatePriceStrip``.
 public struct DatePriceItem: Identifiable, Sendable {

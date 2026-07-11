@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct SeatCell: View {
     @Environment(\.theme) private var theme

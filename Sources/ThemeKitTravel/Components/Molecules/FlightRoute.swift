@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// How ``FlightRoute`` draws the segment between the two time columns.
 public enum FlightRouteTrack {

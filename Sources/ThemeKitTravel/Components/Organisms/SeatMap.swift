@@ -15,6 +15,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// A generic, token-bound seat map.
 ///

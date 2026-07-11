@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// A single seat and its fare features. The fare tier is the source of truth; the
 /// `isPremium` / `isExitRow` … flags are convenience read-outs derived from it.

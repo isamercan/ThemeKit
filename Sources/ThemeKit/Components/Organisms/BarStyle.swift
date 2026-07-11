@@ -40,6 +40,13 @@ public struct BarStyleConfiguration {
     public let trailing: AnyView?
     /// The edge the bar sits on — top bar (header) or bottom bar (dock).
     public let edge: BarEdge
+
+    public init(leading: AnyView?, content: AnyView, trailing: AnyView?, edge: BarEdge) {
+        self.leading = leading
+        self.content = content
+        self.trailing = trailing
+        self.edge = edge
+    }
 }
 
 /// Defines a bar's chrome. Implement `makeBody` to wrap the configuration's
@@ -78,24 +85,30 @@ enum BarMetrics {
 /// `BarStyleConfiguration`: they are component-owned modifiers, so the
 /// component plumbs them to the style through this internal environment value
 /// instead. Built-in styles honor them; custom styles may ignore them.
-struct BarChromeOverrides: Sendable {
+public struct BarChromeOverrides: Sendable {
     /// When non-`nil`, replaces the style's own surface fill.
-    var surface: Theme.BackgroundColorKey?
+    public var surface: Theme.BackgroundColorKey?
     /// When `false`, suppresses the style's edge hairline (also used when a
     /// progress line replaces the divider).
-    var showsHairline = true
+    public var showsHairline = true
     /// When non-`nil`, gates the style's own shadow (`StickyBookingBar
     /// .showsShadow(_:)`). `nil` = the style decides. It can only suppress a
     /// shadow the style already draws — styles without one (e.g.
     /// ``DefaultBarStyle``) ignore `true`.
-    var showsShadow: Bool? = nil
+    public var showsShadow: Bool? = nil
+
+    public init(surface: Theme.BackgroundColorKey? = nil, showsHairline: Bool = true, showsShadow: Bool? = nil) {
+        self.surface = surface
+        self.showsHairline = showsHairline
+        self.showsShadow = showsShadow
+    }
 }
 
 private struct BarChromeOverridesKey: EnvironmentKey {
     static let defaultValue = BarChromeOverrides()
 }
 
-extension EnvironmentValues {
+public extension EnvironmentValues {
     var barChromeOverrides: BarChromeOverrides {
         get { self[BarChromeOverridesKey.self] }
         set { self[BarChromeOverridesKey.self] = newValue }
@@ -225,7 +238,7 @@ public extension BarStyle where Self == FloatingBarStyle {
 
 // MARK: - Type erasure + environment plumbing
 
-struct AnyBarStyle: BarStyle {
+public struct AnyBarStyle: BarStyle {
     private let _makeBody: @MainActor (BarStyleConfiguration) -> AnyView
     /// `true` only for the environment's stock value — i.e. no `.barStyle(_:)`
     /// anywhere up the tree. Bars whose *stock* chrome cannot be produced by
@@ -233,19 +246,19 @@ struct AnyBarStyle: BarStyle {
     /// off this to keep their default look pixel-identical while still routing
     /// through any explicitly set style. `SheetHeader` (whose stock chrome *is*
     /// `DefaultBarStyle`) ignores it.
-    let isDefault: Bool
-    init<S: BarStyle>(_ style: sending S, isDefault: Bool = false) {
+    public let isDefault: Bool
+    public init<S: BarStyle>(_ style: sending S, isDefault: Bool = false) {
         self.isDefault = isDefault
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
-    func makeBody(configuration: BarStyleConfiguration) -> AnyView { _makeBody(configuration) }
+    public func makeBody(configuration: BarStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct BarStyleKey: EnvironmentKey {
-    static let defaultValue = AnyBarStyle(DefaultBarStyle(), isDefault: true)
+    nonisolated(unsafe) static let defaultValue = AnyBarStyle(DefaultBarStyle(), isDefault: true)
 }
 
-extension EnvironmentValues {
+public extension EnvironmentValues {
     var barStyle: AnyBarStyle {
         get { self[BarStyleKey.self] }
         set { self[BarStyleKey.self] = newValue }

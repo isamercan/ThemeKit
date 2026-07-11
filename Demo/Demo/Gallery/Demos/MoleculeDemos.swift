@@ -9,6 +9,7 @@
 
 import SwiftUI
 import ThemeKit
+import ThemeKitTravel
 
 struct ButtonDemo: View {
     enum Style: String, CaseIterable { case primary, secondary, outline, ghost, link }

@@ -10,6 +10,7 @@
 
 import XCTest
 @testable import ThemeKit
+@testable import ThemeKitTravel
 
 final class TravelComponentLogicTests: XCTestCase {
 

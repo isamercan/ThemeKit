@@ -23,6 +23,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct BoardingPass: View {
     @Environment(\.theme) private var theme

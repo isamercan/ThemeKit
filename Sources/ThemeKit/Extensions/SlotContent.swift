@@ -31,15 +31,15 @@ import SwiftUI
 /// Type-erased content of an optional slot; `nil` (no `SlotContent`) means
 /// "render the component's built-in". Internal by design — the public surface
 /// is each component's `@ViewBuilder` slot modifier, never `AnyView`.
-struct SlotContent: View {
+public struct SlotContent: View {
     private let content: AnyView
 
     /// Erases the slot's content. The closure is evaluated immediately at the
     /// modifier call site (during the parent's body construction), so nothing
     /// escapes and no `sending` is needed.
-    init<V: View>(@ViewBuilder _ content: () -> V) {
+    public init<V: View>(@ViewBuilder _ content: () -> V) {
         self.content = AnyView(content())
     }
 
-    var body: some View { content }
+    public var body: some View { content }
 }

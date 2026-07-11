@@ -10,6 +10,7 @@
 import XCTest
 import SwiftUI
 @testable import ThemeKit
+@testable import ThemeKitTravel
 
 @available(iOS 16.0, macOS 13.0, *)
 final class TravelComponentsRenderTests: XCTestCase {
