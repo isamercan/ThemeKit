@@ -71,6 +71,14 @@ public struct FlightListItemConfiguration {
     public let locale: Locale
     /// Flips `isExpanded` (animated). Styles with a disclosure affordance call this.
     public let toggleExpand: () -> Void
+    /// Favourite state — `nil` means no heart was requested (the default; styles
+    /// render no heart and reserve no space). Set by ``FlightListItem/favorite()``
+    /// / ``FlightListItem/favorite(_:)``. Custom styles that predate this field
+    /// simply ignore it — graceful degradation, no crash, no layout shift.
+    public let isFavorite: Bool?
+    /// Flips `isFavorite` (animated, `MicroMotion`-gated). Styles with a heart
+    /// call this — mirrors `toggleExpand`.
+    public let toggleFavorite: (() -> Void)?
 
     /// The itinerary's first leg — every style's primary subject.
     public var leg: FlightLeg { legs[0] }
@@ -203,6 +211,37 @@ private struct PriceBlock: View {
     }
 }
 
+/// The favourite heart toggle shared by the built-ins — parity with
+/// ``FlightCard``'s heart (44pt target, `heart`/`heart.fill`, error-tone fill,
+/// bounce gated by `microAnimations` + Reduce Motion). Renders **nothing** when
+/// the configuration has no favourite (`isFavorite == nil`), so styles compose
+/// it without a layout shift for callers that never asked for a heart.
+private struct FavoriteHeart: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isReadOnly) private var isReadOnly
+    let configuration: FlightListItemConfiguration
+
+    var body: some View {
+        if let isFavorite = configuration.isFavorite {
+            Button { configuration.toggleFavorite?() } label: {
+                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                    .font(.body)
+                    .foregroundStyle(isFavorite ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                    .symbolEffect(.bounce, value: (micro && !reduceMotion) ? isFavorite : false)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isReadOnly)
+            .accessibilityLabel(isFavorite
+                ? String(themeKit: "Remove from favourites")
+                : String(themeKit: "Add to favourites"))
+        }
+    }
+}
+
 /// A tiny price-history sparkline. Drawn in a fixed frame and explicitly
 /// mirrored for RTL (a `Path` doesn't follow layout direction on its own).
 private struct Sparkline: View {
@@ -262,6 +301,7 @@ private struct CompactChrome: View {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 SliceLine(configuration: configuration, leg: configuration.leg)
                 Spacer(minLength: Theme.SpacingKey.xs.value)
+                FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
             .padding(.vertical, Theme.SpacingKey.sm.value)
@@ -310,6 +350,7 @@ private struct TimelineChrome: View {
                     }
                 }
                 Spacer()
+                FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration)
             }
         }
@@ -338,7 +379,13 @@ private struct FareBoardChrome: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            SliceLine(configuration: configuration, leg: configuration.leg)
+            HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+                SliceLine(configuration: configuration, leg: configuration.leg)
+                if configuration.isFavorite != nil {
+                    Spacer(minLength: Theme.SpacingKey.xs.value)
+                    FavoriteHeart(configuration: configuration)
+                }
+            }
             if !configuration.fares.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -419,6 +466,7 @@ private struct DealChrome: View {
                     }
                 }
                 Spacer(minLength: 0)
+                FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration)
             }
             .padding(Theme.SpacingKey.md.value)
@@ -477,6 +525,7 @@ private struct TicketChrome: View {
                 Text(configuration.flightNo ?? leg.airline)
                     .textStyle(.labelSm700).foregroundStyle(theme.text(.textSecondary))
                 Spacer()
+                FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
             .padding(Theme.SpacingKey.md.value)
@@ -557,18 +606,28 @@ private struct JourneyChrome: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Button(action: configuration.toggleExpand) {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    SliceLine(configuration: configuration, leg: configuration.leg)
-                    Spacer(minLength: Theme.SpacingKey.xs.value)
-                    Icon(systemName: "chevron.down").size(.xs).accent(.neutral)
-                        .rotationEffect(.degrees(configuration.isExpanded ? 180 : 0))
+            // The heart sits OUTSIDE the disclosure Button (no nested buttons);
+            // when no favourite is requested the wrapper collapses to the
+            // original single-button header — layout-identical.
+            HStack(spacing: 0) {
+                Button(action: configuration.toggleExpand) {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        SliceLine(configuration: configuration, leg: configuration.leg)
+                        Spacer(minLength: Theme.SpacingKey.xs.value)
+                        Icon(systemName: "chevron.down").size(.xs).accent(.neutral)
+                            .rotationEffect(.degrees(configuration.isExpanded ? 180 : 0))
+                    }
+                    .padding(Theme.SpacingKey.md.value)
+                    .contentShape(Rectangle())
                 }
-                .padding(Theme.SpacingKey.md.value)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .accessibilityLabel(configuration.isExpanded ? "Collapse flight details" : "Expand flight details")
+
+                if configuration.isFavorite != nil {
+                    FavoriteHeart(configuration: configuration)
+                        .padding(.trailing, Theme.SpacingKey.sm.value)
+                }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(configuration.isExpanded ? "Collapse flight details" : "Expand flight details")
 
             if configuration.isExpanded {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
@@ -662,13 +721,14 @@ private struct SlicesChrome: View {
                     Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
                 }
             }
-            if configuration.priceAmount != nil || configuration.onSelect != nil {
+            if configuration.priceAmount != nil || configuration.onSelect != nil || configuration.isFavorite != nil {
                 Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
                 HStack {
                     if configuration.legs.map(\.airline).uniqued().count > 1 {
                         Text("Mixed airlines").textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
                     }
                     Spacer()
+                    FavoriteHeart(configuration: configuration)
                     PriceBlock(configuration: configuration)
                 }
             }
@@ -710,6 +770,7 @@ private struct TimetableChrome: View {
                     .frame(width: 24, height: 24)
                 Text(configuration.leg.airline).textStyle(.labelMd700).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
+                FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
             if let note = configuration.scheduleNote {
@@ -786,6 +847,10 @@ private struct TrayChrome: View {
                     Text(leg.airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
                     if let badge = configuration.badge {
                         Badge(badge).badgeStyle(.info).size(.small)
+                    }
+                    if configuration.isFavorite != nil {
+                        Spacer(minLength: 0)
+                        FavoriteHeart(configuration: configuration)
                     }
                 }
                 FlightRoute(from: leg.origin, to: leg.destination,

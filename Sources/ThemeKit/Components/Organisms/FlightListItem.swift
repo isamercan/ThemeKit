@@ -28,6 +28,8 @@ public struct FlightListItem: View {
     @Environment(\.locale) private var locale
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.flightListItemStyle) private var style
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Required content (R1).
     private let legs: [FlightLeg]
@@ -57,8 +59,16 @@ public struct FlightListItem: View {
     private var onSelect: (() -> Void)?
     private var detailsTitle = "Details"
     private var onDetails: (() -> Void)?
-    private var expandedBinding: Binding<Bool>?
-    @State private var internalExpanded = false
+    /// Expansion state for `.journey`-class styles — uncontrolled by default;
+    /// `.expanded(_:)` swaps in the caller's binding (ADR-F4 via
+    /// `ControllableState`, mirroring the Accordion refactor).
+    @ControllableState private var expandedState = false
+    /// Favourite state — hidden until `.favorite()` / `.favorite(_:)` request
+    /// the heart (the backing var is deliberately NOT named `favorite`: a
+    /// stored `favorite` + a nullary `func favorite()` would be an invalid
+    /// redeclaration).
+    @ControllableState private var favoriteState = false
+    private var showsFavorite = false
 
     /// A multi-leg itinerary (round trip / multi-city). One entry per slice.
     public init(legs: [FlightLeg]) {   // R1 — content
@@ -77,7 +87,7 @@ public struct FlightListItem: View {
     }
 
     public var body: some View {
-        let expanded = expandedBinding?.wrappedValue ?? internalExpanded
+        let heartMotion = MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
         let configuration = FlightListItemConfiguration(
             legs: legs, sliceLabels: sliceLabels, flightNo: flightNo, cabin: cabin,
             airlineSystemImage: airlineSystemImage, logo: logo,
@@ -87,16 +97,18 @@ public struct FlightListItem: View {
             dealText: dealText, dealTone: dealTone, trend: trend,
             badge: badge, amenities: amenities,
             baggage: baggage, checkedBaggage: checkedBaggage,
-            isExpanded: expanded, isSelected: isSelected, isEnabled: isEnabled,
+            isExpanded: expandedState, isSelected: isSelected, isEnabled: isEnabled,
             selectTitle: selectTitle, onSelect: onSelect,
             detailsTitle: detailsTitle, onDetails: onDetails,
             surfaceKey: surfaceKey,
             locale: locale,
             toggleExpand: {
-                withAnimation(.spring(duration: 0.35)) {
-                    if let binding = expandedBinding { binding.wrappedValue.toggle() } else { internalExpanded.toggle() }
-                }
-            }
+                withAnimation(.spring(duration: 0.35)) { expandedState.toggle() }
+            },
+            isFavorite: showsFavorite ? favoriteState : nil,
+            toggleFavorite: showsFavorite
+                ? { withAnimation(heartMotion) { favoriteState.toggle() } }
+                : nil
         )
         style.makeBody(configuration: configuration)
             .opacity(isEnabled ? 1 : 0.5)
@@ -165,7 +177,23 @@ public extension FlightListItem {
     }
     /// Drives expandable styles (`.journey`) from outside — e.g. an accordion
     /// list where only one item is open. Without it the item self-manages.
-    func expanded(_ binding: Binding<Bool>) -> Self { copy { $0.expandedBinding = binding } }
+    func expanded(_ binding: Binding<Bool>) -> Self {
+        copy { $0._expandedState = ControllableState(wrappedValue: false, external: binding) }
+    }
+    /// Self-managed favourite heart (uncontrolled): every built-in style renders
+    /// the heart in its identity/price corner and the item owns the flag.
+    /// Per-identity `@State` means the heart survives List *scrolling*, but not
+    /// identity churn (a row re-created under a new identity — e.g. re-fetched
+    /// results — resets to unfavourited). Use ``favorite(_:)`` when the flag
+    /// must persist.
+    func favorite() -> Self { copy { $0.showsFavorite = true } }
+    /// Controlled favourite heart — the caller owns persistence.
+    func favorite(_ isFavorite: Binding<Bool>) -> Self {
+        copy {
+            $0.showsFavorite = true
+            $0._favoriteState = ControllableState(wrappedValue: false, external: isFavorite)
+        }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var next = self
@@ -179,11 +207,15 @@ public extension FlightListItem {
     let arr = dep.addingTimeInterval(3.5 * 3600)
     ScrollView {
         VStack(spacing: 16) {
+            // Uncontrolled heart (off until tapped) — the item owns the flag.
             FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
                 .flightNo("SK 1123").price(214, currencyCode: "USD", caption: "from").badge("Best")
+                .favorite()
                 .onSelect { }
+            // Controlled heart, shown favourited.
             FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
                 .price(189, currencyCode: "USD")
+                .favorite(.constant(true))
                 .flightListItemStyle(.compact)
             FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
                 .price(164, currencyCode: "USD").original(214)
