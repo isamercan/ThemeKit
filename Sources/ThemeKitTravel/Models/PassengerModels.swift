@@ -47,3 +47,25 @@ public struct PassengerDraft: Sendable, Equatable, Codable {
 
     public init() {}
 }
+
+public extension PassengerDraft {
+    /// The canonical-strings serialization (ADR-F6) `FormValidator` consumes:
+    ///
+    ///     if form.validateAll(traveler.formValues) == nil { proceed(traveler) }
+    ///
+    /// Pinned conventions (§1.4 rev 4): dates serialize as ISO-8601 calendar
+    /// dates (`"2027-04-19"`, locale-independent — the rule pack's date
+    /// factories parse the same shape), enums as their `rawValue`, and absent
+    /// optionals as `""` (so `.required()` applies naturally).
+    var formValues: [PassengerFormField: String] {
+        [
+            .givenName: givenName,
+            .familyName: familyName,
+            .gender: gender?.rawValue ?? "",
+            .dateOfBirth: dateOfBirth.map(ISO8601Day.string(from:)) ?? "",
+            .nationality: nationality ?? "",
+            .documentNumber: documentNumber,
+            .documentExpiry: documentExpiry.map(ISO8601Day.string(from:)) ?? "",
+        ]
+    }
+}
