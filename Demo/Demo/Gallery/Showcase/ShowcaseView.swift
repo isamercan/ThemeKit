@@ -6,7 +6,10 @@
 //  The app's opening experience — a full-screen, tab-bar-free, non-scrolling
 //  paged showcase built for screen recording. It opens on an Ant-Design-homepage
 //  style collage, then swipes through curated, densely-packed pages (Overview ·
-//  Travel · Content · Dashboard) with page dots at the bottom. Each page fills
+//  Travel · ThemeKitTravel · Content · Dashboard · Forms) with page dots at the
+//  bottom. The ThemeKitTravel page is a distinct section for the opt-in
+//  flight-booking edition (TripSearchCard, PaymentMethodSelector, FlightTracker…).
+//  Each page fills
 //  the screen with the richest components in the library. A theme-preset row
 //  (top-right) re-skins the whole wall; "All components" opens the Rich
 //  components shelf. Auto theme-cycle is OFF by default. Wide-canvas first
@@ -42,6 +45,7 @@ struct ShowcaseView: View {
             TabView(selection: $page) {
                 OverviewPage().tag(0)
                 TravelPage().tag(1)
+                ThemeKitTravelPage().tag(5)
                 ContentPage().tag(2)
                 DashboardPage().tag(3)
                 FormsPage().tag(4)
@@ -853,6 +857,79 @@ private struct FormsPage: View {
                 }
                 .level(.secondary)
                 .contentPadding(.sm)
+            }
+        }
+    }
+}
+
+// MARK: - Page 5 · THEMEKITTRAVEL (the opt-in flight-booking edition)
+
+private struct ThemeKitTravelPage: View {
+    @State private var trip = TripSearchDraft()
+    @State private var cabin: CabinClass = .economy
+    @State private var method: String? = "card"
+    @State private var months = 3
+    @State private var phone = ""
+    @State private var lang = "en"
+    @State private var cardID: String? = "visa"
+
+    private let airports: [Airport] = [
+        Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR"),
+        Airport(code: "LHR", name: "Heathrow Airport", city: "London", countryCode: "GB"),
+        Airport(code: "JFK", name: "John F. Kennedy Airport", city: "New York", countryCode: "US"),
+        Airport(code: "CDG", name: "Charles de Gaulle Airport", city: "Paris", countryCode: "FR"),
+        Airport(code: "BER", name: "Brandenburg Airport", city: "Berlin", countryCode: "DE"),
+    ]
+    private let paymentOptions: [PaymentMethodOption] = [
+        .init(id: "card", kind: .card, title: "Credit / debit card"),
+        .init(id: "wallet", kind: .wallet, title: "Digital wallet", subtitle: "Pay in one tap"),
+        .init(id: "transfer", kind: .transfer, title: "Bank transfer"),
+    ]
+    private let cards: [SavedCard] = [
+        SavedCard(id: "visa", brand: .visa, last4: "4242", holder: "Alex Morgan", expiryMonth: 8, expiryYear: 2032),
+        SavedCard(id: "mc", brand: .mastercard, last4: "4444", holder: "Alex Morgan", expiryMonth: 1, expiryYear: 2031),
+    ]
+    private let languages: [AppLanguage] = [
+        AppLanguage(code: "en"), AppLanguage(code: "tr"), AppLanguage(code: "de"), AppLanguage(code: "fr"),
+    ]
+    private var trackerInfo: FlightStatusInfo {
+        let dep = Date(timeIntervalSinceReferenceDate: 790_000_000)
+        return FlightStatusInfo(
+            leg: FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                           departure: dep, arrival: dep.addingTimeInterval(4 * 3600)),
+            status: .boarding, gate: "B12", terminal: "1", checkInDesk: "34–38")
+    }
+
+    var body: some View {
+        PageScaffold(title: "ThemeKitTravel",
+                     subtitle: "The opt-in flight-booking edition — import ThemeKitTravel.") {
+            HStack(alignment: .top, spacing: 16) {
+                VStack(spacing: 16) {
+                    TripSearchCard(draft: $trip, onSearch: { _ in })
+                        .airports(suggestions: airports, recent: Array(airports.prefix(2)))
+                        .variant(.card)
+                    CollageCard("Cabin class") {
+                        CabinClassSelector(selection: $cabin).variant(.segmented).showsGlyphs()
+                    }
+                }
+                VStack(spacing: 16) {
+                    CollageCard("Payment method") {
+                        PaymentMethodSelector(paymentOptions, selection: $method)
+                            .installments([1, 3, 6, 9], selection: $months, total: 9_600)
+                    }
+                    CollageCard("Contact") {
+                        VStack(spacing: 12) {
+                            PhoneField("Phone", number: $phone).formatsNumber()
+                            LanguageSwitcher(languages, selection: $lang).variant(.inline).showsFlags()
+                        }
+                    }
+                }
+                VStack(spacing: 16) {
+                    FlightTracker(trackerInfo).progress(0.62).showsTimeline()
+                    SavedCardsList(cards, selection: $cardID).flagsExpired()
+                    TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
+                        .price(19).duration("2h 10m").badge("Eco").onSelect { }
+                }
             }
         }
     }
