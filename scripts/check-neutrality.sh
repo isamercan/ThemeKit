@@ -19,8 +19,10 @@ red=$'\033[31m'; green=$'\033[32m'; yellow=$'\033[33m'; dim=$'\033[2m'; reset=$'
 fail=0
 
 # --- HARD gate 1: brand name + Turkish-language tokens (English-only rule) ---
+# NOTE: matches Turkish-LANGUAGE tokens + brand only. Real place names in Latin/English
+# (e.g. "Istanbul", "Sabiha Gokcen Airport" in the ThemeKitTravel edition) are fine.
 # Token-specific so the author's name ("İsa Mercan") in file headers never trips it.
-BRAND_RE='etstur|Etstur|Türkiye|Havaliman|Esenboğa|Kadıköy|Gökçen|Sabiha|İstanbul|"/ ay"'
+BRAND_RE='etstur|Etstur|Türkiye|Havaliman|Esenboğa|Kadıköy|Gökçen|İstanbul|"/ ay"'
 brand_hits=$(grep -rnE "$BRAND_RE" Sources Tests --include='*.swift' 2>/dev/null || true)
 if [[ -n "$brand_hits" ]]; then
   printf '%s✗ brand / Turkish-language leak(s):%s\n' "$red" "$reset"
