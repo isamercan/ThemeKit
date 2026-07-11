@@ -57,12 +57,20 @@ public struct FlightTicketCard: View {
     private var accent: SemanticColor?
     private var elevation: CardElevation = .soft
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var radiusRole: Theme.RadiusRole = .box
+    private var showsPerforation = true
+    private var dashKey: Theme.BorderColorKey = .borderPrimary
+    private var priceEmphasis: PriceEmphasis = .standard
+    private var headerSlot: AnyView?
+    private var customStub: AnyView?
 
     public init(from: String, to: String) {   // R1
         self.from = from
         self.to = to
     }
 
+    // deferred: accent-fallback unification — keeps the `.primary` fallback
+    // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
     private var accentBase: Color { (accent ?? .primary).base }
 
     private var resolvedCurrency: String {
@@ -74,9 +82,12 @@ public struct FlightTicketCard: View {
         // notches + tear line + shadow) is the chrome here and is kept as-is —
         // see the header note. `.surface()`/`.elevation()` feed it directly.
         TicketStub {
-            routeHeader
+            if let headerSlot { headerSlot } else { routeHeader }
         }
-        .stub { stub }
+        .stub { if let customStub { customStub } else { stub } }
+        .cornerRadius(radiusRole)
+        .perforation(showsPerforation)
+        .dashColor(dashKey)
         .elevation(elevation)
         .surface(surfaceKey)
     }
@@ -134,7 +145,7 @@ public struct FlightTicketCard: View {
             }
             if let airline { Text(airline).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary)).lineLimit(1) }
             Spacer(minLength: 6)
-            if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.medium).emphasis(.standard).fractionDigits(0) }
+            if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.medium).emphasis(priceEmphasis).fractionDigits(0) }
             if showsFavorite {
                 Button { favoriteState.toggle() } label: {
                     Image(systemName: favoriteState ? "heart.fill" : "heart")
@@ -189,6 +200,19 @@ public extension FlightTicketCard {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// Replaces the built-in airline / price / favourite stub with custom
+    /// content — forwarded to ``TicketStub``'s stub slot below the tear line.
+    func stub<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.customStub = AnyView(content()) } }
+    /// Replaces the built-in route header (codes / cities / timeline) above the tear.
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
+    /// Outer corner radius (radius role token, default `.box`) — forwarded to ``TicketStub``.
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Draw the dashed perforation across the tear line (default on) — forwarded to ``TicketStub``.
+    func perforation(_ on: Bool = true) -> Self { copy { $0.showsPerforation = on } }
+    /// Perforation dash colour (border token key, default `.borderPrimary`) — forwarded to ``TicketStub``.
+    func dashColor(_ key: Theme.BorderColorKey) -> Self { copy { $0.dashKey = key } }
+    /// Emphasis of the stub's `PriceTag` (default `.standard`).
+    func priceEmphasis(_ e: PriceEmphasis) -> Self { copy { $0.priceEmphasis = e } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -201,11 +225,35 @@ public extension FlightTicketCard {
     struct Demo: View {
         @State private var fav = true
         var body: some View {
-            FlightTicketCard(from: "NYC", to: "SFO")
-                .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
-                .times(departure: "10:00 AM", arrival: "11:30 AM")
-                .airline("Garuda Indonesia").price(140, currencyCode: "USD").favorite($fav).accent(.info)
+            ScrollView {
+                VStack(spacing: 16) {
+                    FlightTicketCard(from: "NYC", to: "SFO")
+                        .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
+                        .times(departure: "10:00 AM", arrival: "11:30 AM")
+                        .airline("Garuda Indonesia").price(140, currencyCode: "USD").favorite($fav).accent(.info)
+                    // Hero price emphasis + tighter corner + tinted dashes, no perforation variant.
+                    FlightTicketCard(from: "IST", to: "LHR")
+                        .cities(from: "Istanbul", to: "London").duration("3h 55m")
+                        .times(departure: "09:20", arrival: "12:15")
+                        .airline("Sunrise Air").price(220, currencyCode: "USD")
+                        .priceEmphasis(.hero).cornerRadius(.field).dashColor(.borderHero)
+                    FlightTicketCard(from: "IST", to: "AMS")
+                        .duration("3h 30m").times(departure: "07:10", arrival: "09:40")
+                        .airline("Blue Wings").price(180, currencyCode: "USD")
+                        .perforation(false)
+                    // Custom stub slot — forwarded to TicketStub's tear-off area.
+                    FlightTicketCard(from: "SAW", to: "ESB")
+                        .duration("1h 10m").times(departure: "18:00", arrival: "19:10")
+                        .stub {
+                            HStack {
+                                Text("Booking").textStyle(.bodySm400)
+                                Spacer()
+                                Text("X7K2QF").textStyle(.labelSm700)
+                            }
+                        }
+                }
                 .frame(maxWidth: 320).padding()
+            }
         }
     }
     return Demo()

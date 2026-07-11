@@ -30,6 +30,7 @@ public struct StickyBookingBar: View {
     @Environment(\.barStyle) private var barStyle
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.controlSize) private var controlSize   // R3 — native size axis
 
     private let ctaTitle: String
     private let action: () -> Void
@@ -49,6 +50,11 @@ public struct StickyBookingBar: View {
     /// keeps its own shadow; set via `showsShadow(_:)`, which wins over both.
     private var showsShadowOverride: Bool?
     private var leadingSlot: AnyView?
+    private var trailingSlot: AnyView?
+    private var secondaryTitle: String?
+    private var onSecondary: (() -> Void)?
+    private var onPriceTapAction: (() -> Void)?
+    private var isLoading = false
 
     public init(_ ctaTitle: String, action: @escaping () -> Void) {   // R1
         self.ctaTitle = ctaTitle
@@ -92,7 +98,11 @@ public struct StickyBookingBar: View {
                 priceBlock
             }
             Spacer(minLength: 8)
-            button
+            if let trailingSlot {
+                trailingSlot
+            } else {
+                ctaArea
+            }
         }
         .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
         .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
@@ -100,7 +110,22 @@ public struct StickyBookingBar: View {
     }
 
     @ViewBuilder private var priceBlock: some View {
-        if let priceBreakdown { priceBreakdown }
+        if let onPriceTapAction {
+            Button { onPriceTapAction() } label: {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    if let priceBreakdown { priceBreakdown }
+                    Image(systemName: "chevron.up")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(theme.text(.textSecondary))
+                        .accessibilityHidden(true)   // decorative disclosure glyph
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Price details"))
+        } else if let priceBreakdown {
+            priceBreakdown
+        }
     }
     private var priceBreakdown: PriceBreakdown? {
         guard let price else { return nil }
@@ -111,13 +136,37 @@ public struct StickyBookingBar: View {
         return b
     }
 
+    /// The action cluster: an optional outline secondary button beside the CTA.
+    private var ctaArea: some View {
+        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
+            if let secondaryTitle, let onSecondary {
+                ThemeButton(secondaryTitle) { onSecondary() }
+                    .color(accentSemantic).variant(.outline).size(ctaSize)
+                    .disabled(!isEnabled)
+            }
+            button
+        }
+    }
+
     private var button: some View {
         themeButton.disabled(!isEnabled)
     }
     private var themeButton: ThemeButton {
-        var b = ThemeButton(ctaTitle) { action() }.color(accentSemantic).size(.large)
+        var b = ThemeButton(ctaTitle) { action() }.color(accentSemantic).size(ctaSize).loading(isLoading)
         if let ctaIcon { b = b.icon(trailing: ctaIcon) }
         return b
+    }
+
+    /// Native `.controlSize(_:)` → the CTA's `ButtonSize`. The environment
+    /// default (`.regular`) keeps the bar's classic `.large` footprint; set
+    /// `.controlSize(.small)` / `.mini` on the bar to compact both buttons.
+    private var ctaSize: ButtonSize {
+        switch controlSize {
+        case .mini: return .xxsmall
+        case .small: return .small
+        case .regular, .large, .extraLarge: return .large
+        @unknown default: return .large
+        }
     }
 }
 
@@ -150,6 +199,18 @@ public extension StickyBookingBar {
     func showsShadow(_ on: Bool) -> Self { copy { $0.showsShadowOverride = on } }
     /// Replace the left price block with fully custom content.
     func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.leadingSlot = AnyView(content()) } }
+    /// Replace the CTA area with fully custom content (partner to ``leading(_:)``).
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.trailingSlot = AnyView(content()) } }
+    /// An outline secondary action beside the primary CTA (e.g. "Hold fare").
+    func secondaryAction(_ title: String, action: @escaping () -> Void) -> Self {
+        copy { $0.secondaryTitle = title; $0.onSecondary = action }
+    }
+    /// Makes the price block tappable (adds a disclosure chevron) — open a
+    /// fare-breakdown sheet from the bar.
+    func onPriceTap(_ action: @escaping () -> Void) -> Self { copy { $0.onPriceTapAction = action } }
+    /// Show the CTA's loading spinner and block taps while `on` (forwarded to
+    /// `ThemeButton.loading(_:)`).
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -159,13 +220,35 @@ public extension StickyBookingBar {
 }
 
 #Preview {
-    VStack {
-        Spacer()
-        StickyBookingBar("Book now") { }
-            .note("2 rooms · 4 nights").original(12_000).discountBadge("-20%").price(9_600).ctaIcon("arrow.right")
-        StickyBookingBar("Book now") { }
-            .note("BarStyle demo").price(9_600)
-            .barStyle(.floating)
-            .padding(.top, 24)
+    ScrollView {
+        VStack(spacing: 20) {
+            StickyBookingBar("Book now") { }
+                .note("2 rooms · 4 nights").original(12_000).discountBadge("-20%").price(9_600).ctaIcon("arrow.right")
+            StickyBookingBar("Book now") { }
+                .note("BarStyle demo").price(9_600)
+                .barStyle(.floating)
+            // Tappable price (chevron) + outline secondary action.
+            StickyBookingBar("Continue") { }
+                .price(4_320).note("2 travellers")
+                .onPriceTap { }
+                .secondaryAction("Hold fare") { }
+            // Loading CTA blocks taps; spinner replaces the label.
+            StickyBookingBar("Booking…") { }
+                .price(9_600).loading()
+            // Native controlSize compacts both buttons.
+            StickyBookingBar("Book") { }
+                .price(9_600).secondaryAction("Hold") { }
+                .controlSize(.small)
+            // Trailing slot replaces the CTA area entirely.
+            StickyBookingBar("Unused") { }
+                .price(2_150)
+                .trailing {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        ThemeButton { }.icon(leading: "heart").variant(.soft).shape(.circle)
+                        ThemeButton("Reserve") { }.size(.small)
+                    }
+                }
+        }
+        .padding(.vertical, 24)
     }
 }

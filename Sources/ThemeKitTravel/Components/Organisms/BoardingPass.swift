@@ -26,6 +26,18 @@ import SwiftUI
 import ThemeKit
 
 public struct BoardingPass: View {
+    /// Footprint of the stub's QR / barcode, mapped to the component's internal
+    /// point constants (medium reproduces the classic 72pt QR / 48pt barcode).
+    public enum CodeSize: String, CaseIterable, Sendable { case small, medium, large }
+
+    /// Arrangement of the labelled detail cells.
+    public enum DetailsLayout: String, CaseIterable, Sendable {
+        /// One horizontal row (the classic layout).
+        case row
+        /// A two-column grid — prevents clipping when many cells or large type.
+        case grid
+    }
+
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
 
@@ -50,6 +62,13 @@ public struct BoardingPass: View {
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var elevation: CardElevation = .elevated
+    private var radiusRole: Theme.RadiusRole = .box
+    private var showsPerforation = true
+    private var dashKey: Theme.BorderColorKey = .borderPrimary
+    private var codeSize: CodeSize = .medium
+    private var detailsLayout: DetailsLayout = .row
+    private var headerSlot: AnyView?
+    private var customStub: AnyView?
 
     public init(passenger: String, from: String, to: String) {   // R1
         self.passenger = passenger
@@ -57,7 +76,18 @@ public struct BoardingPass: View {
         self.to = to
     }
 
+    // deferred: accent-fallback unification — keeps the `.primary` fallback
+    // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
     private var accentBase: Color { (accent ?? .primary).base }
+
+    /// Internal point constants behind the `CodeSize` ramp (token rule: ramp
+    /// enums map to private CGFloats; no raw sizes in the public signature).
+    private var qrSide: CGFloat {
+        switch codeSize { case .small: return 56; case .medium: return 72; case .large: return 96 }
+    }
+    private var barcodeHeight: CGFloat {
+        switch codeSize { case .small: return 36; case .medium: return 48; case .large: return 64 }
+    }
 
     public var body: some View {
         // Decorative-shell exception: the perforated `TicketStub` surface (fill +
@@ -65,12 +95,15 @@ public struct BoardingPass: View {
         // see the header note. `.surface()`/`.elevation()` feed it directly.
         TicketStub {
             VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.md.value)) {
-                header
+                if let headerSlot { headerSlot } else { header }
                 route
-                if !details.isEmpty { detailGrid }
+                if !details.isEmpty { detailArea }
             }
         }
-        .stub { stub }
+        .stub { if let customStub { customStub } else { stub } }
+        .cornerRadius(radiusRole)
+        .perforation(showsPerforation)
+        .dashColor(dashKey)
         .elevation(elevation)
         .surface(surfaceKey)
     }
@@ -113,15 +146,48 @@ public struct BoardingPass: View {
         .fixedSize()
     }
 
-    private var detailGrid: some View {
+    @ViewBuilder private var detailArea: some View {
+        switch detailsLayout {
+        case .row: detailRow
+        case .grid: detailTwoColumnGrid
+        }
+    }
+
+    private var detailRow: some View {
         HStack(alignment: .top, spacing: density.scale(Theme.SpacingKey.md.value)) {
             ForEach(Array(details.enumerated()), id: \.offset) { _, item in
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(item.0).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
-                    Text(item.1).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-                }
+                detailCell(item)
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    /// Two-column layout — pairs of cells per `GridRow`, so five details wrap
+    /// to three rows instead of clipping off the trailing edge.
+    private var detailTwoColumnGrid: some View {
+        Grid(alignment: .leading,
+             horizontalSpacing: density.scale(Theme.SpacingKey.md.value),
+             verticalSpacing: density.scale(Theme.SpacingKey.sm.value)) {
+            ForEach(Array(stride(from: 0, to: details.count, by: 2)), id: \.self) { index in
+                GridRow {
+                    detailCell(details[index])
+                        .gridColumnAlignment(.leading)
+                    if index + 1 < details.count {
+                        detailCell(details[index + 1])
+                            .gridColumnAlignment(.leading)
+                    } else {
+                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func detailCell(_ item: (String, String)) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(item.0).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+            Text(item.1).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
         }
     }
 
@@ -141,9 +207,9 @@ public struct BoardingPass: View {
 
     @ViewBuilder private var code: some View {
         if let qrValue {
-            QRCode(qrValue).size(72)
+            QRCode(qrValue).size(qrSide)
         } else if let barcodeValue {
-            Barcode(barcodeValue).height(48).showsValue()
+            Barcode(barcodeValue).height(barcodeHeight).showsValue()
         }
     }
 }
@@ -180,6 +246,21 @@ public extension BoardingPass {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
+    /// Replaces the built-in passenger / booking-ref / code stub with custom
+    /// content — forwarded to ``TicketStub``'s stub slot below the tear line.
+    func stub<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.customStub = AnyView(content()) } }
+    /// Replaces the built-in airline / flight-number header row.
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
+    /// Footprint of the stub's QR / barcode (default `.medium` — the classic sizes).
+    func codeSize(_ s: CodeSize) -> Self { copy { $0.codeSize = s } }
+    /// Detail-cell arrangement: one `.row` (default) or a two-column `.grid`.
+    func detailsLayout(_ l: DetailsLayout) -> Self { copy { $0.detailsLayout = l } }
+    /// Outer corner radius (radius role token, default `.box`) — forwarded to ``TicketStub``.
+    func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Draw the dashed perforation across the tear line (default on) — forwarded to ``TicketStub``.
+    func perforation(_ on: Bool = true) -> Self { copy { $0.showsPerforation = on } }
+    /// Perforation dash colour (border token key, default `.borderPrimary`) — forwarded to ``TicketStub``.
+    func dashColor(_ key: Theme.BorderColorKey) -> Self { copy { $0.dashKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -189,12 +270,44 @@ public extension BoardingPass {
 }
 
 #Preview {
-    BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
-        .airline("Pegasus").flightNo("PC 1234").cabin("Economy")
-        .cities(from: "Istanbul", to: "Berlin").times(departure: "13:15", arrival: "16:05").date("13 Sep")
-        .gate("A12", seat: "14C", boarding: "12:45", terminal: "1")
-        .bookingRef("PNR: X7K2QF").barcode("PC1234SAWBER14C")
+    ScrollView {
+        VStack(spacing: 20) {
+            BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
+                .airline("Pegasus").flightNo("PC 1234").cabin("Economy")
+                .cities(from: "Istanbul", to: "Berlin").times(departure: "13:15", arrival: "16:05").date("13 Sep")
+                .gate("A12", seat: "14C", boarding: "12:45", terminal: "1")
+                .bookingRef("PNR: X7K2QF").barcode("PC1234SAWBER14C")
+            // Two-column detail grid + large QR + tinted dashes + field corner.
+            BoardingPass(passenger: "Alex Morgan", from: "IST", to: "LHR")
+                .airline("Sunrise Air").flightNo("SA 101")
+                .times(departure: "09:20", arrival: "12:15")
+                .details([("Terminal", "2"), ("Gate", "B7"), ("Boarding", "08:40"),
+                          ("Seat", "3A"), ("Zone", "1")])
+                .detailsLayout(.grid)
+                .qr("SA101ISTLHR3A").codeSize(.large)
+                .cornerRadius(.field).dashColor(.borderHero)
+            // Small barcode, no perforation, custom header + stub slots.
+            BoardingPass(passenger: "Sam Carter", from: "AMS", to: "CDG")
+                .times(departure: "18:05", arrival: "19:20")
+                .header {
+                    HStack {
+                        Badge("Priority").badgeStyle(.warning).size(.small)
+                        Spacer()
+                        Text("BW 810").textStyle(.labelSm600)
+                    }
+                }
+                .stub {
+                    HStack {
+                        Text("Group 1").textStyle(.labelBase700)
+                        Spacer()
+                        Barcode("BW810AMSCDG").height(36)
+                    }
+                }
+                .barcode("BW810AMSCDG").codeSize(.small)
+                .perforation(false)
+        }
         .frame(maxWidth: 340).padding()
+    }
 }
 
 // The perforated ticket shell is exempt from `CardStyle` (see header note):
