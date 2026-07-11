@@ -43,6 +43,7 @@ public struct AncillaryCard: View {
     private var addedTitle = "Added"
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var controlSurfaceKey: Theme.BackgroundColorKey = .bgSecondary
     private var radiusRole: Theme.RadiusRole = .box
 
     public init(_ title: String) { self.title = title }   // R1
@@ -126,7 +127,7 @@ public struct AncillaryCard: View {
             }
         }
         .padding(.horizontal, 4)
-        .background(theme.background(.bgSecondary), in: Capsule())
+        .background(theme.background(controlSurfaceKey), in: Capsule())
     }
 
     private func stepButton(_ icon: String, label: String, value: Int, enabled: Bool, _ action: @escaping () -> Void) -> some View {
@@ -182,6 +183,9 @@ public extension AncillaryCard {
     func added(_ binding: Binding<Bool>, title: String = "Add", addedTitle: String = "Added") -> Self { copy { $0.added = binding; $0.addTitle = title; $0.addedTitle = addedTitle } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// Surface token for the quantity stepper's capsule track (default
+    /// `.bgSecondary`) — distinct from ``surface(_:)``, which fills the card shell.
+    func controlSurface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.controlSurfaceKey = key } }
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
@@ -199,6 +203,9 @@ public extension AncillaryCard {
             VStack(spacing: 10) {
                 AncillaryCard("Checked baggage").icon("suitcase.fill").subtitle("20 kg").price(450, suffix: "/ bag").quantity($bags, range: 0...4)
                 AncillaryCard("Travel insurance").icon("cross.case.fill").subtitle("Full coverage").price(120).badge("Popular").added($insurance)
+                AncillaryCard("Extra legroom").icon("figure.seated.side").subtitle("Row 12").price(75).quantity($bags, range: 0...4)
+                    .surface(.bgSecondaryLight)
+                    .controlSurface(.bgWhite)
             }
             .padding()
         }

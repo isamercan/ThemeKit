@@ -157,18 +157,18 @@ public struct SeatCell: View {
     // MARK: Colours
 
     private var fillColor: Color {
-        if isSelected { return theme.foreground(.fgHero) }
-        if seat.isOccupied { return theme.background(.bgSecondary) }
+        if isSelected { return palette.selectedColors(theme: theme).fill }
+        if seat.isOccupied { return palette.occupiedColors(theme: theme).fill }
         return palette.colors(for: seat.tier, theme: theme).fill
     }
     private var strokeColor: Color {
-        if isSelected { return theme.foreground(.fgHero) }
-        if seat.isOccupied { return theme.border(.borderPrimary) }
+        if isSelected { return palette.selectedColors(theme: theme).stroke }
+        if seat.isOccupied { return palette.occupiedColors(theme: theme).stroke }
         return palette.colors(for: seat.tier, theme: theme).stroke
     }
     private var contentColor: Color {
-        if isSelected { return theme.text(.textSecondaryInverse) }
-        if seat.isOccupied { return theme.text(.textTertiary) }
+        if isSelected { return palette.selectedColors(theme: theme).content }
+        if seat.isOccupied { return palette.occupiedColors(theme: theme).content }
         return theme.text(.textSecondary)
     }
 
@@ -198,5 +198,7 @@ public struct SeatCell: View {
         PreviewCase("Occupied") { SeatCell(Seat("1E", occupied: true)) }
         PreviewCase("Recommended") { SeatCell(Seat("1F"), isRecommended: true) }
         PreviewCase("Number display") { SeatCell(Seat("1G"), display: .number) }
+        PreviewCase("Accent selected") { SeatCell(Seat("2A"), isSelected: true, palette: SeatPalette().selected(.accent)) }
+        PreviewCase("Accent occupied") { SeatCell(Seat("2B", occupied: true), palette: SeatPalette().occupied(.warning)) }
     }
 }

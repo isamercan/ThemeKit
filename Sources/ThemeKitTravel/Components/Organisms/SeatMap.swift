@@ -58,6 +58,7 @@ public struct SeatMap: View {
     private var customContent: ((SeatContext) -> AnyView)?
     private var aisleWidthOverride: CGFloat?
     private var tierOverrides: [SeatTier: Color] = [:]
+    private var accentOverride: SemanticColor?
 
     private let gutter: CGFloat = 22
     private var passengerMode: Bool { !passengers.isEmpty && assignment != nil }
@@ -92,10 +93,10 @@ public struct SeatMap: View {
     public var body: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
             if passengerMode {
-                PassengerRail(passengers: passengers, assignment: assignment ?? .constant([:]), active: $activePassenger)
+                PassengerRail(passengers: passengers, assignment: assignment ?? .constant([:]), active: $activePassenger, accent: accentOverride)
             }
             if index.floors.count > 1 {
-                DeckSelector(floors: index.floors, active: $activeFloor)
+                DeckSelector(floors: index.floors, active: $activeFloor, accent: accentOverride)
             }
             cabin.modifier(PinchZoom(enabled: zoomable, zoom: $zoom))
             if showsLegend { SeatLegend(tiers: index.tiers, palette: palette) }
@@ -292,6 +293,10 @@ public extension SeatMap {
     func tierColors(_ overrides: [SeatTier: SemanticColor]) -> Self {
         copy { $0.tierOverrides = overrides.mapValues(\.base) }
     }
+    /// Accent for the passenger rail's and deck selector's **active** pill — the
+    /// token's `.solid` shade fills the pill and `.onSolid` colours its text.
+    /// Pass `nil` to restore the theme's hero default.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accentOverride = color } }
     /// Raw-color tier overrides (back-compat); prefer the token-bound overload.
     /// Disfavored so member-shorthand literals like `[.extraLegroom: .purple]` —
     /// valid as both `Color` and `SemanticColor` values — resolve to the token
@@ -360,6 +365,10 @@ private struct PassengerRail: View {
     let passengers: [Passenger]
     let assignment: Binding<[String: String]>
     @Binding var active: String?
+    let accent: SemanticColor?
+
+    private var activeFill: Color { accent?.solid ?? theme.foreground(.fgHero) }
+    private var activeContent: Color { accent?.onSolid ?? theme.text(.textSecondaryInverse) }
 
     var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
@@ -370,9 +379,9 @@ private struct PassengerRail: View {
                         Text(p.initials).textStyle(.labelSm600)
                         Text(assignment.wrappedValue[p.id] ?? "—").textStyle(.overline400)
                     }
-                    .foregroundStyle(isActive ? theme.text(.textSecondaryInverse) : theme.text(.textPrimary))
+                    .foregroundStyle(isActive ? activeContent : theme.text(.textPrimary))
                     .padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(isActive ? theme.foreground(.fgHero) : theme.background(.bgSecondaryLight), in: Capsule())
+                    .background(isActive ? activeFill : theme.background(.bgSecondaryLight), in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Passenger \(p.initials), seat \(assignment.wrappedValue[p.id] ?? String(themeKit: "unassigned"))"))
@@ -386,6 +395,10 @@ private struct DeckSelector: View {
     @Environment(\.componentDensity) private var density
     let floors: [Int]
     @Binding var active: Int?
+    let accent: SemanticColor?
+
+    private var activeFill: Color { accent?.solid ?? theme.foreground(.fgHero) }
+    private var activeContent: Color { accent?.onSolid ?? theme.text(.textSecondaryInverse) }
 
     var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
@@ -393,9 +406,9 @@ private struct DeckSelector: View {
                 let isActive = (active ?? floors.first) == floor
                 Button { active = floor } label: {
                     Text(String(themeKit: "Deck \(floor)")).textStyle(.labelSm600)
-                        .foregroundStyle(isActive ? theme.text(.textSecondaryInverse) : theme.text(.textPrimary))
+                        .foregroundStyle(isActive ? activeContent : theme.text(.textPrimary))
                         .padding(.horizontal, 14).padding(.vertical, 6)
-                        .background(isActive ? theme.foreground(.fgHero) : theme.background(.bgSecondaryLight), in: Capsule())
+                        .background(isActive ? activeFill : theme.background(.bgSecondaryLight), in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Deck \(floor)"))
@@ -537,6 +550,8 @@ private struct PinchZoom: ViewModifier {
 #Preview {
     struct Demo: View {
         @State private var picked: Set<String> = ["12C"]
+        @State private var accentPicked: Set<String> = []
+        @State private var assignment: [String: String] = [:]
         private let sold: Set<String> = ["12B", "13E", "16A"]
         var body: some View {
             ScrollView {
@@ -548,6 +563,15 @@ private struct PinchZoom: ViewModifier {
                 .showsLabels().legend().showsSeatInfo()
                 .recommended(["11C"]).maxSelection(3).currency("USD")
                 .tierColors([.extraLegroom: .purple]).padding()
+
+                // Accent override — passenger rail + deck selector pick up the token.
+                SeatMap(columns: "AB CD", rows: Array(1...3), selection: $accentPicked) { _, row, _ in
+                    SeatInfo(floor: row <= 2 ? 1 : 2)
+                }
+                .passengers([Passenger(id: "p1", initials: "AB"), Passenger(id: "p2", initials: "CD")],
+                            assignment: $assignment)
+                .accent(.accent)
+                .padding()
             }
         }
     }

@@ -98,9 +98,16 @@ public enum SeatTier: String, Sendable, Hashable, Codable, CaseIterable {
 }
 
 /// Maps a ``SeatTier`` to its fill + stroke colours — token-derived by default,
-/// fully overridable per tier so a brand can map its own palette.
+/// fully overridable per tier so a brand can map its own palette. The **selected**
+/// and **occupied** states are palette entries too (``selected(_:)`` /
+/// ``occupied(_:)``), so ``SeatCell`` and ``SeatLegend`` always agree.
 public struct SeatPalette: Sendable {
-    private let overrides: [SeatTier: Color]
+    private var overrides: [SeatTier: Color]
+    private var selectedAccent: SemanticColor?
+    private var selectedRaw: Color?
+    private var occupiedAccent: SemanticColor?
+    private var occupiedRaw: Color?
+
     public init(_ overrides: [SeatTier: Color] = [:]) { self.overrides = overrides }
     public static let `default` = SeatPalette()
 
@@ -115,6 +122,55 @@ public struct SeatPalette: Sendable {
         case .business: return (SemanticColor.purple.bg, SemanticColor.purple.base)
         case .first: return (SemanticColor.pink.bg, SemanticColor.pink.base)
         }
+    }
+
+    /// Fill + stroke + content colour of a **selected** seat. Defaults to the
+    /// theme's hero foreground; an accent override uses its `.solid` / `.onSolid` pair.
+    public func selectedColors(theme: Theme) -> (fill: Color, stroke: Color, content: Color) {
+        if let accent = selectedAccent { return (accent.solid, accent.solid, accent.onSolid) }
+        if let raw = selectedRaw { return (raw, raw, theme.text(.textSecondaryInverse)) }
+        return (theme.foreground(.fgHero), theme.foreground(.fgHero), theme.text(.textSecondaryInverse))
+    }
+
+    /// Fill + stroke + content colour of an **occupied** seat. Defaults to the
+    /// theme's muted secondary surface; an accent override uses its `.soft` /
+    /// `.border` / `.base` shades.
+    public func occupiedColors(theme: Theme) -> (fill: Color, stroke: Color, content: Color) {
+        if let accent = occupiedAccent { return (accent.soft, accent.border, accent.base) }
+        if let raw = occupiedRaw { return (raw.opacity(0.14), raw, theme.text(.textTertiary)) }
+        return (theme.background(.bgSecondary), theme.border(.borderPrimary), theme.text(.textTertiary))
+    }
+}
+
+public extension SeatPalette {
+    /// Accent for the **selected** state — fill/stroke use the token's `.solid`
+    /// shade and content its `.onSolid`. Pass `nil` to restore the hero default.
+    func selected(_ color: SemanticColor?) -> Self {
+        copy { $0.selectedAccent = color; $0.selectedRaw = nil }
+    }
+    /// Accent for the **occupied** state — surface uses the token's `.soft` /
+    /// `.border` shades. Pass `nil` to restore the muted default.
+    func occupied(_ color: SemanticColor?) -> Self {
+        copy { $0.occupiedAccent = color; $0.occupiedRaw = nil }
+    }
+
+    /// Raw-color selected override (back-compat); prefer the token-bound overload.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use selected(_: SemanticColor?) — the token-bound overload.")
+    func selected(_ color: Color?) -> Self {
+        copy { $0.selectedRaw = color; $0.selectedAccent = nil }
+    }
+    /// Raw-color occupied override (back-compat); prefer the token-bound overload.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use occupied(_: SemanticColor?) — the token-bound overload.")
+    func occupied(_ color: Color?) -> Self {
+        copy { $0.occupiedRaw = color; $0.occupiedAccent = nil }
+    }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 
