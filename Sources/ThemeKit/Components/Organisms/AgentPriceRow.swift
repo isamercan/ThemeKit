@@ -145,9 +145,15 @@ public extension AgentPriceRow {
 }
 
 #Preview {
-    VStack(spacing: 10) {
-        AgentPriceRow("Trip.com") { }.rating(4.2).badge("Cheapest").original(4_100).price(3_538).cta("Go to site").recommended()
-        AgentPriceRow("Kiwi.com") { }.rating(3.8).warning("Self-transfer — you handle the connection").price(3_612).cta("Go to site")
+    PreviewMatrix("AgentPriceRow") {
+        PreviewCase("Recommended + badge + original") {
+            AgentPriceRow("Trip.com") { }.rating(4.2).badge("Cheapest").original(4_100).price(3_538).cta("Go to site").recommended()
+        }
+        PreviewCase("Warning") {
+            AgentPriceRow("Kiwi.com") { }.rating(3.8).warning("Self-transfer — you handle the connection").price(3_612).cta("Go to site")
+        }
+        PreviewCase("Minimal") {
+            AgentPriceRow("Provider") { }.price(2_990)
+        }
     }
-    .padding()
 }

@@ -140,13 +140,24 @@ public extension FloatingActionButton {
 }
 
 #Preview {
-    FloatingActionButton(systemImage: "plus", actions: [
-        .init(systemImage: "camera", label: "Photo", action: {}),
-        .init(systemImage: "doc", label: "Document", action: {}),
-        .init(systemImage: "link", label: "Link", action: {}),
-    ])
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-    .padding()
+    PreviewMatrix("FloatingActionButton") {
+        PreviewCase("Speed dial (tap to expand in live preview)") {
+            FloatingActionButton(systemImage: "plus", actions: [
+                .init(systemImage: "camera", label: "Photo", action: {}),
+                .init(systemImage: "doc", label: "Document", action: {}),
+                .init(systemImage: "link", label: "Link", action: {}),
+            ])
+        }
+        PreviewCase("Square · badge") {
+            FloatingActionButton(systemImage: "cart")
+                .shape(.square)
+                .badge(3)
+        }
+        PreviewCase("Error accent") {
+            FloatingActionButton(systemImage: "heart")
+                .accent(.error)
+        }
+    }
 }
 
 #Preview("ComponentDefaults accent") {

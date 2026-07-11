@@ -417,16 +417,35 @@ public extension View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var show = true
-        var body: some View {
-            Color.gray.opacity(0.1).ignoresSafeArea()
-                .dialog(isPresented: $show, title: "Delete trip?",
+    // Presentation organism — each cell pins `isPresented: .constant(true)` so a
+    // single frame shows the presented card (scrim + chrome) per color scheme.
+    PreviewMatrix("Dialog") {
+        PreviewCase("Confirm · two actions") {
+            Color.clear.frame(height: 300)
+                .dialog(isPresented: .constant(true), title: "Delete trip?",
                         message: "This action cannot be undone.",
                         primaryTitle: "Delete", secondaryTitle: "Cancel", onSecondary: {})
         }
+        PreviewCase("Error kind · closable") {
+            Color.clear.frame(height: 320)
+                .dialog(isPresented: .constant(true), title: "Payment failed",
+                        message: "Your card was declined. Try another method.",
+                        primaryTitle: "Retry", secondaryTitle: "Cancel", onSecondary: {},
+                        kind: .error, closable: true)
+        }
+        PreviewCase("Content + pinned footer slot") {
+            Color.clear.frame(height: 340)
+                .dialog(isPresented: .constant(true), title: "Trip details") {
+                    VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                        ForEach(1...4, id: \.self) { i in
+                            Text("Detail line \(i)").textStyle(.bodyBase400)
+                        }
+                    }
+                } footer: {
+                    PrimaryButton("Done") {}
+                }
+        }
     }
-    return Demo()
 }
 
 #Preview("Swipe to dismiss") {

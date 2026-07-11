@@ -179,17 +179,28 @@ public extension RoomCard {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        RoomCard(name: "Deluxe Room, Sea View")
-            .board("All-inclusive").occupancy("2 adults, 1 child")
-            .features([
-                FareFeature("Free cancellation", systemImage: "checkmark.circle", status: .included),
-                FareFeature("Breakfast included", systemImage: "cup.and.saucer", status: .included),
-            ])
-            .original(12_000).discountBadge("-20%").price(9_600).unit("/ night")
-            .badge("Last 2").onSelect { }
+    @Previewable @State var selected = true
+    PreviewMatrix("RoomCard") {
+        PreviewCase("Full · features + discount + badge + CTA") {
+            RoomCard(name: "Deluxe Room, Sea View")
+                .board("All-inclusive").occupancy("2 adults, 1 child")
+                .features([
+                    FareFeature("Free cancellation", systemImage: "checkmark.circle", status: .included),
+                    FareFeature("Breakfast included", systemImage: "cup.and.saucer", status: .included),
+                ])
+                .original(12_000).discountBadge("-20%").price(9_600).unit("/ night")
+                .badge("Last 2").onSelect { }
+        }
+        PreviewCase("Radio selection · selected") {
+            RoomCard(name: "Standard Room, Garden View")
+                .board("Bed & breakfast").occupancy("2 adults")
+                .price(6_400).unit("/ night")
+                .selection($selected)
+        }
+        PreviewCase("Minimal · name only") {
+            RoomCard(name: "Family Suite")
+        }
     }
-    .padding()
 }
 
 #Preview("Outlined style + selection") {

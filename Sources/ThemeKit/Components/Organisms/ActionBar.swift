@@ -128,20 +128,25 @@ public extension View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var selected: Set<Int> = [1, 2, 3]
-        var body: some View {
-            VStack {
-                Text("Tap an action or clear").padding()
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .actionBar(selection: $selected, actions: [
-                ActionBarAction("Archive", systemImage: "archivebox") {},
-                ActionBarAction("Share", systemImage: "square.and.arrow.up") {},
-                ActionBarAction("Delete", systemImage: "trash", role: .destructive) { selected.removeAll() },
-            ])
+    let actions = [
+        ActionBarAction("Archive", systemImage: "archivebox") {},
+        ActionBarAction("Share", systemImage: "square.and.arrow.up") {},
+        ActionBarAction("Delete", systemImage: "trash", role: .destructive) {},
+    ]
+    return PreviewMatrix("ActionBar") {
+        PreviewCase("Bar") {
+            ActionBar(count: 3, actions: actions)
+        }
+        PreviewCase("With clear") {
+            ActionBar(count: 12, actions: actions, onClear: {})
+        }
+        // Overlay entry point — pinned open with a constant non-empty selection
+        // inside a fixed-height cell.
+        PreviewCase("Auto-show modifier") {
+            Text("Tap an action or clear")
+                .frame(maxWidth: .infinity)
+                .frame(height: 160, alignment: .top)
+                .actionBar(selection: .constant(Set([1, 2, 3])), actions: actions)
         }
     }
-    return Demo()
 }

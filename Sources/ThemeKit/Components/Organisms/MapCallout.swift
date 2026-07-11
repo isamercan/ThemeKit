@@ -144,9 +144,20 @@ public extension MapCallout {
 }
 
 #Preview {
-    MapCallout(title: "Mirage Park Resort")
-        .subtitle("Kemer, Antalya").score(8.9).price(9_600).onSelect { }
-        .padding()
+    PreviewMatrix("MapCallout") {
+        PreviewCase("Default (score + price + CTA)") {
+            MapCallout(title: "Mirage Park Resort")
+                .subtitle("Kemer, Antalya").score(8.9).price(9_600).onSelect { }
+        }
+        PreviewCase("Accent tint") {
+            MapCallout(title: "Mirage Park Resort")
+                .subtitle("Kemer, Antalya").score(8.9).price(9_600).accent(.success).onSelect { }
+        }
+        PreviewCase("No pointer · non-interactive") {
+            MapCallout(title: "Fable Boutique Hotel")
+                .subtitle("Göcek, Muğla").score(9.4).price(12_400).pointer(false)
+        }
+    }
 }
 
 #Preview("Accent + outlined style") {

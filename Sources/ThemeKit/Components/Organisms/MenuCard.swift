@@ -82,10 +82,18 @@ public extension MenuCard {
 }
 
 #Preview {
-    MenuCard(items: [
-        .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
-        .init(title: "Payment methods", subtitle: "Cards & wallets", systemImage: "creditcard"),
-        .init(title: "Help center", subtitle: "FAQ & support", systemImage: "questionmark.circle"),
-    ])
-    .padding()
+    PreviewMatrix("MenuCard") {
+        PreviewCase("Items list") {
+            MenuCard(items: [
+                .init(title: "Reservations", subtitle: "Upcoming & past", systemImage: "calendar"),
+                .init(title: "Payment methods", subtitle: "Cards & wallets", systemImage: "creditcard"),
+                .init(title: "Help center", subtitle: "FAQ & support", systemImage: "questionmark.circle"),
+            ])
+        }
+        PreviewCase("Single link") {
+            MenuCard(title: "Settings", action: {})
+                .subtitle("Preferences & account")
+                .icon("gearshape")
+        }
+    }
 }

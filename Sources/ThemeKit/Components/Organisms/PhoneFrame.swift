@@ -110,8 +110,8 @@ public extension PhoneFrame {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        HStack(alignment: .top, spacing: 20) {
+    PreviewMatrix("PhoneFrame") {
+        PreviewCase("Dynamic island (default)") {
             PhoneFrame {
                 VStack(spacing: 8) {
                     Spacer()
@@ -122,6 +122,9 @@ public extension PhoneFrame {
                     Spacer()
                 }
             }
+            .frame(height: 420)
+        }
+        PreviewCase("Notch · primary bezel") {
             PhoneFrame {
                 VStack {
                     Spacer()
@@ -131,9 +134,18 @@ public extension PhoneFrame {
             }
             .notch(.notch)
             .bezel(.primary)
+            .frame(height: 420)
         }
-        .frame(height: 420)
-        .padding()
+        PreviewCase("No cutout") {
+            PhoneFrame {
+                VStack {
+                    Spacer()
+                    Text("Clean screen").textStyle(.labelMd600)
+                    Spacer()
+                }
+            }
+            .notch(.none)
+            .frame(height: 420)
+        }
     }
-    .background(theme.background(.bgSecondaryLight))
 }

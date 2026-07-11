@@ -185,20 +185,23 @@ public extension Callout {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 10) {
-        Callout("Lorem ipsum placeholder text.").variant(.success)
-        Callout("Lorem ipsum placeholder text.").variant(.error)
-        Callout("Lorem ipsum placeholder text.").variant(.info)
-        Callout("Lorem ipsum placeholder text.").variant(.warning).calloutStyle(.soft)
-        Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft)
-        Callout("Brand-primary emphasis.").variant(.accent).calloutStyle(.soft)
-        Callout("Custom glyph via icon override.").variant(.info).icon("bell.badge")
+    PreviewMatrix("Callout") {
+        PreviewCase("Success") { Callout("Lorem ipsum placeholder text.").variant(.success) }
+        PreviewCase("Error") { Callout("Lorem ipsum placeholder text.").variant(.error) }
+        PreviewCase("Info") { Callout("Lorem ipsum placeholder text.").variant(.info) }
+        PreviewCase("Warning soft") { Callout("Lorem ipsum placeholder text.").variant(.warning).calloutStyle(.soft) }
+        PreviewCase("Neutral soft") { Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft) }
+        PreviewCase("Accent soft") { Callout("Brand-primary emphasis.").variant(.accent).calloutStyle(.soft) }
+        PreviewCase("Icon override") { Callout("Custom glyph via icon override.").variant(.info).icon("bell.badge") }
         // D3 — slot pair mirroring InfoBanner.
-        Callout("Checking availability…").variant(.accent).calloutStyle(.soft)
-            .leading { Spinner().size(14).lineWidth(2).accent(.primary) }
-        Callout("Fare updated a moment ago.").variant(.info).calloutStyle(.soft)
-            .trailing { Badge("New").badgeStyle(.info).size(.small) }
-            .onClose {}
+        PreviewCase("Leading slot") {
+            Callout("Checking availability…").variant(.accent).calloutStyle(.soft)
+                .leading { Spinner().size(14).lineWidth(2).accent(.primary) }
+        }
+        PreviewCase("Trailing slot + close") {
+            Callout("Fare updated a moment ago.").variant(.info).calloutStyle(.soft)
+                .trailing { Badge("New").badgeStyle(.info).size(.small) }
+                .onClose {}
+        }
     }
-    .padding()
 }

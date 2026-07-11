@@ -174,12 +174,21 @@ public extension ReviewCard {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        ReviewCard(author: "Elif Kaya", score: 9.2, text: "Spotless rooms and a great location right by the marina. Breakfast was excellent.")
-            .date(.now).title("Would absolutely stay again").verified()
-        ReviewCard(author: "Marco P.", score: 7.4, text: "Good value, though the wifi was slow in the evenings.")
+    PreviewMatrix("ReviewCard") {
+        PreviewCase("Full · title + verified + date") {
+            ReviewCard(author: "Elif Kaya", score: 9.2, text: "Spotless rooms and a great location right by the marina. Breakfast was excellent.")
+                .date(.now).title("Would absolutely stay again").verified()
+        }
+        PreviewCase("Minimal") {
+            ReviewCard(author: "Marco P.", score: 7.4, text: "Good value, though the wifi was slow in the evenings.")
+        }
+        PreviewCase("Stars + expandable") {
+            ReviewCard(author: "Jonas W.", score: 8.8,
+                       text: "Wonderful pool area and very friendly staff. The rooms were quiet, the beds "
+                           + "comfortable, and the breakfast buffet had plenty of choice — we would come back.")
+                .date(.now).stars().expandable()
+        }
     }
-    .padding()
 }
 
 #Preview("Outlined style") {

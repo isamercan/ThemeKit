@@ -115,11 +115,18 @@ public extension PromoBanner {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        PromoBanner("Early booking", action: {})
-            .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore")
-        PromoBanner("Plus", action: {})
-            .subtitle("Members get exclusive deals").icon("star.circle.fill").ctaTitle("Join").accent(.dark)
+    PreviewMatrix("PromoBanner") {
+        PreviewCase("Blue (default) · CTA") {
+            PromoBanner("Early booking", action: {})
+                .subtitle("Save up to 30% on summer").icon("sun.max.fill").ctaTitle("Explore")
+        }
+        PreviewCase("Dark tint · CTA") {
+            PromoBanner("Plus", action: {})
+                .subtitle("Members get exclusive deals").icon("star.circle.fill").ctaTitle("Join").accent(.dark)
+        }
+        PreviewCase("Turquoise tint · no CTA") {
+            PromoBanner("Weekend getaways")
+                .subtitle("Fresh deals every Friday").icon("airplane").accent(.turquoise)
+        }
     }
-    .padding()
 }

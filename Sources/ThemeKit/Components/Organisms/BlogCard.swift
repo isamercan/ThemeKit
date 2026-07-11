@@ -152,19 +152,32 @@ public extension BlogCard {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 20) {
-        BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
-            theme.background(.bgTertiary)
+    PreviewMatrix("BlogCard") {
+        PreviewCase("Regular") {
+            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                theme.background(.bgTertiary)
+            }
+            .excerpt("To some a miracle of nature, to others a fairyland…")
+            .readMore(action: {})
         }
-        .excerpt("To some a miracle of nature, to others a fairyland…")
-        .readMore(action: {})
-        BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
-            theme.background(.bgTertiary)
+        PreviewCase("Compact") {
+            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                theme.background(.bgTertiary)
+            }
+            .compact()
+            .readMore(action: {})
         }
-        .compact()
-        .readMore(action: {})
+        // Shelled variant — any shell modifier opts into the CardStyle chrome.
+        PreviewCase("Shelled (surface + elevation)") {
+            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                theme.background(.bgTertiary)
+            }
+            .excerpt("To some a miracle of nature, to others a fairyland…")
+            .readMore(action: {})
+            .surface(.bgWhite)
+            .elevation(.soft)
+        }
     }
-    .padding()
 }
 
 #Preview("Outlined style + overlay slot") {

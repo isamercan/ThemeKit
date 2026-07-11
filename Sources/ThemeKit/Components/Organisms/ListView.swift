@@ -186,36 +186,49 @@ public extension ListView {
     let rows = [Row(title: "My Account", subtitle: "Profile & security"),
                 Row(title: "Notifications", subtitle: "Email & push"),
                 Row(title: "Language", subtitle: "English")]
-    return VStack(spacing: 24) {
-        ListView(rows) { row in
-            ListRow(row.title, action: {}).subtitle(row.subtitle)
-        }
-        .header("Settings").footer("3 items")
-        ListView(rows) { _ in EmptyView() }
-            .header("Loading").loading()
-        ListView([Row]()) { _ in EmptyView() }
-            .header("Empty slot")
-            .empty {
-                VStack(spacing: 8) {
-                    Image(systemName: "tray")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                    Text("Nothing here yet")
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Theme.SpacingKey.lg.value)
+    return PreviewMatrix("ListView") {
+        PreviewCase("Header + footer") {
+            ListView(rows) { row in
+                ListRow(row.title, action: {}).subtitle(row.subtitle)
             }
-        ListView(rows) { _ in EmptyView() }
-            .header("Custom loading").loading()
-            .loadingView {
-                ProgressView()
+            .header("Settings").footer("3 items")
+        }
+        PreviewCase("Loading (skeleton rows)") {
+            ListView(rows) { _ in EmptyView() }
+                .header("Loading").loading()
+        }
+        PreviewCase("Empty · custom slot") {
+            ListView([Row]()) { _ in EmptyView() }
+                .header("Empty slot")
+                .empty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "tray")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                        Text("Nothing here yet")
+                            .textStyle(.bodySm400)
+                            .foregroundStyle(.secondary)
+                    }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Theme.SpacingKey.lg.value)
+                }
+        }
+        PreviewCase("Custom loading view") {
+            ListView(rows) { _ in EmptyView() }
+                .header("Custom loading").loading()
+                .loadingView {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Theme.SpacingKey.lg.value)
+                }
+        }
+        PreviewCase("No dividers (split off)") {
+            ListView(rows) { row in
+                ListRow(row.title, action: {}).subtitle(row.subtitle)
             }
+            .split(false)
+        }
     }
-    .padding()
 }
 
 #Preview("Surface variants") {

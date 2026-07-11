@@ -115,15 +115,20 @@ public extension Counter {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        Counter(days: 2, hours: 8, minutes: 45)
-        Counter(days: 2, hours: 8, minutes: 45)
-            .size(.large)
-            .accent(.primary)
-            .separator(":")
-        Counter(segments: [.init(value: 12, label: "Min"), .init(value: 30, label: "Sec")])
-            .size(.small)
-            .accent(.error)
+    PreviewMatrix("Counter") {
+        PreviewCase("Default") {
+            Counter(days: 2, hours: 8, minutes: 45)
+        }
+        PreviewCase("Large · primary accent + separator") {
+            Counter(days: 2, hours: 8, minutes: 45)
+                .size(.large)
+                .accent(.primary)
+                .separator(":")
+        }
+        PreviewCase("Small · error accent") {
+            Counter(segments: [.init(value: 12, label: "Min"), .init(value: 30, label: "Sec")])
+                .size(.small)
+                .accent(.error)
+        }
     }
-    .padding()
 }

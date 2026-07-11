@@ -231,26 +231,24 @@ public extension View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var show = true
-        var sections: [CommandSection] {
-            [
-                CommandSection("Actions", items: [
-                    CommandItem("New booking", systemImage: "plus.circle", keywords: ["create", "add"], shortcut: ["⌘", "N"]) {},
-                    CommandItem("Search flights", systemImage: "airplane", keywords: ["find"], shortcut: ["⌘", "F"]) {},
-                ]),
-                CommandSection("Navigation", items: [
-                    CommandItem("Go to trips", systemImage: "suitcase", keywords: ["bookings"]) {},
-                    CommandItem("Settings", systemImage: "gearshape", shortcut: ["⌘", ","]) {},
-                ]),
-            ]
-        }
-        var body: some View {
+    let sections = [
+        CommandSection("Actions", items: [
+            CommandItem("New booking", systemImage: "plus.circle", keywords: ["create", "add"], shortcut: ["⌘", "N"]) {},
+            CommandItem("Search flights", systemImage: "airplane", keywords: ["find"], shortcut: ["⌘", "F"]) {},
+        ]),
+        CommandSection("Navigation", items: [
+            CommandItem("Go to trips", systemImage: "suitcase", keywords: ["bookings"]) {},
+            CommandItem("Settings", systemImage: "gearshape", shortcut: ["⌘", ","]) {},
+        ]),
+    ]
+    // Overlay organism — the palette is a plain overlay (not a modal), so it
+    // renders inline per column when pinned open with `.constant(true)` inside
+    // a tall fixed-height cell.
+    return PreviewMatrix("CommandPalette") {
+        PreviewCase("Open") {
             Color.gray.opacity(0.1)
-                .ignoresSafeArea()
-                .overlay(Button("Open ⌘K") { show = true })
-                .commandPalette(isPresented: $show, sections: sections)
+                .frame(height: 480)
+                .commandPalette(isPresented: .constant(true), sections: sections)
         }
     }
-    return Demo()
 }

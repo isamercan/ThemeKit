@@ -449,29 +449,34 @@ public extension ListSectionHeader {
         @State var agree = false
         @State var plan = true
         var body: some View {
-            ScrollView {
-                VStack(spacing: 0) {
-                    ListSectionHeader("Settings")
-                        .accent(.primary)
-                        .trailing { LinkButton("See all", action: {}).size(.small) }
-                    ListRow("Account", action: {}).subtitle("Profile & security").icon("person.circle")
-                    DividerView().size(.small)
-                    ListRow("Notifications").trailing(.toggle($push))
-                    DividerView().size(.small)
-                    ListRow("Accept terms").icon("doc.text").trailing(.checkbox($agree))
-                    DividerView().size(.small)
+            PreviewMatrix("ListRow") {
+                PreviewCase("Section header + default rows") {
+                    VStack(spacing: 0) {
+                        ListSectionHeader("Settings")
+                            .accent(.primary)
+                            .trailing { LinkButton("See all", action: {}).size(.small) }
+                        ListRow("Account", action: {}).subtitle("Profile & security").icon("person.circle")
+                        DividerView().size(.small)
+                        ListRow("Notifications").trailing(.toggle($push))
+                        DividerView().size(.small)
+                        ListRow("Accept terms").icon("doc.text").trailing(.checkbox($agree))
+                    }
+                }
+                PreviewCase("Selected · number · price block") {
                     ListRow("Premium plan", action: { plan.toggle() })
                         .subtitle("Billed monthly").number(1).selected(plan)
                         .trailing(.price(.init(total: "$14,400", each: "$1,200", unit: "/ month")))
-                    DividerView().size(.small)
+                }
+                PreviewCase("Meta line + status trailing") {
                     ListRow("Grand Hotel", action: {})
                         .subtitle("Istanbul · Sea view").icon("building.2")
                         .meta(ListRowMeta(rating: 8.4, sentiment: "Excellent", commentLabel: "1,284 reviews"))
                         .trailing(.status("Available", systemImage: "checkmark.seal.fill"))
-                    DividerView().size(.small)
+                }
+                PreviewCase("Inline button trailing") {
                     ListRow("Update payment").trailing(.button("Edit", action: {}))
-
-                    // Inset card style + custom slots.
+                }
+                PreviewCase("Inset style + custom slots") {
                     VStack(spacing: Theme.SpacingKey.sm.value) {
                         ListRow("Inset card row", action: {})
                             .subtitle("Bordered, field radius").icon("creditcard")
@@ -485,9 +490,7 @@ public extension ListSectionHeader {
                             .selected(true)
                     }
                     .listRowStyle(.inset)
-                    .padding(.top, Theme.SpacingKey.md.value)
                 }
-                .padding()
             }
         }
     }

@@ -119,22 +119,31 @@ public extension KeyValueTable {
 }
 
 #Preview {
-    KeyValueTable(rows: [
-        .init("Status", value: "Active", style: .success),
-        .init("Old price", value: "$5,000", style: .strikethrough),
-        .init("Total", value: "$4,250"),
-        .init("Refund", value: "Cancelled", style: .error),
-    ])
-    .padding()
-}
-
-#Preview("Bordered + outlined style") {
-    KeyValueTable(rows: [
-        .init("Status", value: "Active", style: .success),
-        .init("Total", value: "$4,250"),
-    ])
-    .title("Summary")
-    .bordered()
-    .cardStyle(.outlined)
-    .padding()
+    PreviewMatrix("KeyValueTable") {
+        PreviewCase("Value styles (plain / success / strikethrough / error)") {
+            KeyValueTable(rows: [
+                .init("Status", value: "Active", style: .success),
+                .init("Old price", value: "$5,000", style: .strikethrough),
+                .init("Total", value: "$4,250"),
+                .init("Refund", value: "Cancelled", style: .error),
+            ])
+        }
+        PreviewCase("Bordered + outlined card style · title") {
+            KeyValueTable(rows: [
+                .init("Status", value: "Active", style: .success),
+                .init("Total", value: "$4,250"),
+            ])
+            .title("Summary")
+            .bordered()
+            .cardStyle(.outlined)
+        }
+        PreviewCase("Bordered · muted value · custom surface") {
+            KeyValueTable(rows: [
+                .init("Reference", value: "BK-20931", style: .muted),
+                .init("Total", value: "$4,250"),
+            ])
+            .bordered()
+            .surface(.bgSecondaryLight)
+        }
+    }
 }

@@ -104,10 +104,14 @@ public extension Footer {
         .init("Support", items: [.init("Help center"), .init("Contact"), .init("FAQ")]),
         .init("Legal", items: [.init("Terms"), .init("Privacy")]),
     ]
-    return VStack(spacing: 24) {
-        Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
-        Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
-            .barStyle(.floating)
+
+    PreviewMatrix("Footer") {
+        PreviewCase("Default bar style · note") {
+            Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
+        }
+        PreviewCase("Floating bar style") {
+            Footer(columns: columns, note: "© 2026 ThemeKit. All rights reserved.")
+                .barStyle(.floating)
+        }
     }
-    .padding()
 }

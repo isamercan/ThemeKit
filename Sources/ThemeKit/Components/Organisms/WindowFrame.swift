@@ -101,21 +101,30 @@ public extension WindowFrame {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 20) {
-        WindowFrame("Settings") {
-            Text("Window body content")
-                .textStyle(.bodyBase400)
-                .padding()
+    PreviewMatrix("WindowFrame") {
+        PreviewCase("Titled · neutral chrome") {
+            WindowFrame("Settings") {
+                Text("Window body content")
+                    .textStyle(.bodyBase400)
+                    .padding()
+            }
         }
-        WindowFrame {
-            Text("Untitled window, tinted chrome")
-                .textStyle(.bodySm400)
-                .padding()
+        PreviewCase("Untitled · tinted chrome + elevated") {
+            WindowFrame {
+                Text("Untitled window, tinted chrome")
+                    .textStyle(.bodySm400)
+                    .padding()
+            }
+            .accent(.info)
+            .elevation(.elevated)
         }
-        .accent(.info)
-        .elevation(.elevated)
+        PreviewCase("Flat (no shadow)") {
+            WindowFrame("Terminal") {
+                Text("$ swift build")
+                    .textStyle(.bodySm400)
+                    .padding()
+            }
+            .elevation(.none)
+        }
     }
-    .padding()
-    .background(theme.background(.bgSecondaryLight))
 }

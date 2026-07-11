@@ -198,23 +198,43 @@ private struct TourHostModifier: ViewModifier {
 }
 
 #Preview("Default step card") {
-    struct Demo: View {
-        @State private var tour = TourController()
-        var body: some View {
+    // Overlay organism — the tour is pinned active (started at fixture
+    // construction) so each matrix cell shows the presented spotlight + step
+    // card as a single static frame; the idle host is the trivial state.
+    let activeTour: TourController = {
+        let controller = TourController()
+        controller.start()
+        return controller
+    }()
+    let idleTour = TourController()
+    PreviewMatrix("Tour") {
+        PreviewCase("Presented · spotlight + default step card") {
             VStack(spacing: 32) {
-                PrimaryButton("Start tour") { tour.start() }
+                PrimaryButton("Start tour") { activeTour.start() }
                     .tourTarget("start")
                 OutlineButton("Search flights", action: {})
                     .tourTarget("search")
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .tourHost(tour, steps: [
+            .frame(maxWidth: .infinity)
+            .frame(height: 420)
+            .tourHost(activeTour, steps: [
                 TourStep("start", title: "Welcome", message: "Kick off the guided tour from here."),
                 TourStep("search", title: "Search", message: "Find flights, hotels and packages.")
             ])
         }
+        PreviewCase("Idle host (tour not started)") {
+            VStack(spacing: 32) {
+                PrimaryButton("Start tour") { idleTour.start() }
+                    .tourTarget("start")
+                OutlineButton("Search flights", action: {})
+                    .tourTarget("search")
+            }
+            .frame(maxWidth: .infinity)
+            .tourHost(idleTour, steps: [
+                TourStep("start", title: "Welcome", message: "Kick off the guided tour from here.")
+            ])
+        }
     }
-    return Demo()
 }
 
 #Preview("Custom step card") {

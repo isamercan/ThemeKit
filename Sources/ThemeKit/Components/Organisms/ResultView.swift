@@ -174,16 +174,22 @@ public extension ResultView {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 40) {
+    PreviewMatrix("ResultView") {
+        PreviewCase("Success · two actions") {
             ResultView(.success, title: "Reservation confirmed")
                 .message("A confirmation email has been sent.")
                 .primaryAction("Details", action: {})
                 .secondaryAction("Home", action: {})
+        }
+        PreviewCase("Error") {
+            ResultView(.error, title: "Payment failed")
+                .message("Your card was declined. Please try another method.")
+                .primaryAction("Try again", action: {})
+        }
+        PreviewCase("404 exception page") {
             ResultView(.notFound, title: "Page not found")
                 .message("The page you're looking for may have been moved or deleted.")
                 .primaryAction("Back to home", action: {})
         }
-        .padding()
     }
 }

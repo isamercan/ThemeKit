@@ -154,9 +154,9 @@ enum HexColor {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var color = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
-        var body: some View {
+    @Previewable @State var color = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
+    PreviewMatrix("ColorPickerPanel") {
+        PreviewCase("Full (swatches + hex)") {
             VStack(spacing: 24) {
                 ColorPickerPanel(color: $color)
                     .swatches([
@@ -166,8 +166,11 @@ enum HexColor {
                     ])
                 RoundedRectangle(cornerRadius: 12).fill(color.color).frame(height: 44)
             }
-            .padding()
+        }
+        PreviewCase("Minimal (no alpha, no hex)") {
+            ColorPickerPanel(color: $color)
+                .showsAlpha(false)
+                .showsHexField(false)
         }
     }
-    return Demo()
 }

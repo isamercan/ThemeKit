@@ -35,17 +35,23 @@ private struct ButtonDockBar<DockContent: View>: View {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 12) {
-            ForEach(0..<12, id: \.self) { i in
-                Text("Row \(i)").frame(maxWidth: .infinity, alignment: .leading).padding()
+    // Safe-area-inset organism — docked inside a fixed-height cell.
+    PreviewMatrix("ButtonDock") {
+        PreviewCase("Docked actions") {
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(0..<6, id: \.self) { i in
+                        Text("Row \(i)").frame(maxWidth: .infinity, alignment: .leading).padding()
+                    }
+                }
             }
-        }
-    }
-    .buttonDock {
-        ButtonGroup(.horizontal) {
-            SecondaryButton("Cancel") {}
-            PrimaryButton("Continue") {}
+            .buttonDock {
+                ButtonGroup(.horizontal) {
+                    SecondaryButton("Cancel") {}
+                    PrimaryButton("Continue") {}
+                }
+            }
+            .frame(height: 280)
         }
     }
 }

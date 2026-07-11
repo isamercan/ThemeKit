@@ -172,10 +172,22 @@ public extension Coupon {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        Coupon(code: "UXMUQ").couponStyle(.filled)
-        Coupon(code: "UXMUQ").couponStyle(.outlined)
-        Coupon(code: "UXMUQ").couponStyle(.plain)
+    PreviewMatrix("Coupon") {
+        PreviewCase("Filled") {
+            Coupon(code: "UXMUQ").couponStyle(.filled)
+        }
+        PreviewCase("Outlined (dashed)") {
+            Coupon(code: "UXMUQ").couponStyle(.outlined)
+        }
+        PreviewCase("Plain") {
+            Coupon(code: "UXMUQ").couponStyle(.plain)
+        }
+        PreviewCase("Full width · icon + discount + expiry") {
+            Coupon(code: "SUMMER20")
+                .icon("tag.fill")
+                .discount("20% OFF")
+                .expiry("Valid until Dec 31")
+                .fullWidth()
+        }
     }
-    .padding()
 }

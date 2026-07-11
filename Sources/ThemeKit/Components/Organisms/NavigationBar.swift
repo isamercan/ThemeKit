@@ -122,25 +122,28 @@ public extension NavigationBar {
             .init(systemImage: "person", label: "Profile"),
         ]
         var body: some View {
-            VStack(spacing: 24) {
-                NavigationBar(items: items, selection: $sel)
-
-                NavigationBar(items: items, selection: $sel)
-                    .item { item, isActive in
-                        VStack(spacing: 4) {
-                            Image(systemName: item.systemImage)
-                                .font(.system(size: 18, weight: isActive ? .semibold : .regular))
-                            if let label = item.label {
-                                Text(label).textStyle(.overline500)
+            PreviewMatrix("NavigationBar") {
+                PreviewCase("Default capsule chrome") {
+                    NavigationBar(items: items, selection: $sel)
+                }
+                PreviewCase("Custom item slot") {
+                    NavigationBar(items: items, selection: $sel)
+                        .item { item, isActive in
+                            VStack(spacing: 4) {
+                                Image(systemName: item.systemImage)
+                                    .font(.system(size: 18, weight: isActive ? .semibold : .regular))
+                                if let label = item.label {
+                                    Text(label).textStyle(.overline500)
+                                }
                             }
+                            .opacity(isActive ? 1 : 0.5)
                         }
-                        .opacity(isActive ? 1 : 0.5)
-                    }
-
-                NavigationBar(items: items, selection: $sel)
-                    .barStyle(.floating)
+                }
+                PreviewCase("Floating bar style") {
+                    NavigationBar(items: items, selection: $sel)
+                        .barStyle(.floating)
+                }
             }
-            .padding()
         }
     }
     return Demo()

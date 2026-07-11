@@ -257,12 +257,24 @@ public extension UploadList {
 }
 
 #Preview("Static") {
-    Upload(files: [
-        UploadFile(name: "room-1.jpg", status: .uploading(0.6)),
-        UploadFile(name: "room-2.jpg", status: .done),
-        UploadFile(name: "huge-file.jpg", status: .failed("File too large")),
-    ], onRetry: { _ in })
-    .padding()
+    PreviewMatrix("Upload") {
+        PreviewCase("Statuses · uploading / done / failed + retry") {
+            Upload(files: [
+                UploadFile(name: "room-1.jpg", status: .uploading(0.6)),
+                UploadFile(name: "room-2.jpg", status: .done),
+                UploadFile(name: "huge-file.jpg", status: .failed("File too large")),
+            ], onRetry: { _ in })
+        }
+        PreviewCase("Empty · prompt + picker") {
+            Upload()
+        }
+        PreviewCase("At limit · picker disabled + count") {
+            Upload(files: [
+                UploadFile(name: "room-1.jpg", status: .done),
+                UploadFile(name: "room-2.jpg", status: .done),
+            ]).maxCount(2)
+        }
+    }
 }
 
 #Preview("Controller") {
