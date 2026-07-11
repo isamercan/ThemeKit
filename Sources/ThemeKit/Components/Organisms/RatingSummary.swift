@@ -10,6 +10,7 @@ import SwiftUI
 /// count link. (Star display lives in the Rating atom.)
 public struct RatingSummary: View {
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     private let score: Double
 
@@ -34,7 +35,7 @@ public struct RatingSummary: View {
             if let reviewCount {
                 Button { onReviews?() } label: {
                     HStack(spacing: 4) {
-                        Text("\(reviewCount) reviews").textStyle(.linkSm)
+                        Text(reviewsText(reviewCount)).textStyle(.linkSm)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
                             .mirrorsInRTL()
                     }
@@ -54,10 +55,15 @@ public struct RatingSummary: View {
     /// Spoken value — the numeric score, then the qualitative label and review
     /// count when present (e.g. "9.0, Excellent, 1200 reviews").
     private var accessibilityValueText: String {
-        var parts: [String] = [String(format: "%.1f", score)]
+        var parts: [String] = [score.formatted(.number.precision(.fractionLength(1)).locale(locale))]
         if let label { parts.append(label) }
-        if let reviewCount { parts.append(String(themeKit: "\(reviewCount) reviews")) }
+        if let reviewCount { parts.append(reviewsText(reviewCount)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// "N reviews" with the count rendered in the captured locale.
+    private func reviewsText(_ count: Int) -> String {
+        String(themeKit: "\(count.formatted(.number.locale(locale))) reviews")
     }
 }
 

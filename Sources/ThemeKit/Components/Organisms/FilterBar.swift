@@ -45,8 +45,8 @@ public struct FilterBar: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var onFilter: (() -> Void)?
     private var onSort: (() -> Void)?
-    private var filterTitle = "Filter"
-    private var sortTitle = "Sort"
+    private var filterTitle = String(themeKit: "Filter")
+    private var sortTitle = String(themeKit: "Sort")
     private var filterIcon = "line.3.horizontal.decrease"
     private var sortIcon = "arrow.up.arrow.down"
     private var collapsible = true
@@ -174,11 +174,11 @@ public struct FilterBar: View {
 
 public extension FilterBar {
     /// Adds the pinned leading Filter button (collapses to icon-only on scroll).
-    func onFilter(_ title: String = "Filter", icon: String = "line.3.horizontal.decrease", action: @escaping () -> Void) -> Self {
+    func onFilter(_ title: String = String(themeKit: "Filter"), icon: String = "line.3.horizontal.decrease", action: @escaping () -> Void) -> Self {
         copy { $0.filterTitle = title; $0.filterIcon = icon; $0.onFilter = action }
     }
     /// Adds the pinned leading Sort button (collapses to icon-only on scroll).
-    func onSort(_ title: String = "Sort", icon: String = "arrow.up.arrow.down", action: @escaping () -> Void) -> Self {
+    func onSort(_ title: String = String(themeKit: "Sort"), icon: String = "arrow.up.arrow.down", action: @escaping () -> Void) -> Self {
         copy { $0.sortTitle = title; $0.sortIcon = icon; $0.onSort = action }
     }
     /// Whether the leading buttons collapse to icons on scroll (default on).

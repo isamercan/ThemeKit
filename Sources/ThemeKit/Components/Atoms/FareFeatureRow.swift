@@ -37,7 +37,7 @@ public struct FareFeatureRow: View {
             Spacer(minLength: 0)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(feature.text)\(feature.status == .excluded ? ", not included" : "")")
+        .accessibilityLabel(feature.status == .excluded ? feature.text + ", " + String(themeKit: "not included") : feature.text)
     }
 
     private var iconColor: Color {

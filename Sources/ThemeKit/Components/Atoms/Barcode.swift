@@ -47,7 +47,7 @@ public struct Barcode: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Barcode \(value)")
+        .accessibilityLabel(String(themeKit: "Barcode \(value)"))
     }
 
     private static func render(_ string: String) -> CGImage? {

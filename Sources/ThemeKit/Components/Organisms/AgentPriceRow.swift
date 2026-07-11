@@ -34,7 +34,7 @@ public struct AgentPriceRow: View {
     private var price: Decimal?
     private var currencyCode: String?
     private var originalPrice: Decimal?
-    private var ctaTitle = "Select"
+    private var ctaTitle = String(themeKit: "Select")
     private var recommended = false
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
@@ -66,7 +66,9 @@ public struct AgentPriceRow: View {
                     if let rating {
                         HStack(spacing: 3) {
                             Image(systemName: "star.fill").font(.system(size: 10)).foregroundStyle(theme.foreground(.systemcolorsFgWarning))
-                            Text(String(format: "%.1f", rating)).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                                .accessibilityHidden(true)   // decorative; the value carries the meaning
+                            Text(rating.formatted(.number.precision(.fractionLength(1)).locale(locale)))
+                                .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                         }
                     }
                     if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)).lineLimit(1) }
@@ -106,6 +108,7 @@ public struct AgentPriceRow: View {
     private func warningView(_ text: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(theme.foreground(.systemcolorsFgWarning))
+                .accessibilityHidden(true)   // decorative; the warning text carries the meaning
             Text(text).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
             Spacer()
         }

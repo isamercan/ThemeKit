@@ -16,6 +16,7 @@ public struct GaugeView: View {
     public enum Style: Sendable { case circular, linear }
 
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     // Appearance/state — mutated only through the modifiers below (R2).
     private var style: Style = .circular
@@ -54,7 +55,7 @@ public struct GaugeView: View {
             if let label { Text(label).textStyle(.labelSm600) }
         } currentValueLabel: {
             if showsValue {
-                Text(fraction.formatted(.percent.precision(.fractionLength(0))))
+                Text(fraction.formatted(.percent.precision(.fractionLength(0)).locale(locale)))
                     .foregroundStyle(theme.text(.textPrimary))
             }
         }

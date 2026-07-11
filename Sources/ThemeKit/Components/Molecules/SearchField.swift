@@ -252,12 +252,13 @@ public struct SearchField: View {
             EmptyView()
         case .chevron:
             Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
+                .accessibilityHidden(true)   // decorative — the card button carries the label
         case .clear:
             Button { onClear?() } label: {
                 Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(theme.foreground(.fgHero))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Clear")
+            .accessibilityLabel(String(themeKit: "Clear"))
         }
     }
 
@@ -265,7 +266,7 @@ public struct SearchField: View {
         switch content {
         case .placeholder: return placeholder
         case .value(_, let title, let subtitle): return "\(title)\(subtitle.map { ", " + $0 } ?? "")"
-        case .dateRange(let s, let e): return "\(s.label)\(e.map { " to " + $0.label } ?? "")"
+        case .dateRange(let s, let e): return e.map { String(themeKit: "\(s.label) to \($0.label)") } ?? s.label
         case .passengers(let badge, _): return badge
         case .custom: return placeholder
         }

@@ -56,7 +56,7 @@ public struct FlightResultRow: View {
     private var totalAmount: Decimal?
     private var totalLabel: String?
     private var urgencyText: String?
-    private var selectTitle = "Select"
+    private var selectTitle = String(themeKit: "Select")
     private var onSelect: (() -> Void)?
     private var onDetails: (() -> Void)?
 
@@ -133,7 +133,7 @@ public struct FlightResultRow: View {
                                 .font(.system(size: 14)).foregroundStyle(bookmarkState ? theme.foreground(.fgHero) : theme.text(.textTertiary))
                                 .frame(width: 40, height: 40).contentShape(Rectangle())
                         }.buttonStyle(.plain).disabled(isReadOnly)
-                            .accessibilityLabel(bookmarkState ? "Remove saved flight" : "Save")
+                            .accessibilityLabel(bookmarkState ? String(themeKit: "Remove saved flight") : String(themeKit: "Save"))
                     }
                     if showsFavorite {
                         Button { favoriteState.toggle() } label: {
@@ -142,13 +142,13 @@ public struct FlightResultRow: View {
                                 .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
                                 .frame(width: 40, height: 40).contentShape(Rectangle())
                         }.buttonStyle(.plain).disabled(isReadOnly)
-                            .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
+                            .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
                     }
                 }
             }
             if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero).fractionDigits(2) }
             if let totalLabel, let totalAmount {
-                Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))")
+                Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)))")
                     .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)).fixedSize()
             }
             if let onSelect { ThemeButton(selectTitle) { onSelect() }.size(.small) }
@@ -161,6 +161,7 @@ public struct FlightResultRow: View {
             if let baggage {
                 HStack(spacing: 3) {
                     Image(systemName: "suitcase.fill").font(.system(size: 11))
+                        .accessibilityHidden(true)   // decorative; the baggage text carries the meaning
                     Text(baggage).textStyle(.overline500)
                 }.foregroundStyle(theme.text(.textTertiary))
             }
@@ -168,7 +169,7 @@ public struct FlightResultRow: View {
                 Text(urgencyText).textStyle(.overline500).foregroundStyle(theme.foreground(.systemcolorsFgError))
             }
             Spacer()
-            if let onDetails { TextLink("Details") { onDetails() } }
+            if let onDetails { TextLink(String(themeKit: "Details")) { onDetails() } }
         }
     }
 

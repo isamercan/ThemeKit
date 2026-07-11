@@ -32,12 +32,15 @@ private struct CountBubble: View {
     let showZero: Bool
     let color: SemanticColor
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     var body: some View {
         // `count` is an Int badge value, not a collection — `isEmpty` doesn't apply.
         // swiftlint:disable:next empty_count
         if count > 0 || showZero {
-            Text(count > overflowCount ? "\(overflowCount)+" : "\(count)")
+            Text(count > overflowCount
+                ? "\(overflowCount.formatted(.number.locale(locale)))+"
+                : count.formatted(.number.locale(locale)))
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(color.onSolid)
                 .padding(.horizontal, 5)
@@ -57,6 +60,9 @@ private struct DotBadge: View {
         Circle().fill(color.solid).frame(width: 10, height: 10)
             .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 1.5))
             .offset(x: 4, y: -4)
+            // Color-only status dot — decorative to VoiceOver; the host view
+            // carries the semantic (e.g. an "unread" label).
+            .accessibilityHidden(true)
     }
 }
 

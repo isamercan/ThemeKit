@@ -125,7 +125,7 @@ public struct SortSummaryBar: View {
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("More sort options")
+            .accessibilityLabel(String(themeKit: "More sort options"))
         }
     }
 }

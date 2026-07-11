@@ -164,7 +164,7 @@ public struct PriceTag: View {
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(fractionDigits)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(fractionDigits)).locale(locale))
     }
 
     private var discountPercent: Int? { Self.discountPercent(original: original, amount: amount) }

@@ -68,7 +68,7 @@ public struct StepperRow: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .accessibilityLabel(icon == "minus" ? "Decrease \(label)" : "Increase \(label)")
+        .accessibilityLabel(icon == "minus" ? String(themeKit: "Decrease \(label)") : String(themeKit: "Increase \(label)"))
     }
 }
 

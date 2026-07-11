@@ -66,7 +66,7 @@ public struct Coupon: View {
 
     private var inlineBody: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            if let icon { Image(systemName: icon).font(.system(size: 13)) }
+            if let icon { Image(systemName: icon).font(.system(size: 13)).accessibilityHidden(true) }
             Text(label).textStyle(.bodySm400)
             Text(code).textStyle(size.codeStyle)
             copyButton
@@ -79,7 +79,7 @@ public struct Coupon: View {
     private var blockBody: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: Theme.SpacingKey.xs.value) {
-                if let icon { Image(systemName: icon).font(.system(size: 13)) }
+                if let icon { Image(systemName: icon).font(.system(size: 13)).accessibilityHidden(true) }
                 Text(label).textStyle(.bodySm400).foregroundStyle(labelColor)
                 Spacer(minLength: Theme.SpacingKey.sm.value)
                 if let discount { discountChip(discount) }
@@ -106,7 +106,7 @@ public struct Coupon: View {
             Image(systemName: copied ? "checkmark" : "doc.on.doc").font(.system(size: 13))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(copied ? "Copied" : "Copy code")
+        .accessibilityLabel(copied ? String(themeKit: "Copied") : String(themeKit: "Copy code"))
     }
 
     private func discountChip(_ text: String) -> some View {

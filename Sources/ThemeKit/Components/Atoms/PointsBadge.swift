@@ -64,10 +64,11 @@ public struct PointsBadge: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.locale) private var locale
 
     private let points: Int
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var unit: String = "pts"
+    private var unit: String = String(themeKit: "pts")
     private var style: PointsStyle = .balance
     private var size: PointsSize = .medium
     private var systemImage: String = "star.circle.fill"
@@ -96,7 +97,7 @@ public struct PointsBadge: View {
     }
 
     private var label: String {
-        let value = points.formatted(.number.grouping(.automatic))
+        let value = points.formatted(.number.grouping(.automatic).locale(locale))
         let sign = (showsSign && style == .earn && points > 0) ? "＋" : ""
         return "\(sign)\(value) \(unit)"
     }

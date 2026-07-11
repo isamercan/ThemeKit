@@ -32,7 +32,7 @@ public struct Select<Option: Hashable>: View {
     private let optionTitle: (Option) -> String
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var placeholder: String = "Select"
+    private var placeholder: String = String(themeKit: "Select")
     /// Set only by the `.clearable(_:)` modifier, so the subtree
     /// `FieldDefaults.clearable` can fill the default without overriding an
     /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? false`.
@@ -162,6 +162,7 @@ public struct Select<Option: Hashable>: View {
                 Icon(systemName: open ? "chevron.up" : "chevron.down")
                     .size(.sm)
                     .color(showsClear ? .clear : theme.text(.textTertiary))
+                    .accessibilityHidden(true)   // decorative — the trigger carries the label + value
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -206,6 +207,7 @@ public struct Select<Option: Hashable>: View {
             }
             .buttonStyle(.plain)
             .padding(.trailing, Theme.SpacingKey.md.value)
+            .accessibilityLabel(String(themeKit: "Clear selection"))
         }
     }
 
@@ -268,7 +270,7 @@ public struct Select<Option: Hashable>: View {
         VStack(spacing: 0) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Icon(systemName: "magnifyingglass").size(.sm).color(theme.text(.textTertiary))
-                TextField("Search", text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
+                TextField(String(themeKit: "Search"), text: $query).textStyle(.bodyBase400).tint(theme.foreground(.fgHero))
             }
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .scaledControlHeight(44)

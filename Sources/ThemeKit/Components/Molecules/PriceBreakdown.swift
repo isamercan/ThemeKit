@@ -50,7 +50,7 @@ public struct PriceBreakdown: View {
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
-    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
+    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
     private var priceTag: PriceTag {
         var t = PriceTag(amount, currencyCode: resolvedCurrency).size(size).emphasis(emphasis).fractionDigits(0)
         if let unit { t = t.unit(unit) }
@@ -74,6 +74,7 @@ public struct PriceBreakdown: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)   // one VoiceOver stop for the whole price block
     }
 }
 

@@ -99,7 +99,7 @@ public struct SheetHeader: View {
             Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.text(.textPrimary)).frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(icon == "xmark" ? "Close" : "Back")
+        .accessibilityLabel(icon == "xmark" ? String(themeKit: "Close") : String(themeKit: "Back"))
     }
 
     private func progressBar(_ value: Double) -> some View {
@@ -110,6 +110,9 @@ public struct SheetHeader: View {
             }
         }
         .frame(height: 3)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(themeKit: "Progress"))
+        .accessibilityValue(String(themeKit: "\(Int(max(0, min(1, value)) * 100)) percent"))
     }
 }
 
@@ -147,7 +150,7 @@ public extension SheetHeader {
     VStack(spacing: 20) {
         SheetHeader("Passengers").onBack { }.onClose { }
         SheetHeader("Payment").subtitle("Step 3 of 4").onBack { }.onClose { }.progress(0.75)
-        SheetHeader("UcuzaBilet").onClose { }
+        SheetHeader("Filters").onClose { }
         SheetHeader("Floating").subtitle("BarStyle demo").onBack { }.onClose { }
             .barStyle(.floating)
     }

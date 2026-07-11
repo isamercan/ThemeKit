@@ -32,18 +32,18 @@ public struct GuestSelection: Equatable, Sendable, Codable {
             n > 0 ? "\(n) \(n == 1 ? singular : plural)" : nil
         }
         return [
-            part(rooms, "room", "rooms"),
-            part(adults, "adult", "adults"),
-            part(children, "child", "children"),
-            part(infants, "infant", "infants"),
+            part(rooms, String(themeKit: "room"), String(themeKit: "rooms")),
+            part(adults, String(themeKit: "adult"), String(themeKit: "adults")),
+            part(children, String(themeKit: "child"), String(themeKit: "children")),
+            part(infants, String(themeKit: "infant"), String(themeKit: "infants")),
         ].compactMap { $0 }.joined(separator: " · ")
     }
 }
 
 private struct GuestRow: Identifiable {
     let id: String                         // stable key (no per-access UUID churn)
-    let title: LocalizedStringKey
-    let subtitle: LocalizedStringKey?
+    let title: String                      // resolved via String(themeKit:) — Bundle.module lookup
+    let subtitle: String?
     let keyPath: WritableKeyPath<GuestSelection, Int>
     let range: ClosedRange<Int>
     let visible: Bool
@@ -75,10 +75,10 @@ public struct GuestSelector: View {
 
     private var rows: [GuestRow] {
         [
-            GuestRow(id: "rooms", title: "Rooms", subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
-            GuestRow(id: "adults", title: "Adults", subtitle: "Age 13+", keyPath: \.adults, range: adultRange, visible: true),
-            GuestRow(id: "children", title: "Children", subtitle: "Age 2–12", keyPath: \.children, range: childRange, visible: true),
-            GuestRow(id: "infants", title: "Infants", subtitle: "Under 2", keyPath: \.infants, range: infantRange, visible: showsInfants),
+            GuestRow(id: "rooms", title: String(themeKit: "Rooms"), subtitle: nil, keyPath: \.rooms, range: roomRange, visible: showsRooms),
+            GuestRow(id: "adults", title: String(themeKit: "Adults"), subtitle: String(themeKit: "Age 13+"), keyPath: \.adults, range: adultRange, visible: true),
+            GuestRow(id: "children", title: String(themeKit: "Children"), subtitle: String(themeKit: "Age 2–12"), keyPath: \.children, range: childRange, visible: true),
+            GuestRow(id: "infants", title: String(themeKit: "Infants"), subtitle: String(themeKit: "Under 2"), keyPath: \.infants, range: infantRange, visible: showsInfants),
         ].filter(\.visible)
     }
 
@@ -97,6 +97,10 @@ public struct GuestSelector: View {
                     QuantityStepper(value: binding(for: row.keyPath), range: effectiveRange(row))
                 }
                 .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
+                // Group the row so VoiceOver announces the stepper's +/- buttons
+                // in the context of "Adults" / "Children" / etc.
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(row.title)
             }
         }
         .onChange(of: selection) { _, new in onChangeHandler?(new) }

@@ -220,6 +220,11 @@ public struct DataTable<Row: Identifiable>: View {
 
         if isInteractive {
             base.contentShape(Rectangle()).onTapGesture { handleTap(row) }
+                // Tap-gesture rows carry no implicit traits — merge the cells into
+                // one element and surface the button role (+ selection state) so
+                // VoiceOver reads the row as a single button, not per-cell.
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         } else {
             base
         }

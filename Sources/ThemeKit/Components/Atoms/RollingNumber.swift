@@ -18,6 +18,7 @@ public struct RollingNumber: View {
     private let value: Int
 
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     public init(_ value: Int) {   // R1
         self.value = value
@@ -34,7 +35,7 @@ public struct RollingNumber: View {
         }
         // VoiceOver reads the value, not the 0-9 digit skeleton behind the roll.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(value.formatted())
+        .accessibilityLabel(value.formatted(.number.locale(locale)))
     }
 }
 

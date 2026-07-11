@@ -59,7 +59,11 @@ public struct DatePriceCard: View {
             if pill { pillShell } else { cardedShell }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(item.date), \(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))\(isCheapest ? ", lowest fare" : "")")
+        .accessibilityLabel(
+            "\(item.date), "
+                + item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale))
+                + (isCheapest ? ", " + String(themeKit: "lowest fare") : "")
+        )
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -84,7 +88,7 @@ public struct DatePriceCard: View {
             Text(item.date)
                 .textStyle(isSelected ? .labelSm600 : .bodySm400)
                 .foregroundStyle(theme.text(.textPrimary))
-            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))
+            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)))
                 .textStyle(.overline400)
                 .foregroundStyle(isCheapest ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
         }
@@ -101,7 +105,7 @@ public struct DatePriceCard: View {
         VStack(spacing: 2) {
             Text(item.date).textStyle(.labelSm600)
                 .foregroundStyle(isSelected ? theme.foreground(.fgHero) : theme.text(.textSecondary))
-            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(2))))
+            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(2)).locale(locale)))
                 .textStyle(.labelBase700).foregroundStyle(priceColor)
         }
         .frame(maxWidth: .infinity)
@@ -164,9 +168,9 @@ public struct DatePriceStrip: View {
             stripView
         } else if onPrev != nil || onNext != nil {
             HStack(spacing: 8) {
-                pageButton("chevron.left", onPrev)
+                pageButton("chevron.left", label: String(themeKit: "Previous"), onPrev)
                 gridView.frame(maxWidth: .infinity)
-                pageButton("chevron.right", onNext)
+                pageButton("chevron.right", label: String(themeKit: "Next"), onNext)
             }
         } else {
             gridView
@@ -208,7 +212,7 @@ public struct DatePriceStrip: View {
         }
     }
 
-    private func pageButton(_ name: String, _ action: (() -> Void)?) -> some View {
+    private func pageButton(_ name: String, label: String, _ action: (() -> Void)?) -> some View {
         Button { action?() } label: {
             Image(systemName: name).font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(theme.foreground(.fgHero))
@@ -219,6 +223,7 @@ public struct DatePriceStrip: View {
         .buttonStyle(.plain)
         .disabled(action == nil)
         .opacity(action == nil ? 0.4 : 1)
+        .accessibilityLabel(label)
     }
 }
 

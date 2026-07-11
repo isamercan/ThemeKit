@@ -59,7 +59,7 @@ public struct SearchBar: View {
     // Appearance/config — mutated only through the modifiers below (R2); the
     // async init seeds a 0.3s debounce baseline, which `.debounce(_:)` can
     // still override. Typeahead / recent-search features are all opt-in.
-    private var placeholder: String = "Search"
+    private var placeholder: String = String(themeKit: "Search")
     private var source: Source = .none
     private var recent: [String] = []
     private var onSearch: ((String) -> Void)? = nil
@@ -149,6 +149,7 @@ public struct SearchBar: View {
                             .mirrorsInRTL()
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(String(themeKit: "Back"))
                 }
 
                 fieldBox
@@ -237,6 +238,7 @@ public struct SearchBar: View {
                 Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Clear text"))
         } else if let trailingSystemImage {
             Button { onTrailing?() } label: {
                 Icon(systemName: trailingSystemImage).size(.sm).color(theme.text(.textPrimary))

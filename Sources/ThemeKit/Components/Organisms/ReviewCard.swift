@@ -26,6 +26,7 @@ public struct ReviewCard: View {
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.locale) private var locale
     @State private var expanded = false
 
     // Required content (R1).
@@ -77,7 +78,7 @@ public struct ReviewCard: View {
                 Button {
                     withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { expanded.toggle() }
                 } label: {
-                    Text(expanded ? "Show less" : "Read more")
+                    Text(expanded ? String(themeKit: "Show less") : String(themeKit: "Read more"))
                         .textStyle(.labelBase600).foregroundStyle(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
@@ -98,10 +99,11 @@ public struct ReviewCard: View {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 12))
                             .foregroundStyle(theme.foreground(.fgHero))
+                            .accessibilityLabel(String(themeKit: "Verified"))
                     }
                 }
                 if let date {
-                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                    Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale)))
                         .textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
                 }
             }
@@ -125,6 +127,7 @@ public struct ReviewCard: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(onPhotoTap == nil)
+                    .accessibilityLabel(String(themeKit: "Review photo \(index + 1) of \(photos.count)"))
                 }
             }
         }

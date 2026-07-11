@@ -61,7 +61,7 @@ public struct FlightRoute: View {
     private var accessibilitySummary: String {
         let departs = departure.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale))
         let arrives = arrival.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale))
-        return "\(origin) \(departs) to \(destination) \(arrives), \(durationText), \(stopsAccessibility)"
+        return String(themeKit: "\(origin) \(departs) to \(destination) \(arrives), \(durationText), \(stopsAccessibility)")
     }
 
     private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment, marker: String?) -> some View {
@@ -119,13 +119,23 @@ public struct FlightRoute: View {
     private var durationText: String {
         let minutes = max(0, Int(arrival.timeIntervalSince(departure) / 60))
         let h = minutes / 60, m = minutes % 60
-        return h > 0 ? "\(h)h \(m)m" : "\(m)m"
+        return h > 0 ? String(themeKit: "\(h)h \(m)m") : String(themeKit: "\(m)m")
     }
-    private var stopsText: LocalizedStringKey {
-        switch stops { case 0: return "Direct"; case 1: return "1 stop"; default: return "\(stops) stops" }
+    // Resolved via String(themeKit:) so the lookup hits ThemeKit's own catalog
+    // (a bare LocalizedStringKey would resolve against the consumer's main bundle).
+    private var stopsText: String {
+        switch stops {
+        case 0: return String(themeKit: "Direct")
+        case 1: return String(themeKit: "1 stop")
+        default: return String(themeKit: "\(stops) stops")
+        }
     }
     private var stopsAccessibility: String {
-        switch stops { case 0: return "direct"; case 1: return "1 stop"; default: return "\(stops) stops" }
+        switch stops {
+        case 0: return String(themeKit: "direct")
+        case 1: return String(themeKit: "1 stop")
+        default: return String(themeKit: "\(stops) stops")
+        }
     }
 }
 

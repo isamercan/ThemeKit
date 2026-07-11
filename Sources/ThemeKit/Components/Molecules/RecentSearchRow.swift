@@ -77,7 +77,7 @@ public struct RecentSearchRow: View {
             .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(from) to \(to)\(caption.map { ", " + $0 } ?? "")")
+        .accessibilityLabel(String(themeKit: "\(from) to \(to)") + (caption.map { ", " + $0 } ?? ""))
     }
 
     @ViewBuilder private var trailing: some View {
