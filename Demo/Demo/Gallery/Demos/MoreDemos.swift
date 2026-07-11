@@ -41,7 +41,7 @@ struct IconDemo: View {
 
     var body: some View {
         ComponentStage("Icon", inspector: [("size", "\(size.rawValue) · \(Int(size.value))")]) {
-            Icon(systemName: symbol).size(size).color(Theme.shared.foreground(.fgHero))
+            Icon(systemName: symbol).size(size).accent(.primary)
         } knobs: {
             TextField("SF Symbol", text: $symbol).textFieldStyle(.roundedBorder).autocorrectionDisabled()
             Picker("Size", selection: $size) { ForEach(IconSize.allCases, id: \.self) { Text($0.rawValue).tag($0) } }.pickerStyle(.segmented)
@@ -195,12 +195,12 @@ struct SelectDemo: View {
     var body: some View {
         ComponentStage("Select", inspector: [("style", filled ? "filled" : "default"), ("selection", city ?? "nil")]) {
             if filled {
-                selectView.selectStyle(.filled)   // custom SelectStyle via .selectStyle(_:)
+                selectView.fieldStyle(.muted)   // filled chrome via the shared .fieldStyle(_:) axis
             } else {
                 selectView
             }
         } knobs: {
-            Toggle("Filled style (.selectStyle)", isOn: $filled)
+            Toggle("Filled style (.fieldStyle)", isOn: $filled)
             Toggle("Searchable (inline panel + sections)", isOn: $searchable)
             Toggle("Required indicator", isOn: $required)
             Toggle("Allow clear", isOn: $clearable)
@@ -341,13 +341,13 @@ struct TooltipDemo: View {
     var body: some View {
         ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)"), ("content", rich ? "custom view" : "text")]) {
             if rich {
-                Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
+                Icon(systemName: "info.circle").size(.lg).accent(.primary)
                     .tooltip(isPresented: $shown, edge: edge, style: colored ? .info : nil) {
                         HStack(spacing: 6) { Image(systemName: "wifi"); Text("Free Wi-Fi") }
                     }
                     .padding(60)
             } else {
-                Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
+                Icon(systemName: "info.circle").size(.lg).accent(.primary)
                     .tooltip("Helpful hint", isPresented: $shown, edge: edge, style: colored ? .info : nil)
                     .padding(60)
             }
@@ -1048,9 +1048,9 @@ struct IndicatorDemo: View {
         ComponentStage("Indicator", inspector: [("kind", kind.rawValue)]) {
             Group {
                 if kind == .dot {
-                    Icon(systemName: "bell").size(.xl).color(Theme.shared.text(.textPrimary)).indicatorDot(position: position)
+                    Icon(systemName: "bell").size(.xl).accent(.neutral).indicatorDot(position: position)
                 } else {
-                    Icon(systemName: "envelope").size(.xl).color(Theme.shared.text(.textPrimary)).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
+                    Icon(systemName: "envelope").size(.xl).accent(.neutral).indicator(position) { Badge("3").badgeStyle(.error).size(.small) }
                 }
             }
         } knobs: {
@@ -1336,7 +1336,7 @@ struct FABDemo: View {
                 .init(systemImage: "doc", label: "Document", action: { flash("FAB: Document") }),
                 .init(systemImage: "link", label: "Link", action: { flash("FAB: Link") }),
             ] : [], action: { flash("FAB tapped") })
-            .shape(square ? .square : .circle).color(color).badge(badge ? 3 : nil)
+            .shape(square ? .square : .circle).accent(color).badge(badge ? 3 : nil)
             .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomTrailing)
         } knobs: {
             Toggle("Speed dial", isOn: $speedDial)
@@ -2697,7 +2697,7 @@ struct RollingNumberDemo: View {
     var body: some View {
         ComponentStage("RollingNumber", inspector: [("value", "\(value)")]) {
             VStack(spacing: 16) {
-                RollingNumber(value).size(size).color(Theme.shared.text(.textHero))
+                RollingNumber(value).size(size).accent(.primary)
                 ThemeButton("Roll") { value = Int.random(in: 100...99999); flash("RollingNumber: \(value)") }.icon(leading: "dice")
             }
         } knobs: {
