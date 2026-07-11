@@ -63,7 +63,10 @@ private struct DefaultListRowChrome: View {
             if let trailing = configuration.trailing { trailing }
         }
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .padding(.horizontal, configuration.isSelected ? Theme.SpacingKey.md.value : 0)
+        // The selected highlight is a full-width band drawn BEHIND the content —
+        // it never adds horizontal padding, so the leading edge (radio, icon,
+        // text) stays aligned whether or not the row is selected. Want an inset
+        // pill instead? Opt in with `.listRowStyle(.inset)`.
         .background(
             RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
                 .fill(configuration.isSelected ? theme.background(.bgHero).opacity(0.08) : .clear)
