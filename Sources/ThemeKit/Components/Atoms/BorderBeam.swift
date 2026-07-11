@@ -65,6 +65,12 @@ private struct BeamTrail: Shape {
 }
 
 private struct BorderBeamModifier: ViewModifier {
+    /// White-hot comet-head spark — optical glow, intentionally non-thematic (see `MediaScrim`).
+    private static let headSparkColor = Color.white.opacity(0.95)
+    /// Defensive fallback when a caller passes an empty `colors:` palette — a
+    /// neutral light stop (intentionally non-thematic, like the spark above).
+    private static let fallbackBeamColor = Color.white
+
     let cornerRadius: CGFloat
     let lineWidth: CGFloat
     let duration: Double
@@ -92,7 +98,7 @@ private struct BorderBeamModifier: ViewModifier {
             if reduceMotion {
                 // Honor Reduce Motion: a calm static accent border, no traveling beam.
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder((palette.first ?? .white).opacity(0.7), lineWidth: lineWidth)
+                    .strokeBorder((palette.first ?? Self.fallbackBeamColor).opacity(0.7), lineWidth: lineWidth)
                     .allowsHitTesting(false)
             } else {
                 TimelineView(.animation) { context in
@@ -102,7 +108,7 @@ private struct BorderBeamModifier: ViewModifier {
                     ZStack {
                         // Faint persistent outline so the edge reads even between laps.
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .strokeBorder((palette.first ?? .white).opacity(0.12), lineWidth: lineWidth)
+                            .strokeBorder((palette.first ?? Self.fallbackBeamColor).opacity(0.12), lineWidth: lineWidth)
 
                         if glow {
                             comet(head)
@@ -140,12 +146,12 @@ private struct BorderBeamModifier: ViewModifier {
 
     private func headSpark(_ head: CGFloat) -> some View {
         BeamTrail(cornerRadius: cornerRadius, inset: beamInset, from: head - 0.018, to: head + 0.004)
-            .stroke(Color.white.opacity(0.95), style: StrokeStyle(lineWidth: lineWidth * 1.25, lineCap: .round))
+            .stroke(Self.headSparkColor, style: StrokeStyle(lineWidth: lineWidth * 1.25, lineCap: .round))
             .blur(radius: lineWidth * 0.7)
     }
 
     private func segmentColor(_ f: CGFloat) -> Color {
-        guard palette.count >= 2 else { return palette.first ?? .white }
+        guard palette.count >= 2 else { return palette.first ?? Self.fallbackBeamColor }
         return f < 0.5 ? palette[0] : palette[1]
     }
 }

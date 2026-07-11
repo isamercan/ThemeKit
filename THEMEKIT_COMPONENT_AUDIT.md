@@ -62,17 +62,19 @@ Raw score is kept in the appendix as evidence; **this ordering supersedes it.** 
 - [ ] **Sweep:** grep the library for other currency-code / brand / Turkish defaults in public signatures.
 
 ### P0.2 — Structural API violations (House Rules 2 & 3)
-- [ ] **SeatCell** — the only full-legacy API: no `copy{}` extension; `size:`/`isSelected:`/`display:`/`palette:` in init → chainable modifiers (`.controlSize`, `.selected`, `.display`, token-fed palette). *(score 7 — worst in library.)*
-- [ ] **SeatLegend** — `palette`/`perRow` in init with no COW path → `.palette(_:)`/`.perRow(_:)` (it already has `.showsPremium`, so additive not a rewrite); swatch `cornerRadius:4` → `RadiusRole.selector`.
-- [ ] **Raw `Color` in modifier signatures** → accept `SemanticColor`/token keys, `@available(*, deprecated…)` the raw overload: `Checkbox.customInner(color:)` (`:29`), `SeatMap.tierColors([SeatTier:Color])` (`:289`), `BorderBeam(colors:[Color]?, cornerRadius:CGFloat)` (`:27-42`).
+> **Split by API impact.** The **raw-`Color` modifier signatures** are fixed API-safely (deprecate-forward — done below). The **init→modifier demotions remove public init params ⇒ API-breaking**, so they ride the next **major version bump** (see [ADR-0001](docs/ADR-0001-core-kind-in-init.md) rollout note) — NOT done in a patch release.
+- [ ] **⏸ DEFERRED (major bump) — SeatCell** — the only full-legacy API: `size:`/`isSelected:`/`display:`/`palette:` in init → chainable modifiers. *(score 7 — worst in library.)* Removing the init params breaks the API.
+- [ ] **⏸ DEFERRED (major bump) — SeatLegend** — `palette`/`perRow` in init → `.palette(_:)`/`.perRow(_:)`.
+- [x] **Raw `Color` in modifier signatures** — **SHIPPED (P0.3 PR, API-safe deprecate-forward):** added token overloads + `@available(*, deprecated…)` the raw ones. `Checkbox.customInner(_: SemanticColor)` (raw `.customInner(color:)` deprecated); `SeatMap.tierColors(_: [SeatTier: SemanticColor])` (raw `[SeatTier: Color]` `@_disfavoredOverload`+deprecated, per Badge precedent). `BorderBeam(colors:)` init left as a documented decorative input.
 - [x] **AnimatedImage `:69`** — **decided: documented House-Rule-1 exception** (SwiftUI has no animated-image primitive; the `URLSession` fetch mirrors how `RemoteImage` leans on `AsyncImage`, confined to one cancellable `.task(id:)` with only view-local `@State`). Doc comment added; a `Data`/frames-based init is an additive follow-up. *(Shipped in the P0.1 follow-up commit.)*
 
 ### P0.3 — Body-level raw colors → resolve via **[ADR-0002](docs/ADR-0002-on-media-and-specular-color.md)** (one coordinated fix, not 8)
-- [ ] Introduce on-media contrast token(s) + a documented specular-constant convention, then sweep: `ImageCollage:61`, `VideoPlayerView:172`, `ScrubGallery:92`, `LoyaltyCard` (QR bg), `PageHeaderStyle:457` (on-image), `BorderBeam:143`, `TiltCard:130`, `MeterStyle:170`. `ThemePicker` (`Color(hex: theme.base)`) is a separate *intentional cross-theme render* — comment it, don't tokenize.
+> **✅ SHIPPED (P0.3 PR, API-safe).** On-media contrast realized by extending `MediaScrim` (`Effects.swift`) with `.onContent` / `.onContentSecondary`; specular highlights use in-view `private static let` constants.
+- [x] Swept: `ImageCollage:61`, `VideoPlayerView:153,:172`, `ScrubGallery:92`, `LoyaltyCard` (QR bg), `PageHeaderStyle:448-468` (on-image) → `MediaScrim.onContent`; `BorderBeam:143` (`headSparkColor`), `TiltCard:130` (`specularHighlight`), `MeterStyle:170` (`hatchHighlight`) → named constants. `ThemePicker` (`Color(hex: theme.base)`) left as documented intentional cross-theme render. *Remaining advisory (non-blocking): ScrubGallery:97 over-media drop-shadow + BorderBeam `?? .white` fallbacks.*
 
-### P0.4 — Write two ADRs **before** re-bucketing the affected items
-- [ ] **[ADR-0001 — Core kind in init vs modifiers-only appearance](docs/ADR-0001-core-kind-in-init.md).** Unblocks: `ProgressIndicator` (`variant:`), `ButtonGroup`/`Join` (`axis:`), `ScoreBadge`/`ResultView`. **Do not rewrite these until the ADR lands** — 58 files cite the conflicting convention; changing one in isolation creates incoherence.
-- [ ] **[ADR-0002 — On-media & specular color](docs/ADR-0002-on-media-and-specular-color.md).** Unblocks P0.3.
+### P0.4 — Two ADRs — **✅ ACCEPTED (2026-07-11)**
+- [x] **[ADR-0001 — Core kind in init vs modifiers-only appearance](docs/ADR-0001-core-kind-in-init.md).** Archetype test adopted: `ProgressIndicator`/`ResultView` compliant (no change); `ScoreBadge`/`ButtonGroup`/`Join`/`SeatCell`/`SeatLegend` demotions are API-breaking → major-bump bucket.
+- [x] **[ADR-0002 — On-media & specular color](docs/ADR-0002-on-media-and-specular-color.md).** Realized via `MediaScrim` (see P0.3).
 
 ## 🟠 P1 — after P0
 

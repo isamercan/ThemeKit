@@ -197,6 +197,18 @@ public extension Checkbox {
     /// Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`.
     func type(_ t: CheckboxType) -> Self { copy { $0.type = t } }
 
+    /// Always fills the box with a semantic swatch (the `.customInner` type),
+    /// resolved from the token's solid role — the token-bound path.
+    func customInner(_ color: SemanticColor) -> Self {
+        copy { $0.type = .customInner(color: color.solid) }
+    }
+
+    /// Raw swatch fill (back-compat); prefer the token-bound `customInner(_:)`.
+    @available(*, deprecated, message: "Use customInner(_:) with a SemanticColor token.")
+    func customInner(color: Color) -> Self {
+        copy { $0.type = .customInner(color: color) }
+    }
+
     /// Renders the indeterminate (mixed) state instead of a checkmark.
     func indeterminate(_ on: Bool = true) -> Self { copy { $0.isIndeterminate = on } }
 

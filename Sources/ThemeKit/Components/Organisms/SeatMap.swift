@@ -285,7 +285,18 @@ public extension SeatMap {
     /// Width of a `.space` (gap) cell. By default a gap is as wide as a seat so every
     /// column stays aligned; pass a smaller value for a tighter aisle look.
     func aisleWidth(_ width: CGFloat) -> Self { copy { $0.aisleWidthOverride = max(0, width) } }
-    /// Override fare-tier accent colours — brand the tiers with your own palette.
+    /// Override fare-tier accent colours with semantic tokens — brand the tiers
+    /// with your own palette. Each tier uses the token's base shade, matching
+    /// the palette's own tier defaults.
+    func tierColors(_ overrides: [SeatTier: SemanticColor]) -> Self {
+        copy { $0.tierOverrides = overrides.mapValues(\.base) }
+    }
+    /// Raw-color tier overrides (back-compat); prefer the token-bound overload.
+    /// Disfavored so member-shorthand literals like `[.extraLegroom: .purple]` —
+    /// valid as both `Color` and `SemanticColor` values — resolve to the token
+    /// overload instead of being ambiguous.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use tierColors(_: [SeatTier: SemanticColor]) — the token-bound overload.")
     func tierColors(_ overrides: [SeatTier: Color]) -> Self { copy { $0.tierOverrides = overrides } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

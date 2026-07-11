@@ -864,11 +864,11 @@ struct SeatLayoutsShowcase: View {
             block("Tight aisle (opt-in) vs default full-width gap", ".aisleWidth(26)") {
                 displayMap { $0.aisleWidth(26) }
             }
-            block("Branded tier colours (generic override)", ".tierColors([.premium: .indigo, .business: .brown])") {
+            block("Branded tier colours (generic override)", ".tierColors([.premium: .purple, .business: .orange])") {
                 SeatMap(rowPatterns: ["ABC DEF", "ABC DEF", "ABC DEF"], selection: .constant(["1B"])) { _, row, _ in
                     SeatInfo(tier: row == 1 ? .premium : row == 2 ? .business : .standard)
                 }
-                .tierColors([.premium: .indigo, .business: .brown])
+                .tierColors([.premium: .purple, .business: .orange])
                 .showsLabels().legend()
             }
             // Per-row — each row its own shape (the key point).

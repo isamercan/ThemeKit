@@ -70,6 +70,9 @@ public extension View {
 }
 
 private struct Tilt3DModifier: ViewModifier {
+    /// Optical specular sheen — intentionally non-thematic white (see `MediaScrim`).
+    private static let specularHighlight = Color.white.opacity(0.35)
+
     let maxAngle: Angle
     let shine: Bool
     let radiusRole: Theme.RadiusRole
@@ -127,7 +130,7 @@ private struct Tilt3DModifier: ViewModifier {
     /// Specular highlight riding the touch point; fades out entirely at rest.
     private var shineOverlay: some View {
         RadialGradient(
-            colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
+            colors: [Self.specularHighlight, Self.specularHighlight.opacity(0)],
             center: UnitPoint(x: 0.5 + tilt.width / 2, y: 0.5 + tilt.height / 2),
             startRadius: 0,
             endRadius: max(size.width, size.height)
