@@ -44,6 +44,9 @@ struct CalloutDemo: View {
     @State private var showIcon = true
     @State private var action = false
     @State private var closable = false
+    @State private var inlineLink = false
+    @State private var leadingSlot = false
+    @State private var trailingSlot = false
     @State private var dismissed = false
 
     var body: some View {
@@ -52,12 +55,16 @@ struct CalloutDemo: View {
                 Button("Reset") { dismissed = false }.buttonStyle(.plain).foregroundStyle(Theme.shared.foreground(.fgHero))
             } else {
                 {
-                    let base = Callout("Lorem ipsum placeholder text.")
+                    var base = Callout(inlineLink ? "Your changes were saved. View the summary for details." : "Lorem ipsum placeholder text.")
                         .variant(type)
                         .calloutStyle(soft ? .soft : .plain)
                         .showsIcon(showIcon)
+                        .links(inlineLink ? [("summary", { flash("Callout link: summary") })] : [])
                         .onClose(closable ? { dismissed = true } : nil)
-                    return action ? base.action("Undo") { flash("Callout action") } : base
+                    if action { base = base.action("Undo") { flash("Callout action") } }
+                    if leadingSlot { base = base.leading { Spinner() } }
+                    if trailingSlot { base = base.trailing { Badge("New") } }
+                    return base
                 }()
             }
         } knobs: {
@@ -66,6 +73,9 @@ struct CalloutDemo: View {
             }
             Toggle("Soft surface", isOn: $soft)
             Toggle("Show icon", isOn: $showIcon)
+            Toggle("Inline tappable link", isOn: $inlineLink)
+            Toggle("Leading slot (Spinner)", isOn: $leadingSlot)
+            Toggle("Trailing slot (Badge)", isOn: $trailingSlot)
             Toggle("Action (Undo)", isOn: $action)
             Toggle("Closable", isOn: $closable)
         }

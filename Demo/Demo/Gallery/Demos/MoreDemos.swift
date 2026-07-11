@@ -54,12 +54,16 @@ struct InputLabelDemo: View {
     @State private var required = false
     @State private var info = true
     @State private var error = false
+    @State private var link = false
 
     var body: some View {
         ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("hasError", "\(error)")]) {
-            InputLabel(text).required(required).hasInfo(info).hasError(error)
+            InputLabel(link ? "Email (why do we ask?)" : text)
+                .required(required).hasInfo(info).hasError(error)
+                .links(link ? [("why do we ask?", { flash("InputLabel link") })] : [])
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
+            Toggle("Inline tappable link", isOn: $link)
             Toggle("Required", isOn: $required)
             Toggle("Info glyph", isOn: $info)
             Toggle("Error", isOn: $error)
@@ -71,11 +75,11 @@ struct ScoreBadgeDemo: View {
     @State private var score = 9.0
     @State private var large = false
     var body: some View {
-        ComponentStage("ScoreBadge", inspector: [("score", String(format: "%.1f", score))]) {
-            ScoreBadge(score, large: large)
+        ComponentStage("ScoreBadge", inspector: [("score", String(format: "%.1f", score)), ("size", large ? "large" : "small")]) {
+            ScoreBadge(score).size(large ? .large : .small)
         } knobs: {
             HStack { Text("Score"); SwiftUI.Slider(value: $score, in: 0...10, step: 0.1) }
-            Toggle("Large", isOn: $large)
+            Toggle("Large (size axis)", isOn: $large)
         }
     }
 }
@@ -135,20 +139,30 @@ struct SearchBarDemo: View {
     @State private var back = false
     @State private var trailing = true
     @State private var typeahead = true
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
     @State private var recent = ["Istanbul", "Bursa"]
 
     private let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa", "Adana"]
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
 
     var body: some View {
-        ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("recent", "\(recent.count)")]) {
-            SearchBar(text: $text)
-                .suggestions(typeahead ? cities : [])
-                .recent(typeahead ? recent : [], onClear: typeahead ? { recent = []; flash("Recent cleared") } : nil)
-                .onSelect { flash("Selected: \($0)") }
-                .onCommit { flash("Submit: \($0)") }
-                .backButton(back)
-                .trailingIcon(trailing ? "barcode.viewfinder" : nil)
+        ComponentStage("SearchBar", inspector: [("text", "\"\(text)\""), ("suggestions", "\(typeahead)"), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
+            {
+                let base = SearchBar(text: $text)
+                    .suggestions(typeahead ? cities : [])
+                    .recent(typeahead ? recent : [], onClear: typeahead ? { recent = []; flash("Recent cleared") } : nil)
+                    .onSelect { flash("Selected: \($0)") }
+                    .onCommit { flash("Submit: \($0)") }
+                    .backButton(back)
+                    .trailingIcon(trailing ? "barcode.viewfinder" : nil)
+                return explicitSize.map { base.size($0) } ?? base
+            }()
         } knobs: {
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
             Toggle("Back button", isOn: $back)
             Toggle("Trailing icon", isOn: $trailing)
             Toggle("Suggestions + recent", isOn: $typeahead)
@@ -162,6 +176,7 @@ struct SelectDemo: View {
     @State private var searchable = false
     @State private var loading = false
     @State private var disableSoldOut = false   // marks "Konya" disabled
+    @State private var required = false
     @State private var filled = false
 
     private var selectView: some View {
@@ -173,6 +188,7 @@ struct SelectDemo: View {
         .clearable(clearable)
         .searchable(searchable)
         .loading(loading)
+        .required(required)
         .optionEnabled(disableSoldOut ? { $0 != "Konya" } : nil)
     }
 
@@ -186,6 +202,7 @@ struct SelectDemo: View {
         } knobs: {
             Toggle("Filled style (.selectStyle)", isOn: $filled)
             Toggle("Searchable (inline panel + sections)", isOn: $searchable)
+            Toggle("Required indicator", isOn: $required)
             Toggle("Allow clear", isOn: $clearable)
             Toggle("Loading (async)", isOn: $loading)
             Toggle("Disable \"Konya\"", isOn: $disableSoldOut)
@@ -200,24 +217,27 @@ struct MultiSelectDemo: View {
     @State private var searchable = true
     @State private var clearable = true
     @State private var capTags = true
+    @State private var capSelection = false
     @State private var enabled = true
     @State private var loading = false
     @State private var disableSoldOut = false   // marks "Adana" disabled
     private let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana", "Konya"]
 
     var body: some View {
-        ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("loading", "\(loading)")]) {
+        ComponentStage("MultiSelect", inspector: [("count", "\(picks.count)"), ("maxSelection", capSelection ? "5" : "—")]) {
             MultiSelect("Cities", options: cities, selection: $picks) { $0 }
             .optionEnabled(disableSoldOut ? { $0 != "Adana" } : nil)
             .searchable(searchable)
             .clearable(clearable)
             .maxTags(capTags ? 2 : nil)
+            .maxSelection(capSelection ? 5 : nil)
             .loading(loading)
             .disabled(!enabled)
         } knobs: {
             Toggle("Searchable", isOn: $searchable)
             Toggle("Allow clear", isOn: $clearable)
             Toggle("Max 2 tags (+N)", isOn: $capTags)
+            Toggle("Max 5 selections (cap)", isOn: $capSelection)
             Toggle("Loading (async)", isOn: $loading)
             Toggle("Disable \"Adana\"", isOn: $disableSoldOut)
             Toggle("Enabled", isOn: $enabled)
@@ -230,13 +250,26 @@ struct SelectBoxDemo: View {
     @State private var country: String? = "Turkey"
     @State private var error = false
     @State private var enabled = true
+    @State private var required = false
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
     var body: some View {
-        ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("isEnabled", "\(enabled)")]) {
-            SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
-            .hint(error ? nil : "Pick your country")
-            .errorText(error ? "Required" : nil)
+        ComponentStage("SelectBox", inspector: [("selection", country ?? "nil"), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
+            {
+                let base = SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+                    .hint(error ? nil : "Pick your country")
+                    .errorText(error ? "Required" : nil)
+                    .required(required)
+                return explicitSize.map { base.size($0) } ?? base
+            }()
             .disabled(!enabled)
         } knobs: {
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
+            Toggle("Required indicator", isOn: $required)
             Toggle("Error state", isOn: $error)
             Toggle("Enabled", isOn: $enabled)
             Button("Clear") { country = nil }
@@ -248,14 +281,20 @@ struct MultiLineDemo: View {
     @State private var text = ""
     @State private var limit = true
     @State private var error = false
+    @State private var helper = false
+    @State private var warning = false
     var body: some View {
         ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
             MultiLineTextInput("Notes", text: $text)
                 .placeholder("Write something…")
                 .characterLimit(limit ? 200 : nil)
+                .helperText(helper ? "Visible to the support team only." : nil)
+                .warningText(warning ? "Avoid sharing personal data." : nil)
                 .errorText(error ? "Required" : nil)
         } knobs: {
             Toggle("Character limit", isOn: $limit)
+            Toggle("Helper text", isOn: $helper)
+            Toggle("Warning text", isOn: $warning)
             Toggle("Error state", isOn: $error)
         }
     }
@@ -267,17 +306,25 @@ struct OTPDemo: View {
     @State private var error = false
     @State private var secure = false
     @State private var resend = false
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
     @State private var lastComplete = "—"
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
     var body: some View {
-        ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("completed", lastComplete)]) {
+        ComponentStage("OTPInput", inspector: [("code", "\"\(code)\""), ("completed", lastComplete), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
             {
-                let base = OTPInput(code: $code, onComplete: { lastComplete = $0 })
+                var base = OTPInput(code: $code, onComplete: { lastComplete = $0 })
                     .digitCount(six ? 6 : 4)
                     .secure(secure)
                     .errorText(error ? "Invalid code" : nil)
+                if let explicitSize { base = base.size(explicitSize) }
                 return resend ? base.resend(interval: 30, onResend: { lastComplete = "resent" }) : base
             }()
         } knobs: {
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
             Toggle("6 digits", isOn: $six)
             Toggle("Secure entry", isOn: $secure)
             Toggle("Error state", isOn: $error)
@@ -290,13 +337,23 @@ struct TooltipDemo: View {
     @State private var shown = true
     @State private var edge: TooltipEdge = .top
     @State private var colored = false
+    @State private var rich = false
     var body: some View {
-        ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)"), ("style", colored ? "info" : "default")]) {
-            Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
-                .tooltip("Helpful hint", isPresented: $shown, edge: edge, style: colored ? .info : nil)
-                .padding(60)
+        ComponentStage("Tooltip", inspector: [("isPresented", "\(shown)"), ("edge", "\(edge)"), ("content", rich ? "custom view" : "text")]) {
+            if rich {
+                Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
+                    .tooltip(isPresented: $shown, edge: edge, style: colored ? .info : nil) {
+                        HStack(spacing: 6) { Image(systemName: "wifi"); Text("Free Wi-Fi") }
+                    }
+                    .padding(60)
+            } else {
+                Icon(systemName: "info.circle").size(.lg).color(Theme.shared.foreground(.fgHero))
+                    .tooltip("Helpful hint", isPresented: $shown, edge: edge, style: colored ? .info : nil)
+                    .padding(60)
+            }
         } knobs: {
             Toggle("Presented", isOn: $shown)
+            Toggle("Custom content (icon + text)", isOn: $rich)
             Toggle("Colored (info)", isOn: $colored)
             Picker("Edge", selection: $edge) {
                 Text("Top").tag(TooltipEdge.top)
@@ -328,14 +385,23 @@ struct CheckboxGroupDemo: View {
     @State private var selectAll = true
     @State private var enabled = true
     @State private var disableParking = false
+    @State private var horizontal = false
+    @State private var trailingControl = false
+    @State private var description = false
     private let options = ["Wifi", "Pool", "Parking", "Breakfast"]
     var body: some View {
-        ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", "))]) {
+        ComponentStage("CheckboxGroup", inspector: [("selected", sel.sorted().joined(separator: ", ")), ("axis", horizontal ? "horizontal" : "vertical")]) {
             CheckboxGroup(title: "Amenities", options: options, selection: $sel) { $0 }
+                .description(description ? "Included with every room." : nil)
                 .selectAll(selectAll ? "Select all" : nil)
                 .optionEnabled(disableParking ? { $0 != "Parking" } : nil)
+                .axis(horizontal ? .horizontal : .vertical)
+                .controlPlacement(trailingControl ? .trailing : .leading)
                 .disabled(!enabled)
         } knobs: {
+            Toggle("Horizontal axis", isOn: $horizontal)
+            Toggle("Trailing control placement", isOn: $trailingControl)
+            Toggle("Group description", isOn: $description)
             Toggle("Select-all (indeterminate)", isOn: $selectAll)
             Toggle("Enabled (whole group)", isOn: $enabled)
             Toggle("Disable “Parking”", isOn: $disableParking)
@@ -349,6 +415,8 @@ struct RadioGroupDemo: View {
     @State private var styleIdx = 0   // 0 stacked, 1 button-solid, 2 button-outline
     @State private var enabled = true
     @State private var disableFirst = false
+    @State private var trailingControl = false
+    @State private var description = false
     private var optionEnabled: ((String) -> Bool)? { disableFirst ? { $0 != "First" } : nil }
 
     var body: some View {
@@ -364,11 +432,17 @@ struct RadioGroupDemo: View {
                     .disabled(!enabled)
             default:
                 RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .description(description ? "Fares differ by cabin class." : nil)
+                    .controlPlacement(trailingControl ? .trailing : .leading)
                     .optionEnabled(optionEnabled)
                     .disabled(!enabled)
             }
         } knobs: {
             Picker("Style", selection: $styleIdx) { Text("Stacked").tag(0); Text("Button solid").tag(1); Text("Button outline").tag(2) }.pickerStyle(.segmented)
+            if styleIdx == 0 {
+                Toggle("Trailing control placement", isOn: $trailingControl)
+                Toggle("Group description", isOn: $description)
+            }
             Toggle("Enabled (whole group)", isOn: $enabled)
             Toggle("Disable “First” option", isOn: $disableFirst)
             Button("Clear") { sel = nil }
@@ -378,12 +452,21 @@ struct RadioGroupDemo: View {
 
 struct ToggleGroupDemo: View {
     @State private var sel: Set<String> = ["push"]
+    @State private var horizontal = false
+    @State private var accented = false
+    @State private var disableSms = false
     var body: some View {
-        ComponentStage("ToggleGroup", inspector: [("on", sel.sorted().joined(separator: ", "))]) {
+        ComponentStage("ToggleGroup", inspector: [("on", sel.sorted().joined(separator: ", ")), ("axis", horizontal ? "horizontal" : "vertical")]) {
             ToggleGroup(title: "Notifications", options: ["push", "email", "sms"], selection: $sel,
                         label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 })
-                .optionDescription { _ in "Supporting text." }
+                .optionDescription { _ in horizontal ? nil : "Supporting text." }
+                .optionEnabled(disableSms ? { $0 != "sms" } : nil)
+                .accent(accented ? .success : nil)
+                .axis(horizontal ? .horizontal : .vertical)
         } knobs: {
+            Toggle("Horizontal axis", isOn: $horizontal)
+            Toggle("Accent (success)", isOn: $accented)
+            Toggle("Disable “SMS”", isOn: $disableSms)
             Button("Enable all") { sel = ["push", "email", "sms"] }
         }
     }
@@ -393,24 +476,45 @@ struct AutocompleteDemo: View {
     @State private var text = ""
     @State private var asyncMode = false
     @State private var disableSoldOut = false
+    @State private var clearable = false
+    @State private var externalLoading = false
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
     private let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
     private var enabledPredicate: ((String) -> Bool)? {
         disableSoldOut ? { $0 != "Izmit" } : nil
     }
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
     var body: some View {
-        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("disabled", disableSoldOut ? "Izmit" : "—")]) {
+        ComponentStage("Autocomplete", inspector: [("text", "\"\(text)\""), ("mode", asyncMode ? "async" : "static"), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
             if asyncMode {
-                Autocomplete("Destination", text: $text, suggest: { query in
-                    try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
-                    return cities.filter { $0.localizedCaseInsensitiveContains(query) }
-                })
-                .suggestionEnabled(enabledPredicate)
-            } else {
-                Autocomplete("Destination", text: $text, suggestions: cities)
+                {
+                    let base = Autocomplete("Destination", text: $text, suggest: { query in
+                        try? await Task.sleep(nanoseconds: 400_000_000)   // simulate network
+                        return cities.filter { $0.localizedCaseInsensitiveContains(query) }
+                    })
                     .suggestionEnabled(enabledPredicate)
+                    .clearable(clearable)
+                    .loading(externalLoading)
+                    return explicitSize.map { base.size($0) } ?? base
+                }()
+            } else {
+                {
+                    let base = Autocomplete("Destination", text: $text, suggestions: cities)
+                        .suggestionEnabled(enabledPredicate)
+                        .clearable(clearable)
+                        .loading(externalLoading)
+                    return explicitSize.map { base.size($0) } ?? base
+                }()
             }
         } knobs: {
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
             Toggle("Async (remote-style)", isOn: $asyncMode)
+            Toggle("Clearable", isOn: $clearable)
+            Toggle("Loading (external)", isOn: $externalLoading)
             Toggle("Disable “Izmit”", isOn: $disableSoldOut)
             Text("Type to filter suggestions.").font(.footnote).foregroundStyle(.secondary)
         }
@@ -470,9 +574,11 @@ struct EmptyStateDemo: View {
     @State private var customImage = false
     @State private var tintIcon = false
     @State private var animated = false
+    @State private var inlineLink = false
+    @State private var actionsSlot = false
     private let gifURL = URL(string: "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif")
     var body: some View {
-        ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol")]) {
+        ComponentStage("EmptyState", inspector: [("media", animated ? "gif" : customImage ? "custom" : "symbol"), ("actions", actionsSlot ? "slot" : "stock")]) {
             if animated {
                 EmptyState(animatedURL: gifURL, title: "Loading")
                     .imageMaxHeight(140)
@@ -484,19 +590,36 @@ struct EmptyStateDemo: View {
                     .message("You haven't added anything yet.")
                     .primaryAction(hasButton ? "Explore" : nil, action: hasButton ? { flash("EmptyState: Explore") } : nil)
             } else {
-                EmptyState("No results found")
-                    .icon("magnifyingglass")
-                    .iconForeground(tintIcon ? Theme.shared.foreground(.systemcolorsFgWarning) : nil)
-                    .iconBackground(tintIcon ? Theme.shared.background(.systemcolorsBgWarningLight) : nil)
-                    .iconCircleSize(tintIcon ? 104 : 88)
-                    .message("Try adjusting your search or filters.")
-                    .primaryAction(hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
-                    .secondaryAction(secondary ? "Learn more" : nil, action: secondary ? { flash("EmptyState: Learn more") } : nil)
+                {
+                    var base = EmptyState("No results found")
+                        .icon("magnifyingglass")
+                        .iconCircleSize(tintIcon ? 104 : 88)
+                    if tintIcon {
+                        base = base.iconForeground(.systemcolorsFgWarning).iconBackground(.systemcolorsBgWarningLight)
+                    }
+                    base = inlineLink
+                        ? base.message("Try adjusting your filters or read the search tips.",
+                                       links: [("search tips", { flash("EmptyState: search tips") })])
+                        : base.message("Try adjusting your search or filters.")
+                    if actionsSlot {
+                        return base.actions {
+                            ButtonGroup(.horizontal) {
+                                SecondaryButton("Learn more") { flash("EmptyState: Learn more") }.size(.small)
+                                PrimaryButton("Clear filters") { flash("EmptyState: Clear filters") }.size(.small)
+                            }
+                        }
+                    }
+                    return base
+                        .primaryAction(hasButton ? "Clear filters" : nil, action: hasButton ? { flash("EmptyState: Clear filters") } : nil)
+                        .secondaryAction(secondary ? "Learn more" : nil, action: secondary ? { flash("EmptyState: Learn more") } : nil)
+                }()
             }
         } knobs: {
             Toggle("Animated illustration (GIF, native)", isOn: $animated)
             Toggle("Custom illustration", isOn: $customImage)
             Toggle("Tinted + larger icon", isOn: $tintIcon)
+            Toggle("Inline tappable link (symbol)", isOn: $inlineLink)
+            Toggle("Actions slot (ButtonGroup)", isOn: $actionsSlot)
             Toggle("Action button", isOn: $hasButton)
             Toggle("Secondary action (symbol)", isOn: $secondary)
         }
@@ -571,11 +694,12 @@ struct ListRowDemo: View {
 struct NotificationDemo: View {
     @State private var unread = true
     @State private var actions = true
+    @State private var inlineAction = false
     @State private var closable = false
     @State private var typed = false
     private var type: FeedbackKind? { typed ? .success : nil }
     var body: some View {
-        ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("type", typed ? "success" : "default")]) {
+        ComponentStage("NotificationCard", inspector: [("isUnread", "\(unread)"), ("action", actions ? "slot" : inlineAction ? "inline" : "—")]) {
             if actions {
                 NotificationCard(title: "We Have a Suggestion for Your Holiday") {
                     ButtonGroup(.horizontal) {
@@ -589,16 +713,20 @@ struct NotificationDemo: View {
                 .variant(type)
                 .onClose(closable ? { flash("Notification dismissed") } : nil)
             } else {
-                NotificationCard(title: "We Have a Suggestion for Your Holiday")
-                    .message("24 days left until your Hilton Istanbul reservation.")
-                    .date("December 5, 2024")
-                    .unread(unread)
-                    .variant(type)
-                    .onClose(closable ? { flash("Notification dismissed") } : nil)
+                {
+                    let base = NotificationCard(title: "We Have a Suggestion for Your Holiday")
+                        .message("24 days left until your Hilton Istanbul reservation.")
+                        .date("December 5, 2024")
+                        .unread(unread)
+                        .variant(type)
+                        .onClose(closable ? { flash("Notification dismissed") } : nil)
+                    return inlineAction ? base.action("View") { flash("Notification: View") } : base
+                }()
             }
         } knobs: {
             Toggle("Unread", isOn: $unread)
-            Toggle("Actions", isOn: $actions)
+            Toggle("Actions (custom slot)", isOn: $actions)
+            if !actions { Toggle("Inline action (View)", isOn: $inlineAction) }
             Toggle("Type (success icon)", isOn: $typed)
             Toggle("Closable", isOn: $closable)
         }
@@ -990,14 +1118,17 @@ struct StepsDemo: View {
                          percent: (percent && state == .active) ? 0.6 : nil)
         }
     }
+    @State private var small = false
     var body: some View {
-        ComponentStage("Steps", inspector: [("active", "\(active)"), ("progressDot", "\(progressDot)")]) {
+        ComponentStage("Steps", inspector: [("active", "\(active)"), ("size", small ? "small" : "medium")]) {
             Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
                 .axis(vertical ? .vertical : .horizontal)
                 .progressDot(progressDot)
+                .size(small ? .small : .medium)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Small size", isOn: $small)
             Toggle("Progress dot", isOn: $progressDot)
             Toggle("Active percent ring (60%)", isOn: $percent)
             Toggle("Error at active", isOn: $error)
@@ -1029,22 +1160,36 @@ struct TimelineDemo: View {
     @State private var horizontal = false
     @State private var mode: TimelineMode = .left
     @State private var reverse = false
+    @State private var customMarkers = false
     private var modeLabel: String {
         switch mode { case .left: return "left"; case .right: return "right"; case .alternate: return "alternate" }
     }
     var body: some View {
-        ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical"), ("mode", modeLabel), ("reverse", "\(reverse)")]) {
-            Timeline([
-                .init(title: "Order", time: "09:24", systemImage: "cart", state: .done, color: .success),
-                .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
-                failed
-                    ? .init(title: "Error", time: "09:45", description: horizontal ? nil : "Try your card again.", state: .error)
-                    : .init(title: "On the way", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
-            ])
-            .axis(horizontal ? .horizontal : .vertical).mode(mode).reversed(reverse)
-            .pending((!horizontal && pending) ? "Waiting for courier…" : nil)
+        ComponentStage("Timeline", inspector: [("active", "\(Int(step))"), ("axis", horizontal ? "horizontal" : "vertical"), ("mode", modeLabel), ("marker", customMarkers ? "custom" : "stock")]) {
+            {
+                let base = Timeline([
+                    .init(title: "Order", time: "09:24", systemImage: "cart", state: .done, color: .success),
+                    .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: Int(step) > 1 ? .done : .active),
+                    failed
+                        ? .init(title: "Error", time: "09:45", description: horizontal ? nil : "Try your card again.", state: .error)
+                        : .init(title: "On the way", time: "—", systemImage: "truck.box", state: Int(step) > 2 ? .done : Int(step) == 2 ? .active : .todo),
+                ])
+                .axis(horizontal ? .horizontal : .vertical).mode(mode).reversed(reverse)
+                .pending((!horizontal && pending) ? "Waiting for courier…" : nil)
+                if customMarkers {
+                    return base.marker { _, index in
+                        Text("\(index + 1)")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(Theme.shared.foreground(.fgHero)))
+                    }
+                }
+                return base
+            }()
         } knobs: {
             Stepper("Active: \(Int(step))", value: $step, in: 0...3)
+            Toggle("Custom markers (numbered)", isOn: $customMarkers)
             Toggle("Horizontal", isOn: $horizontal)
             Toggle("Pending node (vertical)", isOn: $pending)
             Toggle("Error item", isOn: $failed)
@@ -1494,15 +1639,24 @@ struct CommandPaletteDemo: View {
 
 struct EmojiReactionButtonDemo: View {
     @State private var liked = false
+    @State private var size: ChipSize = .small
+    @State private var accented = false
     var body: some View {
-        ComponentStage("EmojiReactionButton", inspector: [("reacted", "\(liked)")]) {
+        ComponentStage("EmojiReactionButton", inspector: [("reacted", "\(liked)"), ("size", "\(size)"), ("accent", accented ? "success" : "default")]) {
             HStack(spacing: 10) {
                 EmojiReactionButton("👍", count: 12, isReacted: $liked)
+                    .size(size).accent(accented ? .success : nil)
                 EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
+                    .size(size).accent(accented ? .success : nil)
                 EmojiReactionButton("🔥", count: 0)
+                    .size(size).accent(accented ? .success : nil)
             }
         } knobs: {
             Toggle("First reacted", isOn: $liked)
+            Picker("Size", selection: $size) {
+                Text("S").tag(ChipSize.small); Text("M").tag(ChipSize.medium); Text("L").tag(ChipSize.large)
+            }.pickerStyle(.segmented)
+            Toggle("Accent (success)", isOn: $accented)
         }
     }
 }
@@ -1628,8 +1782,11 @@ struct KanbanBoardDemo: View {
         .init("In progress", items: [Task(id: 3, title: "Build charts")], accent: .primary, limit: 2),
         .init("Done", items: [Task(id: 4, title: "Ship colors")], accent: .success),
     ]
+    @State private var width: KanbanColumnWidth = .regular
+    @State private var spacingIdx = 1   // 0 sm, 1 md, 2 lg
+    private var spacingKey: Theme.SpacingKey { spacingIdx == 0 ? .sm : spacingIdx == 2 ? .lg : .md }
     var body: some View {
-        ComponentStage("KanbanBoard", inspector: [("columns", "\(columns.count)")]) {
+        ComponentStage("KanbanBoard", inspector: [("columns", "\(columns.count)"), ("width", "\(width)"), ("spacing", "\(spacingKey)")]) {
             KanbanBoard(columns: $columns) { task in
                 Text(task.title)
                     .font(.callout.weight(.semibold))
@@ -1638,7 +1795,16 @@ struct KanbanBoardDemo: View {
                     .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
                     .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
             }
+            .columnWidth(width)
+            .spacing(spacingKey)
             .frame(height: 380)
+        } knobs: {
+            Picker("Column width", selection: $width) {
+                Text("Compact").tag(KanbanColumnWidth.compact); Text("Regular").tag(KanbanColumnWidth.regular); Text("Wide").tag(KanbanColumnWidth.wide)
+            }.pickerStyle(.segmented)
+            Picker("Column spacing", selection: $spacingIdx) {
+                Text("sm").tag(0); Text("md").tag(1); Text("lg").tag(2)
+            }.pickerStyle(.segmented)
         }
     }
 }
@@ -1651,6 +1817,11 @@ struct DateFieldDemo: View {
     @State private var clearable = true
     @State private var enabled = true
     @State private var error = false
+    @State private var required = false
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
 
     private var style: DateFieldStyle {
         switch styleSel {
@@ -1665,19 +1836,27 @@ struct DateFieldDemo: View {
     private var messages: [InfoMessage] { error ? [InfoMessage("Date is required", kind: .error)] : [] }
 
     var body: some View {
-        ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("value", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")]) {
-            DateField("Date", date: $date)
+        ComponentStage("DateField", inspector: [("style", styleSel.rawValue), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
+            {
+                let base = DateField("Date", date: $date)
                     .style(style)
                     .components(withTime ? .dateAndTime : .date)
                     .infoMessages(messages)
                     .clearable(clearable)
+                    .required(required)
                     .icon("calendar")
                     .a11yID("demoDate")
-                    .disabled(!enabled)
+                return explicitSize.map { base.size($0) } ?? base
+            }()
+            .disabled(!enabled)
         } knobs: {
             Text("style = display format (custom = \"EEE, d MMM\"). Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
             Picker("Style", selection: $styleSel) { ForEach(Style.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
             Toggle("With time", isOn: $withTime)
+            Toggle("Required indicator", isOn: $required)
             Toggle("Clearable", isOn: $clearable)
             Toggle("Error message", isOn: $error)
             Toggle("Enabled", isOn: $enabled)
@@ -1693,6 +1872,11 @@ struct TimeFieldDemo: View {
     @State private var clearable = true
     @State private var enabled = true
     @State private var error = false
+    @State private var required = false
+    @State private var sizeIdx = 0   // 0 auto, then the TextInputSize ramp
+    private var explicitSize: TextInputSize? {
+        switch sizeIdx { case 1: return .xsmall; case 2: return .small; case 3: return .medium; case 4: return .large; default: return nil }
+    }
 
     private var cycle: TimeFieldHourCycle {
         switch cycleSel {
@@ -1704,19 +1888,27 @@ struct TimeFieldDemo: View {
     private var messages: [InfoMessage] { error ? [InfoMessage("Time is required", kind: .error)] : [] }
 
     var body: some View {
-        ComponentStage("TimeField", inspector: [("hourCycle", cycleSel.rawValue), ("value", time.map { $0.formatted(date: .omitted, time: .shortened) } ?? "nil")]) {
-            TimeField("Time", time: $time)
-                .hourCycle(cycle)
-                .minuteInterval(interval)
-                .infoMessages(messages)
-                .clearable(clearable)
-                .icon("clock")
-                .a11yID("demoTime")
-                .disabled(!enabled)
+        ComponentStage("TimeField", inspector: [("hourCycle", cycleSel.rawValue), ("size", explicitSize.map { "\($0)" } ?? "auto")]) {
+            {
+                let base = TimeField("Time", time: $time)
+                    .hourCycle(cycle)
+                    .minuteInterval(interval)
+                    .infoMessages(messages)
+                    .clearable(clearable)
+                    .required(required)
+                    .icon("clock")
+                    .a11yID("demoTime")
+                return explicitSize.map { base.size($0) } ?? base
+            }()
+            .disabled(!enabled)
         } knobs: {
             Text("hourCycle = locale / 12h / 24h. minuteInterval snaps the wheel. Tap the field to open the themed picker.").font(.caption).foregroundStyle(.secondary)
             Picker("Hour cycle", selection: $cycleSel) { ForEach(Cycle.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+            Picker("Size", selection: $sizeIdx) {
+                Text("Auto").tag(0); Text("XS").tag(1); Text("S").tag(2); Text("M").tag(3); Text("L").tag(4)
+            }.pickerStyle(.segmented)
             Stepper("Minute interval: \(interval)", value: $interval, in: 1...30, step: 5)
+            Toggle("Required indicator", isOn: $required)
             Toggle("Clearable", isOn: $clearable)
             Toggle("Error message", isOn: $error)
             Toggle("Enabled", isOn: $enabled)
@@ -1863,6 +2055,7 @@ struct ThemeButtonDemo: View {
     @State private var icon = false
     @State private var trailingIcon = false
     @State private var loading = false
+    @State private var spinnerIdx = 0   // 0 replace label, 1 leading, 2 trailing
 
     private var iconOnly: Bool { shape == .circle || shape == .square }
 
@@ -1870,11 +2063,14 @@ struct ThemeButtonDemo: View {
         ComponentStage("ThemeButton", inspector: [
             ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
         ]) {
-            ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
-                .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
-                      trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
-                .color(color).variant(variant).size(size).shape(shape)
-                .fullWidth(block && !iconOnly).loading(loading)
+            {
+                let base = ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
+                    .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
+                          trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
+                    .color(color).variant(variant).size(size).shape(shape)
+                    .fullWidth(block && !iconOnly).loading(loading)
+                return spinnerIdx == 0 ? base : base.spinnerPlacement(spinnerIdx == 1 ? .leading : .trailing)
+            }()
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
             Picker("Variant", selection: $variant) { ForEach(ButtonVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -1886,6 +2082,9 @@ struct ThemeButtonDemo: View {
             Toggle("Leading icon", isOn: $icon)
             Toggle("Trailing icon position", isOn: $trailingIcon)
             Toggle("Loading", isOn: $loading)
+            Picker("Spinner placement", selection: $spinnerIdx) {
+                Text("Replace").tag(0); Text("Start").tag(1); Text("End").tag(2)
+            }.pickerStyle(.segmented)
         }
     }
 }

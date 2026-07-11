@@ -15,6 +15,7 @@ struct AvatarDemo: View {
     @State private var accent: SemanticColor = .primary
     @State private var initials = false
     @State private var square = false
+    @State private var bordered = false
     @State private var group = false
     @State private var numeric = 0.0   // 0 = use enum tier; >0 = custom point size
     @State private var presenceIdx = 1   // 0 = none
@@ -26,14 +27,14 @@ struct AvatarDemo: View {
 
     var body: some View {
         ComponentStage("Avatar", inspector: [
-            ("size", numeric > 0 ? "\(Int(numeric))pt" : "\(Int(size.rawValue))"), ("presence", presences[presenceIdx].0),
+            ("size", numeric > 0 ? "\(Int(numeric))pt" : "\(Int(size.rawValue))"), ("presence", presences[presenceIdx].0), ("bordered", "\(bordered)"),
         ]) {
             if group {
                 AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).size(size).maxVisible(4)
             } else if numeric > 0 {
-                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).accent(accent).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).dimension(numeric).accent(accent).shape(square ? .square : .circle).bordered(bordered, accent: accent).presence(presence, pulse: presence == .online)
             } else {
-                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).accent(accent).shape(square ? .square : .circle).presence(presence, pulse: presence == .online)
+                Avatar(initials ? .initials("AB") : .icon("person.fill")).size(size).accent(accent).shape(square ? .square : .circle).bordered(bordered, accent: accent).presence(presence, pulse: presence == .online)
             }
         } knobs: {
             Picker("Presence", selection: $presenceIdx) {
@@ -47,6 +48,7 @@ struct AvatarDemo: View {
                 Text("Primary").tag(SemanticColor.primary); Text("Neutral").tag(SemanticColor.neutral); Text("Purple").tag(SemanticColor.purple)
             }.pickerStyle(.segmented)
             Toggle("Square shape", isOn: $square)
+            Toggle("Bordered ring (accent-tinted)", isOn: $bordered)
             Toggle("Initials", isOn: $initials)
             Toggle("Avatar group (+N)", isOn: $group)
         }
@@ -122,7 +124,7 @@ struct BadgeDemo: View {
 struct ChipDemo: View {
     @State private var selected = true
     @State private var solid = false
-    @State private var large = false
+    @State private var size: ChipSize = .small
     @State private var enabled = true
     @State private var rating = false
     @State private var exists = true
@@ -130,10 +132,10 @@ struct ChipDemo: View {
 
     var body: some View {
         ComponentStage("Chip", inspector: [
-            ("isSelected", "\(selected)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
+            ("isSelected", "\(selected)"), ("size", "\(size)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
         ]) {
             Chip(exists ? "Recommended" : "Sold out", isSelected: $selected)
-                    .size(large ? .large : .small)
+                    .size(size)
                     .chipStyle(solid ? .solid : .tonal)
                     .rating(rating ? 4.6 : nil)
                     .exists(exists)
@@ -145,7 +147,9 @@ struct ChipDemo: View {
             Toggle("isExist (strike-through when off)", isOn: $exists)
             Toggle("Expands horizontally", isOn: $expands)
             Toggle("Solid style", isOn: $solid)
-            Toggle("Large", isOn: $large)
+            Picker("Size", selection: $size) {
+                Text("Small").tag(ChipSize.small); Text("Medium").tag(ChipSize.medium); Text("Large").tag(ChipSize.large)
+            }.pickerStyle(.segmented)
             Toggle("Enabled", isOn: $enabled)
         }
     }
@@ -189,6 +193,7 @@ struct RatingDemo: View {
     @State private var layoutIdx = 0   // 0 stars, 1 numberRate, 2 rateNumberText
     @State private var interactive = true
     @State private var allowHalf = true
+    @State private var allowClear = false
     @State private var reviewLink = true
     @State private var taps = 0
 
@@ -200,6 +205,7 @@ struct RatingDemo: View {
                 .layout(layout)
                 .countLabel("1,284 reviews")
                 .allowHalf(allowHalf)
+                .allowClear(allowClear)
                 .onRate((interactive && layoutIdx == 0) ? { value = $0; flash("Rating: \(String(format: "%.1f", $0))") } : nil)
                 .onReviewTap(reviewLink ? { taps += 1; flash("Reviews tapped") } : nil)
         } knobs: {
@@ -208,6 +214,7 @@ struct RatingDemo: View {
             Text("Stars: fill/half-tap. Number: value + star. Number+text: score chip + sentiment word.").font(.caption).foregroundStyle(.secondary)
             Toggle("Interactive (tap to rate, stars)", isOn: $interactive)
             Toggle("Allow half", isOn: $allowHalf)
+            Toggle("Clear on re-tap (tap current value → 0)", isOn: $allowClear)
             Toggle("Tappable review count", isOn: $reviewLink)
         }
     }
@@ -230,6 +237,7 @@ struct SpinnerDemo: View {
 struct TagDemo: View {
     @State private var text = "Istanbul"
     @State private var removable = true
+    @State private var closable = false
     @State private var icon = false
     @State private var styleIdx = 0   // 0 = neutral (no style)
     @State private var variant: FillVariant = .soft
@@ -244,14 +252,21 @@ struct TagDemo: View {
         ("turquoise", .turquoise), ("orange", .orange), ("purple", .purple), ("pink", .pink), ("info", .info),
     ]
 
+    /// `.closable(_:)` takes a non-optional closure, so the chain is built here
+    /// and the modifier applied conditionally.
+    private var demoTag: Tag {
+        let tag = Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
+            .icon(icon ? "mappin" : nil)
+            .tagStyle(styles[styleIdx].1)
+            .variant(variant)
+            .bordered(bordered)
+        return closable ? tag.closable { flash("Tag closed") } : tag
+    }
+
     var body: some View {
-        ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)")]) {
+        ComponentStage("Tag", inspector: [("style", styles[styleIdx].0), ("variant", "\(variant)"), ("closable", "\(closable)")]) {
             VStack(spacing: 18) {
-                Tag(text, onRemove: removable ? { flash("Tag removed") } : nil)
-                    .icon(icon ? "mappin" : nil)
-                    .tagStyle(styles[styleIdx].1)
-                    .variant(variant)
-                    .bordered(bordered)
+                demoTag
 
                 // .color(_) — the broader Ant palette
                 FlowLayout(spacing: 6, lineSpacing: 6) {
@@ -272,7 +287,8 @@ struct TagDemo: View {
             Picker("Variant", selection: $variant) {
                 Text("Soft").tag(FillVariant.soft); Text("Solid").tag(FillVariant.solid); Text("Outline").tag(FillVariant.outline)
             }.pickerStyle(.segmented)
-            Toggle("Removable", isOn: $removable)
+            Toggle("Removable (init onRemove, bare glyph)", isOn: $removable)
+            Toggle("Closable (kit CloseButton)", isOn: $closable)
             Toggle("Leading icon", isOn: $icon)
             Toggle("Bordered", isOn: $bordered)
         }
@@ -328,11 +344,12 @@ struct CloseButtonDemo: View {
 struct HelperTextDemo: View {
     @State private var error = false
     @State private var hides = false
+    @State private var links = false
     @State private var enabled = true
 
     var body: some View {
         ComponentStage("HelperText", inspector: [
-            ("hasError", "\(error)"), ("hidesOnError", "\(hides)"), ("isEnabled", "\(enabled)"),
+            ("hasError", "\(error)"), ("hidesOnError", "\(hides)"), ("links", "\(links)"), ("isEnabled", "\(enabled)"),
         ]) {
             VStack(alignment: .leading, spacing: 6) {
                 InputLabel("Password").required().hasError(error)
@@ -342,7 +359,8 @@ struct HelperTextDemo: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.shared.border(.borderPrimary)))
-                HelperText("Min. 8 characters, one number.")
+                HelperText(links ? "By continuing you agree to the Terms and Privacy Policy." : "Min. 8 characters, one number.")
+                    .links(links ? [("Terms", { flash("Terms tapped") }), ("Privacy Policy", { flash("Privacy Policy tapped") })] : [])
                     .hasError(error)
                     .hidesOnError(hides)
                     .disabled(!enabled)
@@ -350,6 +368,7 @@ struct HelperTextDemo: View {
         } knobs: {
             Toggle("Error (red helper)", isOn: $error)
             Toggle("Hide on error (yields to a field-error line)", isOn: $hides)
+            Toggle("Inline links (tappable substrings)", isOn: $links)
             Toggle("Enabled", isOn: $enabled)
         }
     }
