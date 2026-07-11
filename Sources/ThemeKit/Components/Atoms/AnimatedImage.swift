@@ -11,6 +11,15 @@ import ImageIO
 /// per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven
 /// by a `TimelineView(.animation)`. Handles variable frame durations and loops.
 /// (Reference AVIFAnimatedImage / animated `ImageView` role, native.)
+///
+/// **House-Rule-1 exception (sanctioned).** SwiftUI ships no animated-image
+/// primitive — `AsyncImage` decodes a single frame — so, exactly as `RemoteImage`
+/// leans on `AsyncImage`'s built-in networking, this atom performs its own
+/// `URLSession` fetch. It is confined to a single, cancellable `.task(id: url)`
+/// with only view-local `@State` (no `ObservableObject`, no app/shared state), so
+/// the component stays a value type. Callers that must avoid in-view networking
+/// can pre-decode and pass frames; a `Data`/frames-based init is tracked as a
+/// follow-up (would be additive, no API break).
 public struct AnimatedImage: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

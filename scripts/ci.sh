@@ -43,6 +43,10 @@ if [[ $FAST -eq 0 ]]; then
   fi
 fi
 
+# 2.5: brand-neutrality & i18n gate (fast grep; hard-fails on brand/Turkish leaks).
+step "Brand neutrality (i18n)"
+if bash scripts/check-neutrality.sh ; then pass "Neutrality"; else die "Neutrality — brand/Turkish leak (see THEMEKIT_COMPONENT_AUDIT.md)"; fi
+
 # 3: build (the package + tests). This is the must-pass gate.
 step "swift build --build-tests"
 if swift build --build-tests ; then pass "Build"; else die "Build"; fi
