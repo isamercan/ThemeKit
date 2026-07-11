@@ -30,6 +30,9 @@ public struct FlightCard: View {
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isReadOnly) private var isReadOnly
 
     // Required content (R1).
     private let airline: String
@@ -46,7 +49,11 @@ public struct FlightCard: View {
     private var airlineSystemImage: String = "airplane.circle.fill"
     private var badge: String?
     private var onSelect: (() -> Void)?
-    private var favorite: Binding<Bool>?
+    /// Favourite state — dual-mode via `ControllableState` (ADR-F4); renamed
+    /// from `favorite` so the nullary `func favorite()` overload isn't an
+    /// invalid redeclaration. Hidden until `showsFavorite`.
+    @ControllableState private var favoriteState = false
+    private var showsFavorite = false
     private var scarcity: Int?
     private var fareBrand: String?
     private var footerSlot: AnyView?
@@ -86,6 +93,7 @@ public struct FlightCard: View {
     }
 
     /// The card's inner layout — everything inside the shell.
+    @MainActor
     private var cardContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
             header
@@ -96,6 +104,7 @@ public struct FlightCard: View {
         .padding(density.scale(Theme.SpacingKey.md.value))
     }
 
+    @MainActor
     private var header: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Image(systemName: airlineSystemImage)
@@ -109,20 +118,22 @@ public struct FlightCard: View {
             }
             Spacer()
             if let badge { Badge(badge).badgeStyle(.success).size(.small) }
-            if let favorite { favoriteButton(favorite) }
+            if showsFavorite { favoriteButton }
         }
     }
 
-    private func favoriteButton(_ fav: Binding<Bool>) -> some View {
-        Button { fav.wrappedValue.toggle() } label: {
-            Image(systemName: fav.wrappedValue ? "heart.fill" : "heart")
+    @MainActor
+    private var favoriteButton: some View {
+        Button { favoriteState.toggle() } label: {
+            Image(systemName: favoriteState ? "heart.fill" : "heart")
                 .font(.body)
-                .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                .symbolEffect(.bounce, value: fav.wrappedValue)
+                .foregroundStyle(favoriteState ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
                 .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(fav.wrappedValue ? "Remove from favourites" : "Add to favourites")
+        .disabled(isReadOnly)
+        .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
     }
 
     private func scarcityRow(_ count: Int) -> some View {
@@ -285,8 +296,18 @@ public extension FlightCard {
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
     /// Adds a "Select" button to the footer.
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
-    /// A heart toggle in the header bound to a favourite flag.
-    func favorite(_ isFavorite: Binding<Bool>) -> Self { copy { $0.favorite = isFavorite } }
+    /// A heart toggle in the header bound to a favourite flag (controlled —
+    /// the caller owns persistence).
+    func favorite(_ isFavorite: Binding<Bool>) -> Self {
+        copy {
+            $0.showsFavorite = true
+            $0._favoriteState = ControllableState(wrappedValue: false, external: isFavorite)
+        }
+    }
+    /// A self-managed heart toggle in the header (uncontrolled). Survives List
+    /// *scrolling* (state-per-identity) but not identity churn — use
+    /// ``favorite(_:)`` when the flag must persist.
+    func favorite() -> Self { copy { $0.showsFavorite = true } }
     /// Shows a "N seats left" scarcity line (urgent colour).
     func scarcity(_ seatsLeft: Int?) -> Self { copy { $0.scarcity = seatsLeft } }
     /// A fare-brand chip next to the airline, e.g. "Eco Flex".
@@ -306,9 +327,9 @@ public extension FlightCard {
     let arr = dep.addingTimeInterval(2 * 3_600 + 20 * 60)
     return VStack(spacing: 16) {
         FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr)
-            .price(1_299).badge("Cheapest").onSelect { }
+            .price(1_299).badge("Cheapest").favorite().onSelect { }
         FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: dep, arrival: dep.addingTimeInterval(4 * 3_600))
-            .stops(1).price(3_499)
+            .stops(1).price(3_499).favorite(.constant(true))
     }
     .padding()
 }

@@ -30,6 +30,9 @@ public struct FlightTicketCard: View {
     @Environment(\.componentDensity) private var density
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isReadOnly) private var isReadOnly
 
     private let from: String
     private let to: String
@@ -45,7 +48,11 @@ public struct FlightTicketCard: View {
     private var airlineLogo: URL?
     private var price: Decimal?
     private var currencyCode: String?
-    private var favorite: Binding<Bool>?
+    /// Favourite state — dual-mode via `ControllableState` (ADR-F4); renamed
+    /// from `favorite` so the nullary `func favorite()` overload isn't an
+    /// invalid redeclaration. Hidden until `showsFavorite`.
+    @ControllableState private var favoriteState = false
+    private var showsFavorite = false
     private var accent: SemanticColor?
     private var elevation: CardElevation = .soft
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
@@ -116,6 +123,7 @@ public struct FlightTicketCard: View {
             .overlay(Circle().fill(theme.background(surfaceKey)).frame(width: 3, height: 3))
     }
 
+    @MainActor
     private var stub: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             if let airlineLogo {
@@ -126,16 +134,18 @@ public struct FlightTicketCard: View {
             if let airline { Text(airline).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary)).lineLimit(1) }
             Spacer(minLength: 6)
             if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.medium).emphasis(.standard).fractionDigits(0) }
-            if let favorite {
-                Button { favorite.wrappedValue.toggle() } label: {
-                    Image(systemName: favorite.wrappedValue ? "heart.fill" : "heart")
+            if showsFavorite {
+                Button { favoriteState.toggle() } label: {
+                    Image(systemName: favoriteState ? "heart.fill" : "heart")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle((accent ?? .primary).onSolid)
+                        .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
                         .frame(width: 30, height: 30)
-                        .background(favorite.wrappedValue ? accentBase : theme.text(.textTertiary), in: Circle())
+                        .background(favoriteState ? accentBase : theme.text(.textTertiary), in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Favourite")
+                .disabled(isReadOnly)
+                .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
             }
         }
     }
@@ -163,7 +173,18 @@ public extension FlightTicketCard {
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
-    func favorite(_ binding: Binding<Bool>) -> Self { copy { $0.favorite = binding } }
+    /// A heart toggle in the stub bound to a favourite flag (controlled — the
+    /// caller owns persistence).
+    func favorite(_ binding: Binding<Bool>) -> Self {
+        copy {
+            $0.showsFavorite = true
+            $0._favoriteState = ControllableState(wrappedValue: false, external: binding)
+        }
+    }
+    /// A self-managed heart toggle in the stub (uncontrolled). Survives List
+    /// *scrolling* (state-per-identity) but not identity churn — use
+    /// ``favorite(_:)`` when the flag must persist.
+    func favorite() -> Self { copy { $0.showsFavorite = true } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
@@ -196,6 +217,7 @@ public extension FlightTicketCard {
         .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
         .times(departure: "10:00 AM", arrival: "11:30 AM")
         .airline("Garuda Indonesia").price(140, currencyCode: "USD")
+        .favorite()   // uncontrolled heart, off until tapped
         .cardStyle(.outlined)
         .frame(maxWidth: 320).padding()
 }

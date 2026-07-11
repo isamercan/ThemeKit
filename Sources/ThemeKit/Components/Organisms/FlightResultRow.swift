@@ -24,6 +24,9 @@ public struct FlightResultRow: View {
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isReadOnly) private var isReadOnly
 
     // Required content (R1).
     private let airline: String
@@ -43,8 +46,13 @@ public struct FlightResultRow: View {
     private var currencyCode: String?
     private var baggage: String?
     private var badge: String?
-    private var favorite: Binding<Bool>?
-    private var bookmark: Binding<Bool>?
+    /// Favourite/bookmark state — dual-mode via `ControllableState` (ADR-F4);
+    /// renamed from `favorite`/`bookmark` so the nullary overloads aren't
+    /// invalid redeclarations. Hidden until the `shows…` flags flip.
+    @ControllableState private var favoriteState = false
+    @ControllableState private var bookmarkState = false
+    private var showsFavorite = false
+    private var showsBookmark = false
     private var totalAmount: Decimal?
     private var totalLabel: String?
     private var urgencyText: String?
@@ -74,6 +82,7 @@ public struct FlightResultRow: View {
     }
 
     /// The row's inner layout — everything inside the shell.
+    @MainActor
     private var rowContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             HStack(alignment: .center, spacing: density.scale(Theme.SpacingKey.sm.value)) {
@@ -113,23 +122,27 @@ public struct FlightResultRow: View {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
+    @MainActor
     private var priceBlock: some View {
         VStack(alignment: .trailing, spacing: 4) {
-            if favorite != nil || bookmark != nil {
+            if showsFavorite || showsBookmark {
                 HStack(spacing: 6) {
-                    if let bookmark {
-                        Button { bookmark.wrappedValue.toggle() } label: {
-                            Image(systemName: bookmark.wrappedValue ? "bookmark.fill" : "bookmark")
-                                .font(.system(size: 14)).foregroundStyle(bookmark.wrappedValue ? theme.foreground(.fgHero) : theme.text(.textTertiary))
+                    if showsBookmark {
+                        Button { bookmarkState.toggle() } label: {
+                            Image(systemName: bookmarkState ? "bookmark.fill" : "bookmark")
+                                .font(.system(size: 14)).foregroundStyle(bookmarkState ? theme.foreground(.fgHero) : theme.text(.textTertiary))
                                 .frame(width: 40, height: 40).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel("Save")
+                        }.buttonStyle(.plain).disabled(isReadOnly)
+                            .accessibilityLabel(bookmarkState ? "Remove saved flight" : "Save")
                     }
-                    if let favorite {
-                        Button { favorite.wrappedValue.toggle() } label: {
-                            Image(systemName: favorite.wrappedValue ? "heart.fill" : "heart")
-                                .foregroundStyle(favorite.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                    if showsFavorite {
+                        Button { favoriteState.toggle() } label: {
+                            Image(systemName: favoriteState ? "heart.fill" : "heart")
+                                .foregroundStyle(favoriteState ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                                .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
                                 .frame(width: 40, height: 40).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel("Favourite")
+                        }.buttonStyle(.plain).disabled(isReadOnly)
+                            .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
                     }
                 }
             }
@@ -195,10 +208,28 @@ public extension FlightResultRow {
     func baggage(_ text: String?) -> Self { copy { $0.baggage = text } }
     /// A success badge, e.g. "Best".
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
-    /// A heart toggle bound to a favourite flag.
-    func favorite(_ isFavorite: Binding<Bool>) -> Self { copy { $0.favorite = isFavorite } }
-    /// A bookmark (save) toggle bound to a flag.
-    func bookmark(_ isSaved: Binding<Bool>) -> Self { copy { $0.bookmark = isSaved } }
+    /// A heart toggle bound to a favourite flag (controlled — the caller owns
+    /// persistence).
+    func favorite(_ isFavorite: Binding<Bool>) -> Self {
+        copy {
+            $0.showsFavorite = true
+            $0._favoriteState = ControllableState(wrappedValue: false, external: isFavorite)
+        }
+    }
+    /// A self-managed heart toggle (uncontrolled). Survives List *scrolling*
+    /// (state-per-identity) but not identity churn — use ``favorite(_:)`` when
+    /// the flag must persist.
+    func favorite() -> Self { copy { $0.showsFavorite = true } }
+    /// A bookmark (save) toggle bound to a flag (controlled).
+    func bookmark(_ isSaved: Binding<Bool>) -> Self {
+        copy {
+            $0.showsBookmark = true
+            $0._bookmarkState = ControllableState(wrappedValue: false, external: isSaved)
+        }
+    }
+    /// A self-managed bookmark toggle (uncontrolled) — same identity caveat as
+    /// ``favorite()``.
+    func bookmark() -> Self { copy { $0.showsBookmark = true } }
     /// A secondary total-price line under the fare, e.g. "3 travellers: 43.068 TL".
     func totalPrice(_ amount: Decimal?, label: String) -> Self { copy { $0.totalAmount = amount; $0.totalLabel = label } }
     /// An urgency note in the meta row, shown in error red (e.g. "5 seats left!").
@@ -221,6 +252,11 @@ public extension FlightResultRow {
         FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: dep.addingTimeInterval(90 * 60))
             .flightNo("TK 2434").cabin("Economy").price(3_538.99).baggage("15 kg").badge("Cheapest")
             .onSelect("Select") { }.onDetails { }
+        // Uncontrolled heart + bookmark (off) vs controlled heart (on).
+        FlightResultRow(airline: "Blue Wings", from: "IST", to: "ADB", departure: dep, arrival: dep.addingTimeInterval(70 * 60))
+            .flightNo("BW 810").price(2_899).favorite().bookmark()
+        FlightResultRow(airline: "Blue Wings", from: "IST", to: "ADB", departure: dep, arrival: dep.addingTimeInterval(70 * 60))
+            .flightNo("BW 812").price(2_499).favorite(.constant(true))
     }
     .padding()
 }
