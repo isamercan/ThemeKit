@@ -183,6 +183,7 @@ enum ComponentRegistry {
         .knob("SelectBox", .molecules, demo: SelectBoxDemo(), usage: #"SelectBox("Country", options: items, selection: $sel) { $0 }"#),
         .knob("Slider", .molecules, demo: SliderDemo(), usage: #"Slider(value: $v, in: 0...8).marks([0: "0", 8: "Max"]).showsValueTooltip()"#),
         .knob("TextInput", .molecules, demo: TextInputDemo(), usage: ##"TextInput("Email", text: $t).keyboard(.emailAddress, contentType: .emailAddress, submit: .next)"##),
+        .knob("PhoneField", .molecules, demo: PhoneFieldDemo(), usage: ##"PhoneField("Phone", number: $phone, dialCode: $dial).formatsNumber().required()   // plain init seeds the dial code from the locale"##, isNew: true),
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).accent(.success).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top, color: .primary)"#),
