@@ -123,7 +123,7 @@ public extension AgentPriceRow {
     func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
     func badge(_ text: String?, style: BadgeStyle = .success) -> Self { copy { $0.badgeText = text; $0.badgeStyle = style } }
     func warning(_ text: String?) -> Self { copy { $0.warningText = text } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

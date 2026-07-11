@@ -149,7 +149,7 @@ public extension CurrencyPicker {
 
 #Preview {
     struct Demo: View {
-        @State private var code = "TRY"
+        @State private var code = "USD"
         var body: some View {
             CurrencyPicker(selection: $code)
                 .searchable()

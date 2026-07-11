@@ -9,7 +9,7 @@
 //  ```swift
 //  InstallmentPicker([InstallmentOption(count: 1, total: 9_600),
 //                     InstallmentOption(count: 3, total: 9_900, monthly: 3_300)],
-//                    selection: $count).currency("TRY")
+//                    selection: $count).currency("USD")
 //  ```
 //
 

@@ -9,8 +9,8 @@
 //  destination search sheet.
 //
 //  ```swift
-//  SuggestionRow("Ankara, Türkiye") { pick() }.icon("airplane").code("ANK").subtitle("Any")
-//  SuggestionRow("Esenboğa") { pick() }.icon("airplane").code("ESB").subtitle("Ankara").nested()
+//  SuggestionRow("Ankara, Turkey") { pick() }.icon("airplane").code("ANK").subtitle("Any")
+//  SuggestionRow("Stansted") { pick() }.icon("airplane").code("ESB").subtitle("Ankara").nested()
 //  ```
 //
 
@@ -145,9 +145,9 @@ public extension SuggestionRow {
 
 #Preview {
     VStack(spacing: 2) {
-        SuggestionRow("Ankara, Türkiye") { }.icon("airplane").code("ANK").subtitle("Any").selected().highlight("Ank")
-        SuggestionRow("Esenboğa") { }.icon("airplane").code("ESB").subtitle("Ankara, Türkiye").nested()
-        SuggestionRow("Istanbul Airport") { }.icon("airplane").code("IST").subtitle("Istanbul, Türkiye").nested().accessory(.chevron)
+        SuggestionRow("Ankara, Turkey") { }.icon("airplane").code("ANK").subtitle("Any").selected().highlight("Ank")
+        SuggestionRow("Stansted") { }.icon("airplane").code("ESB").subtitle("Ankara, Turkey").nested()
+        SuggestionRow("Istanbul Airport") { }.icon("airplane").code("IST").subtitle("Istanbul, Turkey").nested().accessory(.chevron)
     }
     .padding()
 }

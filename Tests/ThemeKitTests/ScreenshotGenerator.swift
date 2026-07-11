@@ -379,8 +379,8 @@ final class ScreenshotGenerator: XCTestCase {
         .frame(width: 320, height: 130).clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.shared.border(.borderPrimary), lineWidth: 1)))
         shot("Cascader", Cascader([
-            CascaderOption("tr", label: "Türkiye", children: [
-                CascaderOption("34", label: "İstanbul", children: [CascaderOption("kadikoy", label: "Kadıköy")])])],
+            CascaderOption("us", label: "United States", children: [
+                CascaderOption("ca", label: "California", children: [CascaderOption("berkeley", label: "Berkeley")])])],
             selection: .constant(["tr", "34", "kadikoy"])).frame(width: 320))
         shot("Transfer", Transfer([TransferItem("wifi", title: "Wi-Fi"), TransferItem("pool", title: "Pool"),
                                    TransferItem("gym", title: "Gym"), TransferItem("spa", title: "Spa")],

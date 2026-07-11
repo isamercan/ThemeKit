@@ -33,7 +33,7 @@ public struct FareSummary: View {
     private var onInfoHandler: ((FareLine) -> Void)?
     private var footerSlot: AnyView?
 
-    public init(_ lines: [FareLine], currencyCode: String = "TRY") {   // R1 — content
+    public init(_ lines: [FareLine], currencyCode: String = "USD") {   // R1 — content
         self.lines = lines
         self.currencyCode = currencyCode
     }

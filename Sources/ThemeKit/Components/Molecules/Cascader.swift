@@ -8,7 +8,7 @@
 //  next level, and selecting a leaf commits the path.
 //
 //      Cascader(regions, selection: $path).placeholder("Region")
-//      // path == ["tr", "34", "kadikoy"]  →  "Türkiye / İstanbul / Kadıköy"
+//      // path == ["us", "ca", "berkeley"]  →  "Turkey / Istanbul / Berkeley"
 //
 
 import SwiftUI

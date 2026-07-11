@@ -36,7 +36,7 @@ public struct SeatCell: View {
                 display: SeatDisplay = .icon,
                 palette: SeatPalette = .default,
                 customContent: ((SeatContext) -> AnyView)? = nil,
-                currencyCode: String = "TRY",
+                currencyCode: String = "USD",
                 action: @escaping () -> Void = {}) {
         self.seat = seat
         self.size = size

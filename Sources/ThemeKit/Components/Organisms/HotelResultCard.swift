@@ -245,7 +245,7 @@ public extension HotelResultCard {
     func reviewsSuffix(_ text: String) -> Self { copy { $0.reviewsSuffix = text } }
     func features(_ items: [String]) -> Self { copy { $0.features = items } }
     func promos(_ items: [String]) -> Self { copy { $0.promos = items } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

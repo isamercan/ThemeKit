@@ -232,7 +232,7 @@ public extension PageHeader {
 #Preview("Brand + On-image") {
     VStack(spacing: 20) {
         PageHeader("Brand")
-            .logo(Text("etstur").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
+            .logo(Text("Acme").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
             .pageHeaderStyle(.brand)
 
         PageHeader("Hotel Details")

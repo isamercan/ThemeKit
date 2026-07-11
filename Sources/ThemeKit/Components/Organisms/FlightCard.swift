@@ -275,7 +275,7 @@ public extension FlightCard {
     /// Number of stops (0 = nonstop, shown in green).
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     /// The fare, rendered as a hero `PriceTag` in the footer.
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

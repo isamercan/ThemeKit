@@ -345,7 +345,7 @@ private struct OptionalSoftShadow: ViewModifier {
 
 #Preview {
     VStack(spacing: 12) {
-        SearchField("From") { }.value(code: "SAW", title: "Istanbul", subtitle: "Sabiha Gökçen Havalimanı")
+        SearchField("From") { }.value(code: "SAW", title: "Istanbul", subtitle: "Gatwick Airport")
         SearchField("Dates") { }
             .dateRange(SearchDate(badge: "23 Jul '24", label: "Monday"), SearchDate(badge: "27 Jul '24", label: "Friday"))
         SearchField("Passengers") { }
@@ -353,7 +353,7 @@ private struct OptionalSoftShadow: ViewModifier {
         SearchField("From") { }.value(code: "IST", title: "Istanbul", subtitle: "All airports")
             .chipColors(background: .bgHero, foreground: .textSecondaryInverse).borderColor(.borderHero).titleStyle(color: .textHero)
         // No legacy chrome modifier set → chrome comes from the ambient FieldStyle.
-        SearchField("To") { }.value(code: "ESB", title: "Ankara", subtitle: "Esenboğa Havalimanı")
+        SearchField("To") { }.value(code: "ESB", title: "Ankara", subtitle: "Stansted Airport")
             .fieldStyle(.underlined)
     }
     .padding()

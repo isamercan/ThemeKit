@@ -11,7 +11,7 @@ public struct ListRowPrice {
     let total: String
     let each: String?
     let unit: String
-    public init(total: String, each: String? = nil, unit: String = "/ ay") {
+    public init(total: String, each: String? = nil, unit: String = String(themeKit: "/ mo")) {
         self.total = total
         self.each = each
         self.unit = unit

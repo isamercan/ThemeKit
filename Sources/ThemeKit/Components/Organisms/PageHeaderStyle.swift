@@ -14,8 +14,8 @@
 //                 and (when a search summary is set) a floating map card
 //
 //  Every color, radius, spacing and type resolves from the active `Theme`, so a
-//  preset/dark/brand change re-skins the whole header. Pixel-mapped to the Etstur
-//  AppKit "Page Header" variants (Header · Icon Buttons · Tab · Progress ·
+//  preset/dark/brand change re-skins the whole header. Covers the common
+//  "Page Header" variants (Header · Icon Buttons · Tab · Progress ·
 //  Stepper · with Button · With Search Bar · On Image · On Map · brand/-no-bg ·
 //  with search Input).
 //

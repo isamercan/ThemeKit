@@ -34,7 +34,7 @@ public struct PriceBreakdown: View {
     private var emphasis: PriceEmphasis = .standard
     private var align: HorizontalAlignment = .leading
 
-    public init(_ amount: Decimal, currencyCode: String = "TRY") {   // R1
+    public init(_ amount: Decimal, currencyCode: String = "USD") {   // R1
         self.amount = amount
         self.currencyCode = currencyCode
     }

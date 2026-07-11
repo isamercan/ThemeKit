@@ -191,7 +191,7 @@ public extension DestinationCard {
     /// A location / description line under the title.
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// The price, rendered as a hero `PriceTag` in the footer row.
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
@@ -258,7 +258,7 @@ public extension DestinationCard {
                     .padding(.horizontal, 10).padding(.vertical, 5)
                     .background(MediaScrim.solid, in: Capsule())
             }
-            .subtitle("Türkiye").rating(4.9).price(9_800)
+            .subtitle("Turkey").rating(4.9).price(9_800)
             .tags(["Adventure"])
             .cardStyle(.outlined)
             .padding()
