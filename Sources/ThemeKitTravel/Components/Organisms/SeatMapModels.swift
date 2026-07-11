@@ -230,6 +230,104 @@ public enum SeatDisplay: Sendable {
     case initialsAndNumber
 }
 
+/// The silhouette a seat cell — and its matching legend swatch — is drawn with.
+/// Shared by ``SeatCell``, ``SeatLegend`` and ``SeatMap`` so the key always
+/// matches the map (`SeatMap.seatShape(_:)` forwards it to both).
+public enum SeatShape: Sendable, Hashable, CaseIterable {
+    /// A continuous-corner rounded square (the default).
+    case rounded
+    /// A circle.
+    case circle
+    /// A squircle with a concave backrest notch cut into its top edge — the
+    /// seat-back silhouette.
+    case seatback
+
+    /// The concrete shape, type-erased. `.rounded` takes the caller's corner
+    /// radius (``SeatCell`` passes the selector role's value; ``SeatLegend``
+    /// its smaller swatch radius); the other silhouettes ignore it.
+    func anyShape(cornerRadius: CGFloat) -> AnyShape {
+        switch self {
+        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        case .circle: return AnyShape(Circle())
+        case .seatback: return AnyShape(SeatbackShape())
+        }
+    }
+}
+
+/// A squircle with a shallow concave notch cut out of its top edge — the
+/// backrest between two "shoulders". Cut by path subtraction (like the ticket
+/// notches), so fill *and* stroke both follow the notch. Symmetric, so it needs
+/// no RTL handling.
+private struct SeatbackShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let radius = min(rect.width, rect.height) * 0.28
+        let body = RoundedRectangle(cornerRadius: radius, style: .continuous).path(in: rect)
+        let notchWidth = rect.width * 0.52
+        let notchHeight = rect.height * 0.24
+        var notch = Path()
+        notch.addEllipse(in: CGRect(x: rect.midX - notchWidth / 2, y: rect.minY - notchHeight / 2,
+                                    width: notchWidth, height: notchHeight))
+        return body.subtracting(notch)
+    }
+}
+
+/// Token-stepped seat sizes — the ramp alternative to a raw point size, shared
+/// by `SeatMap.seatSize(_:)`, `SeatCell(_, size:)` and `SeatLegend.swatchSize(_:)`.
+public enum SeatSizeRamp: Sendable, Hashable, CaseIterable {
+    /// 36 pt — dense overview / mini-map grids. Below the 44 pt HIG touch
+    /// minimum, so reserve it for read-only contexts.
+    case compact
+    /// 44 pt — the HIG minimum touch target (the default seat size).
+    case regular
+    /// 52 pt.
+    case large
+    /// 60 pt — hero pickers and large-canvas layouts.
+    case xl
+
+    /// The seat square's side, in points. Internal — the public surface stays
+    /// token-typed; only the family's own views resolve the ramp.
+    var points: CGFloat {
+        switch self {
+        case .compact: return 36
+        case .regular: return 44
+        case .large: return 52
+        case .xl: return 60
+        }
+    }
+}
+
+/// A snapshot of a ``SeatMap``'s selection state, handed to a custom
+/// `summaryBar { summary in … }` slot so brands can render their own footer
+/// without re-deriving totals.
+public struct SeatSummary: Sendable {
+    /// The last-tapped seat, if any.
+    public let focusedSeat: Seat?
+    /// Whether the focused seat is a window seat (`nil` when nothing is focused).
+    public let isWindow: Bool?
+    /// Whether the focused seat is on an aisle (`nil` when nothing is focused).
+    public let isAisle: Bool?
+    /// How many seats are currently selected (or assigned, in passenger mode).
+    public let selectedCount: Int
+    /// The running total of the selected seats' prices.
+    public let totalPrice: Decimal
+    /// Whether any seat in the cabin carries a price.
+    public let hasPrices: Bool
+    /// The resolved currency code the map is formatting with.
+    public let currencyCode: String
+
+    public init(focusedSeat: Seat? = nil, isWindow: Bool? = nil, isAisle: Bool? = nil,
+                selectedCount: Int = 0, totalPrice: Decimal = 0,
+                hasPrices: Bool = false, currencyCode: String = "USD") {
+        self.focusedSeat = focusedSeat
+        self.isWindow = isWindow
+        self.isAisle = isAisle
+        self.selectedCount = selectedCount
+        self.totalPrice = totalPrice
+        self.hasPrices = hasPrices
+        self.currencyCode = currencyCode
+    }
+}
+
 /// The state handed to a custom `seatLabel { … }` builder so it can render its own UI.
 public struct SeatContext: Sendable {
     public let seat: Seat

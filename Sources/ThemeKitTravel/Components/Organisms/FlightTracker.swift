@@ -36,6 +36,10 @@
 import SwiftUI
 import ThemeKit
 
+/// Layout archetype of a ``FlightTracker``: the full status board (`.board`,
+/// default) or a one-row status strip (`.compact`) for lists and widgets.
+public enum FlightTrackerVariant: Sendable { case board, compact }
+
 /// The live flight status board — badge, route + progress, schedule vs
 /// estimate, gate/terminal/belt facts and a phase timeline, on a `Card` shell.
 public struct FlightTracker: View {
@@ -56,6 +60,19 @@ public struct FlightTracker: View {
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var elevationValue: CardElevation = .soft
     private var footerSlot: AnyView?
+    private var variantValue: FlightTrackerVariant = .board
+    private var showsFactsValue = true
+    private var showsEstimatesValue = true
+    /// Replaces the built-in airline/route/badge header (`.board` only).
+    private var headerSlot: AnyView?
+    private var checkInTitleOverride: String?
+    private var boardingTitleOverride: String?
+    private var departedTitleOverride: String?
+    private var arrivedTitleOverride: String?
+    private var contentPaddingKey: Theme.SpacingKey = .md
+    /// Replaces the built-in route progress track, built per clamped fraction.
+    private var progressSlot: ((Double) -> AnyView)?
+    private var timelineSizeValue: StepsSize = .small
 
     /// R1 — the canonical live-status model (ADR-F3). Everything else is a modifier.
     public init(_ info: FlightStatusInfo) {
@@ -101,8 +118,13 @@ public struct FlightTracker: View {
     // MARK: Body
 
     public var body: some View {
-        let card = Card { content }
-            .contentPadding(.md)
+        let card = Card {
+            switch variantValue {
+            case .board: content
+            case .compact: compactStrip
+            }
+        }
+            .contentPadding(contentPaddingKey)
             .surface(surfaceKey)
             .elevation(elevationValue)
         Group {
@@ -128,21 +150,52 @@ public struct FlightTracker: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            header
+            if let headerSlot { headerSlot } else { header }
             route
-            if departureEstimate != nil || arrivalEstimate != nil {
+            if showsEstimatesValue, departureEstimate != nil || arrivalEstimate != nil {
                 estimateRows
             }
-            if !factRows.isEmpty {
+            if showsFactsValue, !factRows.isEmpty {
                 KeyValueTable(rows: factRows)
             }
             if timelineVisible {
-                Steps(phases).size(.small)
+                Steps(phases).size(timelineSizeValue)
             }
             if let updatedDate {
                 updatedCaption(updatedDate)
             }
         }
+    }
+
+    // MARK: Compact variant — one-row status strip
+
+    /// One combined VoiceOver element, like the board header; the status
+    /// announcement `onChange` on the card shell covers this variant too.
+    private var compactStrip: some View {
+        HStack(spacing: Theme.SpacingKey.sm.value) {
+            FlightStatusBadge(info.status).time(delayText)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(info.leg.origin) – \(info.leg.destination)")
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textPrimary))
+                Text(info.leg.airline)
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .lineLimit(1)
+            Spacer(minLength: Theme.SpacingKey.sm.value)
+            if showsEstimatesValue, let estimate = departureEstimate ?? arrivalEstimate {
+                Text(estimate.formatted(timeFormat))
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(tone.base)
+            } else {
+                Text(info.leg.departure.formatted(timeFormat))
+                    .textStyle(.labelBase600)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(headerSummary)
     }
 
     // MARK: Header — one combined VoiceOver element
@@ -195,7 +248,11 @@ public struct FlightTracker: View {
             )
             .stops(info.leg.stops)
             if let fraction = clampedProgress {
-                RouteProgressTrack(fraction: fraction, tone: tone)
+                if let progressSlot {
+                    progressSlot(fraction)
+                } else {
+                    RouteProgressTrack(fraction: fraction, tone: tone)
+                }
             }
         }
     }
@@ -256,10 +313,10 @@ public struct FlightTracker: View {
 
     private var phases: [Steps.Step] {
         let titles = (
-            checkIn: String(themeKitTravel: "Check-in"),
-            boarding: String(themeKitTravel: "Boarding"),
-            departed: String(themeKitTravel: "Departed"),
-            arrived: String(themeKitTravel: "Arrived")
+            checkIn: checkInTitleOverride ?? String(themeKitTravel: "Check-in"),
+            boarding: boardingTitleOverride ?? String(themeKitTravel: "Boarding"),
+            departed: departedTitleOverride ?? String(themeKitTravel: "Departed"),
+            arrived: arrivedTitleOverride ?? String(themeKitTravel: "Arrived")
         )
         let states: [StepState]
         switch info.status {
@@ -359,6 +416,51 @@ public extension FlightTracker {
         copy { $0.footerSlot = AnyView(content()) }
     }
 
+    /// Layout archetype: `.board` (default, the full status card) or
+    /// `.compact` — a one-row badge + route + time strip for lists/widgets.
+    func variant(_ v: FlightTrackerVariant) -> Self { copy { $0.variantValue = v } }
+
+    /// Show the gate/terminal/desk/belt facts grid (default on; `.board` only).
+    func showsFacts(_ on: Bool = true) -> Self { copy { $0.showsFactsValue = on } }
+
+    /// Show the schedule-vs-estimate rows (and the `.compact` estimate time)
+    /// when estimates differ meaningfully from the schedule (default on).
+    func showsEstimates(_ on: Bool = true) -> Self { copy { $0.showsEstimatesValue = on } }
+
+    /// Replaces the built-in airline/route/badge header (canonical
+    /// `.header { }` slot; `.board` variant). The status-change VoiceOver
+    /// announcement lives on the card shell, not the header — it keeps firing
+    /// with a custom header.
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.headerSlot = AnyView(content()) }
+    }
+
+    /// Overrides the phase-timeline titles; `nil` keeps the stock
+    /// English-generic titles ("Check-in" / "Boarding" / "Departed" / "Arrived").
+    func phaseTitles(checkIn: String? = nil, boarding: String? = nil,
+                     departed: String? = nil, arrived: String? = nil) -> Self {
+        copy {
+            $0.checkInTitleOverride = checkIn
+            $0.boardingTitleOverride = boarding
+            $0.departedTitleOverride = departed
+            $0.arrivedTitleOverride = arrived
+        }
+    }
+
+    /// Inner padding of the card shell as a spacing token (default `.md`) —
+    /// forwarded to the composed `Card`.
+    func contentPadding(_ key: Theme.SpacingKey) -> Self { copy { $0.contentPaddingKey = key } }
+
+    /// Replaces the built-in route progress track, built per clamped 0…1
+    /// fraction. The replacement must carry its own accessibility value —
+    /// the stock track's "NN percent" read-out is part of what it replaces.
+    func progressContent(@ViewBuilder _ content: @escaping (Double) -> some View) -> Self {
+        copy { $0.progressSlot = { AnyView(content($0)) } }
+    }
+
+    /// Marker/label size of the phase timeline (default `.small`).
+    func timelineSize(_ s: StepsSize) -> Self { copy { $0.timelineSizeValue = s } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -415,6 +517,47 @@ public extension FlightTracker {
                         .textStyle(.bodySm400)
                 }
                 .readOnly()
+        }
+        .padding()
+    }
+    .background(Theme.shared.background(.bgBase))
+}
+
+#Preview("Compact · header slot · custom progress · phase titles") {
+    let dep = Date().addingTimeInterval(-2 * 3600)
+    let leg = FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                        departure: dep, arrival: dep.addingTimeInterval(4 * 3600))
+    return ScrollView {
+        VStack(spacing: Theme.SpacingKey.lg.value) {
+            // Compact strips — delayed shows the estimate in the status tone.
+            FlightTracker(.init(leg: leg, status: .departed))
+                .variant(.compact)
+            FlightTracker(.init(leg: leg, status: .delayed,
+                                estimatedDeparture: dep.addingTimeInterval(45 * 60)))
+                .variant(.compact)
+
+            // Header slot + custom progress content + renamed phases.
+            FlightTracker(.init(leg: leg, status: .departed, gate: "B12", terminal: "1"))
+                .progress(0.4)
+                .header {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Icon(systemName: "airplane.circle.fill").size(.md)
+                        Text("SK 1893 · Live").textStyle(.headingSm)
+                        Spacer()
+                    }
+                }
+                .progressContent { fraction in
+                    ProgressBar(value: fraction)
+                }
+                .phaseTitles(checkIn: "Bag drop", arrived: "Landed")
+                .timelineSize(.medium)
+                .contentPadding(.lg)
+
+            // Facts/estimates toggled off.
+            FlightTracker(.init(leg: leg, status: .boarding, gate: "B12", terminal: "1",
+                                estimatedDeparture: dep.addingTimeInterval(20 * 60)))
+                .showsFacts(false)
+                .showsEstimates(false)
         }
         .padding()
     }

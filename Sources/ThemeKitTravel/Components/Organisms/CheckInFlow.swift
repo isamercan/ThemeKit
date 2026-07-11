@@ -35,6 +35,23 @@
 import SwiftUI
 import ThemeKit
 
+/// Alignment of the built-in Back / Continue dock: trailing-packed (default)
+/// or stretched full-width buttons.
+public enum DockLayout: Sendable { case trailing, stretch }
+
+/// How pages change: a directional slide (default, RTL-mirrored), a
+/// cross-fade, or an instant swap. All of them respect `MicroMotion` /
+/// Reduce Motion — when motion is off every transition applies instantly.
+public enum PageTransition: Sendable { case slide, fade, none }
+
+/// Where the progress chrome sits: above the page (default) or as a vertical
+/// rail on the leading edge (wide/iPad hosts).
+public enum StepperPlacement: Sendable { case top, leading }
+
+/// The progress chrome itself: the `Steps` markers (default) or a thin
+/// determinate `ProgressBar`.
+public enum CheckInProgressStyle: Sendable { case steps, bar }
+
 /// A check-in journey scaffold — `Steps` header + the current page + a
 /// Back / Continue dock. Pages are the app's content; the scaffold owns only
 /// the progression chrome.
@@ -61,6 +78,15 @@ public struct CheckInFlow<Page: View>: View {
     private var onCompleteAction: (() -> Void)?
     private var showsStepperValue = true
     private var accent: SemanticColor?
+    /// Replaces the built-in Back / Continue dock.
+    private var dockSlot: AnyView?
+    private var dockLayoutValue: DockLayout = .trailing
+    private var buttonSizeValue: ButtonSize = .medium
+    private var stepsTappableValue = false
+    private var pageTransitionValue: PageTransition = .slide
+    private var stepperSizeValue: StepsSize = .medium
+    private var stepperPlacementValue: StepperPlacement = .top
+    private var progressStyleValue: CheckInProgressStyle = .steps
 
     /// R1 — the step definitions + controlled index + per-step page builder.
     /// The binding is the change channel; observe with `.onChange(of:)` at the
@@ -115,22 +141,59 @@ public struct CheckInFlow<Page: View>: View {
         if steps.isEmpty {
             EmptyView()
         } else {
-            VStack(spacing: 0) {
-                if showsStepperValue {
-                    header
-                        .padding(.horizontal, Theme.SpacingKey.md.value)
-                        .padding(.vertical, Theme.SpacingKey.sm.value)
+            Group {
+                if showsStepperValue, stepperPlacementValue == .leading, progressStyleValue == .steps {
+                    // Leading rail: vertical Steps beside the page area.
+                    HStack(alignment: .top, spacing: 0) {
+                        header(axis: .vertical)
+                            .padding(.horizontal, Theme.SpacingKey.md.value)
+                            .padding(.vertical, Theme.SpacingKey.sm.value)
+                        pageContainer
+                    }
+                } else {
+                    VStack(spacing: 0) {
+                        if showsStepperValue {
+                            progressChrome
+                                .padding(.horizontal, Theme.SpacingKey.md.value)
+                                .padding(.vertical, Theme.SpacingKey.sm.value)
+                        }
+                        pageContainer
+                    }
                 }
-                pageContainer
             }
-            .buttonDock { dock }
+            .buttonDock {
+                if let dockSlot {
+                    // Custom dock: the caller owns Back/Continue semantics —
+                    // canAdvance gating and onComplete become its job.
+                    dockSlot.allowsHitTesting(!isReadOnly)
+                } else {
+                    dock
+                }
+            }
             .accessibilityElement(children: .contain)
         }
     }
 
+    /// The `.progressStyle(_:)` switch: Steps markers or a determinate bar.
     @MainActor
-    private var header: some View {
-        let base = Steps(derivedSteps)
+    @ViewBuilder
+    private var progressChrome: some View {
+        switch progressStyleValue {
+        case .steps:
+            header(axis: .horizontal)
+        case .bar:
+            // Step titles are internal to the neutral `Steps.Step`, so the
+            // announcement is positional ("Step 2 of 3").
+            ProgressBar(value: Double(currentIndex + 1) / Double(max(steps.count, 1)))
+                .progressLabel(String(themeKitTravel: "Step \(currentIndex + 1) of \(steps.count)"))
+        }
+    }
+
+    @MainActor
+    private func header(axis: Axis) -> some View {
+        let base = Steps(derivedSteps, onSelect: stepsTappableValue ? { jump(to: $0) } : nil)
+            .axis(axis)
+            .size(stepperSizeValue)
         return Group {
             if let accent {
                 base.marker { _, index in accentMarker(index: index, color: accent) }
@@ -180,20 +243,27 @@ public struct CheckInFlow<Page: View>: View {
         }
     }
 
-    /// Directional slide on leading/trailing edges — mirrored under RTL
-    /// automatically; `motion == nil` (MicroMotion off / Reduce Motion)
-    /// applies the change instantly.
+    /// The `.pageTransition(_:)` switch. `.slide` (default) moves on
+    /// leading/trailing edges — mirrored under RTL automatically; `.fade`
+    /// cross-fades; `.none` swaps identity without motion. All are gated the
+    /// same way: `motion == nil` (MicroMotion off / Reduce Motion) applies
+    /// the change instantly.
     private var pageTransition: AnyTransition {
-        if movesForward {
-            .asymmetric(
-                insertion: .move(edge: .trailing).combined(with: .opacity),
-                removal: .move(edge: .leading).combined(with: .opacity)
-            )
-        } else {
-            .asymmetric(
-                insertion: .move(edge: .leading).combined(with: .opacity),
-                removal: .move(edge: .trailing).combined(with: .opacity)
-            )
+        switch pageTransitionValue {
+        case .fade:
+            return .opacity
+        case .none:
+            return .identity
+        case .slide:
+            return movesForward
+                ? .asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                )
+                : .asymmetric(
+                    insertion: .move(edge: .leading).combined(with: .opacity),
+                    removal: .move(edge: .trailing).combined(with: .opacity)
+                )
         }
     }
 
@@ -201,11 +271,15 @@ public struct CheckInFlow<Page: View>: View {
     private var dock: some View {
         ButtonGroup(.horizontal) {
             SecondaryButton(backTitleValue) { goBack() }
+                .size(buttonSizeValue)
+                .fullWidth(dockLayoutValue == .stretch)
                 .disabled(currentIndex == 0)
             PrimaryButton(isLastStep ? doneTitleValue : nextTitleValue) { advance() }
+                .size(buttonSizeValue)
+                .fullWidth(dockLayoutValue == .stretch)
                 .disabled(!advanceAllowed)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: dockLayoutValue == .stretch ? .center : .trailing)
         .allowsHitTesting(!isReadOnly)   // E1 — read-only blocks progression
     }
 
@@ -227,6 +301,16 @@ public struct CheckInFlow<Page: View>: View {
         guard !isReadOnly, currentIndex > 0 else { return }
         movesForward = false
         selection = currentIndex - 1
+    }
+
+    /// `.stepsTappable` jump: only *backward*, to an already-done marker — a
+    /// tap can never advance past the `canAdvance` gate because it can never
+    /// advance at all.
+    @MainActor
+    private func jump(to index: Int) {
+        guard !isReadOnly, index < currentIndex, steps.indices.contains(index) else { return }
+        movesForward = false
+        selection = index
     }
 }
 
@@ -263,6 +347,43 @@ public extension CheckInFlow {
     /// Semantic tint for the done/active step markers; `nil` (default) keeps
     /// the stock theme-hero markers.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+
+    /// Replaces the built-in Back / Continue `ButtonGroup` with caller
+    /// content (canonical `.dock { }` slot). With a custom dock the scaffold
+    /// no longer drives progression: `canAdvance` gating, `onComplete` and
+    /// the index changes become the caller's job (mutate the bound
+    /// `selection`). Hit-testing still respects `.readOnly()`.
+    func dock<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.dockSlot = AnyView(content()) }
+    }
+
+    /// Built-in dock alignment: `.trailing` (default, packed buttons) or
+    /// `.stretch` (full-width buttons).
+    func dockLayout(_ l: DockLayout) -> Self { copy { $0.dockLayoutValue = l } }
+
+    /// Control size of the built-in dock buttons (default `.medium`).
+    func buttonSize(_ s: ButtonSize) -> Self { copy { $0.buttonSizeValue = s } }
+
+    /// Lets a tap on a *done* marker jump back to that step (markers gain the
+    /// button trait). Forward taps are ignored, so a jump can never bypass
+    /// the `canAdvance` gate. Default off.
+    func stepsTappable(_ on: Bool = true) -> Self { copy { $0.stepsTappableValue = on } }
+
+    /// Page-change motion: `.slide` (default, RTL-mirrored), `.fade`, or
+    /// `.none` — all applied through the `MicroMotion` / Reduce-Motion gate.
+    func pageTransition(_ t: PageTransition) -> Self { copy { $0.pageTransitionValue = t } }
+
+    /// Marker/label size of the `Steps` header (default `.medium`).
+    func stepperSize(_ s: StepsSize) -> Self { copy { $0.stepperSizeValue = s } }
+
+    /// Progress-chrome placement: `.top` (default) or `.leading` — a vertical
+    /// `Steps` rail beside the page (steps style only; the `.bar` progress
+    /// style always renders on top).
+    func stepperPlacement(_ p: StepperPlacement) -> Self { copy { $0.stepperPlacementValue = p } }
+
+    /// Progress chrome: `.steps` markers (default) or `.bar` — a thin
+    /// determinate `ProgressBar` announcing "Step N of M".
+    func progressStyle(_ s: CheckInProgressStyle) -> Self { copy { $0.progressStyleValue = s } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -314,6 +435,69 @@ public extension CheckInFlow {
                 if completed {
                     Text("Check-in complete").textStyle(.labelSm600)
                 }
+            }
+        }
+    }
+    return Demo()
+}
+
+#Preview("Flexibility — dock · bar · leading rail · tappable steps") {
+    struct Demo: View {
+        @State private var custom = 1
+        @State private var barStep = 1
+        @State private var railStep = 1
+        @State private var tappable = 2
+
+        var body: some View {
+            ScrollView {
+                VStack(spacing: Theme.SpacingKey.lg.value) {
+                    // Custom dock slot — caller drives progression.
+                    CheckInFlow(steps: [
+                        .init("Bags", state: .active), .init("Seats", state: .todo),
+                    ], selection: $custom) { index in
+                        Text("Page \(index + 1)").textStyle(.bodyBase400).padding()
+                    }
+                    .dock {
+                        PrimaryButton("Skip to seats") { custom = 1 }.fullWidth()
+                    }
+                    .frame(height: 180)
+
+                    // Progress bar chrome + stretched dock + fade transition.
+                    CheckInFlow(steps: [
+                        .init("Passengers", state: .todo), .init("Seats", state: .todo),
+                        .init("Pass", state: .todo),
+                    ], selection: $barStep) { index in
+                        Text("Step \(index + 1)").textStyle(.bodyBase400).padding()
+                    }
+                    .progressStyle(.bar)
+                    .pageTransition(.fade)
+                    .dockLayout(.stretch)
+                    .buttonSize(.large)
+                    .frame(height: 200)
+
+                    // Leading vertical rail + small tappable markers.
+                    CheckInFlow(steps: [
+                        .init("Bags", state: .todo), .init("Seats", state: .todo),
+                        .init("Confirm", state: .todo),
+                    ], selection: $railStep) { index in
+                        Text("Rail page \(index + 1)").textStyle(.bodyBase400).padding()
+                    }
+                    .stepperPlacement(.leading)
+                    .stepperSize(.small)
+                    .stepsTappable()
+                    .frame(height: 220)
+
+                    // Tappable done markers jump back; forward taps are ignored.
+                    CheckInFlow(steps: [
+                        .init("A", state: .todo), .init("B", state: .todo), .init("C", state: .todo),
+                    ], selection: $tappable) { index in
+                        Text("Page \(index + 1)").textStyle(.bodyBase400).padding()
+                    }
+                    .stepsTappable()
+                    .pageTransition(.none)
+                    .frame(height: 160)
+                }
+                .padding()
             }
         }
     }

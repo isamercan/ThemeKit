@@ -5,7 +5,7 @@
 //  Organism. A flight search-result LIST ITEM whose entire layout is a
 //  swappable ``FlightListItemStyle`` — the component owns the *data* (legs,
 //  fares, price, deal signals, schedule) and the style owns the *presentation*.
-//  Eight built-in styles cover the industry's list-item archetypes (see
+//  Twelve built-in styles cover the industry's list-item archetypes (see
 //  FlightListItemStyle.swift); custom styles get the same typed configuration.
 //
 //      FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
@@ -31,6 +31,7 @@ public struct FlightListItem: View {
     @Environment(\.flightListItemStyle) private var style
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.componentDensity) private var density
 
     // Required content (R1).
     private let legs: [FlightLeg]
@@ -70,6 +71,17 @@ public struct FlightListItem: View {
     /// redeclaration).
     @ControllableState private var favoriteState = false
     private var showsFavorite = false
+    private var accent: SemanticColor?
+    private var radiusRole: Theme.RadiusRole?
+    private var metaItems: [(icon: String, text: String)] = []
+    private var accessory: AnyView?
+    private var footer: AnyView?
+    /// Fare-chip selection for `.fareBoard`-class styles — uncontrolled by
+    /// default; `.selectedFare(_:)` swaps in the caller's binding.
+    @ControllableState private var fareState: String?
+    /// Departure-chip selection for `.timetable` — same controlled/uncontrolled
+    /// split via `.selectedDeparture(_:)`.
+    @ControllableState private var departureState: Date?
 
     /// A multi-leg itinerary (round trip / multi-city). One entry per slice.
     public init(legs: [FlightLeg]) {   // R1 — content
@@ -89,6 +101,10 @@ public struct FlightListItem: View {
 
     public var body: some View {
         let heartMotion = MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
+        // Expansion springs the MicroMotion-gated way: `.base` duration as a
+        // spring, `nil` (instant, no motion) when micro-animations are off or
+        // Reduce Motion is on.
+        let expandMotion: Animation? = (micro && !reduceMotion) ? Motion.base.spring : nil
         let configuration = FlightListItemConfiguration(
             legs: legs, sliceLabels: sliceLabels, flightNo: flightNo, cabin: cabin,
             airlineSystemImage: airlineSystemImage, logo: logo,
@@ -104,12 +120,18 @@ public struct FlightListItem: View {
             surfaceKey: surfaceKey,
             locale: locale,
             toggleExpand: {
-                withAnimation(.spring(duration: 0.35)) { expandedState.toggle() }
+                withAnimation(expandMotion) { expandedState.toggle() }
             },
             isFavorite: showsFavorite ? favoriteState : nil,
             toggleFavorite: showsFavorite
                 ? { withAnimation(heartMotion) { favoriteState.toggle() } }
-                : nil
+                : nil,
+            accent: accent, radiusRole: radiusRole, density: density,
+            metaItems: metaItems, accessory: accessory, footer: footer,
+            selectedFareID: fareState,
+            onFareSelect: { fareState = $0 },
+            selectedDeparture: departureState,
+            onDepartureSelect: { departureState = $0 }
         )
         style.makeBody(configuration: configuration)
             .opacity(isEnabled ? 1 : 0.5)
@@ -195,6 +217,35 @@ public extension FlightListItem {
             $0._favoriteState = ControllableState(wrappedValue: false, external: isFavorite)
         }
     }
+    /// Selection accent — tints the selected border, fare/time chips and other
+    /// emphasis colours the styles otherwise take from the theme's hero tokens.
+    /// Pass `nil` to restore the hero default.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
+    /// Corner-radius role of the card shell (default `.box`).
+    func radius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
+    /// Generic icon + text meta pairs, e.g. `[("wifi", "Wi-Fi"), ("suitcase", "8kg")]` —
+    /// styles with a meta row render them in order.
+    func meta(_ items: [(icon: String, text: String)]) -> Self { copy { $0.metaItems = items } }
+    /// Trailing accessory in the identity row (a co-brand badge, an emissions
+    /// chip…). Styles that place identity honour it; others ignore it.
+    func accessory<A: View>(@ViewBuilder _ content: () -> A) -> Self {
+        copy { $0.accessory = AnyView(content()) }
+    }
+    /// Footer slot below the style's content — fine print, a promo line, links.
+    func footer<F: View>(@ViewBuilder _ content: () -> F) -> Self {
+        copy { $0.footer = AnyView(content()) }
+    }
+    /// Drives fare-chip selection (`.fareBoard`) from outside — e.g. persisting
+    /// the chosen fare family. Without it the item self-manages (ADR-F4 via
+    /// `ControllableState`, like ``expanded(_:)``).
+    func selectedFare(_ binding: Binding<String?>) -> Self {
+        copy { $0._fareState = ControllableState(wrappedValue: nil, external: binding) }
+    }
+    /// Drives departure-chip selection (`.timetable`) from outside — mirrors
+    /// ``selectedFare(_:)``.
+    func selectedDeparture(_ binding: Binding<Date?>) -> Self {
+        copy { $0._departureState = ControllableState(wrappedValue: nil, external: binding) }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var next = self
@@ -223,8 +274,85 @@ public extension FlightListItem {
                 .deal("23% below typical", tone: .success)
                 .trend([0.8, 0.75, 0.9, 0.6, 0.5, 0.42])
                 .flightListItemStyle(.deal)
+
+            // NEW archetypes + full-flex axes -----------------------------
+
+            // Hero: deal strip, amenities, xl price — with a purple accent,
+            // selector radius, meta row, accessory + footer slots.
+            FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
+                .flightNo("SK 1123").cabin("Economy")
+                .price(164, currencyCode: "USD", caption: "from").original(214)
+                .deal("Today's best deal", tone: .warning)
+                .badge("Featured")
+                .amenities(["wifi", "powerplug", "cup.and.saucer"])
+                .meta([(icon: "suitcase.rolling", text: "8kg"), (icon: "leaf", text: "-12% CO₂")])
+                .accent(.purple)
+                .radius(.field)
+                .selected()
+                .accessory { Badge("Partner").badgeStyle(.neutral).size(.small) }
+                .footer {
+                    Text("Free cancellation within 24h")
+                        .textStyle(.overline400)
+                        .foregroundStyle(Theme.shared.text(.textTertiary))
+                }
+                .onSelect { }
+                .flightListItemStyle(.hero)
+
+            // Tile: vertical carousel cards.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(0..<3, id: \.self) { i in
+                        FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR",
+                                       departure: dep.addingTimeInterval(Double(i) * 86_400), arrival: arr)
+                            .price(Decimal(189 + i * 12), currencyCode: "USD", caption: "from")
+                            .badge(i == 0 ? "Best" : nil)
+                            .onSelect { }
+                            .flightListItemStyle(.tile)
+                            .frame(width: 190)
+                    }
+                }
+            }
+
+            // Receipt: checkout read-back — labeled fields, no tap affordance.
+            FlightListItem(legs: [
+                FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr),
+                FlightLeg(airline: "Skyline Air", from: "LHR", to: "IST",
+                          departure: dep.addingTimeInterval(7 * 86_400),
+                          arrival: arr.addingTimeInterval(7 * 86_400))
+            ])
+                .sliceLabels(["Outbound", "Return"])
+                .flightNo("SK 1123").cabin("Economy Flex")
+                .baggage("8kg", checked: "23kg")
+                .price(438, currencyCode: "USD", caption: "Total · 2 travellers")
+                .flightListItemStyle(.receipt)
+
+            // Controlled fare selection through the caller's binding.
+            FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
+                .fares([FlightFare("Light", price: 164), FlightFare("Standard", price: 214),
+                        FlightFare("Flex", price: 289)])
+                .selectedFare(.constant("Standard"))
+                .accent(.accent)
+                .flightListItemStyle(.fareBoard)
         }
         .padding()
     }
     .background(Theme.shared.background(.bgElevatorPrimary))
+}
+
+#Preview("FlightListItem dark + density", traits: .sizeThatFitsLayout) {
+    let dep = Date(timeIntervalSince1970: 1_781_000_000)
+    let arr = dep.addingTimeInterval(3.5 * 3600)
+    VStack(spacing: 16) {
+        FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
+            .price(214, currencyCode: "USD").badge("Best")
+            .meta([(icon: "suitcase.rolling", text: "8kg")])
+            .accent(.success).selected()
+            .componentDensity(.compact)
+        FlightListItem(airline: "Skyline Air", from: "IST", to: "LHR", departure: dep, arrival: arr)
+            .price(214, currencyCode: "USD")
+            .flightListItemStyle(TimelineFlightListItemStyle(showsRouteTrack: false))
+    }
+    .padding()
+    .background(Theme.shared.background(.bgElevatorPrimary))
+    .environment(\.colorScheme, .dark)
 }
