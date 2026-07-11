@@ -149,6 +149,7 @@ public struct TextInput: View {
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.isReadOnly) private var isReadOnly // E1 — set by `.readOnly(_:)`
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.fieldDefaults) private var fieldDefaults
@@ -217,7 +218,7 @@ public struct TextInput: View {
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { model.allowClear && !text.isEmpty && isEnabled && !model.isSecure }
+    private var showsClear: Bool { model.allowClear && !text.isEmpty && isEnabled && !isReadOnly && !model.isSecure }
 
     private var hasAddons: Bool { model.addonBefore != nil || model.addonAfter != nil }
     private var isOverLimit: Bool { Self.isOverLimit(count: text.count, maxLength: model.maxLength) }
@@ -326,7 +327,9 @@ public struct TextInput: View {
                 fieldContent
             }
         }
-        .frame(height: effectiveSize.height)
+        // Scales with Dynamic Type (matches the rest of the field family) instead
+        // of a raw fixed height that clips the floating label + value at large sizes.
+        .scaledControlHeight(effectiveSize.height)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
@@ -342,7 +345,7 @@ public struct TextInput: View {
             size: effectiveSize
         ))
         .contentShape(Rectangle())
-        .onTapGesture { if isEnabled { isFocused = true } }
+        .onTapGesture { if isEnabled && !isReadOnly { isFocused = true } }
     }
 
     public var body: some View {
@@ -377,7 +380,7 @@ public struct TextInput: View {
             if validationTrigger == .live || !validationMessages.isEmpty { runValidation(v) }
         }
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
-            if want && !isFocused { isFocused = true }
+            if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
@@ -403,6 +406,9 @@ public struct TextInput: View {
         // Caret / selection tint follows the validation state (HeroUI invalid caret).
         .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
         .disabled(!isEnabled)
+        // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value, but the
+        // field can't be tapped into. Deliberately NOT `.disabled`, which dims.
+        .allowsHitTesting(!isReadOnly)
         .submitLabel(model.submitLabel)
         .autocorrectionDisabled(model.autocorrectionDisabled)
         .textInputTraits(keyboard: model.keyboardType,
@@ -418,14 +424,16 @@ public struct TextInput: View {
 
     @ViewBuilder
     private var trailingAccessory: some View {
-        if model.isSecure {
+        // E1 — read-only keeps the value chrome but drops the editing
+        // affordances (reveal / clear); a static suffix icon still renders.
+        if model.isSecure && !isReadOnly {
             Button { reveal.toggle() } label: {
                 Icon(systemName: reveal ? "eye.slash" : "eye").size(.sm).color(theme.text(.textTertiary))
             }
             .buttonStyle(.plain)
             .a11y(A11yElement.Field.reveal, in: accessibilityID)
             .accessibilityLabel(reveal ? String(themeKit: "Hide password") : String(themeKit: "Show password"))
-        } else if showsClear || (!text.isEmpty && isFocused && model.suffixSystemImage == nil) {
+        } else if showsClear || (!text.isEmpty && isFocused && !isReadOnly && model.suffixSystemImage == nil) {
             Button { text = "" } label: {
                 Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
             }
@@ -693,6 +701,10 @@ private extension TextInputCapitalization {
                     .required()
                     .errorText(showError ? "This field is required." : nil)
                 Button(showError ? "Hide error" : "Show error") { showError.toggle() }
+                // Read-only (E1): normal chrome + value, editing / clear blocked.
+                TextInput("Confirmation code", text: .constant("BRX-4821"))
+                    .clearable()
+                    .readOnly()
             }
             .padding()
         }

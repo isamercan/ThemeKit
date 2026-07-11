@@ -42,7 +42,10 @@ public struct PaymentCardField: View {
     /// holder) is its own field box, so the whole box chroma belongs to
     /// `FieldStyle`, not `CardStyle`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing.
+    @Environment(\.isReadOnly) private var isReadOnly
 
     /// Which of the four field rows currently holds keyboard focus.
     private enum FieldRole: Hashable { case number, expiry, cvv, holder }
@@ -57,6 +60,17 @@ public struct PaymentCardField: View {
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var numberPlaceholder = "Card number"
     private var holderPlaceholder = "Cardholder name"
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
+    private var infoMessages: [InfoMessage] = []
+
+    // Declarative validation (daisyUI Validator) — rules run against the
+    // *card number* text at `validationTrigger`; failures merge into the
+    // rendered messages, driving the rows' error border automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
 
     public init(number: Binding<String>, expiry: Binding<String>, cvv: Binding<String>) {   // R1
         self._number = number
@@ -67,6 +81,22 @@ public struct PaymentCardField: View {
     private var brand: CardBrand { CardBrand.detect(number) }
     private var accentBase: Color { (accent ?? .primary).base }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic 52pt rows.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+    /// Explicit `infoMessages(_:)` plus any current `validate(_:on:)` failures.
+    private var messages: [InfoMessage] { infoMessages + validationMessages }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
+    private var hasError: Bool { dominant == .error }
+    private var hasWarning: Bool { dominant == .warning }
+
+    /// Runs the declared rules over the card-number text (first failure only,
+    /// via `Validator`); publishes the result and reports validity.
+    private func runValidation(_ value: String) {
+        guard !validationRules.isEmpty else { return }
+        let failures = Validator.validate(value, validationRules)
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
+    }
 
     public var body: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
@@ -82,6 +112,16 @@ public struct PaymentCardField: View {
             if let holder {
                 fieldBox(.holder) { field(holder, holderPlaceholder, role: .holder) { $0 } }
             }
+            if !messages.isEmpty { InfoMessageList(messages) }
+        }
+        // `.live` validates every number change; other triggers re-validate once
+        // a failure is visible so the error clears as the user fixes it.
+        .onChange(of: number) { _, value in
+            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
+        }
+        // `.editingEnd` / `.submit` fire when the number row loses focus.
+        .onChange(of: focused) { old, now in
+            if old == .number, now != .number, validationTrigger != .live { runValidation(number) }
         }
     }
 
@@ -102,16 +142,18 @@ public struct PaymentCardField: View {
 
     /// One field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Mapping: `isFocused` is true for the row whose editor holds focus;
-    /// `hasError`/`hasWarning` are always `false` (this component has no
-    /// validation axis); `size` is `.medium` — the rows have no `TextInputSize`
-    /// axis (they keep their fixed 52pt min-height in the content). A custom
+    /// `hasError`/`hasWarning` follow the dominant message kind (explicit
+    /// `infoMessages` + validation failures — group-level, so every row recolors).
+    /// With no explicit `.size(_:)` and no subtree `FieldDefaults.size` the rows
+    /// keep their classic scaled 52pt min-height (nominal `.medium`). A custom
     /// `surface(_:)` key (anything other than the default `.bgBase`) is painted
     /// inside the content so the modifier keeps working; with the default key the
     /// fill is left entirely to the style.
     private func fieldBox<Content: View>(_ role: FieldRole, @ViewBuilder _ content: () -> Content) -> some View {
         let row = content()
             .padding(.horizontal, Theme.SpacingKey.md.value)
-            .frame(minHeight: 52)
+            // Scales with Dynamic Type (G2); a size preset remaps the height (C1).
+            .scaledControlHeight(effectiveSize?.height ?? 52)
             .frame(maxWidth: .infinity, alignment: .leading)
         return fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: surfaceKey == .bgWhite
@@ -119,9 +161,9 @@ public struct PaymentCardField: View {
                 : AnyView(row.background(theme.background(surfaceKey), in: shape)),
             isFocused: focused == role,
             isEnabled: isEnabled,
-            hasError: false,
-            hasWarning: false,
-            size: .medium
+            hasError: hasError,
+            hasWarning: hasWarning,
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -138,6 +180,9 @@ public struct PaymentCardField: View {
         .focused($focused, equals: role)
         .textStyle(.bodyBase400)
         .foregroundStyle(theme.text(.textPrimary))
+        // Read-only keeps the normal chrome + values but blocks focus/editing
+        // on every row (E1 — distinct from `.disabled`).
+        .allowsHitTesting(!isReadOnly)
         .applyKeyboard(keyboard)
         .onChange(of: binding.wrappedValue) { _, new in
             let f = format(new)
@@ -193,6 +238,28 @@ public extension PaymentCardField {
         copy { if let number { $0.numberPlaceholder = number }; if let holder { $0.holderPlaceholder = holder } }
     }
 
+    /// Control-height preset for every row. An explicit size wins over the
+    /// subtree `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 52pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
+
+    /// Validation / info messages rendered under the group (drives the rows' border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Declarative validation (daisyUI Validator): `rules` run against the
+    /// **card number** text (as displayed, space-grouped) at `trigger` —
+    /// `.editingEnd`/`.submit` when the number row loses focus, `.live` per
+    /// keystroke. Failures merge into the rendered messages and border state.
+    ///
+    ///     PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+    ///         .validate([.required(), .minLength(19, "Enter the full card number")])
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity failure is present.
+    func onValidation(_ handler: @escaping (Bool) -> Void) -> Self { copy { $0.onValidation = handler } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -212,6 +279,15 @@ public extension PaymentCardField {
                 // Swapped chrome: every field row picks up the underlined style.
                 PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
                     .fieldStyle(.underlined)
+                // Declarative validation over the card number (E3).
+                PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+                    .validate([.required(), .minLength(19, "Enter the full card number")])
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).size(.small)
+                // Read-only: values + normal chrome, editing suppressed (E1).
+                PaymentCardField(number: .constant("4111 1111 1111 1111"),
+                                 expiry: .constant("12/29"), cvv: .constant("123"))
+                    .readOnly()
             }
             .padding()
         }

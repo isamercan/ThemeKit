@@ -82,7 +82,8 @@ public struct DateField: View {
     /// DateField has no `TextInputSize` modifier of its own; the subtree
     /// `FieldDefaults.size` maps onto its control height (nil keeps the
     /// component's classic scaled 48pt / nominal `.medium`).
-    private var effectiveSize: TextInputSize? { fieldDefaults.size }
+    private var explicitSize: TextInputSize?
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
     /// Message rows animate only when the subtree `FieldDefaults.messagesAnimated`
     /// opts in (DateField historically snaps) — still gated by `microAnimations`
     /// + Reduce Motion.
@@ -260,6 +261,10 @@ public struct DateField: View {
 public extension DateField {
     /// Placeholder shown while no date is selected.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default.
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Restrict the picker to a selectable date range.
     func range(_ range: ClosedRange<Date>?) -> Self { copy { $0.range = range } }

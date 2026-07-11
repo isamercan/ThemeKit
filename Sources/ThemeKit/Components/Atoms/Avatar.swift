@@ -83,6 +83,8 @@ public struct Avatar: View {
     private var shape: AvatarShape = .circle
     private var presence: StatusKind?
     private var presencePulse: Bool = false
+    private var isBordered: Bool = false
+    private var borderAccent: SemanticColor?
 
     public init(_ content: AvatarContent) {   // R1 — content only
         self.content = content
@@ -130,6 +132,14 @@ public struct Avatar: View {
         }
         .frame(width: dim, height: dim)
         .clipShape(clip)
+        // Border ring (HeroUI `isBordered`): drawn after the clip so it sits on
+        // top of image content; token stroke — the semantic accent's solid when
+        // set, else the primary border token.
+        .overlay {
+            if isBordered {
+                clip.stroke(borderAccent?.solid ?? theme.border(.borderPrimary), lineWidth: 2)
+            }
+        }
         .overlay(alignment: .bottomTrailing) { presenceDot }
         // One element for VoiceOver; callers override with `.accessibilityLabel`.
         // The presence dot's spoken status survives the collapse as the value,
@@ -268,6 +278,14 @@ public extension Avatar {
     /// Circle (default) or rounded square.
     func shape(_ s: AvatarShape) -> Self { copy { $0.shape = s } }
 
+    /// Draws a token stroke ring around the avatar (HeroUI `isBordered`) —
+    /// e.g. to mark the active speaker or lift a photo off a busy surface.
+    /// `accent` tints the ring from the semantic palette; `nil` (default)
+    /// uses the primary border token.
+    func bordered(_ on: Bool = true, accent: SemanticColor? = nil) -> Self {
+        copy { $0.isBordered = on; $0.borderAccent = accent }
+    }
+
     /// Corner presence dot (online / away / busy …); `nil` hides it.
     func presence(_ kind: StatusKind?, pulse: Bool = false) -> Self {
         copy { $0.presence = kind; $0.presencePulse = pulse }
@@ -368,6 +386,13 @@ public extension AvatarGroup {
             Avatar(.initials("NE")).fill(.soft)   // no accent → neutral soft
             Avatar(.initials("SO")).accent(.success)   // solid, for contrast
         }
+        // Border ring: default border token, semantic accent, and on a photo.
+        HStack(spacing: 12) {
+            Avatar(.initials("BR")).bordered()
+            Avatar(.initials("AC")).accent(.success).fill(.soft).bordered(accent: .success)
+            Avatar(.remote(URL(string: "https://i.pravatar.cc/96"))).bordered(accent: .primary)
+            Avatar(.icon("person.fill")).shape(.square).bordered(accent: .warning)
+        }
         AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .icon("person.fill"), .initials("GH"), .initials("IJ")]).maxVisible(4)
         AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF")]).accent(.info).fill(.soft)
         // a11y: each avatar is one VoiceOver element — initials are spoken when
@@ -386,6 +411,7 @@ public extension AvatarGroup {
         PreviewCase("Remote")   { Avatar(.remote(URL(string: "https://i.pravatar.cc/96"))) }
         PreviewCase("Remote fallback") { Avatar(.remote(URL(string: "https://invalid.invalid/broken.png"), fallback: .initials("FB"))).accent(.warning) }
         PreviewCase("Soft fill") { Avatar(.initials("SO")).accent(.success).fill(.soft) }
+        PreviewCase("Bordered") { Avatar(.initials("BR")).bordered(accent: .success) }
         PreviewCase("Group +N") { AvatarGroup([.initials("AB"), .initials("CD"), .initials("EF"), .initials("GH"), .initials("IJ")]).maxVisible(3) }
     }
 }

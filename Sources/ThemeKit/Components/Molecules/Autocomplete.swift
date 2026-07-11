@@ -19,7 +19,9 @@ public struct Autocomplete: View {
     @Environment(\.theme) private var theme
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
-
+    @Environment(\.fieldDefaults) private var fieldDefaults
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing.
+    @Environment(\.isReadOnly) private var isReadOnly
 
     /// Where suggestions come from.
     private enum Source {
@@ -41,6 +43,24 @@ public struct Autocomplete: View {
     private var isSuggestionEnabled: ((String) -> Bool)? = nil
     private var onSearch: ((String) -> Void)? = nil
     private var accessibilityID: String? = nil
+    /// Clear affordance — on by default (Autocomplete's classic behavior);
+    /// `.clearable(false)` hides it (Select-parity axis, E6).
+    private var allowClear = true
+    /// Caller-driven loading state (async option fetch outside the built-in provider).
+    private var externalLoading = false
+    private var infoMessages: [InfoMessage] = []
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
+    /// `.required()` — asterisk on the label + ", required" in the a11y label.
+    private var isRequired = false
+
+    // Declarative validation (daisyUI Validator) — TextInput's plumbing: rules
+    // run against the bound text at `validationTrigger`; failures merge into
+    // the rendered messages, driving the border state automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
 
     @FocusState private var isFocused: Bool
     @State private var results: [String] = []
@@ -85,23 +105,62 @@ public struct Autocomplete: View {
     private func suggestionEnabled(_ suggestion: String) -> Bool { isSuggestionEnabled?(suggestion) ?? true }
 
     private var showsDropdown: Bool {
-        isFocused && !text.isEmpty && (isLoading || !results.isEmpty || isEmptyResult)
+        isFocused && !isReadOnly && !text.isEmpty && (isLoading || !results.isEmpty || isEmptyResult)
     }
 
     private var isEmptyResult: Bool { !isLoading && results.isEmpty }
 
+    /// Explicit `infoMessages(_:)` plus any current `validate(_:on:)` failures.
+    private var messages: [InfoMessage] { infoMessages + validationMessages }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
+    private var hasError: Bool { dominant == .error }
+    private var hasWarning: Bool { dominant == .warning }
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic scaled 48pt.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    private var showsSpinner: Bool { isLoading || externalLoading }
+    private var showsClear: Bool { allowClear && !text.isEmpty && isEnabled && !isReadOnly }
+    private var a11yLabel: String {
+        let base = label ?? placeholder
+        return isRequired ? base + ", " + String(themeKit: "required") : base
+    }
+
+    /// Runs the declared rules (first failure only, via `Validator`);
+    /// publishes the result and reports validity.
+    private func runValidation(_ value: String) {
+        guard !validationRules.isEmpty else { return }
+        let failures = Validator.validate(value, validationRules)
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            if let label { InputLabel(label) }
+            if let label { InputLabel(label).required(isRequired && showsRequiredIndicator).hasError(hasError) }
 
             fieldBox
 
             if showsDropdown { dropdown }
+
+            if !messages.isEmpty {
+                InfoMessageList(messages)
+                    .a11y(A11yElement.Field.message, in: accessibilityID)
+            }
         }
         .onAppear { update(for: text) }
         .onDebouncedChange(of: text, for: debounce) { value in
             update(for: value)
             onSearch?(value)
+        }
+        // `.live` validates every change; other triggers re-validate once a
+        // failure is visible so the error clears as the user fixes it.
+        .onChange(of: text) { _, value in
+            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
+        }
+        .onChange(of: isFocused) { _, now in
+            if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
         }
     }
 
@@ -114,39 +173,46 @@ public struct Autocomplete: View {
             TextField(placeholder, text: $text)
                 .textStyle(.bodyBase400)
                 .foregroundStyle(theme.text(.textPrimary))
-                .tint(theme.foreground(.fgHero))
+                // Caret / selection tint follows the validation state.
+                .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
                 .focused($isFocused)
                 .disabled(!isEnabled)
+                // Read-only keeps the normal chrome + VoiceOver value but
+                // blocks focus/editing (E1 — distinct from `.disabled`).
+                .allowsHitTesting(!isReadOnly)
+                .onSubmit { runValidation(text) }   // submit is the strongest trigger
                 .a11y(A11yElement.Field.field, in: accessibilityID)
-                .accessibilityLabel(label ?? placeholder)
-            if isLoading {
+                .accessibilityLabel(a11yLabel)
+            if showsSpinner {
                 Spinner().size(IconSize.sm.value).lineWidth(2)
-            } else if !text.isEmpty {
+            } else if showsClear {
                 Button { text = "" } label: {
                     Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
+                .a11y(A11yElement.Field.clear, in: accessibilityID)
+                .accessibilityLabel(String(themeKit: "Clear"))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(48)
+        .scaledControlHeight(effectiveSize?.height ?? 48)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: `isFocused` ← the field's `@FocusState`;
-    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` are `false`
-    /// (Autocomplete has no validation concept); `size` is `.medium` —
-    /// Autocomplete has no `TextInputSize` axis (its fixed 48pt control height
-    /// lives in the content and matches no preset).
+    /// `isEnabled` ← `\.isEnabled`; `hasError` / `hasWarning` follow the dominant
+    /// message kind (explicit `infoMessages` + validation failures). With no
+    /// explicit `.size(_:)` and no subtree `FieldDefaults.size` the height stays
+    /// the classic scaled 48pt (nominal `.medium`), carried by the content.
     @ViewBuilder
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
             isFocused: isFocused,
             isEnabled: isEnabled,
-            hasError: false,
-            hasWarning: false,
-            size: .medium
+            hasError: hasError,
+            hasWarning: hasWarning,
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -239,6 +305,39 @@ public extension Autocomplete {
     /// Fires with the query text on each (debounced) change.
     func onSearch(_ action: ((String) -> Void)?) -> Self { copy { $0.onSearch = action } }
 
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 48pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
+
+    /// Show a trailing clear button while the field has text (on by default —
+    /// Autocomplete's classic behavior; pass `false` to hide it).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+
+    /// Shows a loading spinner in place of the clear button (caller-driven
+    /// async option fetch; the built-in async provider spins automatically).
+    func loading(_ on: Bool = true) -> Self { copy { $0.externalLoading = on } }
+
+    /// Validation / info messages rendered under the field (drives the border state).
+    func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Marks the field required: an error-token asterisk on the label (honoring
+    /// `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
+    /// Declarative validation (daisyUI Validator): `rules` run against the bound
+    /// text at `trigger` (`.editingEnd` on blur, `.live` per keystroke, `.submit`
+    /// on return). Failures merge into the rendered messages and border state.
+    ///
+    ///     Autocomplete("City", text: $city, suggestions: cities)
+    ///         .validate([.required(), .minLength(2)])
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity failure is present.
+    func onValidation(_ handler: @escaping (Bool) -> Void) -> Self { copy { $0.onValidation = handler } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -254,14 +353,27 @@ public extension Autocomplete {
     struct Demo: View {
         @State var text = ""
         @State var underlined = ""
+        @State var validated = ""
+        let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
         var body: some View {
             VStack(spacing: 16) {
-                Autocomplete("Destination", text: $text,
-                             suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
+                Autocomplete("Destination", text: $text, suggestions: cities)
                 // Same field, underlined chrome via the ambient FieldStyle.
-                Autocomplete("Destination", text: $underlined,
-                             suggestions: ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"])
+                Autocomplete("Destination", text: $underlined, suggestions: cities)
                     .fieldStyle(.underlined)
+                // Required + validation + loading spinner (E6 axes).
+                Autocomplete("City", text: $validated, suggestions: cities)
+                    .required()
+                    .validate([.required(), .minLength(2)])
+                Autocomplete("Fetching", text: $text, suggestions: cities)
+                    .loading()
+                // Read-only: normal chrome + value, no editing or clear (E1).
+                Autocomplete("Origin (read-only)", text: .constant("Istanbul"), suggestions: cities)
+                    .readOnly()
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                Autocomplete("Small", text: $text, suggestions: cities).size(.small)
+                Autocomplete("Large", text: $text, suggestions: cities).size(.large)
+                    .clearable(false)
             }
             .padding()
         }

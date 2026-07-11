@@ -32,6 +32,7 @@ public struct HelperText: View {
     private var hasError = false
     private var hidesOnError = false
     private var accessibilityID: String? = nil
+    private var links: [(substring: String, action: () -> Void)] = []
 
     public init(_ text: String) {   // R1 — content only
         self.text = text
@@ -40,14 +41,26 @@ public struct HelperText: View {
     public var body: some View {
         Group {
             if !(hasError && hidesOnError) {   // hidden so a field-error line can take its place
-                Text(text)
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(color)
+                content
                     .a11y(A11yElement.Field.message, in: accessibilityID)
                     .transition(.opacity)
             }
         }
         .animation(motion, value: hasError)
+    }
+
+    /// Plain `Text` by default; `InlineText` when `.links(_:)` supplied a
+    /// substring→action map, so "agree to the *Terms*" copy can carry anchors.
+    @ViewBuilder private var content: some View {
+        if links.isEmpty {
+            Text(text)
+                .textStyle(.bodySm400)
+                .foregroundStyle(color)
+        } else {
+            InlineText(text, links: links)
+                .inlineStyle(.bodySm400)
+                .color(color)
+        }
     }
 
     private var color: Color {
@@ -66,6 +79,11 @@ public extension HelperText {
     /// Remove the helper text entirely while `hasError` is set, so a field-error
     /// line can take its place (maps HeroUI `hideOnInvalid`).
     func hidesOnError(_ on: Bool = true) -> Self { copy { $0.hidesOnError = on } }
+
+    /// Turn substrings of the text into inline tappable links (rendered via
+    /// `InlineText`) — e.g. `HelperText("Agree to the Terms").links([("Terms", open)])`.
+    /// (HeroUI/Ant descriptions are nodes; this is the string-surface idiom.)
+    func links(_ links: [(substring: String, action: () -> Void)]) -> Self { copy { $0.links = links } }
 
     /// Namespaced accessibility identifier for UI tests
     /// (the text gets `"<id>.message"`).

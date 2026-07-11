@@ -7,18 +7,31 @@
 import SwiftUI
 
 public enum ChipSize {
-    case small, large
+    case small, medium, large
 
     var verticalPadding: CGFloat {
         switch self {
         case .small: return Theme.SpacingKey.sm.value   // 8
+        case .medium: return 10                          // ramp midpoint (no token between sm and 12)
         case .large: return 12
         }
     }
     var horizontalPadding: CGFloat {
         switch self {
         case .small: return 12
+        case .medium: return 14                          // ramp midpoint
         case .large: return Theme.SpacingKey.md.value   // 16
+        }
+    }
+    /// Enforced capsule min-height per tier (HeroUI Chip `sm/md/lg` fixed
+    /// heights) so mixed-content chips align on a row; `.large` reaches the
+    /// 44pt hit target. Applied via `scaledControlHeight`, so Dynamic Type
+    /// still grows the capsule instead of clipping.
+    var minHeight: CGFloat {
+        switch self {
+        case .small: return 36
+        case .medium: return 40
+        case .large: return 44
         }
     }
 }
@@ -115,13 +128,18 @@ public struct Chip: View {
             }
         }
         .frame(maxWidth: expandsHorizontally ? .infinity : nil)
+        // Enforce the tier's min-height from inside the style's padding, so the
+        // capsule (content + 2 × verticalPadding) lands on the ChipSize ramp
+        // (C3) — for custom `ChipStyle`s the content still carries the floor.
+        .scaledControlHeight(size.minHeight - size.verticalPadding * 2)
     }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension Chip {
-    /// Control size: small / large.
+    /// Control size: small / medium / large — drives paddings and the enforced
+    /// min-height ramp (36 / 40 / 44pt at the default text size).
     func size(_ s: ChipSize) -> Self { copy { $0.size = s } }
     /// How a selected chip is filled: tonal / solid. A shorthand for the
     /// built-in ``TonalChipStyle`` / ``SolidChipStyle`` — it overrides the
@@ -170,6 +188,13 @@ public extension Chip {
             Chip("Icon", isSelected: .constant(true)).icon("checkmark")
             Chip("Large", isSelected: .constant(false)).size(.large)
             Chip("Disabled", isSelected: .constant(false)).disabled(true)
+        }
+        // C3 — size ramp with enforced min-heights: mixed-content chips align.
+        HStack(alignment: .center) {
+            Chip("Small", isSelected: .constant(false)).size(.small)
+            Chip("Medium", isSelected: .constant(false)).size(.medium)
+            Chip("Medium + icon", isSelected: .constant(true)).size(.medium).icon("star")
+            Chip("Large", isSelected: .constant(false)).size(.large)
         }
         // Environment ChipStyle + slots: `.chipStyle(.solid)` on the container
         // resolves to `SolidChipStyle` via the `View` extension, so both chips

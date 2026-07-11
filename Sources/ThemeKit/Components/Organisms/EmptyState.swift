@@ -28,6 +28,7 @@ public struct EmptyState: View {
 
     // Appearance/content/actions — mutated only through the modifiers below (R2).
     private var message: String?
+    private var messageLinks: [(substring: String, action: () -> Void)] = []
     private var imageMaxHeight: CGFloat = 160
     private var iconForeground: Color?
     private var iconBackground: Color?
@@ -38,6 +39,8 @@ public struct EmptyState: View {
     private var action: (() -> Void)?
     private var secondaryTitle: String?
     private var onSecondary: (() -> Void)?
+    /// Custom actions slot (`.actions { }`); replaces the stock buttons.
+    private var actionsSlot: SlotContent?
 
     public init(_ title: String? = nil) {   // R1 — content; default SF Symbol media
         self.media = .symbol("tray")
@@ -89,14 +92,24 @@ public struct EmptyState: View {
                         .multilineTextAlignment(.center)
                 }
                 if let message {
-                    Text(message)
-                        .textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textSecondary))
-                        .multilineTextAlignment(.center)
+                    Group {
+                        if messageLinks.isEmpty {
+                            Text(message)
+                                .textStyle(.bodyBase400)
+                                .foregroundStyle(theme.text(.textSecondary))
+                        } else {
+                            InlineText(message, links: messageLinks)
+                                .inlineStyle(.bodyBase400)   // base color defaults to textSecondary
+                        }
+                    }
+                    .multilineTextAlignment(.center)
                 }
             }
 
-            if buttonTitle != nil || secondaryTitle != nil {
+            if let actionsSlot {
+                // Custom actions replace the stock button stack (D4).
+                actionsSlot
+            } else if buttonTitle != nil || secondaryTitle != nil {
                 VStack(spacing: Theme.SpacingKey.sm.value) {
                     if let buttonTitle, let action {
                         PrimaryButton(buttonTitle, action: action)
@@ -119,6 +132,12 @@ public extension EmptyState {
 
     /// Secondary message under the title.
     func message(_ s: String?) -> Self { copy { $0.message = s } }
+
+    /// Message with inline tappable links (rendered via `InlineText`) — e.g.
+    /// `.message("Read the docs.", links: [("docs", openDocs)])`.
+    func message(_ s: String?, links: [(substring: String, action: () -> Void)]) -> Self {
+        copy { $0.message = s; $0.messageLinks = links }
+    }
 
     /// Max height of the custom/animated illustration.
     func imageMaxHeight(_ h: CGFloat) -> Self { copy { $0.imageMaxHeight = h } }
@@ -150,6 +169,13 @@ public extension EmptyState {
         copy { $0.secondaryTitle = title; $0.onSecondary = action }
     }
 
+    /// Custom actions slot (the `ResultView.actions` precedent) — arbitrary
+    /// content (a `ButtonGroup`, a link row…) rendered where the stock
+    /// primary/secondary buttons go; when set it replaces them.
+    func actions<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.actionsSlot = SlotContent(content) }
+    }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -158,9 +184,24 @@ public extension EmptyState {
 }
 
 #Preview {
-    EmptyState("No results found")
-        .icon("magnifyingglass")
-        .message("Try adjusting your search or filters to find what you're looking for.")
-        .primaryAction("Clear filters") {}
+    ScrollView {
+        VStack(spacing: 48) {
+            EmptyState("No results found")
+                .icon("magnifyingglass")
+                .message("Try adjusting your search or filters to find what you're looking for.")
+                .primaryAction("Clear filters") {}
+
+            // D4 — custom `.actions { }` slot replaces the stock buttons.
+            EmptyState("Your trips will appear here")
+                .icon("airplane")
+                .message("Plan your first trip to get started.")
+                .actions {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        ThemeButton("Search flights") {}.size(.small)
+                        ThemeButton("Explore deals") {}.variant(.ghost).size(.small)
+                    }
+                }
+        }
         .padding()
+    }
 }

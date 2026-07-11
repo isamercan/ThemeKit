@@ -426,7 +426,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var loadingLayer: some View {
         if let title = presenter.activeLoading {
             ZStack {
-                theme.background(.bgTertiary).opacity(0.3).ignoresSafeArea()
+                Backdrop(fade: 0.7).ignoresSafeArea()   // shared themable scrim (bgBackdrop token)
                 VStack(spacing: Theme.SpacingKey.sm.value) {
                     Spinner().size(28).lineWidth(3)
                     Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
@@ -487,7 +487,7 @@ private struct FeedbackHostModifier: ViewModifier {
             let edge: Edge = position == .top ? .top : .bottom
             // Newest nearest the anchored edge: bottom keeps array order, top reverses.
             let ordered = position == .top ? Array(stack.reversed()) : stack
-            VStack(spacing: Theme.SpacingKey.sm.value) {
+            VStack(spacing: (feedbackDefaults.toastSpacing ?? .sm).value) {
                 ForEach(Array(ordered.enumerated()), id: \.element.id) { index, item in
                     // Depth 0 = the newest toast; ones behind it recede with a
                     // subtle scale + peek offset toward the anchored edge.
@@ -501,7 +501,7 @@ private struct FeedbackHostModifier: ViewModifier {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(Theme.SpacingKey.md.value)
+            .padding((feedbackDefaults.toastOffset ?? .md).value)
         }
     }
 
@@ -509,7 +509,7 @@ private struct FeedbackHostModifier: ViewModifier {
     private var confirmLayer: some View {
         if let confirm = presenter.activeConfirm {
             ZStack {
-                theme.background(.bgTertiary).opacity(0.4)
+                Backdrop()
                     .ignoresSafeArea()
                     .onTapGesture { presenter.dismissConfirm() }
                 DialogCard(
@@ -554,20 +554,39 @@ private struct FeedbackToastRow: View {
     }
 
     var body: some View {
-        row
-            .themeShadow(.elevated)
-            .dismissDrag(edge: edge,
-                         threshold: .points(60),
-                         progressSpan: 120,
-                         progress: $dragProgress,
-                         onDismiss: onDismiss)
+        swipeableRow
             .opacity(1 - dragProgress)
             .transition(.move(edge: edge).combined(with: .opacity))
+            .onAppear { if feedbackDefaults.hapticsOnShow == true { Haptics.tap() } }
             .task(id: item.id) {
                 guard let duration = effectiveDuration else { return }   // nil = sticky
-                try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+                // Pause the auto-dismiss countdown while the user is dragging the
+                // toast (reading / inspecting it) — Ant `pauseOnHover` semantics.
+                // Previously the fixed sleep fired mid-drag and dismissed the toast.
+                let tick = 0.05
+                var remaining = duration
+                while remaining > 0 {
+                    try? await Task.sleep(nanoseconds: UInt64(tick * 1_000_000_000))
+                    if Task.isCancelled { return }
+                    if dragProgress == 0 { remaining -= tick }
+                }
                 onDismiss()
             }
+    }
+
+    /// The row with the swipe-to-dismiss gesture, unless the subtree default
+    /// `FeedbackDefaults.swipeToDismiss` is `false`.
+    @ViewBuilder private var swipeableRow: some View {
+        let base = row.themeShadow(.elevated)
+        if feedbackDefaults.swipeToDismiss ?? true {
+            base.dismissDrag(edge: edge,
+                             threshold: .points(60),
+                             progressSpan: 120,
+                             progress: $dragProgress,
+                             onDismiss: onDismiss)
+        } else {
+            base
+        }
     }
 
     /// Stock `AlertToast`, or the caller-drawn view for custom-content toasts.

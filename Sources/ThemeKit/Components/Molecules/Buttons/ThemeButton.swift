@@ -29,17 +29,27 @@ public enum ButtonShape: String, CaseIterable {
 public struct ThemeButton: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    @Environment(\.componentDefaults) private var componentDefaults
 
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var color: SemanticColor = .primary
+    /// Explicit `.color(_:)`; `nil` defers to the subtree `componentDefaults`
+    /// accent, then `.primary` (provider cascade, F3).
+    private var explicitColor: SemanticColor?
     private var variant: ButtonVariant = .solid
     private var size: ButtonSize = .medium
     private var shape: ButtonShape = .rounded
     private var isFullWidth = false
     private var isLoading = false
+    /// When set, `.loading(_:)` keeps the label and shows the spinner on this
+    /// edge instead of replacing the content (A7).
+    private var spinnerEdge: HorizontalEdge?
     private var leadingSystemImage: String?
     private var trailingSystemImage: String?
     private var accessibilityID: String?
+
+    /// The resolved semantic color: explicit modifier ?? subtree
+    /// `componentDefaults.accent` ?? `.primary`.
+    private var color: SemanticColor { explicitColor ?? componentDefaults.accent ?? .primary }
 
     private let title: String?
     private let action: () -> Void
@@ -118,17 +128,31 @@ public struct ThemeButton: View {
         }
     }
 
+    /// `true` while the spinner should render *alongside* the label
+    /// (`spinnerPlacement` set) instead of replacing it. Icon-only buttons
+    /// always replace — there is no label to keep.
+    private var spinnerInline: Bool { isLoading && spinnerEdge != nil && !isIconOnly }
+
+    /// The inline loading spinner, sized down to sit next to the label text.
+    private var inlineSpinner: some View {
+        ProgressView().tint(foreground).controlSize(.small)
+    }
+
     @ViewBuilder
     private var content: some View {
-        if isLoading {
+        if isLoading && !spinnerInline {
             ProgressView().tint(foreground)
         } else if let customLabel {
             // Slot content gets the same environment the built-in label gets:
             // the size's type ramp (child Texts inherit the font) and — via the
             // shared `.foregroundStyle(foreground)` applied in `body` — the
             // variant's token foreground.
-            customLabel
-                .textStyle(size.textStyle)
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                if spinnerInline && spinnerEdge == .leading { inlineSpinner }
+                customLabel
+                    .textStyle(size.textStyle)
+                if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
+            }
         } else if isIconOnly {
             // Icon-only: render the single provided glyph (leading takes
             // precedence), no label.
@@ -137,6 +161,7 @@ public struct ThemeButton: View {
             }
         } else {
             HStack(spacing: Theme.SpacingKey.xs.value) {
+                if spinnerInline && spinnerEdge == .leading { inlineSpinner }
                 if let leadingSystemImage {
                     Image(systemName: leadingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
                 }
@@ -149,6 +174,7 @@ public struct ThemeButton: View {
                 if let trailingSystemImage {
                     Image(systemName: trailingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
                 }
+                if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
             }
         }
     }
@@ -197,8 +223,10 @@ public extension ThemeButton {
     /// Visual treatment: solid / soft / outline / ghost / link.
     func variant(_ v: ButtonVariant) -> Self { copy { $0.variant = v } }
 
-    /// Semantic color token driving the fill/accent ladder (R4).
-    func color(_ c: SemanticColor) -> Self { copy { $0.color = c } }
+    /// Semantic color token driving the fill/accent ladder (R4). When not set,
+    /// the button reads the subtree ``ComponentDefaults`` accent (set once with
+    /// `.componentDefaults(accent:)`), falling back to `.primary`.
+    func color(_ c: SemanticColor) -> Self { copy { $0.explicitColor = c } }
 
     /// Control size: xxsmall … large.
     func size(_ s: ButtonSize) -> Self { copy { $0.size = s } }
@@ -209,8 +237,17 @@ public extension ThemeButton {
     /// Stretch to the available width.
     func fullWidth(_ on: Bool = true) -> Self { copy { $0.isFullWidth = on } }
 
-    /// Swap the label for a spinner and block taps while `on`.
+    /// Show the loading spinner and block taps while `on`. By default the
+    /// spinner replaces the label; combine with ``spinnerPlacement(_:)`` to
+    /// keep the label and show the spinner alongside it.
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    /// Keep the label while loading and render the spinner beside it on the
+    /// given edge (HeroUI `spinnerPlacement="start"/"end"`; Ant Button
+    /// `loading: { icon }`). Without it, `.loading(_:)` swaps the whole label
+    /// for the spinner. Icon-only (circle/square) buttons always swap.
+    /// RTL-safe — `HorizontalEdge` follows the layout direction.
+    func spinnerPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.spinnerEdge = edge } }
 
     /// Leading and/or trailing SF Symbol. On a circle/square button the leading
     /// glyph (or the trailing one if no leading) becomes the icon.
@@ -409,6 +446,21 @@ extension ButtonSize {
             }
             ThemeButton("Block button") {}.color(.primary).fullWidth()
             ThemeButton("Loading") {}.color(.primary).fullWidth().loading()
+
+            // spinnerPlacement: the label stays while loading (HeroUI
+            // spinnerPlacement / Ant loading.icon).
+            HStack {
+                ThemeButton("Saving") {}.loading().spinnerPlacement(.leading)
+                ThemeButton("Uploading") {}.variant(.soft).loading().spinnerPlacement(.trailing)
+            }
+
+            // ComponentDefaults cascade: no explicit .color(_:) → the subtree
+            // accent re-tints the button; an explicit color still wins.
+            HStack {
+                ThemeButton("Subtree accent") {}
+                ThemeButton("Explicit wins") {}.color(.error)
+            }
+            .componentDefaults(accent: .turquoise)
 
             // Custom label slot — icon + text + badge composition; inherits the
             // size's textStyle and the variant's foreground like the built-in label.

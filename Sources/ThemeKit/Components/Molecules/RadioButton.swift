@@ -62,6 +62,9 @@ public struct RadioButton: View {
     private var accent: SemanticColor?
     private var verticalAlignment: VerticalAlignment = .center
     private var accessibilityID: String?
+    private var controlPlacement: HorizontalEdge = .leading   // A3
+    private var customLabel: SlotContent?                     // D1 — `.label { }` slot
+    @Environment(\.isReadOnly) private var isReadOnly         // E1
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -87,25 +90,23 @@ public struct RadioButton: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
                 if type == .check { isSelected.toggle() } else { isSelected = true }
             } label: {
                 HStack(alignment: verticalAlignment, spacing: gap.value) {
-                    Circle()
-                        .fill(filled ? fillColor : .clear)
-                        .overlay(Circle().strokeBorder(stroke, lineWidth: 1.5))
-                        .frame(width: controlSize.checkboxSide, height: controlSize.checkboxSide)
-                        .overlay(indicator.transition(.scale(scale: 0.6).combined(with: .opacity)))
-                        .animation(motion, value: isSelected)
-                    if let label {
-                        Text(label)
-                            .textStyle(.bodyBase400)
-                            .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+                    if controlPlacement == .leading {
+                        control
+                        labelView
+                    } else {
+                        labelView
+                        control
                     }
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!isEnabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, toggling blocked
             .a11y(A11yElement.Control.radio, in: accessibilityID)
             .accessibilityLabel(label ?? "")
             .accessibilityValue(isSelected ? String(themeKit: "selected") : String(themeKit: "not selected"))
@@ -114,6 +115,27 @@ public struct RadioButton: View {
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
+        }
+    }
+
+    /// The radio glyph itself (extracted so `controlPlacement` can branch order).
+    private var control: some View {
+        Circle()
+            .fill(filled ? fillColor : .clear)
+            .overlay(Circle().strokeBorder(stroke, lineWidth: 1.5))
+            .frame(width: controlSize.checkboxSide, height: controlSize.checkboxSide)
+            .overlay(indicator.transition(.scale(scale: 0.6).combined(with: .opacity)))
+            .animation(motion, value: isSelected)
+    }
+
+    /// Built-in string label, or the `.label { }` slot when set (D1/B8).
+    @ViewBuilder private var labelView: some View {
+        if let customLabel {
+            customLabel
+        } else if let label {
+            Text(label)
+                .textStyle(.bodyBase400)
+                .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
         }
     }
 
@@ -193,6 +215,18 @@ public extension RadioButton {
     /// Vertical alignment of the radio against a multi-line label.
     func alignment(_ a: VerticalAlignment) -> Self { copy { $0.verticalAlignment = a } }
 
+    /// Which side of the label the radio sits on: `.leading` (default) or
+    /// `.trailing`. RTL-safe — `HorizontalEdge` follows the layout direction.
+    /// (ControlRow `controlPlacement` vocabulary; A3.)
+    func controlPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.controlPlacement = edge } }
+
+    /// Replaces the built-in text label with custom content (the canonical
+    /// `.label { }` slot). The slot inherits the surrounding text environment;
+    /// pass the string init arg too if the control should keep a VoiceOver label.
+    func label<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.customLabel = SlotContent(content) }
+    }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -213,6 +247,18 @@ public extension RadioButton {
         RadioButton("Remember me", isSelected: .constant(true)).type(.check).radioStyle(.inner).gap(.medium)
         RadioButton("Success accent", isSelected: .constant(true)).accent(.success)
         RadioButton("Error accent", isSelected: .constant(true)).type(.check).accent(.error)
+        RadioButton("Large radio", isSelected: .constant(true)).controlSize(.large)     // C4
+        RadioButton("Radio on the trailing side", isSelected: .constant(true))
+            .controlPlacement(.trailing)                                                // A3
+        RadioButton("Card payment", isSelected: .constant(true))
+            .label {                                                                    // D1
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Image(systemName: "creditcard")
+                    Text("Card payment").fontWeight(.semibold)
+                }
+                .textStyle(.bodyBase400)
+            }
+        RadioButton("Read-only (tap does nothing)", isSelected: .constant(true)).readOnly() // E1
     }
     .padding()
 }

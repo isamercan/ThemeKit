@@ -31,8 +31,11 @@ public enum TimeFieldHourCycle: Equatable, Sendable {
 public struct TimeField: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing.
+    @Environment(\.isReadOnly) private var isReadOnly
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     private let label: String?
     @Binding private var time: Date?
@@ -47,6 +50,18 @@ public struct TimeField: View {
     private var allowClear = false
     private var leadingSystemImage: String? = "clock"
     private var accessibilityID: String?
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
+    /// `.required()` — asterisk on the label + ", required" in the a11y label.
+    private var isRequired = false
+
+    // Declarative validation (daisyUI Validator) — rules run against the
+    // *displayed* time string at `validationTrigger`; failures merge into the
+    // rendered messages, driving the border state automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
 
     @Environment(\.locale) private var environmentLocale
     @State private var showPicker = false
@@ -59,34 +74,68 @@ public struct TimeField: View {
     // MARK: - Derived state
 
     private var locale: Locale { explicitLocale ?? environmentLocale }
-    private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
+    /// Explicit `infoMessages(_:)` plus any current `validate(_:on:)` failures.
+    private var messages: [InfoMessage] { infoMessages + validationMessages }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { allowClear && time != nil && isEnabled }
+    private var showsClear: Bool { allowClear && time != nil && isEnabled && !isReadOnly }
     private var displayText: String? {
         time.map { Self.text(for: $0, hourCycle: hourCycle, locale: locale) }
+    }
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic scaled 48pt.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    private var a11yLabel: String {
+        let base = label ?? String(themeKit: "Time")
+        return isRequired ? base + ", " + String(themeKit: "required") : base
+    }
+
+    /// Runs the declared rules over the displayed time string (first failure
+    /// only, via `Validator`); publishes the result and reports validity.
+    private func runValidation() {
+        guard !validationRules.isEmpty else { return }
+        let failures = Validator.validate(displayText ?? "", validationRules)
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
     }
 
     // MARK: - Body
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            if let label { InputLabel(label).hasError(hasError) }
+            if let label {
+                InputLabel(label).required(isRequired && showsRequiredIndicator).hasError(hasError)
+            }
 
             fieldBox
                 .contentShape(Rectangle())
-                .onTapGesture { if isEnabled { showPicker = true } }
+                // Read-only keeps the normal chrome + VoiceOver value but never
+                // opens the picker (E1 — distinct from `.disabled`).
+                .onTapGesture { if isEnabled && !isReadOnly { showPicker = true } }
+                .allowsHitTesting(!isReadOnly)
                 .popover(isPresented: $showPicker) { picker }
                 .a11y(A11yElement.Select.trigger, in: accessibilityID)
-                .accessibilityLabel(label ?? String(themeKit: "Time"))
+                .accessibilityLabel(a11yLabel)
                 .accessibilityValue(displayText ?? "")
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction { if isEnabled { showPicker = true } }
+                .accessibilityAction { if isEnabled && !isReadOnly { showPicker = true } }
 
-            if !infoMessages.isEmpty {
-                InfoMessageList(infoMessages)
+            if !messages.isEmpty {
+                InfoMessageList(messages)
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
+        }
+        // `.live` validates every change; other triggers re-validate once a
+        // failure is visible so the error clears as the user fixes it.
+        .onChange(of: time) { _, _ in
+            if validationTrigger == .live || !validationMessages.isEmpty { runValidation() }
+        }
+        // Dismissing the picker is this field's blur *and* submit moment.
+        .onChange(of: showPicker) { _, now in
+            if !now, validationTrigger != .live { runValidation() }
         }
     }
 
@@ -104,15 +153,15 @@ public struct TimeField: View {
             trailing
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(48)
+        .scaledControlHeight(effectiveSize?.height ?? 48)
         .frame(maxWidth: .infinity)
     }
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: the open popover reads as `isFocused`; the dominant
-    /// `infoMessages` kind drives `hasError` / `hasWarning`. `size` is nominal
-    /// `.medium` — `TimeField` has no `TextInputSize` axis; its height stays the
-    /// component's own scaled 48pt, carried by the content.
+    /// message kind drives `hasError` / `hasWarning`. With no explicit `.size(_:)`
+    /// and no subtree `FieldDefaults.size` the height stays the component's
+    /// classic scaled 48pt (nominal `.medium`), carried by the content.
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
@@ -120,7 +169,7 @@ public struct TimeField: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -235,6 +284,29 @@ public extension TimeField {
     /// Placeholder shown while no time is selected.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
 
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 48pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
+
+    /// Marks the field required: an error-token asterisk on the label (honoring
+    /// `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
+    /// Declarative validation (daisyUI Validator): `rules` run against the
+    /// *displayed* time string (empty when no time is set) at `trigger` —
+    /// `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on
+    /// every change. Failures merge into the rendered messages and border state.
+    ///
+    ///     TimeField("Alarm", time: $alarm)
+    ///         .validate([.required("Pick a time")])
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity failure is present.
+    func onValidation(_ handler: @escaping (Bool) -> Void) -> Self { copy { $0.onValidation = handler } }
+
     /// Restrict the picker to a selectable time range.
     func range(_ range: ClosedRange<Date>?) -> Self { copy { $0.range = range } }
 
@@ -281,6 +353,15 @@ public extension TimeField {
                     .infoMessages(alarm == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
                 // Disabled.
                 TimeField("Locked", time: .constant(.now)).disabled(true)
+                // Read-only: normal chrome + VoiceOver value, no picker/clear (E1).
+                TimeField("Departure (read-only)", time: .constant(.now)).clearable().readOnly()
+                // Required + declarative validation (asterisk, rules on dismiss).
+                TimeField("Check-in", time: $alarm)
+                    .required()
+                    .validate([.required("Pick a check-in time")])
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                TimeField("Small", time: $meeting).size(.small)
+                TimeField("Large", time: $meeting).size(.large)
                 // Underlined chrome via the shared FieldStyle hook.
                 TimeField("Boarding", time: $meeting)
                     .hourCycle(.h24)

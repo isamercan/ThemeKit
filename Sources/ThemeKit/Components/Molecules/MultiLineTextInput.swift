@@ -26,6 +26,7 @@ public struct MultiLineTextInput: View {
     @Binding private var text: String
     private let label: String
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isReadOnly) private var isReadOnly   // E1 — set by `.readOnly(_:)`
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.fieldDefaults) private var fieldDefaults
@@ -34,6 +35,8 @@ public struct MultiLineTextInput: View {
     private var placeholder: String = ""
     private var characterLimit: Int?
     private var errorText: String?
+    private var helperText: String?
+    private var warningText: String?
     private var infoMessages: [InfoMessage] = []
     /// Set only by the `.size(_:)` modifier — an explicit size wins over the
     /// subtree `FieldDefaults.size` default (`explicitSize ?? fieldDefaults.size ?? .medium`).
@@ -66,6 +69,8 @@ public struct MultiLineTextInput: View {
     private var messages: [InfoMessage] {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
+        if let warningText { messages.append(InfoMessage(warningText, kind: .warning)) }
+        if let helperText { messages.append(InfoMessage(helperText, kind: .info)) }
         return messages
     }
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
@@ -127,7 +132,7 @@ public struct MultiLineTextInput: View {
         // External focus bridge (TextInput parity): a `true` write focuses the
         // editor; blurring resets the external binding so the owner stays in sync.
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
-            if want && !isFocused { isFocused = true }
+            if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
@@ -149,6 +154,9 @@ public struct MultiLineTextInput: View {
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .disabled(!isEnabled)
+                // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value,
+                // but the editor can't be tapped into. NOT `.disabled` (dims).
+                .allowsHitTesting(!isReadOnly)
                 .a11y(A11yElement.Field.field, in: accessibilityID)
                 .accessibilityLabel(isRequired ? label + ", " + String(themeKit: "required") : label)
                 .accessibilityValue(text)
@@ -229,6 +237,14 @@ public extension MultiLineTextInput {
     /// Convenience error message appended as an `.error` `InfoMessage`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
 
+    /// Convenience hint appended to the message list as an `.info` `InfoMessage`
+    /// (parity with `TextInput.helperText`).
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+
+    /// Convenience warning appended to the message list as a `.warning` `InfoMessage`
+    /// (parity with `TextInput.warningText`).
+    func warningText(_ text: String?) -> Self { copy { $0.warningText = text } }
+
     /// Validation / hint messages rendered beneath the editor.
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
@@ -276,6 +292,10 @@ public extension MultiLineTextInput {
                     .errorText(showError ? "This field is required." : nil)
                     .fieldStyle(.muted)
                 Button(showError ? "Hide error" : "Show error") { showError.toggle() }
+                // Read-only (E1): normal chrome + value, editing blocked.
+                MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
+                    .size(.xsmall)
+                    .readOnly()
             }
             .padding()
         }

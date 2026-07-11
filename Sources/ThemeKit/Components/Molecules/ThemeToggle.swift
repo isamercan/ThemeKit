@@ -25,6 +25,7 @@ public struct ThemeToggle: View {
     @Binding private var isOn: Bool
     @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.isReadOnly) private var isReadOnly // E1 — set by `.readOnly(_:)`
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -42,6 +43,7 @@ public struct ThemeToggle: View {
 
     public var body: some View {
         Button {
+            guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
             withAnimation(motion) { isOn.toggle() }
         } label: {
             Capsule()
@@ -56,6 +58,7 @@ public struct ThemeToggle: View {
         }
         .buttonStyle(PressFeedbackStyle())   // subtle press scale, gated by microAnimations + Reduce Motion
         .disabled(!interactive)
+        .allowsHitTesting(!isReadOnly)   // E1 — normal chrome + VoiceOver value, toggling blocked
         .opacity(isEnabled ? 1 : 0.6)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(isOn ? String(themeKit: "on") : String(themeKit: "off"))
@@ -124,6 +127,7 @@ public struct ThemeToggle: View {
         ThemeToggle(isOn: .constant(true)).symbols(on: "checkmark", off: "xmark")
         ThemeToggle(isOn: .constant(true)).loading()
         ThemeToggle(isOn: .constant(true)).disabled(true)
+        ThemeToggle(isOn: .constant(true)).readOnly()   // E1 — normal chrome, tap does nothing
         ThemeToggle(isOn: .constant(true)).accent(.success)
         ThemeToggle(isOn: .constant(true)).accent(.error).controlSize(.small)
         // Track symbols (HeroUI start/end content) — tap to see the crossfade + press scale.

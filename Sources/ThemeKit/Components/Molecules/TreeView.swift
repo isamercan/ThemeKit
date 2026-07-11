@@ -48,6 +48,7 @@ public struct TreeView: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(theme.text(.textTertiary))
+                    .mirrorsInRTL()
                     .rotationEffect(.degrees(expanded.contains(node.id) ? 90 : 0))
                     .frame(width: 20, height: 20)
                     .opacity(hasChildren ? 1 : 0)

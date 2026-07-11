@@ -12,7 +12,25 @@
 
 import SwiftUI
 
-/// One board column. `limit` (when exceeded) turns the count red.
+/// Width tiers for a ``KanbanBoard`` column (Ant Pro Board / HeroUI Pro kanban
+/// column sizing) — an enum, not a raw `CGFloat`, per the token-signature rule.
+public enum KanbanColumnWidth: Sendable {
+    case compact, regular, wide
+
+    /// Fixed column widths — genuine dimensions with no semantic token.
+    var value: CGFloat {
+        switch self {
+        case .compact: return 240
+        case .regular: return 280
+        case .wide: return 320
+        }
+    }
+}
+
+/// One board column. `limit` (when exceeded) turns the count red. `accent` is
+/// column *data* (a status hue travels with the column, like `title`), so it
+/// stays a model argument — the documented exception to the modifiers-only
+/// rule for appearance.
 public struct KanbanColumn<Item: Identifiable & Equatable>: Identifiable {
     public let id: String
     public let title: String
@@ -38,6 +56,10 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
     @Binding private var columns: [KanbanColumn<Item>]
     private let card: (Item) -> CardContent
 
+    // Appearance — mutated only through the modifiers below (R2).
+    private var columnWidth: KanbanColumnWidth = .regular
+    private var spacingKey: Theme.SpacingKey = .md
+
     public init(columns: Binding<[KanbanColumn<Item>]>, @ViewBuilder card: @escaping (Item) -> CardContent) {   // R1
         self._columns = columns
         self.card = card
@@ -45,7 +67,7 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
 
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: Theme.SpacingKey.md.value) {
+            HStack(alignment: .top, spacing: theme.spacing(spacingKey)) {
                 ForEach(columns) { column in
                     columnView(column)
                 }
@@ -82,7 +104,7 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
             }
         }
         .padding(Theme.SpacingKey.sm.value)
-        .frame(width: 280, alignment: .top)
+        .frame(width: columnWidth.value, alignment: .top)
         .background(theme.background(.bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .dropDestination(for: String.self) { dropped, _ in
             for idString in dropped { move(cardID: idString, toColumn: column.id, before: nil) }
@@ -145,6 +167,23 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension KanbanBoard {
+    /// Column width tier: compact / regular (default) / wide (Ant Pro Board /
+    /// HeroUI Pro kanban column sizing).
+    func columnWidth(_ w: KanbanColumnWidth) -> Self { copy { $0.columnWidth = w } }
+
+    /// Gap between columns by spacing token (default `.md`).
+    func spacing(_ key: Theme.SpacingKey) -> Self { copy { $0.spacingKey = key } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         struct Task: Identifiable, Equatable { let id: Int; let title: String }
@@ -154,12 +193,24 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
             .init("Done", items: [Task(id: 4, title: "Ship colors")], accent: .success),
         ]
         var body: some View {
-            KanbanBoard(columns: $columns) { task in
-                Text(task.title)
-                    .textStyle(.labelBase600)
-                    .padding(Theme.SpacingKey.sm.value)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+            VStack(spacing: 24) {
+                KanbanBoard(columns: $columns) { task in
+                    Text(task.title)
+                        .textStyle(.labelBase600)
+                        .padding(Theme.SpacingKey.sm.value)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                }
+                // D7 — width tier + token gap axes.
+                KanbanBoard(columns: $columns) { task in
+                    Text(task.title)
+                        .textStyle(.labelBase600)
+                        .padding(Theme.SpacingKey.sm.value)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                }
+                .columnWidth(.compact)
+                .spacing(.sm)
             }
             .padding(.vertical)
         }

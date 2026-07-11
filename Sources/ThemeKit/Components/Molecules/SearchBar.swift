@@ -134,7 +134,8 @@ public struct SearchBar: View {
     /// SearchBar has no `TextInputSize` modifier of its own; the subtree
     /// `FieldDefaults.size` maps onto its control height (the classic fixed
     /// 44pt equals `.small`, which stays the default).
-    private var effectiveSize: TextInputSize { fieldDefaults.size ?? .small }
+    private var explicitSize: TextInputSize?
+    private var effectiveSize: TextInputSize { explicitSize ?? fieldDefaults.size ?? .small }
     /// Message rows animate when micro-animations are on and the subtree default
     /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
@@ -434,6 +435,10 @@ public struct SearchBar: View {
 public extension SearchBar {
     /// Placeholder shown while the field is empty.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? .small`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Static typeahead suggestions, filtered locally as the user types (classic init only).
     func suggestions(_ items: [String]) -> Self { copy { $0.source = items.isEmpty ? .none : .staticList(items) } }

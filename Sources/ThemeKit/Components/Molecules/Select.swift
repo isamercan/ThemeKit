@@ -42,7 +42,12 @@ public struct Select<Option: Hashable>: View {
     private var describeOption: ((Option) -> String?)? = nil
     private var leadingContent: ((Option) -> AnyView)? = nil
     private var accessibilityID: String? = nil
+    /// Marks the field as required: asterisk after the label + ", required"
+    /// appended to the accessibility label (E2, HeroUI `isRequired`).
+    private var isRequired = false
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.isReadOnly) private var isReadOnly // E1 — set by `.readOnly(_:)`
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     /// Legacy chrome hook — honored only when a custom style was injected with
     /// the (deprecated) `.selectStyle(_:)`. Otherwise chrome comes from `\.fieldStyle`.
@@ -84,7 +89,10 @@ public struct Select<Option: Hashable>: View {
     }
 
     private var hasValue: Bool { selection != nil }
-    private var showsClear: Bool { allowClear && hasValue && isEnabled && !isLoading }
+    private var showsClear: Bool { allowClear && hasValue && isEnabled && !isReadOnly && !isLoading }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
     private func optionEnabled(_ option: Option) -> Bool { isOptionEnabled?(option) ?? true }
     private var hasAnyResults: Bool { sections.contains { !filtered($0.options).isEmpty } }
 
@@ -92,7 +100,7 @@ public struct Select<Option: Hashable>: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             ZStack(alignment: .trailing) {
                 if searchable {
-                    Button { if isEnabled { open.toggle() } } label: { field }
+                    Button { if isEnabled && !isReadOnly { open.toggle() } } label: { field }
                         .buttonStyle(.plain)
                         .disabled(!isEnabled)
                 } else {
@@ -101,11 +109,15 @@ public struct Select<Option: Hashable>: View {
                 }
                 clearButton
             }
+            // E1 — read-only keeps the normal (non-dimmed) chrome + value +
+            // VoiceOver value, but the menu / panel can't be opened and the
+            // clear button is hidden. Deliberately NOT `.disabled`, which dims.
+            .allowsHitTesting(!isReadOnly)
             .a11y(A11yElement.Select.trigger, in: accessibilityID)
-            .accessibilityLabel(label)
+            .accessibilityLabel(isRequired ? label + ", " + String(themeKit: "required") : label)
             .accessibilityValue(selection.map(optionTitle) ?? "")
 
-            if searchable && open { panel }
+            if searchable && open && !isReadOnly { panel }   // E1 — panel closes under read-only
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
@@ -119,10 +131,18 @@ public struct Select<Option: Hashable>: View {
     private var fieldContent: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             ZStack(alignment: .leading) {
-                Text(label)
-                    .textStyle(hasValue ? .labelSm600 : .bodyBase400)
-                    .foregroundStyle(hasValue ? theme.text(.textHero) : theme.text(.textTertiary))
-                    .offset(y: hasValue ? -11 : 0)
+                HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
+                    Text(label)
+                        .foregroundStyle(hasValue ? theme.text(.textHero) : theme.text(.textTertiary))
+                    if isRequired && showsRequiredIndicator {
+                        // Same treatment as `InputLabel.required()` — error-token asterisk.
+                        Text(verbatim: "*")
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the trigger's label suffix
+                    }
+                }
+                .textStyle(hasValue ? .labelSm600 : .bodyBase400)
+                .offset(y: hasValue ? -11 : 0)
                 if let selection {
                     Text(optionTitle(selection))
                         .textStyle(.bodyBase400)
@@ -314,6 +334,12 @@ public extension Select {
     /// Control height of the trigger field (small / medium / large).
     func size(_ size: TextInputSize) -> Self { copy { $0.size = size } }
 
+    /// Marks the field as required: renders an error-token asterisk after the
+    /// floating label (the `InputLabel` treatment, honoring the subtree
+    /// `FieldDefaults.requiredIndicator`) and appends ", required" to the
+    /// trigger's accessibility label (E2, HeroUI `isRequired`).
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
     /// Validation / info messages rendered under the field (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
@@ -377,6 +403,13 @@ public extension Select {
                 // Chrome via the shared FieldStyle axis.
                 Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
                     .fieldStyle(.underlined)
+                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+                Select("Departure city", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                    .required()
+                // Read-only (E1): normal chrome + value, menu / clear blocked.
+                Select("Cabin", options: ["Economy", "Business"], selection: .constant("Economy")) { $0 }
+                    .clearable()
+                    .readOnly()
             }
             .padding()
         }

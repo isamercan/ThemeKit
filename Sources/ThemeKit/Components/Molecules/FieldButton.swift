@@ -14,8 +14,11 @@ import SwiftUI
 public struct FieldButton: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no action.
+    @Environment(\.isReadOnly) private var isReadOnly
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     private let value: String
     private let action: () -> Void
@@ -24,17 +27,26 @@ public struct FieldButton: View {
     private var systemImage: String?
     private var trailingSystemImage: String? = "chevron.down"
     private var isPlaceholder = false
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
 
     public init(_ value: String, action: @escaping () -> Void) {   // R1
         self.value = value
         self.action = action
     }
 
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic
+    /// 56pt (labelled) / 48pt height.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+
     public var body: some View {
-        Button(action: action) {
+        // Read-only keeps the normal (non-dimmed) chrome and the VoiceOver
+        // label/value but never runs the action (E1 — distinct from `.disabled`).
+        Button { if !isReadOnly { action() } } label: {
             fieldBox
         }
         .buttonStyle(.plain)
+        .allowsHitTesting(!isReadOnly)
         .accessibilityLabel("\(fieldLabel.map { $0 + ", " } ?? "")\(value)")
         .accessibilityAddTraits(.isButton)
     }
@@ -60,16 +72,18 @@ public struct FieldButton: View {
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .frame(height: fieldLabel != nil ? 56 : 48)
+        // Scales with Dynamic Type (G2); an explicit/subtree size preset remaps
+        // the classic 56pt (labelled) / 48pt heights onto the family ramp (C1).
+        .scaledControlHeight(effectiveSize?.height ?? (fieldLabel != nil ? 56 : 48))
         .frame(maxWidth: .infinity)
     }
 
     /// The trigger row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: FieldButton has no focus / open-popover state and no
     /// validation axis, so `isFocused` / `hasError` / `hasWarning` are always
-    /// false; `isEnabled` comes from the environment (`.disabled(_:)`). `size` is
-    /// nominal `.medium` — FieldButton has no `TextInputSize` axis; its 48/56pt
-    /// (labelled) height stays carried by the content.
+    /// false; `isEnabled` comes from the environment (`.disabled(_:)`). With no
+    /// explicit `.size(_:)` and no subtree `FieldDefaults.size` the height stays
+    /// the classic 48/56pt (nominal `.medium`), carried by the content.
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldCore),
@@ -77,7 +91,7 @@ public struct FieldButton: View {
             isEnabled: isEnabled,
             hasError: false,
             hasWarning: false,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 }
@@ -93,6 +107,9 @@ public extension FieldButton {
     func trailing(_ systemName: String?) -> Self { copy { $0.trailingSystemImage = systemName } }
     /// Renders the value in the muted placeholder colour (nothing chosen yet).
     func placeholder(_ on: Bool = true) -> Self { copy { $0.isPlaceholder = on } }
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 56/48pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -107,6 +124,11 @@ public extension FieldButton {
         FieldButton("Select a date") { }.icon("calendar").placeholder()
         // Underlined chrome via the shared FieldStyle hook.
         FieldButton("Business class") { }.label("Cabin").fieldStyle(.underlined)
+        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+        FieldButton("Small trigger") { }.size(.small)
+        FieldButton("Large trigger") { }.label("Room").size(.large)
+        // Read-only: normal chrome, action suppressed (E1).
+        FieldButton("1 Room · 2 Guests") { }.label("Occupancy").readOnly()
     }
     .padding()
 }

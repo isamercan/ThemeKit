@@ -61,7 +61,7 @@ public struct MenuCard: View {
                 }
             }
         }
-        .contentPadding(0)
+        .contentPadding(.none)   // token twin of the deprecated raw 0
     }
 }
 

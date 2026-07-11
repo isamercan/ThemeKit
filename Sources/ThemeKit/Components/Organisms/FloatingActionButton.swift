@@ -24,11 +24,18 @@ public enum FABShape { case circle, square }
 /// (daisyUI "FAB / Speed Dial".)
 public struct FloatingActionButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.componentDefaults) private var componentDefaults
 
     // Appearance/state — mutated only through the modifiers below (R2).
     private var shape: FABShape = .circle
-    private var color: SemanticColor = .primary
+    /// Explicit `.accent(_:)`; `nil` defers to the subtree `componentDefaults`
+    /// accent, then `.primary` (provider cascade, F3).
+    private var explicitColor: SemanticColor?
     private var badge: Int?
+
+    /// The resolved semantic color: explicit modifier ?? subtree
+    /// `componentDefaults.accent` ?? `.primary`.
+    private var color: SemanticColor { explicitColor ?? componentDefaults.accent ?? .primary }
 
     private let systemImage: String
     private let actions: [FABAction]
@@ -112,9 +119,11 @@ public extension FloatingActionButton {
     /// Corner treatment of the main button: circle / square.
     func shape(_ s: FABShape) -> Self { copy { $0.shape = s } }
 
-    /// Semantic color token driving the main button's fill (R4); `nil` restores
-    /// the primary default. Standard accent vocabulary (flexibility audit §6).
-    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color ?? .primary } }
+    /// Semantic color token driving the main button's fill (R4); `nil`
+    /// (default) defers to the subtree ``ComponentDefaults`` accent (set once
+    /// with `.componentDefaults(accent:)`), then `.primary`. Standard accent
+    /// vocabulary (flexibility audit §6).
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.explicitColor = color } }
 
     /// Semantic color token driving the main button's fill (R4).
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
@@ -138,4 +147,15 @@ public extension FloatingActionButton {
     ])
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
     .padding()
+}
+
+#Preview("ComponentDefaults accent") {
+    // F3 — no explicit accent: the subtree componentDefaults re-tints the FAB;
+    // an explicit `.accent(_:)` still wins.
+    HStack(spacing: 24) {
+        FloatingActionButton(systemImage: "plus")
+        FloatingActionButton(systemImage: "heart").accent(.error)
+    }
+    .padding()
+    .componentDefaults(accent: .turquoise)
 }

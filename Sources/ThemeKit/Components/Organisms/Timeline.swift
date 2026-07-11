@@ -41,6 +41,8 @@ public struct Timeline: View {
     private var axis: Axis = .vertical
     private var mode: TimelineMode = .left
     private var reverse = false
+    /// Custom per-item marker (`marker(_:)`); nil renders the stock dot/icon.
+    private var markerBuilder: ((Item, Int) -> AnyView)? = nil
 
     private let items: [Item]
 
@@ -73,7 +75,7 @@ public struct Timeline: View {
                         if index < ordered.count - 1 {
                             Rectangle().fill(railColor(item)).frame(height: 2).offset(x: 14)
                         }
-                        marker(item)
+                        marker(item, index: index)
                     }
                     if let time = item.time {
                         Text(time).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
@@ -97,7 +99,7 @@ public struct Timeline: View {
                 let isLast = position == displayRows.count - 1
                 switch row {
                 case .item(let item):
-                    verticalRow(position: position, isLast: isLast, marker: marker(item), rail: railColor(item),
+                    verticalRow(position: position, isLast: isLast, marker: marker(item, index: position), rail: railColor(item),
                                 main: { itemMain(item, showTime: mode != .alternate) },
                                 opposite: { oppositeContent(item) })
                 case .pending(let text):
@@ -183,7 +185,19 @@ public struct Timeline: View {
     }
 
     @ViewBuilder
-    private func marker(_ item: Item) -> some View {
+    private func marker(_ item: Item, index: Int) -> some View {
+        if let markerBuilder {
+            // Custom marker (Ant Timeline `dot`): replaces the stock dot/icon,
+            // centered in the same 28pt slot so the rail geometry is unchanged.
+            ZStack { markerBuilder(item, index) }
+                .frame(width: 28, height: 28)
+        } else {
+            stockMarker(item)
+        }
+    }
+
+    @ViewBuilder
+    private func stockMarker(_ item: Item) -> some View {
         let dotColor = item.state == .error
             ? theme.background(.systemcolorsBgError)
             : (item.color?.solid ?? theme.background(.bgHero))
@@ -225,6 +239,15 @@ public extension Timeline {
     /// Trailing loading ("pending") node with its label.
     func pending(_ text: String?) -> Self { copy { $0.pending = text } }
 
+    /// Replace the default dot/icon marker with a custom view, built per item
+    /// from the item and its zero-based display position (Ant Timeline custom
+    /// `dot`; the `Steps.marker(_:)` precedent). The custom view is centered
+    /// in the marker's 28pt slot, so the rail and connectors are unchanged;
+    /// the pending node keeps its stock spinner. Omit for the stock markers.
+    func marker<V: View>(@ViewBuilder _ content: @escaping (Timeline.Item, Int) -> V) -> Self {
+        copy { $0.markerBuilder = { item, index in AnyView(content(item, index)) } }
+    }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -246,6 +269,18 @@ public extension Timeline {
                 .init(title: "Layover", time: "12:30", description: "Munich (MUC)", systemImage: "clock", state: .active),
                 .init(title: "Arrival", time: "16:45", description: "Barcelona (BCN)", systemImage: "airplane.arrival", state: .todo),
             ]).mode(.alternate)
+
+            // Custom `.marker { }` slot — the Steps precedent; rail unchanged.
+            Timeline([
+                .init(title: "Booked", time: "Mon", state: .done),
+                .init(title: "Checked in", time: "Tue", state: .active),
+                .init(title: "Flight", time: "Wed", state: .todo),
+            ])
+            .marker { item, index in
+                Image(systemName: item.state == .done ? "checkmark.seal.fill" : "\(index + 1).circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(item.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
+            }
         }
         .padding()
     }

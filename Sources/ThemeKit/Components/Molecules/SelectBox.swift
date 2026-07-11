@@ -25,6 +25,13 @@ public struct SelectBox<Option: Hashable>: View {
     private var errorText: String? = nil
     private var infoMessages: [InfoMessage] = []
     private var accessibilityID: String? = nil
+    /// Set only by the `.size(_:)` modifier — an explicit size wins over the
+    /// subtree `FieldDefaults.size` default (`explicitSize ?? fieldDefaults.size`;
+    /// with neither set, the field keeps its original 48pt height). C1.
+    private var explicitSize: TextInputSize?
+    /// Marks the field as required: asterisk after the label + ", required"
+    /// appended to the accessibility label (E2, HeroUI `isRequired`).
+    private var isRequired = false
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     /// The native `Menu` cannot be opened programmatically, so a `true` write
     /// renders the `FieldStyle` focus border (drawing the eye to the field);
@@ -34,6 +41,8 @@ public struct SelectBox<Option: Hashable>: View {
     /// title (empty when nothing is selected) when the selection changes.
     private var onEditingEnd: ((String) -> Void)?
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isReadOnly) private var isReadOnly   // E1 — set by `.readOnly(_:)`
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     public init(   // R1
         _ label: String? = nil,
@@ -58,11 +67,25 @@ public struct SelectBox<Option: Hashable>: View {
     private var hasError: Bool { messages.dominantKind == .error }
     private var hasWarning: Bool { messages.dominantKind == .warning }
 
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → `nil` (the field's
+    /// own 48pt default height, kept for source-visual compatibility).
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             if let label {
                 HStack(spacing: 4) {
                     Text(label).textStyle(.labelSm600).foregroundStyle(labelColor)
+                    if isRequired && showsRequiredIndicator {
+                        // Same treatment as `InputLabel.required()` — error-token asterisk.
+                        Text(verbatim: "*")
+                            .textStyle(.labelSm600)
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the trigger's label suffix
+                    }
                     Image(systemName: "info.circle").font(.system(size: 11)).foregroundStyle(theme.text(.textTertiary))
                 }
             }
@@ -83,8 +106,11 @@ public struct SelectBox<Option: Hashable>: View {
                 fieldBox
             }
             .disabled(!isEnabled)
+            // E1 — read-only keeps the normal (non-dimmed) chrome + value +
+            // VoiceOver value, but the menu can't be opened. NOT `.disabled` (dims).
+            .allowsHitTesting(!isReadOnly)
             .a11y(A11yElement.Select.trigger, in: accessibilityID)
-            .accessibilityLabel(label ?? "")
+            .accessibilityLabel(isRequired ? (label ?? "") + ", " + String(themeKit: "required") : (label ?? ""))
             .accessibilityValue(selection.map(optionTitle) ?? "")
 
             if !infoMessages.isEmpty {
@@ -106,8 +132,10 @@ public struct SelectBox<Option: Hashable>: View {
     }
 
     /// The composed trigger row — everything a `FieldStyle` receives as
-    /// `configuration.content`. The fixed 48pt control height lives here, so the
-    /// style only supplies the surface (fill + border + corner).
+    /// `configuration.content`. The control height lives here (the family
+    /// `TextInputSize` ramp when a `.size(_:)` / `FieldDefaults.size` is set,
+    /// the original 48pt otherwise), so the style only supplies the surface
+    /// (fill + border + corner).
     private var fieldContent: some View {
         HStack {
             Text(selection.map(optionTitle) ?? placeholder)
@@ -117,7 +145,7 @@ public struct SelectBox<Option: Hashable>: View {
             Icon(systemName: "chevron.down").size(.sm).color(theme.text(.textTertiary))
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .scaledControlHeight(48)
+        .scaledControlHeight(effectiveSize?.height ?? 48)   // C1 — family size ramp
         .frame(maxWidth: .infinity)
     }
 
@@ -125,9 +153,9 @@ public struct SelectBox<Option: Hashable>: View {
     /// mapping: the native `Menu` exposes no open state, so `isFocused` reflects
     /// only the external focus binding (a `FormValidator` focusing this field
     /// renders the focus border; user taps draw no ring, as before); `hasWarning`
-    /// follows the dominant message severity; and — SelectBox having no
-    /// `TextInputSize` axis — `size` maps to `.medium`, purely advisory for
-    /// styles that key off it (the row keeps its own 48pt height).
+    /// follows the dominant message severity; and `size` reports the resolved
+    /// `TextInputSize` axis (`.medium` while unset — advisory for styles that
+    /// key off it; the row then keeps its own 48pt height).
     private var fieldBox: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(fieldContent),
@@ -135,7 +163,7 @@ public struct SelectBox<Option: Hashable>: View {
             isEnabled: isEnabled,
             hasError: hasError,
             hasWarning: hasWarning,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -149,6 +177,17 @@ public struct SelectBox<Option: Hashable>: View {
 public extension SelectBox {
     /// Placeholder shown while no option is selected.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+
+    /// Control height on the field family's `TextInputSize` ramp (C1). An
+    /// explicit size wins over the subtree `FieldDefaults.size` default; with
+    /// neither set the field keeps its original 48pt height.
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
+
+    /// Marks the field as required: renders an error-token asterisk after the
+    /// label (the `InputLabel` treatment, honoring the subtree
+    /// `FieldDefaults.requiredIndicator`) and appends ", required" to the
+    /// trigger's accessibility label (E2, HeroUI `isRequired`).
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
 
     /// Helper text rendered under the field (hidden while an error is shown).
     func hint(_ text: String?) -> Self { copy { $0.hint = text } }
@@ -195,6 +234,15 @@ public extension SelectBox {
                 // Chrome via the shared FieldStyle axis.
                 SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
                     .fieldStyle(.underlined)
+                // Family size ramp (C1) — aligns with a `.small` TextInput beside it.
+                SelectBox("Compact", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                    .size(.small)
+                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+                SelectBox("Region", options: ["EMEA", "APAC"], selection: $country) { $0 }
+                    .required()
+                // Read-only (E1): normal chrome + value, menu blocked.
+                SelectBox("Country (submitted)", options: ["Turkey", "Germany"], selection: .constant("Turkey")) { $0 }
+                    .readOnly()
             }
             .padding()
         }

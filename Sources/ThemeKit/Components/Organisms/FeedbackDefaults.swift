@@ -35,10 +35,27 @@ public struct FeedbackDefaults: Equatable {
     /// it). Read ahead of the host's `maxVisibleToasts:` parameter.
     public var maxVisibleToasts: Int?
 
-    public init(toastPosition: ToastPosition? = nil, toastDuration: Double? = nil, maxVisibleToasts: Int? = nil) {
+    /// Inset of the toast stack from its anchored edge (default `.md`). Ant
+    /// `notification.config({ top / bottom })`.
+    public var toastOffset: Theme.SpacingKey?
+    /// Gap between stacked toasts (default `.sm`).
+    public var toastSpacing: Theme.SpacingKey?
+    /// Whether toasts can be swiped away (default `true`). Ant `closable` /
+    /// HeroUI `shouldAllowSwipe`.
+    public var swipeToDismiss: Bool?
+    /// Fire a light haptic when a toast appears (default off).
+    public var hapticsOnShow: Bool?
+
+    public init(toastPosition: ToastPosition? = nil, toastDuration: Double? = nil, maxVisibleToasts: Int? = nil,
+                toastOffset: Theme.SpacingKey? = nil, toastSpacing: Theme.SpacingKey? = nil,
+                swipeToDismiss: Bool? = nil, hapticsOnShow: Bool? = nil) {
         self.toastPosition = toastPosition
         self.toastDuration = toastDuration
         self.maxVisibleToasts = maxVisibleToasts
+        self.toastOffset = toastOffset
+        self.toastSpacing = toastSpacing
+        self.swipeToDismiss = swipeToDismiss
+        self.hapticsOnShow = hapticsOnShow
     }
 }
 
@@ -68,11 +85,19 @@ public extension View {
     /// ```
     func feedbackDefaults(toastPosition: ToastPosition? = nil,
                           toastDuration: Double? = nil,
-                          maxVisibleToasts: Int? = nil) -> some View {
+                          maxVisibleToasts: Int? = nil,
+                          toastOffset: Theme.SpacingKey? = nil,
+                          toastSpacing: Theme.SpacingKey? = nil,
+                          swipeToDismiss: Bool? = nil,
+                          hapticsOnShow: Bool? = nil) -> some View {
         transformEnvironment(\.feedbackDefaults) { d in
             if let toastPosition { d.toastPosition = toastPosition }
             if let toastDuration { d.toastDuration = toastDuration }
             if let maxVisibleToasts { d.maxVisibleToasts = maxVisibleToasts }
+            if let toastOffset { d.toastOffset = toastOffset }
+            if let toastSpacing { d.toastSpacing = toastSpacing }
+            if let swipeToDismiss { d.swipeToDismiss = swipeToDismiss }
+            if let hapticsOnShow { d.hapticsOnShow = hapticsOnShow }
         }
     }
 }
