@@ -119,6 +119,12 @@ private struct TooltipBubble: View {
     @Environment(\.theme) private var theme
 
     let text: String
+    /// Rich slot content (the `.tooltip(isPresented:…) { }` overload); when set
+    /// it replaces the plain `Text` inside the same bubble chrome. It inherits
+    /// the bubble's auto-contrast foreground and `bodySm400` type ramp, so
+    /// plain `Text`/`Image(systemName:)` children render correctly with zero
+    /// configuration (slot convention).
+    var rich: SlotContent? = nil
     let edge: TooltipEdge
     let style: BadgeStyle?
     let color: SemanticColor?
@@ -131,10 +137,15 @@ private struct TooltipBubble: View {
     private var textColor: Color { ColorContrast.content(on: bubbleColor) }
 
     var body: some View {
-        let bubble = Text(text)
+        let bubble = Group {
+            if let rich {
+                rich
+            } else {
+                Text(text).multilineTextAlignment(.leading)
+            }
+        }
             .textStyle(.bodySm400)
             .foregroundStyle(textColor)
-            .multilineTextAlignment(.leading)
             .frame(maxWidth: maxWidth, alignment: .leading)
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.vertical, Theme.SpacingKey.xs.value)
@@ -174,6 +185,8 @@ private struct TooltipPlacement: ViewModifier {
 /// Binding-driven tooltip presentation — gates its fade on `microAnimations`.
 private struct BindingTooltip: ViewModifier {
     let text: String
+    /// Rich slot content — replaces the plain text inside the bubble (D2).
+    var rich: SlotContent? = nil
     @Binding var isPresented: Bool
     let edge: TooltipEdge
     let align: PopoverAlign
@@ -188,7 +201,7 @@ private struct BindingTooltip: ViewModifier {
         content
             .overlay(alignment: edge.alignment(align)) {
                 if isPresented {
-                    TooltipBubble(text: text, edge: edge, style: style, color: color, maxWidth: maxWidth)
+                    TooltipBubble(text: text, rich: rich, edge: edge, style: style, color: color, maxWidth: maxWidth)
                         .fixedSize(horizontal: maxWidth == nil, vertical: true)
                         .modifier(TooltipPlacement(edge: edge))
                         .transition(.opacity)
@@ -249,6 +262,29 @@ public extension View {
         modifier(BindingTooltip(text: text, isPresented: isPresented, edge: edge, align: align, style: style, color: color, maxWidth: maxWidth))
     }
 
+    /// Binding-driven tooltip with **rich content** (HeroUI/Ant Tooltip content
+    /// node): the `content` slot replaces the plain text inside the same bubble
+    /// chrome (fill, arrow, placement, motion). Slot content inherits the
+    /// bubble's auto-contrast foreground and `bodySm400` ramp, so plain
+    /// `Text`/`Image(systemName:)` children render correctly with zero
+    /// configuration.
+    ///
+    ///     icon.tooltip(isPresented: $show, edge: .bottom) {
+    ///         HStack { Image(systemName: "wifi"); Text("Free Wi-Fi") }
+    ///     }
+    func tooltip<C: View>(
+        isPresented: Binding<Bool>,
+        edge: TooltipEdge = .top,
+        align: PopoverAlign = .center,
+        style: BadgeStyle? = nil,
+        color: SemanticColor? = nil,
+        maxWidth: CGFloat? = nil,
+        @ViewBuilder content: () -> C
+    ) -> some View {
+        modifier(BindingTooltip(text: "", rich: SlotContent(content), isPresented: isPresented,
+                                edge: edge, align: align, style: style, color: color, maxWidth: maxWidth))
+    }
+
     /// Self-managed tooltip: tap the anchor to toggle it (tap again to dismiss).
     /// No external state required — use for simple hint glyphs. While shown, a
     /// tap anywhere outside the bubble also dismisses it (HeroUI Popover
@@ -274,16 +310,47 @@ public extension View {
         @State var show = true
         var body: some View {
             VStack(spacing: 64) {
-                Icon(systemName: "info.circle").size(.md).color(theme.foreground(.fgHero))
+                Icon(systemName: "info.circle").size(.md).colorOverride(theme.foreground(.fgHero))
                     .tooltip("Helpful hint", isPresented: $show)
                 HStack(spacing: 56) {
-                    Icon(systemName: "questionmark.circle").size(.md).color(theme.foreground(.fgHero))
+                    Icon(systemName: "questionmark.circle").size(.md).colorOverride(theme.foreground(.fgHero))
                         .tooltip("On the trailing side", edge: .trailing, style: .info)
-                    Icon(systemName: "exclamationmark.triangle").size(.md).color(theme.foreground(.fgHero))
+                    Icon(systemName: "exclamationmark.triangle").size(.md).colorOverride(theme.foreground(.fgHero))
                         .tooltip("A longer hint that wraps onto several lines", edge: .leading, style: .warning, maxWidth: 140)
                 }
-                Icon(systemName: "star.circle").size(.md).color(theme.foreground(.fgHero))
+                Icon(systemName: "star.circle").size(.md).colorOverride(theme.foreground(.fgHero))
                     .tooltip("Primary-tinted tooltip", edge: .bottom, color: .primary)
+            }
+            .padding(80)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Rich content slot") {
+    struct Demo: View {
+        @State var plain = true
+        @State var tinted = true
+        var body: some View {
+            VStack(spacing: 72) {
+                // Custom content in the standard bubble chrome — inherits the
+                // auto-contrast foreground and bodySm400 ramp.
+                Icon(systemName: "wifi").size(.md)
+                    .tooltip(isPresented: $plain, edge: .top) {
+                        HStack(spacing: Theme.SpacingKey.xs.value) {
+                            Image(systemName: "wifi")
+                            Text("Free Wi-Fi")
+                            Badge("New").badgeStyle(.success).size(.small)
+                        }
+                    }
+                // Rich content on a tinted bubble.
+                Icon(systemName: "creditcard").size(.md)
+                    .tooltip(isPresented: $tinted, edge: .bottom, color: .info, maxWidth: 180) {
+                        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                            Text("Installments available").fontWeight(.semibold)
+                            Text("Split the total into 3 payments at no extra cost.")
+                        }
+                    }
             }
             .padding(80)
         }
