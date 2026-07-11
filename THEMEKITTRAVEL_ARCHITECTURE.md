@@ -1,6 +1,9 @@
 # ThemeKitTravel — Domain-Edition Architecture Decision Record & Build Plan
 
-**Author:** iOS Architect agent · **Date:** 2026-07-10 · **Status:** REVISED — sr-ios-dev pressure-test complete (2026-07-10, probe-proven); call-site revisions folded in (see §1.4). Architecture holds; no structural change; F0.3/F1.1/F1.2/F1.3 all GO with revisions.
+**Author:** iOS Architect agent · **Date:** 2026-07-10 · **Status:** ✅ **IMPLEMENTED** (2026-07-12) — the full F0→F4 build plan (§12) has shipped to `main`. All 12 gap components + foundation files exist; the 2.0 flight-family extraction is complete. Superseded planning note below: *REVISED — sr-ios-dev pressure-test complete (2026-07-10, probe-proven); call-site revisions folded in (see §1.4). Architecture holds; no structural change; F0.3/F1.1/F1.2/F1.3 all GO with revisions.*
+
+**Implementation status (phase → PR):** F0.1 packaging #257 · F0.2 model consolidation #258 · F0.4 edition models + `FlightDefaults` #259 · F0.3 `FormatDefaults` + currency sweep #260 · F1.1 PhoneField + DialCode (neutral) #261 · F1.2 PassengerForm + F1.3 PaymentMethodSelector #262 · F2 search cluster (CabinClassSelector, AirportPicker, TripSearchCard, favorite parity) #264 · F3 journey & periphery (SavedCardsList, TransportCrossSellCard, FlightTracker, CheckInFlow, LanguageSwitcher) #266 · F4 2.0 extraction #272 · Demo showcase #273/#275 · audit polish #265/#277/#278. All open questions (§13) resolved 2026-07-10. Remaining threads are **roadmap-only** (issue #229): future Stay/Transport clusters join the same module — out of scope for this ADR.
+
 **Companion docs:** `HEROUI_INFRA_PLAN.md` (cross-cutting infra ADRs T1–T8 + sr-ios-dev review — this plan *builds on* those primitives), `HEROUI_NATIVE_AUDIT.md` (per-component gaps), issue #229 / memory `themekit-modular-roadmap` (Core split + domain-edition direction), `.claude/skills/themekit-authoring` (the 6 house rules).
 
 ---
