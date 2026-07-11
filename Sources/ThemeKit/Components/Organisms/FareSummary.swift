@@ -11,30 +11,6 @@
 
 import SwiftUI
 
-/// One line of a ``FareSummary``.
-public struct FareLine: Identifiable, Sendable, Equatable, Codable {
-    public enum Kind: String, Sendable, Codable { case item, discount, total }
-    /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
-    public var id: String { "\(kind.rawValue):\(label)" }
-    let label: String
-    let amount: Decimal
-    let kind: Kind
-    let info: String?
-
-    /// A regular charge (base fare, taxes, a service fee…).
-    public static func item(_ label: String, _ amount: Decimal, info: String? = nil) -> FareLine {
-        .init(label: label, amount: amount, kind: .item, info: info)
-    }
-    /// A saving — rendered green with a leading minus.
-    public static func discount(_ label: String, _ amount: Decimal, info: String? = nil) -> FareLine {
-        .init(label: label, amount: amount, kind: .discount, info: info)
-    }
-    /// The emphasised total — rendered as a hero `PriceTag` under a divider.
-    public static func total(_ label: String, _ amount: Decimal, info: String? = nil) -> FareLine {
-        .init(label: label, amount: amount, kind: .total, info: info)
-    }
-}
-
 /// A token-bound fare breakdown.
 ///
 /// ```swift
