@@ -16,13 +16,17 @@ import Foundation
 public enum FlightStatus: String, Sendable, CaseIterable {
     case onTime, boarding, delayed, gateClosed, departed, arrived, cancelled
 
-    var label: String {
+    /// Default English display label (overridable at every render site).
+    /// Public so editions (e.g. `FlightTracker`) reuse the canonical wording.
+    public var label: String {
         switch self {
         case .onTime: "On time"; case .boarding: "Boarding"; case .delayed: "Delayed"
         case .gateClosed: "Gate closed"; case .departed: "Departed"; case .arrived: "Arrived"; case .cancelled: "Cancelled"
         }
     }
-    var semantic: SemanticColor {
+    /// The status's semantic tone — the single source of truth for status
+    /// colouring across the flight family (badge, tracker progress, estimates).
+    public var semantic: SemanticColor {
         switch self {
         case .onTime, .arrived: .success
         case .boarding, .departed: .info
@@ -30,7 +34,8 @@ public enum FlightStatus: String, Sendable, CaseIterable {
         case .cancelled: .error
         }
     }
-    var icon: String {
+    /// SF Symbol name paired with the status.
+    public var icon: String {
         switch self {
         case .onTime: "checkmark.circle.fill"; case .boarding: "figure.walk"; case .delayed: "clock.fill"
         case .gateClosed: "lock.fill"; case .departed: "airplane.departure"; case .arrived: "airplane.arrival"; case .cancelled: "xmark.circle.fill"

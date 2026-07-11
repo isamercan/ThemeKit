@@ -20,7 +20,7 @@ import ThemeKit
 final class AirportPickerSnapshotTests: SnapshotTestCase {
 
     private let ist = Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR")
-    private let saw = Airport(code: "SAW", name: "Sabiha Gokcen Airport", city: "Istanbul", countryCode: "TR")
+    private let saw = Airport(code: "SAW", name: "Istanbul East Airport", city: "Istanbul", countryCode: "TR")
     private let lhr = Airport(code: "LHR", name: "Heathrow Airport", city: "London", countryCode: "GB")
     private let lgw = Airport(code: "LGW", name: "Gatwick Airport", city: "London", countryCode: "GB")
     private let jfk = Airport(code: "JFK", name: "John F. Kennedy Airport", city: "New York", countryCode: "US")

@@ -398,7 +398,7 @@ private extension View {
 
 private let previewAirports: [Airport] = [
     Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR"),
-    Airport(code: "SAW", name: "Sabiha Gokcen Airport", city: "Istanbul", countryCode: "TR"),
+    Airport(code: "SAW", name: "Istanbul East Airport", city: "Istanbul", countryCode: "TR"),
     Airport(code: "LHR", name: "Heathrow Airport", city: "London", countryCode: "GB"),
     Airport(code: "LGW", name: "Gatwick Airport", city: "London", countryCode: "GB"),
     Airport(code: "JFK", name: "John F. Kennedy Airport", city: "New York", countryCode: "US"),
