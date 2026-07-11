@@ -262,6 +262,16 @@ public extension Steps {
     }
 }
 
+public extension Steps.Step {
+    /// A copy of this step with a different ``StepState`` — title, description,
+    /// icon and percent are preserved. Lets flow scaffolds (e.g. an edition's
+    /// `CheckInFlow`) derive header states from a selection index without
+    /// re-declaring the steps.
+    func with(state: StepState) -> Steps.Step {
+        Steps.Step(title, description: description, systemImage: systemImage, state: state, percent: percent)
+    }
+}
+
 #Preview {
     VStack(spacing: 40) {
         Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])

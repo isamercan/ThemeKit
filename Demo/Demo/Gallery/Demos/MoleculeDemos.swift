@@ -1,3 +1,4 @@
+// REGISTER: LanguageSwitcher · deep-link "LanguageSwitcher" · molecule · isNew
 //
 //  MoleculeDemos.swift
 //  Demo
@@ -963,6 +964,50 @@ struct ScrollShadowDemo: View {
             Toggle("Horizontal chip row", isOn: $horizontal)
             Toggle("Longer fade", isOn: $long)
             Text(".auto follows the scroll position (iOS 18+); explicit modes are always-on.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct LanguageSwitcherDemo: View {
+    enum Variant: String, CaseIterable { case menu, list, inline }
+    @State private var variant: Variant = .menu
+    @State private var code = "en"
+    @State private var flags = true
+    @State private var native = true
+    @State private var accented = false
+    @State private var enabled = true
+    @State private var readOnly = false
+
+    private var languages: [AppLanguage] {
+        [AppLanguage(code: "en"), AppLanguage(code: "de"), AppLanguage(code: "fr"), AppLanguage(code: "ar")]
+    }
+    private var switcherVariant: LanguageSwitcherVariant {
+        switch variant { case .menu: return .menu; case .list: return .list; case .inline: return .inline }
+    }
+
+    var body: some View {
+        ComponentStage("LanguageSwitcher", inspector: [
+            ("variant", variant.rawValue), ("selection", code),
+            ("nativeNames", "\(native)"), ("readOnly", "\(readOnly)"),
+        ]) {
+            LanguageSwitcher(variant == .inline ? Array(languages.prefix(3)) : languages, selection: $code)
+                .variant(switcherVariant)
+                .showsFlags(flags)
+                .nativeNames(native)
+                .accent(accented ? .success : nil)
+                .readOnly(readOnly)
+                .disabled(!enabled)
+        } knobs: {
+            Picker("Variant", selection: $variant) {
+                ForEach(Variant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Toggle("Flags", isOn: $flags)
+            Toggle("Native names (endonyms)", isOn: $native)
+            Toggle("Success accent", isOn: $accented)
+            Toggle("Enabled", isOn: $enabled)
+            Toggle("Read-only", isOn: $readOnly)
+            Text("Names derive from Locale — endonyms by default, exonyms in the environment locale when off.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }
