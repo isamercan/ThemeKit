@@ -34,9 +34,15 @@ import ThemeKit
 // MARK: - Variant
 
 /// How ``TripSearchCard`` presents: the standard `.card`, a larger `.hero`
-/// treatment for landing headers, or a `.compact` collapsed summary row that
-/// expands into the full editor on tap.
-public enum TripSearchVariant: Sendable { case card, hero, compact }
+/// treatment for landing headers, a `.compact` collapsed summary row that
+/// expands into the full editor on tap, or an `.inlineBar` — a single-row
+/// horizontal bar for wide/iPad headers (narrow widths fall back to the
+/// stacked editor via `ViewThatFits`).
+public enum TripSearchVariant: Sendable { case card, hero, compact, inlineBar }
+
+/// Vertical density of the editor: `.regular` (default) or `.compact` —
+/// tighter stacks resolved from spacing tokens.
+public enum TripSearchDensity: Sendable { case compact, regular }
 
 // MARK: - TripSearchCard
 
@@ -88,6 +94,19 @@ public struct TripSearchCard: View {
     /// internal to that module); evaluated immediately at the modifier call
     /// site, so nothing escapes.
     private var promoContent: AnyView?
+    /// Header slot above the editor (distinct from `.promo`).
+    private var headerContent: AnyView?
+    /// Footer slot below the editor (after `.promo`).
+    private var footerContent: AnyView?
+    /// Replaces the CTA button's built-in label; submit + disable wiring stay.
+    private var ctaLabelContent: AnyView?
+    private var densityValue: TripSearchDensity = .regular
+    private var originIconName: String?
+    private var destinationIconName: String?
+    private var departureIconName: String?
+    private var passengersIconName: String?
+    private var showsSwapValue = true
+    private var passengerDetents: [BottomSheetDetent] = [.medium]
 
     /// UI-only state (house rule 1): sheet + compact-expansion + swap spin.
     @State private var isPassengerSheetPresented = false
@@ -148,25 +167,62 @@ public struct TripSearchCard: View {
         if variant == .compact && !isExpanded {
             summaryRow
         } else {
-            form
+            VStack(alignment: .leading, spacing: stackSpacing) {
+                if variant == .compact { collapseHeader }
+                if let headerContent { headerContent }
+                if variant == .inlineBar { inlineRun } else { editorStack }
+                if let promoContent { promoContent }
+                if let footerContent { footerContent }
+            }
+            // `.oneWay` hides the return field; gated by `microAnimations` + Reduce Motion.
+            .animation(motion, value: draft.tripType)
         }
     }
 
-    // MARK: - Form (the full editor)
+    /// Stack gap from the density axis (token-fed).
+    private var stackSpacing: CGFloat {
+        densityValue == .compact ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
+    }
 
-    private var form: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            if variant == .compact { collapseHeader }
+    // MARK: - Form (the full stacked editor)
+
+    private var editorStack: some View {
+        VStack(alignment: .leading, spacing: stackSpacing) {
             if showsTripType { tripTypeToggle }
             routeFields
             dateFields
             passengersTrigger
             if showsCabinPicker { cabinSection }
-            cta
-            if let promoContent { promoContent }
+            cta(fullWidth: true)
         }
-        // `.oneWay` hides the return field; gated by `microAnimations` + Reduce Motion.
-        .animation(motion, value: draft.tripType)
+    }
+
+    // MARK: - Inline bar (single-row editor for wide/iPad headers)
+
+    /// One horizontal run of the core fields; when the row can't fit (narrow
+    /// widths, accessibility type sizes) `ViewThatFits` falls back to the
+    /// stacked editor — nothing is ever clipped. Trip type and cabin stay
+    /// draft-driven (no room in one row); toggle them with the modifiers on
+    /// a wrapping toolbar if needed.
+    private var inlineRun: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+                originPicker
+                if showsSwapValue { swapControl("arrow.left.arrow.right") }
+                destinationPicker
+                DateField(String(themeKitTravel: "Departure"), date: $draft.departureDate)
+                    .range(effectiveDateRange)
+                    .icon(departureIconName ?? "calendar")
+                if showsReturnDate {
+                    DateField(String(themeKitTravel: "Return"), date: $draft.returnDate)
+                        .range(returnDateRange)
+                        .icon(departureIconName ?? "calendar")
+                }
+                passengersTrigger
+                cta(fullWidth: false)
+            }
+            editorStack
+        }
     }
 
     // MARK: Trip type (TripTypeToggle wrap — TripType ⇄ index)
@@ -199,7 +255,7 @@ public struct TripSearchCard: View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 originPicker
-                swapControl("arrow.left.arrow.right")
+                if showsSwapValue { swapControl("arrow.left.arrow.right") }
                 destinationPicker
             }
             VStack(spacing: Theme.SpacingKey.xs.value) {
@@ -207,31 +263,39 @@ public struct TripSearchCard: View {
                 destinationPicker
             }
             .overlay(alignment: .trailing) {
-                swapControl("arrow.up.arrow.down")
-                    .padding(.trailing, Theme.SpacingKey.lg.value)
+                if showsSwapValue {
+                    swapControl("arrow.up.arrow.down")
+                        .padding(.trailing, Theme.SpacingKey.lg.value)
+                }
             }
         }
     }
 
     private var originPicker: some View {
-        airportPicker(selection: $draft.origin, placeholder: String(themeKitTravel: "From"))
+        airportPicker(selection: $draft.origin,
+                      placeholder: String(themeKitTravel: "From"),
+                      icon: originIconName)
     }
 
     private var destinationPicker: some View {
-        airportPicker(selection: $draft.destination, placeholder: String(themeKitTravel: "To"))
+        airportPicker(selection: $draft.destination,
+                      placeholder: String(themeKitTravel: "To"),
+                      icon: destinationIconName)
     }
 
     /// The embedded §9.4 picker — sheet presentation (FieldButton trigger),
     /// fed by the caller-owned dataset plumbed through `airports(…)` /
     /// `onAirportQuery(_:)`. The picker owns the query debounce; this card
     /// never spawns work of its own.
-    private func airportPicker(selection: Binding<Airport?>, placeholder: String) -> some View {
+    private func airportPicker(selection: Binding<Airport?>, placeholder: String,
+                               icon: String?) -> some View {
         var picker = AirportPicker(selection: selection, suggestions: suggestions)
             .presentation(.sheet)
             .placeholder(placeholder)
             .recent(recentAirports)
             .popular(popularAirports)
             .accent(accentColor)
+        if let icon { picker = picker.triggerIcon(icon) }
         if let airportQueryAction { picker = picker.onQueryChange(airportQueryAction) }
         return picker
     }
@@ -258,11 +322,11 @@ public struct TripSearchCard: View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             DateField(String(themeKitTravel: "Departure"), date: $draft.departureDate)
                 .range(effectiveDateRange)
-                .icon("calendar")
+                .icon(departureIconName ?? "calendar")
             if showsReturnDate {
                 DateField(String(themeKitTravel: "Return"), date: $draft.returnDate)
                     .range(returnDateRange)
-                    .icon("calendar")
+                    .icon(departureIconName ?? "calendar")
                     .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
         }
@@ -291,8 +355,8 @@ public struct TripSearchCard: View {
     private var passengersTrigger: some View {
         FieldButton(passengerSummary) { isPassengerSheetPresented = true }
             .label(String(themeKitTravel: "Passengers"))
-            .icon("person.2")
-            .bottomSheet(isPresented: $isPassengerSheetPresented, detents: [.medium]) {
+            .icon(passengersIconName ?? "person.2")
+            .bottomSheet(isPresented: $isPassengerSheetPresented, detents: passengerDetents) {
                 passengerSheet
             }
     }
@@ -347,15 +411,34 @@ public struct TripSearchCard: View {
 
     // MARK: CTA
 
-    private var cta: some View {
-        PrimaryButton(ctaTitle) {
-            guard !isReadOnly else { return }   // E1 — read-only never submits
-            onSearch(draft)
+    /// The submit control. A `.ctaLabel { }` slot replaces the button's look
+    /// (caller-styled label inside a plain button) while the submit guard and
+    /// completeness-driven `.disabled` wiring stay intact.
+    @ViewBuilder
+    private func cta(fullWidth: Bool) -> some View {
+        if let ctaLabelContent {
+            Button {
+                guard !isReadOnly else { return }   // E1 — read-only never submits
+                onSearch(draft)
+            } label: {
+                ctaLabelContent
+                    .frame(maxWidth: fullWidth ? .infinity : nil)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!isDraftComplete)
+            .allowsHitTesting(!isReadOnly)
+            .accessibilityAddTraits(.isButton)
+        } else {
+            PrimaryButton(ctaTitle) {
+                guard !isReadOnly else { return }   // E1 — read-only never submits
+                onSearch(draft)
+            }
+            .size(variant == .hero ? .large : .medium)
+            .fullWidth(fullWidth)
+            .disabled(!isDraftComplete)
+            .allowsHitTesting(!isReadOnly)
         }
-        .size(variant == .hero ? .large : .medium)
-        .fullWidth()
-        .disabled(!isDraftComplete)
-        .allowsHitTesting(!isReadOnly)
     }
 
     // MARK: Compact (collapsed summary row → expands to the full editor)
@@ -497,6 +580,50 @@ public extension TripSearchCard {
         copy { $0.promoContent = AnyView(content()) }
     }
 
+    /// Header slot above the editor (canonical `.header { }`) — e.g. a title
+    /// or a route breadcrumb. Distinct from `.promo` (which sits under the CTA).
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.headerContent = AnyView(content()) }
+    }
+
+    /// Footer slot below the editor and the promo (canonical `.footer { }`) —
+    /// e.g. a fare-rules note.
+    func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.footerContent = AnyView(content()) }
+    }
+
+    /// Replaces the CTA button's built-in label with caller content. The
+    /// submit action, read-only guard and completeness-driven disabling are
+    /// preserved; the caller owns the label's look entirely.
+    func ctaLabel<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.ctaLabelContent = AnyView(content()) }
+    }
+
+    /// Editor density: `.regular` (default) or `.compact` — tighter stacks
+    /// resolved from spacing tokens.
+    func density(_ d: TripSearchDensity) -> Self { copy { $0.densityValue = d } }
+
+    /// Overrides the field icons (SF Symbol names); `nil` keeps each field's
+    /// stock symbol (origin/destination "airplane", departure "calendar",
+    /// passengers "person.2"). The departure icon also styles the return field.
+    func fieldIcons(origin: String? = nil, destination: String? = nil,
+                    departure: String? = nil, passengers: String? = nil) -> Self {
+        copy {
+            $0.originIconName = origin
+            $0.destinationIconName = destination
+            $0.departureIconName = departure
+            $0.passengersIconName = passengers
+        }
+    }
+
+    /// Show the origin/destination swap affordance (default on).
+    func showsSwap(_ on: Bool = true) -> Self { copy { $0.showsSwapValue = on } }
+
+    /// Detents for the passengers bottom sheet (default `[.medium]`).
+    func passengerSheetDetents(_ detents: [BottomSheetDetent]) -> Self {
+        copy { $0.passengerDetents = detents.isEmpty ? [.medium] : detents }
+    }
+
     /// Seeds the compact variant expanded (previews/snapshots only).
     internal func seedExpanded(_ on: Bool = true) -> Self {
         copy { $0._isExpanded = State(initialValue: on) }
@@ -582,6 +709,51 @@ private func previewDraft(roundTrip: Bool = true) -> TripSearchDraft {
                 }
                 .padding()
             }
+        }
+    }
+    return Demo()
+}
+
+#Preview("Inline bar · slots · density · icons · detents") {
+    struct Demo: View {
+        @Environment(\.theme) private var theme
+        @State private var bar = previewDraft()
+        @State private var dense = previewDraft(roundTrip: false)
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Single-row bar for wide hosts (stacks when it can't fit).
+                    TripSearchCard(draft: $bar) { _ in }
+                        .variant(.inlineBar)
+                        .showsSwap(false)
+                        .header {
+                            Text("Find your next flight").textStyle(.headingSm)
+                        }
+
+                    // Compact density + custom field icons + custom CTA label
+                    // + footer + tall passenger sheet.
+                    TripSearchCard(draft: $dense) { _ in }
+                        .density(.compact)
+                        .fieldIcons(origin: "airplane.departure",
+                                    destination: "airplane.arrival",
+                                    departure: "calendar.badge.clock",
+                                    passengers: "person.3")
+                        .passengerSheetDetents([.large])
+                        .ctaLabel {
+                            HStack(spacing: Theme.SpacingKey.xs.value) {
+                                Icon(systemName: "magnifyingglass").size(.sm)
+                                Text("Let's go").textStyle(.labelBase700)
+                            }
+                            .padding(Theme.SpacingKey.sm.value)
+                        }
+                        .footer {
+                            Text("Prices include all taxes and fees.")
+                                .textStyle(.bodySm400)
+                        }
+                }
+                .padding()
+            }
+            .background(theme.background(.bgBase))
         }
     }
     return Demo()

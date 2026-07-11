@@ -27,8 +27,17 @@
 import SwiftUI
 import ThemeKit
 
-/// Layout archetype of a ``TransportCrossSellCard``: notched strip or flat row.
-public enum TransportCrossSellVariant: Sendable { case ribbon, inline }
+/// Layout archetype of a ``TransportCrossSellCard``: notched strip (`.ribbon`),
+/// flat row (`.inline`), or a compact vertical card for grids (`.tile`).
+public enum TransportCrossSellVariant: Sendable { case ribbon, inline, tile }
+
+/// Size ramp of a ``TransportCrossSellCard`` — scales the mode glyph, the
+/// `PriceTag` and the paddings together.
+public enum TransportCrossSellSize: Sendable { case small, medium }
+
+/// The ribbon's tear-line chrome: the TicketStub-style `.notched` cut with a
+/// dashed perforation (default), or a `.plain` rounded strip with no cut.
+public enum TearStyle: Sendable { case notched, plain }
 
 /// A cross-sell for an alternative transport mode — "No flights? Take the
 /// bus/train" — with a mode glyph, route endpoints, a lead-in price and a CTA.
@@ -84,6 +93,11 @@ public struct TransportCrossSellCard: View {
     private let mode: Mode
     private let from: String
     private let to: String
+    /// Custom-mode overrides — set only by the `customMode` init; when set
+    /// they win over every `Mode`-derived value.
+    private var customGlyph: String?
+    private var customLabel: String?
+    private var customAccent: SemanticColor?
 
     // Config — mutated only through the modifiers below (R2).
     private var priceAmount: Decimal?
@@ -98,6 +112,12 @@ public struct TransportCrossSellCard: View {
     private var accentOverride: SemanticColor?
     private var logoSlot: AnyView?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var sizeValue: TransportCrossSellSize = .medium
+    private var tearStyleValue: TearStyle = .notched
+    private var badgeFillValue: FillVariant = .soft
+    /// Replaces the ribbon CTA button's built-in label (action preserved).
+    private var ctaLabelSlot: AnyView?
+    private var shadowStyleValue: ThemeKitCore.ShadowStyle = .soft
 
     /// Bespoke coupon geometry (TicketStub-class chrome) — fixed constants,
     /// not knobs: the notch cut radius and the dash inset past the notch.
@@ -111,16 +131,39 @@ public struct TransportCrossSellCard: View {
         self.to = to
     }
 
-    private var accent: SemanticColor { accentOverride ?? mode.defaultAccent }
+    /// R1 overload — a transport mode beyond the built-in four (shuttle,
+    /// funicular, ride-share…): its glyph, display label and default accent
+    /// come from the caller; everything else behaves like a stock mode.
+    public init(customMode systemImage: String, label: String, accent: SemanticColor,
+                from: String, to: String) {
+        self.mode = .bus   // inert — every mode-derived value is overridden
+        self.from = from
+        self.to = to
+        self.customGlyph = systemImage
+        self.customLabel = label
+        self.customAccent = accent
+    }
+
+    private var accent: SemanticColor { accentOverride ?? customAccent ?? mode.defaultAccent }
+    private var modeGlyph: String { customGlyph ?? mode.systemImage }
+    private var modeLabel: String { customLabel ?? mode.displayName }
     private var motion: Animation? {
         MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
     }
+
+    /// The size ramp, resolved once (token-fed paddings; Icon/PriceTag enums).
+    private var glyphIconSize: IconSize { sizeValue == .small ? .md : .lg }
+    private var sectionPad: CGFloat {
+        sizeValue == .small ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
+    }
+    private var ribbonPriceSize: PriceSize { sizeValue == .small ? .small : .medium }
 
     public var body: some View {
         Group {
             switch variantValue {
             case .ribbon: ribbon
             case .inline: inline
+            case .tile: tile
             }
         }
         .animation(motion, value: priceAmount)
@@ -132,14 +175,14 @@ public struct TransportCrossSellCard: View {
     private var ribbon: some View {
         HStack(spacing: 0) {
             glyphSection
-                .padding(Theme.SpacingKey.md.value)
+                .padding(sectionPad)
             // A zero-width marker whose center is the tear line, reported up so
             // the background carves its notches at exactly this x (mirrors under
             // RTL by construction — the anchor resolves after layout).
             Color.clear.frame(width: 0)
                 .anchorPreference(key: TearXAnchorKey.self, value: .center) { $0 }
             contentSection
-                .padding(Theme.SpacingKey.md.value)
+                .padding(sectionPad)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .backgroundPreferenceValue(TearXAnchorKey.self) { anchor in
@@ -157,14 +200,14 @@ public struct TransportCrossSellCard: View {
                 if let logoSlot {
                     logoSlot
                 } else {
-                    Icon(systemName: mode.systemImage)
-                        .size(.lg)
+                    Icon(systemName: modeGlyph)
+                        .size(glyphIconSize)
                         .accent(accent)
                 }
             }
             .padding(Theme.SpacingKey.sm.value)
             .background(Circle().fill(accent.soft))
-            Text(mode.displayName)
+            Text(modeLabel)
                 .textStyle(.labelSm600)
                 .foregroundStyle(theme.text(.textSecondary))
         }
@@ -176,7 +219,7 @@ public struct TransportCrossSellCard: View {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 routeLine
                 if let badgeText {
-                    Badge(badgeText).badgeStyle(badgeStyle).size(.small)
+                    Badge(badgeText).badgeStyle(badgeStyle).variant(badgeFillValue).size(.small)
                 }
             }
             if let metaLine {
@@ -186,15 +229,30 @@ public struct TransportCrossSellCard: View {
             }
             if priceAmount != nil || ctaAction != nil {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    if priceAmount != nil { priceTag(size: .medium) }
+                    if priceAmount != nil { priceTag(size: ribbonPriceSize) }
                     Spacer(minLength: 0)
-                    if let ctaTitle, ctaAction != nil {
-                        ThemeButton(ctaTitle) { select() }
-                            .color(accent)
-                            .size(.small)
+                    if ctaAction != nil {
+                        ctaControl
                     }
                 }
             }
+        }
+    }
+
+    /// The ribbon CTA: the caller's `.ctaLabel { }` content wrapped in the
+    /// same select action, or the stock `ThemeButton`.
+    @ViewBuilder
+    private var ctaControl: some View {
+        if let ctaLabelSlot {
+            Button { select() } label: {
+                ctaLabelSlot.contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isButton)
+        } else if let ctaTitle {
+            ThemeButton(ctaTitle) { select() }
+                .color(accent)
+                .size(sizeValue == .small ? .xsmall : .small)
         }
     }
 
@@ -212,15 +270,17 @@ public struct TransportCrossSellCard: View {
     /// The coupon surface: rounded fill, two `destinationOut` semicircular
     /// notches on the top/bottom edges at the tear x, and a vertical dashed
     /// perforation between them (TicketStub's drawing approach, rotated 90°).
+    /// `.tearStyle(.plain)` skips the cut and the perforation entirely.
     private func ribbonSurface(tearX: CGFloat?, size: CGSize) -> some View {
         let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+        let notched = tearStyleValue == .notched
         return ZStack {
             shape
                 .fill(theme.background(surfaceKey))
-                .overlay { if let tearX { notches(tearX: tearX, height: size.height) } }
+                .overlay { if notched, let tearX { notches(tearX: tearX, height: size.height) } }
                 .compositingGroup()                       // scope the destinationOut cut
-                .themeShadow(.soft)
-            if let tearX {
+                .themeShadow(shadowStyleValue)
+            if notched, let tearX {
                 dashedLine(x: tearX, height: size.height)
             }
         }
@@ -256,8 +316,8 @@ public struct TransportCrossSellCard: View {
                     if let logoSlot {
                         logoSlot
                     } else {
-                        Icon(systemName: mode.systemImage)
-                            .size(.md)
+                        Icon(systemName: modeGlyph)
+                            .size(sizeValue == .small ? .sm : .md)
                             .accent(accent)
                     }
                 }
@@ -276,6 +336,58 @@ public struct TransportCrossSellCard: View {
             }
             .accessibilityElement(children: .contain)
             .accessibilityLabel(accessibilityText)
+    }
+
+    // MARK: - Tile variant — compact vertical card for grids
+
+    private var tile: some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+        let face = VStack(spacing: Theme.SpacingKey.xs.value) {
+            Group {
+                if let logoSlot {
+                    logoSlot
+                } else {
+                    Icon(systemName: modeGlyph)
+                        .size(glyphIconSize)
+                        .accent(accent)
+                }
+            }
+            .padding(Theme.SpacingKey.sm.value)
+            .background(Circle().fill(accent.soft))
+            Text(modeLabel)
+                .textStyle(.labelSm600)
+                .foregroundStyle(theme.text(.textSecondary))
+            Text("\(from) – \(to)")   // en dash — direction-neutral under RTL
+                .textStyle(sizeValue == .small ? .labelSm600 : .labelBase600)
+                .foregroundStyle(theme.text(.textPrimary))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+            if let badgeText {
+                Badge(badgeText).badgeStyle(badgeStyle).variant(badgeFillValue).size(.small)
+            }
+            if priceAmount != nil {
+                priceTag(size: sizeValue == .small ? .small : .medium)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(sectionPad)
+        .background(theme.background(surfaceKey), in: shape)
+        .themeShadow(shadowStyleValue)
+
+        return Group {
+            if ctaAction != nil {
+                Button { select() } label: {
+                    face.contentShape(shape)
+                }
+                .buttonStyle(.plain)
+                .allowsHitTesting(!isReadOnly)
+                .accessibilityAddTraits(.isButton)
+            } else {
+                face
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityText)
     }
 
     // MARK: - Shared pieces
@@ -312,7 +424,7 @@ public struct TransportCrossSellCard: View {
 
     private var accessibilityText: String {
         var parts: [String] = [
-            String(themeKitTravel: "\(mode.displayName) from \(from) to \(to)")
+            String(themeKitTravel: "\(modeLabel) from \(from) to \(to)")
         ]
         if let durationText { parts.append(durationText) }
         if let departuresNote { parts.append(departuresNote) }
@@ -354,8 +466,27 @@ public extension TransportCrossSellCard {
     ) -> Self {
         copy { $0.ctaTitle = title; $0.ctaAction = action }
     }
-    /// Layout archetype: `.ribbon` (default, notched strip) or `.inline` (flat row).
+    /// Layout archetype: `.ribbon` (default, notched strip), `.inline` (flat
+    /// row), or `.tile` (compact vertical card for grids).
     func variant(_ v: TransportCrossSellVariant) -> Self { copy { $0.variantValue = v } }
+    /// Size ramp: `.medium` (default) or `.small` — scales the mode glyph,
+    /// the `PriceTag` and the paddings together.
+    func size(_ s: TransportCrossSellSize) -> Self { copy { $0.sizeValue = s } }
+    /// Ribbon tear-line chrome: `.notched` (default — the TicketStub cut +
+    /// dashed perforation) or `.plain` (an uncut rounded strip).
+    func tearStyle(_ t: TearStyle) -> Self { copy { $0.tearStyleValue = t } }
+    /// Fill variant of the badge (`.soft` default, `.solid`, `.outline`,
+    /// `.ghost`); its color keeps following the accent→style mapping.
+    func badgeVariant(_ v: FillVariant) -> Self { copy { $0.badgeFillValue = v } }
+    /// Replaces the ribbon CTA button's label with caller content — the
+    /// select action, accent gating and read-only behavior are preserved.
+    /// `.inline` and `.tile` draw no CTA button, so they ignore this slot
+    /// (documented no-op).
+    func ctaLabel<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.ctaLabelSlot = AnyView(content()) }
+    }
+    /// Shadow token under the ribbon/tile surface (default `.soft`).
+    func shadow(_ style: ThemeKitCore.ShadowStyle) -> Self { copy { $0.shadowStyleValue = style } }
     /// Overrides the mode-tinted accent (bus `.warning`, train `.info`,
     /// ferry `.turquoise`, car `.neutral`); `nil` restores the default.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentOverride = color } }
@@ -438,6 +569,53 @@ private struct TearXAnchorKey: PreferenceKey {
             .onSelect {}
     }
     .padding()
+}
+
+#Preview("Tiles · custom mode · sizes · tear/badge/shadow/ctaLabel") {
+    ScrollView {
+        VStack(spacing: Theme.SpacingKey.md.value) {
+            // Tile grid — including a custom mode beyond the 4-case enum.
+            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+                TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
+                    .variant(.tile)
+                    .price(34)
+                    .badge("Fastest")
+                    .onSelect {}
+                TransportCrossSellCard(customMode: "figure.wave", label: "Shuttle",
+                                       accent: .purple, from: "Airport", to: "Center")
+                    .variant(.tile)
+                    .price(9)
+                    .onSelect {}
+                TransportCrossSellCard(.ferry, from: "Harbor", to: "North Isle")
+                    .variant(.tile)
+                    .size(.small)
+                    .price(12)
+            }
+            // Plain tear + solid badge + elevated shadow + custom CTA label.
+            TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
+                .price(19)
+                .duration("6h 30m")
+                .badge("Cheapest")
+                .badgeVariant(.solid)
+                .tearStyle(.plain)
+                .shadow(.elevated)
+                .onSelect {}
+                .ctaLabel {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        Text("Book now").textStyle(.labelSm700)
+                        Icon(systemName: "arrow.forward").size(.xs)
+                    }
+                }
+            // Small ribbon ramp.
+            TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
+                .size(.small)
+                .price(28)
+                .duration("3h 40m")
+                .onSelect {}
+        }
+        .padding()
+    }
+    .background(Theme.shared.background(.bgSecondaryLight))
 }
 
 #Preview("RTL") {

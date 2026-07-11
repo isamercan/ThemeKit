@@ -48,6 +48,13 @@ public struct FlightResultRow: View {
     private var currencyCode: String?
     private var baggage: String?
     private var badge: String?
+    private var badgeStyle: BadgeStyle = .success
+    private var isSelected = false
+    private var elevation: CardElevation = .none
+    private var priceFractionDigits = 2
+    private var footerSlot: AnyView?
+    private var trailingSlot: AnyView?
+    private var detailsTitle = String(themeKit: "Details")
     /// Favourite/bookmark state — dual-mode via `ControllableState` (ADR-F4);
     /// renamed from `favorite`/`bookmark` so the nullary overloads aren't
     /// invalid redeclarations. Hidden until the `shows…` flags flip.
@@ -80,8 +87,8 @@ public struct FlightResultRow: View {
         // `.none` matches today's chrome: no shadow, hairline border.
         cardStyle.makeBody(configuration: CardStyleConfiguration(
             content: AnyView(rowContent),
-            elevation: .none,
-            isSelected: false,
+            elevation: elevation,
+            isSelected: isSelected,
             isPressed: false,
             surfaceKey: surfaceKey,
             radius: .box))
@@ -102,9 +109,16 @@ public struct FlightResultRow: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                priceBlock.frame(minWidth: 84, alignment: .trailing)
+                Group {
+                    if let trailingSlot { trailingSlot } else { priceBlock }
+                }
+                .frame(minWidth: 84, alignment: .trailing)
             }
-            if badge != nil || baggage != nil || urgencyText != nil || onDetails != nil { metaRow }
+            if let footerSlot {
+                footerSlot
+            } else if badge != nil || baggage != nil || urgencyText != nil || onDetails != nil {
+                metaRow
+            }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
     }
@@ -152,7 +166,7 @@ public struct FlightResultRow: View {
                     }
                 }
             }
-            if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero).fractionDigits(2) }
+            if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero).fractionDigits(priceFractionDigits) }
             if let totalLabel, let totalAmount {
                 Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)))")
                     .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)).fixedSize()
@@ -171,7 +185,7 @@ public struct FlightResultRow: View {
 
     @ViewBuilder private var metaRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            if let badge { Badge(badge).badgeStyle(.success).variant(.soft).size(.small) }
+            if let badge { Badge(badge).badgeStyle(badgeStyle).variant(.soft).size(.small) }
             if let baggage {
                 HStack(spacing: 3) {
                     Image(systemName: "suitcase.fill").font(.system(size: 11))
@@ -183,7 +197,7 @@ public struct FlightResultRow: View {
                 Text(urgencyText).textStyle(.overline500).foregroundStyle(theme.foreground(.systemcolorsFgError))
             }
             Spacer()
-            if let onDetails { TextLink(String(themeKit: "Details")) { onDetails() } }
+            if let onDetails { TextLink(detailsTitle) { onDetails() } }
         }
     }
 
@@ -228,6 +242,21 @@ public extension FlightResultRow {
     func baggage(_ text: String?) -> Self { copy { $0.baggage = text } }
     /// A success badge, e.g. "Best".
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
+    /// A meta-row badge with an explicit `BadgeStyle` (the one-argument form
+    /// keeps the classic `.success` styling).
+    func badge(_ text: String?, style: BadgeStyle) -> Self { copy { $0.badge = text; $0.badgeStyle = style } }
+    /// Selected state, fed to the active `CardStyle` (the default style draws a
+    /// hero border).
+    func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
+    /// Shell elevation, fed to the active `CardStyle` (default `.none` — today's
+    /// flat, hairline-only chrome).
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
+    /// Fraction digits for the fare `PriceTag` (default 2).
+    func priceFractionDigits(_ n: Int) -> Self { copy { $0.priceFractionDigits = max(0, n) } }
+    /// Replaces the built-in meta row (badge / baggage / urgency / Details).
+    func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
+    /// Replaces the built-in trailing price / favourite / Select area.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.trailingSlot = AnyView(content()) } }
     /// A heart toggle bound to a favourite flag (controlled — the caller owns
     /// persistence).
     func favorite(_ isFavorite: Binding<Bool>) -> Self {
@@ -258,6 +287,10 @@ public extension FlightResultRow {
     func onSelect(_ title: String = "Select", action: @escaping () -> Void) -> Self { copy { $0.selectTitle = title; $0.onSelect = action } }
     /// Adds a "Details" link in the meta row.
     func onDetails(_ action: @escaping () -> Void) -> Self { copy { $0.onDetails = action } }
+    /// Adds a meta-row link with a custom title (default "Details").
+    func onDetails(_ title: String = "Details", action: @escaping () -> Void) -> Self {
+        copy { $0.detailsTitle = title; $0.onDetails = action }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -281,6 +314,27 @@ public extension FlightResultRow {
         FlightResultRow(airline: "Sunrise Air", from: "IST", to: "LHR", departure: dep, arrival: dep.addingTimeInterval(3 * 3_600))
             .accent(.success).flightNo("SA 101").price(4_120).bookmark(.constant(true))
             .onSelect("Select") { }
+        // Styled badge · whole-number fare · selected/elevated shell · custom Details title.
+        FlightResultRow(airline: "Anadolu Air", from: "IST", to: "AYT", departure: dep, arrival: dep.addingTimeInterval(95 * 60))
+            .flightNo("TK 2436").price(3_950).priceFractionDigits(0)
+            .badge("Fastest", style: .info)
+            .onDetails("Fare rules") { }
+            .selected().elevation(.soft)
+        // Footer + trailing slots replace the meta row and the price area.
+        FlightResultRow(airline: "Blue Wings", from: "IST", to: "ADB", departure: dep, arrival: dep.addingTimeInterval(70 * 60))
+            .footer {
+                HStack {
+                    Badge("Charter").badgeStyle(.warning).variant(.soft).size(.small)
+                    Spacer()
+                    Text("Operated by partner").textStyle(.overline400)
+                }
+            }
+            .trailing {
+                VStack(alignment: .trailing, spacing: 4) {
+                    Badge("Sold out").badgeStyle(.error).size(.small)
+                    Text("Join waitlist").textStyle(.labelSm600)
+                }
+            }
     }
     .padding()
 }

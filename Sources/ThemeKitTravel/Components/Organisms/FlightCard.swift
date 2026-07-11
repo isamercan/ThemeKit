@@ -49,8 +49,14 @@ public struct FlightCard: View {
     private var price: Decimal?
     private var currencyCode: String?
     private var airlineSystemImage: String = "airplane.circle.fill"
+    private var airlineLogoURL: URL?
     private var badge: String?
+    private var badgeStyle: BadgeStyle = .success
+    private var selectTitle = String(themeKit: "Select")
     private var onSelect: (() -> Void)?
+    private var elevation: CardElevation = .none
+    private var isSelected = false
+    private var headerSlot: AnyView?
     /// Favourite state — dual-mode via `ControllableState` (ADR-F4); renamed
     /// from `favorite` so the nullary `func favorite()` overload isn't an
     /// invalid redeclaration. Hidden until `showsFavorite`.
@@ -91,8 +97,8 @@ public struct FlightCard: View {
         // `.none` matches today's chrome: no shadow, hairline border.
         cardStyle.makeBody(configuration: CardStyleConfiguration(
             content: AnyView(cardContent),
-            elevation: .none,
-            isSelected: false,
+            elevation: elevation,
+            isSelected: isSelected,
             isPressed: false,
             surfaceKey: surfaceKey,
             radius: .box))
@@ -102,7 +108,7 @@ public struct FlightCard: View {
     @MainActor
     private var cardContent: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-            header
+            if let headerSlot { headerSlot } else { header }
             routeContent
             if let scarcity { scarcityRow(scarcity) }
             if footerSlot != nil || price != nil || onSelect != nil { footer }
@@ -113,9 +119,13 @@ public struct FlightCard: View {
     @MainActor
     private var header: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            Image(systemName: airlineSystemImage)
-                .font(.title3)
-                .foregroundStyle(accentBase)
+            if let url = airlineLogoURL {
+                RemoteImage(url).ratio(1).frame(width: 22, height: 22)
+            } else {
+                Image(systemName: airlineSystemImage)
+                    .font(.title3)
+                    .foregroundStyle(accentBase)
+            }
             Text(airline).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
             if let fareBrand {
                 Text(fareBrand).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary))
@@ -123,7 +133,7 @@ public struct FlightCard: View {
                     .background(theme.background(.bgSecondaryLight), in: Capsule())
             }
             Spacer()
-            if let badge { Badge(badge).badgeStyle(.success).size(.small) }
+            if let badge { Badge(badge).badgeStyle(badgeStyle).size(.small) }
             if showsFavorite { favoriteButton }
         }
     }
@@ -267,9 +277,9 @@ public struct FlightCard: View {
                     // Accent set → semantic-colored ThemeButton; nil → the stock
                     // hero PrimaryButton, byte-for-byte today's rendering.
                     if let accent {
-                        ThemeButton(String(themeKit: "Select")) { onSelect() }.color(accent).size(.small)
+                        ThemeButton(selectTitle) { onSelect() }.color(accent).size(.small)
                     } else {
-                        PrimaryButton(String(themeKit: "Select")) { onSelect() }.size(.small)
+                        PrimaryButton(selectTitle) { onSelect() }.size(.small)
                     }
                 }
             }
@@ -313,8 +323,26 @@ public extension FlightCard {
     func airlineIcon(_ systemName: String) -> Self { copy { $0.airlineSystemImage = systemName } }
     /// A success badge in the header, e.g. `"Cheapest"`.
     func badge(_ text: String?) -> Self { copy { $0.badge = text } }
+    /// A header badge with an explicit `BadgeStyle` (the one-argument form keeps
+    /// the classic `.success` styling).
+    func badge(_ text: String?, style: BadgeStyle) -> Self { copy { $0.badge = text; $0.badgeStyle = style } }
+    /// A remote airline logo in the header (overrides the SF Symbol) — parity
+    /// with ``FlightResultRow/airlineLogo(_:)``.
+    func airlineLogo(_ url: URL?) -> Self { copy { $0.airlineLogoURL = url } }
+    /// Shell elevation, fed to the active `CardStyle` (default `.none` — today's
+    /// flat, hairline-only chrome).
+    func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
+    /// Selected state, fed to the active `CardStyle` (the default style draws a
+    /// hero border).
+    func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
     /// Adds a "Select" button to the footer.
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
+    /// Adds a footer button with a custom title (default "Select").
+    func onSelect(_ title: String = "Select", action: @escaping () -> Void) -> Self {
+        copy { $0.selectTitle = title; $0.onSelect = action }
+    }
+    /// Replaces the built-in airline / fare-brand / badge / heart header row.
+    func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
     /// A heart toggle in the header bound to a favourite flag (controlled —
     /// the caller owns persistence).
     func favorite(_ isFavorite: Binding<Bool>) -> Self {
@@ -352,6 +380,21 @@ public extension FlightCard {
         // Accented brand chrome — icon, route planes and Select follow the accent.
         FlightCard(airline: "Sunrise Air", from: "IST", to: "LHR", departure: dep, arrival: dep.addingTimeInterval(3 * 3_600))
             .accent(.success).price(2_199).onSelect { }
+        // Styled badge + custom Select title + selected/elevated shell.
+        FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arrival: arr)
+            .badge("Fastest", style: .info).price(1_499)
+            .onSelect("Book now") { }
+            .selected().elevation(.soft)
+        // Custom header slot replaces the built-in airline row.
+        FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: dep, arrival: dep.addingTimeInterval(4 * 3_600))
+            .header {
+                HStack {
+                    Badge("Round trip").badgeStyle(.info).size(.small)
+                    Spacer()
+                    Badge("Refundable").badgeStyle(.success).size(.small)
+                }
+            }
+            .price(3_499)
     }
     .padding()
 }

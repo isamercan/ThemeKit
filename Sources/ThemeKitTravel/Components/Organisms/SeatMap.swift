@@ -17,6 +17,16 @@
 import SwiftUI
 import ThemeKit
 
+/// Where a ``SeatMap`` renders its legend relative to the cabin.
+public enum LegendPlacement: Sendable {
+    /// Above the cabin (below the passenger rail / deck selector).
+    case top
+    /// Below the cabin — the default.
+    case bottom
+    /// Never — suppresses a `legend()` set further up a modifier chain.
+    case hidden
+}
+
 /// A generic, token-bound seat map.
 ///
 /// ```swift
@@ -59,6 +69,13 @@ public struct SeatMap: View {
     private var aisleWidthOverride: CGFloat?
     private var tierOverrides: [SeatTier: Color] = [:]
     private var accentOverride: SemanticColor?
+    private var seatShape: SeatShape = .rounded
+    private var legendPlacement: LegendPlacement = .bottom
+    private var fuselageSurfaceKey: Theme.BackgroundColorKey = .bgSecondaryLight
+    private var deckLabelProvider: ((Int) -> String)?
+    private var zoomBinding: Binding<CGFloat>?
+    private var sectionHeaderSlot: ((String) -> AnyView)?
+    private var summarySlot: ((SeatSummary) -> AnyView)?
 
     private let gutter: CGFloat = 22
     private var passengerMode: Bool { !passengers.isEmpty && assignment != nil }
@@ -96,16 +113,36 @@ public struct SeatMap: View {
                 PassengerRail(passengers: passengers, assignment: assignment ?? .constant([:]), active: $activePassenger, accent: accentOverride)
             }
             if index.floors.count > 1 {
-                DeckSelector(floors: index.floors, active: $activeFloor, accent: accentOverride)
+                DeckSelector(floors: index.floors, active: $activeFloor, accent: accentOverride,
+                             label: deckLabelProvider ?? { (floor: Int) in String(themeKit: "Deck \(floor)") })
             }
-            cabin.modifier(PinchZoom(enabled: zoomable, zoom: $zoom))
-            if showsLegend { SeatLegend(tiers: index.tiers, palette: palette) }
-            if showsInfo {
-                SeatSummaryBar(seat: focusedSeat.flatMap { index.byId[$0] },
-                               position: focusedSeat.flatMap { index.positions[$0] },
-                               palette: palette, selectedCount: selection.count,
-                               totalPrice: totalPrice, hasPrices: index.hasPrices, currencyCode: resolvedCurrency)
-            }
+            if legendVisible, legendPlacement == .top { legendView }
+            cabin.modifier(PinchZoom(enabled: zoomable, zoom: zoomBinding ?? $zoom))
+            if legendVisible, legendPlacement == .bottom { legendView }
+            if showsInfo || summarySlot != nil { summaryView }
+        }
+    }
+
+    private var legendVisible: Bool { showsLegend && legendPlacement != .hidden }
+
+    /// The legend inherits the map's palette and seat shape so the key matches.
+    private var legendView: some View {
+        SeatLegend(tiers: index.tiers, palette: palette).swatchShape(seatShape)
+    }
+
+    /// The `summaryBar { … }` slot when provided, else the built-in bar.
+    @ViewBuilder private var summaryView: some View {
+        let focused = focusedSeat.flatMap { index.byId[$0] }
+        let position = focusedSeat.flatMap { index.positions[$0] }
+        if let summarySlot {
+            summarySlot(SeatSummary(focusedSeat: focused,
+                                    isWindow: position?.window, isAisle: position?.aisle,
+                                    selectedCount: selection.count, totalPrice: totalPrice,
+                                    hasPrices: index.hasPrices, currencyCode: resolvedCurrency))
+        } else {
+            SeatSummaryBar(seat: focused, position: position,
+                           palette: palette, selectedCount: selection.count,
+                           totalPrice: totalPrice, hasPrices: index.hasPrices, currencyCode: resolvedCurrency)
         }
     }
 
@@ -117,16 +154,18 @@ public struct SeatMap: View {
         VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.xs.value)) {
             if showsLabels { columnHeader }
             ForEach(Array(visibleSections.enumerated()), id: \.offset) { _, section in
-                if let title = section.title { sectionHeader(title) }
+                if let title = section.title {
+                    if let sectionHeaderSlot { sectionHeaderSlot(title) } else { defaultSectionHeader(title) }
+                }
                 sectionRows(section)
             }
         }
         .dynamicTypeClamp()
         .padding(showsFuselage ? EdgeInsets(top: 46, leading: 18, bottom: 26, trailing: 18) : EdgeInsets())
-        .background { if showsFuselage { FuselageView() } }
+        .background { if showsFuselage { FuselageView(surfaceKey: fuselageSurfaceKey) } }
     }
 
-    private func sectionHeader(_ title: String) -> some View {
+    private func defaultSectionHeader(_ title: String) -> some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             Text(title.uppercased()).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
             Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
@@ -178,7 +217,7 @@ public struct SeatMap: View {
         return SeatCell(seat, size: seatSize, isSelected: selected, isSelectable: isSelectable(seat),
                         isRecommended: recommended.contains(seat.id), assignedInitials: assigned,
                         display: seatDisplay, palette: palette, customContent: customContent,
-                        currencyCode: resolvedCurrency, action: {
+                        currencyCode: resolvedCurrency, shape: seatShape, action: {
             focusedSeat = seat.id
             withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) {
                 if passengerMode { assignSeat(seat) } else { toggle(seat) }
@@ -305,6 +344,39 @@ public extension SeatMap {
     @available(*, deprecated, message: "Use tierColors(_: [SeatTier: SemanticColor]) — the token-bound overload.")
     func tierColors(_ overrides: [SeatTier: Color]) -> Self { copy { $0.tierOverrides = overrides } }
 
+    /// Token-stepped seat size (compact 36 · regular 44 · large 52 · xl 60).
+    /// Unlike the raw overload, `.compact` deliberately drops below the 44 pt
+    /// touch minimum — reserve it for read-only overview grids.
+    func seatSize(_ ramp: SeatSizeRamp) -> Self { copy { $0.seatSize = ramp.points } }
+    /// Token-fed aisle width — the gap cells take the spacing token's value.
+    func aisleWidth(_ key: Theme.SpacingKey) -> Self { copy { $0.aisleWidthOverride = key.value } }
+    /// The silhouette every seat is drawn with (`.rounded` default · `.circle` ·
+    /// `.seatback`). Forwarded to the legend so its swatches match.
+    func seatShape(_ shape: SeatShape) -> Self { copy { $0.seatShape = shape } }
+    /// Replaces the built-in cabin-section header — receives the section title.
+    func sectionHeader(@ViewBuilder _ content: @escaping (String) -> some View) -> Self {
+        copy { $0.sectionHeaderSlot = { AnyView(content($0)) } }
+    }
+    /// Replaces the built-in seat-summary bar — receives a live ``SeatSummary``
+    /// (focused seat, selection count, running total). Providing the slot shows
+    /// the bar even without `showsSeatInfo()`.
+    func summaryBar(@ViewBuilder _ content: @escaping (SeatSummary) -> some View) -> Self {
+        copy { $0.summarySlot = { AnyView(content($0)) } }
+    }
+    /// Where the legend renders relative to the cabin: `.top` · `.bottom`
+    /// (default) · `.hidden` (suppresses a `legend()` set upstream).
+    func legendPlacement(_ placement: LegendPlacement) -> Self { copy { $0.legendPlacement = placement } }
+    /// Surface fill of the fuselage frame (default `.bgSecondaryLight`).
+    func fuselageSurface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.fuselageSurfaceKey = key } }
+    /// Custom deck-pill titles for multi-deck cabins, e.g. `{ $0 == 1 ? "Main" : "Upper" }`.
+    func deckLabel(_ label: @escaping (Int) -> String) -> Self { copy { $0.deckLabelProvider = label } }
+    /// Pinch-to-zoom with the zoom scale exposed through the caller's binding —
+    /// drive it from zoom buttons, or persist it. Pass `nil` to keep the
+    /// internal state (same as ``zoomable(_:)``).
+    func zoomable(_ on: Bool = true, zoom: Binding<CGFloat>?) -> Self {
+        copy { $0.zoomable = on; $0.zoomBinding = zoom }
+    }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -396,6 +468,8 @@ private struct DeckSelector: View {
     let floors: [Int]
     @Binding var active: Int?
     let accent: SemanticColor?
+    /// Pill title per floor — `SeatMap.deckLabel(_:)` or the localized default.
+    let label: (Int) -> String
 
     private var activeFill: Color { accent?.solid ?? theme.foreground(.fgHero) }
     private var activeContent: Color { accent?.onSolid ?? theme.text(.textSecondaryInverse) }
@@ -405,13 +479,13 @@ private struct DeckSelector: View {
             ForEach(floors, id: \.self) { floor in
                 let isActive = (active ?? floors.first) == floor
                 Button { active = floor } label: {
-                    Text(String(themeKit: "Deck \(floor)")).textStyle(.labelSm600)
+                    Text(label(floor)).textStyle(.labelSm600)
                         .foregroundStyle(isActive ? activeContent : theme.text(.textPrimary))
                         .padding(.horizontal, 14).padding(.vertical, 6)
                         .background(isActive ? activeFill : theme.background(.bgSecondaryLight), in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "Deck \(floor)"))
+                .accessibilityLabel(label(floor))
                 .accessibilityAddTraits(isActive ? .isSelected : [])
             }
         }
@@ -496,11 +570,13 @@ private struct ExitBand: View {
 }
 
 /// The aircraft body used by `SeatMap.fuselage()` — a tapered nose + cockpit hint.
+/// `surfaceKey` comes from `SeatMap.fuselageSurface(_:)` (default `.bgSecondaryLight`).
 private struct FuselageView: View {
     @Environment(\.theme) private var theme
+    var surfaceKey: Theme.BackgroundColorKey = .bgSecondaryLight
     var body: some View {
         FuselageShape()
-            .fill(theme.background(.bgSecondaryLight))
+            .fill(theme.background(surfaceKey))
             .overlay(FuselageShape().stroke(theme.border(.borderPrimary), lineWidth: 1.5))
             .overlay(alignment: .top) {
                 Capsule().fill(theme.border(.borderPrimary)).frame(width: 34, height: 4).padding(.top, 14)
@@ -551,6 +627,8 @@ private struct PinchZoom: ViewModifier {
     struct Demo: View {
         @State private var picked: Set<String> = ["12C"]
         @State private var accentPicked: Set<String> = []
+        @State private var shapePicked: Set<String> = ["10C"]
+        @State private var zoomLevel: CGFloat = 1
         @State private var assignment: [String: String] = [:]
         private let sold: Set<String> = ["12B", "13E", "16A"]
         var body: some View {
@@ -565,12 +643,50 @@ private struct PinchZoom: ViewModifier {
                 .tierColors([.extraLegroom: .purple]).padding()
 
                 // Accent override — passenger rail + deck selector pick up the token.
+                // Custom deck-pill titles via `.deckLabel`.
                 SeatMap(columns: "AB CD", rows: Array(1...3), selection: $accentPicked) { _, row, _ in
                     SeatInfo(floor: row <= 2 ? 1 : 2)
                 }
                 .passengers([Passenger(id: "p1", initials: "AB"), Passenger(id: "p2", initials: "CD")],
                             assignment: $assignment)
                 .accent(.accent)
+                .deckLabel { $0 == 1 ? String(themeKit: "Main deck") : String(themeKit: "Upper deck") }
+                .padding()
+
+                // Full-flex axes: seatback silhouette, large ramp size, tight
+                // token aisle, legend on top, custom section header + summary bar.
+                SeatMap(sections: [SeatSection("Business", columns: "AB CD", rows: [1, 2]),
+                                   SeatSection("Economy", columns: "ABC DEF", rows: Array(10...12))],
+                        selection: $shapePicked)
+                    .seatShape(.seatback)
+                    .seatSize(.large)
+                    .aisleWidth(.lg)
+                    .legend().legendPlacement(.top)
+                    .fuselage().fuselageSurface(.bgBase)
+                    .sectionHeader { title in
+                        Badge(title).badgeStyle(.info).size(.small)
+                    }
+                    .summaryBar { summary in
+                        HStack {
+                            Text(summary.focusedSeat.map { String(themeKit: "Seat \($0.id)") }
+                                    ?? String(themeKit: "Pick a seat"))
+                                .textStyle(.labelBase700)
+                            Spacer()
+                            Text(String(themeKit: "\(summary.selectedCount) selected")).textStyle(.bodySm400)
+                        }
+                        .padding(Theme.SpacingKey.md.value)
+                        .background(Theme.shared.background(.bgSecondaryLight),
+                                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+                    }
+                    .padding()
+
+                // Controlled zoom binding — the slider drives the same scale as the pinch.
+                VStack {
+                    Slider(value: $zoomLevel, in: 1...2.5)
+                    SeatMap(columns: "AB", rows: Array(1...2), selection: $shapePicked)
+                        .seatShape(.circle)
+                        .zoomable(true, zoom: $zoomLevel)
+                }
                 .padding()
             }
         }

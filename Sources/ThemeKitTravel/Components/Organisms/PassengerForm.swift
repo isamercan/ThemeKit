@@ -42,6 +42,13 @@ public enum PassengerFormField: Hashable, Sendable, CaseIterable {
     case givenName, familyName, gender, dateOfBirth, nationality, documentNumber, documentExpiry
 }
 
+// MARK: - PassengerFormLayout
+
+/// Section chrome of a ``PassengerForm``: two `Fieldset`s (`.stacked`, the
+/// default), bare fields with plain section titles (`.flat`), or every field
+/// inside one `Fieldset` (`.grouped`).
+public enum PassengerFormLayout: Sendable { case stacked, flat, grouped }
+
 // MARK: - PassengerForm
 
 /// The editable traveler form for booking flows. Controlled-only: bind a
@@ -64,6 +71,7 @@ public enum PassengerFormField: Hashable, Sendable, CaseIterable {
 public struct PassengerForm: View {
     @Environment(\.theme) private var theme
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private let title: String
     @Binding private var draft: PassengerDraft
@@ -77,6 +85,16 @@ public struct PassengerForm: View {
     private var accent: SemanticColor?
     private var customHeader: AnyView?
     private var customFooter: AnyView?
+    /// Per-field title overrides (`label(_:for:)`); absent = built-in title.
+    private var labelOverrides: [PassengerFormField: String] = [:]
+    /// Section titles: `nil` = built-in, `""` = section renders without a title.
+    private var personalTitleOverride: String?
+    private var documentTitleOverride: String?
+    private var layoutValue: PassengerFormLayout = .stacked
+    /// Extra caller fields appended after the document section.
+    private var additionalFieldsSlot: AnyView?
+    private var genderOptions: [PassengerGender] = Array(PassengerGender.allCases)
+    private var columnsValue = 1
 
     /// R1 — title + controlled draft. Controlled-only (ADR-F4).
     public init(_ title: String, draft: Binding<PassengerDraft>) {
@@ -136,17 +154,28 @@ public struct PassengerForm: View {
                 titleHeader
             }
 
-            if !personalFields.isEmpty {
-                Fieldset(String(themeKitTravel: "Personal details")) {
-                    ForEach(personalFields, id: \.self) { field(for: $0) }
+            switch layoutValue {
+            case .stacked:
+                if !personalFields.isEmpty {
+                    section(title: resolvedPersonalTitle, fields: personalFields, chrome: true)
+                }
+                if !documentFields.isEmpty {
+                    section(title: resolvedDocumentTitle, fields: documentFields, chrome: true)
+                }
+            case .flat:
+                if !personalFields.isEmpty {
+                    section(title: resolvedPersonalTitle, fields: personalFields, chrome: false)
+                }
+                if !documentFields.isEmpty {
+                    section(title: resolvedDocumentTitle, fields: documentFields, chrome: false)
+                }
+            case .grouped:
+                if !fieldList.isEmpty {
+                    section(title: resolvedGroupedTitle, fields: fieldList, chrome: true)
                 }
             }
 
-            if !documentFields.isEmpty {
-                Fieldset(String(themeKitTravel: "Travel document")) {
-                    ForEach(documentFields, id: \.self) { field(for: $0) }
-                }
-            }
+            if let additionalFieldsSlot { additionalFieldsSlot }
 
             if let customFooter { customFooter }
         }
@@ -177,6 +206,113 @@ public struct PassengerForm: View {
             .accessibilityAddTraits(.isHeader)
     }
 
+    // MARK: Sections (layout + titles + column pairing)
+
+    /// `nil` = render the section without a title (`sectionTitles` passed "").
+    private var resolvedPersonalTitle: String? {
+        switch personalTitleOverride {
+        case nil: return String(themeKitTravel: "Personal details")
+        case "": return nil
+        case let custom: return custom
+        }
+    }
+
+    private var resolvedDocumentTitle: String? {
+        switch documentTitleOverride {
+        case nil: return String(themeKitTravel: "Travel document")
+        case "": return nil
+        case let custom: return custom
+        }
+    }
+
+    /// `.grouped` merges both sections under one `Fieldset` — an explicit
+    /// personal title wins, otherwise a merged default.
+    private var resolvedGroupedTitle: String? {
+        switch personalTitleOverride {
+        case nil: return String(themeKitTravel: "Traveler details")
+        case "": return nil
+        case let custom: return custom
+        }
+    }
+
+    /// One section: `Fieldset` chrome (or a plain labeled stack for `.flat` /
+    /// title-less sections) around the ordered, column-aware field run.
+    @ViewBuilder
+    private func section(title: String?, fields: [PassengerFormField], chrome: Bool) -> some View {
+        if chrome, let title {
+            Fieldset(title) { fieldRun(fields) }
+        } else {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                if let title {
+                    Text(title)
+                        .textStyle(.labelBase700)
+                        .foregroundStyle(theme.text(.textPrimary))
+                        .accessibilityAddTraits(.isHeader)
+                }
+                fieldRun(fields)
+            }
+        }
+    }
+
+    /// Whether the given/family pair renders side-by-side: `columns(2)` asked
+    /// for it, both names are in the run, and the type size isn't an
+    /// accessibility size (those always stack).
+    private func pairsNames(in fields: [PassengerFormField]) -> Bool {
+        columnsValue >= 2
+            && !dynamicTypeSize.isAccessibilitySize
+            && fields.contains(.givenName)
+            && fields.contains(.familyName)
+    }
+
+    /// The ordered fields; when pairing, the two name fields collapse into one
+    /// `ViewThatFits` row at the first name's position (narrow widths fall
+    /// back to stacked automatically).
+    @ViewBuilder
+    private func fieldRun(_ fields: [PassengerFormField]) -> some View {
+        let pairing = pairsNames(in: fields)
+        let secondName: PassengerFormField? = pairing
+            ? [PassengerFormField.givenName, .familyName]
+                .max { (fields.firstIndex(of: $0) ?? 0) < (fields.firstIndex(of: $1) ?? 0) }
+            : nil
+        ForEach(fields, id: \.self) { key in
+            if pairing, key == .givenName || key == .familyName {
+                if key != secondName {   // render the pair once, skip the later twin
+                    namePairRow
+                }
+            } else {
+                field(for: key)
+            }
+        }
+    }
+
+    /// Given/family side-by-side when they fit; stacked otherwise.
+    private var namePairRow: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+                givenNameField
+                familyNameField
+            }
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                givenNameField
+                familyNameField
+            }
+        }
+    }
+
+    /// The field's title: the `label(_:for:)` override or the built-in string.
+    private func fieldTitle(_ field: PassengerFormField) -> String {
+        if let override = labelOverrides[field] { return override }
+        switch field {
+        case .givenName: return String(themeKitTravel: "Given name")
+        case .familyName: return String(themeKitTravel: "Family name")
+        case .gender: return String(themeKitTravel: "Gender")
+        case .dateOfBirth: return String(themeKitTravel: "Date of birth")
+        case .nationality: return String(themeKitTravel: "Nationality")
+        case .documentNumber: return String(themeKitTravel: "Document number")
+        case .documentExpiry: return String(themeKitTravel: "Document expiry")
+        }
+    }
+
     @ViewBuilder
     private func field(for field: PassengerFormField) -> some View {
         switch field {
@@ -191,7 +327,7 @@ public struct PassengerForm: View {
     }
 
     private var givenNameField: some View {
-        var input = TextInput(String(themeKitTravel: "Given name"), text: $draft.givenName)
+        var input = TextInput(fieldTitle(.givenName), text: $draft.givenName)
             .keyboard(contentType: .givenName, submit: .next, capitalization: .words)
             .a11yID("passenger-form.given-name")
         if let form { input = input.field(.givenName, in: form) }
@@ -199,7 +335,7 @@ public struct PassengerForm: View {
     }
 
     private var familyNameField: some View {
-        var input = TextInput(String(themeKitTravel: "Family name"), text: $draft.familyName)
+        var input = TextInput(fieldTitle(.familyName), text: $draft.familyName)
             .keyboard(contentType: .familyName, submit: .next, capitalization: .words)
             .a11yID("passenger-form.family-name")
         if let form { input = input.field(.familyName, in: form) }
@@ -207,8 +343,8 @@ public struct PassengerForm: View {
     }
 
     private var genderField: some View {
-        var box = SelectBox(String(themeKitTravel: "Gender"),
-                            options: PassengerGender.allCases,
+        var box = SelectBox(fieldTitle(.gender),
+                            options: genderOptions,
                             selection: $draft.gender) { $0.label }
             .a11yID("passenger-form.gender")
         if let form {
@@ -219,7 +355,7 @@ public struct PassengerForm: View {
     }
 
     private var birthDateField: some View {
-        var field = DateField(String(themeKitTravel: "Date of birth"), date: $draft.dateOfBirth)
+        var field = DateField(fieldTitle(.dateOfBirth), date: $draft.dateOfBirth)
             .range(birthRange)
             .a11yID("passenger-form.date-of-birth")
         if let form {
@@ -230,7 +366,7 @@ public struct PassengerForm: View {
     }
 
     private var nationalityField: some View {
-        var box = SelectBox(String(themeKitTravel: "Nationality"),
+        var box = SelectBox(fieldTitle(.nationality),
                             options: nationalityCodes,
                             selection: $draft.nationality) { regionName($0) }
             .a11yID("passenger-form.nationality")
@@ -242,7 +378,7 @@ public struct PassengerForm: View {
     }
 
     private var documentNumberField: some View {
-        var input = TextInput(String(themeKitTravel: "Document number"), text: $draft.documentNumber)
+        var input = TextInput(fieldTitle(.documentNumber), text: $draft.documentNumber)
             .keyboard(submit: .next, capitalization: .characters)
             .required(isDocumentRequired)
             .a11yID("passenger-form.document-number")
@@ -256,7 +392,7 @@ public struct PassengerForm: View {
     }
 
     private var documentExpiryField: some View {
-        var field = DateField(String(themeKitTravel: "Document expiry"), date: $draft.documentExpiry)
+        var field = DateField(fieldTitle(.documentExpiry), date: $draft.documentExpiry)
             .range(expiryRange)   // picker prevents past dates; trip-date policy is the validator's
             .required(isDocumentRequired)
             .a11yID("passenger-form.document-expiry")
@@ -310,6 +446,47 @@ public extension PassengerForm {
 
     /// Bottom-aligned accessory area under the fieldsets.
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.customFooter = AnyView(content()) } }
+
+    /// Overrides one field's built-in title (e.g. "First name" for
+    /// `.givenName`). Chain once per field; unset fields keep their defaults.
+    func label(_ text: String, for field: PassengerFormField) -> Self {
+        copy { $0.labelOverrides[field] = text }
+    }
+
+    /// Overrides the section titles. `nil` keeps the built-in title
+    /// ("Personal details" / "Travel document"); an empty string hides the
+    /// title while keeping the section. In `.grouped` the personal title
+    /// names the single fieldset.
+    func sectionTitles(personal: String? = nil, document: String? = nil) -> Self {
+        copy {
+            $0.personalTitleOverride = personal
+            $0.documentTitleOverride = document
+        }
+    }
+
+    /// Section chrome: `.stacked` (two `Fieldset`s, default), `.flat` (bare
+    /// fields + plain titles, no fieldset chrome), or `.grouped` (everything
+    /// in one `Fieldset`).
+    func layout(_ l: PassengerFormLayout) -> Self { copy { $0.layoutValue = l } }
+
+    /// Extra caller-owned fields appended after the document section (before
+    /// the footer) — e.g. a frequent-flyer number. The slot inherits the
+    /// subtree's `FieldStyle`/`FieldDefaults`; validation of slot fields is
+    /// the caller's.
+    func additionalFields<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.additionalFieldsSlot = AnyView(content()) }
+    }
+
+    /// The gender selector's options (default: all ``PassengerGender`` cases)
+    /// — e.g. `[.female, .male]` for carriers that don't file "Unspecified".
+    func genders(_ options: [PassengerGender]) -> Self {
+        copy { $0.genderOptions = options.isEmpty ? Array(PassengerGender.allCases) : options }
+    }
+
+    /// `2` renders given/family side-by-side (via `ViewThatFits`, so narrow
+    /// widths still stack); accessibility type sizes always fall back to
+    /// stacked. Default `1`.
+    func columns(_ n: Int) -> Self { copy { $0.columnsValue = min(2, max(1, n)) } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -391,6 +568,42 @@ public extension PassengerForm {
                         .documentRequired()
                         .nationalities(["DE", "FR", "JP", "BR", "NO"])
                         .birthDateRange(Date.distantPast...Date.now)
+                }
+                .padding()
+            }
+            .background(theme.background(.bgBase))
+        }
+    }
+    return Demo()
+}
+
+#Preview("Layouts · labels · columns · genders · extra fields") {
+    struct Demo: View {
+        @Environment(\.theme) private var theme
+        @State private var flat = PassengerDraft()
+        @State private var grouped = PassengerDraft()
+        @State private var loyalty = ""
+
+        var body: some View {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
+                    // Flat layout, custom labels, side-by-side names, trimmed genders.
+                    PassengerForm("Traveler 1", draft: $flat)
+                        .layout(.flat)
+                        .columns(2)
+                        .label("First name", for: .givenName)
+                        .label("Last name", for: .familyName)
+                        .genders([.female, .male])
+                        .sectionTitles(personal: "Who is flying?", document: "")
+
+                    // Grouped layout + additional caller field after the documents.
+                    PassengerForm("Traveler 2", draft: $grouped)
+                        .layout(.grouped)
+                        .sectionTitles(personal: "Traveler details")
+                        .additionalFields {
+                            TextInput("Frequent flyer number", text: $loyalty)
+                                .keyboard(capitalization: .characters)
+                        }
                 }
                 .padding()
             }

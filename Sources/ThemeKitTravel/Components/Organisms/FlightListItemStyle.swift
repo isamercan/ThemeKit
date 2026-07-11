@@ -5,7 +5,7 @@
 //  The styling hook for ``FlightListItem`` — and the most data-rich style
 //  protocol in the library: the configuration hands styles the *typed flight
 //  data* (legs, fares, deal signals, schedule), not pre-laid content, so a
-//  style owns the entire layout. Eight built-ins cover the industry's
+//  style owns the entire layout. Twelve built-ins cover the industry's
 //  search-result archetypes (researched across Skyscanner, Google Flights,
 //  Kayak, Hopper, Delta/THY fare boards, Kiwi itineraries, Expedia bundles):
 //
@@ -17,6 +17,10 @@
 //    .journey    expandable per-leg vertical timeline (Kayak/Kiwi details)
 //    .slices     one card per itinerary, stacked slice rows (Expedia round trip)
 //    .timetable  carrier-grouped departure-time chips (Skyscanner widget)
+//    .tray       nested white card on a soft tray with a CTA rail (design-system spec)
+//    .tile       vertical card for horizontal carousels (destination-deal shelves)
+//    .hero       featured tall card: deal strip + big price + amenities
+//    .receipt    checkout summary — labeled fields, no tap affordance
 //
 //      FlightListItem(legs: [out, back]).price(438, caption: "total")
 //          .flightListItemStyle(.slices)
@@ -80,6 +84,35 @@ public struct FlightListItemConfiguration {
     /// Flips `isFavorite` (animated, `MicroMotion`-gated). Styles with a heart
     /// call this — mirrors `toggleExpand`.
     public let toggleFavorite: (() -> Void)?
+    /// Selection accent (`FlightListItem.accent(_:)`), or `nil` for the theme's
+    /// hero tokens — resolve via ``accentBorder(_:)`` and friends.
+    public let accent: SemanticColor?
+    /// Corner-radius role override (`FlightListItem.radius(_:)`); `nil` = the
+    /// style's standard `.box`. Resolve via ``cornerRadius``.
+    public let radiusRole: Theme.RadiusRole?
+    /// The environment's component density, captured by the component — scale
+    /// chrome padding/gaps with ``spacing(_:)``.
+    public let density: ComponentDensity
+    /// Generic icon + text meta pairs (`FlightListItem.meta(_:)`) — styles with
+    /// a meta row render them in order.
+    public let metaItems: [(icon: String, text: String)]
+    /// Optional trailing accessory for the identity row (`.accessory { }`).
+    /// Styles that predate this field simply ignore it.
+    public let accessory: AnyView?
+    /// Optional footer below the style's content (`.footer { }`).
+    public let footer: AnyView?
+    /// The chosen fare id — fed by `FlightListItem.selectedFare(_:)` or the
+    /// item's own uncontrolled state. Fare-aware styles read this instead of
+    /// keeping a private selection.
+    public let selectedFareID: String?
+    /// Reports a fare-chip tap. Fare-aware styles call this; when `nil`
+    /// (a hand-built configuration) styles fall back to local state.
+    public let onFareSelect: ((String) -> Void)?
+    /// The chosen departure time (`.timetable`) — controlled/uncontrolled like
+    /// ``selectedFareID``, via `FlightListItem.selectedDeparture(_:)`.
+    public let selectedDeparture: Date?
+    /// Reports a departure-chip tap — mirrors ``onFareSelect``.
+    public let onDepartureSelect: ((Date) -> Void)?
 
     /// The itinerary's first leg — every style's primary subject.
     public var leg: FlightLeg { legs[0] }
@@ -88,6 +121,24 @@ public struct FlightListItemConfiguration {
     public func surface(default fallback: Theme.BackgroundColorKey) -> Theme.BackgroundColorKey {
         surfaceKey ?? fallback
     }
+
+    /// The `radius(_:)` override's value, or the standard card `.box` radius.
+    public var cornerRadius: CGFloat { (radiusRole ?? .box).value }
+
+    /// Density-scaled spacing — use for chrome padding/gaps so `.componentDensity`
+    /// compacts or airs out the item.
+    public func spacing(_ key: Theme.SpacingKey) -> CGFloat { density.scale(key.value) }
+
+    // Accent resolution — the `accent(_:)` override, else the theme's hero tokens
+    // (the values the built-ins hardcoded before the accent axis existed).
+    /// Selected-state border tint.
+    public func accentBorder(_ theme: Theme) -> Color { accent?.base ?? theme.border(.borderHero) }
+    /// Emphasized foreground tint (selected text/icons).
+    public func accentForeground(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(.fgHero) }
+    /// Selected-chip fill.
+    public func accentFill(_ theme: Theme) -> Color { accent?.solid ?? theme.background(.bgHero) }
+    /// Content colour on top of ``accentFill(_:)``.
+    public func accentOnFill(_ theme: Theme) -> Color { accent?.onSolid ?? theme.foreground(.fgSecondary) }
 
     // Shared formatting, so all styles speak one language.
     public func time(_ date: Date) -> String {
@@ -267,16 +318,38 @@ private struct Sparkline: View {
     }
 }
 
+/// A row of icon + text meta pairs (`FlightListItem.meta(_:)`). Renders nothing
+/// when the configuration carries no meta items.
+private struct MetaRow: View {
+    @Environment(\.theme) private var theme
+    let items: [(icon: String, text: String)]
+
+    var body: some View {
+        if !items.isEmpty {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    HStack(spacing: 2) {
+                        Icon(systemName: item.icon).size(.xs).accent(.neutral)
+                        Text(item.text).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+        }
+    }
+}
+
 /// The card shell every carded built-in shares: surface fill, continuous
-/// corners, hairline border (accented when selected).
+/// corners (radius-role override honored), hairline border (accent-tinted
+/// when selected).
 private extension View {
     func itemShell(_ configuration: FlightListItemConfiguration, theme: Theme) -> some View {
         self
             .background(theme.background(configuration.surface(default: .bgBase)),
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+                        in: RoundedRectangle(cornerRadius: configuration.cornerRadius, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-                    .strokeBorder(configuration.isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
+                RoundedRectangle(cornerRadius: configuration.cornerRadius, style: .continuous)
+                    .strokeBorder(configuration.isSelected ? configuration.accentBorder(theme) : theme.border(.borderPrimary),
                                   lineWidth: configuration.isSelected ? 1.5 : 1)
             )
     }
@@ -305,7 +378,7 @@ private struct CompactChrome: View {
                 FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
-            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .padding(.vertical, configuration.spacing(.sm))
             .contentShape(Rectangle())
             .onTapGesture { configuration.onSelect?() }
             Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
@@ -318,28 +391,49 @@ private struct CompactChrome: View {
 /// Kayak/Skyscanner archetype: 3-column route block over a footer with the
 /// airline identity and price. The library default.
 public struct TimelineFlightListItemStyle: FlightListItemStyle {
-    public init() {}
+    private let showsRouteTrack: Bool
+    /// - Parameter showsRouteTrack: draw the dotted route track between the
+    ///   endpoints (default). `false` swaps in a plain duration/stops column
+    ///   for quieter lists.
+    public init(showsRouteTrack: Bool = true) {
+        self.showsRouteTrack = showsRouteTrack
+    }
     public func makeBody(configuration: FlightListItemConfiguration) -> some View {
-        TimelineChrome(configuration: configuration)
+        TimelineChrome(configuration: configuration, showsRouteTrack: showsRouteTrack)
     }
 }
 
 private struct TimelineChrome: View {
     @Environment(\.theme) private var theme
     let configuration: FlightListItemConfiguration
+    var showsRouteTrack = true
 
     var body: some View {
         let leg = configuration.leg
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+        VStack(alignment: .leading, spacing: configuration.spacing(.md)) {
             if let badge = configuration.badge {
                 Badge(badge).badgeStyle(.info).size(.small)
             }
             HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
                 TimeColumn(time: configuration.time(leg.departure), code: leg.origin, alignment: .leading)
-                RouteTrack(leg: leg, duration: configuration.duration(of: leg), stops: configuration.stopsText(leg))
+                if showsRouteTrack {
+                    RouteTrack(leg: leg, duration: configuration.duration(of: leg), stops: configuration.stopsText(leg))
+                        .frame(maxWidth: .infinity)
+                } else {
+                    VStack(spacing: 2) {
+                        Text(configuration.duration(of: leg))
+                            .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                        Text(configuration.stopsText(leg))
+                            .textStyle(.overline400)
+                            .foregroundStyle(leg.stops == 0
+                                ? theme.foreground(.systemcolorsFgSuccess)
+                                : theme.text(.textTertiary))
+                    }
                     .frame(maxWidth: .infinity)
+                }
                 TimeColumn(time: configuration.time(leg.arrival), code: leg.destination, alignment: .trailing)
             }
+            MetaRow(items: configuration.metaItems)
             Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.md).accent(.primary)))
@@ -351,11 +445,13 @@ private struct TimelineChrome: View {
                     }
                 }
                 Spacer()
+                if let accessory = configuration.accessory { accessory }
                 FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration)
             }
+            if let footer = configuration.footer { footer }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(configuration.spacing(.md))
         .itemShell(configuration, theme: theme)
         .contentShape(Rectangle())
         .onTapGesture { configuration.onSelect?() }
@@ -376,14 +472,22 @@ public struct FareBoardFlightListItemStyle: FlightListItemStyle {
 private struct FareBoardChrome: View {
     @Environment(\.theme) private var theme
     let configuration: FlightListItemConfiguration
+    /// Uncontrolled fallback for hand-built configurations without
+    /// `onFareSelect` — `FlightListItem` always feeds the configuration fields
+    /// (ADR-F4 `ControllableState`), so this stays dormant for the built-ins.
     @State private var chosen: String?
 
+    private var selectedFareID: String? {
+        configuration.onFareSelect != nil ? configuration.selectedFareID : chosen
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+        VStack(alignment: .leading, spacing: configuration.spacing(.md)) {
             HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
                 SliceLine(configuration: configuration, leg: configuration.leg)
-                if configuration.isFavorite != nil {
+                if configuration.accessory != nil || configuration.isFavorite != nil {
                     Spacer(minLength: Theme.SpacingKey.xs.value)
+                    if let accessory = configuration.accessory { accessory }
                     FavoriteHeart(configuration: configuration)
                 }
             }
@@ -396,15 +500,16 @@ private struct FareBoardChrome: View {
                     }
                 }
             }
+            if let footer = configuration.footer { footer }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(configuration.spacing(.md))
         .itemShell(configuration, theme: theme)
     }
 
     private func fareChip(_ fare: FlightFare) -> some View {
-        let selected = chosen == fare.id
+        let selected = selectedFareID == fare.id
         return Button {
-            chosen = fare.id
+            if let onFareSelect = configuration.onFareSelect { onFareSelect(fare.id) } else { chosen = fare.id }
             configuration.onSelect?()
         } label: {
             VStack(alignment: .leading, spacing: 4) {
@@ -424,10 +529,11 @@ private struct FareBoardChrome: View {
                         in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
-                    .strokeBorder(selected ? theme.border(.borderHero) : .clear, lineWidth: 1.5)
+                    .strokeBorder(selected ? configuration.accentBorder(theme) : .clear, lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -470,7 +576,7 @@ private struct DealChrome: View {
                 FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration)
             }
-            .padding(Theme.SpacingKey.md.value)
+            .padding(configuration.spacing(.md))
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .itemShell(configuration, theme: theme)
@@ -518,7 +624,7 @@ private struct TicketChrome: View {
                     field("Stops", configuration.stopsText(leg))
                 }
             }
-            .padding(Theme.SpacingKey.md.value)
+            .padding(configuration.spacing(.md))
             perforation
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.md).accent(.primary)))
@@ -529,13 +635,13 @@ private struct TicketChrome: View {
                 FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
-            .padding(Theme.SpacingKey.md.value)
+            .padding(configuration.spacing(.md))
         }
         .background(theme.background(configuration.surface(default: .bgBase)))
         .clipShape(TicketNotchShape(stubHeight: 58, radius: 7))
         .overlay(
             TicketNotchShape(stubHeight: 58, radius: 7)
-                .stroke(configuration.isSelected ? theme.border(.borderHero) : theme.border(.borderPrimary),
+                .stroke(configuration.isSelected ? configuration.accentBorder(theme) : theme.border(.borderPrimary),
                         lineWidth: configuration.isSelected ? 1.5 : 1)
         )
         .contentShape(Rectangle())
@@ -551,7 +657,7 @@ private struct TicketChrome: View {
     private func bigCode(_ code: String, time: String, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 2) {
             Text(code).textStyle(.headingLg).foregroundStyle(theme.text(.textPrimary))
-            Text(time).textStyle(.labelSm600).foregroundStyle(theme.foreground(.fgHero))
+            Text(time).textStyle(.labelSm600).foregroundStyle(configuration.accentForeground(theme))
         }
     }
 
@@ -618,7 +724,7 @@ private struct JourneyChrome: View {
                         Icon(systemName: "chevron.down").size(.xs).accent(.neutral)
                             .rotationEffect(.degrees(configuration.isExpanded ? 180 : 0))
                     }
-                    .padding(Theme.SpacingKey.md.value)
+                    .padding(configuration.spacing(.md))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -653,7 +759,7 @@ private struct JourneyChrome: View {
                         }
                     }
                 }
-                .padding([.horizontal, .bottom], Theme.SpacingKey.md.value)
+                .padding([.horizontal, .bottom], configuration.spacing(.md))
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -663,9 +769,9 @@ private struct JourneyChrome: View {
     private func legTimeline(_ leg: FlightLeg) -> some View {
         HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
             VStack(spacing: 0) {
-                Circle().stroke(theme.border(.borderHero), lineWidth: 1.5).frame(width: 7, height: 7)
+                Circle().stroke(configuration.accentBorder(theme), lineWidth: 1.5).frame(width: 7, height: 7)
                 Rectangle().fill(theme.border(.borderPrimary)).frame(width: 1.5).frame(maxHeight: .infinity)
-                Circle().fill(theme.border(.borderHero)).frame(width: 7, height: 7)
+                Circle().fill(configuration.accentBorder(theme)).frame(width: 7, height: 7)
             }
             .padding(.vertical, 5)
             VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
@@ -734,7 +840,7 @@ private struct SlicesChrome: View {
                 }
             }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(configuration.spacing(.md))
         .itemShell(configuration, theme: theme)
         .contentShape(Rectangle())
         .onTapGesture { configuration.onSelect?() }
@@ -765,15 +871,21 @@ private struct TimetableChrome: View {
     // the container reads the direction and hands it to the layout.
     @Environment(\.layoutDirection) private var layoutDirection
     let configuration: FlightListItemConfiguration
+    /// Uncontrolled fallback — see ``FareBoardChrome/chosen``.
     @State private var chosen: Date?
 
+    private var selectedDeparture: Date? {
+        configuration.onDepartureSelect != nil ? configuration.selectedDeparture : chosen
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+        VStack(alignment: .leading, spacing: configuration.spacing(.md)) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.md).accent(.primary)))
                     .frame(width: 24, height: 24)
                 Text(configuration.leg.airline).textStyle(.labelMd700).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
+                if let accessory = configuration.accessory { accessory }
                 FavoriteHeart(configuration: configuration)
                 PriceBlock(configuration: configuration, size: .small)
             }
@@ -785,26 +897,28 @@ private struct TimetableChrome: View {
                     timeChip(date)
                 }
             }
+            if let footer = configuration.footer { footer }
         }
-        .padding(Theme.SpacingKey.md.value)
+        .padding(configuration.spacing(.md))
         .itemShell(configuration, theme: theme)
     }
 
     private func timeChip(_ date: Date) -> some View {
-        let selected = chosen == date
+        let selected = selectedDeparture == date
         return Button {
-            chosen = date
+            if let onDepartureSelect = configuration.onDepartureSelect { onDepartureSelect(date) } else { chosen = date }
             configuration.onSelect?()
         } label: {
             Text(configuration.time(date))
                 .textStyle(.labelSm700)
-                .foregroundStyle(selected ? theme.foreground(.fgSecondary) : theme.text(.textPrimary))
+                .foregroundStyle(selected ? configuration.accentOnFill(theme) : theme.text(.textPrimary))
                 .padding(.horizontal, Theme.SpacingKey.sm.value)
                 .padding(.vertical, Theme.SpacingKey.xs.value)
-                .background(selected ? theme.background(.bgHero) : theme.background(.bgSecondaryLight),
+                .background(selected ? configuration.accentFill(theme) : theme.background(.bgSecondaryLight),
                             in: Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -884,7 +998,7 @@ private struct TrayChrome: View {
                     }
                 }
             }
-            .padding(Theme.SpacingKey.md.value)
+            .padding(configuration.spacing(.md))
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(theme.background(.bgWhite),
                         in: RoundedRectangle(cornerRadius: cardRadius, style: .continuous))
@@ -927,8 +1041,220 @@ private struct TrayChrome: View {
         .overlay {
             if configuration.isSelected {
                 RoundedRectangle(cornerRadius: trayRadius, style: .continuous)
-                    .strokeBorder(theme.border(.borderHero), lineWidth: 1.5)
+                    .strokeBorder(configuration.accentBorder(theme), lineWidth: 1.5)
             }
+        }
+    }
+}
+
+// MARK: - 10. Tile — vertical carousel card
+
+/// A vertical card for horizontal carousels (destination-deal shelves, "more
+/// dates" rails): identity on top, the route in the middle, price pinned at the
+/// bottom. Width comes from the carousel (`.frame(width:)`); the tile fills
+/// whatever it's given.
+public struct TileFlightListItemStyle: FlightListItemStyle {
+    public init() {}
+    public func makeBody(configuration: FlightListItemConfiguration) -> some View {
+        TileChrome(configuration: configuration)
+    }
+}
+
+private struct TileChrome: View {
+    @Environment(\.theme) private var theme
+    let configuration: FlightListItemConfiguration
+
+    var body: some View {
+        let leg = configuration.leg
+        VStack(alignment: .leading, spacing: configuration.spacing(.sm)) {
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.md).accent(.primary)))
+                    .frame(width: 24, height: 24)
+                if let badge = configuration.badge {
+                    Badge(badge).badgeStyle(.info).size(.small)
+                }
+                Spacer(minLength: 0)
+                if let accessory = configuration.accessory { accessory }
+                FavoriteHeart(configuration: configuration)
+            }
+            Text(leg.airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                Text(leg.origin).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                // `arrow.forward` mirrors under RTL (unlike `arrow.right`).
+                Icon(systemName: "arrow.forward").size(.xs).accent(.neutral)
+                Text(leg.destination).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+            }
+            Text("\(configuration.time(leg.departure)) – \(configuration.time(leg.arrival)) · \(configuration.duration(of: leg))")
+                .textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+            Text(configuration.stopsText(leg))
+                .textStyle(.labelSm600)
+                .foregroundStyle(leg.stops == 0 ? theme.foreground(.systemcolorsFgSuccess) : theme.foreground(.systemcolorsFgWarning))
+            MetaRow(items: configuration.metaItems)
+            Spacer(minLength: Theme.SpacingKey.xs.value)
+            PriceBlock(configuration: configuration)
+            if let footer = configuration.footer { footer }
+        }
+        .padding(configuration.spacing(.md))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .itemShell(configuration, theme: theme)
+        .contentShape(Rectangle())
+        .onTapGesture { configuration.onSelect?() }
+    }
+}
+
+// MARK: - 11. Hero — featured tall card
+
+/// The featured/promoted archetype: a deal strip on top, prominent route block,
+/// amenities, an extra-large price and a pinned CTA — the card a "today's best
+/// deal" section leads with.
+public struct HeroFlightListItemStyle: FlightListItemStyle {
+    public init() {}
+    public func makeBody(configuration: FlightListItemConfiguration) -> some View {
+        HeroChrome(configuration: configuration)
+    }
+}
+
+private struct HeroChrome: View {
+    @Environment(\.theme) private var theme
+    let configuration: FlightListItemConfiguration
+
+    var body: some View {
+        let leg = configuration.leg
+        VStack(alignment: .leading, spacing: 0) {
+            if let deal = configuration.dealText {
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Icon(systemName: "flame.fill").size(.xs).accent(configuration.dealTone)
+                    Text(deal).textStyle(.labelSm700).foregroundStyle(configuration.dealTone.base)
+                    Spacer()
+                }
+                .padding(.horizontal, configuration.spacing(.md))
+                .padding(.vertical, Theme.SpacingKey.xs.value)
+                .background(configuration.dealTone.soft)
+            }
+            VStack(alignment: .leading, spacing: configuration.spacing(.md)) {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    (configuration.logo ?? AnyView(Icon(systemName: configuration.airlineSystemImage).size(.md).accent(.primary)))
+                        .frame(width: 24, height: 24)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(leg.airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
+                        if let no = configuration.flightNo {
+                            Text(no).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                        }
+                    }
+                    Spacer()
+                    if let badge = configuration.badge {
+                        Badge(badge).badgeStyle(.info).size(.small)
+                    }
+                    if let accessory = configuration.accessory { accessory }
+                    FavoriteHeart(configuration: configuration)
+                }
+                HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+                    TimeColumn(time: configuration.time(leg.departure), code: leg.origin, alignment: .leading)
+                    RouteTrack(leg: leg, duration: configuration.duration(of: leg), stops: configuration.stopsText(leg))
+                        .frame(maxWidth: .infinity)
+                    TimeColumn(time: configuration.time(leg.arrival), code: leg.destination, alignment: .trailing)
+                }
+                if !configuration.amenities.isEmpty {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        ForEach(configuration.amenities, id: \.self) { symbol in
+                            Icon(systemName: symbol).size(.sm).accent(.neutral)
+                        }
+                    }
+                }
+                MetaRow(items: configuration.metaItems)
+                Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
+                HStack(alignment: .bottom) {
+                    PriceBlock(configuration: configuration, size: .xlarge)
+                    Spacer()
+                    if let action = configuration.onSelect {
+                        ThemeButton(configuration.selectTitle, action: action).size(.small)
+                    }
+                }
+                if let footer = configuration.footer { footer }
+            }
+            .padding(configuration.spacing(.md))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: configuration.cornerRadius, style: .continuous))
+        .itemShell(configuration, theme: theme)
+        .contentShape(Rectangle())
+        .onTapGesture { configuration.onSelect?() }
+    }
+}
+
+// MARK: - 12. Receipt — checkout summary, labeled fields
+
+/// The checkout-summary archetype: every slice as a labeled row, then fare,
+/// baggage and meta as labeled fields, closed by the itinerary total. **No tap
+/// affordance** — it's a read-back of what the user already chose, not a
+/// selectable result (so `onSelect` is deliberately not wired).
+public struct ReceiptFlightListItemStyle: FlightListItemStyle {
+    public init() {}
+    public func makeBody(configuration: FlightListItemConfiguration) -> some View {
+        ReceiptChrome(configuration: configuration)
+    }
+}
+
+private struct ReceiptChrome: View {
+    @Environment(\.theme) private var theme
+    let configuration: FlightListItemConfiguration
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: configuration.spacing(.sm)) {
+            ForEach(Array(configuration.legs.enumerated()), id: \.element.id) { index, leg in
+                VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                    if index < configuration.sliceLabels.count {
+                        Text(configuration.sliceLabels[index])
+                            .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                    }
+                    SliceLine(configuration: configuration, leg: leg)
+                }
+            }
+            Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
+            if let no = configuration.flightNo { fieldRow(String(themeKit: "Flight"), no) }
+            if let cabin = configuration.cabin { fieldRow(String(themeKit: "Fare"), cabin) }
+            if let carryOn = configuration.baggage {
+                fieldRow(String(themeKit: "Carry-on"), carryOn)
+                fieldRow(String(themeKit: "Checked bag"),
+                         configuration.checkedBaggage ?? String(themeKit: "Not included"))
+            }
+            ForEach(Array(configuration.metaItems.enumerated()), id: \.offset) { _, item in
+                fieldRow(item.text, icon: item.icon)
+            }
+            if let amount = configuration.priceAmount {
+                Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
+                // The caption doubles as the total row's label, so the price
+                // itself renders bare (no PriceBlock — that would repeat it).
+                HStack(alignment: .firstTextBaseline) {
+                    Text(configuration.priceCaption ?? String(themeKit: "Total"))
+                        .textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
+                    Spacer()
+                    PriceTag(amount, currencyCode: configuration.currencyCode)
+                        .original(configuration.originalAmount)
+                }
+            }
+            if let footer = configuration.footer { footer }
+        }
+        .padding(configuration.spacing(.md))
+        .itemShell(configuration, theme: theme)
+        // No contentShape/onTapGesture: a receipt is not a tappable result row.
+    }
+
+    private func fieldRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+            Spacer(minLength: Theme.SpacingKey.sm.value)
+            Text(value).textStyle(.labelSm700).foregroundStyle(theme.text(.textPrimary))
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    /// A meta item rendered receipt-style: icon leading, text as the value.
+    private func fieldRow(_ text: String, icon: String) -> some View {
+        HStack(alignment: .center) {
+            Icon(systemName: icon).size(.xs).accent(.neutral)
+            Spacer(minLength: Theme.SpacingKey.sm.value)
+            Text(text).textStyle(.labelSm700).foregroundStyle(theme.text(.textPrimary))
+                .multilineTextAlignment(.trailing)
         }
     }
 }
@@ -971,6 +1297,18 @@ public extension FlightListItemStyle where Self == TrayFlightListItemStyle {
     /// Nested white card on a soft tray with a details/price/go CTA rail
     /// (design-system spec) — built from FlightRoute, PriceTag, TextLink & co.
     static var tray: TrayFlightListItemStyle { TrayFlightListItemStyle() }
+}
+public extension FlightListItemStyle where Self == TileFlightListItemStyle {
+    /// Vertical card for horizontal carousels: logo top, route mid, price bottom.
+    static var tile: TileFlightListItemStyle { TileFlightListItemStyle() }
+}
+public extension FlightListItemStyle where Self == HeroFlightListItemStyle {
+    /// Featured tall card: deal strip + big price + badge + amenities.
+    static var hero: HeroFlightListItemStyle { HeroFlightListItemStyle() }
+}
+public extension FlightListItemStyle where Self == ReceiptFlightListItemStyle {
+    /// Checkout summary — slices, fare and baggage as labeled fields, no tap affordance.
+    static var receipt: ReceiptFlightListItemStyle { ReceiptFlightListItemStyle() }
 }
 
 // MARK: - Type erasure + environment plumbing

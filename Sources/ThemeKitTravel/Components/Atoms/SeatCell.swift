@@ -3,12 +3,26 @@
 //  ThemeKit
 //
 //  Atom. A single seat button — token-bound fill/border by tier + state, a
-//  configurable inner label (icon / number / initials / custom) and a recommended
-//  star. Composed by ``SeatMap`` but reusable on its own for bespoke seat grids.
+//  configurable inner label (icon / number / initials / custom), a swappable
+//  silhouette (rounded / circle / seatback) and a recommended star. Composed by
+//  ``SeatMap`` but reusable on its own for bespoke seat grids.
+//
+//  NOTE: this atom predates the copy-on-write modifier convention — its knobs
+//  are DEFAULTED init params by design. COW migration deferred to next major.
 //
 
 import SwiftUI
 import ThemeKit
+
+/// How a selected ``SeatCell`` is emphasized. Both looks resolve their colours
+/// from ``SeatPalette/selectedColors(theme:)``, so a palette override drives
+/// either treatment.
+public enum SeatSelectionEmphasis: Sendable {
+    /// The selected fill plus an emphasized 2 pt ring — the shipped default.
+    case border
+    /// The selected fill alone; the ring is dropped for a flat look.
+    case fill
+}
 
 public struct SeatCell: View {
     @Environment(\.theme) private var theme
@@ -26,6 +40,9 @@ public struct SeatCell: View {
     private let palette: SeatPalette
     private let customContent: ((SeatContext) -> AnyView)?
     private let currencyCode: String?
+    private let shape: SeatShape
+    private let recommendedSymbol: String
+    private let selectionEmphasis: SeatSelectionEmphasis
     private let action: () -> Void
 
     public init(_ seat: Seat,
@@ -38,6 +55,9 @@ public struct SeatCell: View {
                 palette: SeatPalette = .default,
                 customContent: ((SeatContext) -> AnyView)? = nil,
                 currencyCode: String = "USD",
+                shape: SeatShape = .rounded,
+                recommendedSymbol: String = "star.fill",
+                selectionEmphasis: SeatSelectionEmphasis = .border,
                 action: @escaping () -> Void = {}) {
         self.seat = seat
         self.size = size
@@ -49,6 +69,9 @@ public struct SeatCell: View {
         self.palette = palette
         self.customContent = customContent
         self.currencyCode = currencyCode
+        self.shape = shape
+        self.recommendedSymbol = recommendedSymbol
+        self.selectionEmphasis = selectionEmphasis
         self.action = action
     }
 
@@ -63,6 +86,9 @@ public struct SeatCell: View {
                 display: SeatDisplay = .icon,
                 palette: SeatPalette = .default,
                 customContent: ((SeatContext) -> AnyView)? = nil,
+                shape: SeatShape = .rounded,
+                recommendedSymbol: String = "star.fill",
+                selectionEmphasis: SeatSelectionEmphasis = .border,
                 action: @escaping () -> Void = {}) {
         self.seat = seat
         self.size = size
@@ -74,7 +100,42 @@ public struct SeatCell: View {
         self.palette = palette
         self.customContent = customContent
         self.currencyCode = nil
+        self.shape = shape
+        self.recommendedSymbol = recommendedSymbol
+        self.selectionEmphasis = selectionEmphasis
         self.action = action
+    }
+
+    /// Token-stepped size overload — `size:` takes a ``SeatSizeRamp`` instead of
+    /// raw points (compact 36 · regular 44 · large 52 · xl 60). A `nil`
+    /// `currencyCode` resolves from the environment like the omitted-currency init.
+    public init(_ seat: Seat,
+                size ramp: SeatSizeRamp,
+                isSelected: Bool = false,
+                isSelectable: Bool = true,
+                isRecommended: Bool = false,
+                assignedInitials: String? = nil,
+                display: SeatDisplay = .icon,
+                palette: SeatPalette = .default,
+                customContent: ((SeatContext) -> AnyView)? = nil,
+                currencyCode: String? = nil,
+                shape: SeatShape = .rounded,
+                recommendedSymbol: String = "star.fill",
+                selectionEmphasis: SeatSelectionEmphasis = .border,
+                action: @escaping () -> Void = {}) {
+        if let currencyCode {
+            self.init(seat, size: ramp.points, isSelected: isSelected, isSelectable: isSelectable,
+                      isRecommended: isRecommended, assignedInitials: assignedInitials,
+                      display: display, palette: palette, customContent: customContent,
+                      currencyCode: currencyCode, shape: shape, recommendedSymbol: recommendedSymbol,
+                      selectionEmphasis: selectionEmphasis, action: action)
+        } else {
+            self.init(seat, size: ramp.points, isSelected: isSelected, isSelectable: isSelectable,
+                      isRecommended: isRecommended, assignedInitials: assignedInitials,
+                      display: display, palette: palette, customContent: customContent,
+                      shape: shape, recommendedSymbol: recommendedSymbol,
+                      selectionEmphasis: selectionEmphasis, action: action)
+        }
     }
 
     private var resolvedCurrency: String {
@@ -82,13 +143,11 @@ public struct SeatCell: View {
     }
 
     public var body: some View {
+        let cellShape = shape.anyShape(cornerRadius: Theme.RadiusRole.selector.value)
         Button(action: action) {
-            RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
+            cellShape
                 .fill(fillColor)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
-                        .stroke(strokeColor, lineWidth: isSelected ? 2 : 1)
-                )
+                .overlay(cellShape.stroke(strokeColor, lineWidth: strokeWidth))
                 .overlay(glyph)
                 .overlay(alignment: .topTrailing) { if showsStar { recommendedStar } }
                 .frame(width: size, height: size)
@@ -133,20 +192,22 @@ public struct SeatCell: View {
         }
     }
 
+    // Glyphs step through the type ramp (Dynamic Type for free) instead of
+    // hardcoded point sizes.
     @ViewBuilder private var iconGlyph: some View {
         if let assignedInitials {
             Text(assignedInitials).textStyle(.labelSm600).foregroundStyle(contentColor)
         } else if isSelected {
-            Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(contentColor)
+            Image(systemName: "checkmark").textStyle(.labelSm700).foregroundStyle(contentColor)
         } else if seat.isOccupied {
-            Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).foregroundStyle(contentColor)
+            Image(systemName: "xmark").textStyle(.labelSm600).foregroundStyle(contentColor)
         } else {
-            Image(systemName: seat.tier.glyph).font(.system(size: 13, weight: .semibold)).foregroundStyle(contentColor)
+            Image(systemName: seat.tier.glyph).textStyle(.labelSm600).foregroundStyle(contentColor)
         }
     }
 
     private var recommendedStar: some View {
-        Image(systemName: "star.fill")
+        Image(systemName: recommendedSymbol)
             .font(.system(size: 8, weight: .bold))
             .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
             .padding(2)
@@ -162,9 +223,15 @@ public struct SeatCell: View {
         return palette.colors(for: seat.tier, theme: theme).fill
     }
     private var strokeColor: Color {
-        if isSelected { return palette.selectedColors(theme: theme).stroke }
+        if isSelected {
+            return selectionEmphasis == .border ? palette.selectedColors(theme: theme).stroke : .clear
+        }
         if seat.isOccupied { return palette.occupiedColors(theme: theme).stroke }
         return palette.colors(for: seat.tier, theme: theme).stroke
+    }
+    private var strokeWidth: CGFloat {
+        guard isSelected else { return 1 }
+        return selectionEmphasis == .border ? 2 : 0
     }
     private var contentColor: Color {
         if isSelected { return palette.selectedColors(theme: theme).content }
@@ -200,5 +267,18 @@ public struct SeatCell: View {
         PreviewCase("Number display") { SeatCell(Seat("1G"), display: .number) }
         PreviewCase("Accent selected") { SeatCell(Seat("2A"), isSelected: true, palette: SeatPalette().selected(.accent)) }
         PreviewCase("Accent occupied") { SeatCell(Seat("2B", occupied: true), palette: SeatPalette().occupied(.warning)) }
+        PreviewCase("Circle shape") { SeatCell(Seat("3A"), shape: .circle) }
+        PreviewCase("Seatback shape") { SeatCell(Seat("3B"), shape: .seatback) }
+        PreviewCase("Seatback selected") { SeatCell(Seat("3C"), isSelected: true, shape: .seatback) }
+        PreviewCase("Ramp sizes") {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                SeatCell(Seat("4A"), size: .compact)
+                SeatCell(Seat("4B"), size: .regular)
+                SeatCell(Seat("4C"), size: .large)
+                SeatCell(Seat("4D"), size: .xl)
+            }
+        }
+        PreviewCase("Fill emphasis") { SeatCell(Seat("5A"), isSelected: true, selectionEmphasis: .fill) }
+        PreviewCase("Custom star") { SeatCell(Seat("5B"), isRecommended: true, recommendedSymbol: "sparkles") }
     }
 }
