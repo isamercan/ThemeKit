@@ -28,6 +28,7 @@ public enum StepsSize: Sendable {
 /// ```
 public struct Steps: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
 
     public struct Step: Identifiable {
         public let id = UUID()
@@ -62,6 +63,9 @@ public struct Steps: View {
     private var dotSize: CGFloat { progressDot ? 12 : (small ? 22 : 28) }
 
     public var body: some View {
+        // `.offset(x:)` doesn't auto-mirror: in RTL the next step sits to the
+        // LEFT, so the connector's half-marker nudge toward it flips sign.
+        let dir: CGFloat = layoutDirection == .rightToLeft ? -1 : 1
         if axis == .horizontal {
             HStack(alignment: .top, spacing: 0) {
                 ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
@@ -70,7 +74,7 @@ public struct Steps: View {
                             if index < steps.count - 1 {
                                 Rectangle().fill(connectorColor(index))
                                     .frame(height: 2)
-                                    .offset(x: dotSize * 0.57)
+                                    .offset(x: dir * dotSize * 0.57)
                             }
                             marker(step, index: index)
                         }
@@ -285,6 +289,20 @@ public extension Steps.Step {
                     .font(.system(size: 20))
                     .foregroundStyle(step.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
             }
+    }
+    .padding()
+}
+
+#Preview("RTL — horizontal connector") {
+    let steps: [Steps.Step] = [
+        .init("Cart", state: .done), .init("Pay", state: .active), .init("Done", state: .todo),
+    ]
+    // Same data twice: the connector's half-marker nudge must point toward the
+    // NEXT step in both directions (right in LTR, left in RTL).
+    VStack(spacing: 40) {
+        Steps(steps)
+        Steps(steps)
+            .environment(\.layoutDirection, .rightToLeft)
     }
     .padding()
 }

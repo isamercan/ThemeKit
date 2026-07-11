@@ -10,6 +10,11 @@ import SwiftUI
 /// two layers. (daisyUI "Diff".)
 public struct Diff<Before: View, After: View>: View {
     @Environment(\.theme) private var theme
+    // `.offset(x:)` and gesture coordinates don't auto-mirror — the divider
+    // position and drag delta branch on this under RTL. `fraction` always
+    // measures the split from the LEADING edge (the mask's `.leading`
+    // alignment mirrors on its own).
+    @Environment(\.layoutDirection) private var layoutDirection
 
     private let before: () -> Before
     private let after: () -> After
@@ -27,6 +32,9 @@ public struct Diff<Before: View, After: View>: View {
     public var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
+            // Mirrors the absolute x offsets: the ZStack's `.leading` anchor
+            // flips to the physical right under RTL, so the push-out inverts.
+            let direction: CGFloat = layoutDirection == .rightToLeft ? -1 : 1
             ZStack(alignment: .leading) {
                 after()
                     .frame(width: w, height: geo.size.height)
@@ -39,22 +47,38 @@ public struct Diff<Before: View, After: View>: View {
                 Rectangle()
                     .fill(theme.background(.bgWhite))
                     .frame(width: 2)
-                    .offset(x: w * fraction - 1)
+                    .offset(x: (w * fraction - 1) * direction)
 
                 Circle()
                     .fill(theme.background(.bgWhite))
                     .frame(width: 36, height: 36)
                     .overlay(Image(systemName: "arrow.left.and.right").font(.system(size: 14, weight: .bold)).foregroundStyle(theme.text(.textPrimary)))
                     .themeShadow(.soft)
-                    .offset(x: w * fraction - 18)
+                    .offset(x: (w * fraction - 18) * direction)
             }
             .contentShape(Rectangle())
             .gesture(DragGesture().onChanged { value in
-                fraction = min(max(value.location.x / w, 0), 1)
+                // Gesture x is physical — measure from the trailing side in RTL
+                // so the divider follows the finger.
+                let physical = min(max(value.location.x / w, 0), 1)
+                fraction = layoutDirection == .rightToLeft ? 1 - physical : physical
             })
         }
         .aspectRatio(aspectRatio, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        // The drag handle is invisible to VoiceOver — expose the split as one
+        // adjustable element instead.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(themeKit: "Before and after comparison"))
+        .accessibilityValue(Text(Double(fraction), format: .percent.precision(.fractionLength(0))))
+        .accessibilityAdjustableAction { direction in
+            let step: CGFloat = 0.1
+            switch direction {
+            case .increment: fraction = min(1, fraction + step)
+            case .decrement: fraction = max(0, fraction - step)
+            @unknown default: break
+            }
+        }
     }
 }
 
@@ -80,4 +104,15 @@ public extension Diff {
         theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
     }
     .padding()
+}
+
+#Preview("RTL — divider and drag mirror") {
+    @Previewable @Environment(\.theme) var theme
+    Diff {
+        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+    } after: {
+        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+    }
+    .padding()
+    .environment(\.layoutDirection, .rightToLeft)
 }

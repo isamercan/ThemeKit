@@ -12,6 +12,7 @@ import SwiftUI
 /// the visual language of RangeSlider (token track / fill / thumb).
 public struct Slider: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
 
     @Binding private var value: Double
     private let bounds: ClosedRange<Double>
@@ -56,6 +57,13 @@ public struct Slider: View {
     }
 
     private var span: Double { bounds.upperBound - bounds.lowerBound }
+
+    // MARK: RTL (absolute coords; `.offset(x:)`/`.position(x:)` and gesture
+    // locations don't auto-mirror, so the x math is flipped by hand — the
+    // ColorSlider precedent).
+    private var isRTL: Bool { layoutDirection == .rightToLeft }
+    /// Sign for hand-mirrored `.offset(x:)` moves from the leading edge.
+    private var dir: CGFloat { isRTL ? -1 : 1 }
 
     /// One formatting point for the label row, the drag tooltip and the
     /// accessibility value — the `valueLabel` closure wins when provided.
@@ -124,6 +132,9 @@ public struct Slider: View {
                 let x = CGFloat((value - bounds.lowerBound) / span) * usable
 
                 ZStack(alignment: .leading) {
+                    // The fill capsule needs no hand-mirroring: `.leading`
+                    // alignment + a width-only frame anchor it to the leading
+                    // (right, in RTL) edge automatically.
                     Capsule().fill(theme.border(.borderPrimary)).frame(height: trackHeight)
                     Capsule().fill(fillColor)
                         .frame(width: x + thumbSize / 2, height: trackHeight)
@@ -132,12 +143,12 @@ public struct Slider: View {
                         Circle()
                             .fill(mark <= value ? theme.foreground(.fgSecondary) : theme.border(.borderPrimary))
                             .frame(width: 6, height: 6)
-                            .offset(x: CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2 - 3)
+                            .offset(x: dir * (CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2 - 3))
                     }
 
                     thumb
-                        .offset(x: x)
-                        .overlay(alignment: .top) { tooltip.offset(x: x, y: -thumbSize) }
+                        .offset(x: dir * x)
+                        .overlay(alignment: .top) { tooltip.offset(x: dir * x, y: -thumbSize) }
                 }
                 .frame(height: thumbSize)
                 // Tap-to-set: the whole (slop-enlarged) track accepts the drag,
@@ -151,11 +162,12 @@ public struct Slider: View {
                 GeometryReader { geo in
                     let usable = max(geo.size.width - thumbSize, 1)
                     ForEach(marks.keys.sorted(), id: \.self) { mark in
+                        let centerX = CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2
                         Text(marks[mark] ?? "")
                             .textStyle(.bodySm400)
                             .foregroundStyle(theme.text(.textTertiary))
                             .fixedSize()
-                            .position(x: CGFloat((mark - bounds.lowerBound) / span) * usable + thumbSize / 2, y: 8)
+                            .position(x: isRTL ? geo.size.width - centerX : centerX, y: 8)
                     }
                 }
                 .frame(height: 18)
@@ -211,7 +223,8 @@ public struct Slider: View {
             .onChanged { g in
                 guard isEnabled else { return }
                 dragging = true
-                let ratio = Double(min(max(g.location.x - thumbSize / 2, 0), usable) / usable)
+                var ratio = Double(min(max(g.location.x - thumbSize / 2, 0), usable) / usable)
+                if isRTL { ratio = 1 - ratio }   // gesture x doesn't auto-mirror
                 let raw = bounds.lowerBound + ratio * span
                 value = min(max(bounds.lowerBound, (raw / step).rounded() * step), bounds.upperBound)
             }
@@ -256,6 +269,26 @@ public struct Slider: View {
                     .valueLabel { "\(Int($0))" }
             }
             .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("RTL") {
+    struct Demo: View {
+        @State var v: Double = 4
+        var body: some View {
+            // Mirrored geometry: fill grows from the right (leading) edge,
+            // dragging toward the left increases the value, marks flip.
+            VStack(spacing: 32) {
+                Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip()
+                Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"])
+                Slider(value: $v, in: 0...8, label: "Accented")
+                    .accent(.success)
+                    .valueLabel { "\(Int($0))" }
+            }
+            .padding()
+            .environment(\.layoutDirection, .rightToLeft)
         }
     }
     return Demo()

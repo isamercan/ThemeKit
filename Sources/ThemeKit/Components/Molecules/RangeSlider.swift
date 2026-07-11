@@ -16,6 +16,7 @@ import SwiftUI
 /// VoiceOver-adjustable thumbs.
 public struct RangeSlider: View {
     @Environment(\.theme) private var theme
+    @Environment(\.layoutDirection) private var layoutDirection
 
     @Binding private var lowerValue: Double
     @Binding private var upperValue: Double
@@ -47,6 +48,13 @@ public struct RangeSlider: View {
     private let hitSlop: CGFloat = 8
     /// HeroUI-style press feedback: the active thumb scales down while dragging.
     private let pressScale: CGFloat = 0.9
+
+    // MARK: RTL (absolute coords; `.offset(x:)`/`.position(x:)` and gesture
+    // locations don't auto-mirror, so the x math is flipped by hand — the
+    // ColorSlider precedent).
+    private var isRTL: Bool { layoutDirection == .rightToLeft }
+    /// Sign for hand-mirrored `.offset(x:)` moves from the leading edge.
+    private var dir: CGFloat { isRTL ? -1 : 1 }
 
     public init(   // R1
         lowerValue: Binding<Double>,
@@ -120,12 +128,12 @@ public struct RangeSlider: View {
                 Capsule()
                     .fill(fillColor)
                     .frame(width: max(upperX - lowerX, 0), height: trackHeight)
-                    .offset(x: lowerX + thumbSize / 2)
+                    .offset(x: dir * (lowerX + thumbSize / 2))
 
                 thumb(value: lowerValue, title: inputTitles.min, isLower: true)
-                    .offset(x: lowerX)
+                    .offset(x: dir * lowerX)
                 thumb(value: upperValue, title: inputTitles.max, isLower: false)
-                    .offset(x: upperX)
+                    .offset(x: dir * upperX)
             }
             .frame(height: thumbSize)
             // Tap-to-set: the whole (slop-enlarged) track accepts the drag and
@@ -193,7 +201,9 @@ public struct RangeSlider: View {
         ZStack(alignment: .topLeading) {
             ForEach(marks, id: \.self) { mark in
                 let ratio = span > 0 ? (mark - bounds.lowerBound) / span : 0
-                let centerX = thumbSize / 2 + CGFloat(ratio) * usable
+                let ltrX = thumbSize / 2 + CGFloat(ratio) * usable
+                // `.position(x:)` doesn't auto-mirror: flip within the row width.
+                let centerX = isRTL ? (usable + thumbSize) - ltrX : ltrX
                 VStack(spacing: 2) {
                     Capsule().fill(theme.border(.borderPrimary)).frame(width: 1, height: 5)
                     Text(markLabel(mark))
@@ -300,7 +310,8 @@ public struct RangeSlider: View {
         DragGesture(minimumDistance: 0)
             .onChanged { gesture in
                 guard isEnabled else { return }
-                let ratio = Double(min(max(gesture.location.x - thumbSize / 2, 0), usable) / usable)
+                var ratio = Double(min(max(gesture.location.x - thumbSize / 2, 0), usable) / usable)
+                if isRTL { ratio = 1 - ratio }   // gesture x doesn't auto-mirror
                 move(toward: bounds.lowerBound + ratio * span)
             }
             .onEnded { _ in
@@ -384,6 +395,30 @@ public struct RangeSlider: View {
                     .valueLabel { "\(Int($0))" }
             }
             .padding()
+        }
+    }
+    return Demo()
+}
+
+#Preview("RTL") {
+    struct Demo: View {
+        @State var lo: Double = 200
+        @State var hi: Double = 800
+        var body: some View {
+            // Mirrored geometry: the range fill spans right-to-left between the
+            // thumbs, marks flip, and dragging tracks the finger correctly.
+            VStack(spacing: 32) {
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
+                    .marks([0, 250, 500, 750, 1000])
+                    .valueLabel { "\(Int($0)) $" }
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
+                    .accent(.success)
+                    .valueLabel { "$\(Int($0))" }
+            }
+            .padding()
+            .environment(\.layoutDirection, .rightToLeft)
         }
     }
     return Demo()

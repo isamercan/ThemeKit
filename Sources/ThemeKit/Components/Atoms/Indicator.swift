@@ -33,9 +33,8 @@ public enum IndicatorPosition {
 public extension View {
     /// Overlays `content` at a corner of this view.
     func indicator<Content: View>(_ position: IndicatorPosition = .topTrailing, @ViewBuilder content: () -> Content) -> some View {
-        let offset = position.offset
-        return overlay(alignment: position.alignment) {
-            content().offset(x: offset.width, y: offset.height)
+        overlay(alignment: position.alignment) {
+            content().modifier(IndicatorNudge(offset: position.offset))
         }
     }
 
@@ -56,6 +55,19 @@ public extension View {
     @available(*, deprecated, message: "Use indicatorDot(_: SemanticColor, position:) — the token-fed overload.")
     func indicatorDot(_ color: Color? = nil, position: IndicatorPosition = .topTrailing) -> some View {
         indicator(position) { IndicatorDot(color: color) }
+    }
+}
+
+/// Pushes the badge outward past the corner. The `alignment` itself mirrors in
+/// RTL (`.topTrailing` resolves to the top-LEFT corner), but `.offset(x:)` does
+/// not — so the outward x-nudge flips sign by hand to keep pointing outward.
+private struct IndicatorNudge: ViewModifier {
+    @Environment(\.layoutDirection) private var layoutDirection
+    let offset: CGSize
+
+    func body(content: Content) -> some View {
+        content.offset(x: layoutDirection == .rightToLeft ? -offset.width : offset.width,
+                       y: offset.height)
     }
 }
 
@@ -86,4 +98,20 @@ private struct IndicatorDot: View {
             .indicator { Badge("3").badgeStyle(.error).size(.small) }
     }
     .padding()
+}
+
+#Preview("RTL") {
+    @Previewable @Environment(\.theme) var theme
+    // `.topTrailing` resolves to the top-LEFT corner here; the outward nudge
+    // must push the badge past that corner, not back inward.
+    HStack(spacing: 32) {
+        Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
+            .indicatorDot()
+        Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
+            .indicatorDot(.success, position: .bottomLeading)
+        Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
+            .indicator { Badge("3").badgeStyle(.error).size(.small) }
+    }
+    .padding()
+    .environment(\.layoutDirection, .rightToLeft)
 }
