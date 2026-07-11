@@ -164,6 +164,7 @@ public struct AlertToast: View {
                     Icon(systemName: "xmark").size(.xs).color(type.foreground(theme))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Close"))
             }
         }
     }

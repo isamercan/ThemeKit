@@ -74,6 +74,7 @@ public struct FilterGroup<Option: Hashable>: View {
                         .overlay(Circle().strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Clear selection"))
             }
             ForEach(options, id: \.self) { option in
                 let enabled = optionEnabled(option)

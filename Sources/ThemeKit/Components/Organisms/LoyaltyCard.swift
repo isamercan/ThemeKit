@@ -32,6 +32,7 @@ public struct LoyaltyCard: View {
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.locale) private var locale
     @State private var flipped = false
 
     // Required content (R1).
@@ -92,7 +93,7 @@ public struct LoyaltyCard: View {
             }
             Spacer(minLength: Theme.SpacingKey.sm.value)
             HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
-                Text(points.formatted(.number.grouping(.automatic)))
+                Text(points.formatted(.number.grouping(.automatic).locale(locale)))
                     .textStyle(.heading2xl).foregroundStyle(onCard)
                     .contentTransition(animatesValue && !reduceMotion ? .numericText(value: Double(points)) : .identity)
                 Text(unit).textStyle(.bodyBase400).foregroundStyle(onCard.opacity(0.8))

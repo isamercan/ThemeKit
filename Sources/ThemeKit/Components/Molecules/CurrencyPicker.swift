@@ -79,9 +79,9 @@ public struct CurrencyPicker: View {
                 SearchBar(text: $searchText).padding(.bottom, density.scale(Theme.SpacingKey.sm.value))
             }
             if showsRecents {
-                sectionHeader("Recent")
+                sectionHeader(String(themeKit: "Recent"))
                 list(recents)
-                sectionHeader("All currencies")
+                sectionHeader(String(themeKit: "All currencies"))
             }
             list(filtered)
         }

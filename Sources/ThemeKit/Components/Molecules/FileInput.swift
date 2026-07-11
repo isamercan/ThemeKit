@@ -17,8 +17,8 @@ public struct FileInput: View {
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var fileName: String?
-    private var buttonTitle: String = "Choose file"
-    private var placeholder: String = "No file chosen"
+    private var buttonTitle: String = String(themeKit: "Choose file")
+    private var placeholder: String = String(themeKit: "No file chosen")
     private var infoMessages: [InfoMessage] = []
     private var onClear: (() -> Void)?
 

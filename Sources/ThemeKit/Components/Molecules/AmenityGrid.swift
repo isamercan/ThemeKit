@@ -84,11 +84,12 @@ public struct AmenityGrid: View {
                 Button {
                     withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { expanded = true }
                 } label: {
-                    Text("+\(hiddenCount) more")
+                    Text(String(themeKit: "+\(hiddenCount) more"))
                         .textStyle(.labelBase600)
                         .foregroundStyle(theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Show \(hiddenCount) more"))
             }
         }
     }

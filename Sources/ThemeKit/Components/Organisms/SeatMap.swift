@@ -407,6 +407,7 @@ private struct DeckSelector: View {
 private struct SeatSummaryBar: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
     let seat: Seat?
     let position: (window: Bool, aisle: Bool)?
     let palette: SeatPalette
@@ -431,10 +432,10 @@ private struct SeatSummaryBar: View {
             Spacer(minLength: Theme.SpacingKey.sm.value)
             VStack(alignment: .trailing, spacing: 2) {
                 if hasPrices {
-                    Text(totalPrice.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))
+                    Text(totalPrice.formatted(.currency(code: currencyCode).precision(.fractionLength(0)).locale(locale)))
                         .textStyle(.labelBase700).foregroundStyle(theme.foreground(.fgHero))
                 }
-                Text(String(themeKit: "\(selectedCount) seat\(selectedCount == 1 ? "" : "s")")).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                Text(selectedCount == 1 ? String(themeKit: "1 seat") : String(themeKit: "\(selectedCount) seats")).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
             }
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
@@ -456,7 +457,7 @@ private struct SeatSummaryBar: View {
         if seat.isExtraLegroom { parts.append(String(themeKit: "Extra legroom")) }
         if seat.isExitRow { parts.append(String(themeKit: "Exit row")) }
         if let floor = seat.floor { parts.append(String(themeKit: "Deck \(floor)")) }
-        if let price = seat.price { parts.append(price.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))) }
+        if let price = seat.price { parts.append(price.formatted(.currency(code: currencyCode).precision(.fractionLength(0)).locale(locale))) }
         return parts.joined(separator: " · ")
     }
 }

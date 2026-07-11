@@ -133,13 +133,13 @@ public struct FlightCard: View {
         }
         .buttonStyle(.plain)
         .disabled(isReadOnly)
-        .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
+        .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
     }
 
     private func scarcityRow(_ count: Int) -> some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             Image(systemName: "flame.fill").font(.caption2)
-            Text("\(count) seat\(count == 1 ? "" : "s") left").textStyle(.bodySm400)
+            Text(count == 1 ? String(themeKit: "1 seat left") : String(themeKit: "\(count) seats left")).textStyle(.bodySm400)
         }
         .foregroundStyle(theme.foreground(.systemcolorsFgError))
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -198,11 +198,11 @@ public struct FlightCard: View {
         let h = minutes / 60, m = minutes % 60
         return h > 0 ? "\(h)h \(m)m" : "\(m)m"
     }
-    private func stopsLabel(_ stops: Int) -> LocalizedStringKey {
+    private func stopsLabel(_ stops: Int) -> String {
         switch stops {
-        case 0: return "Nonstop"
-        case 1: return "1 stop"
-        default: return "\(stops) stops"
+        case 0: return String(themeKit: "Nonstop")
+        case 1: return String(themeKit: "1 stop")
+        default: return String(themeKit: "\(stops) stops")
         }
     }
 
@@ -257,7 +257,7 @@ public struct FlightCard: View {
             HStack {
                 if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.large).emphasis(.hero) }
                 Spacer()
-                if let onSelect { PrimaryButton("Select") { onSelect() }.size(.small) }
+                if let onSelect { PrimaryButton(String(themeKit: "Select")) { onSelect() }.size(.small) }
             }
         }
     }
@@ -268,11 +268,11 @@ public struct FlightCard: View {
         return h > 0 ? "\(h)h \(m)m" : "\(m)m"
     }
 
-    private var stopsText: LocalizedStringKey {
+    private var stopsText: String {
         switch stops {
-        case 0: return "Nonstop"
-        case 1: return "1 stop"
-        default: return "\(stops) stops"
+        case 0: return String(themeKit: "Nonstop")
+        case 1: return String(themeKit: "1 stop")
+        default: return String(themeKit: "\(stops) stops")
         }
     }
 }

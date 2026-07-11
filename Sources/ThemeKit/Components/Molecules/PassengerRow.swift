@@ -61,7 +61,7 @@ public struct PassengerRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel([name, typeText, seat.map { "seat \($0)" }, statusText].compactMap { $0 }.joined(separator: ", "))
+        .accessibilityLabel([name, typeText, seat.map { String(themeKit: "seat \($0)") }, statusText].compactMap { $0 }.joined(separator: ", "))
     }
 
     @ViewBuilder private var leading: some View {
@@ -83,9 +83,10 @@ public struct PassengerRow: View {
             if let onEdit {
                 Button { onEdit() } label: {
                     Image(systemName: "pencil").font(.system(size: 14, weight: .semibold)).foregroundStyle(accentBase).frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Edit")
+                }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Edit"))
             } else if accessory == .chevron {
                 Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
+                    .accessibilityHidden(true)   // decorative disclosure indicator
             }
         }
     }

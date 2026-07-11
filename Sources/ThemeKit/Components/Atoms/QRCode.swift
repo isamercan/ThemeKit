@@ -37,7 +37,10 @@ public struct QRCode: View {
             }
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("QR code")
+        // Alt text — the CG image is `decorative`, so fold the whole atom into
+        // one labelled element (mirrors Barcode).
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(themeKit: "QR code"))
     }
 
     private static func render(_ string: String) -> CGImage? {

@@ -50,7 +50,7 @@ public struct PriceHistogram: View {
                         .textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                     Spacer()
                     if let resultCount {
-                        Text("\(resultCount) results").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                        Text(String(themeKit: "\(resultCount) results")).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
                     }
                 }
             }
@@ -86,7 +86,7 @@ public struct PriceHistogram: View {
     }
 
     private func formatted(_ value: Double) -> String {
-        Decimal(Int(value.rounded())).formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
+        Decimal(Int(value.rounded())).formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale))
     }
 
     private func heightRatio(_ count: Int) -> CGFloat {

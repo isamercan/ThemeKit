@@ -72,7 +72,7 @@ public struct FareSummary: View {
                     Image(systemName: "info.circle").font(.caption).foregroundStyle(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("More about \(line.label)")
+                .accessibilityLabel(String(themeKit: "More about \(line.label)"))
             }
             Spacer()
             Text(value).textStyle(.bodyBase500).foregroundStyle(valueColor)
@@ -93,7 +93,7 @@ public struct FareSummary: View {
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale))
     }
 }
 

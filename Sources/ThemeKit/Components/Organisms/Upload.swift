@@ -84,6 +84,7 @@ public struct Upload: View {
                 .fill(theme.background(.bgElevatorTertiary))
                 .frame(width: 36, height: 36)
                 .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
+                .accessibilityHidden(true)   // decorative thumbnail placeholder
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(file.name)
@@ -110,6 +111,7 @@ public struct Upload: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Remove \(file.name)"))
         }
         .padding(.vertical, Theme.SpacingKey.sm.value)
     }

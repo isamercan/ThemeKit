@@ -145,7 +145,7 @@ public struct FlightTicketCard: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(isReadOnly)
-                .accessibilityLabel(favoriteState ? "Remove from favourites" : "Add to favourites")
+                .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
             }
         }
     }

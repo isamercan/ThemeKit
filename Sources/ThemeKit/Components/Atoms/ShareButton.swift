@@ -18,7 +18,7 @@ public struct ShareButton: View {
     private var size: ButtonSize?   // nil → the stock 44 pt chrome
     private var accent: SemanticColor?
 
-    public init(_ title: String = "Share", item: String) {
+    public init(_ title: String = String(themeKit: "Share"), item: String) {
         self.title = title
         self.item = item
     }

@@ -69,6 +69,9 @@ private struct IndicatorDot: View {
             .fill(color ?? theme.foreground(.systemcolorsFgError))
             .frame(width: 10, height: 10)
             .overlay(Circle().stroke(theme.background(.bgWhite), lineWidth: 2))
+            // Color-only status dot — decorative to VoiceOver; the host view
+            // carries the semantic (e.g. an "unread" / "online" label).
+            .accessibilityHidden(true)
     }
 }
 

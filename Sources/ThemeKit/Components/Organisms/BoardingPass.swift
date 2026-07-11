@@ -43,7 +43,7 @@ public struct BoardingPass: View {
     private var date: String?
     private var details: [(String, String)] = []   // gate/seat/boarding/terminal…
     private var bookingRef: String?
-    private var passengerLabel = "Passenger"
+    private var passengerLabel = String(themeKit: "Passenger")
     private var barcodeValue: String?
     private var qrValue: String?
     private var accent: SemanticColor?
@@ -78,6 +78,7 @@ public struct BoardingPass: View {
         HStack {
             HStack(spacing: 6) {
                 Image(systemName: airlineIcon).font(.system(size: 14)).foregroundStyle(accentBase)
+                    .accessibilityHidden(true)   // decorative airline glyph
                 if let airline { Text(airline).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)) }
             }
             Spacer()
@@ -95,6 +96,7 @@ public struct BoardingPass: View {
             VStack(spacing: 2) {
                 if let date { Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)) }
                 Image(systemName: "airplane").font(.system(size: 16)).foregroundStyle(accentBase).mirrorsInRTL()
+                    .accessibilityHidden(true)   // decorative route glyph
             }
             Spacer(minLength: 8)
             routeCol(to, city: toCity, time: arrival, alignment: .trailing)
@@ -160,10 +162,10 @@ public extension BoardingPass {
     func gate(_ gate: String? = nil, seat: String? = nil, boarding: String? = nil, terminal: String? = nil) -> Self {
         copy {
             var d: [(String, String)] = []
-            if let terminal { d.append(("Terminal", terminal)) }
-            if let gate { d.append(("Gate", gate)) }
-            if let boarding { d.append(("Boarding", boarding)) }
-            if let seat { d.append(("Seat", seat)) }
+            if let terminal { d.append((String(themeKit: "Terminal"), terminal)) }
+            if let gate { d.append((String(themeKit: "Gate"), gate)) }
+            if let boarding { d.append((String(themeKit: "Boarding"), boarding)) }
+            if let seat { d.append((String(themeKit: "Seat"), seat)) }
             $0.details = d
         }
     }

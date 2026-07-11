@@ -33,7 +33,7 @@ public struct SwapButton: View {
                 .overlay { if bordered { Circle().stroke(theme.border(.borderPrimary), lineWidth: 1) } }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Swap")
+        .accessibilityLabel(String(themeKit: "Swap"))
         .accessibilityAddTraits(.isButton)
     }
 }

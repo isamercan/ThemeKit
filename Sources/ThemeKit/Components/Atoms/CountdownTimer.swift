@@ -148,7 +148,7 @@ public struct CountdownTimer: View {
             let segs = Self.segments(remaining, showsDays: showsDays)
             ForEach(Array(segs.enumerated()), id: \.offset) { index, seg in
                 if index > 0 { Text(":").textStyle(size.textStyle).foregroundStyle(st.foreground(theme)) }
-                box(seg.value, label: seg.label, st: st)
+                box(seg.value, label: Self.localizedUnit(seg.label), st: st)
             }
         }
         .dynamicTypeClamp()
@@ -205,7 +205,20 @@ public struct CountdownTimer: View {
     }
 
     private func accessibilityText(_ remaining: TimeInterval) -> String {
-        remaining <= 0 ? String(themeKit: "Time's up") : Self.segments(remaining, showsDays: showsDays).map { "\($0.value) \($0.label)" }.joined(separator: " ")
+        remaining <= 0 ? String(themeKit: "Time's up") : Self.segments(remaining, showsDays: showsDays).map { "\($0.value) \(Self.localizedUnit($0.label))" }.joined(separator: " ")
+    }
+
+    /// Localizes a `segments(_:showsDays:)` unit token at the display site — the
+    /// pure segment maths (and the `compactString` short-unit map keyed off the
+    /// raw tokens) stay locale-independent.
+    private static func localizedUnit(_ label: String) -> String {
+        switch label {
+        case "days": return String(themeKit: "days")
+        case "hrs": return String(themeKit: "hrs")
+        case "min": return String(themeKit: "min")
+        case "sec": return String(themeKit: "sec")
+        default: return label
+        }
     }
 }
 

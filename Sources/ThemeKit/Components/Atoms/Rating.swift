@@ -38,12 +38,18 @@ public struct Rating: View {
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.locale) private var locale
 
     public init(value: Double) {   // R1
         self.value = value
     }
 
     private var interactive: Bool { onRate != nil && isEnabled }
+
+    /// The score rendered with the captured locale (e.g. "4.3" / "4,3").
+    private var scoreText: String {
+        value.formatted(.number.precision(.fractionLength(1)).locale(locale))
+    }
 
     /// Default sentiment word from the score band when none is supplied.
     private var resolvedSentiment: String {
@@ -75,14 +81,14 @@ public struct Rating: View {
         case .stars:
             stars
         case .numberRate:
-            Text(String(format: "%.1f", value))
+            Text(scoreText)
                 .font(.system(size: size * 1.15, weight: .bold))
                 .foregroundStyle(theme.text(.textPrimary))
             Image(systemName: "\(systemImage).fill")
                 .font(.system(size: size))
                 .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
         case .rateNumberText:
-            Text(String(format: "%.1f", value))
+            Text(scoreText)
                 .font(.system(size: size * 1.15, weight: .bold))
                 .foregroundStyle(theme.foreground(.fgSecondary))
                 .padding(.horizontal, 6).padding(.vertical, 2)
@@ -131,7 +137,7 @@ public struct Rating: View {
     /// The review count is intentionally omitted: the sibling `review` element
     /// announces it, so including it here would double it.
     private var accessibilityValueText: String {
-        let score = String(format: "%.1f", value)
+        let score = scoreText
         switch layout {
         case .stars:
             return String(themeKit: "\(score) out of \(maxValue)")

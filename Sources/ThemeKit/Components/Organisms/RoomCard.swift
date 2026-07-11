@@ -43,7 +43,7 @@ public struct RoomCard: View {
     private var discountText: String?
     private var cornerBadge: String?
     private var selection: Binding<Bool>?
-    private var selectTitle = "Select"
+    private var selectTitle = String(themeKit: "Select")
     private var onSelect: (() -> Void)?
     private var footerSlot: AnyView?
     // Styling — token-fed.
@@ -139,6 +139,7 @@ public struct RoomCard: View {
                 Image(systemName: selection.wrappedValue ? "largecircle.fill.circle" : "circle")
                     .font(.system(size: 22)).foregroundStyle(selection.wrappedValue ? accentSemantic.base : theme.text(.textTertiary))
             }.buttonStyle(.plain).accessibilityLabel(name)
+                .accessibilityAddTraits(selection.wrappedValue ? .isSelected : [])
         } else if let onSelect {
             ThemeButton(selectTitle) { onSelect() }.color(accentSemantic).size(.small)
         }

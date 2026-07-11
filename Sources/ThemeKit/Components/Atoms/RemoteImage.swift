@@ -38,6 +38,7 @@ public struct RemoteImage: View {
     private var contentMode: ContentMode = .fill
     private var cornerRadius: CGFloat = 0
     private var circle: Bool = false
+    private var altText: String?
 
     private let url: URL?
 
@@ -92,6 +93,10 @@ public struct RemoteImage: View {
         .modifier(RatioModifier(ratio: aspectRatio, contentMode: contentMode))
         .clipped()
         .clipShape(clip)
+        // Opt-in alt text via `.altText(_:)`. Without it the image carries no
+        // explicit a11y, so it doesn't inject a generic label into a `.combine`
+        // parent (a decorative image should stay silent).
+        .modifier(AltTextModifier(altText: altText))
     }
 
     @ViewBuilder
@@ -124,10 +129,29 @@ public extension RemoteImage {
     /// Clip to a circle instead of a rounded rectangle.
     func circle(_ on: Bool = true) -> Self { copy { $0.circle = on } }
 
+    /// Accessibility alt text. When set, the image becomes one labelled a11y
+    /// element with the `.isImage` trait; when omitted it stays decorative
+    /// (silent), so it won't pollute a `.combine` parent's announcement.
+    func altText(_ text: String) -> Self { copy { $0.altText = text } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
         return c
+    }
+}
+
+private struct AltTextModifier: ViewModifier {
+    let altText: String?
+    func body(content: Content) -> some View {
+        if let altText {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(altText)
+                .accessibilityAddTraits(.isImage)
+        } else {
+            content
+        }
     }
 }
 

@@ -30,6 +30,8 @@ public struct QuantityStepper: View {
             stepButton(systemName: "minus", enabled: value > range.lowerBound) {
                 value = max(range.lowerBound, value - step)
             }
+            .accessibilityLabel(String(themeKit: "Decrease"))
+            .accessibilityValue("\(value)")
 
             Text("\(value)")
                 .textStyle(.labelMd600)
@@ -40,6 +42,8 @@ public struct QuantityStepper: View {
             stepButton(systemName: "plus", enabled: value < range.upperBound) {
                 value = min(range.upperBound, value + step)
             }
+            .accessibilityLabel(String(themeKit: "Increase"))
+            .accessibilityValue("\(value)")
         }
         .padding(.horizontal, Theme.SpacingKey.sm.value)
         .padding(.vertical, Theme.SpacingKey.xs.value)

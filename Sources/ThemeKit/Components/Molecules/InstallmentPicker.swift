@@ -52,8 +52,8 @@ public struct InstallmentPicker: View {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
     private var accentBase: Color { (accent ?? .primary).base }
-    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
-    private func title(_ o: InstallmentOption) -> String { o.label ?? (o.count <= 1 ? "Single payment" : "\(o.count) instalments") }
+    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
+    private func title(_ o: InstallmentOption) -> String { o.label ?? (o.count <= 1 ? String(themeKit: "Single payment") : String(themeKit: "\(o.count) installments")) }
 
     public var body: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {

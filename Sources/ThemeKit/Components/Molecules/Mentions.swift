@@ -53,6 +53,9 @@ public struct Mentions: View {
                 .textFieldStyle(.plain)
                 .textStyle(.bodyBase400)
                 .lineLimit(3...6)
+                // The placeholder doubles as the spoken label; a generic fallback
+                // keeps the field identifiable when no placeholder is set.
+                .accessibilityLabel(placeholder.isEmpty ? String(themeKit: "Mentions") : placeholder)
                 // Read-only keeps the normal chrome + VoiceOver value but
                 // blocks focus/editing (E1 — distinct from `.disabled`).
                 .allowsHitTesting(!isReadOnly)

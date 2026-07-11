@@ -73,7 +73,7 @@ public struct PriceTrendChart: View {
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
-    private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
+    private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
 
     // MARK: Body
 
@@ -124,19 +124,21 @@ public struct PriceTrendChart: View {
 
     private var header: some View {
         HStack {
-            if let onPrev { chevron("chevron.left", onPrev) }
+            if let onPrev { chevron("chevron.left", label: String(themeKit: "Previous"), onPrev) }
             Spacer()
             if let title { Text(title).textStyle(.labelBase600).foregroundStyle(theme.text(.textSecondary)) }
             Spacer()
-            if let onNext { chevron("chevron.right", onNext) }
+            if let onNext { chevron("chevron.right", label: String(themeKit: "Next"), onNext) }
         }
     }
-    private func chevron(_ name: String, _ action: @escaping () -> Void) -> some View {
+    private func chevron(_ name: String, label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name).font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.foreground(.fgHero))
                 .mirrorsInRTL()
                 .frame(width: 28, height: 28).background(theme.background(.bgSecondaryLight), in: Circle())
-        }.buttonStyle(.plain)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     // MARK: Bar

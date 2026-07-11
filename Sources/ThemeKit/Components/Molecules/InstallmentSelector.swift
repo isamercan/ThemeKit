@@ -117,7 +117,7 @@ public struct InstallmentSelector: View {
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale))
     }
 }
 

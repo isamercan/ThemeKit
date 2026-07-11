@@ -135,6 +135,7 @@ public struct SegmentedTabBar: View {
                         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous).strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Add tab"))
             }
         }
         .padding(style == .pill ? Theme.SpacingKey.xs.value : 0)
@@ -193,6 +194,7 @@ public struct SegmentedTabBar: View {
         }
         .buttonStyle(.plain)
         .disabled(!item.isEnabled)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
     private func cardTab(index: Int, item: TabItem) -> some View {
@@ -216,12 +218,14 @@ public struct SegmentedTabBar: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityAddTraits(isActive ? .isSelected : [])
             if let onClose {
                 Button { onClose(index) } label: {
                     Image(systemName: "xmark").font(.system(size: 10, weight: .bold))
                         .foregroundStyle(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Close \(item.title)"))
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
@@ -280,6 +284,7 @@ public struct SegmentedTabBar: View {
         }
         .buttonStyle(.plain)
         .disabled(!item.isEnabled)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
