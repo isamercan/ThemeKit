@@ -13,6 +13,10 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 COMPONENTS = ROOT / "Sources/ThemeKit/Components"
+# Component roots scanned for the reference/llms output. The neutral catalog plus
+# any domain editions (e.g. ThemeKitTravel) that also ship atomic-layer components,
+# so edition components are counted alongside the neutral ones.
+COMPONENT_ROOTS = [COMPONENTS, ROOT / "Sources/ThemeKitTravel/Components"]
 OUT = ROOT / "skills/themekit/references/components.md"
 # ThemePresets moved into the ThemeKitCore target during the Core split; fall back
 # to the legacy path so this stays runnable on older checkouts.
@@ -156,8 +160,8 @@ def collect():
     all_modifiers = set()
     for label, folder in CATEGORIES:
         items = []
-        base = COMPONENTS / folder
-        for path in sorted(base.rglob("*.swift")):
+        bases = [root / folder for root in COMPONENT_ROOTS if (root / folder).is_dir()]
+        for path in sorted(p for base in bases for p in base.rglob("*.swift")):
             swift = path.read_text(encoding="utf-8")
             lines = swift.split("\n")
             # (name, char-offset) — the offset scopes init extraction to the component.

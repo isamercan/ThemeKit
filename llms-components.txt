@@ -34,12 +34,12 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **205** components (49 atoms · 88 molecules · 68 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **235** components (51 atoms · 104 molecules · 80 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
 
-# Atoms (49)
+# Atoms (51)
 
 _Smallest building blocks — a single visual/interactive primitive._
 
@@ -87,6 +87,7 @@ init(_ content: AvatarContent)
 - `.fill` — Fill treatment for the semantic surface (HeroUI Avatar variants): `.solid` (default) keeps the accent's solid shade with auto-contrast content; `.soft` resolves the surface to the accent `SemanticColor`'s `.soft` shade and the content to its high-contrast `.accent` foreground.
 - `.fillColor` — Surface fill behind the icon/initials (renamed from `background:` to avoid clashing with SwiftUI's `.background`, R5).
 - `.shape` — Circle (default) or rounded square.
+- `.bordered` — Draws a token stroke ring around the avatar (HeroUI `isBordered`) — e.g.
 - `.presence` — Corner presence dot (online / away / busy …); `nil` hides it.
 - `.maxVisible` — How many avatars show before collapsing into the "+N" bubble (default 4, floored at 1).
 
@@ -119,7 +120,7 @@ init(_ text: String, action: (() -> Void)? = nil)
 - `.badgeShape` — Pill (default) or rounded-rectangle outline.
 - `.trailingIcon` — A trailing SF Symbol after the text (e.g.
 - `.badgeColor` — Overrides the text/foreground color (otherwise derived from style + variant).
-- `.gradient` — Fills the badge with a horizontal gradient instead of the style background.
+- `.gradient` — Fills the badge with a horizontal gradient of semantic tokens (each hue's solid shade) instead of the style background; `nil` restores it.
 - `.highlighted` — Lifts the badge off the surface with a subtle drop shadow.
 
 ## Barcode
@@ -147,7 +148,7 @@ init(_ title: String, isSelected: Binding<Bool>)
 
 **Modifiers**
 
-- `.size` — Control size: small / large.
+- `.size` — Control size: small / medium / large — drives paddings and the enforced min-height ramp (36 / 40 / 44pt at the default text size).
 - `.chipStyle` — How a selected chip is filled: tonal / solid.
 - `.icon` — A leading SF Symbol before the title.
 - `.rating` — A leading star + numeric rating before the title.
@@ -180,6 +181,18 @@ CodeBlock(lines)
 **Modifiers**
 
 - `.copyable` — Show a copy-to-clipboard button in the top-trailing corner.
+
+## ColorSwatch
+
+```swift
+ColorSwatch(color, label:)
+```
+
+**Modifiers**
+
+- `.shape` — `.square` (default, `RadiusRole.selector` corners) or `.circle`.
+- `.size` — Chip dimension — `.small` 20 / `.medium` 28 (default) / `.large` 36pt.
+- `.selected` — Draw the hero selection ring (default off).
 
 ## Confetti
 
@@ -291,6 +304,7 @@ HelperText(text)
 
 - `.hasError` — Render the helper text in the error color (maps HeroUI `isInvalid`).
 - `.hidesOnError` — Remove the helper text entirely while `hasError` is set, so a field-error line can take its place (maps HeroUI `hideOnInvalid`).
+- `.links` — Turn substrings of the text into inline tappable links (rendered via `InlineText`) — e.g.
 - `.a11yID` — Namespaced accessibility identifier for UI tests (the text gets `"<id>.message"`).
 
 ## Icon
@@ -349,6 +363,7 @@ init(_ text: String)
 **Modifiers**
 
 - `.required` — Append a required asterisk after the label text.
+- `.links` — Turn substrings of the label into inline tappable links (rendered via `InlineText`) — e.g.
 - `.hasInfo` — Show a trailing info glyph.
 - `.hasError` — Render the label in the error color.
 
@@ -493,6 +508,7 @@ init(value: Double)
 - `.maxValue` — Number of glyphs / the score denominator (default 5).
 - `.starSize` — Glyph point size (default 16).
 - `.allowHalf` — Enables half-step interaction (and half-star tap targets).
+- `.allowClear` — Re-tapping the current value clears the rating to 0 (Ant Rate `allowClear`) — interactive star layout only; VoiceOver users reach 0 through the adjustable decrement as before.
 - `.symbol` — Overrides the SF Symbol used for the glyph (default "star").
 - `.sentiment` — Sentiment word for the `.rateNumberText` layout (otherwise score-derived).
 - `.onRate` — Makes the rating interactive: the closure receives the newly tapped value.
@@ -542,7 +558,8 @@ init(_ score: Double, large: Bool = false)
 
 **Modifiers**
 
-- `.large` — Larger box + type — the chainable twin of the init's `large:` flag.
+- `.size` — Size tier: small (default) / large — the kit's uniform size-enum axis.
+- `.large` — Larger box + type — the boolean twin of the init's `large:` flag.
 - `.accent` — Token-fed fill override (content auto-contrasts); `nil` keeps the stock turquoise token.
 
 ## SearchBadge
@@ -689,6 +706,7 @@ init(_ text: String, onRemove: (() -> Void)? = nil)
 - `.variant` — Fill variant: soft / solid / outline / ghost.
 - `.color` — Color the tag from the full semantic palette (Ant Tag `color`) — reaches hues beyond ``tagStyle(_:)``'s status set (e.g.
 - `.bordered` — Add a hairline border to a soft/solid tag (Ant `bordered`).
+- `.closable` — Make the tag removable, appending the kit ``CloseButton`` after the text/trailing slot (Ant Tag `closable` + `onClose`) — the modifier twin of the `onRemove:` init argument, rendering the standard dismiss atom (muted glyph + full hit slop) instead of the bare glyph.
 
 ## CheckableTag
 
@@ -751,9 +769,21 @@ init(_ text: String)
 - `.eyebrow` — Uppercased kicker rendered above the title.
 - `.action` — Trailing action link (e.g.
 
+## TrendChip
+
+```swift
+TrendChip(trend)
+```
+
+**Modifiers**
+
+- `.positiveIsUp` — Whether an upward trend is the good (success-tinted) outcome.
+- `.showsIcon` — Show or hide the directional arrow glyph (default on).
+- `.size` — Text/glyph scale — `.small` (12pt label) matches `Stat`'s inline badge; `.medium` (14pt, default) reads well standalone.
+
 ---
 
-# Molecules (88)
+# Molecules (104)
 
 _Compositions of atoms — inputs, buttons, selectors, small layouts._
 
@@ -810,6 +840,13 @@ init(_ label: String? = nil, text: Binding<String>, suggest: @escaping nonisolat
 - `.debounce` — Debounce interval for typeahead (async init defaults to 0.3s).
 - `.suggestionEnabled` — Per-suggestion enable predicate; disabled rows are shown greyed and unselectable.
 - `.onSearch` — Fires with the query text on each (debounced) change.
+- `.size` — Control-height preset.
+- `.clearable` — Show a trailing clear button while the field has text (on by default — Autocomplete's classic behavior; pass `false` to hide it).
+- `.loading` — Shows a loading spinner in place of the clear button (caller-driven async option fetch; the built-in async provider spins automatically).
+- `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
+- `.required` — Marks the field required: an error-token asterisk on the label (honoring `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+- `.validate` — Declarative validation (daisyUI Validator): `rules` run against the bound text at `trigger` (`.editingEnd` on blur, `.live` per keystroke, `.submit` on return).
+- `.onValidation` — Reports validity after each `validate(_:on:)` pass — `true` when no error-severity failure is present.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## Breadcrumbs
@@ -898,7 +935,8 @@ init(_ title: String? = nil, action: @escaping () -> Void)
 - `.size` — Control size: xxsmall … large.
 - `.shape` — Corner treatment: rounded / pill / circle / square (circle & square are icon-only).
 - `.fullWidth` — Stretch to the available width.
-- `.loading` — Swap the label for a spinner and block taps while `on`.
+- `.loading` — Show the loading spinner and block taps while `on`.
+- `.spinnerPlacement` — Keep the label while loading and render the spinner beside it on the given edge (HeroUI `spinnerPlacement="start"/"end"`; Ant Button `loading: { icon }`).
 - `.icon` — Leading and/or trailing SF Symbol.
 - `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
 
@@ -915,6 +953,18 @@ init(selection: Binding<Date?>)
 - `.accent` — Token-fed accent for the selected day (today's ring/text follows the same ladder); `nil` (default) keeps the hero tokens.
 - `.showsWeekdayHeader` — Show or hide the weekday-initials row (default on).
 - `.firstWeekday` — Override the first day of the week — `1` = Sunday … `7` = Saturday (clamped); `nil` (default) follows the locale's convention.
+- `.yearPicker` — Make the month-year header tappable to jump across months and years: day grid → year grid → month grid, then back to the chosen month.
+
+## CalendarYearPicker
+
+```swift
+CalendarYearPicker(selection:)
+```
+
+**Modifiers**
+
+- `.range` — Selectable year range; years outside it are dimmed and disabled.
+- `.accent` — Token-fed accent for the selected year (the current-year ring/text follows the same ladder); `nil` (default) keeps the hero tokens.
 
 ## Cascader
 
@@ -926,6 +976,66 @@ Cascader(options, selection:)
 
 - `.placeholder` — Hint shown when nothing is selected.
 - `.changeOnSelect` — Commit the path at every level, not only on a leaf (Ant `changeOnSelect`).
+- `.clearable` — Show a trailing clear button when a path is selected (Ant `allowClear`).
+- `.searchable` — Add a search field atop the dropdown; typing filters to a flat list of matching leaf paths (Ant `showSearch`).
+- `.nodeEnabled` — Per-node enable predicate; disabled nodes are greyed, unselectable, and excluded from search results (kit-standard `optionEnabled` idiom).
+- `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
+
+## AreaChart
+
+```swift
+AreaChart(series)
+```
+
+**Modifiers**
+
+- `.height` — Chart height — `.compact` / `.regular` (default) / `.tall`.
+- `.showsLegend` — Force the legend on/off; default shows it for two or more series.
+- `.showsGrid` — Hairline grid lines (default on).
+- `.curved` — Monotone curve interpolation instead of straight segments (default off).
+- `.stacked` — Stack the series into cumulative bands instead of overlaid washes.
+- `.locale` — Locale for value/tick formatting; defaults to the environment locale.
+
+## BarChart
+
+```swift
+BarChart(series)
+```
+
+**Modifiers**
+
+- `.height` — Chart height — `.compact` / `.regular` (default) / `.tall`.
+- `.showsLegend` — Force the legend on/off; default shows it for two or more series.
+- `.showsGrid` — Hairline grid lines (default on).
+- `.mode` — `.grouped` (default) places series side by side; `.stacked` sums them.
+- `.locale` — Locale for value/tick formatting; defaults to the environment locale.
+
+## DonutChart
+
+```swift
+DonutChart(slices)
+```
+
+**Modifiers**
+
+- `.height` — Chart height — `.compact` / `.regular` (default) / `.tall`.
+- `.innerRadius` — Hole size — `.pie` (no hole) / `.ring` (default) / `.thin`.
+- `.locale` — Locale for value formatting; defaults to the environment locale.
+
+## LineChart
+
+```swift
+LineChart(series)
+```
+
+**Modifiers**
+
+- `.height` — Chart height — `.compact` / `.regular` (default) / `.tall`.
+- `.showsLegend` — Force the legend on/off; default shows it for two or more series.
+- `.showsGrid` — Hairline grid lines (default on).
+- `.curved` — Monotone curve interpolation instead of straight segments (default off).
+- `.showsPoints` — Draw a marker at every data vertex (default off).
+- `.locale` — Locale for value/tick formatting; defaults to the environment locale.
 
 ## Checkbox
 
@@ -942,6 +1052,8 @@ init(_ label: String? = nil, isChecked: Binding<Bool>)
 - `.type` — Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`.
 - `.indeterminate` — Renders the indeterminate (mixed) state instead of a checkmark.
 - `.alignment` — Vertical alignment of the box against a multi-line label.
+- `.controlPlacement` — Which side of the label the box sits on: `.leading` (default) or `.trailing`.
+- `.lineThrough` — Strikes the label through while checked (HeroUI Checkbox `lineThrough`).
 - `.customSize` — Overrides the box side length, bypassing the native `.controlSize` metric.
 - `.accent` — Semantic tint for the selected fill/border (glyph auto-contrasts); `nil` (default) uses the hero tokens.
 - `.infoMessages` — Validation / info messages rendered under the control (drives the border state).
@@ -959,6 +1071,10 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 
 - `.infoMessages` — Validation / info messages rendered under the group (drives the title color).
 - `.selectAll` — Adds a "select all" master row with the given title (nil hides it).
+- `.description` — Group-level supporting text rendered under the title via `HelperText` (Ant/HeroUI group `description`; E5).
+- `.required` — Marks the whole group required: an error-token asterisk after the title (honoring `FieldDefaults.requiredIndicator`) and ", required" in the title's a11y label.
+- `.axis` — Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
+- `.controlPlacement` — Which side of each row's label the box sits on: `.leading` (default) or `.trailing`, forwarded to every option row and the "select all" row.
 - `.optionEnabled` — Per-option enablement predicate (nil enables every option).
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
@@ -1027,6 +1143,16 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 // usage: ChipGroup(options: <[Option]>, selection: $selection, label: "label")
 ```
 
+## ColorArea
+
+```swift
+ColorArea(color:)
+```
+
+**Modifiers**
+
+- `.cornerRadius` — Corner rounding, token-typed — default `.field`; capped to the plane height so a large role never over-rounds a short area.
+
 ## ColorField
 
 ```swift
@@ -1038,6 +1164,29 @@ init(_ label: String, selection: Binding<Color>)
 **Modifiers**
 
 - `.supportsOpacity` — Whether the color well lets the user adjust opacity (defaults to true).
+- `.size` — Control-height preset.
+
+## ColorSlider
+
+```swift
+ColorSlider(channel, color:)
+```
+
+**Modifiers**
+
+- `.trackHeight` — Track thickness — `.regular` (28pt, default) or `.compact` (16pt).
+
+## ColorSwatchPicker
+
+```swift
+ColorSwatchPicker(items, selection:)
+```
+
+**Modifiers**
+
+- `.columns` — Fixed column count (a `LazyVGrid`); `nil` (default) wraps with a `FlowLayout` sized to the container width.
+- `.swatchShape` — Shape of every swatch (default `.square`).
+- `.swatchSize` — Size of every swatch (default `.medium`).
 
 ## ColumnsGrid
 
@@ -1060,7 +1209,8 @@ ControlRow(title, isOn:)
 **Modifiers**
 
 - `.description` — Supporting text rendered under the label.
-- `.control` — Which boolean control renders in the trailing slot: `.toggle` (default), `.checkbox`, or `.radio`.
+- `.control` — Which boolean control renders: `.toggle` (default), `.checkbox`, or `.radio`.
+- `.controlPlacement` — Which side the control sits on: `.trailing` (default, switch-row style) or `.leading` (control-first, checkbox/radio style).
 - `.indicator` — Replaces the built-in control with a custom trailing indicator view.
 - `.required` — Append a required asterisk after the label text (via `InputLabel`).
 - `.hasError` — Render the label + description in the error color and unlock the `errorText(_:)` line.
@@ -1092,6 +1242,10 @@ init(_ label: String? = nil, date: Binding<Date?>)
 **Modifiers**
 
 - `.placeholder` — Placeholder shown while no date is selected.
+- `.size` — Control-height preset.
+- `.required` — Marks the field required: an error-token asterisk on the label (honoring `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+- `.validate` — Declarative validation (daisyUI Validator): `rules` run against the *displayed* date string (empty when no date is set) at `trigger` — `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on every change.
+- `.onValidation` — Reports validity after each `validate(_:on:)` pass — `true` when no error-severity failure is present.
 - `.range` — Restrict the picker to a selectable date range.
 - `.style` — How the chosen date renders in the field (numeric / abbreviated / long / full / relative / custom).
 - `.locale` — Override the formatting locale (defaults to the environment locale).
@@ -1112,7 +1266,7 @@ DatePriceCard(item, isSelected:, action:)
 
 **Modifiers**
 
-- `.currency` — Currency code for the price (default "TRY").
+- `.currency` — Currency code for the price.
 - `.cheapest` — Highlights this as the lowest fare (price shown in success green).
 - `.pill` — Render as a horizontal-strip pill (rounded capsule) instead of a card.
 - `.columns` — Number of columns for the grid layout (default 3).
@@ -1140,6 +1294,17 @@ Dropdown(items:, isPresented:, trigger:)
 - `.indicator` — The leading mark drawn on selected rows (default `.checkmark`).
 - `.shouldCloseOnSelect` — Whether tapping an action row dismisses the menu (default `true`).
 
+## EmojiReactionButton
+
+```swift
+EmojiReactionButton(emoji, count:, initiallyReacted:)
+```
+
+**Modifiers**
+
+- `.size` — Control size: small (default) / medium / large — shares Chip's ``ChipSize`` vocabulary and drives the emoji/count sizes and paddings.
+- `.accent` — Semantic tint for the reacted state (soft fill, border and count); `nil` (default) keeps the stock hero treatment.
+
 ## FieldButton
 
 ```swift
@@ -1152,6 +1317,7 @@ FieldButton(value, action:)
 - `.icon` — A leading SF Symbol.
 - `.trailing` — The trailing accessory symbol (default `chevron.down`; pass `nil` to hide).
 - `.placeholder` — Renders the value in the muted placeholder colour (nothing chosen yet).
+- `.size` — Control-height preset.
 
 ## Fieldset
 
@@ -1267,10 +1433,14 @@ init(_ label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...
 **Modifiers**
 
 - `.step` — Increment/decrement applied by the − / + steppers.
+- `.precision` — Fraction digits shown and kept on commit (E11, Ant `precision`).
 - `.unit` — Trailing unit suffix labelling the value (e.g.
 - `.hint` — Helper text shown under the field (hidden while an error is present).
 - `.errorText` — Error text + error styling; takes precedence over `hint`.
-- `.large` — Use the larger (48pt) field height.
+- `.size` — Control height on the field family's `TextInputSize` ramp (C2).
+- `.required` — Marks the field as required: renders an error-token asterisk after the label (the `InputLabel` treatment, honoring the subtree `FieldDefaults.requiredIndicator`) and appends ", required" to the field's accessibility label (E2, HeroUI `isRequired`).
+- `.validate` — Declarative validation (E3, TextInput parity): evaluates `rules` against the field's text at `trigger` and feeds the first failure into the message list / error styling automatically.
+- `.large` — Legacy binary height (regular 40pt / large 48pt), superseded by the field family's size ramp.
 - `.editable` — Whether the value can be typed (default true); `false` shows it read-only with steppers still active.
 - `.hasInfo` — Shows an info-circle glyph next to the label.
 - `.onValueChange` — Fires with the clamped value whenever it changes (stepper / type / commit).
@@ -1284,7 +1454,7 @@ InstallmentPicker(options, selection:)
 
 **Modifiers**
 
-- `.currency`
+- `.currency` — Currency code for the amounts.
 - `.accent`
 
 ## InstallmentSelector
@@ -1300,6 +1470,21 @@ InstallmentSelector(total:, options:, selection:, currencyCode:)
 - `.interestFreeUpTo` — Instalment counts up to (and including) this are tagged "Interest-free".
 - `.recommended` — Flags one plan as recommended with a badge.
 - `.surcharge` — Per-plan surcharge (interest) added to the base total, keyed by instalment count.
+
+## LanguageSwitcher
+
+A token-bound app-language picker.
+
+```swift
+LanguageSwitcher(languages, selection:)
+```
+
+**Modifiers**
+
+- `.variant` — Presentation archetype — `.menu` (default), `.list`, or `.inline`.
+- `.showsFlags` — Shows a flag emoji before each name (default true).
+- `.nativeNames` — Renders each language endonymically ("Deutsch", "العربية") — default true.
+- `.accent` — Selection tint: explicit → subtree `componentDefaults` accent → the theme's hero foreground.
 
 ## LayoverRow
 
@@ -1350,6 +1535,7 @@ Mentions(text:, options:)
 
 - `.prefix` — The trigger character (Ant `prefix`).
 - `.placeholder` — Placeholder shown when empty.
+- `.size` — Control-height preset for the suggestion rows (the editor itself is multi-line and grows with content).
 
 ## MultiLineTextInput
 
@@ -1369,6 +1555,8 @@ init(_ label: String, text: Binding<String>)
 - `.size` — Editor-height preset (`.xsmall` 80 … `.large` 160; defaults to `.medium`, 120).
 - `.required` — Marks the editor as required: renders an error-token asterisk after the header label (the `InputLabel` treatment) and appends ", required" to the editor's accessibility label (HeroUI `isRequired`, TextInput parity).
 - `.errorText` — Convenience error message appended as an `.error` `InfoMessage`.
+- `.helperText` — Convenience hint appended to the message list as an `.info` `InfoMessage` (parity with `TextInput.helperText`).
+- `.warningText` — Convenience warning appended to the message list as a `.warning` `InfoMessage` (parity with `TextInput.warningText`).
 - `.infoMessages` — Validation / hint messages rendered beneath the editor.
 - `.minHeight` — Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
 - `.externalFocus` — Drive focus from outside (e.g.
@@ -1393,6 +1581,7 @@ init(_ label: String? = nil, options: [Option], selection: Binding<Set<Option>>,
 - `.searchable` — Whether the dropdown shows a search field (default true).
 - `.clearable` — Whether a clear-all button is offered (default true).
 - `.maxTags` — Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
+- `.maxSelection` — Caps how many options can be selected (E13, Ant `maxCount`).
 - `.loading` — Shows a loading spinner in place of the chevron (async option fetch).
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
@@ -1412,9 +1601,12 @@ init(code: Binding<String>, onComplete: ((String) -> Void)? = nil)
 - `.characters` — Which characters the field accepts (default `.digits`).
 - `.groups` — Splits the boxes into visual groups separated by a small dash, e.g.
 - `.placeholder` — Per-slot placeholder: each empty, non-caret box shows the character at its position (e.g.
+- `.size` — Control-height preset.
 - `.secure` — Mask the entered digits (password-style dots) instead of showing them.
 - `.errorText` — Inline error line (appended to `infoMessages` as `.error`, driving the error state).
 - `.infoMessages` — Validation / hint messages displayed below the boxes.
+- `.validate` — Declarative validation (daisyUI Validator): `rules` run against the entered code at `trigger` — `.editingEnd`/`.submit` fire when the last box fills (the OTP's completion moment), `.live` on every keystroke.
+- `.onValidation` — Reports validity after each `validate(_:on:)` pass — `true` when no error-severity failure is present.
 - `.resend` — Adds a countdown + "resend code" row.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
@@ -1463,6 +1655,27 @@ PaymentCardField(number:, expiry:, cvv:)
 - `.accent`
 - `.surface` — Custom fill for the field rows, painted *inside* the ``FieldStyle`` chrome.
 - `.placeholders`
+- `.size` — Control-height preset for every row.
+- `.infoMessages` — Validation / info messages rendered under the group (drives the rows' border state).
+- `.validate` — Declarative validation (daisyUI Validator): `rules` run against the **card number** text (as displayed, space-grouped) at `trigger` — `.editingEnd`/`.submit` when the number row loses focus, `.live` per keystroke.
+- `.onValidation` — Reports validity after each `validate(_:on:)` pass — `true` when no error-severity failure is present.
+
+## PhoneField
+
+```swift
+PhoneField(label, number:)
+```
+
+**Modifiers**
+
+- `.dialCodes` — The selectable dial codes (default: `DialCode.common`).
+- `.placeholder` — Placeholder for the national-number portion (default localized "Phone number").
+- `.searchablePicker` — Searchable picker list (default: `true` when the list has more than 8 entries).
+- `.formatsNumber` — Groups digits as you type using the `TextInputFormatter` machinery.
+- `.infoMessages` — Validation / info messages rendered under the field (drives the border state) — forwarded to the underlying `TextInput`.
+- `.externalFocus` — Drive focus from outside (e.g.
+- `.required` — Marks the field as required: error-token asterisk after the label + ", required" in the accessibility label — forwarded to the underlying `TextInput`.
+- `.a11yID` — Sets the accessibility-identifier namespace (sub-elements get `"<id>.<element>"`) — forwarded to the underlying `TextInput`; the dial-code trigger gets `"<id>.trigger"`, picker rows `"<id>.option"`.
 
 ## PriceBreakdown
 
@@ -1493,7 +1706,7 @@ PriceHistogram(bins:, lowerValue:, upperValue:, in:)
 
 - `.barHeight` — Max bar height in points (default 56).
 - `.accent` — Overrides the selected-bar colour (otherwise the theme accent).
-- `.currency` — Currency for the range / bound labels (default TRY).
+- `.currency` — Currency for the range / bound labels.
 - `.resultCount` — Shows a live selected-range readout and how many results it matches.
 - `.showsBounds` — Shows the min / max bound labels under the slider (and the range readout above).
 
@@ -1506,7 +1719,7 @@ PriceTrendChart(points, selection:)
 **Modifiers**
 
 - `.title` — A centered title (e.g.
-- `.currency` — Currency code for the prices (default "TRY").
+- `.currency` — Currency code for the prices.
 - `.accent` — Bar accent colour (token); `nil` (default) uses the hero foreground.
 - `.selectionAccent` — Colour of the selected-day pill (token); `nil` (default) uses the primary-text/inverse pair.
 - `.selectionColor` — Colour of the selected-day pill (token).
@@ -1573,6 +1786,7 @@ init(_ label: String? = nil, isSelected: Binding<Bool>)
 - `.accent` — Semantic tint for the selected fill/border (glyph auto-contrasts); `nil` (default) uses the hero tokens.
 - `.infoMessages` — Validation / info messages rendered under the control (drives the border state).
 - `.alignment` — Vertical alignment of the radio against a multi-line label.
+- `.controlPlacement` — Which side of the label the radio sits on: `.leading` (default) or `.trailing`.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## RadioGroup
@@ -1588,6 +1802,9 @@ init(title: String? = nil, options: [Option], selection: Binding<Option?>, label
 - `.infoMessages` — Validation / info messages rendered under the group (drives the title color).
 - `.optionEnabled` — Per-option enablement predicate (nil enables every option).
 - `.optionDescription` — Supporting text rendered under each row's label (return nil for none).
+- `.description` — Group-level supporting text rendered under the title via `HelperText` (Ant/HeroUI group `description`; E5).
+- `.required` — Marks the whole group required: an error-token asterisk after the title (honoring `FieldDefaults.requiredIndicator`) and ", required" in the title's a11y label.
+- `.controlPlacement` — Which side of each row's label the radio sits on: `.leading` (default) or `.trailing`, forwarded to every option row.
 - `.accent` — Semantic tint forwarded to every radio's selected fill/border; `nil` (default) uses the hero tokens.
 - `.axis` — Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
@@ -1685,6 +1902,7 @@ init(text: Binding<String>)
 **Modifiers**
 
 - `.placeholder` — Placeholder shown while the field is empty.
+- `.size` — Control-height preset.
 - `.suggestions` — Static typeahead suggestions, filtered locally as the user types (classic init only).
 - `.recent` — Recent searches shown while the field is focused and empty; the optional action drives the header's Clear button.
 - `.onSearch` — Fires with the query text on each (debounced) change.
@@ -1769,7 +1987,8 @@ init(_ items: [SegmentItem], selection: Binding<Int>)
 - `.vertical` — Stack the segments vertically (Ant Segmented `vertical`).
 - `.selectionStyle` — How the active option is drawn — the raised white `.thumb` (default), a hero-tinted `.outline` pill, or a thumbless `.tinted` soft track.
 - `.dividers` — Draw a hairline between adjacent segments — pair with `.tinted()` / `.shape(.round)` for the design-system icon toggle (chart / grid switch).
-- `.tinted` — The thumbless soft-track selection style, tinted with a base `color` (default hero): the track uses `color.soft`, the active option `color.accent`.
+- `.tinted` — The thumbless soft-track selection style, tinted with a base `color`: the track uses `color.soft`, the active option `color.accent`.
+- `.accent` — Semantic tint for the `.tinted` / `.outline` selection styles (standard accent vocabulary); `nil` (default) defers to the subtree ``ComponentDefaults`` accent (set once with `.componentDefaults(accent:)`), then `.primary`.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component.
 
 ## Select
@@ -1788,6 +2007,7 @@ init(_ label: String, options: [Option], selection: Binding<Option?>, optionTitl
 - `.clearable` — Show a trailing clear button when an option is selected.
 - `.searchable` — Use the searchable inline panel instead of the native menu.
 - `.size` — Control height of the trigger field (small / medium / large).
+- `.required` — Marks the field as required: renders an error-token asterisk after the floating label (the `InputLabel` treatment, honoring the subtree `FieldDefaults.requiredIndicator`) and appends ", required" to the trigger's accessibility label (E2, HeroUI `isRequired`).
 - `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
 - `.loading` — Shows a loading spinner in place of the chevron (async option fetch).
 - `.optionEnabled` — Per-option enable predicate; disabled rows are shown greyed and unselectable.
@@ -1805,6 +2025,8 @@ init(_ label: String? = nil, options: [Option], selection: Binding<Option?>, opt
 **Modifiers**
 
 - `.placeholder` — Placeholder shown while no option is selected.
+- `.size` — Control height on the field family's `TextInputSize` ramp (C1).
+- `.required` — Marks the field as required: renders an error-token asterisk after the label (the `InputLabel` treatment, honoring the subtree `FieldDefaults.requiredIndicator`) and appends ", required" to the trigger's accessibility label (E2, HeroUI `isRequired`).
 - `.hint` — Helper text rendered under the field (hidden while an error is shown).
 - `.errorText` — Error message rendered under the field (drives the error border / label color).
 - `.infoMessages` — Validation / info messages rendered under the field as an `InfoMessageList` (their dominant severity drives the `FieldStyle` error / warning border, as in `TextInput`).
@@ -1888,6 +2110,7 @@ Splitter(axis, initialFraction:, first:)
 **Modifiers**
 
 - `.bounds` — Clamp the split fraction (Ant Panel `min` / `max`).
+- `.vertical` — Stack the panes vertically (Ant Splitter `layout="vertical"`) — the kit-standard axis vocabulary (cf.
 
 ## Stat
 
@@ -1933,7 +2156,8 @@ init(_ steps: [Steps.Step], onSelect: ((Int) -> Void)? = nil)
 **Modifiers**
 
 - `.axis` — Layout orientation: horizontal / vertical.
-- `.small` — Compact markers and labels.
+- `.size` — Marker + label size: medium (default) / small — the kit's uniform size-enum axis.
+- `.small` — Compact markers and labels — the boolean twin of `size(.small)`.
 - `.progressDot` — Render minimal progress dots instead of numbered markers (Ant `progressDot`).
 
 ## SuggestionRow
@@ -1954,6 +2178,38 @@ SuggestionRow(title, action:)
 - `.highlight` — Bold + tint the substring of the title matching this query (autocomplete highlight).
 - `.accessory` — Trailing accessory: none (default) / chevron / add.
 - `.accent` — Token-fed accent for the selected background / highlight (default primary).
+
+## TableToggleCell
+
+A row-height boolean toggle.
+
+```swift
+TableToggleCell(isOn:, label:)
+```
+
+## TableSelectCell
+
+A compact menu picker over string options.
+
+```swift
+TableSelectCell()
+```
+
+## TableSliderCell
+
+A compact value slider, tinted with the hero token.
+
+```swift
+TableSliderCell()
+```
+
+## TableColorCell
+
+A system color well for editing a `Color` in place.
+
+```swift
+TableColorCell()
+```
 
 ## TextInput
 
@@ -2031,6 +2287,10 @@ init(_ label: String? = nil, time: Binding<Date?>)
 **Modifiers**
 
 - `.placeholder` — Placeholder shown while no time is selected.
+- `.size` — Control-height preset.
+- `.required` — Marks the field required: an error-token asterisk on the label (honoring `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+- `.validate` — Declarative validation (daisyUI Validator): `rules` run against the *displayed* time string (empty when no time is set) at `trigger` — `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on every change.
+- `.onValidation` — Reports validity after each `validate(_:on:)` pass — `true` when no error-severity failure is present.
 - `.range` — Restrict the picker to a selectable time range.
 - `.minuteInterval` — Snap the selected minute to the nearest multiple of `minutes` (e.g.
 - `.hourCycle` — Force the displayed hour cycle (12 / 24-hour) or follow the locale (default).
@@ -2051,6 +2311,9 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 **Modifiers**
 
 - `.optionDescription` — Supporting text rendered under each row's label (return nil for none).
+- `.optionEnabled` — Per-option enablement predicate — disabled rows dim and their switch stops responding (nil enables every option; the kit-standard group idiom, cf.
+- `.accent` — Semantic track tint forwarded to each row's `ThemeToggle`; `nil` (default) keeps the stock hero track.
+- `.axis` — Lay the rows out along `axis` (vertical default; HStack/VStack mirror for RTL automatically — cf.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## Transfer
@@ -2062,6 +2325,8 @@ Transfer(items, target:)
 **Modifiers**
 
 - `.titles` — Header labels for the source and target boxes (Ant `titles`).
+- `.searchable` — Show a search field in each list box, filtering its rows by title (Ant Transfer `showSearch`).
+- `.itemEnabled` — Per-item enablement predicate — disabled rows dim, can't be checked and never move (nil enables every item; the kit-standard `optionEnabled` idiom, Ant Transfer per-item `disabled`).
 
 ## TreeSelect
 
@@ -2103,9 +2368,22 @@ TripTypeToggle(options, selection:)
 - `.accent` — Token-fed accent for the selected pill (default primary).
 - `.fullWidth` — Stretch pills to fill the width (default on); off = intrinsic width.
 
+## CabinClassSelector
+
+```swift
+CabinClassSelector(selection:)
+```
+
+**Modifiers**
+
+- `.classes` — Subset + order of the offered cabins (default: all four).
+- `.variant` — Presentation: `.segmented` (default), a `.chips` row, or `.list` (RadioGroup-style rows for sheet contexts).
+- `.showsGlyphs` — Show each cabin's SF Symbol next to its label (`.segmented` / `.chips`; the `.list` rows stay text-only, matching `RadioGroup` anatomy).
+- `.accent` — Semantic tint: `.segmented` switches to the tinted selection style, `.list` tints the radios, `.chips` feeds the subtree accent cascade.
+
 ---
 
-# Organisms (68)
+# Organisms (80)
 
 _Full sections — cards, tables, navigation, banners, domain surfaces._
 
@@ -2148,6 +2426,23 @@ init(_ items: [Item], initiallyExpanded: Set<Item.ID> = [], title: @escaping (It
 - `.dividers` — Whether to draw the dividers between rows (default true).
 - `.collapsible` — Whether an open item can be collapsed again (default true).
 - `.itemDisabled` — Per-item disabled predicate — disabled rows render in the disabled text token and don't respond to taps.
+
+## ActionBar
+
+```swift
+ActionBar(count:, actions:, onClear:)
+```
+
+## Agenda
+
+```swift
+Agenda(events)
+```
+
+**Modifiers**
+
+- `.showsDayHeaders` — Show or hide the per-day header rows (default on).
+- `.locale` — Locale for date/time formatting; defaults to the environment locale.
 
 ## AgentPriceRow
 
@@ -2271,6 +2566,7 @@ init(_ text: String)
 **Modifiers**
 
 - `.variant` — Semantic status: neutral / info / success / warning / error / accent (drives accent + icon).
+- `.links` — Turn substrings of the body into inline tappable links (rendered via `InlineText`) — API symmetry with `InfoBanner`, which already supports it.
 - `.calloutStyle` — Surface treatment: plain (transparent) or soft (light tinted surface).
 - `.showsIcon` — Show or hide the leading status icon.
 - `.icon` — Override the leading status glyph (otherwise derived from the variant); `nil` restores the variant's default.
@@ -2289,7 +2585,7 @@ init(_ title: String? = nil, action: (() -> Void)? = nil, @ViewBuilder content: 
 
 - `.subtitle` — Secondary line under the title in the card header.
 - `.elevation` — Surface elevation: none / soft / elevated.
-- `.contentPadding` — Inner content padding (named so it doesn't shadow the native `.padding`).
+- `.contentPadding` — Inner content padding by spacing token (named so it doesn't shadow the native `.padding`; the `SurfaceView`/`TicketStub` twin) — resolved against the environment theme, so it re-skins with a spacing change.
 - `.extraAction` — Trailing header action (Ant `extra`) — renders when both title and action are set.
 - `.loading` — Replace the body with a skeleton placeholder while content loads.
 - `.surface` — Surface fill by background token, threaded into the active ``CardStyle``'s configuration (HeroUI `Card` `variant`): default → `.bgWhite`, `secondary` → `.bgSecondaryLight`, `tertiary` → `.bgTertiary`; HeroUI `transparent` ≈ `.cardStyle(.outlined)` instead.
@@ -2338,6 +2634,18 @@ init(_ text: String, author: String? = nil, time: String? = nil)
 - `.side` — Conversation side: incoming (leading) / outgoing (trailing).
 - `.icon` — Leading/trailing avatar SF Symbol (positioned by `side`).
 - `.accent` — Semantic tint for the bubble fill (foreground auto-contrasts); `nil` (default) keeps the side-based look.
+
+## ColorPickerPanel
+
+```swift
+ColorPickerPanel(color:)
+```
+
+**Modifiers**
+
+- `.showsAlpha` — Show the alpha slider (default on).
+- `.showsHexField` — Show the two-way hex field (default on).
+- `.swatches` — A preset-swatch row; tapping one sets the working color.
 
 ## Counter
 
@@ -2453,7 +2761,7 @@ FareFamilyCard(name, price:)
 **Modifiers**
 
 - `.surface` — Surface fill (background token key, default `.bgBase`).
-- `.currency` — Currency code for the price (default "TRY").
+- `.currency` — Currency code for the price.
 - `.accent` — The tier accent colour — brands the name badge and CTA (green / orange / purple…).
 - `.features` — The feature & rule lines.
 - `.selected` — Selected state (for a CTA card without a binding).
@@ -2519,7 +2827,7 @@ FlightCard(airline:, from:, to:, departure:, arrival:)
 - `.airlineIcon` — A leading airline SF Symbol (default `airplane.circle.fill`).
 - `.badge` — A success badge in the header, e.g.
 - `.onSelect` — Adds a "Select" button to the footer.
-- `.favorite` — A heart toggle in the header bound to a favourite flag.
+- `.favorite` — A heart toggle in the header bound to a favourite flag (controlled — the caller owns persistence).
 - `.scarcity` — Shows a "N seats left" scarcity line (urgent colour).
 - `.fareBrand` — A fare-brand chip next to the airline, e.g.
 
@@ -2549,6 +2857,7 @@ FlightListItem(legs:)
 - `.selected` — Marks the item as the current selection (styles accent it).
 - `.onSelect` — Primary action; expandable styles pin it in the expanded footer.
 - `.expanded` — Drives expandable styles (`.journey`) from outside — e.g.
+- `.favorite` — Self-managed favourite heart (uncontrolled): every built-in style renders the heart in its identity/price corner and the item owns the flag.
 
 ## FlightResultRow
 
@@ -2569,8 +2878,8 @@ FlightResultRow(airline:, from:, to:, departure:, arrival:)
 - `.airlineLogo` — A remote airline logo (overrides the SF Symbol).
 - `.baggage` — A baggage chip, e.g.
 - `.badge` — A success badge, e.g.
-- `.favorite` — A heart toggle bound to a favourite flag.
-- `.bookmark` — A bookmark (save) toggle bound to a flag.
+- `.favorite` — A heart toggle bound to a favourite flag (controlled — the caller owns persistence).
+- `.bookmark` — A bookmark (save) toggle bound to a flag (controlled).
 - `.totalPrice` — A secondary total-price line under the fare, e.g.
 - `.urgency` — An urgency note in the meta row, shown in error red (e.g.
 - `.onSelect` — Adds a Select button (with an optional custom title).
@@ -2591,7 +2900,7 @@ FlightTicketCard(from:, to:)
 - `.airline`
 - `.airlineLogo`
 - `.price`
-- `.favorite`
+- `.favorite` — A heart toggle in the stub bound to a favourite flag (controlled — the caller owns persistence).
 - `.accent`
 - `.elevation`
 - `.surface`
@@ -2607,7 +2916,7 @@ init(systemImage: String = "plus", actions: [FABAction] = [], action: @escaping 
 **Modifiers**
 
 - `.shape` — Corner treatment of the main button: circle / square.
-- `.accent` — Semantic color token driving the main button's fill (R4); `nil` restores the primary default.
+- `.accent` — Semantic color token driving the main button's fill (R4); `nil` (default) defers to the subtree ``ComponentDefaults`` accent (set once with `.componentDefaults(accent:)`), then `.primary`.
 - `.color` — Semantic color token driving the main button's fill (R4).
 - `.badge` — Count bubble on the main button (hidden when 0 or nil).
 
@@ -2725,6 +3034,17 @@ init(_ message: String, title: String? = nil, links: [(substring: String, action
 - `.action` — Trailing inline action button: its label + handler.
 - `.onDismiss` — Trailing dismiss (×) button handler.
 
+## KanbanBoard
+
+```swift
+KanbanBoard(columns:, card:)
+```
+
+**Modifiers**
+
+- `.columnWidth` — Column width tier: compact / regular (default) / wide (Ant Pro Board / HeroUI Pro kanban column sizing).
+- `.spacing` — Gap between columns by spacing token (default `.md`).
+
 ## KeyValueTable
 
 ```swift
@@ -2832,7 +3152,7 @@ LoyaltyCard(tier:, points:)
 - `.unit` — The points unit (default `"pts"`).
 - `.progress` — Progress (0…1) to the next tier, with its name.
 - `.icon` — A tier SF Symbol (default `seal.fill`).
-- `.gradient` — Overrides the brand gradient.
+- `.gradient` — Overrides the brand gradient with semantic tokens (each hue's solid shade); `nil` restores the theme's primary 600→900 gradient.
 - `.animatesValue` — Animates the points balance on change (numeric-text; no-op under Reduce Motion).
 - `.membership` — A scannable membership code (QR or barcode) shown on the card back.
 - `.flippable` — Lets the card flip to its membership code on tap (needs `.membership`).
@@ -2890,6 +3210,8 @@ init(title: String)
 - `.unread` — Show the unread dot next to the timestamp.
 - `.variant` — Semantic variant driving the leading icon and its color (nil = bell).
 - `.onClose` — Show a trailing dismiss button invoking `action`.
+- `.action` — Inline call-to-action under the message — e.g.
+- `.secondaryAction` — Optional secondary inline action rendered after the primary — e.g.
 - `.surface` — Surface fill (background token key, default `.bgWhite`).
 - `.cornerRadius` — Container corner radius role (default `.box`).
 - `.elevation` — Surface elevation (default `.soft` — the classic card shadow).
@@ -3074,7 +3396,7 @@ SeatMap(sections:, selection:)
 - `.fuselage` — Frames the cabin in an aircraft fuselage (nose, tapered body, exit-door bands).
 - `.showsSeatInfo` — Shows a live detail + running-total bar for the last-tapped seat.
 - `.recommended` — Highlights recommended seats with a star.
-- `.currency` — Currency code for per-seat and total pricing (default "TRY").
+- `.currency` — Currency code for per-seat and total pricing.
 - `.seatEnabled` — A custom availability predicate — return false to block a seat (e.g.
 - `.passengers` — Assigns seats to specific travellers: tapping a seat gives it to the active passenger (shown by their initials) and advances to the next unassigned one.
 - `.zoomable` — Enables pinch-to-zoom (1×–2.5×) on the seat grid.
@@ -3271,3 +3593,145 @@ WindowFrame(title, content:)
 
 - `.elevation` — Surface elevation: none / soft / elevated (default soft).
 - `.accent` — Tint the title bar with a semantic color; `nil` (default) uses neutral chrome.
+
+## AirportPicker
+
+Airport search & select.
+
+```swift
+AirportPicker(selection:, suggestions:)
+```
+
+**Modifiers**
+
+- `.onQueryChange` — Debounced query callback — the caller performs its lookup and updates `suggestions`.
+- `.debounce` — Debounce interval for the query callback (default 0.25s, clamped ≥ 0).
+- `.recent` — Recent airports shown before typing; the optional action drives the section header's Clear button.
+- `.popular` — Curated popular airports shown before typing.
+- `.nearby` — Airports near the user shown before typing (the caller resolves location).
+- `.loading` — Skeleton rows while the caller's lookup is in flight.
+- `.placeholder` — Placeholder for the search field / sheet trigger (default "City or airport").
+- `.presentation` — `.inline` (default) embeds the picker; `.sheet` renders a field-shaped trigger opening the search UI in a `BottomSheet`.
+- `.accent` — Semantic tint for the code chips, selection checkmark and Clear action; `nil` (default) keeps the hero/neutral tokens.
+- `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`, e.g.
+
+## CheckInFlow
+
+A check-in journey scaffold — `Steps` header + the current page + a Back / Continue dock.
+
+```swift
+CheckInFlow(steps:, selection:, page:)
+```
+
+**Modifiers**
+
+- `.nextTitle` — Title of the advancing dock button (default "Continue"); on the last step the button shows ``doneTitle(_:)`` instead.
+- `.backTitle` — Title of the back dock button (default "Back").
+- `.doneTitle` — Title of the advancing button on the last step (default "Done") — the tap calls ``onComplete(_:)`` instead of advancing.
+- `.canAdvance` — Gate advancing (e.g.
+- `.onComplete` — Called when the advancing button is tapped on the last step.
+- `.showsStepper` — Show or hide the `Steps` header — hide for compact hosts that provide their own progress chrome.
+- `.accent` — Semantic tint for the done/active step markers; `nil` (default) keeps the stock theme-hero markers.
+
+## FlightTracker
+
+The live flight status board — badge, route + progress, schedule vs estimate, gate/terminal/belt facts and a phase timeline, on a `Card` shell.
+
+```swift
+FlightTracker(info)
+```
+
+**Modifiers**
+
+- `.progress` — En-route progress 0…1 drawn along the route path (clamped; `nil` hides it).
+- `.updated` — "Updated 2 minutes ago" caption — formatted with the environment locale.
+- `.details` — Extra fact rows appended to the facts grid, e.g.
+- `.showsTimeline` — Show the Check-in → Boarding → Departed → Arrived phase timeline (default on).
+- `.accent` — Semantic tint for the progress treatment and estimate emphasis; `nil` (default) derives from the status (`FlightStatus.semantic`).
+- `.surface` — Surface fill for the card shell (background token key, default `.bgWhite`) — threaded into the active `CardStyle` via the composed `Card`.
+- `.elevation` — Card shell elevation: none / soft (default) / elevated.
+
+## PassengerForm
+
+The editable traveler form for booking flows.
+
+```swift
+PassengerForm(title, draft:)
+```
+
+**Modifiers**
+
+- `.fields` — Which fields render, in order (default: all).
+- `.nationalities` — Nationality options as ISO 3166-1 region codes (default: all ISO regions).
+- `.documentRequired` — Renders document number + expiry as required — asterisks on both, and (only when no `validator(_:)` is wired) the rule pack runs field-locally: `.required() + .documentNumber` on the number, `.required()` plus a future-only picker window on the expiry.
+- `.birthDateRange` — Selectable date-of-birth window (default: 120 years back … today).
+- `.validator` — Wires every rendered field into the given validator (ADR-F6): messages, focus and live re-validation flow through it, keyed by `PassengerFormField`.
+- `.accent` — Accent tint for the interactive chrome (date pickers, menu checkmarks).
+
+## PaymentMethodSelector
+
+A payment-method chooser — radio-semantic rows (or tiles) over ``PaymentMethodOption`` values, with an optional inline instalment picker under the selected card option.
+
+```swift
+PaymentMethodSelector(options, selection:)
+```
+
+**Modifiers**
+
+- `.variant` — Layout archetype: `.list` radio rows (default) or `.grid` tiles.
+- `.installments` — Instalment plans shown inline under the selected `.card` option.
+- `.badge` — Per-option badge, e.g.
+- `.disabledMethods` — Options rendered disabled and excluded from selection.
+- `.accent` — Semantic tint for the radio / selected chrome / instalment rows; `nil` (default) uses the primary triad.
+
+## SavedCardsList
+
+A stored-cards chooser — radio-semantic rows over ``SavedCard`` values with optional delete and add-new affordances.
+
+```swift
+SavedCardsList(cards, selection:)
+```
+
+**Modifiers**
+
+- `.onDelete` — Enables the delete affordances — a trailing remove button on every row plus a destructive context-menu entry.
+- `.onAddNew` — Appends an "Add new card" row (and wires the empty state's primary action) that invokes `action`.
+- `.flagsExpired` — Expired cards (per `SavedCard.isExpired`) carry an "Expired" badge and auto-disable (default on); pass `false` to keep them selectable.
+- `.accent` — Semantic tint for the radio / brand glyph / add-new chrome; `nil` (default) uses the primary triad.
+
+## TransportCrossSellCard
+
+A cross-sell for an alternative transport mode — "No flights? Take the bus/train" — with a mode glyph, route endpoints, a lead-in price and a CTA.
+
+```swift
+TransportCrossSellCard(mode, from:, to:)
+```
+
+**Modifiers**
+
+- `.price` — Lead-in price; the currency code resolves via the §10 environment chain (`formatDefaults.currencyCode` → locale currency → "USD").
+- `.duration` — Journey duration, e.g.
+- `.departures` — Frequency/terminal note, e.g.
+- `.badge` — A short accent-tinted flag, e.g.
+- `.onSelect` — The call to action.
+- `.variant` — Layout archetype: `.ribbon` (default, notched strip) or `.inline` (flat row).
+- `.accent` — Overrides the mode-tinted accent (bus `.warning`, train `.info`, ferry `.turquoise`, car `.neutral`); `nil` restores the default.
+
+## TripSearchCard
+
+```swift
+TripSearchCard(draft:, onSearch:)
+```
+
+**Modifiers**
+
+- `.airports` — Data for the embedded ``AirportPicker`` sheets (same caller-owned model as §9.4): the live `suggestions` for the typed query, plus optional `recent` / `popular` sections shown before typing.
+- `.onAirportQuery` — Debounced query callback, plumbed into both embedded pickers — the caller runs its lookup and updates `suggestions`.
+- `.dateRange` — Selectable date window (past dates excluded by default).
+- `.showsCabinPicker` — Show the inline ``CabinClassSelector`` (default true).
+- `.showsTripType` — Show the ``TripTypeToggle`` row (default true).
+- `.ctaTitle` — CTA title (default "Search flights").
+- `.variant` — `.card` (default) · `.hero` (larger treatment for landing headers) · `.compact` (collapsed summary row that expands on tap).
+- `.surface` — Surface fill by background token, threaded into the active ``CardStyle``'s configuration (e.g.
+- `.elevation` — Card elevation.
+- `.accent` — Semantic tint threaded through the composed pieces (trip-type pill, airport-picker chips, cabin selector).
