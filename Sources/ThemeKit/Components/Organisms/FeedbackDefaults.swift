@@ -46,9 +46,28 @@ public struct FeedbackDefaults: Equatable {
     /// Fire a light haptic when a toast appears (default off).
     public var hapticsOnShow: Bool?
 
+    /// Motion token for the toast stack's insert / remove animation (default
+    /// `.base`, as a spring). Gated the `MicroMotion` way — micro-animations
+    /// off or system Reduce Motion on disable the motion entirely, whatever
+    /// this is set to.
+    public var toastMotion: Motion?
+    /// Show a thin drain bar along each toast's bottom edge while its
+    /// auto-dismiss countdown runs (HeroUI `shouldShowTimeoutProgress`;
+    /// default off). Sticky toasts (`duration: nil`) never show it, and it is
+    /// suppressed under Reduce Motion. It pauses with the countdown while the
+    /// toast is being dragged.
+    public var showsTimeoutProgress: Bool?
+    /// Anchor for the `notify(...)` notification card (default `.top` — the
+    /// historical placement). Corner anchors are logical (leading/trailing),
+    /// so they mirror under RTL; the card spans the full width, so what they
+    /// choose is the vertical edge it slides from.
+    public var notificationPosition: ToastPosition?
+
     public init(toastPosition: ToastPosition? = nil, toastDuration: Double? = nil, maxVisibleToasts: Int? = nil,
                 toastOffset: Theme.SpacingKey? = nil, toastSpacing: Theme.SpacingKey? = nil,
-                swipeToDismiss: Bool? = nil, hapticsOnShow: Bool? = nil) {
+                swipeToDismiss: Bool? = nil, hapticsOnShow: Bool? = nil,
+                toastMotion: Motion? = nil, showsTimeoutProgress: Bool? = nil,
+                notificationPosition: ToastPosition? = nil) {
         self.toastPosition = toastPosition
         self.toastDuration = toastDuration
         self.maxVisibleToasts = maxVisibleToasts
@@ -56,6 +75,9 @@ public struct FeedbackDefaults: Equatable {
         self.toastSpacing = toastSpacing
         self.swipeToDismiss = swipeToDismiss
         self.hapticsOnShow = hapticsOnShow
+        self.toastMotion = toastMotion
+        self.showsTimeoutProgress = showsTimeoutProgress
+        self.notificationPosition = notificationPosition
     }
 }
 
@@ -89,7 +111,10 @@ public extension View {
                           toastOffset: Theme.SpacingKey? = nil,
                           toastSpacing: Theme.SpacingKey? = nil,
                           swipeToDismiss: Bool? = nil,
-                          hapticsOnShow: Bool? = nil) -> some View {
+                          hapticsOnShow: Bool? = nil,
+                          toastMotion: Motion? = nil,
+                          showsTimeoutProgress: Bool? = nil,
+                          notificationPosition: ToastPosition? = nil) -> some View {
         transformEnvironment(\.feedbackDefaults) { d in
             if let toastPosition { d.toastPosition = toastPosition }
             if let toastDuration { d.toastDuration = toastDuration }
@@ -98,24 +123,36 @@ public extension View {
             if let toastSpacing { d.toastSpacing = toastSpacing }
             if let swipeToDismiss { d.swipeToDismiss = swipeToDismiss }
             if let hapticsOnShow { d.hapticsOnShow = hapticsOnShow }
+            if let toastMotion { d.toastMotion = toastMotion }
+            if let showsTimeoutProgress { d.showsTimeoutProgress = showsTimeoutProgress }
+            if let notificationPosition { d.notificationPosition = notificationPosition }
         }
     }
 }
 
-#Preview("Feedback defaults: top edge + 1s duration") {
+#Preview("Feedback defaults: top edge + 2s duration") {
     struct Demo: View {
         @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
         var body: some View {
             VStack(spacing: 12) {
                 ThemeButton("Toast (uses defaults)") {
-                    feedback.toast("Anchored top, gone in 1s", kind: .success)
+                    feedback.toast("Top-anchored, 2s, drain bar", kind: .success)
                 }
                 ThemeButton("Explicit duration wins") {
-                    feedback.toast("Sticky despite the default", kind: .info, duration: nil)
+                    feedback.toast("Sticky despite the default (no drain bar)", kind: .info, duration: nil)
                 }
                 .variant(.outline)
                 ThemeButton("Explicit position wins") {
                     feedback.toast("Bottom despite the default", kind: .neutral, position: .bottom)
+                }
+                .variant(.outline)
+                ThemeButton("Corner toast (.topTrailing)") {
+                    feedback.toast("Anchored to the trailing corner", kind: .accent, position: .topTrailing)
+                }
+                .variant(.outline)
+                ThemeButton("Notification (bottom via default)") {
+                    feedback.notify("Synced", message: "See the sync log for details.",
+                                    links: [("sync log", { print("log") })])
                 }
                 .variant(.outline)
             }
@@ -124,5 +161,7 @@ public extension View {
     }
     return Demo()
         .feedbackHost()
-        .feedbackDefaults(toastPosition: .top, toastDuration: 1, maxVisibleToasts: 2)
+        .feedbackDefaults(toastPosition: .top, toastDuration: 2, maxVisibleToasts: 2,
+                          toastMotion: .slow, showsTimeoutProgress: true,
+                          notificationPosition: .bottom)
 }

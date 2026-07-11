@@ -70,8 +70,44 @@ public enum FeedbackKind: String, CaseIterable {
     }
 }
 
-/// Which edge the toast stack is anchored to.
-public enum ToastPosition { case top, bottom }
+/// Where the toast stack is anchored: an edge (centered) or a corner. Corner
+/// cases are *logical* — leading/trailing, not left/right — so they mirror
+/// automatically under right-to-left layouts (Ant/HeroUI's 6 placements).
+public enum ToastPosition: CaseIterable {
+    case top, bottom
+    case topLeading, topTrailing, bottomLeading, bottomTrailing
+
+    /// The vertical screen edge this anchor belongs to — drives the insert /
+    /// remove transition direction and the stacking order.
+    var verticalEdge: Edge {
+        switch self {
+        case .top, .topLeading, .topTrailing: return .top
+        case .bottom, .bottomLeading, .bottomTrailing: return .bottom
+        }
+    }
+
+    /// Overlay alignment for this anchor (logical, so RTL-safe by construction).
+    var overlayAlignment: Alignment {
+        switch self {
+        case .top: return .top
+        case .bottom: return .bottom
+        case .topLeading: return .topLeading
+        case .topTrailing: return .topTrailing
+        case .bottomLeading: return .bottomLeading
+        case .bottomTrailing: return .bottomTrailing
+        }
+    }
+
+    /// Horizontal placement of the stack inside its full-width layer:
+    /// edge cases stay centered (the historical look), corners hug their side.
+    var stackAlignment: Alignment {
+        switch self {
+        case .top, .bottom: return .center
+        case .topLeading, .bottomLeading: return .leading
+        case .topTrailing, .bottomTrailing: return .trailing
+        }
+    }
+}
 
 /// Imperative presenter for app-global feedback. A single shared instance is
 /// injected via `.feedbackHost()`; call it from any descendant view.
@@ -143,17 +179,23 @@ public final class FeedbackPresenter {
         /// Whether `duration` was passed explicitly at the call site — `false`
         /// lets the host substitute `FeedbackDefaults.toastDuration` when set.
         let hasExplicitDuration: Bool
+        /// Tappable substrings of `message`; when non-empty the card renders
+        /// the message via `InlineText` (the shipped links idiom).
+        let links: [(substring: String, action: () -> Void)]
         /// When set, the card body renders this instead of the stock icon +
         /// title / message layout; the card chrome and dismissal are shared.
         let custom: AnyView?
 
         init(title: String, message: String?, kind: FeedbackKind, duration: Double,
-             hasExplicitDuration: Bool = true, custom: AnyView? = nil) {
+             hasExplicitDuration: Bool = true,
+             links: [(substring: String, action: () -> Void)] = [],
+             custom: AnyView? = nil) {
             self.title = title
             self.message = message
             self.kind = kind
             self.duration = duration
             self.hasExplicitDuration = hasExplicitDuration
+            self.links = links
             self.custom = custom
         }
     }
@@ -344,6 +386,27 @@ public final class FeedbackPresenter {
                                               duration: 4, hasExplicitDuration: false)
     }
 
+    /// `notify(_:)` with tappable inline substrings in the message — rendered
+    /// via `InlineText` (API symmetry with `Callout.links` / `AlertToast`'s
+    /// `message(_:links:)`). Additive overload; existing `notify` calls are
+    /// untouched.
+    public func notify(_ title: String, message: String,
+                       links: [(substring: String, action: () -> Void)],
+                       kind: FeedbackKind = .info, duration: Double = 4) {
+        activeNotification = NotificationItem(title: title, message: message, kind: kind,
+                                              duration: duration, links: links)
+    }
+
+    /// Links `notify(_:)` without the `duration:` argument — auto-dismisses
+    /// after the subtree default (`.feedbackDefaults(toastDuration:)` when set,
+    /// else 4s).
+    public func notify(_ title: String, message: String,
+                       links: [(substring: String, action: () -> Void)],
+                       kind: FeedbackKind = .info) {
+        activeNotification = NotificationItem(title: title, message: message, kind: kind,
+                                              duration: 4, hasExplicitDuration: false, links: links)
+    }
+
     /// Present a notification card with fully custom body content. Same top-edge
     /// card chrome, close button, transition and auto-dismiss as `notify(_:)`.
     public func notify<Content: View>(duration: Double = 4, @ViewBuilder content: () -> Content) {
@@ -390,6 +453,23 @@ private struct FeedbackHostModifier: ViewModifier {
         feedbackDefaults.toastPosition ?? defaultPosition
     }
 
+    /// Effective anchor for the notification card:
+    /// `FeedbackDefaults.notificationPosition` when set, else the historical
+    /// top edge. (The card spans the full width, so corner anchors matter for
+    /// their vertical edge; the alignment is logical and RTL-safe regardless.)
+    private var effectiveNotificationPosition: ToastPosition {
+        feedbackDefaults.notificationPosition ?? .top
+    }
+
+    /// Insert/remove animation for the toast stack — `FeedbackDefaults.toastMotion`
+    /// when set (else the stock `.base`), as a spring, gated the `MicroMotion`
+    /// way: `nil` (state applies instantly, no motion) when micro-animations
+    /// are off or the system Reduce Motion setting is on.
+    private var toastStackAnimation: Animation? {
+        guard micro && !reduceMotion else { return nil }
+        return (feedbackDefaults.toastMotion ?? .base).spring
+    }
+
     /// HeroUI-style stack depth: each toast behind the newest peeks out by a few
     /// points and recedes at ~0.97 scale per depth step. Fixed chrome constants
     /// (no semantic token exists for a stack-depth transform).
@@ -406,12 +486,16 @@ private struct FeedbackHostModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environment(presenter)
-            .overlay(alignment: .top) { notificationLayer }
+            .overlay(alignment: effectiveNotificationPosition.overlayAlignment) { notificationLayer }
             .overlay(alignment: .top) { toastLayer(.top) }
             .overlay(alignment: .bottom) { toastLayer(.bottom) }
+            .overlay(alignment: .topLeading) { toastLayer(.topLeading) }
+            .overlay(alignment: .topTrailing) { toastLayer(.topTrailing) }
+            .overlay(alignment: .bottomLeading) { toastLayer(.bottomLeading) }
+            .overlay(alignment: .bottomTrailing) { toastLayer(.bottomTrailing) }
             .overlay { confirmLayer }
             .overlay { loadingLayer }
-            .animation(Motion.base.spring, value: presenter.toasts.map(\.id))
+            .animation(toastStackAnimation, value: presenter.toasts.map(\.id))
             .animation(Motion.base.animation, value: presenter.activeConfirm?.id)
             .animation(Motion.base.animation, value: presenter.activeNotification?.id)
             .animation(Motion.fast.animation, value: presenter.activeLoading)
@@ -450,7 +534,14 @@ private struct FeedbackHostModifier: ViewModifier {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                         if let message = note.message {
-                            Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                            if note.links.isEmpty {
+                                Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                            } else {
+                                // Tappable substrings via the shipped links idiom;
+                                // InlineText's default base color is textSecondary,
+                                // matching the plain-message line above.
+                                InlineText(message, links: note.links).inlineStyle(.bodySm400)
+                            }
                         }
                     }
                 }
@@ -465,7 +556,7 @@ private struct FeedbackHostModifier: ViewModifier {
             .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
             .themeShadow(.elevated)
             .padding(Theme.SpacingKey.md.value)
-            .transition(.move(edge: .top).combined(with: .opacity))
+            .transition(.move(edge: effectiveNotificationPosition.verticalEdge).combined(with: .opacity))
             .task(id: note.id) {
                 // Omitted-duration `notify(...)` falls back to the subtree default.
                 let duration = note.hasExplicitDuration
@@ -484,23 +575,26 @@ private struct FeedbackHostModifier: ViewModifier {
     private func toastLayer(_ position: ToastPosition) -> some View {
         let stack = presenter.toasts.filter { ($0.position ?? effectiveDefaultPosition) == position }
         if !stack.isEmpty {
-            let edge: Edge = position == .top ? .top : .bottom
+            let edge = position.verticalEdge
+            let isTop = edge == .top
             // Newest nearest the anchored edge: bottom keeps array order, top reverses.
-            let ordered = position == .top ? Array(stack.reversed()) : stack
+            let ordered = isTop ? Array(stack.reversed()) : stack
             VStack(spacing: (feedbackDefaults.toastSpacing ?? .sm).value) {
                 ForEach(Array(ordered.enumerated()), id: \.element.id) { index, item in
                     // Depth 0 = the newest toast; ones behind it recede with a
                     // subtle scale + peek offset toward the anchored edge.
                     // Static (flat stack) under Reduce Motion / micro-animations off.
-                    let depth = position == .top ? index : ordered.count - 1 - index
+                    let depth = isTop ? index : ordered.count - 1 - index
                     FeedbackToastRow(item: item, edge: edge) { presenter.dismissToast(item.id) }
                         .scaleEffect(depthOn ? pow(stackScale, CGFloat(depth)) : 1,
-                                     anchor: position == .top ? .top : .bottom)
-                        .offset(y: depthOn ? CGFloat(depth) * stackPeek * (position == .top ? -1 : 1) : 0)
+                                     anchor: isTop ? .top : .bottom)
+                        .offset(y: depthOn ? CGFloat(depth) * stackPeek * (isTop ? -1 : 1) : 0)
                         .zIndex(Double(-depth))   // newest draws above what it overlaps
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
+            // Edge anchors stay centered (the historical look); corner anchors
+            // hug their logical side, mirroring under RTL by construction.
+            .frame(maxWidth: .infinity, alignment: position.stackAlignment)
             .padding((feedbackDefaults.toastOffset ?? .md).value)
         }
     }
@@ -538,6 +632,8 @@ private struct FeedbackToastRow: View {
     let edge: Edge
     let onDismiss: () -> Void
 
+    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Read here (inside the view tree) because `FeedbackPresenter.toast(...)`
     /// is called from outside it — the omitted-duration overloads resolve their
     /// effective duration at this host layer.
@@ -547,10 +643,28 @@ private struct FeedbackToastRow: View {
     /// it is dragged toward its anchored edge.
     @State private var dragProgress: Double = 0
 
+    /// 1…0 fraction of the auto-dismiss countdown still remaining — drives the
+    /// timeout progress bar. Updated by the countdown loop itself, so dragging
+    /// pauses the bar together with the timer.
+    @State private var remainingFraction: Double = 1
+
+    /// Fixed chrome: hairline height of the timeout progress bar (no semantic
+    /// token exists for a meter hairline — cf. `stackPeek` above).
+    private let progressBarHeight: CGFloat = 2
+
     /// Explicit `duration:` (including `nil` = sticky) wins; the omitted-argument
     /// overloads fall back to `FeedbackDefaults.toastDuration`, then the stock 2.5s.
     private var effectiveDuration: Double? {
         item.hasExplicitDuration ? item.duration : (feedbackDefaults.toastDuration ?? item.duration)
+    }
+
+    /// HeroUI `shouldShowTimeoutProgress`: opt-in via `FeedbackDefaults`, only
+    /// meaningful when a countdown exists (suppressed for sticky toasts), and
+    /// suppressed under Reduce Motion — it is a continuously animating drain.
+    private var showsTimeoutProgress: Bool {
+        feedbackDefaults.showsTimeoutProgress == true
+            && effectiveDuration != nil
+            && !reduceMotion
     }
 
     var body: some View {
@@ -568,16 +682,39 @@ private struct FeedbackToastRow: View {
                 while remaining > 0 {
                     try? await Task.sleep(nanoseconds: UInt64(tick * 1_000_000_000))
                     if Task.isCancelled { return }
-                    if dragProgress == 0 { remaining -= tick }
+                    if dragProgress == 0 {
+                        remaining -= tick
+                        // Drain the timeout bar from the same countdown so it
+                        // pauses with the timer while the toast is dragged.
+                        if showsTimeoutProgress { remainingFraction = max(0, remaining / duration) }
+                    }
                 }
                 onDismiss()
             }
     }
 
+    /// Thin drain bar along the toast's bottom edge showing how much of the
+    /// auto-dismiss countdown remains. Purely decorative (hidden from
+    /// accessibility); anchored `.leading` so it drains RTL-correctly.
+    @ViewBuilder private var timeoutProgress: some View {
+        if showsTimeoutProgress {
+            Capsule()
+                .fill(item.kind.toastType.foreground(theme).opacity(0.4))
+                .frame(height: progressBarHeight)
+                .scaleEffect(x: max(0, min(1, remainingFraction)), anchor: .leading)
+                .padding(.horizontal, Theme.SpacingKey.sm.value)
+                .padding(.bottom, Theme.SpacingKey.xs.value)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
     /// The row with the swipe-to-dismiss gesture, unless the subtree default
     /// `FeedbackDefaults.swipeToDismiss` is `false`.
     @ViewBuilder private var swipeableRow: some View {
-        let base = row.themeShadow(.elevated)
+        let base = row
+            .overlay(alignment: .bottom) { timeoutProgress }
+            .themeShadow(.elevated)
         if feedbackDefaults.swipeToDismiss ?? true {
             base.dismissDrag(edge: edge,
                              threshold: .points(60),

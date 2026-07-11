@@ -10,6 +10,7 @@ import SwiftUI
 /// Selection state is owned by the caller (single Set binding — no per-row state).
 public struct CheckboxGroup<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.fieldDefaults) private var fieldDefaults   // F4 — requiredIndicator default
 
     private let title: String?
     private let options: [Option]
@@ -24,6 +25,8 @@ public struct CheckboxGroup<Option: Hashable>: View {
     private var groupDescription: String?                     // E5
     private var axis: Axis = .vertical                        // A6
     private var controlPlacement: HorizontalEdge = .leading   // A5 — forwarded to rows
+    /// `.required()` — group-level asterisk after the title (E2).
+    private var isRequired = false
     private var accessibilityID: String? = nil
     @Environment(\.isReadOnly) private var isReadOnly         // E1 — rows own the tap
 
@@ -63,7 +66,19 @@ public struct CheckboxGroup<Option: Hashable>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
+                // E2 — group-level required mark: the group has no `InputLabel`,
+                // so render the same error-token asterisk manually (the
+                // MultiLineTextInput treatment), honoring `FieldDefaults.requiredIndicator`.
+                HStack(spacing: 2) {
+                    Text(title).foregroundStyle(titleColor)
+                    if isRequired && (fieldDefaults.requiredIndicator ?? true) {
+                        Text(verbatim: "*")
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the title's label suffix
+                    }
+                }
+                .textStyle(.labelMd600)
+                .accessibilityLabel(isRequired ? title + ", " + String(themeKit: "required") : title)
             }
             if let groupDescription {
                 HelperText(groupDescription)   // E5 — group-level supporting text
@@ -166,6 +181,8 @@ public struct CheckboxGroup<Option: Hashable>: View {
                     .controlPlacement(.trailing)                                        // A5
                     .selectAll("All amenities")
                     .description("Filters apply to all room types.")                    // E5
+                CheckboxGroup(title: "Required group", options: ["Wifi", "Pool"], selection: $sel) { $0 }
+                    .required()                                                         // E2
             }
             .padding()
         }
@@ -185,6 +202,11 @@ public extension CheckboxGroup {
     /// Group-level supporting text rendered under the title via `HelperText`
     /// (Ant/HeroUI group `description`; E5).
     func description(_ text: String?) -> Self { copy { $0.groupDescription = text } }
+
+    /// Marks the whole group required: an error-token asterisk after the title
+    /// (honoring `FieldDefaults.requiredIndicator`) and ", required" in the
+    /// title's a11y label. (E2 — HeroUI `isRequired`, Ant required mark.)
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
 
     /// Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
     /// (Ant `Checkbox.Group` / HeroUI `orientation`; A6.) The "select all"
