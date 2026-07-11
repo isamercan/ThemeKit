@@ -36,7 +36,7 @@ public struct Flex<Content: View>: View {
 
     public var body: some View {
         if wraps, axis == .horizontal {
-            FlowLayout(spacing: spacing, lineSpacing: spacing, alignment: .leading) { content }
+            FlowLayout(spacing: spacing, lineSpacing: spacing, alignment: .leading, layoutDirection: layoutDirection) { content }
         } else {
             FlexLayout(axis: axis, gap: spacing, justify: justify, alignment: alignment, layoutDirection: layoutDirection) { content }
         }

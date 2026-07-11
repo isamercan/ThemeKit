@@ -33,6 +33,9 @@ public struct ColorSwatchItem: Identifiable, Equatable, Sendable {
 public struct ColorSwatchPicker: View {
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // `Layout.placeSubviews` computes absolute x that does NOT auto-mirror, so
+    // the container reads the direction and hands it to the layout.
+    @Environment(\.layoutDirection) private var layoutDirection
 
     private let items: [ColorSwatchItem]
     @Binding private var selection: ColorSwatchItem?
@@ -62,7 +65,7 @@ public struct ColorSwatchPicker: View {
                 ForEach(items) { swatchButton($0) }
             }
         } else {
-            FlowLayout(spacing: spacing, lineSpacing: spacing) {
+            FlowLayout(spacing: spacing, lineSpacing: spacing, layoutDirection: layoutDirection) {
                 ForEach(items) { swatchButton($0) }
             }
         }

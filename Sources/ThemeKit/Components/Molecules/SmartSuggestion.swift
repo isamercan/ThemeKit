@@ -60,6 +60,9 @@ public struct SmartSuggestion: View {
         }
     }
 
+    // `labelText + messageText` must stay a `Text` concatenation so the prefix and
+    // message wrap as one paragraph — `.textStyle(_:)` returns `some View`, so the
+    // raw system font here is a justified constraint, not an oversight.
     private var labelText: Text {
         guard let label else { return Text("") }
         return Text(label + ": ").font(.system(size: 14, weight: .semibold)).foregroundColor(tint.strong)

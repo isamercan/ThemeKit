@@ -85,6 +85,7 @@ public struct ListRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.listRowStyle) private var style
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.locale) private var locale
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var subtitle: String?
@@ -253,7 +254,7 @@ public struct ListRow: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             if let rating = meta.rating {
                 HStack(spacing: 2) {
-                    Text(meta.ratingLabel ?? String(format: "%.1f", rating))
+                    Text(meta.ratingLabel ?? rating.formatted(.number.precision(.fractionLength(1)).locale(locale)))
                         .textStyle(.labelSm700)
                         .foregroundStyle(theme.text(.textPrimary))
                     Image(systemName: "star.fill")

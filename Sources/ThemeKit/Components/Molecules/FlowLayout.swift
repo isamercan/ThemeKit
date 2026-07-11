@@ -15,11 +15,36 @@ public struct FlowLayout: Layout {
     public var spacing: CGFloat
     public var lineSpacing: CGFloat
     public var alignment: HorizontalAlignment
+    /// Absolute placement doesn't auto-mirror — under `.rightToLeft` each
+    /// subview's x is mirrored within `bounds` so the first item of every line
+    /// starts at the trailing edge. Containers read `@Environment(\.layoutDirection)`
+    /// and hand it in (see ``Flex``/``Space``).
+    public var layoutDirection: LayoutDirection = .leftToRight
 
-    public init(spacing: CGFloat = 8, lineSpacing: CGFloat = 8, alignment: HorizontalAlignment = .leading) {
+    public init(
+        spacing: CGFloat = 8,
+        lineSpacing: CGFloat = 8,
+        alignment: HorizontalAlignment = .leading
+    ) {
         self.spacing = spacing
         self.lineSpacing = lineSpacing
         self.alignment = alignment
+    }
+
+    /// RTL-aware overload — containers read `@Environment(\.layoutDirection)`
+    /// and pass it so absolute placement mirrors under right-to-left. Kept
+    /// separate from the base init (with `layoutDirection` **required**) so the
+    /// original signature stays source- and ABI-stable.
+    public init(
+        spacing: CGFloat = 8,
+        lineSpacing: CGFloat = 8,
+        alignment: HorizontalAlignment = .leading,
+        layoutDirection: LayoutDirection
+    ) {
+        self.spacing = spacing
+        self.lineSpacing = lineSpacing
+        self.alignment = alignment
+        self.layoutDirection = layoutDirection
     }
 
     public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
@@ -42,10 +67,11 @@ public struct FlowLayout: Layout {
             default: x = bounds.minX
             }
             for item in row.items {
-                subviews[item.index].place(
-                    at: CGPoint(x: x, y: y + (row.height - item.size.height) / 2),
-                    proposal: ProposedViewSize(item.size)
-                )
+                var origin = CGPoint(x: x, y: y + (row.height - item.size.height) / 2)
+                if layoutDirection == .rightToLeft {
+                    origin.x = bounds.maxX - (origin.x - bounds.minX) - item.size.width
+                }
+                subviews[item.index].place(at: origin, proposal: ProposedViewSize(item.size))
                 x += item.size.width + spacing
             }
             y += row.height + lineSpacing

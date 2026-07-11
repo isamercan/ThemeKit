@@ -761,6 +761,9 @@ public struct TimetableFlightListItemStyle: FlightListItemStyle {
 
 private struct TimetableChrome: View {
     @Environment(\.theme) private var theme
+    // `Layout.placeSubviews` computes absolute x that does NOT auto-mirror, so
+    // the container reads the direction and hands it to the layout.
+    @Environment(\.layoutDirection) private var layoutDirection
     let configuration: FlightListItemConfiguration
     @State private var chosen: Date?
 
@@ -777,7 +780,7 @@ private struct TimetableChrome: View {
             if let note = configuration.scheduleNote {
                 Text(note).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
             }
-            FlowLayout(spacing: Theme.SpacingKey.xs.value, lineSpacing: Theme.SpacingKey.xs.value) {
+            FlowLayout(spacing: Theme.SpacingKey.xs.value, lineSpacing: Theme.SpacingKey.xs.value, layoutDirection: layoutDirection) {
                 ForEach(configuration.departures, id: \.self) { date in
                     timeChip(date)
                 }

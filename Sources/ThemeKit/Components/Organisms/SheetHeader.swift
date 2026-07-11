@@ -23,6 +23,7 @@ public struct SheetHeader: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.barStyle) private var barStyle
+    @Environment(\.locale) private var locale
 
     private let title: String
     // Content/appearance — mutated only through the modifiers below (R2).
@@ -112,7 +113,8 @@ public struct SheetHeader: View {
         .frame(height: 3)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String(themeKit: "Progress"))
-        .accessibilityValue(String(themeKit: "\(Int(max(0, min(1, value)) * 100)) percent"))
+        // Locale-formatted fraction (e.g. "75%") — VoiceOver speaks the percent sign.
+        .accessibilityValue(max(0, min(1, value)).formatted(.percent.precision(.fractionLength(0)).locale(locale)))
     }
 }
 

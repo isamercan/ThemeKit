@@ -9,6 +9,7 @@ import SwiftUI
 /// A token-bound quantity stepper (− value +), bounded by a range.
 public struct QuantityStepper: View {
     @Environment(\.theme) private var theme
+    @Environment(\.locale) private var locale
 
     @Binding private var value: Int
     private let range: ClosedRange<Int>
@@ -25,15 +26,18 @@ public struct QuantityStepper: View {
         self.range = range
     }
 
+    /// The bound value rendered in the captured locale (visible text + a11y values).
+    private var formattedValue: String { value.formatted(.number.locale(locale)) }
+
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.md.value) {
             stepButton(systemName: "minus", enabled: value > range.lowerBound) {
                 value = max(range.lowerBound, value - step)
             }
             .accessibilityLabel(String(themeKit: "Decrease"))
-            .accessibilityValue("\(value)")
+            .accessibilityValue(formattedValue)
 
-            Text("\(value)")
+            Text(formattedValue)
                 .textStyle(.labelMd600)
                 .foregroundStyle(theme.text(.textPrimary))
                 .frame(minWidth: 24)
@@ -43,7 +47,7 @@ public struct QuantityStepper: View {
                 value = min(range.upperBound, value + step)
             }
             .accessibilityLabel(String(themeKit: "Increase"))
-            .accessibilityValue("\(value)")
+            .accessibilityValue(formattedValue)
         }
         .padding(.horizontal, Theme.SpacingKey.sm.value)
         .padding(.vertical, Theme.SpacingKey.xs.value)
@@ -51,7 +55,7 @@ public struct QuantityStepper: View {
             Capsule().strokeBorder(theme.border(.borderPrimary), lineWidth: 1)
         )
         .a11y(A11yElement.Control.stepper, in: accessibilityID)
-        .accessibilityValue("\(value)")
+        .accessibilityValue(formattedValue)
     }
 
     private func stepButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
