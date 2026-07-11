@@ -19,11 +19,13 @@ public struct InstallmentSelector: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let total: Decimal
     private let options: [Int]
     @Binding private var selection: Int
-    private let currencyCode: String
+    private let currencyCode: String?
     // Appearance/state — mutated only through the modifiers below (R2).
     private var interestFreeUpTo: Int = 0
     private var recommendedCount: Int?
@@ -34,6 +36,20 @@ public struct InstallmentSelector: View {
         self.options = options
         self._selection = selection
         self.currencyCode = currencyCode
+    }
+
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD" (§10).
+    public init(total: Decimal, options: [Int], selection: Binding<Int>) {
+        self.total = total
+        self.options = options
+        self._selection = selection
+        self.currencyCode = nil
+    }
+
+    /// Explicit `currencyCode:` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -101,7 +117,7 @@ public struct InstallmentSelector: View {
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
     }
 }
 

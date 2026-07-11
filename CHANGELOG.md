@@ -8,7 +8,11 @@ breaking changes bump the **major**.
 ## [Unreleased]
 
 ### Added
+- **`FormatDefaults` environment + `.formatDefaults(currencyCode:)` modifier** (neutral `ThemeKit`) — sets a subtree-wide default ISO-4217 currency for every price-bearing component, so the currency is provided once at the root instead of per call site.
 - **`SemanticColor` now conforms to `Sendable`**, and **`CardBrand` now conforms to `Sendable, CaseIterable, Codable`** — additive conformances (no signature change) so `Sendable` value types (e.g. edition environment defaults) can carry a `SemanticColor`, and `CardBrand`-bearing models can be `Codable`.
+
+### Changed
+- **Price components now resolve their currency from the environment** instead of a hardcoded `"TRY"`/`"USD"` default. The resolution chain is: explicit `currencyCode:` argument › `.formatDefaults(currencyCode:)` › the environment `\.locale`'s currency › `"USD"` terminal fallback. **Source-compatible** (existing signatures unchanged; added omitted-argument overloads), but **render-visible**: a call site that omitted `currencyCode:` and relied on silently getting `TRY`/`USD` will now show the environment-resolved currency. Pin it explicitly with `.formatDefaults(currencyCode: "TRY")` at your root, or pass an explicit code per call. Affects ~23 components (PriceTag, FareSummary, FlightCard, RoomCard, DestinationCard, InstallmentPicker, …).
 - **`ThemeKitTravel`** library product — the opt-in flight/booking **domain edition** (composition over forking: it wraps the neutral `ThemeKit` catalog rather than re-implementing it). This first drop is the packaging foundation — the SPM target/product plus the edition's own String Catalog (`String(themeKitTravel:)`); the booking-flow components land in follow-ups. **No package trait and no re-export** (mirroring `ThemeKitCalendar`): add `ThemeKitTravel` to a target and write `import ThemeKitTravel` alongside `import ThemeKit` to opt in — a consumer who doesn't compiles nothing from it and downloads the same package. Part of the [#229](https://github.com/isamercan/ThemeKit/issues/229) modular direction (ADR: `THEMEKITTRAVEL_ARCHITECTURE.md`).
 
 ## [1.1.0] - 2026-07-10

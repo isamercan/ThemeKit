@@ -26,6 +26,8 @@ public struct RoomCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let name: String
     // Content — mutated only through the modifiers below (R2).
@@ -35,7 +37,7 @@ public struct RoomCard: View {
     private var occupancyIcon = "person.2.fill"
     private var features: [FareFeature] = []
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var originalPrice: Decimal?
     private var unit: String?
     private var discountText: String?
@@ -55,6 +57,11 @@ public struct RoomCard: View {
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         // The shell (fill, corner clipping, border, shadow) is drawn by the active
@@ -97,7 +104,7 @@ public struct RoomCard: View {
 
     private var priceBreakdown: PriceBreakdown? {
         guard let price else { return nil }
-        var b = PriceBreakdown(price, currencyCode: currencyCode).size(.medium)
+        var b = PriceBreakdown(price, currencyCode: resolvedCurrency).size(.medium)
         if let unit { b = b.unit(unit) }
         if let originalPrice { b = b.original(originalPrice) }
         if let discountText { b = b.discountBadge(discountText) }
@@ -146,6 +153,9 @@ public extension RoomCard {
     func occupancy(_ text: String?, icon: String = "person.2.fill") -> Self { copy { $0.occupancy = text; $0.occupancyIcon = icon } }
     func features(_ items: [FareFeature]) -> Self { copy { $0.features = items } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
     func unit(_ text: String?) -> Self { copy { $0.unit = text } }
     func discountBadge(_ text: String?) -> Self { copy { $0.discountText = text } }

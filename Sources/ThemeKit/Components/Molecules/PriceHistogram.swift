@@ -21,6 +21,8 @@ public struct PriceHistogram: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let bins: [Int]
     @Binding private var lowerValue: Double
@@ -29,7 +31,7 @@ public struct PriceHistogram: View {
     // Appearance/state — mutated only through the modifiers below (R2).
     private var barHeight: CGFloat = 56
     private var accent: Color?
-    private var currencyCode: String = "TRY"
+    private var currencyCode: String?
     private var resultCount: Int?
     private var showsBounds: Bool = false
 
@@ -78,8 +80,13 @@ public struct PriceHistogram: View {
 
     private var selectedColor: Color { accent ?? theme.foreground(.fgHero) }
 
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+
     private func formatted(_ value: Double) -> String {
-        Decimal(Int(value.rounded())).formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+        Decimal(Int(value.rounded())).formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
     }
 
     private func heightRatio(_ count: Int) -> CGFloat {
@@ -106,7 +113,8 @@ public extension PriceHistogram {
     func accent(_ color: Color?) -> Self { copy { $0.accent = color } }
     /// Token-bound overload — selected bars use the semantic colour's base.
     func accent(_ color: SemanticColor) -> Self { copy { $0.accent = color.base } }
-    /// Currency for the range / bound labels (default TRY).
+    /// Currency for the range / bound labels. Unset, it resolves from
+    /// `\.formatDefaults`, then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Shows a live selected-range readout and how many results it matches.
     func resultCount(_ count: Int?) -> Self { copy { $0.resultCount = count } }

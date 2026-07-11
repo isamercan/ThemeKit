@@ -28,6 +28,8 @@ public struct FlightCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     // Required content (R1).
     private let airline: String
@@ -40,7 +42,7 @@ public struct FlightCard: View {
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var stops: Int = 0
     private var price: Decimal?
-    private var currencyCode: String = "TRY"
+    private var currencyCode: String?
     private var airlineSystemImage: String = "airplane.circle.fill"
     private var badge: String?
     private var onSelect: (() -> Void)?
@@ -202,9 +204,14 @@ public struct FlightCard: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+
     private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 2) {
-            Text(date.formatted(date: .omitted, time: .shortened))
+            // Captured-locale fix (§10): schedule times honour the injected \.locale.
+            Text(date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)))
                 .textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
             Text(code)
                 .textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
@@ -237,7 +244,7 @@ public struct FlightCard: View {
             footerSlot
         } else {
             HStack {
-                if let price { PriceTag(price, currencyCode: currencyCode).size(.large).emphasis(.hero) }
+                if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.large).emphasis(.hero) }
                 Spacer()
                 if let onSelect { PrimaryButton("Select") { onSelect() }.size(.small) }
             }
@@ -269,6 +276,9 @@ public extension FlightCard {
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     /// The fare, rendered as a hero `PriceTag` in the footer.
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     /// A leading airline SF Symbol (default `airplane.circle.fill`).
     func airlineIcon(_ systemName: String) -> Self { copy { $0.airlineSystemImage = systemName } }
     /// A success badge in the header, e.g. `"Cheapest"`.

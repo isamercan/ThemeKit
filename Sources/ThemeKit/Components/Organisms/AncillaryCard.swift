@@ -23,6 +23,8 @@ public struct AncillaryCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let title: String
     // Content/appearance — mutated only through the modifiers below (R2).
@@ -30,7 +32,7 @@ public struct AncillaryCard: View {
     private var imageURL: URL?
     private var subtitle: String?
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var priceSuffix: String?
     private var badgeText: String?
     private var quantity: Binding<Int>?
@@ -46,6 +48,9 @@ public struct AncillaryCard: View {
 
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
     private var isActive: Bool { (added?.wrappedValue ?? false) || ((quantity?.wrappedValue ?? 0) > 0) }
 
@@ -94,7 +99,7 @@ public struct AncillaryCard: View {
 
     private func priceLine(_ amount: Decimal) -> some View {
         HStack(spacing: 2) {
-            Text(amount.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))
+            Text(amount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))
                 .textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
             if let priceSuffix { Text(priceSuffix).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
         }
@@ -161,6 +166,13 @@ public extension AncillaryCard {
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY", suffix: String? = nil) -> Self {
         copy { $0.price = amount; $0.currencyCode = currencyCode; $0.priceSuffix = suffix }
+    }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    /// Replicates every parameter except `currencyCode` so
+    /// `price(450, suffix: "/ bag")` binds here, not the hardcoded default.
+    func price(_ amount: Decimal?, suffix: String? = nil) -> Self {
+        copy { $0.price = amount; $0.priceSuffix = suffix }
     }
     func badge(_ text: String?) -> Self { copy { $0.badgeText = text } }
     /// A quantity stepper bound to `binding` (mutually exclusive with ``added(_:)``).

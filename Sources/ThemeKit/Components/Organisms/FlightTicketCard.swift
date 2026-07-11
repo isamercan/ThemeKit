@@ -28,6 +28,8 @@ import SwiftUI
 public struct FlightTicketCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let from: String
     private let to: String
@@ -42,7 +44,7 @@ public struct FlightTicketCard: View {
     private var airlineIcon = "airplane"
     private var airlineLogo: URL?
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var favorite: Binding<Bool>?
     private var accent: SemanticColor?
     private var elevation: CardElevation = .soft
@@ -54,6 +56,10 @@ public struct FlightTicketCard: View {
     }
 
     private var accentBase: Color { (accent ?? .primary).base }
+
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         // Decorative-shell exception: the perforated `TicketStub` surface (fill +
@@ -119,7 +125,7 @@ public struct FlightTicketCard: View {
             }
             if let airline { Text(airline).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary)).lineLimit(1) }
             Spacer(minLength: 6)
-            if let price { PriceTag(price, currencyCode: currencyCode).size(.medium).emphasis(.standard).fractionDigits(0) }
+            if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.medium).emphasis(.standard).fractionDigits(0) }
             if let favorite {
                 Button { favorite.wrappedValue.toggle() } label: {
                     Image(systemName: favorite.wrappedValue ? "heart.fill" : "heart")
@@ -154,6 +160,9 @@ public extension FlightTicketCard {
     func airline(_ name: String?, icon: String = "airplane") -> Self { copy { $0.airline = name; $0.airlineIcon = icon } }
     func airlineLogo(_ url: URL?) -> Self { copy { $0.airlineLogo = url } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func favorite(_ binding: Binding<Bool>) -> Self { copy { $0.favorite = binding } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }

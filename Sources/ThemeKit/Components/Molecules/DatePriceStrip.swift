@@ -28,12 +28,14 @@ public struct DatePriceCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let item: DatePriceItem
     private let isSelected: Bool
     private let action: () -> Void
     // Appearance — mutated only through the modifiers below (R2).
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var isCheapest = false
     private var pill = false
 
@@ -41,6 +43,11 @@ public struct DatePriceCard: View {
         self.item = item
         self.isSelected = isSelected
         self.action = action
+    }
+
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     private var priceColor: Color {
@@ -52,7 +59,7 @@ public struct DatePriceCard: View {
             if pill { pillShell } else { cardedShell }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(item.date), \(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))\(isCheapest ? ", lowest fare" : "")")
+        .accessibilityLabel("\(item.date), \(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))\(isCheapest ? ", lowest fare" : "")")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -77,7 +84,7 @@ public struct DatePriceCard: View {
             Text(item.date)
                 .textStyle(isSelected ? .labelSm600 : .bodySm400)
                 .foregroundStyle(theme.text(.textPrimary))
-            Text(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))
+            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))
                 .textStyle(.overline400)
                 .foregroundStyle(isCheapest ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
         }
@@ -94,7 +101,7 @@ public struct DatePriceCard: View {
         VStack(spacing: 2) {
             Text(item.date).textStyle(.labelSm600)
                 .foregroundStyle(isSelected ? theme.foreground(.fgHero) : theme.text(.textSecondary))
-            Text(item.price.formatted(.currency(code: currencyCode).precision(.fractionLength(2))))
+            Text(item.price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(2))))
                 .textStyle(.labelBase700).foregroundStyle(priceColor)
         }
         .frame(maxWidth: .infinity)
@@ -105,7 +112,8 @@ public struct DatePriceCard: View {
 }
 
 public extension DatePriceCard {
-    /// Currency code for the price (default "TRY").
+    /// Currency code for the price. Unset, it resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Highlights this as the lowest fare (price shown in success green).
     func cheapest(_ on: Bool = true) -> Self { copy { $0.isCheapest = on } }
@@ -126,7 +134,9 @@ public struct DatePriceStrip: View {
     @Binding private var selection: Int
     // Appearance/state — mutated only through the modifiers below (R2).
     @Environment(\.theme) private var theme
-    private var currencyCode = "TRY"
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
+    private var currencyCode: String?
     private var columns = 3
     private var highlightsCheapest = true
     private var stripLayout = false
@@ -141,6 +151,12 @@ public struct DatePriceStrip: View {
     private var cheapestIndex: Int? {
         guard highlightsCheapest, !items.isEmpty else { return nil }
         return items.indices.min(by: { items[$0].price < items[$1].price })
+    }
+
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    /// Passed down explicitly so every card renders the strip's one resolved code.
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -166,7 +182,7 @@ public struct DatePriceStrip: View {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                         DatePriceCard(item, isSelected: i == selection) { selection = i }
-                            .currency(currencyCode)
+                            .currency(resolvedCurrency)
                             .cheapest(i == cheapest)
                             .pill()
                             .id(i)
@@ -186,7 +202,7 @@ public struct DatePriceStrip: View {
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: max(1, columns)), spacing: 8) {
             ForEach(Array(items.enumerated()), id: \.offset) { i, item in
                 DatePriceCard(item, isSelected: i == selection) { selection = i }
-                    .currency(currencyCode)
+                    .currency(resolvedCurrency)
                     .cheapest(i == cheapest)
             }
         }
@@ -209,7 +225,8 @@ public struct DatePriceStrip: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension DatePriceStrip {
-    /// Currency code for the prices (default "TRY").
+    /// Currency code for the prices. Unset, it resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Number of columns for the grid layout (default 3).
     func columns(_ count: Int) -> Self { copy { $0.columns = max(1, count) } }

@@ -11,6 +11,8 @@ import SwiftUI
 
 public struct SeatCell: View {
     @Environment(\.theme) private var theme
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     // Content (R1) + state.
     private let seat: Seat
@@ -22,7 +24,7 @@ public struct SeatCell: View {
     private let display: SeatDisplay
     private let palette: SeatPalette
     private let customContent: ((SeatContext) -> AnyView)?
-    private let currencyCode: String
+    private let currencyCode: String?
     private let action: () -> Void
 
     public init(_ seat: Seat,
@@ -47,6 +49,35 @@ public struct SeatCell: View {
         self.customContent = customContent
         self.currencyCode = currencyCode
         self.action = action
+    }
+
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    public init(_ seat: Seat,
+                size: CGFloat = 44,
+                isSelected: Bool = false,
+                isSelectable: Bool = true,
+                isRecommended: Bool = false,
+                assignedInitials: String? = nil,
+                display: SeatDisplay = .icon,
+                palette: SeatPalette = .default,
+                customContent: ((SeatContext) -> AnyView)? = nil,
+                action: @escaping () -> Void = {}) {
+        self.seat = seat
+        self.size = size
+        self.isSelected = isSelected
+        self.isSelectable = isSelectable
+        self.isRecommended = isRecommended
+        self.assignedInitials = assignedInitials
+        self.display = display
+        self.palette = palette
+        self.customContent = customContent
+        self.currencyCode = nil
+        self.action = action
+    }
+
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -151,7 +182,7 @@ public struct SeatCell: View {
         if seat.isOccupied { return "Occupied" }
         if !isSelectable { return "Unavailable" }
         if isSelected { return "Selected" }
-        if let price = seat.price { return "Available, \(price.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))" }
+        if let price = seat.price { return "Available, \(price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))" }
         return "Available"
     }
 }

@@ -27,12 +27,14 @@ public struct StickyBookingBar: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.barStyle) private var barStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let ctaTitle: String
     private let action: () -> Void
     // Content/appearance — mutated only through the modifiers below (R2).
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var originalPrice: Decimal?
     private var note: String?
     private var discountText: String?
@@ -54,6 +56,10 @@ public struct StickyBookingBar: View {
 
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
+
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         if barStyle.isDefault {
@@ -97,7 +103,7 @@ public struct StickyBookingBar: View {
     }
     private var priceBreakdown: PriceBreakdown? {
         guard let price else { return nil }
-        var b = PriceBreakdown(price, currencyCode: currencyCode).size(.large).emphasis(.hero)
+        var b = PriceBreakdown(price, currencyCode: resolvedCurrency).size(.large).emphasis(.hero)
         if let note { b = b.note(note) }
         if let originalPrice { b = b.original(originalPrice) }
         if let discountText { b = b.discountBadge(discountText) }
@@ -125,6 +131,9 @@ private struct BarShadow: ViewModifier {
 
 public extension StickyBookingBar {
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
     func note(_ text: String?) -> Self { copy { $0.note = text } }
     func discountBadge(_ text: String?) -> Self { copy { $0.discountText = text } }

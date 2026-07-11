@@ -24,9 +24,11 @@ import SwiftUI
 public struct FareSummary: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let lines: [FareLine]
-    private let currencyCode: String
+    private let currencyCode: String?
     // Appearance/state — mutated only through the modifiers below (R2).
     private var onInfoHandler: ((FareLine) -> Void)?
     private var footerSlot: AnyView?
@@ -34,6 +36,17 @@ public struct FareSummary: View {
     public init(_ lines: [FareLine], currencyCode: String = "TRY") {   // R1 — content
         self.lines = lines
         self.currencyCode = currencyCode
+    }
+
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    public init(_ lines: [FareLine]) {   // R1 — content
+        self.lines = lines
+        self.currencyCode = nil
+    }
+
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -74,13 +87,13 @@ public struct FareSummary: View {
             HStack {
                 Text(line.label).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
-                PriceTag(line.amount, currencyCode: currencyCode).size(.large).emphasis(.hero).animatesValue()
+                PriceTag(line.amount, currencyCode: resolvedCurrency).size(.large).emphasis(.hero).animatesValue()
             }
         }
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)))
     }
 }
 

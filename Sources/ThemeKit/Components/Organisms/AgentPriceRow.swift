@@ -18,6 +18,8 @@ import SwiftUI
 public struct AgentPriceRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let provider: String
     private let action: () -> Void
@@ -30,7 +32,7 @@ public struct AgentPriceRow: View {
     private var badgeStyle: BadgeStyle = .success
     private var warningText: String?
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var originalPrice: Decimal?
     private var ctaTitle = "Select"
     private var recommended = false
@@ -46,6 +48,11 @@ public struct AgentPriceRow: View {
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
@@ -91,7 +98,7 @@ public struct AgentPriceRow: View {
     }
     private var priceBreakdown: PriceBreakdown? {
         guard let price else { return nil }
-        var b = PriceBreakdown(price, currencyCode: currencyCode).size(.medium).emphasis(.hero).align(.trailing)
+        var b = PriceBreakdown(price, currencyCode: resolvedCurrency).size(.medium).emphasis(.hero).align(.trailing)
         if let originalPrice { b = b.original(originalPrice) }
         return b
     }
@@ -117,6 +124,9 @@ public extension AgentPriceRow {
     func badge(_ text: String?, style: BadgeStyle = .success) -> Self { copy { $0.badgeText = text; $0.badgeStyle = style } }
     func warning(_ text: String?) -> Self { copy { $0.warningText = text } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
     func cta(_ title: String) -> Self { copy { $0.ctaTitle = title } }
     func recommended(_ on: Bool = true) -> Self { copy { $0.recommended = on } }

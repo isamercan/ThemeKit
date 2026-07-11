@@ -22,6 +22,8 @@ public struct FlightResultRow: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     // Required content (R1).
     private let airline: String
@@ -38,7 +40,7 @@ public struct FlightResultRow: View {
     private var stops = 0
     private var extraLegs: [FlightLeg] = []
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var baggage: String?
     private var badge: String?
     private var favorite: Binding<Bool>?
@@ -107,6 +109,10 @@ public struct FlightResultRow: View {
         }
     }
 
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+
     private var priceBlock: some View {
         VStack(alignment: .trailing, spacing: 4) {
             if favorite != nil || bookmark != nil {
@@ -127,9 +133,9 @@ public struct FlightResultRow: View {
                     }
                 }
             }
-            if let price { PriceTag(price, currencyCode: currencyCode).emphasis(.hero).fractionDigits(2) }
+            if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero).fractionDigits(2) }
             if let totalLabel, let totalAmount {
-                Text("\(totalLabel): \(totalAmount.formatted(.currency(code: currencyCode).precision(.fractionLength(0))))")
+                Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))")
                     .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)).fixedSize()
             }
             if let onSelect { ThemeButton(selectTitle) { onSelect() }.size(.small) }
@@ -178,6 +184,9 @@ public extension FlightResultRow {
     func addLeg(_ leg: FlightLeg) -> Self { copy { $0.extraLegs.append(leg) } }
     /// The fare.
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     /// A leading airline SF Symbol (default `airplane.circle.fill`).
     func airlineIcon(_ systemName: String) -> Self { copy { $0.airlineSystemImage = systemName } }
     /// A remote airline logo (overrides the SF Symbol).

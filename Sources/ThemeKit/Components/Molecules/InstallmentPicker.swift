@@ -33,11 +33,13 @@ public struct InstallmentOption: Identifiable, Sendable {
 public struct InstallmentPicker: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let options: [InstallmentOption]
     @Binding private var selection: Int
     // Config — mutated only through the modifiers below (R2).
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var accent: SemanticColor?
 
     public init(_ options: [InstallmentOption], selection: Binding<Int>) {   // R1
@@ -45,8 +47,12 @@ public struct InstallmentPicker: View {
         self._selection = selection
     }
 
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
     private var accentBase: Color { (accent ?? .primary).base }
-    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: currencyCode).precision(.fractionLength(0))) }
+    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
     private func title(_ o: InstallmentOption) -> String { o.label ?? (o.count <= 1 ? "Single payment" : "\(o.count) instalments") }
 
     public var body: some View {
@@ -86,6 +92,8 @@ public struct InstallmentPicker: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension InstallmentPicker {
+    /// Currency code for the amounts. Unset, it resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 

@@ -59,8 +59,8 @@ public struct FlightRoute: View {
     }
 
     private var accessibilitySummary: String {
-        let departs = departure.formatted(date: .omitted, time: .shortened)
-        let arrives = arrival.formatted(date: .omitted, time: .shortened)
+        let departs = departure.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale))
+        let arrives = arrival.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale))
         return "\(origin) \(departs) to \(destination) \(arrives), \(durationText), \(stopsAccessibility)"
     }
 
