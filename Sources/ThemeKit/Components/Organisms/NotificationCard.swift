@@ -29,6 +29,11 @@ public struct NotificationCard<Actions: View>: View {
     private var type: FeedbackKind?
     private var onClose: (() -> Void)?
     private var leadingSlot: AnyView?
+    // Inline CTA row (Ant notification `actions`; Callout/InfoBanner pattern).
+    private var actionTitle: String?
+    private var onAction: (() -> Void)?
+    private var secondaryActionTitle: String?
+    private var onSecondaryAction: (() -> Void)?
     // Shell — token-fed; defaults match the previous `Card`-provided chrome.
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var radiusRole: Theme.RadiusRole = .box
@@ -80,11 +85,28 @@ public struct NotificationCard<Actions: View>: View {
                 if let actions {
                     actions.padding(.top, Theme.SpacingKey.xs.value)
                 }
+                if actionTitle != nil || secondaryActionTitle != nil {
+                    HStack(spacing: Theme.SpacingKey.md.value) {
+                        if let actionTitle, let onAction {
+                            Button(action: onAction) {
+                                Text(actionTitle).textStyle(.labelSm600).foregroundStyle(theme.text(.textHero))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        if let secondaryActionTitle, let onSecondaryAction {
+                            Button(action: onSecondaryAction) {
+                                Text(secondaryActionTitle).textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.top, Theme.SpacingKey.xs.value)
+                }
             }
             Spacer(minLength: 0)
             if let onClose {
                 Button(action: onClose) {
-                    Icon(systemName: "xmark").size(.xs).color(theme.text(.textTertiary))
+                    Icon(systemName: "xmark").size(.xs).colorOverride(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Dismiss"))
@@ -100,7 +122,7 @@ public struct NotificationCard<Actions: View>: View {
         if let leadingSlot {
             leadingSlot
         } else {
-            Icon(systemName: iconName).size(.sm).color(iconColor)
+            Icon(systemName: iconName).size(.sm).colorOverride(iconColor)
         }
     }
 }
@@ -128,6 +150,18 @@ public extension NotificationCard {
 
     /// Show a trailing dismiss button invoking `action`.
     func onClose(_ action: (() -> Void)?) -> Self { copy { $0.onClose = action } }
+
+    /// Inline call-to-action under the message — e.g. "View" (Ant notification
+    /// `actions`; the Callout/InfoBanner `action(_:onAction:)` pattern). For
+    /// richer content, compose the `actions:` init slot instead.
+    func action(_ title: String, onAction: @escaping () -> Void) -> Self {
+        copy { $0.actionTitle = title; $0.onAction = onAction }
+    }
+
+    /// Optional secondary inline action rendered after the primary — e.g. "Undo".
+    func secondaryAction(_ title: String, onAction: @escaping () -> Void) -> Self {
+        copy { $0.secondaryActionTitle = title; $0.onSecondaryAction = onAction }
+    }
 
     /// Replace the leading icon region with custom content — an avatar, a brand
     /// mark. Omit to keep the `variant(_:)`-driven bell icon.
@@ -162,6 +196,13 @@ public extension NotificationCard {
         NotificationCard(title: "7 days left until your holiday begins")
             .message("Rixos Sungate")
             .date("November 28, 2024")
+        // D6 — inline action row via the Callout/InfoBanner modifier pattern.
+        NotificationCard(title: "Your price alert dropped")
+            .message("The route you follow is now 12% cheaper.")
+            .variant(.success)
+            .action("View") {}
+            .secondaryAction("Dismiss") {}
+            .onClose {}
     }
     .padding()
 }

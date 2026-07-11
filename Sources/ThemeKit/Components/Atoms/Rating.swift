@@ -30,6 +30,7 @@ public struct Rating: View {
     private var maxValue: Int = 5
     private var size: CGFloat = 16
     private var allowHalf: Bool = false
+    private var allowClear: Bool = false
     private var systemImage: String = "star"
     private var sentiment: String? = nil
     private var onRate: ((Double) -> Void)? = nil
@@ -196,10 +197,16 @@ public struct Rating: View {
     private func tapTargets(for index: Int) -> some View {
         HStack(spacing: 0) {
             Color.clear.contentShape(Rectangle())
-                .onTapGesture { onRate?(allowHalf ? Double(index) - 0.5 : Double(index)) }
+                .onTapGesture { rate(allowHalf ? Double(index) - 0.5 : Double(index)) }
             Color.clear.contentShape(Rectangle())
-                .onTapGesture { onRate?(Double(index)) }
+                .onTapGesture { rate(Double(index)) }
         }
+    }
+
+    /// Routes a tap through the clear-on-repeat rule: re-tapping the current
+    /// value resets to 0 when `allowClear` is on (Ant Rate `allowClear`).
+    private func rate(_ newValue: Double) {
+        onRate?(allowClear && value == newValue ? 0 : newValue)
     }
 
     private func color(for index: Int) -> Color {
@@ -229,6 +236,10 @@ public extension Rating {
     func starSize(_ points: CGFloat) -> Self { copy { $0.size = points } }
     /// Enables half-step interaction (and half-star tap targets).
     func allowHalf(_ on: Bool = true) -> Self { copy { $0.allowHalf = on } }
+    /// Re-tapping the current value clears the rating to 0 (Ant Rate
+    /// `allowClear`) — interactive star layout only; VoiceOver users reach 0
+    /// through the adjustable decrement as before.
+    func allowClear(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
     /// Overrides the SF Symbol used for the glyph (default "star").
     func symbol(_ systemImage: String) -> Self { copy { $0.systemImage = systemImage } }
     /// Sentiment word for the `.rateNumberText` layout (otherwise score-derived).
@@ -253,6 +264,7 @@ public extension Rating {
                 Rating(value: 4.3).countLabel("(128)")                                   // continuous fill
                 Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {}  // numeric + tappable review
                 Rating(value: v).allowHalf().onRate { v = $0 }                            // interactive
+                Rating(value: v).allowClear().onRate { v = $0 }                           // re-tap current value → 0
                 Rating(value: 3).symbol("heart")
             }
             .padding()

@@ -186,7 +186,15 @@ public extension LoyaltyCard {
     func progress(_ value: Double, toNextTier tier: String? = nil) -> Self { copy { $0.progress = value; $0.nextTier = tier } }
     /// A tier SF Symbol (default `seal.fill`).
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
-    /// Overrides the brand gradient.
+    /// Overrides the brand gradient with semantic tokens (each hue's solid
+    /// shade); `nil` restores the theme's primary 600→900 gradient.
+    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.gradientOverride = colors?.map(\.solid) } }
+    /// Raw-color gradient override (back-compat); prefer the token-bound
+    /// overload. Disfavored so member-shorthand literals like
+    /// `[.purple, .pink]` — valid as both `[Color]` and `[SemanticColor]` —
+    /// resolve to the token overload instead of being ambiguous.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use gradient(_: [SemanticColor]?) — the token-bound overload.")
     func gradient(_ colors: [Color]?) -> Self { copy { $0.gradientOverride = colors } }
     /// A brand logo slot in the top-trailing corner (replaces the tier icon).
     func logo<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.logoSlot = AnyView(content()) } }
@@ -205,10 +213,16 @@ public extension LoyaltyCard {
 }
 
 #Preview {
-    LoyaltyCard(tier: "Gold", points: 8_430)
-        .memberName("Elif Kaya")
-        .progress(0.62, toNextTier: "Platinum")
-        .padding()
+    VStack(spacing: 16) {
+        LoyaltyCard(tier: "Gold", points: 8_430)
+            .memberName("Elif Kaya")
+            .progress(0.62, toNextTier: "Platinum")
+        // G5 — token gradient twin (solid shades of semantic hues).
+        LoyaltyCard(tier: "Emerald", points: 4_120)
+            .memberName("Ada Deniz")
+            .gradient([.success, .turquoise])
+    }
+    .padding()
 }
 
 #Preview("Outlined style (back face)") {

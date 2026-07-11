@@ -205,7 +205,15 @@ public extension Badge {
     /// Overrides the text/foreground color (otherwise derived from style + variant).
     @available(*, deprecated, message: "Use badgeStyle(_:) with a semantic BadgeStyle (plus variant(_:)) instead of a raw color.")
     func badgeColor(_ color: Color?) -> Self { copy { $0.textColor = color } }
-    /// Fills the badge with a horizontal gradient instead of the style background.
+    /// Fills the badge with a horizontal gradient of semantic tokens (each
+    /// hue's solid shade) instead of the style background; `nil` restores it.
+    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.gradient = colors?.map(\.solid) } }
+    /// Raw-color gradient (back-compat); prefer the token-bound overload.
+    /// Disfavored so member-shorthand literals like `[.purple, .pink]` —
+    /// valid as both `[Color]` and `[SemanticColor]` — resolve to the token
+    /// overload instead of being ambiguous.
+    @_disfavoredOverload
+    @available(*, deprecated, message: "Use gradient(_: [SemanticColor]?) — the token-bound overload.")
     func gradient(_ colors: [Color]?) -> Self { copy { $0.gradient = colors } }
     /// Lifts the badge off the surface with a subtle drop shadow.
     func highlighted(_ on: Bool = true) -> Self { copy { $0.highlighted = on } }
@@ -238,6 +246,12 @@ private struct BadgeHighlight: ViewModifier {
             Badge("Medium").badgeStyle(.info).size(.medium)
             Badge("Large").badgeStyle(.info).size(.large)
             Badge("Rounded").badgeStyle(.success).badgeShape(.rounded)
+        }
+        // G5 — token gradient twin (solid shades of semantic hues); `.solid`
+        // variant keeps the on-solid foreground over the gradient fill.
+        HStack {
+            Badge("Pro").gradient([.purple, .pink]).variant(.solid)
+            Badge("Deal").gradient([.primary, .turquoise]).variant(.solid)
         }
     }
     .padding()

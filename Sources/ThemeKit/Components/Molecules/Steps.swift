@@ -14,6 +14,12 @@ public enum StepState {
     case done, active, todo, error
 }
 
+/// Size tiers for ``Steps`` markers + labels — the kit's uniform size-enum
+/// vocabulary (replaces the boolean `small()` toggle, C5).
+public enum StepsSize: Sendable {
+    case small, medium
+}
+
 /// A horizontal or vertical step / progress indicator with done / active / todo /
 /// error states, an optional progress dot, and tap-to-navigate.
 ///
@@ -42,7 +48,7 @@ public struct Steps: View {
 
     // Appearance — mutated only through the modifiers below (R2).
     private var axis: Axis = .horizontal
-    private var small = false
+    private var size: StepsSize = .medium
     private var progressDot = false
     /// Custom per-step marker (`marker(_:)`); nil renders the stock circle/number.
     private var markerBuilder: ((Step, Int) -> AnyView)? = nil
@@ -52,6 +58,7 @@ public struct Steps: View {
         self.onSelect = onSelect
     }
 
+    private var small: Bool { size == .small }
     private var dotSize: CGFloat { progressDot ? 12 : (small ? 22 : 28) }
 
     public var body: some View {
@@ -227,8 +234,13 @@ public extension Steps {
     /// Layout orientation: horizontal / vertical.
     func axis(_ a: Axis) -> Self { copy { $0.axis = a } }
 
-    /// Compact markers and labels.
-    func small(_ on: Bool = true) -> Self { copy { $0.small = on } }
+    /// Marker + label size: medium (default) / small — the kit's uniform
+    /// size-enum axis.
+    func size(_ s: StepsSize) -> Self { copy { $0.size = s } }
+
+    /// Compact markers and labels — the boolean twin of `size(.small)`.
+    @available(*, deprecated, message: "Use size(_:) with a StepsSize.")
+    func small(_ on: Bool = true) -> Self { size(on ? .small : .medium) }
 
     /// Render minimal progress dots instead of numbered markers (Ant `progressDot`).
     func progressDot(_ on: Bool = true) -> Self { copy { $0.progressDot = on } }
@@ -253,6 +265,8 @@ public extension Steps {
 #Preview {
     VStack(spacing: 40) {
         Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])
+        // C5 — the size-enum axis (compact markers + labels).
+        Steps([.init("Cart", state: .done), .init("Pay", state: .active), .init("Done", state: .todo)]).size(.small)
         Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)]).axis(.vertical)
         // Custom per-step markers; the percent ring still wraps the active step.
         Steps([.init("Cart", state: .done), .init("Pay", state: .active, percent: 0.6), .init("Done", state: .todo)])

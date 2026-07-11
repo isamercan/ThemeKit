@@ -68,6 +68,7 @@ public enum SegmentedSelectionStyle { case thumb, outline, tinted }
 public struct SegmentedControl: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.componentDefaults) private var componentDefaults
 
     private let items: [SegmentItem]
     @Binding private var selection: Int
@@ -77,10 +78,19 @@ public struct SegmentedControl: View {
     private var size: SegmentedSize = .medium
     private var shape: SegmentedShape = .default
     private var selectionStyle: SegmentedSelectionStyle = .thumb
-    private var tintColor: SemanticColor = .primary
+    /// Explicit `.accent(_:)` / `.tinted(_:)` color; `nil` defers to the
+    /// subtree `componentDefaults` accent, then `.primary` (provider cascade, F3).
+    private var tintColor: SemanticColor?
     private var isVertical = false
     private var showsDividers = false
     private var accessibilityID: String? = nil
+
+    /// The resolved tint for the `.tinted` / `.outline` selection styles:
+    /// explicit modifier ?? subtree `componentDefaults.accent` ?? `.primary`.
+    private var resolvedTint: SemanticColor { tintColor ?? componentDefaults.accent ?? .primary }
+    /// `true` while nothing (explicit or provider) re-tints the control — the
+    /// stock hero chroma applies, keeping the default look pixel-identical.
+    private var usesStockTint: Bool { tintColor == nil && componentDefaults.accent == nil }
 
     @State private var hovered: Int?
     @Namespace private var pill
@@ -110,7 +120,7 @@ public struct SegmentedControl: View {
 
     /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.
     private var trackFill: Color {
-        selectionStyle == .tinted ? tintColor.soft : theme.background(.bgBase)
+        selectionStyle == .tinted ? resolvedTint.soft : theme.background(.bgBase)
     }
 
     public var body: some View {
@@ -188,8 +198,10 @@ public struct SegmentedControl: View {
                 thumbShape.fill(theme.background(.bgWhite)).themeShadow(.soft)
                     .matchedGeometryEffect(id: "pill", in: pill)
             case .outline:
-                thumbShape.fill(SemanticColor.primary.soft)
-                    .overlay(thumbShape.stroke(theme.border(.borderHero), lineWidth: 2))
+                // Stock hue keeps the historical hero-border chroma exactly;
+                // an explicit/provider accent re-tints the pill + stroke.
+                thumbShape.fill(resolvedTint.soft)
+                    .overlay(thumbShape.stroke(usesStockTint ? theme.border(.borderHero) : resolvedTint.border, lineWidth: 2))
                     .matchedGeometryEffect(id: "pill", in: pill)
             case .tinted:
                 EmptyView()   // no thumb — the soft track + hero foreground carry selection
@@ -207,7 +219,7 @@ public struct SegmentedControl: View {
         guard enabled else { return theme.text(.textDisabled) }
         guard isActive else { return theme.text(.textSecondary) }
         // The tinted style follows its base color's accent; others use the hero.
-        return selectionStyle == .tinted ? tintColor.accent : theme.text(.textHero)
+        return selectionStyle == .tinted ? resolvedTint.accent : theme.text(.textHero)
     }
 }
 
@@ -228,12 +240,20 @@ public extension SegmentedControl {
     /// Draw a hairline between adjacent segments — pair with `.tinted()` / `.shape(.round)`
     /// for the design-system icon toggle (chart / grid switch).
     func dividers(_ on: Bool = true) -> Self { copy { $0.showsDividers = on } }
-    /// The thumbless soft-track selection style, tinted with a base `color`
-    /// (default hero): the track uses `color.soft`, the active option `color.accent`.
-    /// Shortcut for `.selectionStyle(.tinted)` with a color.
-    func tinted(_ color: SemanticColor = .primary) -> Self {
+    /// The thumbless soft-track selection style, tinted with a base `color`:
+    /// the track uses `color.soft`, the active option `color.accent`. `nil`
+    /// (default) defers to the subtree ``ComponentDefaults`` accent, then the
+    /// hero primary. Shortcut for `.selectionStyle(.tinted)` with a color.
+    func tinted(_ color: SemanticColor? = nil) -> Self {
         copy { $0.selectionStyle = .tinted; $0.tintColor = color }
     }
+
+    /// Semantic tint for the `.tinted` / `.outline` selection styles (standard
+    /// accent vocabulary); `nil` (default) defers to the subtree
+    /// ``ComponentDefaults`` accent (set once with
+    /// `.componentDefaults(accent:)`), then `.primary`. The stock `.thumb`
+    /// style keeps its neutral chroma.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.tintColor = color } }
     /// Sets the accessibility-identifier namespace for this component.
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
 
@@ -261,6 +281,14 @@ public extension SegmentedControl {
                     SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
                                       SegmentItem(icon: "map")], selection: $c).fullWidth(false)
                     SegmentedControl(["A", "B", "C"], selection: $d).vertical().fullWidth(false)
+                    // F3 — provider cascade: no explicit accent → the subtree
+                    // componentDefaults re-tints .tinted/.outline; explicit wins.
+                    VStack(alignment: .leading, spacing: 8) {
+                        SegmentedControl(["Chart", "Grid"], selection: $a).tinted().dividers().fullWidth(false)
+                        SegmentedControl(["Day", "Week"], selection: $b).selectionStyle(.outline)
+                        SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
+                    }
+                    .componentDefaults(accent: .turquoise)
                 }
                 .padding()
             }

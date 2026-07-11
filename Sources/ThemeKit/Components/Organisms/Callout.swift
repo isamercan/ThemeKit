@@ -68,6 +68,8 @@ public struct Callout: View {
     private var style: CalloutStyle = .plain
     private var showIcon = true
     private var iconOverride: String?
+    private var leadingView: AnyView?
+    private var trailingView: AnyView?
     private var actionTitle: String?
     private var onAction: (() -> Void)?
     private var onClose: (() -> Void)?
@@ -80,11 +82,16 @@ public struct Callout: View {
     }
 
     private var hasAction: Bool { actionTitle != nil && onAction != nil }
-    private var hasTrailing: Bool { hasAction || onClose != nil }
+    private var hasTrailing: Bool { hasAction || onClose != nil || trailingView != nil }
 
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
-            if showIcon {
+            // Leading indicator: a custom view replaces the stock status icon
+            // entirely (the InfoBanner slot pair, D3); otherwise the glyph,
+            // optionally overridden per-instance via `icon(_:)`.
+            if let leadingView {
+                leadingView
+            } else if showIcon {
                 Image(systemName: iconOverride ?? type.systemImage)
                     .font(.system(size: 14))
                     .accessibilityLabel(type.accessibilityLabel)
@@ -98,6 +105,9 @@ public struct Callout: View {
             }
             if hasTrailing {
                 Spacer(minLength: Theme.SpacingKey.sm.value)
+                if let trailingView {
+                    trailingView
+                }
                 if let actionTitle, let onAction {
                     Button(action: onAction) {
                         Text(actionTitle).textStyle(.labelSm600)
@@ -144,6 +154,21 @@ public extension Callout {
     /// `nil` restores the variant's default.
     func icon(_ systemName: String?) -> Self { copy { $0.iconOverride = systemName } }
 
+    /// Replace the stock status icon with a custom leading view — e.g. a
+    /// `Spinner` for an in-progress note (mirrors `InfoBanner.leading`, D3).
+    /// Wins over `icon(_:)` and `showsIcon(_:)`; inherits the variant's accent
+    /// foreground, so plain glyphs tint correctly with zero configuration.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingView = AnyView(content()) }
+    }
+
+    /// Custom trailing accessory rendered before the text-link action and the
+    /// dismiss button — e.g. a `Badge` or a small `ThemeButton` (mirrors
+    /// `InfoBanner.trailing`, D3).
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.trailingView = AnyView(content()) }
+    }
+
     /// Trailing inline action button (title + handler).
     func action(_ title: String, onAction: @escaping () -> Void) -> Self {
         copy { $0.actionTitle = title; $0.onAction = onAction }
@@ -168,6 +193,12 @@ public extension Callout {
         Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft)
         Callout("Brand-primary emphasis.").variant(.accent).calloutStyle(.soft)
         Callout("Custom glyph via icon override.").variant(.info).icon("bell.badge")
+        // D3 — slot pair mirroring InfoBanner.
+        Callout("Checking availability…").variant(.accent).calloutStyle(.soft)
+            .leading { Spinner().size(14).lineWidth(2).accent(.primary) }
+        Callout("Fare updated a moment ago.").variant(.info).calloutStyle(.soft)
+            .trailing { Badge("New").badgeStyle(.info).size(.small) }
+            .onClose {}
     }
     .padding()
 }

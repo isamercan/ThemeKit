@@ -20,7 +20,13 @@ public struct Card<Content: View>: View {
 
     // Appearance/config — mutated only through the modifiers below (R2).
     private var elevation: CardElevation = .soft
+    /// Raw padding (deprecated escape hatch); `paddingKey` wins when set.
     private var padding: CGFloat = 16
+    /// Token padding (`contentPadding(_ key:)`) — resolved against the
+    /// environment theme so it re-skins with a spacing-scale change.
+    private var paddingKey: Theme.SpacingKey?
+
+    private var resolvedPadding: CGFloat { paddingKey.map { theme.spacing($0) } ?? padding }
     private var subtitle: String?
     private var extraTitle: String?
     private var onExtra: (() -> Void)?
@@ -54,8 +60,8 @@ public struct Card<Content: View>: View {
                 titleHeader
             }
         }
-        .padding(.horizontal, padding)
-        .padding(.top, padding)
+        .padding(.horizontal, resolvedPadding)
+        .padding(.top, resolvedPadding)
         .padding(.bottom, Theme.SpacingKey.sm.value)
     }
 
@@ -87,9 +93,9 @@ public struct Card<Content: View>: View {
         if let footerContent {
             footerContent
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, padding)
+                .padding(.horizontal, resolvedPadding)
                 .padding(.top, Theme.SpacingKey.sm.value)
-                .padding(.bottom, padding)
+                .padding(.bottom, resolvedPadding)
         }
     }
 
@@ -113,7 +119,7 @@ public struct Card<Content: View>: View {
             Group {
                 if isLoading { loadingPlaceholder } else { content() }
             }
-            .padding(padding)
+            .padding(resolvedPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             if footerContent != nil {
                 DividerView().size(.small)
@@ -149,8 +155,18 @@ public extension Card {
     /// Surface elevation: none / soft / elevated.
     func elevation(_ elevation: CardElevation) -> Self { copy { $0.elevation = elevation } }
 
-    /// Inner content padding (named so it doesn't shadow the native `.padding`).
-    func contentPadding(_ padding: CGFloat) -> Self { copy { $0.padding = padding } }
+    /// Inner content padding by spacing token (named so it doesn't shadow the
+    /// native `.padding`; the `SurfaceView`/`TicketStub` twin) — resolved
+    /// against the environment theme, so it re-skins with a spacing change.
+    func contentPadding(_ key: Theme.SpacingKey) -> Self {
+        copy { $0.paddingKey = key }
+    }
+
+    /// Raw inner content padding (back-compat); prefer the token-bound overload.
+    @available(*, deprecated, message: "Use contentPadding(_: Theme.SpacingKey) — the token-bound overload.")
+    func contentPadding(_ padding: CGFloat) -> Self {
+        copy { $0.padding = padding; $0.paddingKey = nil }
+    }
 
     /// Trailing header action (Ant `extra`) — renders when both title and action are set.
     func extraAction(_ title: String?, action: (() -> Void)? = nil) -> Self {
@@ -264,6 +280,13 @@ public extension View {
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .surface(.bgSecondaryLight)
+
+            // Token content padding (G5): the SpacingKey overload.
+            Card("Compact padding") {
+                Text("Inner padding from the `.sm` spacing token.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .contentPadding(.sm)
         }
         .padding()
     }

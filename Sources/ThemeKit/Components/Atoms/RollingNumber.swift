@@ -52,7 +52,12 @@ public extension RollingNumber {
 
     /// Raw digit color override (back-compat); prefer `accent(_:)`.
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
-    func color(_ c: Color?) -> Self { copy { $0.color = c } }
+    func color(_ c: Color?) -> Self { colorOverride(c) }
+
+    /// Module-internal raw digit color (mirrors `Icon.colorOverride`), so
+    /// in-package call sites needing a theme-token `Color` stay off the
+    /// deprecated `color(_:)` without changing behavior.
+    internal func colorOverride(_ c: Color?) -> Self { copy { $0.color = c } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

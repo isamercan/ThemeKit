@@ -29,8 +29,14 @@ public struct Transfer: View {
     @Binding private var target: Set<String>
     // Appearance — mutated only through the modifiers below.
     private var titles: (String, String) = (String(themeKit: "Source"), String(themeKit: "Target"))
+    private var isSearchable = false
+    /// Per-item enablement predicate (nil enables every item) — the
+    /// kit-standard `optionEnabled` idiom (Ant Transfer per-item `disabled`).
+    private var isItemEnabled: ((TransferItem) -> Bool)?
 
     @State private var checked: Set<String> = []
+    @State private var sourceQuery = ""
+    @State private var targetQuery = ""
 
     public init(_ items: [TransferItem], target: Binding<Set<String>>) {   // R1
         self.items = items
@@ -39,21 +45,28 @@ public struct Transfer: View {
 
     private var source: [TransferItem] { items.filter { !target.contains($0.key) } }
     private var targeted: [TransferItem] { items.filter { target.contains($0.key) } }
-    private var checkedInSource: Bool { source.contains { checked.contains($0.key) } }
-    private var checkedInTarget: Bool { targeted.contains { checked.contains($0.key) } }
+    private var checkedInSource: Bool { source.contains { checked.contains($0.key) && itemEnabled($0) } }
+    private var checkedInTarget: Bool { targeted.contains { checked.contains($0.key) && itemEnabled($0) } }
+
+    private func itemEnabled(_ item: TransferItem) -> Bool { isItemEnabled?(item) ?? true }
+
+    private func filtered(_ items: [TransferItem], query: String) -> [TransferItem] {
+        guard isSearchable, !query.isEmpty else { return items }
+        return items.filter { $0.title.localizedCaseInsensitiveContains(query) }
+    }
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            listBox(titles.0, items: source)
+            listBox(titles.0, items: source, query: $sourceQuery)
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 arrow("chevron.right", label: String(themeKit: "Move to \(titles.1)"), enabled: checkedInSource, action: moveToTarget)
                 arrow("chevron.left", label: String(themeKit: "Move to \(titles.0)"), enabled: checkedInTarget, action: moveToSource)
             }
-            listBox(titles.1, items: targeted)
+            listBox(titles.1, items: targeted, query: $targetQuery)
         }
     }
 
-    private func listBox(_ title: String, items: [TransferItem]) -> some View {
+    private func listBox(_ title: String, items: [TransferItem], query: Binding<String>) -> some View {
         VStack(spacing: 0) {
             HStack {
                 Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
@@ -66,9 +79,22 @@ public struct Transfer: View {
 
             Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
 
+            // Per-list search (Ant Transfer `showSearch`) — the Select-panel idiom.
+            if isSearchable {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Icon(systemName: "magnifyingglass").size(.xs).colorOverride(theme.text(.textTertiary))
+                    TextField(String(themeKit: "Search"), text: query)
+                        .textStyle(.bodySm400)
+                        .tint(theme.foreground(.fgHero))
+                }
+                .padding(.horizontal, Theme.SpacingKey.sm.value)
+                .scaledControlHeight(32)
+                Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
+            }
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    ForEach(items) { item in row(item) }
+                    ForEach(filtered(items, query: query.wrappedValue)) { item in row(item) }
                 }
             }
             .frame(maxHeight: .infinity)
@@ -81,23 +107,26 @@ public struct Transfer: View {
 
     private func row(_ item: TransferItem) -> some View {
         let isOn = checked.contains(item.key)
+        let enabled = itemEnabled(item)
         return Button {
             if isOn { checked.remove(item.key) } else { checked.insert(item.key) }
         } label: {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Image(systemName: isOn ? "checkmark.square.fill" : "square")
                     .font(.system(size: 16))
-                    .foregroundStyle(isOn ? theme.text(.textHero) : theme.text(.textTertiary))
-                Text(item.title).textStyle(.bodySm400).foregroundStyle(theme.text(.textPrimary))
+                    .foregroundStyle(!enabled ? theme.text(.textDisabled) : (isOn ? theme.text(.textHero) : theme.text(.textTertiary)))
+                Text(item.title).textStyle(.bodySm400)
+                    .foregroundStyle(enabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .frame(height: 34)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isOn ? SemanticColor.primary.soft.opacity(0.5) : .clear)
+            .background(isOn && enabled ? SemanticColor.primary.soft.opacity(0.5) : .clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!enabled)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
@@ -118,13 +147,13 @@ public struct Transfer: View {
     }
 
     private func moveToTarget() {
-        let moving = source.filter { checked.contains($0.key) }.map(\.key)
+        let moving = source.filter { checked.contains($0.key) && itemEnabled($0) }.map(\.key)
         target.formUnion(moving)
         checked.subtract(moving)
     }
 
     private func moveToSource() {
-        let moving = targeted.filter { checked.contains($0.key) }.map(\.key)
+        let moving = targeted.filter { checked.contains($0.key) && itemEnabled($0) }.map(\.key)
         target.subtract(moving)
         checked.subtract(moving)
     }
@@ -135,6 +164,15 @@ public struct Transfer: View {
 public extension Transfer {
     /// Header labels for the source and target boxes (Ant `titles`).
     func titles(_ source: String, _ target: String) -> Self { copy { $0.titles = (source, target) } }
+
+    /// Show a search field in each list box, filtering its rows by title
+    /// (Ant Transfer `showSearch`).
+    func searchable(_ on: Bool = true) -> Self { copy { $0.isSearchable = on } }
+
+    /// Per-item enablement predicate — disabled rows dim, can't be checked and
+    /// never move (nil enables every item; the kit-standard `optionEnabled`
+    /// idiom, Ant Transfer per-item `disabled`).
+    func itemEnabled(_ predicate: ((TransferItem) -> Bool)?) -> Self { copy { $0.isItemEnabled = predicate } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
@@ -151,6 +189,23 @@ public extension Transfer {
                      TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
         var body: some View {
             Transfer(items, target: $target).titles("Available", "Included").padding()
+        }
+    }
+    return Demo().environment(Theme.shared)
+}
+
+#Preview("Searchable + disabled items") {
+    struct Demo: View {
+        @State private var target: Set<String> = ["wifi"]
+        let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
+                     TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
+                     TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
+        var body: some View {
+            Transfer(items, target: $target)
+                .titles("Available", "Included")
+                .searchable()                              // E8 — per-list search
+                .itemEnabled { $0.key != "spa" }           // E8 — disabled rows never move
+                .padding()
         }
     }
     return Demo().environment(Theme.shared)

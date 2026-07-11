@@ -26,6 +26,7 @@ public struct Tag: View {
     private var size: ChipSize = .small
     private var leadingSlot: AnyView?
     private var trailingSlot: AnyView?
+    private var onClose: (() -> Void)?
 
     @Environment(\.theme) private var theme
 
@@ -52,6 +53,17 @@ public struct Tag: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(String(themeKit: "Remove \(text)"))
             }
+            if let onClose {
+                // The kit CloseButton atom (Ant Tag `closable` + `onClose`).
+                // Its 44pt hit slop is bigger than the tag: the fixed frame
+                // clamps the *visual* footprint to the mini/small circle while
+                // the hit target overflows the capsule (nothing clips it).
+                CloseButton(action: onClose)
+                    .plain()
+                    .controlSize(size == .small ? .mini : .small)
+                    .frame(width: closeButtonSide, height: closeButtonSide)
+                    .accessibilityLabel(String(themeKit: "Remove \(text)"))
+            }
         }
         .foregroundStyle(foreground)
         .padding(.horizontal, horizontalPadding)
@@ -76,6 +88,9 @@ public struct Tag: View {
     // Fixed glyph constants for the icon/remove shorthands (no semantic token).
     private var iconGlyphSize: CGFloat { size == .small ? 12 : 14 }
     private var removeGlyphSize: CGFloat { size == .small ? 10 : 12 }
+    /// Visual side of the composed `CloseButton` — matches its mini/small
+    /// circle diameters so the capsule stays tag-sized.
+    private var closeButtonSide: CGFloat { size == .small ? 24 : 28 }
 
     private var foreground: Color {
         if let semantic {
@@ -153,6 +168,13 @@ public extension Tag {
 
     /// Add a hairline border to a soft/solid tag (Ant `bordered`). Outline is always bordered.
     func bordered(_ on: Bool = true) -> Self { copy { $0.bordered = on } }
+
+    /// Make the tag removable, appending the kit ``CloseButton`` after the
+    /// text/trailing slot (Ant Tag `closable` + `onClose`) — the modifier twin
+    /// of the `onRemove:` init argument, rendering the standard dismiss atom
+    /// (muted glyph + full hit slop) instead of the bare glyph. Pairs best
+    /// with the soft / outline variants, where the muted glyph stays legible.
+    func closable(_ onClose: @escaping () -> Void) -> Self { copy { $0.onClose = onClose } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -241,6 +263,12 @@ public extension CheckableTag {
             Tag("Boosted").leading { Image(systemName: "sparkles").font(.system(size: 12)) }
             Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) }
         }
+        // Closable: the kit CloseButton atom (vs the bare onRemove glyph).
+        HStack {
+            Tag("Filter").closable {}
+            Tag("Nonstop").tagStyle(.info).closable {}
+            Tag("Large").size(.large).closable {}
+        }
         CheckableTagRow()
     }
     .padding()
@@ -266,6 +294,7 @@ private struct CheckableTagRow: View {
         PreviewCase("Large")     { Tag("Filter", onRemove: {}).size(.large) }
         PreviewCase("Leading slot")  { Tag("Online").leading { StatusDot(.online) } }
         PreviewCase("Trailing slot") { Tag("Deploys", onRemove: {}).trailing { Text("12").textStyle(.labelSm700) } }
+        PreviewCase("Closable (CloseButton)") { Tag("Filter").closable {} }
         PreviewCase("Long text") { Tag("a-very-long-keyword-value-here") }
     }
 }

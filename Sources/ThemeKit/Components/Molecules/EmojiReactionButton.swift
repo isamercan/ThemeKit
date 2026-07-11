@@ -23,6 +23,10 @@ public struct EmojiReactionButton: View {
     /// Base count of *other* reactions; the current user's reaction adds one.
     private let count: Int
 
+    // Appearance — mutated only through the modifiers below (R2).
+    private var size: ChipSize = .small
+    private var accent: SemanticColor?
+
     @ControllableState private var reacted: Bool
     @State private var pop = false
 
@@ -40,21 +44,54 @@ public struct EmojiReactionButton: View {
 
     private var displayCount: Int { count + (reacted ? 1 : 0) }
 
+    // Size ramp — shares Chip's `ChipSize` vocabulary; `.small` reproduces the
+    // original metrics exactly. Fixed glyph constants (no semantic token).
+    private var emojiPointSize: CGFloat {
+        switch size {
+        case .small: return 15
+        case .medium: return 17
+        case .large: return 19
+        }
+    }
+    private var countPointSize: CGFloat {
+        switch size {
+        case .small: return 13
+        case .medium: return 14
+        case .large: return 15
+        }
+    }
+    private var verticalPadding: CGFloat {
+        switch size {
+        case .small: return 5
+        case .medium: return 7
+        case .large: return 9
+        }
+    }
+    private var horizontalPadding: CGFloat {
+        size == .large ? Theme.SpacingKey.md.value : Theme.SpacingKey.sm.value
+    }
+
+    /// Chroma when reacted — the semantic accent when set, else the stock hero
+    /// treatment (unchanged default).
+    private var reactedFill: Color { accent?.soft ?? SemanticColor.primary.soft }
+    private var reactedBorder: Color { accent?.border ?? theme.border(.borderHero) }
+    private var reactedCount: Color { accent?.accent ?? theme.text(.textHero) }
+
     public var body: some View {
         Button(action: toggle) {
             HStack(spacing: 5) {
                 Text(emoji)
-                    .font(.system(size: 15))
+                    .font(.system(size: emojiPointSize))
                     .scaleEffect(pop ? 1.35 : 1)
                 RollingNumber(displayCount)
-                    .size(13)
+                    .size(countPointSize)
                     .weight(.semibold)
-                    .color(reacted ? theme.text(.textHero) : theme.text(.textSecondary))
+                    .colorOverride(reacted ? reactedCount : theme.text(.textSecondary))
             }
-            .padding(.horizontal, Theme.SpacingKey.sm.value)
-            .padding(.vertical, 5)
-            .background(reacted ? SemanticColor.primary.soft : theme.background(.bgSecondaryLight), in: Capsule())
-            .overlay(Capsule().stroke(reacted ? theme.border(.borderHero) : .clear, lineWidth: 1))
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .background(reacted ? reactedFill : theme.background(.bgSecondaryLight), in: Capsule())
+            .overlay(Capsule().stroke(reacted ? reactedBorder : .clear, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(String(themeKit: "React with \(emoji), \(displayCount) reactions")))
@@ -73,14 +110,40 @@ public struct EmojiReactionButton: View {
     }
 }
 
+// MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
+
+public extension EmojiReactionButton {
+    /// Control size: small (default) / medium / large — shares Chip's
+    /// ``ChipSize`` vocabulary and drives the emoji/count sizes and paddings.
+    func size(_ s: ChipSize) -> Self { copy { $0.size = s } }
+
+    /// Semantic tint for the reacted state (soft fill, border and count);
+    /// `nil` (default) keeps the stock hero treatment.
+    func accent(_ c: SemanticColor?) -> Self { copy { $0.accent = c } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     struct Demo: View {
         @State var liked = false
         var body: some View {
-            HStack(spacing: 10) {
-                EmojiReactionButton("👍", count: 12, isReacted: $liked)
-                EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
-                EmojiReactionButton("🔥", count: 0)
+            VStack(spacing: 16) {
+                HStack(spacing: 10) {
+                    EmojiReactionButton("👍", count: 12, isReacted: $liked)
+                    EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
+                    EmojiReactionButton("🔥", count: 0)
+                }
+                // D8 — size ramp + semantic accent for the reacted state.
+                HStack(spacing: 10) {
+                    EmojiReactionButton("👍", count: 3, initiallyReacted: true).size(.medium)
+                    EmojiReactionButton("❤️", count: 9, initiallyReacted: true).size(.large).accent(.error)
+                    EmojiReactionButton("✅", count: 2, initiallyReacted: true).accent(.success)
+                }
             }
             .padding()
         }

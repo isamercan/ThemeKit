@@ -16,10 +16,10 @@ import SwiftUI
 public struct Splitter<First: View, Second: View>: View {
     @Environment(\.theme) private var theme
 
-    private let axis: Axis
     private let first: First
     private let second: Second
     // Appearance — mutated only through the modifiers below.
+    private var axis: Axis
     private var minFraction: CGFloat = 0.15
     private var maxFraction: CGFloat = 0.85
 
@@ -101,6 +101,12 @@ public extension Splitter {
         copy { $0.minFraction = Swift.max(0, min); $0.maxFraction = Swift.min(1, max) }
     }
 
+    /// Stack the panes vertically (Ant Splitter `layout="vertical"`) — the
+    /// kit-standard axis vocabulary (cf. `SegmentedControl.vertical`) and the
+    /// modifier twin of the `axis:` init argument; `false` restores the
+    /// side-by-side layout.
+    func vertical(_ on: Bool = true) -> Self { copy { $0.axis = on ? .vertical : .horizontal } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
         mutate(&c)
@@ -110,13 +116,25 @@ public extension Splitter {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    Splitter(.horizontal) {
-        Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
-    } second: {
-        Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+    VStack(spacing: Theme.SpacingKey.md.value) {
+        Splitter(.horizontal) {
+            Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+        } second: {
+            Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+        }
+        .frame(height: 200)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
+
+        // The `.vertical()` modifier twin of `Splitter(.vertical) { … }`.
+        Splitter {
+            Text("Map").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+        } second: {
+            Text("List").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+        }
+        .vertical()
+        .frame(height: 200)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
     }
-    .frame(height: 240)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
     .padding()
     .environment(Theme.shared)
 }
