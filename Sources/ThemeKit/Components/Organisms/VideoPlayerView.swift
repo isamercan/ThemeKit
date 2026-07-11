@@ -150,7 +150,7 @@ private struct InlineVideo: View {
                 if !isPlaying {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 56))
-                        .foregroundStyle(.white.opacity(0.92))
+                        .foregroundStyle(MediaScrim.onContent.opacity(0.92))
                         .shadow(radius: 6)
                         .allowsHitTesting(false)
                 }
@@ -169,7 +169,7 @@ private struct InlineVideo: View {
                         } label: {
                             Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(MediaScrim.onContent)
                                 .padding(8)
                                 .background(MediaScrim.solid, in: Circle())
                         }

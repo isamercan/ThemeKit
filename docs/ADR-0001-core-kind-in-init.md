@@ -1,9 +1,10 @@
 # ADR-0001 — "Core kind" in `init` vs. modifiers-only appearance
 
-- **Status:** Proposed (needs design-system owner sign-off)
+- **Status:** **Accepted** (2026-07-11)
 - **Date:** 2026-07-11
 - **Deciders:** ThemeKit architecture
 - **Context source:** `THEMEKIT_COMPONENT_AUDIT.md` (v2) + architect review
+- **Rollout note:** The *classification* is adopted now — `ProgressIndicator`/`ResultView` `variant:` are ratified "core kind" (compliant, no change). The *reskin→modifier demotions* (`ScoreBadge.large:`, `ButtonGroup`/`Join.axis:`, `SeatCell`/`SeatLegend` appearance args) **remove public init parameters and are therefore API-breaking** — they ride the next **major version bump** alongside the full `FormatDefaults` `nil`-default adoption, not a patch release.
 - **Supersedes / clarifies:** the informal `COMPONENT_REFACTOR_RULES R1–R7` convention and `.claude/skills/themekit-authoring/SKILL.md` rule 3
 
 ## Context

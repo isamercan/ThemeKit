@@ -152,6 +152,9 @@ private struct StripedMeterBar: View {
 /// A static 45° line pattern (a white highlight, purely decorative — hidden
 /// from hit testing and never animated).
 private struct DiagonalStripes: View {
+    /// Optical hatch highlight — intentionally non-thematic white (see `MediaScrim`).
+    private static let hatchHighlight = Color.white.opacity(0.35)
+
     let lineWidth: CGFloat
     let gap: CGFloat
 
@@ -167,7 +170,7 @@ private struct DiagonalStripes: View {
                     x += step
                 }
             }
-            .stroke(Color.white.opacity(0.35), lineWidth: lineWidth)
+            .stroke(Self.hatchHighlight, lineWidth: lineWidth)
             .flipsForRightToLeftLayoutDirection(true)
         }
         .allowsHitTesting(false)

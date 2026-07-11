@@ -8,6 +8,7 @@ breaking changes bump the **major**.
 ## [Unreleased]
 
 ### Added
+- **`MediaScrim.onContent` / `.onContentSecondary`** on-media foreground contrast colors (the sanctioned no-raw-`Color` exemption), plus **token-bound `Checkbox.customInner(_: SemanticColor)` and `SeatMap.tierColors(_: [SeatTier: SemanticColor])` modifier overloads** (the raw-`Color` forms are `@available(*, deprecated…)` deprecated-forward). Clears body-level raw whites from ImageCollage / VideoPlayerView / ScrubGallery / on-image PageHeader / LoyaltyCard; specular highlights (TiltCard / BorderBeam / MeterStyle) moved to named in-view constants. Audit P0.3 · [ADR-0002](docs/ADR-0002-on-media-and-specular-color.md) · **API-safe** (`diagnose-api-breaking-changes` clean).
 - **`FormatDefaults` environment + `.formatDefaults(currencyCode:)` modifier** (neutral `ThemeKit`) — sets a subtree-wide default ISO-4217 currency for every price-bearing component, so the currency is provided once at the root instead of per call site.
 - **`SemanticColor` now conforms to `Sendable`**, and **`CardBrand` now conforms to `Sendable, CaseIterable, Codable`** — additive conformances (no signature change) so `Sendable` value types (e.g. edition environment defaults) can carry a `SemanticColor`, and `CardBrand`-bearing models can be `Codable`.
 

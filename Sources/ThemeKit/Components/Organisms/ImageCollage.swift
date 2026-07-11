@@ -58,7 +58,7 @@ public struct ImageCollage: View {
                     .fill(MediaScrim.solid)
                 Text("+\(overlayExtra)")
                     .textStyle(.headingBase)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(MediaScrim.onContent)
             }
         }
         .contentShape(Rectangle())

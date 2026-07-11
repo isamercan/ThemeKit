@@ -1,9 +1,10 @@
 # ADR-0002 — On-media contrast & specular color (non-thematic white/black)
 
-- **Status:** Proposed (needs design-system owner sign-off)
+- **Status:** **Accepted** (2026-07-11)
 - **Date:** 2026-07-11
 - **Deciders:** ThemeKit architecture
 - **Context source:** `THEMEKIT_COMPONENT_AUDIT.md` (v2) + architect review
+- **Realization:** Rather than a new `SemanticColor` slot, category-A on-media contrast is realized by **extending the existing `MediaScrim` enum** (`Sources/ThemeKit/Utils/Effects.swift`) — which already carries the sanctioned no-raw-`Color` exemption — with `MediaScrim.onContent` / `.onContentSecondary`. Category-B specular highlights use the documented in-view `private static let` constant convention. Applied API-safely (body-only) in the P0.3 change set.
 
 ## Context
 

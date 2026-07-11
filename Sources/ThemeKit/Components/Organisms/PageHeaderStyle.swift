@@ -445,16 +445,16 @@ private struct OnImageChrome: View {
     @ViewBuilder private var leading: some View {
         if let leadingIcon = configuration.leadingIcon {
             PHIconButton(systemImage: leadingIcon.systemImage, action: leadingIcon.handler,
-                         foreground: .white, circular: true, label: "Menu")
+                         foreground: MediaScrim.onContent, circular: true, label: "Menu")
         } else if let onBack = configuration.onBack {
-            PHIconButton(systemImage: "arrow.left", action: onBack, foreground: .white, circular: true, label: "Back")
+            PHIconButton(systemImage: "arrow.left", action: onBack, foreground: MediaScrim.onContent, circular: true, label: "Back")
         }
     }
 
     private var title: some View {
         Group {
             if configuration.showTitle {
-                Text(configuration.title).textStyle(.heading2xs).foregroundStyle(Color.white)
+                Text(configuration.title).textStyle(.heading2xs).foregroundStyle(MediaScrim.onContent)
             }
         }
         .frame(maxWidth: .infinity)
@@ -465,7 +465,7 @@ private struct OnImageChrome: View {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 ForEach(configuration.actions) { action in
                     PHIconButton(systemImage: action.systemImage, action: action.handler,
-                                 foreground: .white, circular: true, label: action.accessibilityLabel)
+                                 foreground: MediaScrim.onContent, circular: true, label: action.accessibilityLabel)
                 }
             }
         }

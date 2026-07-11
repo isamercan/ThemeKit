@@ -89,7 +89,7 @@ public struct ScrubGallery<Content: View>: View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             ForEach(0..<pageCount, id: \.self) { i in
                 Capsule()
-                    .fill(i == index ? accentColor.solid : Color.white.opacity(0.55))
+                    .fill(i == index ? accentColor.solid : MediaScrim.onContentSecondary)
                     .frame(height: 4)
                     .frame(maxWidth: .infinity)
             }

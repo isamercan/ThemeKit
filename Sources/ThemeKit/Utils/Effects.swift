@@ -54,6 +54,17 @@ public enum MediaScrim {
         colors: [.black.opacity(0), .black.opacity(0.65)],
         startPoint: .top, endPoint: .bottom
     )
+
+    /// Foreground content — glyphs, counts, labels — laid *over* imagery or a
+    /// `.solid`/`.gradient` scrim. Stays light regardless of the active theme
+    /// (same sanctioned exemption as the scrims above: the pixels underneath
+    /// aren't theme-controlled, so on-media content must not re-tint). Use this
+    /// instead of a raw `Color.white` for the "+N" collage count, video overlay
+    /// glyphs, on-image page-header titles, QR quiet-zones, etc.
+    public static let onContent = Color.white
+
+    /// Dimmed on-media content (inactive page dots, secondary captions).
+    public static let onContentSecondary = Color.white.opacity(0.7)
 }
 
 struct EdgeBorderShape: Shape {

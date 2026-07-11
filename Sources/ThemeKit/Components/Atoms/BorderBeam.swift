@@ -65,6 +65,9 @@ private struct BeamTrail: Shape {
 }
 
 private struct BorderBeamModifier: ViewModifier {
+    /// White-hot comet-head spark — optical glow, intentionally non-thematic (see `MediaScrim`).
+    private static let headSparkColor = Color.white.opacity(0.95)
+
     let cornerRadius: CGFloat
     let lineWidth: CGFloat
     let duration: Double
@@ -140,7 +143,7 @@ private struct BorderBeamModifier: ViewModifier {
 
     private func headSpark(_ head: CGFloat) -> some View {
         BeamTrail(cornerRadius: cornerRadius, inset: beamInset, from: head - 0.018, to: head + 0.004)
-            .stroke(Color.white.opacity(0.95), style: StrokeStyle(lineWidth: lineWidth * 1.25, lineCap: .round))
+            .stroke(Self.headSparkColor, style: StrokeStyle(lineWidth: lineWidth * 1.25, lineCap: .round))
             .blur(radius: lineWidth * 0.7)
     }
 
