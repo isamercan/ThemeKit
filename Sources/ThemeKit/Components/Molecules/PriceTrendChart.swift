@@ -246,7 +246,7 @@ public extension PriceTrendChart {
             PriceTrendPoint("\($0)", sublabel: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][$0 % 7], price: Decimal(1400 + ($0 * 37) % 700))
         }
         var body: some View {
-            PriceTrendChart(points, selection: $sel).title("July").currency("TRY")
+            PriceTrendChart(points, selection: $sel).title("July").currency("USD")
                 .scrollable().showsAxis().showsValues().onPage(prev: {}, next: {}).padding()
         }
     }

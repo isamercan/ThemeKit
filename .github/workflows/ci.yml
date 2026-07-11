@@ -173,3 +173,17 @@ jobs:
           BASELINE="${{ github.event.pull_request.base.sha || 'origin/main' }}"
           scripts/check-api.sh "$BASELINE" \
             || echo "::warning::Public API changed vs base — confirm the SemVer bump (see docs/API-STABILITY.md)."
+
+  # ---------------------------------------------------------------------------
+  # Brand-neutrality & i18n gate — the catalog is brand-neutral and English-only.
+  # HARD-fails on a leaked brand name ("etstur") or Turkish-language string in
+  # Swift source/tests (advisory raw-color/URLSession counts are non-blocking).
+  # See THEMEKIT_COMPONENT_AUDIT.md.
+  # ---------------------------------------------------------------------------
+  neutrality:
+    name: Brand neutrality (i18n)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for brand / Turkish-language leaks
+        run: scripts/check-neutrality.sh

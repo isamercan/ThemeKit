@@ -152,7 +152,7 @@ public extension RoomCard {
     func board(_ text: String?) -> Self { copy { $0.board = text } }
     func occupancy(_ text: String?, icon: String = "person.2.fill") -> Self { copy { $0.occupancy = text; $0.occupancyIcon = icon } }
     func features(_ items: [FareFeature]) -> Self { copy { $0.features = items } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

@@ -164,7 +164,7 @@ public extension AncillaryCard {
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     func image(_ url: URL?) -> Self { copy { $0.imageURL = url } }
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY", suffix: String? = nil) -> Self {
+    func price(_ amount: Decimal?, currencyCode: String = "USD", suffix: String? = nil) -> Self {
         copy { $0.price = amount; $0.currencyCode = currencyCode; $0.priceSuffix = suffix }
     }
     /// Omitted-currency form — resolves the code from the environment:

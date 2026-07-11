@@ -126,7 +126,7 @@ public extension MapCallout {
     func image(_ url: URL?) -> Self { copy { $0.imageURL = url } }
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     func score(_ value: Double?) -> Self { copy { $0.score = value } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

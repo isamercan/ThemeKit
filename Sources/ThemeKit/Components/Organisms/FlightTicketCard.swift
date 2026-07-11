@@ -159,7 +159,7 @@ public extension FlightTicketCard {
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     func airline(_ name: String?, icon: String = "airplane") -> Self { copy { $0.airline = name; $0.airlineIcon = icon } }
     func airlineLogo(_ url: URL?) -> Self { copy { $0.airlineLogo = url } }
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }

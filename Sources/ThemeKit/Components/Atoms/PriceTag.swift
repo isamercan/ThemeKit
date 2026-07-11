@@ -64,7 +64,7 @@ public enum PriceState: Sendable { case priced, free, soldOut }
 /// A token-bound price label.
 ///
 /// ```swift
-/// PriceTag(1_299, currencyCode: "TRY")
+/// PriceTag(1_299, currencyCode: "USD")
 ///     .original(1_899).unit("/ night").size(.large).emphasis(.hero).discountBadge()
 /// PriceTag(0).free()                       // "Free"
 /// PriceTag(2_499).from().animatesValue()   // "from ₺2.499", rolls on change
@@ -91,7 +91,7 @@ public struct PriceTag: View {
     private var animatesValue: Bool = false
     private var trailingSlot: AnyView?
 
-    public init(_ amount: Decimal, currencyCode: String = "TRY") {   // R1 — content
+    public init(_ amount: Decimal, currencyCode: String = "USD") {   // R1 — content
         self.amount = amount
         self.currencyCode = currencyCode
     }

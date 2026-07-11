@@ -31,7 +31,7 @@ public struct InstallmentSelector: View {
     private var recommendedCount: Int?
     private var surcharge: [Int: Decimal] = [:]
 
-    public init(total: Decimal, options: [Int], selection: Binding<Int>, currencyCode: String = "TRY") {
+    public init(total: Decimal, options: [Int], selection: Binding<Int>, currencyCode: String = "USD") {
         self.total = total
         self.options = options
         self._selection = selection

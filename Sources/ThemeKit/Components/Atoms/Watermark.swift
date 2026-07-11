@@ -77,7 +77,7 @@ private struct WatermarkModifier: ViewModifier {
     @Previewable @Environment(\.theme) var theme
     VStack(spacing: 12) {
         Text("Boarding pass").textStyle(.headingSm)
-        Text("İstanbul → Antalya").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+        Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
     }
     .frame(maxWidth: .infinity)
     .padding(40)

@@ -130,7 +130,7 @@ private struct BarShadow: ViewModifier {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension StickyBookingBar {
-    func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
