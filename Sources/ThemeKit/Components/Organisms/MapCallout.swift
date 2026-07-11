@@ -27,6 +27,8 @@ public struct MapCallout: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let title: String
     // Content — mutated only through the modifiers below (R2).
@@ -34,7 +36,7 @@ public struct MapCallout: View {
     private var subtitle: String?
     private var score: Double?
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var onSelect: (() -> Void)?
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
@@ -43,6 +45,11 @@ public struct MapCallout: View {
     public init(title: String) { self.title = title }   // R1
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous) }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -89,7 +96,7 @@ public struct MapCallout: View {
                 if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
                 HStack(spacing: 6) {
                     if let score { ScoreBadge(score) }
-                    if let price { PriceTag(price, currencyCode: currencyCode).size(.small).emphasis(.hero).fractionDigits(0) }
+                    if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.small).emphasis(.hero).fractionDigits(0) }
                 }
             }
             Spacer(minLength: 4)
@@ -120,6 +127,9 @@ public extension MapCallout {
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     func score(_ value: Double?) -> Self { copy { $0.score = value } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func onSelect(_ action: @escaping () -> Void) -> Self { copy { $0.onSelect = action } }
     /// Tints the border and CTA chevron (default: neutral border, tertiary chevron).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }

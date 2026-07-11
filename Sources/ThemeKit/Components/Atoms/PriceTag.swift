@@ -73,9 +73,11 @@ public struct PriceTag: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let amount: Decimal
-    private let currencyCode: String
+    private let currencyCode: String?
     // Appearance/state — mutated only through the modifiers below (R2).
     private var original: Decimal?
     private var originalBelow = false
@@ -92,6 +94,17 @@ public struct PriceTag: View {
     public init(_ amount: Decimal, currencyCode: String = "TRY") {   // R1 — content
         self.amount = amount
         self.currencyCode = currencyCode
+    }
+
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    public init(_ amount: Decimal) {   // R1 — content
+        self.amount = amount
+        self.currencyCode = nil
+    }
+
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -151,7 +164,7 @@ public struct PriceTag: View {
     }
 
     private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: currencyCode).precision(.fractionLength(fractionDigits)))
+        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(fractionDigits)))
     }
 
     private var discountPercent: Int? { Self.discountPercent(original: original, amount: amount) }

@@ -26,6 +26,8 @@ public struct PriceAlertCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let title: String
     @Binding private var isOn: Bool
@@ -33,7 +35,7 @@ public struct PriceAlertCard: View {
     private var subtitle: String?
     private var systemImage = "bell.fill"
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var trend: PriceTrend?
     private var trendText: String?
     private var accent: SemanticColor?
@@ -48,6 +50,11 @@ public struct PriceAlertCard: View {
 
     @Environment(\.componentDefaults) private var defaults
     private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
     private var trendColor: Color {
         switch trend { case .down: theme.foreground(.systemcolorsFgSuccess); case .up: theme.foreground(.systemcolorsFgError); default: theme.text(.textSecondary) }
     }
@@ -91,7 +98,7 @@ public struct PriceAlertCard: View {
 
     private var priceTrend: some View {
         HStack(spacing: 6) {
-            if let price { PriceTag(price, currencyCode: currencyCode).size(.small).fractionDigits(0) }
+            if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.small).fractionDigits(0) }
             if trend != nil {
                 HStack(spacing: 2) {
                     Image(systemName: trendIcon).font(.system(size: 10, weight: .bold))
@@ -109,6 +116,9 @@ public extension PriceAlertCard {
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func trend(_ direction: PriceTrend?, _ text: String? = nil) -> Self { copy { $0.trend = direction; $0.trendText = text } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }

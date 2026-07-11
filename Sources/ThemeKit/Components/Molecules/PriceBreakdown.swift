@@ -18,9 +18,11 @@ import SwiftUI
 
 public struct PriceBreakdown: View {
     @Environment(\.theme) private var theme
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let amount: Decimal
-    private let currencyCode: String
+    private let currencyCode: String?
     // Appearance/content — mutated only through the modifiers below (R2).
     private var originalPrice: Decimal?
     private var discountText: String?
@@ -37,9 +39,20 @@ public struct PriceBreakdown: View {
         self.currencyCode = currencyCode
     }
 
-    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: currencyCode).precision(.fractionLength(0))) }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD" (§10).
+    public init(_ amount: Decimal) {   // R1
+        self.amount = amount
+        self.currencyCode = nil
+    }
+
+    /// Explicit `currencyCode:` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+    private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
     private var priceTag: PriceTag {
-        var t = PriceTag(amount, currencyCode: currencyCode).size(size).emphasis(emphasis).fractionDigits(0)
+        var t = PriceTag(amount, currencyCode: resolvedCurrency).size(size).emphasis(emphasis).fractionDigits(0)
         if let unit { t = t.unit(unit) }
         return t
     }

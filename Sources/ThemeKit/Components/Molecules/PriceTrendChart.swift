@@ -26,12 +26,14 @@ public struct PriceTrendPoint: Identifiable, Sendable {
 public struct PriceTrendChart: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let points: [PriceTrendPoint]
     @Binding private var selection: Int
     // Appearance/state — mutated only through the modifiers below (R2).
     private var title: String?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var accentColor: SemanticColor?
     private var selectionColorToken: SemanticColor?
     private var barHeight: CGFloat = 120
@@ -67,7 +69,11 @@ public struct PriceTrendChart: View {
     }
     private var selectionBg: Color { selectionColorToken?.base ?? theme.text(.textPrimary) }
     private var selectionFg: Color { selectionColorToken?.onSolid ?? theme.text(.textSecondaryInverse) }
-    private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: currencyCode).precision(.fractionLength(0))) }
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+    private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))) }
 
     // MARK: Body
 
@@ -186,7 +192,8 @@ public struct PriceTrendChart: View {
 public extension PriceTrendChart {
     /// A centered title (e.g. the month).
     func title(_ text: String?) -> Self { copy { $0.title = text } }
-    /// Currency code for the prices (default "TRY").
+    /// Currency code for the prices. Unset, it resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// Bar accent colour (token); `nil` (default) uses the hero foreground.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }

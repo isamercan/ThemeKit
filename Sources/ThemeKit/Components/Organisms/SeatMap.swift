@@ -30,6 +30,8 @@ public struct SeatMap: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let sections: [SeatSection]
     private let index: SeatIndex
@@ -46,7 +48,7 @@ public struct SeatMap: View {
     private var showsFuselage = false
     private var showsInfo = false
     private var recommended: Set<String> = []
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var seatEnabled: ((Seat) -> Bool)?
     private var passengers: [Passenger] = []
     private var assignment: Binding<[String: String]>?
@@ -60,6 +62,9 @@ public struct SeatMap: View {
     private var passengerMode: Bool { !passengers.isEmpty && assignment != nil }
     private var gapWidth: CGFloat { aisleWidthOverride ?? seatSize }
     private var palette: SeatPalette { SeatPalette(tierOverrides) }
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     // MARK: Init (all delegate to `sections:` so the index is built once)
 
@@ -97,7 +102,7 @@ public struct SeatMap: View {
                 SeatSummaryBar(seat: focusedSeat.flatMap { index.byId[$0] },
                                position: focusedSeat.flatMap { index.positions[$0] },
                                palette: palette, selectedCount: selection.count,
-                               totalPrice: totalPrice, hasPrices: index.hasPrices, currencyCode: currencyCode)
+                               totalPrice: totalPrice, hasPrices: index.hasPrices, currencyCode: resolvedCurrency)
             }
         }
     }
@@ -171,7 +176,7 @@ public struct SeatMap: View {
         return SeatCell(seat, size: seatSize, isSelected: selected, isSelectable: isSelectable(seat),
                         isRecommended: recommended.contains(seat.id), assignedInitials: assigned,
                         display: seatDisplay, palette: palette, customContent: customContent,
-                        currencyCode: currencyCode, action: {
+                        currencyCode: resolvedCurrency, action: {
             focusedSeat = seat.id
             withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) {
                 if passengerMode { assignSeat(seat) } else { toggle(seat) }
@@ -257,7 +262,8 @@ public extension SeatMap {
     func showsSeatInfo(_ on: Bool = true) -> Self { copy { $0.showsInfo = on } }
     /// Highlights recommended seats with a star.
     func recommended(_ ids: Set<String>) -> Self { copy { $0.recommended = ids } }
-    /// Currency code for per-seat and total pricing (default "TRY").
+    /// Currency code for per-seat and total pricing. When unset it resolves from
+    /// the environment: `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// A custom availability predicate — return false to block a seat (e.g. exit rows
     /// for a passenger with an infant). Blocked seats render dimmed and untappable.

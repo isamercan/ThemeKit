@@ -26,6 +26,7 @@ public struct FlightListItem: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.locale) private var locale
+    @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.flightListItemStyle) private var style
 
     // Required content (R1).
@@ -39,7 +40,7 @@ public struct FlightListItem: View {
     private var logo: AnyView?
     private var priceAmount: Decimal?
     private var originalAmount: Decimal?
-    private var currencyCode = "USD"
+    private var currencyCode: String?
     private var priceCaption: String?
     private var fares: [FlightFare] = []
     private var departures: [Date] = []
@@ -71,13 +72,17 @@ public struct FlightListItem: View {
                                departure: departure, arrival: arrival)]
     }
 
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
+
     public var body: some View {
         let expanded = expandedBinding?.wrappedValue ?? internalExpanded
         let configuration = FlightListItemConfiguration(
             legs: legs, sliceLabels: sliceLabels, flightNo: flightNo, cabin: cabin,
             airlineSystemImage: airlineSystemImage, logo: logo,
             priceAmount: priceAmount, originalAmount: originalAmount,
-            currencyCode: currencyCode, priceCaption: priceCaption,
+            currencyCode: resolvedCurrency, priceCaption: priceCaption,
             fares: fares, departures: departures, scheduleNote: scheduleNote,
             dealText: dealText, dealTone: dealTone, trend: trend,
             badge: badge, amenities: amenities,
@@ -116,6 +121,13 @@ public extension FlightListItem {
     /// The headline price. `caption` qualifies it ("from", "total · round trip").
     func price(_ amount: Decimal?, currencyCode: String = "USD", caption: String? = nil) -> Self {
         copy { $0.priceAmount = amount; $0.currencyCode = currencyCode; $0.priceCaption = caption }
+    }
+    /// Omitted-currency form — resolves the code from the environment:
+    /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    /// Replicates every parameter except `currencyCode` so
+    /// `price(214, caption: "from")` binds here, not the hardcoded default.
+    func price(_ amount: Decimal?, caption: String? = nil) -> Self {
+        copy { $0.priceAmount = amount; $0.priceCaption = caption }
     }
     /// A compare-at price (typical/undiscounted) — deal-aware styles strike it through.
     func original(_ amount: Decimal?) -> Self { copy { $0.originalAmount = amount } }

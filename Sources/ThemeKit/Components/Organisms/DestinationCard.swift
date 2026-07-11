@@ -27,6 +27,8 @@ public struct DestinationCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     // Required content (R1).
     private let title: String
@@ -35,7 +37,7 @@ public struct DestinationCard: View {
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var subtitle: String?
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var rating: Double?
     private var ribbon: String?
     private var ribbonColor: SemanticColor = .primary
@@ -53,6 +55,11 @@ public struct DestinationCard: View {
     public init(_ title: String, image url: URL? = nil) {   // R1 — content
         self.title = title
         self.imageURL = url
+    }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
@@ -165,7 +172,7 @@ public struct DestinationCard: View {
             }
             if price != nil || rating != nil || footerSlot != nil {
                 HStack(alignment: .center) {
-                    if let price { PriceTag(price, currencyCode: currencyCode).emphasis(.hero) }
+                    if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero) }
                     Spacer(minLength: Theme.SpacingKey.sm.value)
                     if let rating { ScoreBadge(rating) }
                 }
@@ -185,6 +192,9 @@ public extension DestinationCard {
     func subtitle(_ text: String?) -> Self { copy { $0.subtitle = text } }
     /// The price, rendered as a hero `PriceTag` in the footer row.
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     /// A 0–5 review score, rendered as a `ScoreBadge`.
     func rating(_ value: Double?) -> Self { copy { $0.rating = value } }
     /// A corner ribbon, e.g. "Top #1".

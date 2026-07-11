@@ -22,6 +22,8 @@ public struct HotelResultCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     private let name: String
     // Content — mutated only through the modifiers below (R2).
@@ -35,7 +37,7 @@ public struct HotelResultCard: View {
     private var features: [String] = []
     private var promos: [String] = []
     private var price: Decimal?
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var originalPrice: Decimal?
     private var discountText: String?
     private var stayText: String?
@@ -61,6 +63,11 @@ public struct HotelResultCard: View {
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
     private var accentColor: Color { accent.map { $0.base } ?? theme.foreground(.fgHero) }
+
+    /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         // The shell (fill, corner clipping, border, shadow) is drawn by the active
@@ -200,7 +207,7 @@ public struct HotelResultCard: View {
     /// The reusable ``PriceBreakdown`` molecule, configured from this card's fields.
     private var priceBreakdown: PriceBreakdown? {
         guard let price else { return nil }
-        var b = PriceBreakdown(price, currencyCode: currencyCode).size(.large).emphasis(.standard)
+        var b = PriceBreakdown(price, currencyCode: resolvedCurrency).size(.large).emphasis(.standard)
         if let stayText { b = b.note(stayText) }
         if let originalPrice { b = b.original(originalPrice) }
         if let discountText { b = b.discountBadge(discountText) }
@@ -239,6 +246,9 @@ public extension HotelResultCard {
     func features(_ items: [String]) -> Self { copy { $0.features = items } }
     func promos(_ items: [String]) -> Self { copy { $0.promos = items } }
     func price(_ amount: Decimal?, currencyCode: String = "TRY") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }
+    /// Omitted-currency overload — the currency resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
+    func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
     func discountBadge(_ text: String?) -> Self { copy { $0.discountText = text } }
     func stay(_ text: String?) -> Self { copy { $0.stayText = text } }

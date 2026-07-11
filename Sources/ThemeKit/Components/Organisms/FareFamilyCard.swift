@@ -29,13 +29,15 @@ import SwiftUI
 public struct FareFamilyCard: View {
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
 
     // Required content (R1).
     private let name: String
     private let price: Decimal
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var currencyCode = "TRY"
+    private var currencyCode: String?
     private var accent: SemanticColor = .success
     private var features: [FareFeature] = []
     private var isSelected = false
@@ -49,6 +51,11 @@ public struct FareFamilyCard: View {
     }
 
     private var active: Bool { selection?.wrappedValue ?? isSelected }
+
+    /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
+    private var resolvedCurrency: String {
+        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+    }
 
     public var body: some View {
         // The shell (fill, hairline, selected hero frame) is drawn by the active
@@ -96,7 +103,7 @@ public struct FareFamilyCard: View {
     @ViewBuilder private var footer: some View {
         if let selection {
             HStack {
-                PriceTag(price, currencyCode: currencyCode).emphasis(.hero)
+                PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero)
                 Spacer()
                 RadioButton(isSelected: selection)
             }
@@ -109,7 +116,7 @@ public struct FareFamilyCard: View {
     }
 
     private var priceText: String {
-        price.formatted(.currency(code: currencyCode).precision(.fractionLength(2)))
+        price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(2)))
     }
     private func select() { selection?.wrappedValue = true; onSelect?() }
 }
@@ -119,7 +126,8 @@ public struct FareFamilyCard: View {
 public extension FareFamilyCard {
     /// Surface fill (background token key, default `.bgBase`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
-    /// Currency code for the price (default "TRY").
+    /// Currency code for the price. Unset, it resolves from `\.formatDefaults`,
+    /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
     /// The tier accent colour — brands the name badge and CTA (green / orange / purple…).
     func accent(_ color: SemanticColor) -> Self { copy { $0.accent = color } }
