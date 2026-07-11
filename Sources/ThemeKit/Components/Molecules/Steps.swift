@@ -277,20 +277,27 @@ public extension Steps.Step {
 }
 
 #Preview {
-    VStack(spacing: 40) {
-        Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])
+    PreviewMatrix("Steps") {
+        PreviewCase("Done / error / todo") {
+            Steps([.init("Cart", state: .done), .init("Address", description: "Shipping", state: .done), .init("Payment", state: .error), .init("Done", state: .todo)])
+        }
         // C5 — the size-enum axis (compact markers + labels).
-        Steps([.init("Cart", state: .done), .init("Pay", state: .active), .init("Done", state: .todo)]).size(.small)
-        Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)]).axis(.vertical)
+        PreviewCase("Small") {
+            Steps([.init("Cart", state: .done), .init("Pay", state: .active), .init("Done", state: .todo)]).size(.small)
+        }
+        PreviewCase("Vertical") {
+            Steps([.init("Account", description: "Your details", state: .done), .init("Profile", state: .active), .init("Confirm", state: .todo)]).axis(.vertical)
+        }
         // Custom per-step markers; the percent ring still wraps the active step.
-        Steps([.init("Cart", state: .done), .init("Pay", state: .active, percent: 0.6), .init("Done", state: .todo)])
-            .marker { step, index in
-                Image(systemName: step.state == .done ? "checkmark.seal.fill" : "\(index + 1).circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(step.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
-            }
+        PreviewCase("Custom markers + percent") {
+            Steps([.init("Cart", state: .done), .init("Pay", state: .active, percent: 0.6), .init("Done", state: .todo)])
+                .marker { step, index in
+                    Image(systemName: step.state == .done ? "checkmark.seal.fill" : "\(index + 1).circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(step.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
+                }
+        }
     }
-    .padding()
 }
 
 #Preview("RTL — horizontal connector") {

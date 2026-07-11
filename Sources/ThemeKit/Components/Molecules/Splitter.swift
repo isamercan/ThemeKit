@@ -133,26 +133,28 @@ public extension Splitter {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: Theme.SpacingKey.md.value) {
-        Splitter(.horizontal) {
-            Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
-        } second: {
-            Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+    PreviewMatrix("Splitter") {
+        PreviewCase("Horizontal") {
+            Splitter(.horizontal) {
+                Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+            } second: {
+                Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+            }
+            .frame(height: 200)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
         }
-        .frame(height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
-
         // The `.vertical()` modifier twin of `Splitter(.vertical) { … }`.
-        Splitter {
-            Text("Map").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
-        } second: {
-            Text("List").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+        PreviewCase("Vertical") {
+            Splitter {
+                Text("Map").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+            } second: {
+                Text("List").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+            }
+            .vertical()
+            .frame(height: 200)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
         }
-        .vertical()
-        .frame(height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
     }
-    .padding()
     .environment(Theme.shared)
 }
 

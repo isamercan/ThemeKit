@@ -265,34 +265,32 @@ public extension SegmentedControl {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var a = 0
-        @State var b = 1
-        @State var c = 0
-        @State var d = 2
-        var body: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a)
-                    SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a).shape(.round)
-                    SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
-                                      SegmentItem("Grid", systemImage: "square.grid.2x2"),
-                                      SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $b)
-                    SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
-                                      SegmentItem(icon: "map")], selection: $c).fullWidth(false)
-                    SegmentedControl(["A", "B", "C"], selection: $d).vertical().fullWidth(false)
-                    // F3 — provider cascade: no explicit accent → the subtree
-                    // componentDefaults re-tints .tinted/.outline; explicit wins.
-                    VStack(alignment: .leading, spacing: 8) {
-                        SegmentedControl(["Chart", "Grid"], selection: $a).tinted().dividers().fullWidth(false)
-                        SegmentedControl(["Day", "Week"], selection: $b).selectionStyle(.outline)
-                        SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
-                    }
-                    .componentDefaults(accent: .turquoise)
-                }
-                .padding()
+    @Previewable @State var a = 0
+    @Previewable @State var b = 1
+    @Previewable @State var c = 0
+    @Previewable @State var d = 2
+    PreviewMatrix("SegmentedControl") {
+        PreviewCase("Default") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a) }
+        PreviewCase("Round") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a).shape(.round) }
+        PreviewCase("Icons + disabled item") {
+            SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
+                              SegmentItem("Grid", systemImage: "square.grid.2x2"),
+                              SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $b)
+        }
+        PreviewCase("Icon-only") {
+            SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
+                              SegmentItem(icon: "map")], selection: $c).fullWidth(false)
+        }
+        PreviewCase("Vertical") { SegmentedControl(["A", "B", "C"], selection: $d).vertical().fullWidth(false) }
+        // F3 — provider cascade: no explicit accent → the subtree
+        // componentDefaults re-tints .tinted/.outline; explicit wins.
+        PreviewCase("Provider cascade (F3)") {
+            VStack(alignment: .leading, spacing: 8) {
+                SegmentedControl(["Chart", "Grid"], selection: $a).tinted().dividers().fullWidth(false)
+                SegmentedControl(["Day", "Week"], selection: $b).selectionStyle(.outline)
+                SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
             }
+            .componentDefaults(accent: .turquoise)
         }
     }
-    return Demo()
 }

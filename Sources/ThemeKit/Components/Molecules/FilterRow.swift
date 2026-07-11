@@ -74,16 +74,17 @@ public extension FilterRow {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var a = true
-        @State private var b = false
-        var body: some View {
+    @Previewable @State var a = true
+    @Previewable @State var b = false
+    PreviewMatrix("FilterRow") {
+        PreviewCase("Stacked · count + separator") {
             VStack(spacing: 0) {
                 FilterRow("Direct", isOn: $a).count(128).showsSeparator()
                 FilterRow("1 stop", isOn: $b).count(64)
             }
-            .padding()
+        }
+        PreviewCase("Leading icon") {
+            FilterRow("Free Wi-Fi", isOn: $a).icon("wifi").count(42)
         }
     }
-    return Demo()
 }

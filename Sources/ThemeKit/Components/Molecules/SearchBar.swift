@@ -515,21 +515,16 @@ public extension SearchBar {
 }
 
 #Preview("Classic") {
-    struct Demo: View {
-        @State var a = ""
-        @State var b = "query"
-        @State var c = ""
-        var body: some View {
-            VStack(spacing: 16) {
-                SearchBar(text: $a).trailingIcon("barcode.viewfinder")
-                SearchBar(text: $b).backButton()
-                // Same bar, underlined chrome via the ambient FieldStyle.
-                SearchBar(text: $c).fieldStyle(.underlined)
-            }
-            .padding()
-        }
+    @Previewable @State var a = ""
+    @Previewable @State var b = "query"
+    @Previewable @State var c = ""
+    PreviewMatrix("SearchBar") {
+        PreviewCase("Trailing icon") { SearchBar(text: $a).trailingIcon("barcode.viewfinder") }
+        PreviewCase("Back button + text") { SearchBar(text: $b).backButton() }
+        // Same bar, underlined chrome via the ambient FieldStyle.
+        PreviewCase("Underlined") { SearchBar(text: $c).fieldStyle(.underlined) }
+        PreviewCase("Disabled") { SearchBar(text: .constant("")).disabled(true) }
     }
-    return Demo()
 }
 
 #Preview("Validation + custom icon") {

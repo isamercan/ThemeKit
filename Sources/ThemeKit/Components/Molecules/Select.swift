@@ -382,45 +382,51 @@ public extension Select {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var city: String?
-        @State var plan: String?
-        @State var planPanelOpen = false
-        let planDetails = [
-            "Basic": "Essential features for personal use",
-            "Pro": "Advanced tools for power users",
-            "Team": "Collaboration for organizations",
-        ]
-        var body: some View {
-            VStack(spacing: 16) {
-                Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                    .clearable()
-                Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
-                       selection: $city) { $0 }
-                    .searchable()
-                // Native-menu subtitles via optionDescription.
-                Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
-                    .optionDescription { planDetails[$0] }
-                // Panel rows with descriptions + custom leading content,
-                // driven by a controlled isExpanded binding.
-                Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: $planPanelOpen) { $0 }
-                    .searchable()
-                    .optionDescription { planDetails[$0] }
-                    .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
-                Button(planPanelOpen ? "Close plan panel" : "Open plan panel") { planPanelOpen.toggle() }
-                // Chrome via the shared FieldStyle axis.
-                Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                    .fieldStyle(.underlined)
-                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
-                Select("Departure city", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                    .required()
-                // Read-only (E1): normal chrome + value, menu / clear blocked.
-                Select("Cabin", options: ["Economy", "Business"], selection: .constant("Economy")) { $0 }
-                    .clearable()
-                    .readOnly()
-            }
-            .padding()
+    @Previewable @State var city: String?
+    @Previewable @State var plan: String?
+    let planDetails = [
+        "Basic": "Essential features for personal use",
+        "Pro": "Advanced tools for power users",
+        "Team": "Collaboration for organizations",
+    ]
+    PreviewMatrix("Select") {
+        PreviewCase("Clearable") {
+            Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                .clearable()
+        }
+        PreviewCase("Searchable sections") {
+            Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
+                   selection: $city) { $0 }
+                .searchable()
+        }
+        // Native-menu subtitles via optionDescription.
+        PreviewCase("Menu subtitles") {
+            Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
+                .optionDescription { planDetails[$0] }
+        }
+        // Panel rows with descriptions + custom leading content,
+        // driven by a controlled isExpanded binding.
+        PreviewCase("Open panel + leading content") {
+            Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: .constant(true)) { $0 }
+                .searchable()
+                .optionDescription { planDetails[$0] }
+                .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
+        }
+        // Chrome via the shared FieldStyle axis.
+        PreviewCase("Underlined") {
+            Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                .fieldStyle(.underlined)
+        }
+        // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+        PreviewCase("Required (E2)") {
+            Select("Departure city", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                .required()
+        }
+        // Read-only (E1): normal chrome + value, menu / clear blocked.
+        PreviewCase("Read-only (E1)") {
+            Select("Cabin", options: ["Economy", "Business"], selection: .constant("Economy")) { $0 }
+                .clearable()
+                .readOnly()
         }
     }
-    return Demo()
 }

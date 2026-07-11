@@ -106,10 +106,9 @@ public extension PriceBreakdown {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        PriceBreakdown(190_960).note("2 rooms · 4 nights").original(248_000).discountBadge("-23%").extra("Extra 8%", 175_683)
-        PriceBreakdown(9_600).unit("/ night").size(.medium).original(12_000).discountBadge("-20%")
-        PriceBreakdown(3_538).size(.medium).emphasis(.hero).align(.trailing).original(4_100)
+    PreviewMatrix("PriceBreakdown") {
+        PreviewCase("Full discount block") { PriceBreakdown(190_960).note("2 rooms · 4 nights").original(248_000).discountBadge("-23%").extra("Extra 8%", 175_683) }
+        PreviewCase("Per-unit, medium") { PriceBreakdown(9_600).unit("/ night").size(.medium).original(12_000).discountBadge("-20%") }
+        PreviewCase("Hero emphasis, trailing") { PriceBreakdown(3_538).size(.medium).emphasis(.hero).align(.trailing).original(4_100) }
     }
-    .padding()
 }

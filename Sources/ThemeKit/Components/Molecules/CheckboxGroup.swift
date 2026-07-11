@@ -170,24 +170,25 @@ public struct CheckboxGroup<Option: Hashable>: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var sel: Set<String> = ["Wifi"]
-        var body: some View {
-            VStack(alignment: .leading, spacing: 24) {
-                CheckboxGroup(title: "Amenities", options: ["Wifi", "Pool", "Parking", "Breakfast"], selection: $sel) { $0 }
-                CheckboxGroup(title: "Horizontal", options: ["Wifi", "Pool", "Parking"], selection: $sel) { $0 }
-                    .axis(.horizontal)                                                  // A6
-                CheckboxGroup(title: "Trailing boxes", options: ["Wifi", "Pool", "Parking"], selection: $sel) { $0 }
-                    .controlPlacement(.trailing)                                        // A5
-                    .selectAll("All amenities")
-                    .description("Filters apply to all room types.")                    // E5
-                CheckboxGroup(title: "Required group", options: ["Wifi", "Pool"], selection: $sel) { $0 }
-                    .required()                                                         // E2
-            }
-            .padding()
+    PreviewMatrix("CheckboxGroup") {
+        PreviewCase("Vertical (default)") {
+            CheckboxGroup(title: "Amenities", options: ["Wifi", "Pool", "Parking", "Breakfast"], selection: .constant(["Wifi"])) { $0 }
+        }
+        PreviewCase("Horizontal") {
+            CheckboxGroup(title: "Horizontal", options: ["Wifi", "Pool", "Parking"], selection: .constant(["Wifi"])) { $0 }
+                .axis(.horizontal)                                                  // A6
+        }
+        PreviewCase("Trailing boxes + select all + description") {
+            CheckboxGroup(title: "Trailing boxes", options: ["Wifi", "Pool", "Parking"], selection: .constant(["Wifi"])) { $0 }
+                .controlPlacement(.trailing)                                        // A5
+                .selectAll("All amenities")
+                .description("Filters apply to all room types.")                    // E5
+        }
+        PreviewCase("Required") {
+            CheckboxGroup(title: "Required group", options: ["Wifi", "Pool"], selection: .constant(["Wifi"])) { $0 }
+                .required()                                                         // E2
         }
     }
-    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

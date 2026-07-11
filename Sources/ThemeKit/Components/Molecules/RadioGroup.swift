@@ -220,33 +220,41 @@ public struct RadioButtonGroup<Option: Hashable>: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var sel: String? = "Economy"
-        @State var seg: String? = "Day"
-        var body: some View {
-            VStack(spacing: 24) {
-                RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                RadioGroup(title: "Class + descriptions", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                    .optionDescription {
-                        ["Economy": "Standard seat and cabin baggage.",
-                         "Business": "Priority boarding, lounge access and flat bed."][$0]
-                    }
-                    .accent(.success)
-                RadioGroup(title: "Horizontal", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                    .axis(.horizontal)
-                RadioGroup(title: "Trailing radios", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
-                    .controlPlacement(.trailing)                                        // A4
-                    .description("Fares are per passenger, taxes included.")            // E5
-                RadioGroup(title: "Required group", options: ["Economy", "Business"], selection: $sel) { $0 }
-                    .required()                                                         // E2
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
-                RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
-                    .groupStyle(.outline).fullWidth()
-            }
-            .padding()
+    @Previewable @State var sel: String? = "Economy"
+    @Previewable @State var seg: String? = "Day"
+    PreviewMatrix("RadioGroup") {
+        PreviewCase("Default") {
+            RadioGroup(title: "Class", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+        }
+        PreviewCase("Descriptions + accent") {
+            RadioGroup(title: "Class + descriptions", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                .optionDescription {
+                    ["Economy": "Standard seat and cabin baggage.",
+                     "Business": "Priority boarding, lounge access and flat bed."][$0]
+                }
+                .accent(.success)
+        }
+        PreviewCase("Horizontal") {
+            RadioGroup(title: "Horizontal", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                .axis(.horizontal)
+        }
+        PreviewCase("Trailing radios + description") {   // A4 / E5
+            RadioGroup(title: "Trailing radios", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                .controlPlacement(.trailing)
+                .description("Fares are per passenger, taxes included.")
+        }
+        PreviewCase("Required") {   // E2
+            RadioGroup(title: "Required group", options: ["Economy", "Business"], selection: $sel) { $0 }
+                .required()
+        }
+        PreviewCase("Button group (solid)") {
+            RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+        }
+        PreviewCase("Button group (outline, full width)") {
+            RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
+                .groupStyle(.outline).fullWidth()
         }
     }
-    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

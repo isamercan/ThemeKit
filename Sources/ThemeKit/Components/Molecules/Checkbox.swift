@@ -253,27 +253,30 @@ public extension Checkbox {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        Checkbox(isChecked: .constant(false))
-        Checkbox(isChecked: .constant(true))
-        Checkbox(isChecked: .constant(true)).indeterminate()
-        Checkbox(isChecked: .constant(true)).controlSize(.small)
-        Checkbox(isChecked: .constant(true)).disabled(true)
-        Checkbox("Success accent", isChecked: .constant(true)).accent(.success)
-        Checkbox("Warning accent", isChecked: .constant(true)).accent(.warning)
-        Checkbox("Large box", isChecked: .constant(true)).controlSize(.large)          // C4
-        Checkbox("Box on the trailing side", isChecked: .constant(true))
-            .controlPlacement(.trailing)                                               // A2
-        Checkbox("Buy milk", isChecked: .constant(true)).lineThrough()                 // E4
-        Checkbox("Terms", isChecked: .constant(false))
-            .label {                                                                   // D1
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    Text("I accept the")
-                    Text("Terms of Service").underline().fontWeight(.semibold)
+    PreviewMatrix("Checkbox") {
+        PreviewCase("Off") { Checkbox(isChecked: .constant(false)) }
+        PreviewCase("On") { Checkbox(isChecked: .constant(true)) }
+        PreviewCase("Indeterminate") { Checkbox(isChecked: .constant(true)).indeterminate() }
+        PreviewCase("Small") { Checkbox(isChecked: .constant(true)).controlSize(.small) }
+        PreviewCase("Disabled") { Checkbox(isChecked: .constant(true)).disabled(true) }
+        PreviewCase("Success accent") { Checkbox("Success accent", isChecked: .constant(true)).accent(.success) }
+        PreviewCase("Warning accent") { Checkbox("Warning accent", isChecked: .constant(true)).accent(.warning) }
+        PreviewCase("Large box") { Checkbox("Large box", isChecked: .constant(true)).controlSize(.large) }          // C4
+        PreviewCase("Trailing control") {
+            Checkbox("Box on the trailing side", isChecked: .constant(true))
+                .controlPlacement(.trailing)                                            // A2
+        }
+        PreviewCase("Line-through") { Checkbox("Buy milk", isChecked: .constant(true)).lineThrough() }              // E4
+        PreviewCase("Label slot") {
+            Checkbox("Terms", isChecked: .constant(false))
+                .label {                                                                // D1
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        Text("I accept the")
+                        Text("Terms of Service").underline().fontWeight(.semibold)
+                    }
+                    .textStyle(.bodyBase400)
                 }
-                .textStyle(.bodyBase400)
-            }
-        Checkbox("Read-only (tap does nothing)", isChecked: .constant(true)).readOnly() // E1
+        }
+        PreviewCase("Read-only") { Checkbox("Read-only (tap does nothing)", isChecked: .constant(true)).readOnly() } // E1
     }
-    .padding()
 }

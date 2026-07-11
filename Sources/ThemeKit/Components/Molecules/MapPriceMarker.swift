@@ -113,19 +113,22 @@ public extension MapPriceMarker {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        HStack(spacing: 16) {
-            MapPriceMarker("₺1.250")
-            MapPriceMarker("₺2.100").selected()
-            MapPriceMarker("Sold out").icon("xmark").pointer(false)
+    PreviewMatrix("MapPriceMarker") {
+        PreviewCase("Default / selected / no pointer") {
+            HStack(spacing: 16) {
+                MapPriceMarker("₺1.250")
+                MapPriceMarker("₺2.100").selected()
+                MapPriceMarker("Sold out").icon("xmark").pointer(false)
+            }
         }
         // Custom ChipStyle via the environment: the pill routes through
         // `SolidChipStyle.makeBody`; the pointer/shadow/scale stay the marker's.
-        HStack(spacing: 16) {
-            MapPriceMarker("₺1.250")
-            MapPriceMarker("₺2.100").selected()
+        PreviewCase("Solid chip style") {
+            HStack(spacing: 16) {
+                MapPriceMarker("₺1.250")
+                MapPriceMarker("₺2.100").selected()
+            }
+            .chipStyle(.solid)
         }
-        .chipStyle(.solid)
     }
-    .padding()
 }

@@ -70,13 +70,14 @@ public struct QuantityStepper: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var qty = 1
-        var body: some View {
-            QuantityStepper(value: $qty, range: 0...10).padding()
-        }
+    @Previewable @State var qty = 1
+    PreviewMatrix("QuantityStepper") {
+        PreviewCase("Default") { QuantityStepper(value: $qty, range: 0...10) }
+        PreviewCase("At minimum") { QuantityStepper(value: .constant(0), range: 0...10) }
+        PreviewCase("At maximum") { QuantityStepper(value: .constant(10), range: 0...10) }
+        PreviewCase("Step 5") { QuantityStepper(value: $qty, range: 0...10).step(5) }
+        PreviewCase("Disabled") { QuantityStepper(value: .constant(3), range: 0...10).disabled(true) }
     }
-    return Demo()
 }
 
 public extension QuantityStepper {

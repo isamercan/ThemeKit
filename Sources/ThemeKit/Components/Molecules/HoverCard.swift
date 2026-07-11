@@ -61,20 +61,26 @@ public extension View {
 }
 
 #Preview {
-    VStack(spacing: 60) {
-        Text("Long-press / hover me")
-            .textStyle(.labelBase600)
-            .hoverCard(edge: .bottom) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Preview card").textStyle(.labelBase600)
-                    Text("Long-press on touch, hover with a pointer.").textStyle(.bodySm400)
+    // Overlay component — the card only appears on long-press (touch) or
+    // pointer hover, so each cell shows its resting trigger; interact in the
+    // live preview to reveal the anchored card.
+    PreviewMatrix("HoverCard") {
+        PreviewCase("Text trigger · card below") {
+            Text("Long-press / hover me")
+                .textStyle(.labelBase600)
+                .hoverCard(edge: .bottom) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Preview card").textStyle(.labelBase600)
+                        Text("Long-press on touch, hover with a pointer.").textStyle(.bodySm400)
+                    }
                 }
-            }
-        Icon(systemName: "info.circle")
-            .size(.lg)
-            .hoverCard(edge: .top) {
-                Text("A quick contextual preview.").textStyle(.bodySm400)
-            }
+        }
+        PreviewCase("Icon trigger · card above") {
+            Icon(systemName: "info.circle")
+                .size(.lg)
+                .hoverCard(edge: .top) {
+                    Text("A quick contextual preview.").textStyle(.bodySm400)
+                }
+        }
     }
-    .padding(80)
 }

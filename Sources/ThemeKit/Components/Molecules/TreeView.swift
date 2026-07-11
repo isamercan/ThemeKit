@@ -125,18 +125,19 @@ public extension TreeView {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var checked: Set<String> = []
-        let nodes = [
-            TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
-                TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
-                TreeNode(id: "img", "Images", systemImage: "folder", children: [
-                    TreeNode(id: "a", "beach.jpg", systemImage: "photo"),
-                    TreeNode(id: "b", "city.jpg", systemImage: "photo")])]),
-            TreeNode(id: "music", "Music", systemImage: "folder", children: [
-                TreeNode(id: "s1", "song.mp3", systemImage: "music.note")]),
-        ]
-        var body: some View { TreeView(nodes, selection: $checked).checkable().padding() }
+    @Previewable @State var checked: Set<String> = []
+    let nodes = [
+        TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
+            TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
+            TreeNode(id: "img", "Images", systemImage: "folder", children: [
+                TreeNode(id: "a", "beach.jpg", systemImage: "photo"),
+                TreeNode(id: "b", "city.jpg", systemImage: "photo")])]),
+        TreeNode(id: "music", "Music", systemImage: "folder", children: [
+            TreeNode(id: "s1", "song.mp3", systemImage: "music.note")]),
+    ]
+    PreviewMatrix("TreeView") {
+        PreviewCase("Checkable") { TreeView(nodes, selection: $checked).checkable() }
+        PreviewCase("Plain (no checkboxes)") { TreeView(nodes, selection: .constant([])) }
     }
-    return Demo().environment(Theme.shared)
+    .environment(Theme.shared)
 }

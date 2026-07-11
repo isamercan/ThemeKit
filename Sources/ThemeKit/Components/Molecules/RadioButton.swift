@@ -239,26 +239,29 @@ public extension RadioButton {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        RadioButton(isSelected: .constant(false))
-        RadioButton(isSelected: .constant(true))
-        RadioButton(isSelected: .constant(true)).controlSize(.small)
-        RadioButton(isSelected: .constant(true)).disabled(true)
-        RadioButton("Remember me", isSelected: .constant(true)).type(.check).radioStyle(.inner).gap(.medium)
-        RadioButton("Success accent", isSelected: .constant(true)).accent(.success)
-        RadioButton("Error accent", isSelected: .constant(true)).type(.check).accent(.error)
-        RadioButton("Large radio", isSelected: .constant(true)).controlSize(.large)     // C4
-        RadioButton("Radio on the trailing side", isSelected: .constant(true))
-            .controlPlacement(.trailing)                                                // A3
-        RadioButton("Card payment", isSelected: .constant(true))
-            .label {                                                                    // D1
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    Image(systemName: "creditcard")
-                    Text("Card payment").fontWeight(.semibold)
+    PreviewMatrix("RadioButton") {
+        PreviewCase("Unselected") { RadioButton(isSelected: .constant(false)) }
+        PreviewCase("Selected") { RadioButton(isSelected: .constant(true)) }
+        PreviewCase("Small") { RadioButton(isSelected: .constant(true)).controlSize(.small) }
+        PreviewCase("Disabled") { RadioButton(isSelected: .constant(true)).disabled(true) }
+        PreviewCase("Check + inner") { RadioButton("Remember me", isSelected: .constant(true)).type(.check).radioStyle(.inner).gap(.medium) }
+        PreviewCase("Success accent") { RadioButton("Success accent", isSelected: .constant(true)).accent(.success) }
+        PreviewCase("Error accent") { RadioButton("Error accent", isSelected: .constant(true)).type(.check).accent(.error) }
+        PreviewCase("Large") { RadioButton("Large radio", isSelected: .constant(true)).controlSize(.large) }   // C4
+        PreviewCase("Trailing control") {   // A3
+            RadioButton("Radio on the trailing side", isSelected: .constant(true))
+                .controlPlacement(.trailing)
+        }
+        PreviewCase("Label slot") {   // D1
+            RadioButton("Card payment", isSelected: .constant(true))
+                .label {
+                    HStack(spacing: Theme.SpacingKey.xs.value) {
+                        Image(systemName: "creditcard")
+                        Text("Card payment").fontWeight(.semibold)
+                    }
+                    .textStyle(.bodyBase400)
                 }
-                .textStyle(.bodyBase400)
-            }
-        RadioButton("Read-only (tap does nothing)", isSelected: .constant(true)).readOnly() // E1
+        }
+        PreviewCase("Read-only") { RadioButton("Read-only (tap does nothing)", isSelected: .constant(true)).readOnly() }   // E1
     }
-    .padding()
 }

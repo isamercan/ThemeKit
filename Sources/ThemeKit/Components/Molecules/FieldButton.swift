@@ -119,16 +119,32 @@ public extension FieldButton {
 }
 
 #Preview {
-    VStack(spacing: 10) {
-        FieldButton("2 Passengers · Economy") { }.label("Passengers").icon("person.2.fill")
-        FieldButton("Select a date") { }.icon("calendar").placeholder()
+    // Trigger molecule — the action opens the caller's picker/sheet, so each
+    // cell shows a representative resting field state.
+    PreviewMatrix("FieldButton") {
+        PreviewCase("Labelled + icon") {
+            FieldButton("2 Passengers · Economy") { }.label("Passengers").icon("person.2.fill")
+        }
+        PreviewCase("Placeholder") {
+            FieldButton("Select a date") { }.icon("calendar").placeholder()
+        }
         // Underlined chrome via the shared FieldStyle hook.
-        FieldButton("Business class") { }.label("Cabin").fieldStyle(.underlined)
+        PreviewCase("Underlined field style") {
+            FieldButton("Business class") { }.label("Cabin").fieldStyle(.underlined)
+        }
         // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-        FieldButton("Small trigger") { }.size(.small)
-        FieldButton("Large trigger") { }.label("Room").size(.large)
+        PreviewCase("Size ramp") {
+            VStack(spacing: 10) {
+                FieldButton("Small trigger") { }.size(.small)
+                FieldButton("Large trigger") { }.label("Room").size(.large)
+            }
+        }
         // Read-only: normal chrome, action suppressed (E1).
-        FieldButton("1 Room · 2 Guests") { }.label("Occupancy").readOnly()
+        PreviewCase("Read-only") {
+            FieldButton("1 Room · 2 Guests") { }.label("Occupancy").readOnly()
+        }
+        PreviewCase("Disabled") {
+            FieldButton("Unavailable") { }.label("Cabin").disabled(true)
+        }
     }
-    .padding()
 }

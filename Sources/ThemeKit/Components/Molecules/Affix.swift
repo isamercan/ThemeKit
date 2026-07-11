@@ -124,17 +124,24 @@ private enum AffixMetrics {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 12) {
-            Affix(offsetTop: 8) {
-                HStack { ThemeButton("Pinned toolbar") {}; Spacer() }
-                    .padding(8)
-                    .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
-                    .themeShadow(.soft)
+    // Affix is scroll-driven; each cell shows a single unpinned frame inside a
+    // short ScrollView — live pinning needs interactive scrolling (see the demo).
+    PreviewMatrix("Affix") {
+        PreviewCase("Top affix in scroll flow") {
+            ScrollView {
+                VStack(spacing: 12) {
+                    Affix(offsetTop: 8) {
+                        HStack { ThemeButton("Pinned toolbar") {}; Spacer() }
+                            .padding(8)
+                            .background(Theme.shared.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
+                            .themeShadow(.soft)
+                    }
+                    ForEach(0..<6) { Text("Row \($0)").frame(maxWidth: .infinity).padding().background(Theme.shared.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: 8)) }
+                }
+                .padding()
             }
-            ForEach(0..<40) { Text("Row \($0)").frame(maxWidth: .infinity).padding().background(Theme.shared.background(.bgElevatorPrimary), in: RoundedRectangle(cornerRadius: 8)) }
+            .frame(height: 260)
         }
-        .padding()
     }
     .environment(Theme.shared)
 }

@@ -82,13 +82,19 @@ public extension TripTypeToggle {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var sel = 1
-        var body: some View {
+    @Previewable @State var sel = 1
+    PreviewMatrix("TripTypeToggle") {
+        PreviewCase("Icons") {
             TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
                 .icons(["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"])
-                .padding()
+        }
+        PreviewCase("Accent") {
+            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                .accent(.success)
+        }
+        PreviewCase("Intrinsic width") {
+            TripTypeToggle(["One way", "Round trip"], selection: .constant(0))
+                .fullWidth(false)
         }
     }
-    return Demo()
 }

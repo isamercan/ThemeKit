@@ -125,11 +125,18 @@ public extension FileInput {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        FileInput("Passport", onPick: {})
-        FileInput("Photo", onPick: {}).fileName("passport-scan.jpg")
+    PreviewMatrix("FileInput") {
+        PreviewCase("Empty") { FileInput("Passport", onPick: {}) }
+        PreviewCase("File chosen + clear") {
+            FileInput("Photo", onPick: {}).fileName("passport-scan.jpg").onClear {}
+        }
+        PreviewCase("Error message") {
+            FileInput("Visa", onPick: {})
+                .infoMessages([InfoMessage("File is too large", kind: .error)])
+        }
         // Swapped chrome: underlined field, same behavior.
-        FileInput("Receipt", onPick: {}).fieldStyle(.underlined)
+        PreviewCase("Underlined field style") {
+            FileInput("Receipt", onPick: {}).fieldStyle(.underlined)
+        }
     }
-    .padding()
 }

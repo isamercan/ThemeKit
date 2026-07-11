@@ -125,18 +125,14 @@ public extension BarChart {
 }
 
 #Preview {
-    struct Demo: View {
-        let series = [
-            ChartSeries("Revenue", [ChartPoint("Q1", 120), ChartPoint("Q2", 150), ChartPoint("Q3", 138), ChartPoint("Q4", 172)]),
-            ChartSeries("Cost", [ChartPoint("Q1", 80), ChartPoint("Q2", 95), ChartPoint("Q3", 90), ChartPoint("Q4", 110)]),
-        ]
-        var body: some View {
-            VStack(spacing: 24) {
-                BarChart(series)
-                BarChart(series).mode(.stacked).height(.compact)
-            }
-            .padding()
-        }
+    // The chart is scrub-interactive; each cell is a single static frame.
+    let series = [
+        ChartSeries("Revenue", [ChartPoint("Q1", 120), ChartPoint("Q2", 150), ChartPoint("Q3", 138), ChartPoint("Q4", 172)]),
+        ChartSeries("Cost", [ChartPoint("Q1", 80), ChartPoint("Q2", 95), ChartPoint("Q3", 90), ChartPoint("Q4", 110)]),
+    ]
+    PreviewMatrix("BarChart") {
+        PreviewCase("Grouped (default)") { BarChart(series) }
+        PreviewCase("Stacked · compact") { BarChart(series).mode(.stacked).height(.compact) }
+        PreviewCase("Single series · no grid") { BarChart([series[0]]).showsGrid(false) }
     }
-    return Demo()
 }

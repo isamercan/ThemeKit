@@ -92,12 +92,13 @@ public extension Space {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 24) {
-        Space { ForEach(0..<3) { Tag("Tag \($0)") } }
-        Space { ForEach(0..<8) { Tag("Item \($0)") } }.size(.medium).wrap().frame(width: 260)
-        Space { Text("Title").textStyle(.headingSm); Text("Subtitle").textStyle(.bodySm400) }
-            .vertical().align(.start)
+    PreviewMatrix("Space") {
+        PreviewCase("Row (default gap)") { Space { ForEach(0..<3) { Tag("Tag \($0)") } } }
+        PreviewCase("Wrap, medium gap") { Space { ForEach(0..<8) { Tag("Item \($0)") } }.size(.medium).wrap().frame(width: 260) }
+        PreviewCase("Vertical, start-aligned") {
+            Space { Text("Title").textStyle(.headingSm); Text("Subtitle").textStyle(.bodySm400) }
+                .vertical().align(.start)
+        }
     }
-    .padding()
     .environment(Theme.shared)
 }

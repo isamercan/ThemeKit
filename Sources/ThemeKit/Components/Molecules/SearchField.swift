@@ -345,18 +345,25 @@ private struct OptionalSoftShadow: ViewModifier {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        SearchField("From") { }.value(code: "SAW", title: "Istanbul", subtitle: "Gatwick Airport")
-        SearchField("Dates") { }
-            .dateRange(SearchDate(badge: "23 Jul '24", label: "Monday"), SearchDate(badge: "27 Jul '24", label: "Friday"))
-        SearchField("Passengers") { }
-            .passengers(badge: "4 Guests", [PassengerCount("person.fill", "2"), PassengerCount("figure.child", "1")])
-        SearchField("From") { }.value(code: "IST", title: "Istanbul", subtitle: "All airports")
-            .chipColors(background: .bgHero, foreground: .textSecondaryInverse).borderColor(.borderHero).titleStyle(color: .textHero)
+    PreviewMatrix("SearchField") {
+        PreviewCase("Placeholder") { SearchField("Where to?") { }.icon("magnifyingglass").trailing(.chevron) }
+        PreviewCase("Location value") { SearchField("From") { }.value(code: "SAW", title: "Istanbul", subtitle: "Gatwick Airport") }
+        PreviewCase("Date range") {
+            SearchField("Dates") { }
+                .dateRange(SearchDate(badge: "23 Jul '24", label: "Monday"), SearchDate(badge: "27 Jul '24", label: "Friday"))
+        }
+        PreviewCase("Passengers") {
+            SearchField("Passengers") { }
+                .passengers(badge: "4 Guests", [PassengerCount("person.fill", "2"), PassengerCount("figure.child", "1")])
+        }
+        PreviewCase("Token overrides") {
+            SearchField("From") { }.value(code: "IST", title: "Istanbul", subtitle: "All airports")
+                .chipColors(background: .bgHero, foreground: .textSecondaryInverse).borderColor(.borderHero).titleStyle(color: .textHero)
+        }
         // No legacy chrome modifier set → chrome comes from the ambient FieldStyle.
-        SearchField("To") { }.value(code: "ESB", title: "Ankara", subtitle: "Stansted Airport")
-            .fieldStyle(.underlined)
+        PreviewCase("Ambient FieldStyle (underlined)") {
+            SearchField("To") { }.value(code: "ESB", title: "Ankara", subtitle: "Stansted Airport")
+                .fieldStyle(.underlined)
+        }
     }
-    .padding()
-    .background(Theme.shared.background(.bgSecondary))
 }

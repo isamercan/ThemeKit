@@ -129,15 +129,17 @@ public extension PriceHistogram {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var low = 800.0
-        @State private var high = 3_200.0
-        let bins = [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2]
-        var body: some View {
+    @Previewable @State var low = 800.0
+    @Previewable @State var high = 3_200.0
+    let bins = [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2]
+    PreviewMatrix("PriceHistogram") {
+        PreviewCase("Bounds + result count") {
             PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
                 .showsBounds().resultCount(87)
-                .padding()
+        }
+        PreviewCase("Minimal + accent") {
+            PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
+                .accent(.success)
         }
     }
-    return Demo()
 }

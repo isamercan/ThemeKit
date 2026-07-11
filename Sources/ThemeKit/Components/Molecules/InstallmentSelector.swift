@@ -139,13 +139,16 @@ public extension InstallmentSelector {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var months = 3
-        var body: some View {
+    @Previewable @State var months = 3
+    PreviewMatrix("InstallmentSelector") {
+        PreviewCase("Interest-free") {
             InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months)
                 .interestFreeUpTo(3)
-                .padding()
+        }
+        PreviewCase("Recommended + surcharge") {
+            InstallmentSelector(total: 12_000, options: [1, 3, 6], selection: $months)
+                .recommended(3)
+                .surcharge([6: 600])
         }
     }
-    return Demo()
 }

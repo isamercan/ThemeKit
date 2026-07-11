@@ -373,33 +373,28 @@ private struct OTPDigitBox: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var code = "123"
-        @State var grouped = "12"
-        @State var alpha = "A1"
-        @State var lastComplete = "—"
-        var body: some View {
-            VStack(spacing: 24) {
-                OTPInput(code: $code, onComplete: { lastComplete = $0 }).resend(interval: 30, onResend: {})
-                Text("Completed: \(lastComplete)").textStyle(.bodySm400)
-                OTPInput(code: .constant("4321")).digitCount(4).secure()
-                OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code")
-                // Declarative validation: rules run live against the entered code.
-                OTPInput(code: $code)
-                    .validate([.minLength(6, "Enter all 6 digits")], on: .live)
-                // Swapped chrome: every digit cell picks up the underlined style.
-                OTPInput(code: .constant("98")).digitCount(4).fieldStyle(.underlined)
-                // HeroUI Group/Separator anatomy: 3 + 3 with a dash between.
-                OTPInput(code: $grouped).groups([3, 3])
-                // Letters + digits: ASCII keyboard, `.oneTimeCode` kept.
-                OTPInput(code: $alpha).characters(.alphanumeric)
-                // Per-slot placeholder in the tertiary text tone.
-                OTPInput(code: .constant("7")).digitCount(4).placeholder("0000")
-            }
-            .padding()
+    // Interactive field — the matrix wraps representative static states (one frame per cell).
+    @Previewable @State var code = "123"
+    @Previewable @State var grouped = "12"
+    @Previewable @State var alpha = "A1"
+    PreviewMatrix("OTPInput") {
+        PreviewCase("Default + resend") { OTPInput(code: $code, onComplete: { _ in }).resend(interval: 30, onResend: {}) }
+        PreviewCase("Secure") { OTPInput(code: .constant("4321")).digitCount(4).secure() }
+        PreviewCase("Error") { OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code") }
+        // Declarative validation: rules run live against the entered code.
+        PreviewCase("Live validation") {
+            OTPInput(code: $code)
+                .validate([.minLength(6, "Enter all 6 digits")], on: .live)
         }
+        // Swapped chrome: every digit cell picks up the underlined style.
+        PreviewCase("Underlined") { OTPInput(code: .constant("98")).digitCount(4).fieldStyle(.underlined) }
+        // HeroUI Group/Separator anatomy: 3 + 3 with a dash between.
+        PreviewCase("Groups") { OTPInput(code: $grouped).groups([3, 3]) }
+        // Letters + digits: ASCII keyboard, `.oneTimeCode` kept.
+        PreviewCase("Alphanumeric") { OTPInput(code: $alpha).characters(.alphanumeric) }
+        // Per-slot placeholder in the tertiary text tone.
+        PreviewCase("Placeholder") { OTPInput(code: .constant("7")).digitCount(4).placeholder("0000") }
     }
-    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

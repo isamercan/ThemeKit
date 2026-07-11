@@ -129,18 +129,14 @@ public extension AreaChart {
 }
 
 #Preview {
-    struct Demo: View {
-        let series = [
-            ChartSeries("Organic", [ChartPoint("Mon", 30), ChartPoint("Tue", 42), ChartPoint("Wed", 35), ChartPoint("Thu", 50), ChartPoint("Fri", 48)]),
-            ChartSeries("Paid", [ChartPoint("Mon", 18), ChartPoint("Tue", 22), ChartPoint("Wed", 28), ChartPoint("Thu", 24), ChartPoint("Fri", 33)]),
-        ]
-        var body: some View {
-            VStack(spacing: 24) {
-                AreaChart(series).curved()
-                AreaChart(series).stacked().height(.compact)
-            }
-            .padding()
-        }
+    // The chart is scrub-interactive; each cell is a single static frame.
+    let series = [
+        ChartSeries("Organic", [ChartPoint("Mon", 30), ChartPoint("Tue", 42), ChartPoint("Wed", 35), ChartPoint("Thu", 50), ChartPoint("Fri", 48)]),
+        ChartSeries("Paid", [ChartPoint("Mon", 18), ChartPoint("Tue", 22), ChartPoint("Wed", 28), ChartPoint("Thu", 24), ChartPoint("Fri", 33)]),
+    ]
+    PreviewMatrix("AreaChart") {
+        PreviewCase("Overlaid + curved") { AreaChart(series).curved() }
+        PreviewCase("Stacked · compact") { AreaChart(series).stacked().height(.compact) }
+        PreviewCase("Single series · no grid") { AreaChart([series[0]]).showsGrid(false) }
     }
-    return Demo()
 }

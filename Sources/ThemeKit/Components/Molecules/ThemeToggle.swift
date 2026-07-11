@@ -120,29 +120,45 @@ public struct ThemeToggle: View {
 
 #Preview {
     @Previewable @State var live = true   // interactive rows: slide + press-scale feedback
-    VStack(alignment: .leading, spacing: 16) {
-        ThemeToggle(isOn: .constant(true))
-        ThemeToggle(isOn: .constant(false))
-        ThemeToggle(isOn: .constant(true)).controlSize(.small)
-        ThemeToggle(isOn: .constant(true)).symbols(on: "checkmark", off: "xmark")
-        ThemeToggle(isOn: .constant(true)).loading()
-        ThemeToggle(isOn: .constant(true)).disabled(true)
-        ThemeToggle(isOn: .constant(true)).readOnly()   // E1 — normal chrome, tap does nothing
-        ThemeToggle(isOn: .constant(true)).accent(.success)
-        ThemeToggle(isOn: .constant(true)).accent(.error).controlSize(.small)
-        // Track symbols (HeroUI start/end content) — tap to see the crossfade + press scale.
-        ThemeToggle(isOn: $live).trackSymbols(on: "sun.max.fill", off: "moon.fill")
-        ThemeToggle(isOn: .constant(false)).trackSymbols(on: "sun.max.fill", off: "moon.fill")
-        ThemeToggle(isOn: .constant(true)).trackSymbols(on: "sun.max.fill", off: "moon.fill").disabled(true)
-        ThemeToggle(isOn: .constant(true)).trackSymbols(on: "checkmark").accent(.success).controlSize(.small)
-        // Custom thumb content (HeroUI Switch.Thumb children); spinner still wins while loading.
-        ThemeToggle(isOn: $live).thumbContent { on in
-            Image(systemName: on ? "sun.max.fill" : "moon.fill")
-                .font(.system(size: 10, weight: .bold))
+    PreviewMatrix("ThemeToggle") {
+        PreviewCase("On / off") {
+            HStack(spacing: 16) {
+                ThemeToggle(isOn: .constant(true))
+                ThemeToggle(isOn: .constant(false))
+            }
         }
-        ThemeToggle(isOn: .constant(true)).thumbContent { _ in Text("A").font(.system(size: 10, weight: .bold)) }.loading()
+        PreviewCase("Small") { ThemeToggle(isOn: .constant(true)).controlSize(.small) }
+        PreviewCase("Knob symbols") { ThemeToggle(isOn: .constant(true)).symbols(on: "checkmark", off: "xmark") }
+        PreviewCase("Loading") { ThemeToggle(isOn: .constant(true)).loading() }
+        PreviewCase("Disabled") { ThemeToggle(isOn: .constant(true)).disabled(true) }
+        // E1 — normal chrome, tap does nothing
+        PreviewCase("Read-only") { ThemeToggle(isOn: .constant(true)).readOnly() }
+        PreviewCase("Accents") {
+            HStack(spacing: 16) {
+                ThemeToggle(isOn: .constant(true)).accent(.success)
+                ThemeToggle(isOn: .constant(true)).accent(.error).controlSize(.small)
+            }
+        }
+        // Track symbols (HeroUI start/end content) — tap to see the crossfade + press scale.
+        PreviewCase("Track symbols") {
+            HStack(spacing: 16) {
+                ThemeToggle(isOn: $live).trackSymbols(on: "sun.max.fill", off: "moon.fill")
+                ThemeToggle(isOn: .constant(false)).trackSymbols(on: "sun.max.fill", off: "moon.fill")
+                ThemeToggle(isOn: .constant(true)).trackSymbols(on: "sun.max.fill", off: "moon.fill").disabled(true)
+                ThemeToggle(isOn: .constant(true)).trackSymbols(on: "checkmark").accent(.success).controlSize(.small)
+            }
+        }
+        // Custom thumb content (HeroUI Switch.Thumb children); spinner still wins while loading.
+        PreviewCase("Custom thumb") {
+            HStack(spacing: 16) {
+                ThemeToggle(isOn: $live).thumbContent { on in
+                    Image(systemName: on ? "sun.max.fill" : "moon.fill")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                ThemeToggle(isOn: .constant(true)).thumbContent { _ in Text("A").font(.system(size: 10, weight: .bold)) }.loading()
+            }
+        }
     }
-    .padding()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

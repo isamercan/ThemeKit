@@ -108,15 +108,14 @@ public extension AnchorNav {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var active = "intro"
-        let items = [AnchorItem("intro", title: "Introduction"),
-                     AnchorItem("install", title: "Installation"),
-                     AnchorItem("usage", title: "Usage", level: 1),
-                     AnchorItem("api", title: "API")]
-        var body: some View {
-            AnchorNav(items, active: $active).padding()
-        }
+    let items = [AnchorItem("intro", title: "Introduction"),
+                 AnchorItem("install", title: "Installation"),
+                 AnchorItem("usage", title: "Usage", level: 1),
+                 AnchorItem("api", title: "API")]
+    PreviewMatrix("AnchorNav") {
+        PreviewCase("Vertical (default)") { AnchorNav(items, active: .constant("intro")) }
+        PreviewCase("Nested link active") { AnchorNav(items, active: .constant("usage")) }
+        PreviewCase("Horizontal") { AnchorNav(items, active: .constant("install")).direction(.horizontal) }
     }
-    return Demo().environment(Theme.shared)
+    .environment(Theme.shared)
 }

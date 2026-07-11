@@ -364,35 +364,36 @@ public extension Autocomplete {
 }
 
 #Preview("Static") {
-    struct Demo: View {
-        @State var text = ""
-        @State var underlined = ""
-        @State var validated = ""
-        let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
-        var body: some View {
-            VStack(spacing: 16) {
-                Autocomplete("Destination", text: $text, suggestions: cities)
-                // Same field, underlined chrome via the ambient FieldStyle.
-                Autocomplete("Destination", text: $underlined, suggestions: cities)
-                    .fieldStyle(.underlined)
-                // Required + validation + loading spinner (E6 axes).
-                Autocomplete("City", text: $validated, suggestions: cities)
-                    .required()
-                    .validate([.required(), .minLength(2)])
-                Autocomplete("Fetching", text: $text, suggestions: cities)
-                    .loading()
-                // Read-only: normal chrome + value, no editing or clear (E1).
-                Autocomplete("Origin (read-only)", text: .constant("Istanbul"), suggestions: cities)
-                    .readOnly()
-                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-                Autocomplete("Small", text: $text, suggestions: cities).size(.small)
-                Autocomplete("Large", text: $text, suggestions: cities).size(.large)
-                    .clearable(false)
-            }
-            .padding()
+    // The suggestion dropdown is focus-driven; each cell shows the field chrome
+    // as a single static frame (type in the demo for live suggestions).
+    let cities = ["Istanbul", "Izmir", "Izmit", "Ankara", "Antalya", "Bursa"]
+    PreviewMatrix("Autocomplete") {
+        PreviewCase("Default") { Autocomplete("Destination", text: .constant(""), suggestions: cities) }
+        // Same field, underlined chrome via the ambient FieldStyle.
+        PreviewCase("Underlined chrome") {
+            Autocomplete("Destination", text: .constant(""), suggestions: cities)
+                .fieldStyle(.underlined)
         }
+        // Required + validation + loading spinner (E6 axes).
+        PreviewCase("Required + validation") {
+            Autocomplete("City", text: .constant(""), suggestions: cities)
+                .required()
+                .validate([.required(), .minLength(2)])
+        }
+        PreviewCase("Loading") { Autocomplete("Fetching", text: .constant(""), suggestions: cities).loading() }
+        // Read-only: normal chrome + value, no editing or clear (E1).
+        PreviewCase("Read-only") {
+            Autocomplete("Origin (read-only)", text: .constant("Istanbul"), suggestions: cities)
+                .readOnly()
+        }
+        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+        PreviewCase("Small") { Autocomplete("Small", text: .constant(""), suggestions: cities).size(.small) }
+        PreviewCase("Large · not clearable") {
+            Autocomplete("Large", text: .constant(""), suggestions: cities).size(.large)
+                .clearable(false)
+        }
+        PreviewCase("Disabled") { Autocomplete("Disabled", text: .constant(""), suggestions: cities).disabled(true) }
     }
-    return Demo()
 }
 
 #Preview("Async") {

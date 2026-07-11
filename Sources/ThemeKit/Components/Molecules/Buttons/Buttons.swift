@@ -460,14 +460,16 @@ public extension LinkButton {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        PrimaryButton("Primary") {}
-        SecondaryButton("Secondary") {}
-        OutlineButton("Outline") {}
-        PrimaryButton("Disabled") {}.disabled(true)
-        PrimaryButton("Loading") {}.loading()
-        PrimaryButton("Full-width CTA") {}.fullWidth()
+    PreviewMatrix("Buttons") {
+        PreviewCase("Primary") { PrimaryButton("Primary") {} }
+        PreviewCase("Secondary") { SecondaryButton("Secondary") {} }
+        PreviewCase("Outline") { OutlineButton("Outline") {} }
+        PreviewCase("Ghost") { GhostButton("Ghost") {} }
+        PreviewCase("Link") { LinkButton("Link") {} }
+        PreviewCase("Disabled") { PrimaryButton("Disabled") {}.disabled(true) }
+        PreviewCase("Loading") { PrimaryButton("Loading") {}.loading() }
+        PreviewCase("Full-width CTA") { PrimaryButton("Full-width CTA") {}.fullWidth() }
+        PreviewCase("Helper text") { PrimaryButton("Book now") {}.helperText("No charge yet") }
     }
-    .padding()
     .environment(Theme.shared)
 }

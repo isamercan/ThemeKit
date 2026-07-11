@@ -68,9 +68,9 @@ public struct SeatLegend: View {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        SeatLegend(tiers: [.standard, .extraLegroom, .exit])
-        SeatLegend(tiers: [.standard, .premium, .business, .first])
+    PreviewMatrix("SeatLegend") {
+        PreviewCase("Economy tiers") { SeatLegend(tiers: [.standard, .extraLegroom, .exit]) }
+        PreviewCase("All cabins") { SeatLegend(tiers: [.standard, .premium, .business, .first]) }
+        PreviewCase("Default + premium") { SeatLegend().showsPremium() }
     }
-    .padding()
 }

@@ -142,7 +142,7 @@ public extension AmenityGrid {
 }
 
 #Preview {
-    AmenityGrid([
+    let amenities = [
         Amenity("Free Wi-Fi", systemImage: "wifi"),
         Amenity("Pool", systemImage: "figure.pool.swim"),
         Amenity("Breakfast", systemImage: "fork.knife"),
@@ -151,7 +151,16 @@ public extension AmenityGrid {
         Amenity("Pet friendly", systemImage: "pawprint"),
         Amenity("Spa", systemImage: "sparkles"),
         Amenity("Bar", systemImage: "wineglass"),
-    ])
-    .columns(2).limit(6).highlighted(["Free Wi-Fi", "Pool"])
-    .padding()
+    ]
+    PreviewMatrix("AmenityGrid") {
+        PreviewCase("Limit + highlighted") {
+            AmenityGrid(amenities).columns(2).limit(6).highlighted(["Free Wi-Fi", "Pool"])
+        }
+        PreviewCase("Small · single column") {
+            AmenityGrid(Array(amenities.prefix(4))).columns(1).size(.small)
+        }
+        PreviewCase("Large · tinted") {
+            AmenityGrid(Array(amenities.prefix(4))).size(.large).tint(.success)
+        }
+    }
 }

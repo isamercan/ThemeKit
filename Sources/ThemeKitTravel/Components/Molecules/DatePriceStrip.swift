@@ -252,21 +252,17 @@ public extension DatePriceStrip {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var sel = 1
-        private let items = [
-            DatePriceItem("17 Jul", price: 1_697.99), DatePriceItem("18 Jul", price: 1_767.99),
-            DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
-            DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
-        ]
-        var body: some View {
-            VStack(spacing: 16) {
-                DatePriceStrip(items, selection: $sel).strip()          // Timeline pills
-                DatePriceStrip(items, selection: $sel).padding()        // grid
-            }
-        }
+    @Previewable @State var sel = 1
+    let items = [
+        DatePriceItem("17 Jul", price: 1_697.99), DatePriceItem("18 Jul", price: 1_767.99),
+        DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
+        DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
+    ]
+    PreviewMatrix("DatePriceStrip") {
+        PreviewCase("Timeline strip (pills)") { DatePriceStrip(items, selection: $sel).strip() }
+        PreviewCase("Grid") { DatePriceStrip(items, selection: $sel) }
+        PreviewCase("Paged grid") { DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {}) }
     }
-    return Demo()
 }
 
 #Preview("Selected card + outlined style") {

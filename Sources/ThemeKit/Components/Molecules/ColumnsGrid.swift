@@ -55,18 +55,23 @@ public extension ColumnsGrid {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        ColumnsGrid {
-            ForEach(0..<9) { i in
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(SemanticColor.primary.soft)
-                    .frame(height: 64)
-                    .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
-            }
+    // Shared demo cell for every case.
+    let cell: (Int, CGFloat) -> AnyView = { i, height in
+        AnyView(RoundedRectangle(cornerRadius: 12)
+            .fill(SemanticColor.primary.soft)
+            .frame(height: height)
+            .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero))))
+    }
+    PreviewMatrix("ColumnsGrid") {
+        PreviewCase("3 columns · medium gutter") {
+            ColumnsGrid { ForEach(0..<6) { cell($0, 64) } }
+                .columns(3)
+                .gutter(.medium)
         }
-        .columns(3)
-        .gutter(.medium)
-        .padding()
+        PreviewCase("Adaptive · min 90pt") {
+            ColumnsGrid { ForEach(0..<6) { cell($0, 48) } }
+                .adaptive(minWidth: 90)
+        }
     }
     .environment(Theme.shared)
 }

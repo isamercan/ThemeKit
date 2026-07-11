@@ -129,24 +129,22 @@ public extension EmojiReactionButton {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var liked = false
-        var body: some View {
-            VStack(spacing: 16) {
-                HStack(spacing: 10) {
-                    EmojiReactionButton("👍", count: 12, isReacted: $liked)
-                    EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
-                    EmojiReactionButton("🔥", count: 0)
-                }
-                // D8 — size ramp + semantic accent for the reacted state.
-                HStack(spacing: 10) {
-                    EmojiReactionButton("👍", count: 3, initiallyReacted: true).size(.medium)
-                    EmojiReactionButton("❤️", count: 9, initiallyReacted: true).size(.large).accent(.error)
-                    EmojiReactionButton("✅", count: 2, initiallyReacted: true).accent(.success)
-                }
+    @Previewable @State var liked = false
+    PreviewMatrix("EmojiReactionButton") {
+        PreviewCase("Controlled / reacted / zero") {
+            HStack(spacing: 10) {
+                EmojiReactionButton("👍", count: 12, isReacted: $liked)
+                EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
+                EmojiReactionButton("🔥", count: 0)
             }
-            .padding()
+        }
+        // D8 — size ramp + semantic accent for the reacted state.
+        PreviewCase("Size ramp + semantic accents") {
+            HStack(spacing: 10) {
+                EmojiReactionButton("👍", count: 3, initiallyReacted: true).size(.medium)
+                EmojiReactionButton("❤️", count: 9, initiallyReacted: true).size(.large).accent(.error)
+                EmojiReactionButton("✅", count: 2, initiallyReacted: true).accent(.success)
+            }
         }
     }
-    return Demo()
 }

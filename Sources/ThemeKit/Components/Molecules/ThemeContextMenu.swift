@@ -89,29 +89,31 @@ public extension View {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        Text("Long-press me")
-            .textStyle(.labelBase600)
-            .padding()
-            .themeContextMenu([
-                MenuAction("Share", systemImage: "square.and.arrow.up") {},
-                MenuAction("Move", systemImage: "folder", children: [
-                    MenuAction("To Inbox") {},
-                    MenuAction("To Archive") {},
-                ]),
-                MenuAction("Delete", systemImage: "trash", role: .destructive) {},
-            ])
-
-        Text("With preview")
-            .textStyle(.labelBase600)
-            .padding()
-            .themeContextMenu([MenuAction("Open", systemImage: "arrow.up.forward") {}]) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Preview").textStyle(.labelBase600)
-                    Text("A token-styled preview card.").textStyle(.bodySm400)
-                }
+    PreviewMatrix("ThemeContextMenu") {
+        PreviewCase("Submenu + destructive (long-press)") {
+            Text("Long-press me")
+                .textStyle(.labelBase600)
                 .padding()
-            }
+                .themeContextMenu([
+                    MenuAction("Share", systemImage: "square.and.arrow.up") {},
+                    MenuAction("Move", systemImage: "folder", children: [
+                        MenuAction("To Inbox") {},
+                        MenuAction("To Archive") {},
+                    ]),
+                    MenuAction("Delete", systemImage: "trash", role: .destructive) {},
+                ])
+        }
+        PreviewCase("With preview card") {
+            Text("With preview")
+                .textStyle(.labelBase600)
+                .padding()
+                .themeContextMenu([MenuAction("Open", systemImage: "arrow.up.forward") {}]) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Preview").textStyle(.labelBase600)
+                        Text("A token-styled preview card.").textStyle(.bodySm400)
+                    }
+                    .padding()
+                }
+        }
     }
-    .padding()
 }

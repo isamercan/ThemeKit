@@ -113,24 +113,26 @@ public extension FilterGroup {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var sel: String? = "Hotels"
-        @State var stops: String? = "Direct"
-        var body: some View {
-            VStack(alignment: .leading, spacing: 24) {
-                FilterGroup(title: "Category", options: ["Hotels", "Flights", "Cars", "Tours"], selection: $sel) { $0 }
-                FilterGroup(title: "Stops", options: ["Direct", "1 stop", "2+"], selection: $stops) { $0 }
-                    .chipStyle(.tonal)
-                    .fullWidth()
-                // Per-option disabled: "Cars" renders dimmed + non-interactive.
-                FilterGroup(title: "Per-option disabled", options: ["Hotels", "Flights", "Cars", "Tours"], selection: $sel) { $0 }
-                    .optionEnabled { $0 != "Cars" }
-                // Invalid state: messages under the chips + error-tinted title.
-                FilterGroup(title: "With error", options: ["Direct", "1 stop", "2+"], selection: .constant(nil)) { $0 }
-                    .infoMessages([InfoMessage("Choose a stop filter", kind: .error)])
-            }
-            .padding()
+    @Previewable @State var sel: String? = "Hotels"
+    @Previewable @State var stops: String? = "Direct"
+    PreviewMatrix("FilterGroup") {
+        PreviewCase("Default (solid)") {
+            FilterGroup(title: "Category", options: ["Hotels", "Flights", "Cars", "Tours"], selection: $sel) { $0 }
+        }
+        PreviewCase("Tonal · full width") {
+            FilterGroup(title: "Stops", options: ["Direct", "1 stop", "2+"], selection: $stops) { $0 }
+                .chipStyle(.tonal)
+                .fullWidth()
+        }
+        // Per-option disabled: "Cars" renders dimmed + non-interactive.
+        PreviewCase("Per-option disabled") {
+            FilterGroup(title: "Per-option disabled", options: ["Hotels", "Flights", "Cars", "Tours"], selection: $sel) { $0 }
+                .optionEnabled { $0 != "Cars" }
+        }
+        // Invalid state: messages under the chips + error-tinted title.
+        PreviewCase("With error") {
+            FilterGroup(title: "With error", options: ["Direct", "1 stop", "2+"], selection: .constant(nil)) { $0 }
+                .infoMessages([InfoMessage("Choose a stop filter", kind: .error)])
         }
     }
-    return Demo()
 }

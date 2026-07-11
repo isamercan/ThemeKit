@@ -223,29 +223,35 @@ public extension SelectBox {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var country: String?
-        var body: some View {
-            VStack(spacing: 16) {
-                SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
-                    .hint("Pick your country")
-                SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
-                    .errorText("Required")
-                // Chrome via the shared FieldStyle axis.
-                SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
-                    .fieldStyle(.underlined)
-                // Family size ramp (C1) — aligns with a `.small` TextInput beside it.
-                SelectBox("Compact", options: ["Turkey", "Germany"], selection: $country) { $0 }
-                    .size(.small)
-                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
-                SelectBox("Region", options: ["EMEA", "APAC"], selection: $country) { $0 }
-                    .required()
-                // Read-only (E1): normal chrome + value, menu blocked.
-                SelectBox("Country (submitted)", options: ["Turkey", "Germany"], selection: .constant("Turkey")) { $0 }
-                    .readOnly()
-            }
-            .padding()
+    @Previewable @State var country: String?
+    PreviewMatrix("SelectBox") {
+        PreviewCase("Hint") {
+            SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+                .hint("Pick your country")
+        }
+        PreviewCase("Error") {
+            SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
+                .errorText("Required")
+        }
+        // Chrome via the shared FieldStyle axis.
+        PreviewCase("Underlined") {
+            SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                .fieldStyle(.underlined)
+        }
+        // Family size ramp (C1) — aligns with a `.small` TextInput beside it.
+        PreviewCase("Compact (C1)") {
+            SelectBox("Compact", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                .size(.small)
+        }
+        // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+        PreviewCase("Required (E2)") {
+            SelectBox("Region", options: ["EMEA", "APAC"], selection: $country) { $0 }
+                .required()
+        }
+        // Read-only (E1): normal chrome + value, menu blocked.
+        PreviewCase("Read-only (E1)") {
+            SelectBox("Country (submitted)", options: ["Turkey", "Germany"], selection: .constant("Turkey")) { $0 }
+                .readOnly()
         }
     }
-    return Demo()
 }

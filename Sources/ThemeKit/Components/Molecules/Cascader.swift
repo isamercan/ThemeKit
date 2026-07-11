@@ -317,32 +317,35 @@ public extension Cascader {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var path: [String] = []
-        @State private var searched: [String] = ["de", "be", "mitte"]
-        let options = [
-            CascaderOption("us", label: "United States", children: [
-                CascaderOption("ca", label: "California", children: [
-                    CascaderOption("sf", label: "San Francisco"), CascaderOption("la", label: "Los Angeles")]),
-                CascaderOption("ny", label: "New York", children: [CascaderOption("bk", label: "Brooklyn")])]),
-            CascaderOption("de", label: "Germany", children: [
-                CascaderOption("be", label: "Berlin", children: [CascaderOption("mitte", label: "Mitte")])]),
-        ]
-        var body: some View {
-            VStack(spacing: 16) {
-                Cascader(options, selection: $path).placeholder("Region")
-                // Searchable + clearable, with a disabled branch (E7 axes).
-                Cascader(options, selection: $searched)
-                    .searchable().clearable()
-                    .nodeEnabled { $0.value != "ny" }
-                // Validation message drives the error border.
-                Cascader(options, selection: $path)
-                    .infoMessages(path.isEmpty ? [InfoMessage("Pick a region", kind: .error)] : [])
-                // Read-only: normal chrome + value, columns suppressed (E1).
-                Cascader(options, selection: $searched).clearable().readOnly()
-            }
-            .padding()
+    // The dropdown columns are tap-driven; each cell shows the field chrome as
+    // a single static frame (open the demo to drive the cascading panels).
+    let options = [
+        CascaderOption("us", label: "United States", children: [
+            CascaderOption("ca", label: "California", children: [
+                CascaderOption("sf", label: "San Francisco"), CascaderOption("la", label: "Los Angeles")]),
+            CascaderOption("ny", label: "New York", children: [CascaderOption("bk", label: "Brooklyn")])]),
+        CascaderOption("de", label: "Germany", children: [
+            CascaderOption("be", label: "Berlin", children: [CascaderOption("mitte", label: "Mitte")])]),
+    ]
+    PreviewMatrix("Cascader") {
+        PreviewCase("Placeholder") {
+            Cascader(options, selection: .constant([])).placeholder("Region")
+        }
+        // Searchable + clearable, with a disabled branch (E7 axes).
+        PreviewCase("Selected · searchable + clearable") {
+            Cascader(options, selection: .constant(["de", "be", "mitte"]))
+                .searchable().clearable()
+                .nodeEnabled { $0.value != "ny" }
+        }
+        // Validation message drives the error border.
+        PreviewCase("Error message") {
+            Cascader(options, selection: .constant([]))
+                .infoMessages([InfoMessage("Pick a region", kind: .error)])
+        }
+        // Read-only: normal chrome + value, columns suppressed (E1).
+        PreviewCase("Read-only") {
+            Cascader(options, selection: .constant(["de", "be", "mitte"])).clearable().readOnly()
         }
     }
-    return Demo().environment(Theme.shared)
+    .environment(Theme.shared)
 }
