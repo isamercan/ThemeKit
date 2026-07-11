@@ -8,6 +8,7 @@ breaking changes bump the **major**.
 ## [Unreleased]
 
 ### Added
+- **`SemanticColor` now conforms to `Sendable`**, and **`CardBrand` now conforms to `Sendable, CaseIterable, Codable`** — additive conformances (no signature change) so `Sendable` value types (e.g. edition environment defaults) can carry a `SemanticColor`, and `CardBrand`-bearing models can be `Codable`.
 - **`ThemeKitTravel`** library product — the opt-in flight/booking **domain edition** (composition over forking: it wraps the neutral `ThemeKit` catalog rather than re-implementing it). This first drop is the packaging foundation — the SPM target/product plus the edition's own String Catalog (`String(themeKitTravel:)`); the booking-flow components land in follow-ups. **No package trait and no re-export** (mirroring `ThemeKitCalendar`): add `ThemeKitTravel` to a target and write `import ThemeKitTravel` alongside `import ThemeKit` to opt in — a consumer who doesn't compiles nothing from it and downloads the same package. Part of the [#229](https://github.com/isamercan/ThemeKit/issues/229) modular direction (ADR: `THEMEKITTRAVEL_ARCHITECTURE.md`).
 
 ## [1.1.0] - 2026-07-10

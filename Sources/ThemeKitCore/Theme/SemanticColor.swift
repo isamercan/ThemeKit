@@ -10,7 +10,7 @@
 
 import SwiftUI
 
-public enum SemanticColor: String, CaseIterable {
+public enum SemanticColor: String, CaseIterable, Sendable {
     case primary, neutral, info, success, warning, error
     case turquoise, orange, purple, pink
     /// daisyUI brand colors — backed by additive `palette.secondary/accent.*`

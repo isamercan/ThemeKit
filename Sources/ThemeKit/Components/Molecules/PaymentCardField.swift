@@ -14,7 +14,7 @@
 import SwiftUI
 
 /// Card network detected from the number prefix.
-public enum CardBrand: String, Sendable, CaseIterable {
+public enum CardBrand: String, Sendable, CaseIterable, Codable {
     case visa, mastercard, amex, troy, unknown
 
     public var label: String {
