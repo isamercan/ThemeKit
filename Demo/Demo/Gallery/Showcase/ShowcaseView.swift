@@ -865,13 +865,24 @@ private struct FormsPage: View {
 // MARK: - Page 5 · THEMEKITTRAVEL (the opt-in flight-booking edition)
 
 private struct ThemeKitTravelPage: View {
-    @State private var trip = TripSearchDraft()
-    @State private var cabin: CabinClass = .economy
+    // A populated draft so the search CTA reads as ready (blue), not disabled (grey).
+    @State private var trip: TripSearchDraft = {
+        var d = TripSearchDraft()
+        d.origin = Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR")
+        d.destination = Airport(code: "LHR", name: "Heathrow Airport", city: "London", countryCode: "GB")
+        d.departureDate = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        d.returnDate = Date(timeIntervalSinceReferenceDate: 800_000_000 + 7 * 86_400)
+        return d
+    }()
+    @State private var cabin: CabinClass = .business
     @State private var method: String? = "card"
     @State private var months = 3
-    @State private var phone = ""
+    @State private var phone = "532 123 45 67"
     @State private var lang = "en"
     @State private var cardID: String? = "visa"
+    @State private var passenger = PassengerDraft()
+    @State private var checkinStep = 0
+    @State private var airportSel: Airport?
 
     private let airports: [Airport] = [
         Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR"),
@@ -879,6 +890,7 @@ private struct ThemeKitTravelPage: View {
         Airport(code: "JFK", name: "John F. Kennedy Airport", city: "New York", countryCode: "US"),
         Airport(code: "CDG", name: "Charles de Gaulle Airport", city: "Paris", countryCode: "FR"),
         Airport(code: "BER", name: "Brandenburg Airport", city: "Berlin", countryCode: "DE"),
+        Airport(code: "DXB", name: "Dubai International", city: "Dubai", countryCode: "AE"),
     ]
     private let paymentOptions: [PaymentMethodOption] = [
         .init(id: "card", kind: .card, title: "Credit / debit card"),
@@ -892,6 +904,11 @@ private struct ThemeKitTravelPage: View {
     private let languages: [AppLanguage] = [
         AppLanguage(code: "en"), AppLanguage(code: "tr"), AppLanguage(code: "de"), AppLanguage(code: "fr"),
     ]
+    private let checkinSteps: [Steps.Step] = [
+        .init("Passengers", state: .active),
+        .init("Seats", state: .todo),
+        .init("Boarding pass", state: .todo),
+    ]
     private var trackerInfo: FlightStatusInfo {
         let dep = Date(timeIntervalSinceReferenceDate: 790_000_000)
         return FlightStatusInfo(
@@ -901,37 +918,78 @@ private struct ThemeKitTravelPage: View {
     }
 
     var body: some View {
-        PageScaffold(title: "ThemeKitTravel",
-                     subtitle: "The opt-in flight-booking edition — import ThemeKitTravel.") {
-            HStack(alignment: .top, spacing: 16) {
-                VStack(spacing: 16) {
-                    TripSearchCard(draft: $trip, onSearch: { _ in })
-                        .airports(suggestions: airports, recent: Array(airports.prefix(2)))
-                        .variant(.card)
-                    CollageCard("Cabin class") {
-                        CabinClassSelector(selection: $cabin).variant(.segmented).showsGlyphs()
-                    }
-                }
-                VStack(spacing: 16) {
-                    CollageCard("Payment method") {
-                        PaymentMethodSelector(paymentOptions, selection: $method)
-                            .installments([1, 3, 6, 9], selection: $months, total: 9_600)
-                    }
-                    CollageCard("Contact") {
-                        VStack(spacing: 12) {
-                            PhoneField("Phone", number: $phone).formatsNumber()
-                            LanguageSwitcher(languages, selection: $lang).variant(.inline).showsFlags()
+        VStack(spacing: 14) {
+            VStack(spacing: 6) {
+                Text("ThemeKitTravel").font(.system(size: 34, weight: .bold, design: .rounded))
+                Text("The opt-in flight-booking edition — every component, one import.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            ScrollView(showsIndicators: false) {
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(spacing: 16) {
+                        TripSearchCard(draft: $trip, onSearch: { _ in })
+                            .airports(suggestions: airports, recent: Array(airports.prefix(2)))
+                            .variant(.card)
+                        CollageCard("Cabin class") {
+                            CabinClassSelector(selection: $cabin).variant(.segmented).showsGlyphs()
+                        }
+                        CollageCard("Contact & language") {
+                            VStack(spacing: 12) {
+                                PhoneField("Phone", number: $phone).formatsNumber()
+                                LanguageSwitcher(languages, selection: $lang).variant(.inline).showsFlags()
+                            }
                         }
                     }
+                    VStack(spacing: 16) {
+                        CollageCard("Airport search") {
+                            AirportPicker(selection: $airportSel, suggestions: airports)
+                                .recent([airports[0], airports[1]])
+                                .popular([airports[2], airports[3]])
+                                .presentation(.inline)
+                        }
+                        CollageCard("Passenger form") {
+                            PassengerForm("Passenger 1 · Adult", draft: $passenger)
+                                .fields([.givenName, .familyName, .documentNumber])
+                                .documentRequired()
+                        }
+                    }
+                    VStack(spacing: 16) {
+                        CollageCard("Payment method") {
+                            PaymentMethodSelector(paymentOptions, selection: $method)
+                                .installments([1, 3, 6, 9], selection: $months, total: 9_600)
+                        }
+                        SavedCardsList(cards, selection: $cardID).flagsExpired()
+                        CollageCard("Check-in flow") {
+                            CheckInFlow(steps: checkinSteps, selection: $checkinStep) { index in
+                                checkinPage(index)
+                            }
+                            .frame(height: 230)
+                        }
+                    }
+                    VStack(spacing: 16) {
+                        FlightTracker(trackerInfo).progress(0.62).showsTimeline()
+                        TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
+                            .price(19).duration("2h 10m").badge("Eco").onSelect { }
+                    }
                 }
-                VStack(spacing: 16) {
-                    FlightTracker(trackerInfo).progress(0.62).showsTimeline()
-                    SavedCardsList(cards, selection: $cardID).flagsExpired()
-                    TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
-                        .price(19).duration("2h 10m").badge("Eco").onSelect { }
-                }
+                .frame(maxWidth: 1500)
+                .padding(.bottom, 36)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 28)
+        .padding(.top, 78)
+        .padding(.bottom, 18)
+    }
+
+    @ViewBuilder private func checkinPage(_ index: Int) -> some View {
+        let glyphs = ["person.2.fill", "chair.fill", "qrcode"]
+        let titles = ["Traveler details", "Choose your seats", "Your boarding pass"]
+        VStack(spacing: 8) {
+            Image(systemName: glyphs[min(index, 2)]).font(.system(size: 36)).foregroundStyle(.secondary)
+            Text(titles[min(index, 2)]).font(.headline)
+        }
+        .frame(maxWidth: .infinity, minHeight: 120)
     }
 }
 
