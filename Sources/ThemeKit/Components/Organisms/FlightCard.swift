@@ -15,31 +15,6 @@
 
 import SwiftUI
 
-/// One leg of a multi-leg ``FlightCard`` (outbound, return, connection…).
-public struct FlightLeg: Identifiable, Sendable, Equatable, Codable {
-    /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
-    public var id: String { "\(origin)-\(destination)@\(Int(departure.timeIntervalSinceReferenceDate))" }
-    public let airline: String
-    public let origin: String
-    public let destination: String
-    public let departure: Date
-    public let arrival: Date
-    public var stops: Int
-    /// Layover summary shown under the path, e.g. `"1 stop · 6h 45m · ESB"`.
-    public var layover: String?
-
-    public init(airline: String, from origin: String, to destination: String,
-                departure: Date, arrival: Date, stops: Int = 0, layover: String? = nil) {
-        self.airline = airline
-        self.origin = origin
-        self.destination = destination
-        self.departure = departure
-        self.arrival = arrival
-        self.stops = stops
-        self.layover = layover
-    }
-}
-
 /// A token-bound flight card — one segment, or a multi-leg itinerary.
 ///
 /// ```swift

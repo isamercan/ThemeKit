@@ -22,24 +22,6 @@
 
 import SwiftUI
 
-/// One purchasable fare option on a flight (fare-family shopping — Delta/THY
-/// style "Basic / Classic / Flex" columns). Rendered by ``FlightListItemStyle``s
-/// that surface multiple prices per flight (e.g. `.fareBoard`).
-public struct FlightFare: Identifiable, Sendable, Equatable {
-    /// Stable, content-derived identity (no per-init `UUID()` churn in `ForEach`).
-    public var id: String { name }
-    public let name: String
-    public let price: Decimal
-    /// SF Symbol names for 1–2 headline perks (e.g. `"suitcase.fill"`).
-    public var perks: [String]
-
-    public init(_ name: String, price: Decimal, perks: [String] = []) {
-        self.name = name
-        self.price = price
-        self.perks = perks
-    }
-}
-
 public struct FlightListItem: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled

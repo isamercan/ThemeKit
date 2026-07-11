@@ -9,24 +9,6 @@
 
 import SwiftUI
 
-/// Whether a fare feature is granted, denied, or neutral info.
-public enum FareFeatureStatus: Sendable { case included, excluded, info }
-
-/// A single fare feature / rule line.
-public struct FareFeature: Identifiable, Sendable {
-    public var id: String { "\(systemImage):\(text)" }
-    public let text: String
-    public let systemImage: String
-    public let detail: String?
-    public let status: FareFeatureStatus
-    public init(_ text: String, systemImage: String, detail: String? = nil, status: FareFeatureStatus = .info) {
-        self.text = text
-        self.systemImage = systemImage
-        self.detail = detail
-        self.status = status
-    }
-}
-
 public struct FareFeatureRow: View {
     @Environment(\.theme) private var theme
     private let feature: FareFeature
