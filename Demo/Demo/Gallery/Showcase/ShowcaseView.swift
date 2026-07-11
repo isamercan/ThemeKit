@@ -931,7 +931,10 @@ private struct ThemeKitTravelPage: View {
                             .airports(suggestions: airports, recent: Array(airports.prefix(2)))
                             .variant(.card)
                         CollageCard("Cabin class") {
-                            CabinClassSelector(selection: $cabin).variant(.segmented).showsGlyphs()
+                            // .chips (not .segmented): a narrow column can't give four
+                            // equal segments enough width for "Premium Economy" without
+                            // wrapping the labels character-by-character.
+                            CabinClassSelector(selection: $cabin).variant(.chips).showsGlyphs()
                         }
                         CollageCard("Contact & language") {
                             VStack(spacing: 12) {

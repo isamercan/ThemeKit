@@ -336,7 +336,11 @@ public struct TripSearchCard: View {
             Text(String(themeKitTravel: "Cabin"))
                 .textStyle(.overline500)
                 .foregroundStyle(theme.text(.textTertiary))
+            // .chips (not the default .segmented): a search card is often narrow
+            // (phone width, a sidebar column), where four equal segments can't fit
+            // "Premium Economy" without wrapping the labels character-by-character.
             CabinClassSelector(selection: $draft.cabin)
+                .variant(.chips)
                 .accent(accentColor)
         }
     }
