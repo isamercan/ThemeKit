@@ -232,8 +232,8 @@ public extension View {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        VStack(spacing: 16) {
+    PreviewMatrix("Card") {
+        PreviewCase("Basic") {
             Card {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Card title").textStyle(.headingSm)
@@ -241,12 +241,15 @@ public extension View {
                         .foregroundStyle(theme.text(.textSecondary))
                 }
             }
+        }
+        PreviewCase("Elevated") {
             Card {
                 Text("Elevated card").textStyle(.labelMd600)
             }
             .elevation(.elevated)
-
-            // Footer slot: bottom-aligned actions below a divider.
+        }
+        // Footer slot: bottom-aligned actions below a divider.
+        PreviewCase("Footer slot") {
             Card("Living room sofa") {
                 Text("Perfect for modern tropical spaces.").textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
@@ -258,8 +261,9 @@ public extension View {
                     ThemeButton("Add to cart") {}.variant(.ghost).size(.small)
                 }
             }
-
-            // Custom header slot: icon + badge replace the string header.
+        }
+        // Custom header slot: icon + badge replace the string header.
+        PreviewCase("Custom header slot") {
             Card {
                 Text("Custom header replaces the title/subtitle row.").textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
@@ -273,22 +277,36 @@ public extension View {
                     Badge("New").badgeStyle(.success)
                 }
             }
-
-            // Surface-fill variant (HeroUI `secondary`).
+        }
+        // Surface-fill variant (HeroUI `secondary`).
+        PreviewCase("Secondary surface") {
             Card("Secondary surface") {
                 Text("Card filled with the secondary background token.").textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .surface(.bgSecondaryLight)
-
-            // Token content padding (G5): the SpacingKey overload.
+        }
+        // Token content padding (G5): the SpacingKey overload.
+        PreviewCase("Compact padding") {
             Card("Compact padding") {
                 Text("Inner padding from the `.sm` spacing token.").textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .contentPadding(.sm)
         }
-        .padding()
+        PreviewCase("Loading skeleton") {
+            Card("Loading") {
+                Text("Replaced by the skeleton while loading.").textStyle(.bodyBase400)
+            }
+            .loading()
+        }
+        // Style-protocol case — the outlined `CardStyle` from the environment.
+        PreviewCase("Outlined style") {
+            Card("Outlined") {
+                Text("Chrome drawn by the outlined card style.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .cardStyle(.outlined)
+        }
     }
-    .background(theme.background(.bgBase))
 }

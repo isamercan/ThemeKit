@@ -180,24 +180,41 @@ public extension Accordion {
 
 #Preview {
     @Previewable @State var controlledOpen = false
-    ScrollView {
-        VStack(spacing: 8) {
+    PreviewMatrix("Accordion") {
+        PreviewCase("Expanded") {
             Accordion("What is your refund policy?", initiallyExpanded: true) {
                 Text("You can request a refund within 14 days of purchase.")
             }
+        }
+        PreviewCase("Collapsed + icon") {
             Accordion("How do I contact support?") {
                 Text("Email us at support@example.com.")
             }
             .icon("questionmark.circle")
-
-            // Controlled expansion — the binding drives (and observes) the row.
-            Accordion("Controlled from outside", isExpanded: $controlledOpen) {
-                Text("This row's expansion is owned by the parent view.")
+        }
+        PreviewCase("Subtitle + number") {
+            Accordion("Baggage allowance") {
+                Text("One carry-on and one personal item.")
             }
-            Button(controlledOpen ? "Collapse above" : "Expand above") {
-                controlledOpen.toggle()
+            .subtitle("Applies to standard fares")
+            .number(2)
+        }
+        PreviewCase("Plus/minus indicator") {
+            Accordion("Custom indicator", initiallyExpanded: true) {
+                Text("Expands with a plus/minus glyph.")
+            }
+            .indicator(.plusMinus)
+        }
+        // Controlled expansion — the binding drives (and observes) the row.
+        PreviewCase("Controlled") {
+            VStack(alignment: .leading, spacing: 8) {
+                Accordion("Controlled from outside", isExpanded: $controlledOpen) {
+                    Text("This row's expansion is owned by the parent view.")
+                }
+                Button(controlledOpen ? "Collapse above" : "Expand above") {
+                    controlledOpen.toggle()
+                }
             }
         }
-        .padding()
     }
 }

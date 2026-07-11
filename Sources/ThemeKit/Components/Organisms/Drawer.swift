@@ -161,26 +161,34 @@ public extension View {
 }
 
 #Preview("Declarative") {
-    struct Demo: View {
-        @State private var open = false
-        var body: some View {
-            ZStack {
-                PrimaryButton("Open drawer") { open = true }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .drawer(isPresented: $open) {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Menu").textStyle(.headingSm)
-                    ListRow("Account", action: {}).icon("person.circle")
-                    ListRow("Settings", action: {}).icon("gearshape")
-                    Spacer()
+    // Presentation organism — each cell pins `isPresented: .constant(true)` so a
+    // single frame shows the slid-in panel (scrim + glass chrome) per color scheme.
+    PreviewMatrix("Drawer") {
+        PreviewCase("Leading (pinned open)") {
+            Color.clear
+                .frame(height: 360)
+                .drawer(isPresented: .constant(true)) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Menu").textStyle(.headingSm)
+                        ListRow("Account", action: {}).icon("person.circle")
+                        ListRow("Settings", action: {}).icon("gearshape")
+                        Spacer()
+                    }
+                    .padding()
                 }
-                .padding()
-                .padding(.top, 60)
-            }
+        }
+        PreviewCase("Trailing edge · narrow") {
+            Color.clear
+                .frame(height: 360)
+                .drawer(isPresented: .constant(true), edge: .trailing, width: 220) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Filters").textStyle(.headingSm)
+                        Spacer()
+                    }
+                    .padding()
+                }
         }
     }
-    return Demo()
 }
 
 #Preview("Imperative host") {

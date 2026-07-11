@@ -201,13 +201,16 @@ public extension AccordionGroup {
     struct FAQ: Identifiable { let id = UUID(); let q: String; let a: String }
     let faqs = [FAQ(q: "Can I cancel?", a: "Yes, free up to 24 hours before."),
                 FAQ(q: "Payment options?", a: "Credit card and bank transfer.")]
-    return ScrollView {
-        VStack(spacing: 24) {
+    return PreviewMatrix("AccordionGroup") {
+        PreviewCase("Single mode") {
             AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+        }
+        PreviewCase("Multiple mode") {
             AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
                 .mode(.multiple)
-
-            // Custom header (item + isExpanded) with a plus/minus indicator.
+        }
+        // Custom header (item + isExpanded) with a plus/minus indicator.
+        PreviewCase("Custom header + plus/minus") {
             AccordionGroup(faqs) { faq, isOpen in
                 HStack(spacing: Theme.SpacingKey.sm.value) {
                     Icon(systemName: isOpen ? "folder.badge.minus" : "folder").size(.sm)
@@ -215,23 +218,24 @@ public extension AccordionGroup {
                 }
             } content: { Text($0.a).textStyle(.bodyBase400) }
                 .indicator(.plusMinus)
-
-            // Plain variant — no card chrome, no dividers.
+        }
+        // Plain variant — no card chrome, no dividers.
+        PreviewCase("Plain (no chrome)") {
             AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
                 .surface(false)
                 .dividers(false)
-
-            // Non-collapsible single mode — one row always stays open.
+        }
+        // Non-collapsible single mode — one row always stays open.
+        PreviewCase("Non-collapsible") {
             AccordionGroup(faqs, initiallyExpanded: [faqs[0].id]) { $0.q } content: {
                 Text($0.a).textStyle(.bodyBase400)
             }
             .collapsible(false)
-
-            // Per-item disabled.
+        }
+        PreviewCase("Per-item disabled") {
             AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
                 .itemDisabled { $0.q.contains("Payment") }
         }
-        .padding()
     }
 }
 

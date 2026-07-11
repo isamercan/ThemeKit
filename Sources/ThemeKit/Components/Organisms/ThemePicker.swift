@@ -143,19 +143,17 @@ private struct ThemeCard: View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var active: String? = "dracula"
-        var body: some View {
-            ScrollView {
-                VStack(spacing: 24) {
-                    ThemePicker(selection: $active, onSelect: { active = $0.id })
-                    ThemePicker(selection: $active, onSelect: { active = $0.id })
-                        .columns(2)
-                        .spacing(8)
-                }
-                .padding()
-            }
+    @Previewable @State var active: String? = "dracula"
+    // Each tile paints itself in its OWN preset's palette, so the dark column
+    // mostly exercises the surrounding chrome — the cards' colors are inherent.
+    PreviewMatrix("ThemePicker") {
+        PreviewCase("Adaptive grid · active selection") {
+            ThemePicker(selection: $active, onSelect: { active = $0.id })
+        }
+        PreviewCase("Fixed 2 columns · tight spacing") {
+            ThemePicker(selection: $active, onSelect: { active = $0.id })
+                .columns(2)
+                .spacing(8)
         }
     }
-    return Demo()
 }

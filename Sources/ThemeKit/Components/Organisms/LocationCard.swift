@@ -239,10 +239,25 @@ public extension LocationCard {
 }
 
 #Preview {
-    LocationCard(title: "Marina Bay Hotel", coordinate: CLLocationCoordinate2D(latitude: 38.4237, longitude: 27.1428))
-        .subtitle("Kordon Cd. No:12, İzmir")
-        .distance("1.2 km to center")
-        .padding()
+    let coordinate = CLLocationCoordinate2D(latitude: 38.4237, longitude: 27.1428)
+    PreviewMatrix("LocationCard") {
+        PreviewCase("Default") {
+            LocationCard(title: "Marina Bay Hotel", coordinate: coordinate)
+                .subtitle("Kordon Cd. No:12, İzmir")
+                .distance("1.2 km to center")
+        }
+        PreviewCase("Directions + POI pins") {
+            LocationCard(title: "Marina Bay Hotel", coordinate: coordinate)
+                .subtitle("Kordon Cd. No:12, İzmir")
+                .directions()
+                .pois([LocationPin(title: "Clock Tower", latitude: 38.4189, longitude: 27.1287)])
+        }
+        PreviewCase("Snapshot mode (static image)") {
+            LocationCard(title: "Marina Bay Hotel", coordinate: coordinate)
+                .subtitle("Kordon Cd. No:12, İzmir")
+                .snapshot()
+        }
+    }
 }
 
 #Preview("Outlined style + media slot") {

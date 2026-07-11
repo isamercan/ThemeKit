@@ -137,14 +137,23 @@ public extension View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var show = true
-        var body: some View {
-            Color.clear
-                .toast(isPresented: $show, "Saved successfully", type: .success)
+    // Presentation modifier — the presented state is pinned (`.constant(true)`,
+    // sticky `autoDismiss: nil`) so each matrix cell holds one static frame.
+    PreviewMatrix("Toast") {
+        PreviewCase("Success") {
+            Color.clear.frame(height: 110)
+                .toast(isPresented: .constant(true), "Saved successfully", type: .success, autoDismiss: nil)
+        }
+        PreviewCase("Error · with message") {
+            Color.clear.frame(height: 130)
+                .toast(isPresented: .constant(true), "Upload failed",
+                       message: "Check your connection and try again.", type: .danger, autoDismiss: nil)
+        }
+        PreviewCase("Info") {
+            Color.clear.frame(height: 110)
+                .toast(isPresented: .constant(true), "Copied to clipboard", type: .info, autoDismiss: nil)
         }
     }
-    return Demo()
 }
 
 #Preview("Capsule style + custom content") {

@@ -121,12 +121,22 @@ public extension PagingCarousel {
     struct Slide: Identifiable { let id = UUID(); let color: Color; let title: String }
     let slides = [Slide(color: .blue, title: "One"), Slide(color: .teal, title: "Two"),
                   Slide(color: .orange, title: "Three"), Slide(color: .purple, title: "Four")]
-    return PagingCarousel(slides) { s in
-        s.color.opacity(0.3).overlay(Text(s.title).font(.title))
+    return PreviewMatrix("PagingCarousel") {
+        PreviewCase("Autoplay · 36pt peek") {
+            PagingCarousel(slides) { s in
+                s.color.opacity(0.3).overlay(Text(s.title).font(.title))
+            }
+            .peek(36)
+            .autoplay(2)
+        }
+        PreviewCase("Token peek/spacing · manual") {
+            PagingCarousel(slides) { s in
+                s.color.opacity(0.3).overlay(Text(s.title).font(.title))
+            }
+            .peek(.md)
+            .spacing(.sm)
+        }
     }
-    .peek(36)
-    .autoplay(2)
-    .padding(.vertical)
 }
 
 #Preview("RTL") {

@@ -260,21 +260,23 @@ public extension Timeline {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 40) {
+    PreviewMatrix("Timeline") {
+        PreviewCase("States · done / error / colored + pending") {
             Timeline([
                 .init(title: "Order placed", time: "09:24", description: "We received your order.", systemImage: "cart", state: .done),
                 .init(title: "Payment failed", time: "09:30", description: "Retry your card.", state: .error),
                 .init(title: "Preparing", time: "09:40", systemImage: "shippingbox", state: .done, color: .success),
             ]).pending("Awaiting courier…")
-
+        }
+        PreviewCase("Alternate mode") {
             Timeline([
                 .init(title: "Departure", time: "08:00", description: "Istanbul (IST)", systemImage: "airplane.departure", state: .done),
                 .init(title: "Layover", time: "12:30", description: "Munich (MUC)", systemImage: "clock", state: .active),
                 .init(title: "Arrival", time: "16:45", description: "Barcelona (BCN)", systemImage: "airplane.arrival", state: .todo),
             ]).mode(.alternate)
-
-            // Custom `.marker { }` slot — the Steps precedent; rail unchanged.
+        }
+        // Custom `.marker { }` slot — the Steps precedent; rail unchanged.
+        PreviewCase("Custom marker slot") {
             Timeline([
                 .init(title: "Booked", time: "Mon", state: .done),
                 .init(title: "Checked in", time: "Tue", state: .active),
@@ -286,7 +288,13 @@ public extension Timeline {
                     .foregroundStyle(item.state == .todo ? SemanticColor.neutral.solid : SemanticColor.primary.solid)
             }
         }
-        .padding()
+        PreviewCase("Horizontal axis") {
+            Timeline([
+                .init(title: "Booked", time: "Mon", systemImage: "cart", state: .done),
+                .init(title: "Checked in", time: "Tue", state: .active),
+                .init(title: "Flight", time: "Wed", state: .todo),
+            ]).axis(.horizontal)
+        }
     }
 }
 

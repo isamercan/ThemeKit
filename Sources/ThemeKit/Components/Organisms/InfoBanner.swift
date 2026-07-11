@@ -162,22 +162,30 @@ public struct InfoBanner: View {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        InfoBanner("This is an informational message.", title: "Heads up").variant(.info)
-        InfoBanner("Your changes were saved.").variant(.success)
-        InfoBanner("Please double-check this field.").variant(.warning)
-        InfoBanner("Something went wrong.").variant(.error).onDismiss {}
-        InfoBanner("A neutral note.").variant(.neutral)
-        InfoBanner("Brand-primary emphasis.", title: "New feature").variant(.accent)
-        InfoBanner("Custom glyph via icon override.").variant(.info).icon("bell.badge")
-        InfoBanner("Uploading your document…", title: "Processing")
-            .variant(.accent)
-            .leading { Spinner().size(IconSize.sm.value).lineWidth(2).accent(.primary) }
-        InfoBanner("A new version is available.", title: "Update")
-            .variant(.info)
-            .trailing { ThemeButton("Install") {}.size(.small).color(.info) }
+    PreviewMatrix("InfoBanner") {
+        PreviewCase("Info · title") {
+            InfoBanner("This is an informational message.", title: "Heads up").variant(.info)
+        }
+        PreviewCase("Success") { InfoBanner("Your changes were saved.").variant(.success) }
+        PreviewCase("Warning") { InfoBanner("Please double-check this field.").variant(.warning) }
+        PreviewCase("Error · dismissible") { InfoBanner("Something went wrong.").variant(.error).onDismiss {} }
+        PreviewCase("Neutral") { InfoBanner("A neutral note.").variant(.neutral) }
+        PreviewCase("Accent") { InfoBanner("Brand-primary emphasis.", title: "New feature").variant(.accent) }
+        PreviewCase("Icon override") { InfoBanner("Custom glyph via icon override.").variant(.info).icon("bell.badge") }
+        PreviewCase("Leading spinner") {
+            InfoBanner("Uploading your document…", title: "Processing")
+                .variant(.accent)
+                .leading { Spinner().size(IconSize.sm.value).lineWidth(2).accent(.primary) }
+        }
+        PreviewCase("Trailing action") {
+            InfoBanner("A new version is available.", title: "Update")
+                .variant(.info)
+                .trailing { ThemeButton("Install") {}.size(.small).color(.info) }
+        }
+        PreviewCase("Full-width banner") {
+            InfoBanner("Scheduled maintenance tonight.").variant(.warning).fullWidth()
+        }
     }
-    .padding()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

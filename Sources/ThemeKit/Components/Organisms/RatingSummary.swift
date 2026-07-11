@@ -86,10 +86,18 @@ public extension RatingSummary {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        RatingSummary(score: 9.0).label("Excellent").reviews(count: 1200, onTap: {})
-        RatingSummary(score: 8.5).label("Very Good").reviews(count: 340)
-        RatingSummary(score: 9.8).label("Excellent")
+    PreviewMatrix("RatingSummary") {
+        PreviewCase("Label + reviews link") {
+            RatingSummary(score: 9.0).label("Excellent").reviews(count: 1200, onTap: {})
+        }
+        PreviewCase("Reviews without handler (link disabled)") {
+            RatingSummary(score: 8.5).label("Very Good").reviews(count: 340)
+        }
+        PreviewCase("Label only") {
+            RatingSummary(score: 9.8).label("Excellent")
+        }
+        PreviewCase("Score only") {
+            RatingSummary(score: 7.2)
+        }
     }
-    .padding()
 }

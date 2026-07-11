@@ -101,14 +101,17 @@ public extension Hero {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        Hero(title: "Discover Istanbul")
-            .subtitle("Hand-picked stays at the best prices.")
-            .cta("Explore", action: {})
-        Hero(title: "Summer Sale")
-            .subtitle("Up to 30% off")
-            .cta("Shop now", action: {})
-            .dark()
+    PreviewMatrix("Hero") {
+        PreviewCase("Default surface · CTA") {
+            Hero(title: "Discover Istanbul")
+                .subtitle("Hand-picked stays at the best prices.")
+                .cta("Explore", action: {})
+        }
+        PreviewCase("Dark treatment (scrim + inverted text)") {
+            Hero(title: "Summer Sale")
+                .subtitle("Up to 30% off")
+                .cta("Shop now", action: {})
+                .dark()
+        }
     }
-    .padding()
 }

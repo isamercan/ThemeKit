@@ -184,14 +184,22 @@ public extension EmptyState {
 }
 
 #Preview {
-    ScrollView {
-        VStack(spacing: 48) {
+    PreviewMatrix("EmptyState") {
+        PreviewCase("Primary action") {
             EmptyState("No results found")
                 .icon("magnifyingglass")
                 .message("Try adjusting your search or filters to find what you're looking for.")
                 .primaryAction("Clear filters") {}
-
-            // D4 — custom `.actions { }` slot replaces the stock buttons.
+        }
+        PreviewCase("Primary + secondary actions") {
+            EmptyState("You're offline")
+                .icon("wifi.slash")
+                .message("Check your connection and try again.")
+                .primaryAction("Retry") {}
+                .secondaryAction("Use offline mode") {}
+        }
+        // D4 — custom `.actions { }` slot replaces the stock buttons.
+        PreviewCase("Custom actions slot") {
             EmptyState("Your trips will appear here")
                 .icon("airplane")
                 .message("Plan your first trip to get started.")
@@ -202,6 +210,5 @@ public extension EmptyState {
                     }
                 }
         }
-        .padding()
     }
 }

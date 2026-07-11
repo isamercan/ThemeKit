@@ -193,26 +193,29 @@ public extension KanbanBoard {
             .init("Done", items: [Task(id: 4, title: "Ship colors")], accent: .success),
         ]
         var body: some View {
-            VStack(spacing: 24) {
-                KanbanBoard(columns: $columns) { task in
-                    Text(task.title)
-                        .textStyle(.labelBase600)
-                        .padding(Theme.SpacingKey.sm.value)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+            PreviewMatrix("KanbanBoard") {
+                PreviewCase("Default (regular columns)") {
+                    KanbanBoard(columns: $columns) { task in
+                        Text(task.title)
+                            .textStyle(.labelBase600)
+                            .padding(Theme.SpacingKey.sm.value)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                    }
                 }
                 // D7 — width tier + token gap axes.
-                KanbanBoard(columns: $columns) { task in
-                    Text(task.title)
-                        .textStyle(.labelBase600)
-                        .padding(Theme.SpacingKey.sm.value)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                PreviewCase("Compact columns · .sm gap") {
+                    KanbanBoard(columns: $columns) { task in
+                        Text(task.title)
+                            .textStyle(.labelBase600)
+                            .padding(Theme.SpacingKey.sm.value)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
+                    }
+                    .columnWidth(.compact)
+                    .spacing(.sm)
                 }
-                .columnWidth(.compact)
-                .spacing(.sm)
             }
-            .padding(.vertical)
         }
     }
     return Demo()

@@ -175,17 +175,20 @@ public extension Agenda {
 #Preview {
     let now = Date.now
     let cal = Calendar.current
-    func at(_ h: Int, _ m: Int = 0, dayOffset: Int = 0) -> Date {
+    // `let` closure, not a local `func` — the #Preview macro rejects local funcs.
+    let at: (_ h: Int, _ m: Int, _ dayOffset: Int) -> Date = { h, m, dayOffset in
         let base = cal.date(byAdding: .day, value: dayOffset, to: now) ?? now
         return cal.date(bySettingHour: h, minute: m, second: 0, of: base) ?? base
     }
-    return ScrollView {
-        Agenda([
-            AgendaEvent("Team standup", start: at(9, 30), end: at(10), location: "Zoom", accent: .primary),
-            AgendaEvent("Design review", start: at(13), end: at(14), subtitle: "New components", accent: .purple),
-            AgendaEvent("Company offsite", start: at(0, dayOffset: 1), isAllDay: true, accent: .success),
-            AgendaEvent("1:1 with Ada", start: at(11, dayOffset: 1), end: at(11, 30)),
-        ])
-        .padding()
+    let events = [
+        AgendaEvent("Team standup", start: at(9, 30, 0), end: at(10, 0, 0), location: "Zoom", accent: .primary),
+        AgendaEvent("Design review", start: at(13, 0, 0), end: at(14, 0, 0), subtitle: "New components", accent: .purple),
+        AgendaEvent("Company offsite", start: at(0, 0, 1), isAllDay: true, accent: .success),
+        AgendaEvent("1:1 with Ada", start: at(11, 0, 1), end: at(11, 30, 1)),
+    ]
+    return PreviewMatrix("Agenda") {
+        PreviewCase("Schedule") { Agenda(events) }
+        PreviewCase("No day headers") { Agenda(Array(events.prefix(2))).showsDayHeaders(false) }
+        PreviewCase("Empty") { Agenda([]) }
     }
 }

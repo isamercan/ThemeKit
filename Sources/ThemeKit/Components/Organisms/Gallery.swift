@@ -58,31 +58,42 @@ public extension Gallery {
     }
 }
 
-#Preview {
-    struct Photo: Identifiable { let id = UUID(); let color: Color }
-    let photos = [Photo(color: .blue), Photo(color: .teal), Photo(color: .orange), Photo(color: .purple)]
-    return VStack(spacing: 24) {
-        Gallery(photos) { photo in
-            photo.color.opacity(0.3)
-        }
-        .columns(2)
-        .aspect(.square)
+private struct Photo: Identifiable { let id = UUID(); let color: Color }
 
-        Gallery([Photo]()) { photo in
-            photo.color.opacity(0.3)
-        }
-        .empty {
-            VStack(spacing: 8) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-                Text("No photos yet")
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(.secondary)
+#Preview {
+    let photos = [Photo(color: .blue), Photo(color: .teal), Photo(color: .orange), Photo(color: .purple)]
+
+    PreviewMatrix("Gallery") {
+        PreviewCase("2 columns · square") {
+            Gallery(photos) { photo in
+                photo.color.opacity(0.3)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Theme.SpacingKey.lg.value)
+            .columns(2)
+            .aspect(.square)
+        }
+        PreviewCase("3 columns · landscape 4:3") {
+            Gallery(photos) { photo in
+                photo.color.opacity(0.3)
+            }
+            .columns(3)
+            .aspect(.landscape4x3)
+        }
+        PreviewCase("Empty · custom slot") {
+            Gallery([Photo]()) { photo in
+                photo.color.opacity(0.3)
+            }
+            .empty {
+                VStack(spacing: 8) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                    Text("No photos yet")
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Theme.SpacingKey.lg.value)
+            }
         }
     }
-    .padding()
 }

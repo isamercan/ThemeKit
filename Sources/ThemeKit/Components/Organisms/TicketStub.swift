@@ -154,26 +154,35 @@ private struct TicketElevation: ViewModifier {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        VStack(spacing: 24) {
-            TicketStub {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("EMIRATES").textStyle(.labelMd700)
-                    HStack {
-                        VStack(alignment: .leading) { Text("09:00").textStyle(.headingSm); Text("JFK").textStyle(.labelSm600) }
-                        Spacer()
-                        Image(systemName: "airplane").foregroundStyle(theme.foreground(.fgHero))
-                        Spacer()
-                        VStack(alignment: .trailing) { Text("08:00").textStyle(.headingSm); Text("DPS").textStyle(.labelSm600) }
-                    }
-                }
+    let flightContent: AnyView = AnyView(
+        VStack(alignment: .leading, spacing: 8) {
+            Text("EMIRATES").textStyle(.labelMd700)
+            HStack {
+                VStack(alignment: .leading) { Text("09:00").textStyle(.headingSm); Text("JFK").textStyle(.labelSm600) }
+                Spacer()
+                Image(systemName: "airplane").foregroundStyle(theme.foreground(.fgHero))
+                Spacer()
+                VStack(alignment: .trailing) { Text("08:00").textStyle(.headingSm); Text("DPS").textStyle(.labelSm600) }
             }
-            .stub {
-                HStack { Text("Booking").textStyle(.bodySm400); Spacer(); Text("BID12025BKG").textStyle(.labelSm700) }
-            }
-            .elevation(.elevated)
         }
-        .padding()
+    )
+    PreviewMatrix("TicketStub") {
+        PreviewCase("Content + stub · perforation · elevated") {
+            TicketStub { flightContent }
+                .stub {
+                    HStack { Text("Booking").textStyle(.bodySm400); Spacer(); Text("BID12025BKG").textStyle(.labelSm700) }
+                }
+                .elevation(.elevated)
+        }
+        PreviewCase("No perforation") {
+            TicketStub { flightContent }
+                .stub {
+                    HStack { Text("Seat").textStyle(.bodySm400); Spacer(); Text("14A").textStyle(.labelSm700) }
+                }
+                .perforation(false)
+        }
+        PreviewCase("Content only (no stub)") {
+            TicketStub { flightContent }
+        }
     }
-    .background(theme.background(.bgSecondary))
 }

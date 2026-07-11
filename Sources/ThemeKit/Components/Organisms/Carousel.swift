@@ -224,13 +224,27 @@ private extension View {
         Slide(color: .teal, title: "Two"),
         Slide(color: .orange, title: "Three"),
     ]
-    return Carousel(slides, loop: true) { slide in
-        RoundedRectangle(cornerRadius: 16)
-            .fill(slide.color.opacity(0.3))
-            .overlay(Text(slide.title).font(.title))
-            .padding(.horizontal)
+    return PreviewMatrix("Carousel") {
+        PreviewCase("Loop + arrows + autoplay") {
+            Carousel(slides, loop: true) { slide in
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(slide.color.opacity(0.3))
+                    .overlay(Text(slide.title).font(.title))
+                    .padding(.horizontal)
+            }
+            .autoplay(2)
+            .arrows()
+            .frame(height: 200)
+        }
+        PreviewCase("Fade") {
+            Carousel(slides) { slide in
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(slide.color.opacity(0.3))
+                    .overlay(Text(slide.title).font(.title))
+                    .padding(.horizontal)
+            }
+            .fade()
+            .frame(height: 160)
+        }
     }
-    .autoplay(2)
-    .arrows()
-    .frame(height: 200)
 }

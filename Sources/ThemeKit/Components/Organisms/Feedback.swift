@@ -761,43 +761,46 @@ public extension View {
     }
 }
 
-#Preview("Toasts: stack / action / task") {
-    struct Demo: View {
+private struct Seeded: View {
+    let seed: (FeedbackPresenter) -> Void
+    var body: some View { Trigger(seed: seed).feedbackHost(toastPosition: .bottom) }
+
+    struct Trigger: View {
         @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+        let seed: (FeedbackPresenter) -> Void
         var body: some View {
-            VStack(spacing: 12) {
-                ThemeButton("Stack ×3") {
-                    for i in 1 ... 3 { feedback.toast("Toast #\(i)", kind: .success) }
-                }
-                ThemeButton("Neutral / accent") {
-                    feedback.toast("Notifications paused", kind: .neutral)
-                    feedback.toast("Pro features unlocked", kind: .accent)
-                }
-                .variant(.outline)
-                ThemeButton("Top override + callbacks") {
-                    feedback.toast("Heads up", kind: .info, position: .top,
-                                   onShow: { print("shown") },
-                                   onDismiss: { print("dismissed") })
-                }
-                .variant(.outline)
-                ThemeButton("Undo (sticky + action)") {
-                    feedback.toast("Message deleted", kind: .info,
-                                   action: ToastAction("Undo") {}, duration: nil)
-                }
-                .variant(.outline)
-                ThemeButton("Async task") {
-                    Task {
-                        await feedback.toastTask(loading: "Saving…", success: "Saved") {
-                            try await Task.sleep(nanoseconds: 600_000_000)
-                        }
-                    }
-                }
-                .variant(.outline)
-            }
-            .padding()
+            Color.clear.frame(height: 240).onAppear { seed(feedback) }
         }
     }
-    return Demo().feedbackHost(toastPosition: .bottom)
+}
+
+#Preview("Toasts: stack / action / task") {
+    // Imperative presenter — each cell installs its own `.feedbackHost()` and
+    // seeds *sticky* feedback in `onAppear` (interactive flows live in the demo).
+    PreviewMatrix("Feedback") {
+        PreviewCase("Toast stack · success / neutral / accent") {
+            Seeded { f in
+                f.toast("Saved", kind: .success, duration: nil)
+                f.toast("Notifications paused", kind: .neutral, duration: nil)
+                f.toast("Pro features unlocked", kind: .accent, duration: nil)
+            }
+        }
+        PreviewCase("Sticky toast with action (Undo)") {
+            Seeded { f in
+                f.toast("Message deleted", kind: .info,
+                        action: ToastAction("Undo") {}, duration: nil)
+            }
+        }
+        PreviewCase("Confirm dialog · destructive") {
+            Seeded { f in
+                f.confirm(title: "Delete trip?", message: "This action cannot be undone.",
+                          primaryTitle: "Delete", primaryKind: .error)
+            }
+        }
+        PreviewCase("Blocking loading") {
+            Seeded { f in f.loading() }
+        }
+    }
 }
 
 #Preview("Custom content slots") {

@@ -360,17 +360,40 @@ public extension View {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var show = true
-        var body: some View {
-            // Default: tapping anywhere outside the card dismisses it.
-            ThemeButton("Delete") { show.toggle() }.color(.error).variant(.soft)
-                .popconfirm(isPresented: $show, title: "Delete this item?", message: "This can't be undone.",
+    // Presentation overlay — the "open" cells pin the card with a constant
+    // `isPresented:` inside a taller padded frame so the anchored card stays
+    // within the matrix cell.
+    PreviewMatrix("Popconfirm") {
+        PreviewCase("Pinned open · top edge (default)") {
+            ThemeButton("Delete") {}.color(.error).variant(.soft)
+                .popconfirm(isPresented: .constant(true), title: "Delete this item?", message: "This can't be undone.",
                             confirmTitle: "Delete", cancelTitle: "Cancel") {}
-                .padding(80)
+                .padding(.top, 130)
+                .frame(maxWidth: .infinity)
+        }
+        PreviewCase("Pinned open · bottom edge + arrow") {
+            ThemeButton("Remove card") {}.color(.error).variant(.outline)
+                .popconfirm(isPresented: .constant(true), title: "Remove this card?",
+                            confirmTitle: "Remove", cancelTitle: "Keep",
+                            edge: .bottom, showsArrow: true) {}
+                .padding(.bottom, 120)
+                .frame(maxWidth: .infinity)
+        }
+        PreviewCase("Titled popover · pinned open") {
+            ThemeButton("What's this?") {}.variant(.outline)
+                .themePopover(isPresented: .constant(true), title: "Flexible fare",
+                              message: "Change your flight up to 2 hours before departure at no extra cost.",
+                              edge: .top, showsArrow: true)
+                .padding(.top, 120)
+                .frame(maxWidth: .infinity)
+        }
+        PreviewCase("Trigger at rest (uncontrolled — tap in live preview)") {
+            ThemeButton("Clear history") {}.color(.error).variant(.soft)
+                .popconfirm(title: "Clear browsing history?",
+                            message: "This removes it from every signed-in device.",
+                            confirmTitle: "Clear", cancelTitle: "Keep") {}
         }
     }
-    return Demo()
 }
 
 #Preview("Self-managed (uncontrolled)") {

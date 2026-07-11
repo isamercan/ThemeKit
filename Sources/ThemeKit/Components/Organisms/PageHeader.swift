@@ -204,43 +204,50 @@ public extension PageHeader {
 // MARK: - Previews
 
 #Preview("Plain — variants") {
-    VStack(spacing: 20) {
-        PageHeader("Antalya Hotels")
-            .onBack {}
-            .searchSummary(SearchSummary(time: "12 – 16 Jul", adults: 2).title("Antalya Hotels").children(1).rooms(1))
-            .actions([.init(systemImage: "square.on.square") {},
-                      .init(systemImage: "magnifyingglass") {}])
-
-        PageHeader("Title")
-            .onBack {}
-            .tabs(["Tab 1", "Tab 2", "Tab 3", "Tab 4"], selected: 0) { _ in }
-            .actions([.init(systemImage: "magnifyingglass") {}])
-
-        PageHeader("Title").onBack {}.progress(0.4)
-            .actions([.init(systemImage: "magnifyingglass") {}])
-
-        PageHeader("Title").onBack {}.stepper(current: 1, total: 4)
-
-        PageHeader("Title")
-            .primaryButton("Set alert", systemImage: "bell.fill") {}
-            .actions([.init(systemImage: "magnifyingglass") {}])
+    PreviewMatrix("PageHeader — plain style") {
+        PreviewCase("Search summary + actions") {
+            PageHeader("Antalya Hotels")
+                .onBack {}
+                .searchSummary(SearchSummary(time: "12 – 16 Jul", adults: 2).title("Antalya Hotels").children(1).rooms(1))
+                .actions([.init(systemImage: "square.on.square") {},
+                          .init(systemImage: "magnifyingglass") {}])
+        }
+        PreviewCase("Tabs accessory") {
+            PageHeader("Title")
+                .onBack {}
+                .tabs(["Tab 1", "Tab 2", "Tab 3", "Tab 4"], selected: 0) { _ in }
+                .actions([.init(systemImage: "magnifyingglass") {}])
+        }
+        PreviewCase("Progress accessory") {
+            PageHeader("Title").onBack {}.progress(0.4)
+                .actions([.init(systemImage: "magnifyingglass") {}])
+        }
+        PreviewCase("Stepper accessory") {
+            PageHeader("Title").onBack {}.stepper(current: 1, total: 4)
+        }
+        PreviewCase("Primary pill CTA") {
+            PageHeader("Title")
+                .primaryButton("Set alert", systemImage: "bell.fill") {}
+                .actions([.init(systemImage: "magnifyingglass") {}])
+        }
     }
-    .padding(.vertical)
     .environment(Theme.shared)
 }
 
 #Preview("Brand + On-image") {
-    VStack(spacing: 20) {
-        PageHeader("Brand")
-            .logo(Text("Acme").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
-            .pageHeaderStyle(.brand)
-
-        PageHeader("Hotel Details")
-            .onBack {}
-            .actions([.init(systemImage: "heart") {}, .init(systemImage: "xmark") {}])
-            .pageHeaderStyle(.onImage)
-            .background(SemanticColor.primary.solid)
+    PreviewMatrix("PageHeader — brand / onImage styles") {
+        PreviewCase("Brand chrome (logo center)") {
+            PageHeader("Brand")
+                .logo(Text("Acme").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
+                .pageHeaderStyle(.brand)
+        }
+        PreviewCase("On-image chrome") {
+            PageHeader("Hotel Details")
+                .onBack {}
+                .actions([.init(systemImage: "heart") {}, .init(systemImage: "xmark") {}])
+                .pageHeaderStyle(.onImage)
+                .background(SemanticColor.primary.solid)
+        }
     }
-    .padding(.vertical)
     .environment(Theme.shared)
 }

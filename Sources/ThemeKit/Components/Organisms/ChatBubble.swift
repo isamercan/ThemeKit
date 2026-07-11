@@ -95,11 +95,18 @@ public extension ChatBubble {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        ChatBubble("Hello! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming).icon("person.fill")
-        ChatBubble("Thanks, great!", time: "09:25").side(.outgoing).icon("person.fill")
-        ChatBubble("Payment received.").side(.outgoing).accent(.success)
-        ChatBubble("Gate changed to B12.").side(.incoming).accent(.warning)
+    PreviewMatrix("ChatBubble") {
+        PreviewCase("Incoming + avatar") {
+            ChatBubble("Hello! Your reservation is confirmed.", author: "Support", time: "09:24").side(.incoming).icon("person.fill")
+        }
+        PreviewCase("Outgoing + avatar") {
+            ChatBubble("Thanks, great!", time: "09:25").side(.outgoing).icon("person.fill")
+        }
+        PreviewCase("Accent success") {
+            ChatBubble("Payment received.").side(.outgoing).accent(.success)
+        }
+        PreviewCase("Accent warning") {
+            ChatBubble("Gate changed to B12.").side(.incoming).accent(.warning)
+        }
     }
-    .padding()
 }

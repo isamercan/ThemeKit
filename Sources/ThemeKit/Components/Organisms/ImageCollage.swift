@@ -104,9 +104,16 @@ public extension ImageCollage {
 
 #Preview {
     let urls = (1...6).compactMap { URL(string: "https://picsum.photos/seed/collage\($0)/400/300") }
-    return VStack(spacing: 16) {
-        ImageCollage(Array(urls.prefix(3))).height(180)
-        ImageCollage(urls).height(220)
+
+    PreviewMatrix("ImageCollage") {
+        PreviewCase("Three images") {
+            ImageCollage(Array(urls.prefix(3))).height(180)
+        }
+        PreviewCase("Six images (+N overlay)") {
+            ImageCollage(urls).height(220)
+        }
+        PreviewCase("Empty placeholder") {
+            ImageCollage([]).height(140)
+        }
     }
-    .padding()
 }

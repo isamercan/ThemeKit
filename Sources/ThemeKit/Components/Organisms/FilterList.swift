@@ -130,17 +130,26 @@ public extension FilterList {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var sel: Set<String> = ["Direct"]
-        var body: some View {
+    @Previewable @State var sel: Set<String> = ["Direct"]
+    let options = [
+        FilterOption("Direct", count: 128),
+        FilterOption("1 stop", count: 64),
+        FilterOption("2+ stops", count: 12),
+    ]
+
+    PreviewMatrix("FilterList") {
+        PreviewCase("Bordered · select-all master") {
+            FilterList(options, selection: $sel)
+                .title("Stops").bordered().selectAll("All")
+        }
+        PreviewCase("Plain · no separators, icons") {
             FilterList([
-                FilterOption("Direct", count: 128),
-                FilterOption("1 stop", count: 64),
-                FilterOption("2+ stops", count: 12),
+                FilterOption("Breakfast", icon: "cup.and.saucer"),
+                FilterOption("Pool", icon: "figure.pool.swim"),
+                FilterOption("Pet friendly", icon: "pawprint"),
             ], selection: $sel)
-            .title("Stops").bordered().selectAll("All")
-            .padding()
+            .title("Amenities")
+            .showsSeparators(false)
         }
     }
-    return Demo()
 }

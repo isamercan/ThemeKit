@@ -183,28 +183,33 @@ public extension NotificationCard {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        NotificationCard(title: "We Have a Suggestion for Your Holiday") {
-            ButtonGroup(.horizontal) {
-                SecondaryButton("Sec") {}.size(.small)
-                PrimaryButton("Pri") {}.size(.small)
+    PreviewMatrix("NotificationCard") {
+        PreviewCase("Unread · actions slot") {
+            NotificationCard(title: "We Have a Suggestion for Your Holiday") {
+                ButtonGroup(.horizontal) {
+                    SecondaryButton("Sec") {}.size(.small)
+                    PrimaryButton("Pri") {}.size(.small)
+                }
             }
+            .message("24 days left until your reservation at Hilton Istanbul.")
+            .date("Thursday, December 5, 2024")
+            .unread()
         }
-        .message("24 days left until your reservation at Hilton Istanbul.")
-        .date("Thursday, December 5, 2024")
-        .unread()
-        NotificationCard(title: "7 days left until your holiday begins")
-            .message("Rixos Sungate")
-            .date("November 28, 2024")
+        PreviewCase("Read · plain") {
+            NotificationCard(title: "7 days left until your holiday begins")
+                .message("Rixos Sungate")
+                .date("November 28, 2024")
+        }
         // D6 — inline action row via the Callout/InfoBanner modifier pattern.
-        NotificationCard(title: "Your price alert dropped")
-            .message("The route you follow is now 12% cheaper.")
-            .variant(.success)
-            .action("View") {}
-            .secondaryAction("Dismiss") {}
-            .onClose {}
+        PreviewCase("Success variant · inline actions · dismissible") {
+            NotificationCard(title: "Your price alert dropped")
+                .message("The route you follow is now 12% cheaper.")
+                .variant(.success)
+                .action("View") {}
+                .secondaryAction("Dismiss") {}
+                .onClose {}
+        }
     }
-    .padding()
 }
 
 #Preview("Outlined style + leading slot") {

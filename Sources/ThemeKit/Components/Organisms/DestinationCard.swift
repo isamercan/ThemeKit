@@ -229,18 +229,27 @@ public extension DestinationCard {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
     @Previewable @State var fav = true
-    ScrollView {
-        VStack(spacing: 16) {
+    PreviewMatrix("DestinationCard") {
+        PreviewCase("Default · ribbon + price + rating + favourite") {
             DestinationCard("Bali & Unforgettable 3-Days")
                 .subtitle("Indonesia").ribbon("Top #1")
                 .price(1_450).rating(4.8).favorite($fav)
                 .tags(["Beach", "Culture"])
         }
-        .padding()
+        PreviewCase("Inline badge") {
+            DestinationCard("Santorini Sunset Trail")
+                .subtitle("Greece")
+                .badge("New")
+                .price(2_300).rating(4.6)
+        }
+        PreviewCase("Overlay title (scrim over media)") {
+            DestinationCard("Lisbon City Break")
+                .subtitle("Portugal")
+                .overlayTitle()
+                .price(980).rating(4.4)
+        }
     }
-    .background(theme.background(.bgSecondary))
 }
 
 #Preview("Outlined style + overlay slot") {

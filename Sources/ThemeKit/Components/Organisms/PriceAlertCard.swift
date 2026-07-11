@@ -136,9 +136,24 @@ public extension PriceAlertCard {
 #Preview {
     struct Demo: View {
         @State private var on = true
+        @State private var off = false
         var body: some View {
-            PriceAlertCard("Get price alerts", isOn: $on)
-                .subtitle("We'll notify you when this route's price changes").price(3_538).trend(.down, "-8%").padding()
+            PreviewMatrix("PriceAlertCard") {
+                PreviewCase("On · price + downward trend") {
+                    PriceAlertCard("Get price alerts", isOn: $on)
+                        .subtitle("We'll notify you when this route's price changes").price(3_538).trend(.down, "-8%")
+                }
+                PreviewCase("Off · upward trend") {
+                    PriceAlertCard("Get price alerts", isOn: $off)
+                        .subtitle("Prices are rising for these dates").price(4_120).trend(.up, "+5%")
+                }
+                PreviewCase("No price · custom icon + accent") {
+                    PriceAlertCard("Fare watch", isOn: $on)
+                        .subtitle("We'll email you when the price changes")
+                        .icon("bell.badge.fill")
+                        .accent(.success)
+                }
+            }
         }
     }
     return Demo()

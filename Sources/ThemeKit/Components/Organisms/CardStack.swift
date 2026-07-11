@@ -70,14 +70,27 @@ public extension CardStack {
 #Preview {
     struct Item: Identifiable { let id = UUID(); let color: Color; let title: String }
     let items = [Item(color: .blue, title: "Front"), Item(color: .teal, title: "Middle"), Item(color: .orange, title: "Back")]
-    return CardStack(items) { item in
-        RoundedRectangle(cornerRadius: 16)
-            .fill(item.color.opacity(0.3))
-            .frame(height: 120)
-            .overlay(Text(item.title).font(.headline))
-            .frame(maxWidth: .infinity)
+    return PreviewMatrix("CardStack") {
+        PreviewCase("Deck") {
+            CardStack(items) { item in
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(item.color.opacity(0.3))
+                    .frame(height: 120)
+                    .overlay(Text(item.title).font(.headline))
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        PreviewCase("Fanned (rotation)") {
+            CardStack(items) { item in
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(item.color.opacity(0.3))
+                    .frame(height: 120)
+                    .overlay(Text(item.title).font(.headline))
+                    .frame(maxWidth: .infinity)
+            }
+            .rotation(3)
+        }
     }
-    .padding()
 }
 
 #Preview("Deck modifiers") {

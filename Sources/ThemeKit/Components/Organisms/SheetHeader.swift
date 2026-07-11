@@ -147,11 +147,19 @@ public extension SheetHeader {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        SheetHeader("Passengers").onBack { }.onClose { }
-        SheetHeader("Payment").subtitle("Step 3 of 4").onBack { }.onClose { }.progress(0.75)
-        SheetHeader("Filters").onClose { }
-        SheetHeader("Floating").subtitle("BarStyle demo").onBack { }.onClose { }
-            .barStyle(.floating)
+    PreviewMatrix("SheetHeader") {
+        PreviewCase("Back + close") {
+            SheetHeader("Passengers").onBack { }.onClose { }
+        }
+        PreviewCase("Subtitle + progress line") {
+            SheetHeader("Payment").subtitle("Step 3 of 4").onBack { }.onClose { }.progress(0.75)
+        }
+        PreviewCase("Close only") {
+            SheetHeader("Filters").onClose { }
+        }
+        PreviewCase("Floating bar style") {
+            SheetHeader("Floating").subtitle("BarStyle demo").onBack { }.onClose { }
+                .barStyle(.floating)
+        }
     }
 }

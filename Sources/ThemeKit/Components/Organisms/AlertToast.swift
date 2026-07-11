@@ -209,22 +209,23 @@ public extension AlertToast {
 }
 
 #Preview {
-    VStack(spacing: 12) {
-        AlertToast("Saved successfully").variant(.success).onClose {}
-        AlertToast("Check your input").message("One field needs attention.").variant(.warning)
-        AlertToast("Something went wrong").variant(.danger).onClose {}
-        AlertToast("New update available").variant(.info)
-        AlertToast("Notifications paused").variant(.neutral).onClose {}
-        AlertToast("Pro features unlocked").message("Enjoy the upgrade.").variant(.accent).onClose {}
-        AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {}
-        AlertToast("Uploading…").variant(.info).loading()
-        AlertToast("Update available")
-            .message("Read the release notes before installing.",
-                     links: [("release notes", { print("notes") })])
-            .variant(.neutral)
-            .onClose {}
+    PreviewMatrix("AlertToast") {
+        PreviewCase("Success") { AlertToast("Saved successfully").variant(.success).onClose {} }
+        PreviewCase("Warning + message") { AlertToast("Check your input").message("One field needs attention.").variant(.warning) }
+        PreviewCase("Danger") { AlertToast("Something went wrong").variant(.danger).onClose {} }
+        PreviewCase("Info") { AlertToast("New update available").variant(.info) }
+        PreviewCase("Neutral") { AlertToast("Notifications paused").variant(.neutral).onClose {} }
+        PreviewCase("Accent") { AlertToast("Pro features unlocked").message("Enjoy the upgrade.").variant(.accent).onClose {} }
+        PreviewCase("Inline action") { AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {} }
+        PreviewCase("Loading") { AlertToast("Uploading…").variant(.info).loading() }
+        PreviewCase("Message links") {
+            AlertToast("Update available")
+                .message("Read the release notes before installing.",
+                         links: [("release notes", { print("notes") })])
+                .variant(.neutral)
+                .onClose {}
+        }
     }
-    .padding()
 }
 
 #Preview("Toast styles") {

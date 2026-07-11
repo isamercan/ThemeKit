@@ -179,22 +179,33 @@ public extension Sidebar {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var tab: String? = "home"
-        var body: some View {
-            Sidebar(sections: [
-                .init(items: [
-                    .init(tag: "home", "Home", systemImage: "house"),
-                    .init(tag: "search", "Search", systemImage: "magnifyingglass"),
-                ]),
-                .init("Library", items: [
-                    .init(tag: "fav", "Favorites", systemImage: "heart", badge: 3),
-                    .init(tag: "down", "Downloads", systemImage: "arrow.down.circle"),
-                ]),
-            ], selection: $tab)
-            .width(260)
-            .frame(height: 480)
+    @Previewable @State var tab: String? = "home"
+    let sections: [Sidebar.Section] = [
+        .init(items: [
+            .init(tag: "home", "Home", systemImage: "house"),
+            .init(tag: "search", "Search", systemImage: "magnifyingglass"),
+        ]),
+        .init("Library", items: [
+            .init(tag: "fav", "Favorites", systemImage: "heart", badge: 3),
+            .init(tag: "down", "Downloads", systemImage: "arrow.down.circle"),
+        ]),
+    ]
+    PreviewMatrix("Sidebar") {
+        PreviewCase("Sections · selection + badge") {
+            Sidebar(sections: sections, selection: $tab)
+                .width(260)
+                .frame(height: 360)
+        }
+        PreviewCase("Header + footer slots") {
+            Sidebar(sections: sections, selection: $tab)
+                .header {
+                    Text("ThemeKit").textStyle(.headingSm)
+                }
+                .footer {
+                    Text("Settings").textStyle(.labelSm600)
+                }
+                .width(260)
+                .frame(height: 360)
         }
     }
-    return Demo()
 }

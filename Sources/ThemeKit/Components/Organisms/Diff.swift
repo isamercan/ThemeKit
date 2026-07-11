@@ -98,12 +98,23 @@ public extension Diff {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    Diff {
-        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
-    } after: {
-        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+    PreviewMatrix("Diff") {
+        PreviewCase("Default 16:9 (drag divider in live preview)") {
+            Diff {
+                theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+            } after: {
+                theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+            }
+        }
+        PreviewCase("Custom aspect · 21:9") {
+            Diff {
+                theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+            } after: {
+                theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+            }
+            .aspect(21.0 / 9.0)
+        }
     }
-    .padding()
 }
 
 #Preview("RTL — divider and drag mirror") {

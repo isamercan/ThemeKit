@@ -219,16 +219,25 @@ public extension LoyaltyCard {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        LoyaltyCard(tier: "Gold", points: 8_430)
-            .memberName("Elif Kaya")
-            .progress(0.62, toNextTier: "Platinum")
+    PreviewMatrix("LoyaltyCard") {
+        PreviewCase("Default · progress to next tier") {
+            LoyaltyCard(tier: "Gold", points: 8_430)
+                .memberName("Elif Kaya")
+                .progress(0.62, toNextTier: "Platinum")
+        }
         // G5 — token gradient twin (solid shades of semantic hues).
-        LoyaltyCard(tier: "Emerald", points: 4_120)
-            .memberName("Ada Deniz")
-            .gradient([.success, .turquoise])
+        PreviewCase("Token gradient override") {
+            LoyaltyCard(tier: "Emerald", points: 4_120)
+                .memberName("Ada Deniz")
+                .gradient([.success, .turquoise])
+        }
+        PreviewCase("Flippable · membership QR (tap to flip)") {
+            LoyaltyCard(tier: "Platinum", points: 12_800)
+                .memberName("Elif Kaya")
+                .membership(.qr("MBR-2201-4410"))
+                .flippable()
+        }
     }
-    .padding()
 }
 
 #Preview("RTL — progress fills from the trailing edge") {

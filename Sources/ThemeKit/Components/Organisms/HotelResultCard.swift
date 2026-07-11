@@ -280,19 +280,28 @@ public extension HotelResultCard {
 }
 
 #Preview {
-    ScrollView {
-        HotelResultCard(name: "Mirage Park Resort")
-            .location("Kemer, Antalya")
-            .score(8.9, label: "Very good", reviews: 949)
-            .features(["Premium All-inclusive", "Seafront"])
-            .promos(["Special 7.500 TL MaxiPoint!", "50% deposit"])
-            .stay("2 Rooms | 4 Nights")
-            .original(248_000).discountBadge("-23%").price(190_960)
-            .extraDiscount("Extra 8%", 175_683)
-            .badge("Deal")
-            .favorite(.constant(true))
-            .onSelect { }
-            .padding()
+    PreviewMatrix("HotelResultCard") {
+        PreviewCase("Full · deal, promos, extra discount") {
+            HotelResultCard(name: "Mirage Park Resort")
+                .location("Kemer, Antalya")
+                .score(8.9, label: "Very good", reviews: 949)
+                .features(["Premium All-inclusive", "Seafront"])
+                .promos(["Special 7.500 TL MaxiPoint!", "50% deposit"])
+                .stay("2 Rooms | 4 Nights")
+                .original(248_000).discountBadge("-23%").price(190_960)
+                .extraDiscount("Extra 8%", 175_683)
+                .badge("Deal")
+                .favorite(.constant(true))
+                .onSelect { }
+        }
+        PreviewCase("Minimal · score + price, error accent") {
+            HotelResultCard(name: "City Inn Express")
+                .location("Downtown")
+                .score(7.8, label: "Good", reviews: 120)
+                .price(42_000)
+                .accent(.error)
+                .favorite(.constant(false))
+        }
     }
 }
 
