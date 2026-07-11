@@ -137,7 +137,7 @@ public struct DestinationCard: View {
                 .padding(Theme.SpacingKey.sm.value)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(fav.wrappedValue ? "Remove from favourites" : "Add to favourites")
+        .accessibilityLabel(fav.wrappedValue ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
     }
 
     private var overlayTitleBar: some View {

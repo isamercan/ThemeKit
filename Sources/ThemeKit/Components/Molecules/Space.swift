@@ -30,6 +30,10 @@ public enum SpaceSize: Sendable {
 public enum SpaceAlign: Sendable { case start, center, end, baseline }
 
 public struct Space<Content: View>: View {
+    // `Layout.placeSubviews` computes absolute x that does NOT auto-mirror, so
+    // the container reads the direction and hands it to the layout.
+    @Environment(\.layoutDirection) private var layoutDirection
+
     private let content: Content
     // Appearance — mutated only through the modifiers below.
     private var axis: Axis = .horizontal
@@ -41,7 +45,7 @@ public struct Space<Content: View>: View {
 
     public var body: some View {
         if axis == .horizontal, wraps {
-            FlowLayout(spacing: spacing, lineSpacing: spacing, alignment: horizontal) { content }
+            FlowLayout(spacing: spacing, lineSpacing: spacing, alignment: horizontal, layoutDirection: layoutDirection) { content }
         } else if axis == .horizontal {
             HStack(alignment: vertical, spacing: spacing) { content }
         } else {

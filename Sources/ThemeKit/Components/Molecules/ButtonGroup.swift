@@ -18,7 +18,12 @@ public enum ButtonGroupAxis {
 /// natural width and overflowing buttons flow to the next line, instead of being
 /// squeezed until the text wraps onto two lines.
 public struct ButtonGroup<Content: View>: View {
-    private let axis: ButtonGroupAxis
+    // `Layout.placeSubviews` computes absolute x that does NOT auto-mirror, so
+    // the container reads the direction and hands it to the layout.
+    @Environment(\.layoutDirection) private var layoutDirection
+
+    // Appearance — mutated only through the modifiers below.
+    private var axis: ButtonGroupAxis
     private let spacing: CGFloat
     private let content: () -> Content
 
@@ -35,8 +40,23 @@ public struct ButtonGroup<Content: View>: View {
         case .horizontal:
             // FlowLayout (not HStack) so buttons wrap to the next line rather than
             // compressing — hugs content when it fits, wraps when it doesn't.
-            FlowLayout(spacing: spacing, lineSpacing: spacing) { content() }
+            FlowLayout(spacing: spacing, lineSpacing: spacing, layoutDirection: layoutDirection) { content() }
         }
+    }
+}
+
+// MARK: - Modifiers (copy-on-write · single mutation point)
+
+public extension ButtonGroup {
+    /// Layout axis — a vertical stack or a wrapping side-by-side row.
+    /// Preferred over the `axis:` init argument (orientation is a reskin, so it
+    /// chains): `ButtonGroup { … }.axis(.horizontal)`.
+    func axis(_ axis: ButtonGroupAxis) -> Self { copy { $0.axis = axis } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {
+        var c = self
+        mutate(&c)
+        return c
     }
 }
 

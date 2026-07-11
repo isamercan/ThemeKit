@@ -111,6 +111,7 @@ public struct CompactChip: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     @Environment(\.chipStyle) private var environmentChipStyle
+    @Environment(\.locale) private var locale
 
     @Binding private var isSelected: Bool
     private let text: String
@@ -169,7 +170,7 @@ public struct CompactChip: View {
                     HStack(spacing: 2) {
                         Image(systemName: "star.fill").font(.system(size: 11))
                             .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
-                        Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
+                        Text(rating.formatted(.number.precision(.fractionLength(1)).locale(locale))).textStyle(.labelSm700)
                     }
                 }
                 Text(text).textStyle(.labelBase600).lineLimit(1)
@@ -213,6 +214,7 @@ public struct ChoseChip: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     @Environment(\.chipStyle) private var environmentChipStyle
+    @Environment(\.locale) private var locale
 
     @Binding private var isSelected: Bool
     private let title: String
@@ -279,7 +281,7 @@ public struct ChoseChip: View {
                         HStack(spacing: 2) {
                             Image(systemName: "star.fill").font(.system(size: 11))
                                 .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
-                            Text(String(format: "%.1f", rating)).textStyle(.labelSm700)
+                            Text(rating.formatted(.number.precision(.fractionLength(1)).locale(locale))).textStyle(.labelSm700)
                         }
                     }
                     if let description {
