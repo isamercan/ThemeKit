@@ -146,6 +146,14 @@ public struct TextInput: View {
     /// parameter is indistinguishable from the `.medium` default, so it yields
     /// to `FieldDefaults`; use `.size(_:)` to pin a size against the defaults.
     private var explicitSize: TextInputSize?
+    /// Set only by the `.clearable(_:)` modifier. Detects "explicitly set" so
+    /// the subtree `FieldDefaults.clearable` can fill the default without
+    /// overriding an explicit per-field choice (F5):
+    /// `explicitClearable ?? fieldDefaults.clearable ?? model.allowClear`.
+    /// Like `size`, the (init-era) `TextInputModel.allowClear` parameter is
+    /// indistinguishable from the `false` default, so it yields to
+    /// `FieldDefaults`; use `.clearable(_:)` to pin it against the defaults.
+    private var explicitClearable: Bool?
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
@@ -171,11 +179,14 @@ public struct TextInput: View {
     private var warningText: String?
 
     // Declarative validation (daisyUI Validator, see `ValidationRule.swift`):
-    // rules run at `validationTrigger` and their first failure is merged into
-    // `messages`, driving the existing error styling automatically.
+    // rules run at `effectiveValidationTrigger` and their first failure is merged
+    // into `messages`, driving the existing error styling automatically.
     private var validationRules: [ValidationRule] = []
     private var validationCheck: ((String) -> String?)?
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to the subtree `FieldDefaults.validationTrigger`, then `.editingEnd`
+    /// (F5): `explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd`.
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     /// Internal editing-end hook (form wiring): fires with the current text when
     /// the field loses focus — regardless of the component's own validation setup.
@@ -207,6 +218,12 @@ public struct TextInput: View {
     /// Message rows animate when micro-animations are on and the subtree default
     /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → the model's default (F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? model.allowClear }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
     /// `infoMessages` plus the helper/error/warning conveniences (computed merge).
     private var messages: [InfoMessage] {
         var messages = model.infoMessages + validationMessages
@@ -218,7 +235,7 @@ public struct TextInput: View {
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { model.allowClear && !text.isEmpty && isEnabled && !isReadOnly && !model.isSecure }
+    private var showsClear: Bool { effectiveClearable && !text.isEmpty && isEnabled && !isReadOnly && !model.isSecure }
 
     private var hasAddons: Bool { model.addonBefore != nil || model.addonAfter != nil }
     private var isOverLimit: Bool { Self.isOverLimit(count: text.count, maxLength: model.maxLength) }
@@ -377,14 +394,14 @@ public struct TextInput: View {
             if v != text { text = v }
             // `.live` validates every change; other triggers re-validate once a
             // failure is visible so the error clears as the user fixes it.
-            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(v) }
+            if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(v) }
         }
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
-            if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
+            if !now, effectiveValidationTrigger == .editingEnd { runValidation(text) }   // validate on blur
             if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
     }
@@ -495,8 +512,9 @@ public extension TextInput {
     /// Masks input as a password field with a reveal toggle.
     func secure(_ on: Bool = true) -> Self { copy { $0.model.isSecure = on } }
 
-    /// Show a trailing clear button while the field has text.
-    func clearable(_ on: Bool = true) -> Self { copy { $0.model.allowClear = on } }
+    /// Show a trailing clear button while the field has text. An explicit call
+    /// wins over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.model.allowClear = on; $0.explicitClearable = on } }
 
     /// Caps input at `max` characters; a soft limit (`hardLimit: false`) allows overflow and flags the counter instead.
     func maxLength(_ max: Int?, hardLimit: Bool = true) -> Self {
@@ -529,19 +547,22 @@ public extension TextInput {
 
     /// Declarative validation (daisyUI Validator): evaluates `rules` at
     /// `trigger` and feeds the first failure into the message list / error
-    /// styling automatically — no hand-managed `infoMessages`.
+    /// styling automatically — no hand-managed `infoMessages`. Omitting `on:`
+    /// (`nil`) follows the subtree `FieldDefaults.validationTrigger` default,
+    /// falling back to `.editingEnd` (F5); an explicit trigger always wins.
     ///
     ///     TextInput("Email", text: $email)
     ///         .validate([.required(), .email()], on: .editingEnd)
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Closure form of `validate(_:on:)` for dynamic failure messages:
     /// return the error text, or `nil` when the value passes. Runs after the
-    /// rule array (if both are declared).
-    func validate(on trigger: ValidationTrigger = .editingEnd, _ check: @escaping (String) -> String?) -> Self {
-        copy { $0.validationCheck = check; $0.validationTrigger = trigger }
+    /// rule array (if both are declared). Omitting `on:` follows the subtree
+    /// `FieldDefaults.validationTrigger` default, then `.editingEnd` (F5).
+    func validate(on trigger: ValidationTrigger? = nil, _ check: @escaping (String) -> String?) -> Self {
+        copy { $0.validationCheck = check; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no
@@ -655,6 +676,32 @@ private extension TextInputCapitalization {
     }
 }
 #endif
+
+#Preview("Field defaults: clearable + validationTrigger (F5)") {
+    struct Demo: View {
+        @State var name = "Alex"
+        @State var code = "SAVE20"
+        @State var email = ""
+        var body: some View {
+            VStack(spacing: 16) {
+                Text("fieldDefaults(clearable: true, validationTrigger: .live)")
+                    .textStyle(.labelSm600)
+                // No per-instance .clearable() — inherits the subtree default → shows ×.
+                TextInput("Full name", text: $name)
+                // Explicit .clearable(false) wins over the subtree default → no ×.
+                TextInput("Promo code", text: $code)
+                    .clearable(false)
+                // validate(...) without on: — inherits .live from the subtree default,
+                // so the error appears while typing instead of on blur.
+                TextInput("Email", text: $email)
+                    .validate([.required(), .email()])
+            }
+            .padding()
+            .fieldDefaults(clearable: true, validationTrigger: .live)
+        }
+    }
+    return Demo()
+}
 
 #Preview {
     struct Demo: View {

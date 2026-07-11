@@ -32,13 +32,18 @@ public struct Cascader: View {
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no picking.
     @Environment(\.isReadOnly) private var isReadOnly
+    /// Subtree field-family defaults (F5) — fills `clearable` when not set explicitly.
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     private let options: [CascaderOption]
     @Binding private var selection: [String]
     // Appearance — mutated only through the modifiers below.
     private var placeholder: String = String(themeKit: "Select")
     private var changeOnSelect = false
-    private var allowClear = false
+    /// Set only by the `.clearable(_:)` modifier, so the subtree
+    /// `FieldDefaults.clearable` can fill the default without overriding an
+    /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? false`.
+    private var explicitClearable: Bool?
     private var isSearchable = false
     private var isNodeEnabled: ((CascaderOption) -> Bool)?
     private var infoMessages: [InfoMessage] = []
@@ -55,7 +60,9 @@ public struct Cascader: View {
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { allowClear && !selection.isEmpty && isEnabled && !isReadOnly }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → off (F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? false }
+    private var showsClear: Bool { effectiveClearable && !selection.isEmpty && isEnabled && !isReadOnly }
     private func nodeEnabled(_ node: CascaderOption) -> Bool { isNodeEnabled?(node) ?? true }
 
     public var body: some View {
@@ -291,7 +298,8 @@ public extension Cascader {
     /// Commit the path at every level, not only on a leaf (Ant `changeOnSelect`).
     func changeOnSelect(_ on: Bool = true) -> Self { copy { $0.changeOnSelect = on } }
     /// Show a trailing clear button when a path is selected (Ant `allowClear`).
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// An explicit call wins over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
     /// Add a search field atop the dropdown; typing filters to a flat list of
     /// matching leaf paths (Ant `showSearch`).
     func searchable(_ on: Bool = true) -> Self { copy { $0.isSearchable = on } }

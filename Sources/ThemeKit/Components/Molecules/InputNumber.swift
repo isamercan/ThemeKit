@@ -48,10 +48,12 @@ public struct InputNumber: View {
     private var isRequired = false
 
     // Declarative validation (E3, TextInput parity): rules run against the
-    // field's text at `validationTrigger`; the first failure renders as an
-    // `InfoMessageList` row and drives the error border.
+    // field's text at `effectiveValidationTrigger`; the first failure renders
+    // as an `InfoMessageList` row and drives the error border.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     @State private var validationMessages: [InfoMessage] = []
 
     @Environment(\.isEnabled) private var isEnabled
@@ -104,6 +106,10 @@ public struct InputNumber: View {
     /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
     /// the accessibility ", required" suffix is unaffected).
     private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -152,7 +158,7 @@ public struct InputNumber: View {
             defer {
                 // `.live` validates every change; other triggers re-validate once
                 // a failure is visible so the error clears as the user fixes it.
-                if validationTrigger == .live || !validationMessages.isEmpty { runValidation(newText) }
+                if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(newText) }
             }
             guard editable, let parsed = parseValue(newText) else { return }
             let clamped = Self.clamp(parsed, to: range)
@@ -161,7 +167,7 @@ public struct InputNumber: View {
         .onChange(of: isFocused) { _, focused in
             if !focused {
                 commit()
-                if validationTrigger == .editingEnd { runValidation(textValue) }   // validate on blur
+                if effectiveValidationTrigger == .editingEnd { runValidation(textValue) }   // validate on blur
             }
         }
     }
@@ -431,12 +437,14 @@ public extension InputNumber {
 
     /// Declarative validation (E3, TextInput parity): evaluates `rules` against
     /// the field's text at `trigger` and feeds the first failure into the
-    /// message list / error styling automatically.
+    /// message list / error styling automatically. Omitting `on:` follows the
+    /// subtree `FieldDefaults.validationTrigger` default, then `.editingEnd`
+    /// (F5); an explicit trigger always wins.
     ///
     ///     InputNumber("Guests", value: $count)
     ///         .validate([.required()], on: .editingEnd)
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Legacy binary height (regular 40pt / large 48pt), superseded by the

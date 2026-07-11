@@ -47,7 +47,10 @@ public struct TimeField: View {
     private var hourCycle: TimeFieldHourCycle = .locale
     private var explicitLocale: Locale?
     private var infoMessages: [InfoMessage] = []
-    private var allowClear = false
+    /// Set only by the `.clearable(_:)` modifier, so the subtree
+    /// `FieldDefaults.clearable` can fill the default without overriding an
+    /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? false`.
+    private var explicitClearable: Bool?
     private var leadingSystemImage: String? = "clock"
     private var accessibilityID: String?
     /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
@@ -56,10 +59,12 @@ public struct TimeField: View {
     private var isRequired = false
 
     // Declarative validation (daisyUI Validator) — rules run against the
-    // *displayed* time string at `validationTrigger`; failures merge into the
-    // rendered messages, driving the border state automatically.
+    // *displayed* time string at `effectiveValidationTrigger`; failures merge
+    // into the rendered messages, driving the border state automatically.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
@@ -79,7 +84,13 @@ public struct TimeField: View {
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { allowClear && time != nil && isEnabled && !isReadOnly }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → off (F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? false }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
+    private var showsClear: Bool { effectiveClearable && time != nil && isEnabled && !isReadOnly }
     private var displayText: String? {
         time.map { Self.text(for: $0, hourCycle: hourCycle, locale: locale) }
     }
@@ -131,11 +142,11 @@ public struct TimeField: View {
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
         .onChange(of: time) { _, _ in
-            if validationTrigger == .live || !validationMessages.isEmpty { runValidation() }
+            if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation() }
         }
         // Dismissing the picker is this field's blur *and* submit moment.
         .onChange(of: showPicker) { _, now in
-            if !now, validationTrigger != .live { runValidation() }
+            if !now, effectiveValidationTrigger != .live { runValidation() }
         }
     }
 
@@ -296,11 +307,13 @@ public extension TimeField {
     /// *displayed* time string (empty when no time is set) at `trigger` —
     /// `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on
     /// every change. Failures merge into the rendered messages and border state.
+    /// Omitting `on:` follows the subtree `FieldDefaults.validationTrigger`
+    /// default, then `.editingEnd` (F5); an explicit trigger always wins.
     ///
     ///     TimeField("Alarm", time: $alarm)
     ///         .validate([.required("Pick a time")])
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no
@@ -322,8 +335,9 @@ public extension TimeField {
     /// Validation / info messages rendered under the field (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
-    /// Show a trailing clear button when a time is set.
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// Show a trailing clear button when a time is set. An explicit call wins
+    /// over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
 
     /// Leading SF Symbol shown inside the field (defaults to `clock`; pass `nil` to hide).
     func icon(_ systemImage: String?) -> Self { copy { $0.leadingSystemImage = systemImage } }

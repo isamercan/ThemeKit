@@ -48,17 +48,22 @@ public struct DateField: View {
     private var explicitLocale: Locale?
     private var components: DateFieldComponents = .date
     private var infoMessages: [InfoMessage] = []
-    private var allowClear = false
+    /// Set only by the `.clearable(_:)` modifier, so the subtree
+    /// `FieldDefaults.clearable` can fill the default without overriding an
+    /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? false`.
+    private var explicitClearable: Bool?
     private var leadingSystemImage: String?
     private var accessibilityID: String?
     /// `.required()` — asterisk on the label + ", required" in the a11y label.
     private var isRequired = false
 
     // Declarative validation (daisyUI Validator) — rules run against the
-    // *displayed* date string at `validationTrigger`; failures merge into the
-    // rendered messages, driving the border state automatically.
+    // *displayed* date string at `effectiveValidationTrigger`; failures merge
+    // into the rendered messages, driving the border state automatically.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
@@ -87,7 +92,13 @@ public struct DateField: View {
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
-    private var showsClear: Bool { allowClear && date != nil && isEnabled }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → off (F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? false }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
+    private var showsClear: Bool { effectiveClearable && date != nil && isEnabled }
     private var displayText: String? {
         date.map { Self.text(for: $0, style: style, locale: locale, components: components) }
     }
@@ -149,7 +160,7 @@ public struct DateField: View {
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
         .onChange(of: date) { _, _ in
-            if validationTrigger == .live || !validationMessages.isEmpty { runValidation() }
+            if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation() }
         }
         // External focus bridge (TextInput parity, popover-flavored): a `true`
         // write opens the picker; dismissing it resets the external binding.
@@ -160,7 +171,7 @@ public struct DateField: View {
         .onChange(of: showPicker) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
-            if !now, validationTrigger != .live { runValidation() }
+            if !now, effectiveValidationTrigger != .live { runValidation() }
         }
     }
 
@@ -311,11 +322,13 @@ public extension DateField {
     /// *displayed* date string (empty when no date is set) at `trigger` —
     /// `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on
     /// every change. Failures merge into the rendered messages and border state.
+    /// Omitting `on:` follows the subtree `FieldDefaults.validationTrigger`
+    /// default, then `.editingEnd` (F5); an explicit trigger always wins.
     ///
     ///     DateField("Check-in", date: $checkIn)
     ///         .validate([.required("Pick a check-in date")])
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no
@@ -337,8 +350,9 @@ public extension DateField {
     /// Validation / info messages rendered under the field (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
 
-    /// Show a trailing clear button when a date is set.
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// Show a trailing clear button when a date is set. An explicit call wins
+    /// over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
 
     /// Drive focus from outside (e.g. `FormValidator.focusBinding`). DateField's
     /// focus analog is its picker popover: a `true` write opens the picker (which

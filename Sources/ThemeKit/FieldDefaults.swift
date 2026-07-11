@@ -36,15 +36,18 @@ public struct FieldDefaults: Equatable {
     /// hiding the asterisk never hides the semantics from VoiceOver.
     public var requiredIndicator: Bool?
     /// Whether fields show a trailing clear (×) affordance while non-empty
-    /// (Ant ConfigProvider input `allowClear`). Provider field only for now —
-    /// the field family adopts it in a follow-up; a field's own explicit
-    /// clearable modifier will still win over this subtree default.
+    /// (Ant ConfigProvider input `allowClear`). Read by TextInput, Select,
+    /// DateField, TimeField, Autocomplete, Cascader, and MultiSelect; a field's
+    /// own explicit `.clearable(_:)` still wins over this subtree default, and
+    /// `nil` keeps each component's own default (off for most; Autocomplete and
+    /// MultiSelect stay on by default).
     public var clearable: Bool?
     /// Default `ValidationTrigger` for rule-driven validation — when
     /// `TextInput.validate(_:)`-style calls omit their `on:` argument
-    /// (`.live` / `.editingEnd` / `.submit`). Provider field only for now —
-    /// the field family adopts it in a follow-up; an explicit per-field `on:`
-    /// argument will still win over this subtree default.
+    /// (`.live` / `.editingEnd` / `.submit`). Read by TextInput, DateField,
+    /// TimeField, Autocomplete, InputNumber, PaymentCardField, and OTPInput;
+    /// an explicit per-field `on:` argument still wins over this subtree
+    /// default, and `nil` keeps the family's `.editingEnd` default.
     public var validationTrigger: ValidationTrigger?
 
     public init(size: TextInputSize? = nil, messagesAnimated: Bool? = nil, requiredIndicator: Bool? = nil,

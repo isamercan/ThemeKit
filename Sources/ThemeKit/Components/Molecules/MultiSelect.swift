@@ -28,13 +28,19 @@ public struct MultiSelect<Option: Hashable>: View {
     private var describeOption: ((Option) -> String?)? = nil
     private var leadingContent: ((Option) -> AnyView)? = nil
     private var searchable: Bool = true
-    private var allowClear: Bool = true
+    /// Set only by the `.clearable(_:)` modifier, so the subtree
+    /// `FieldDefaults.clearable` can fill the default without overriding an
+    /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? true`
+    /// (clear is on by default, matching a tag picker).
+    private var explicitClearable: Bool?
     private var maxTagCount: Int? = nil
     /// Selection-count cap (E13, Ant `maxCount`); `nil` = unlimited.
     private var maxSelection: Int? = nil
     private var isLoading: Bool = false
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
+    /// Subtree field-family defaults (F5) — fills `clearable` when not set explicitly.
+    @Environment(\.fieldDefaults) private var fieldDefaults
 
     @State private var open = false
     @State private var query = ""
@@ -66,6 +72,8 @@ public struct MultiSelect<Option: Hashable>: View {
 
     private var hasError: Bool { infoMessages.dominantKind == .error }
     private var hasWarning: Bool { infoMessages.dominantKind == .warning }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → on (tag-picker default, F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? true }
 
     private var selectedOptions: [Option] { options.filter { selection.contains($0) } }
     private var visibleTags: [Option] { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).visible }
@@ -150,7 +158,7 @@ public struct MultiSelect<Option: Hashable>: View {
                 }
             }
             Spacer(minLength: 0)
-            if allowClear && !selection.isEmpty && isEnabled && !isLoading {
+            if effectiveClearable && !selection.isEmpty && isEnabled && !isLoading {
                 Button { selection.removeAll() } label: {
                     Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                 }
@@ -268,8 +276,9 @@ public extension MultiSelect {
     /// Whether the dropdown shows a search field (default true).
     func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
 
-    /// Whether a clear-all button is offered (default true).
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// Whether a clear-all button is offered (default true). An explicit call
+    /// wins over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
 
     /// Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
     func maxTags(_ count: Int?) -> Self { copy { $0.maxTagCount = count } }
