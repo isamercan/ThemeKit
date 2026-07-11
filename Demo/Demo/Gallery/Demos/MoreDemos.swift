@@ -421,7 +421,7 @@ struct AutocompleteDemo: View {
 
 struct CardDemo: View {
     @State private var elevation: CardElevation = .soft
-    @State private var padding = 16.0
+    @State private var padding: Theme.SpacingKey = .base
     @State private var tappable = false
     @State private var header = true
     @State private var loading = false
@@ -457,7 +457,9 @@ struct CardDemo: View {
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
             Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
-            HStack { Text("Padding"); SwiftUI.Slider(value: $padding, in: 0...32, step: 4) }
+            Picker("Padding", selection: $padding) {
+                ForEach([Theme.SpacingKey.none, .xs, .sm, .md, .base, .lg], id: \.self) { Text($0.rawValue).tag($0) }
+            }
         }
     }
 }

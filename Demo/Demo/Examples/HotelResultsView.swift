@@ -141,6 +141,6 @@ struct HotelCard: View {
                 .padding()
             }
         }
-        .contentPadding(0)
+        .contentPadding(.none)
     }
 }
