@@ -218,7 +218,7 @@ struct AmenityGridDemo: View {
     private var grid: AmenityGrid {
         var g = AmenityGrid(items).columns(Int(columns)).size(size)
         if useLimit { g = g.limit(Int(limit)) }
-        if tinted { g = g.tint(SemanticColor.purple.base) }
+        if tinted { g = g.tint(.purple) }
         if highlight { g = g.highlighted(["Free Wi-Fi", "Breakfast"]) }
         return g
     }
@@ -312,7 +312,7 @@ struct PriceHistogramDemo: View {
     private var histogram: PriceHistogram {
         var h = PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
             .barHeight(barHeight).currency(currency).showsBounds(showsBounds)
-        if accent { h = h.accent(SemanticColor.purple.base) }
+        if accent { h = h.accent(.purple) }
         if showsCount { h = h.resultCount(bins.reduce(0, +)) }
         return h
     }
@@ -1686,7 +1686,7 @@ struct SmartSuggestionDemo: View {
     private let tintNames = ["Success", "Warning", "Info"]
 
     private var banner: SmartSuggestion {
-        var b = SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.").tint(tints[tintIdx])
+        var b = SmartSuggestion("The Berlin outbound is 12% cheaper on Sat 13 Sep.").accent(tints[tintIdx])
         if hasLabel { b = b.label("Smart tip") }
         if action { b = b.action("Apply") { flash("Applied") } } else { b = b.onTap { flash("Tapped") } }
         return b
@@ -1811,7 +1811,7 @@ struct FlightStatusBadgeDemo: View {
         ComponentStage("FlightStatusBadge", inspector: [("status", "\(statuses[idx])")]) {
             FlightStatusBadge(statuses[idx]).solid(solid).time(time ? (statuses[idx] == .delayed ? "+35m" : "13:15") : nil)
         } knobs: {
-            Picker("Status", selection: $idx) { ForEach(statuses.indices, id: \.self) { Text("\(statuses[$0])").tag($0) } }
+            Picker("Status", selection: $idx) { ForEach(statuses.indices, id: \.self) { Text(verbatim: "\(statuses[$0])").tag($0) } }
             Toggle("Solid fill (vs soft)", isOn: $solid)
             Toggle("Trailing time", isOn: $time)
             Text("Semantic colour per status: on-time green · delayed amber · cancelled red.").font(.caption).foregroundStyle(.secondary)
