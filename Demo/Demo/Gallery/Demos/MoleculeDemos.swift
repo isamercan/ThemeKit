@@ -69,12 +69,15 @@ struct ButtonDemo: View {
 struct CheckboxDemo: View {
     @State private var checked = false
     @State private var indeterminate = false
-    @State private var small = false
+    @State private var sizeIdx = 1   // 0 small (20pt), 1 regular (24pt), 2 large (28pt glyph)
     @State private var enabled = true
     @State private var withLabel = true
     @State private var requiredError = true
     @State private var big = false
     @State private var typeIdx = 0   // 0 plain, 1 inner, 2 customInner
+    @State private var trailing = false
+    @State private var strike = false
+    @State private var readOnly = false
 
     private var type: CheckboxType {
         switch typeIdx {
@@ -97,16 +100,22 @@ struct CheckboxDemo: View {
                     .type(type)
                     .indeterminate(indeterminate)
                     .alignment(.top)
-                    .controlSize(small ? .small : .regular)
+                    .controlPlacement(trailing ? .trailing : .leading)
+                    .lineThrough(strike)
+                    .controlSize(sizeIdx == 0 ? .small : sizeIdx == 2 ? .large : .regular)
                     .disabled(!enabled)
+                    .readOnly(readOnly)
         } knobs: {
             Toggle("Checked", isOn: $checked)
             Toggle("Custom size (32)", isOn: $big)
             Picker("Type", selection: $typeIdx) { Text("Plain").tag(0); Text("Inner").tag(1); Text("Swatch").tag(2) }.pickerStyle(.segmented)
+            Picker("Size", selection: $sizeIdx) { Text("S (20)").tag(0); Text("M (24)").tag(1); Text("L (28)").tag(2) }.pickerStyle(.segmented)
+            Toggle("Trailing control (.controlPlacement)", isOn: $trailing)
+            Toggle("Line-through when checked", isOn: $strike)
             Toggle("Required (error when unchecked)", isOn: $requiredError)
             Toggle("Inline label", isOn: $withLabel)
             Toggle("Indeterminate", isOn: $indeterminate)
-            Toggle("Small", isOn: $small)
+            Toggle("Read-only (blocks toggling, normal chrome)", isOn: $readOnly)
             Toggle("Enabled", isOn: $enabled)
         }
     }
@@ -119,6 +128,8 @@ struct RadioButtonDemo: View {
     @State private var check = false
     @State private var inner = false
     @State private var inlineLabel = true
+    @State private var trailing = false
+    @State private var readOnly = false
 
     var body: some View {
         ComponentStage("RadioButton", inspector: [("type", check ? "check" : "select"), ("style", inner ? "inner" : "plain")]) {
@@ -126,14 +137,18 @@ struct RadioButtonDemo: View {
                     .type(check ? .check : .select)
                     .radioStyle(inner ? .inner : .plain)
                     .gap(.medium)
+                    .controlPlacement(trailing ? .trailing : .leading)
                     .controlSize(small ? .small : .regular)
                     .disabled(!enabled)
+                    .readOnly(readOnly)
         } knobs: {
             Toggle("Selected", isOn: $selected)
             Toggle("Inline label", isOn: $inlineLabel)
+            Toggle("Trailing control (.controlPlacement)", isOn: $trailing)
             Toggle("Check type (toggles)", isOn: $check)
             Toggle("Inner style (check)", isOn: $inner)
             Toggle("Small", isOn: $small)
+            Toggle("Read-only (blocks toggling, normal chrome)", isOn: $readOnly)
             Toggle("Enabled", isOn: $enabled)
         }
     }
@@ -145,19 +160,22 @@ struct ToggleDemo: View {
     @State private var enabled = true
     @State private var loading = false
     @State private var icons = false
+    @State private var readOnly = false
 
     var body: some View {
-        ComponentStage("ThemeToggle", inspector: [("isOn", "\(on)"), ("isLoading", "\(loading)"), ("isEnabled", "\(enabled)")]) {
+        ComponentStage("ThemeToggle", inspector: [("isOn", "\(on)"), ("isLoading", "\(loading)"), ("readOnly", "\(readOnly)")]) {
             ThemeToggle(isOn: $on)
                 .loading(loading)
                 .symbols(on: icons ? "checkmark" : nil, off: icons ? "xmark" : nil)
                 .controlSize(small ? .small : .regular)
                 .disabled(!enabled)
+                .readOnly(readOnly)
         } knobs: {
             Toggle("On", isOn: $on)
             Toggle("Loading", isOn: $loading)
             Toggle("Inner icons", isOn: $icons)
             Toggle("Small", isOn: $small)
+            Toggle("Read-only (blocks toggling, normal chrome)", isOn: $readOnly)
             Toggle("Enabled", isOn: $enabled)
         }
     }
@@ -168,6 +186,8 @@ struct TextInputDemo: View {
     @State private var text = ""
     @State private var mode: Mode = .email
     @State private var loggedIn = false
+    @State private var readOnly = false
+    @State private var sizeIdx = 1   // 0 small, 1 medium, 2 large (TextInputSize ramp)
 
     private var model: TextInputModel {
         switch mode {
@@ -214,11 +234,16 @@ struct TextInputDemo: View {
     }
 
     var body: some View {
-        ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("value", "\"\(text)\""), ("login", "\(loggedIn)")]) {
-            TextInput(model, text: $text).a11yID(demoA11yID)
+        ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("value", "\"\(text)\""), ("readOnly", "\(readOnly)")]) {
+            TextInput(model, text: $text)
+                .size([.small, .medium, .large][sizeIdx])
+                .a11yID(demoA11yID)
+                .readOnly(readOnly)
         } knobs: {
             Text("email = keyboard/autofill + validation. password = password-manager autofill. bio = soft limit (exceed 80 → red counter). card/phone/currency = format-as-you-type masks.").font(.caption).foregroundStyle(.secondary)
             Picker("Mode", selection: $mode) { ForEach(Mode.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
+            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Read-only (keeps chrome, blocks editing)", isOn: $readOnly)
             Button("Reset") { text = ""; loggedIn = false }
         }
         .onChange(of: mode) { _, _ in text = ""; loggedIn = false }
@@ -389,29 +414,35 @@ struct SegmentedControlDemo: View {
 
 struct InputNumberDemo: View {
     @State private var value = 2
-    @State private var large = true
+    @State private var sizeIdx = 2   // 0 small, 1 medium, 2 large (TextInputSize ramp)
     @State private var showError = false
     @State private var editable = true
     @State private var priceMode = false   // toggles a step:50 + "$" unit config
+    @State private var readOnly = false
+
+    private var size: TextInputSize { [.small, .medium, .large][sizeIdx] }
 
     var body: some View {
-        ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)")]) {
+        ComponentStage("InputNumber", inspector: [("value", "\(value)"), ("editable", "\(editable)"), ("readOnly", "\(readOnly)")]) {
             if priceMode {
                 InputNumber("Max price", value: $value, range: 0...10000).step(50).unit("$")
-                    .hint("Type or step by 50").size(large ? .large : .small)
+                    .hint("Type or step by 50").size(size)
                     .editable(editable)
+                    .readOnly(readOnly)
             } else {
                 InputNumber("Guests", value: $value, range: 1...9).unit("guests")
                     .hint(showError ? nil : "Type a number or use ± ")
-                    .errorText(showError ? "Too many" : nil).size(large ? .large : .small)
+                    .errorText(showError ? "Too many" : nil).size(size)
                     .editable(editable)
+                    .readOnly(readOnly)
             }
         } knobs: {
             Text("editable = type the value directly (Ant InputNumber); ± steps by `step`.").font(.caption).foregroundStyle(.secondary)
             Stepper("Value: \(value)", value: $value, in: 0...10000)
             Toggle("Editable (type to enter)", isOn: $editable)
             Toggle("Price mode (step 50, $)", isOn: $priceMode)
-            Toggle("Large", isOn: $large)
+            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Read-only (keeps chrome, blocks stepping)", isOn: $readOnly)
             Toggle("Error state", isOn: $showError)
         }
         .onChange(of: priceMode) { _, price in value = price ? 500 : 2 }
@@ -617,16 +648,17 @@ struct SplitterDemo: View {
 
     var body: some View {
         ComponentStage("Splitter", inspector: [("axis", vertical ? "vertical" : "horizontal")]) {
-            Splitter(vertical ? .vertical : .horizontal, initialFraction: 0.4) {
+            Splitter(initialFraction: 0.4) {
                 pane("Pane A", .bgElevatorPrimary)
             } second: {
                 pane("Pane B", .bgWhite)
             }
+            .vertical(vertical)
             .frame(height: 320)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(theme.border(.borderPrimary), lineWidth: 1))
         } knobs: {
-            Toggle("Vertical", isOn: $vertical)
+            Toggle("Vertical (.vertical())", isOn: $vertical)
             Text("Drag the divider to resize the panes.").font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -641,6 +673,9 @@ struct SplitterDemo: View {
 
 struct CascaderDemo: View {
     @State private var path: [String] = []
+    @State private var searchable = false
+    @State private var clearable = false
+    @State private var readOnly = false
     private let options = [
         CascaderOption("tr", label: "Türkiye", children: [
             CascaderOption("34", label: "İstanbul", children: [
@@ -655,7 +690,13 @@ struct CascaderDemo: View {
     var body: some View {
         ComponentStage("Cascader", inspector: [("path", path.isEmpty ? "—" : path.joined(separator: "/"))]) {
             Cascader(options, selection: $path).placeholder("Select region")
+                .searchable(searchable)
+                .clearable(clearable)
+                .readOnly(readOnly)
         } knobs: {
+            Toggle("Searchable (filter across levels)", isOn: $searchable)
+            Toggle("Clearable (x when selected)", isOn: $clearable)
+            Toggle("Read-only (keeps chrome, blocks opening)", isOn: $readOnly)
             Text("Pick through the columns; selecting a leaf commits the path.").font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -663,14 +704,20 @@ struct CascaderDemo: View {
 
 struct TransferDemo: View {
     @State private var target: Set<String> = ["wifi"]
+    @State private var searchable = false
+    @State private var lockSpa = false
     private let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
                          TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
                          TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
 
     var body: some View {
-        ComponentStage("Transfer", inspector: [("target", "\(target.count) items")]) {
+        ComponentStage("Transfer", inspector: [("target", "\(target.count) items"), ("searchable", "\(searchable)")]) {
             Transfer(items, target: $target).titles("Available", "Included")
+                .searchable(searchable)
+                .itemEnabled(lockSpa ? { $0.key != "spa" } : nil)
         } knobs: {
+            Toggle("Searchable (per-list filter)", isOn: $searchable)
+            Toggle("Disable Spa (.itemEnabled)", isOn: $lockSpa)
             Text("Check items, then move them across with the arrows.").font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -678,13 +725,19 @@ struct TransferDemo: View {
 
 struct MentionsDemo: View {
     @State private var text = "Nice work "
+    @State private var sizeIdx = 1   // 0 small, 1 medium, 2 large (TextInputSize ramp)
+    @State private var readOnly = false
     private let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
                           MentionOption("grace", label: "Grace Hopper"), MentionOption("linus", label: "Linus Torvalds")]
 
     var body: some View {
-        ComponentStage("Mentions", inspector: [("chars", "\(text.count)")]) {
+        ComponentStage("Mentions", inspector: [("chars", "\(text.count)"), ("readOnly", "\(readOnly)")]) {
             Mentions(text: $text, options: people).placeholder("Type @ to mention someone…")
+                .size([.small, .medium, .large][sizeIdx])
+                .readOnly(readOnly)
         } knobs: {
+            Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Read-only (keeps chrome, blocks editing)", isOn: $readOnly)
             Text("Type '@' then a name → pick a suggestion; it inserts @value.").font(.caption).foregroundStyle(.secondary)
         }
     }

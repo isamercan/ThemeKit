@@ -33,7 +33,10 @@ public struct Select<Option: Hashable>: View {
 
     // Appearance/config — mutated only through the modifiers below (R2).
     private var placeholder: String = "Select"
-    private var allowClear: Bool = false
+    /// Set only by the `.clearable(_:)` modifier, so the subtree
+    /// `FieldDefaults.clearable` can fill the default without overriding an
+    /// explicit per-field choice (F5): `explicitClearable ?? fieldDefaults.clearable ?? false`.
+    private var explicitClearable: Bool?
     private var searchable: Bool = false
     private var size: TextInputSize = .medium
     private var infoMessages: [InfoMessage] = []
@@ -89,7 +92,9 @@ public struct Select<Option: Hashable>: View {
     }
 
     private var hasValue: Bool { selection != nil }
-    private var showsClear: Bool { allowClear && hasValue && isEnabled && !isReadOnly && !isLoading }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → off (F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? false }
+    private var showsClear: Bool { effectiveClearable && hasValue && isEnabled && !isReadOnly && !isLoading }
     /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
     /// the accessibility ", required" suffix is unaffected).
     private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
@@ -325,8 +330,9 @@ public extension Select {
     /// Placeholder shown while no option is selected.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
 
-    /// Show a trailing clear button when an option is selected.
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// Show a trailing clear button when an option is selected. An explicit
+    /// call wins over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
 
     /// Use the searchable inline panel instead of the native menu.
     func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }

@@ -65,10 +65,12 @@ public struct PaymentCardField: View {
     private var infoMessages: [InfoMessage] = []
 
     // Declarative validation (daisyUI Validator) — rules run against the
-    // *card number* text at `validationTrigger`; failures merge into the
-    // rendered messages, driving the rows' error border automatically.
+    // *card number* text at `effectiveValidationTrigger`; failures merge into
+    // the rendered messages, driving the rows' error border automatically.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
@@ -83,6 +85,10 @@ public struct PaymentCardField: View {
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
     /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic 52pt rows.
     private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
     /// Explicit `infoMessages(_:)` plus any current `validate(_:on:)` failures.
     private var messages: [InfoMessage] { infoMessages + validationMessages }
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
@@ -117,11 +123,11 @@ public struct PaymentCardField: View {
         // `.live` validates every number change; other triggers re-validate once
         // a failure is visible so the error clears as the user fixes it.
         .onChange(of: number) { _, value in
-            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
+            if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
         }
         // `.editingEnd` / `.submit` fire when the number row loses focus.
         .onChange(of: focused) { old, now in
-            if old == .number, now != .number, validationTrigger != .live { runValidation(number) }
+            if old == .number, now != .number, effectiveValidationTrigger != .live { runValidation(number) }
         }
     }
 
@@ -249,11 +255,13 @@ public extension PaymentCardField {
     /// **card number** text (as displayed, space-grouped) at `trigger` —
     /// `.editingEnd`/`.submit` when the number row loses focus, `.live` per
     /// keystroke. Failures merge into the rendered messages and border state.
+    /// Omitting `on:` follows the subtree `FieldDefaults.validationTrigger`
+    /// default, then `.editingEnd` (F5); an explicit trigger always wins.
     ///
     ///     PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
     ///         .validate([.required(), .minLength(19, "Enter the full card number")])
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no

@@ -44,8 +44,11 @@ public struct Autocomplete: View {
     private var onSearch: ((String) -> Void)? = nil
     private var accessibilityID: String? = nil
     /// Clear affordance — on by default (Autocomplete's classic behavior);
-    /// `.clearable(false)` hides it (Select-parity axis, E6).
-    private var allowClear = true
+    /// `.clearable(false)` hides it (Select-parity axis, E6). Set only by the
+    /// `.clearable(_:)` modifier, so the subtree `FieldDefaults.clearable` can
+    /// fill the default without overriding an explicit per-field choice (F5):
+    /// `explicitClearable ?? fieldDefaults.clearable ?? true`.
+    private var explicitClearable: Bool?
     /// Caller-driven loading state (async option fetch outside the built-in provider).
     private var externalLoading = false
     private var infoMessages: [InfoMessage] = []
@@ -55,10 +58,12 @@ public struct Autocomplete: View {
     private var isRequired = false
 
     // Declarative validation (daisyUI Validator) — TextInput's plumbing: rules
-    // run against the bound text at `validationTrigger`; failures merge into
-    // the rendered messages, driving the border state automatically.
+    // run against the bound text at `effectiveValidationTrigger`; failures merge
+    // into the rendered messages, driving the border state automatically.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
@@ -121,7 +126,13 @@ public struct Autocomplete: View {
     /// the accessibility ", required" suffix is unaffected).
     private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
     private var showsSpinner: Bool { isLoading || externalLoading }
-    private var showsClear: Bool { allowClear && !text.isEmpty && isEnabled && !isReadOnly }
+    /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → on (Autocomplete's classic default, F5).
+    private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? true }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
+    private var showsClear: Bool { effectiveClearable && !text.isEmpty && isEnabled && !isReadOnly }
     private var a11yLabel: String {
         let base = label ?? placeholder
         return isRequired ? base + ", " + String(themeKit: "required") : base
@@ -157,10 +168,10 @@ public struct Autocomplete: View {
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
         .onChange(of: text) { _, value in
-            if validationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
+            if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
         }
         .onChange(of: isFocused) { _, now in
-            if !now, validationTrigger == .editingEnd { runValidation(text) }   // validate on blur
+            if !now, effectiveValidationTrigger == .editingEnd { runValidation(text) }   // validate on blur
         }
     }
 
@@ -310,8 +321,9 @@ public extension Autocomplete {
     func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Show a trailing clear button while the field has text (on by default —
-    /// Autocomplete's classic behavior; pass `false` to hide it).
-    func clearable(_ on: Bool = true) -> Self { copy { $0.allowClear = on } }
+    /// Autocomplete's classic behavior; pass `false` to hide it). An explicit
+    /// call wins over the subtree `FieldDefaults.clearable` default (F5).
+    func clearable(_ on: Bool = true) -> Self { copy { $0.explicitClearable = on } }
 
     /// Shows a loading spinner in place of the clear button (caller-driven
     /// async option fetch; the built-in async provider spins automatically).
@@ -327,11 +339,13 @@ public extension Autocomplete {
     /// Declarative validation (daisyUI Validator): `rules` run against the bound
     /// text at `trigger` (`.editingEnd` on blur, `.live` per keystroke, `.submit`
     /// on return). Failures merge into the rendered messages and border state.
+    /// Omitting `on:` follows the subtree `FieldDefaults.validationTrigger`
+    /// default, then `.editingEnd` (F5); an explicit trigger always wins.
     ///
     ///     Autocomplete("City", text: $city, suggestions: cities)
     ///         .validate([.required(), .minLength(2)])
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no

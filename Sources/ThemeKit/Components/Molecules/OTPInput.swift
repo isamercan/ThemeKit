@@ -50,10 +50,12 @@ public struct OTPInput: View {
     private var onResend: (() -> Void)?
 
     // Declarative validation (daisyUI Validator) — rules run against the entered
-    // code at `validationTrigger`; failures merge into the rendered messages,
-    // fanning the error state out to every digit cell automatically.
+    // code at `effectiveValidationTrigger`; failures merge into the rendered
+    // messages, fanning the error state out to every digit cell automatically.
     private var validationRules: [ValidationRule] = []
-    private var validationTrigger: ValidationTrigger = .editingEnd
+    /// Set only by an explicit `on:` argument to `validate(_:on:)`; `nil` falls
+    /// back to `FieldDefaults.validationTrigger`, then `.editingEnd` (F5).
+    private var explicitValidationTrigger: ValidationTrigger?
     private var onValidation: ((Bool) -> Void)?
     @State private var validationMessages: [InfoMessage] = []
 
@@ -98,6 +100,10 @@ public struct OTPInput: View {
     /// Message rows animate when micro-animations are on and the subtree default
     /// doesn't turn message motion off (Reduce Motion still wins inside MicroMotion).
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
+    /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
+    private var effectiveValidationTrigger: ValidationTrigger {
+        explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
+    }
 
     /// Keeps only the characters allowed by `characters` (digits by default)
     /// and caps the length (extracted for testing).
@@ -179,7 +185,7 @@ public struct OTPInput: View {
                         // validate at completion (the OTP's editing-end/submit
                         // moment) and re-validate once a failure is visible so
                         // the error clears as the user retypes.
-                        if validationTrigger == .live || !validationMessages.isEmpty
+                        if effectiveValidationTrigger == .live || !validationMessages.isEmpty
                             || sanitized.count == digitCount {
                             runValidation()
                         }
@@ -434,12 +440,14 @@ public extension OTPInput {
     /// entered code at `trigger` — `.editingEnd`/`.submit` fire when the last
     /// box fills (the OTP's completion moment), `.live` on every keystroke.
     /// Failures merge into the rendered messages, fanning the error state out
-    /// to every digit cell.
+    /// to every digit cell. Omitting `on:` follows the subtree
+    /// `FieldDefaults.validationTrigger` default, then `.editingEnd` (F5);
+    /// an explicit trigger always wins.
     ///
     ///     OTPInput(code: $code)
     ///         .validate([.minLength(6, "Enter all 6 digits")])
-    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
-        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger? = nil) -> Self {
+        copy { $0.validationRules = rules; if let trigger { $0.explicitValidationTrigger = trigger } }
     }
 
     /// Reports validity after each `validate(_:on:)` pass — `true` when no
