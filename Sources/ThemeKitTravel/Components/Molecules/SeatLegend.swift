@@ -3,8 +3,8 @@
 //  ThemeKit
 //
 //  Molecule. A key for a ``SeatMap`` — the fare tiers present, plus Selected and
-//  Occupied — wrapping to rows. Tier colours come from a ``SeatPalette`` so it
-//  matches whatever the map (or a brand override) uses.
+//  Occupied — wrapping to rows. Tier *and* selected/occupied colours come from a
+//  ``SeatPalette`` so it matches whatever the map (or a brand override) uses.
 //
 
 import SwiftUI
@@ -31,8 +31,10 @@ public struct SeatLegend: View {
             let c = palette.colors(for: tier, theme: theme)
             return Entry(fill: c.fill, border: c.stroke, label: tier.label)
         }
-        e.append(Entry(fill: theme.foreground(.fgHero), border: theme.foreground(.fgHero), label: String(themeKit: "Selected")))
-        e.append(Entry(fill: theme.background(.bgSecondary), border: theme.border(.borderPrimary), label: String(themeKit: "Occupied")))
+        let selected = palette.selectedColors(theme: theme)
+        e.append(Entry(fill: selected.fill, border: selected.stroke, label: String(themeKit: "Selected")))
+        let occupied = palette.occupiedColors(theme: theme)
+        e.append(Entry(fill: occupied.fill, border: occupied.stroke, label: String(themeKit: "Occupied")))
         return e
     }
 
@@ -72,5 +74,9 @@ public struct SeatLegend: View {
         PreviewCase("Economy tiers") { SeatLegend(tiers: [.standard, .extraLegroom, .exit]) }
         PreviewCase("All cabins") { SeatLegend(tiers: [.standard, .premium, .business, .first]) }
         PreviewCase("Default + premium") { SeatLegend().showsPremium() }
+        PreviewCase("Accent selected/occupied") {
+            SeatLegend(tiers: [.standard, .exit],
+                       palette: SeatPalette().selected(.accent).occupied(.warning))
+        }
     }
 }

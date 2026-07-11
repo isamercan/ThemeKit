@@ -37,6 +37,7 @@ public struct FlightResultRow: View {
     private let arrival: Date
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var accent: SemanticColor?
     private var flightNo: String?
     private var cabinClass: String?
     private var airlineSystemImage = "airplane.circle.fill"
@@ -68,6 +69,10 @@ public struct FlightResultRow: View {
         self.departure = departure
         self.arrival = arrival
     }
+
+    /// The brand-chrome tint: explicit `.accent(_:)` when set, else the theme's
+    /// hero foreground — `nil` reproduces today's rendering exactly.
+    private var accentBase: Color { accent?.base ?? theme.foreground(.fgHero) }
 
     public var body: some View {
         // The shell (fill, corner clipping, border) is drawn by the active
@@ -109,7 +114,7 @@ public struct FlightResultRow: View {
             if let url = airlineLogoURL {
                 RemoteImage(url).ratio(1).frame(width: 22, height: 22)
             } else {
-                Image(systemName: airlineSystemImage).font(.title3).foregroundStyle(theme.foreground(.fgHero))
+                Image(systemName: airlineSystemImage).font(.title3).foregroundStyle(accentBase)
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
@@ -131,7 +136,7 @@ public struct FlightResultRow: View {
                     if showsBookmark {
                         Button { bookmarkState.toggle() } label: {
                             Image(systemName: bookmarkState ? "bookmark.fill" : "bookmark")
-                                .font(.system(size: 14)).foregroundStyle(bookmarkState ? theme.foreground(.fgHero) : theme.text(.textTertiary))
+                                .font(.system(size: 14)).foregroundStyle(bookmarkState ? accentBase : theme.text(.textTertiary))
                                 .frame(width: 40, height: 40).contentShape(Rectangle())
                         }.buttonStyle(.plain).disabled(isReadOnly)
                             .accessibilityLabel(bookmarkState ? String(themeKit: "Remove saved flight") : String(themeKit: "Save"))
@@ -152,7 +157,15 @@ public struct FlightResultRow: View {
                 Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)))")
                     .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)).fixedSize()
             }
-            if let onSelect { ThemeButton(selectTitle) { onSelect() }.size(.small) }
+            if let onSelect {
+                // Accent set → semantic-colored Select; nil → the button's stock
+                // resolution (componentDefaults.accent → .primary), unchanged.
+                if let accent {
+                    ThemeButton(selectTitle) { onSelect() }.color(accent).size(.small)
+                } else {
+                    ThemeButton(selectTitle) { onSelect() }.size(.small)
+                }
+            }
         }
     }
 
@@ -185,6 +198,11 @@ public extension FlightResultRow {
     /// Surface fill (background token key, default `.bgBase`) — feeds the
     /// active `CardStyle`'s configuration.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// A semantic accent for the brand chrome — the airline fallback glyph, the
+    /// active bookmark and the Select button. `nil` (default) keeps the theme's
+    /// hero styling. Semantic colours (favourite red, urgency red, nonstop
+    /// green) are fixed and unaffected.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Flight number, e.g. "TK 2434".
     func flightNo(_ text: String?) -> Self { copy { $0.flightNo = text } }
     /// Cabin class caption, e.g. "Economy".
@@ -259,6 +277,10 @@ public extension FlightResultRow {
             .flightNo("BW 810").price(2_899).favorite().bookmark()
         FlightResultRow(airline: "Blue Wings", from: "IST", to: "ADB", departure: dep, arrival: dep.addingTimeInterval(70 * 60))
             .flightNo("BW 812").price(2_499).favorite(.constant(true))
+        // Accented brand chrome — glyph, active bookmark and Select follow the accent.
+        FlightResultRow(airline: "Sunrise Air", from: "IST", to: "LHR", departure: dep, arrival: dep.addingTimeInterval(3 * 3_600))
+            .accent(.success).flightNo("SA 101").price(4_120).bookmark(.constant(true))
+            .onSelect("Select") { }
     }
     .padding()
 }

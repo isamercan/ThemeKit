@@ -50,6 +50,7 @@ public struct PaymentMethodSelector: View {
     private var disabledIDs: Set<String> = []
     private var accent: SemanticColor?
     private var footerSlot: AnyView?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     /// R1 — options + controlled selection (option id). The binding is the
     /// change channel; observe with `.onChange(of:)` at the call site.
@@ -166,7 +167,7 @@ public struct PaymentMethodSelector: View {
             }
             .frame(maxWidth: .infinity, minHeight: 88)
             .padding(Theme.SpacingKey.md.value)
-            .background(isOn ? (accent ?? .primary).bg : theme.background(.bgBase), in: shape)
+            .background(isOn ? (accent ?? .primary).bg : theme.background(surfaceKey), in: shape)
             .overlay(shape.stroke(isOn ? accentBase : theme.border(.borderPrimary), lineWidth: isOn ? 1.5 : 1))
             .overlay(alignment: .topTrailing) {
                 if let badgeText = badges[option.id] {
@@ -266,6 +267,10 @@ public extension PaymentMethodSelector {
     /// `nil` (default) uses the primary triad.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
+    /// Surface token for the *unselected* `.grid` tile fill (default `.bgBase`);
+    /// the selected tile keeps the accent tint and stroke.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+
     /// Bottom-aligned accessory area (canonical `.footer { }` slot), e.g. a
     /// security note or fee disclaimer.
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self {
@@ -331,6 +336,14 @@ public extension PaymentMethodSelector {
                 ], selection: $method)
                     .variant(.grid)
                     .badge("New", for: "wallet")
+
+                ListSectionHeader("Grid · surface(.bgWhite)")
+                PaymentMethodSelector([
+                    .init(id: "card", kind: .card, title: "Card"),
+                    .init(id: "wallet", kind: .wallet, title: "Wallet"),
+                ], initiallySelected: "card")
+                    .variant(.grid)
+                    .surface(.bgWhite)
             }
             .padding()
             .background(dark.background(.bgBase))

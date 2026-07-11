@@ -56,6 +56,7 @@ public struct FilterBar: View {
     private var spacing: CGFloat = 8
     private var chipStyleVariant: FilterChipStyle = .solid
     private var leadingShapeVariant: FilterLeadingShape = .adaptive
+    private var chipSurfaceKey: Theme.BackgroundColorKey = .bgWhite
 
     @State private var collapsed = false
     @State private var scrolledID: String?
@@ -162,11 +163,11 @@ public struct FilterBar: View {
         return isOn ? accentFg : chipOffText
     }
     private func chipFill(isOn: Bool, outlined: Bool) -> Color {
-        if outlined { return isOn ? SemanticColor.primary.soft : theme.background(.bgWhite) }
-        return isOn ? accentBg : theme.background(.bgWhite)
+        if outlined { return isOn ? (accentColor?.soft ?? SemanticColor.primary.soft) : theme.background(chipSurfaceKey) }
+        return isOn ? accentBg : theme.background(chipSurfaceKey)
     }
     private func chipBorderColor(isOn: Bool, outlined: Bool) -> Color {
-        if outlined { return isOn ? theme.border(.borderHero) : theme.background(.bgElevatorTertiary) }
+        if outlined { return isOn ? (accentColor?.border ?? theme.border(.borderHero)) : theme.background(.bgElevatorTertiary) }
         return isOn ? Color.clear : theme.border(.borderPrimary)
     }
 }
@@ -194,6 +195,8 @@ public extension FilterBar {
     func leadingShape(_ shape: FilterLeadingShape) -> Self { copy { $0.leadingShapeVariant = shape } }
     /// Token-fed accent for the leading buttons and selected chips (default hero).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
+    /// Surface token for the unselected chip fill (default `.bgWhite`).
+    func chipSurface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.chipSurfaceKey = key } }
     /// Gap between controls (default 8).
     func spacing(_ value: CGFloat) -> Self { copy { $0.spacing = max(0, value) } }
     /// Gap between controls from a theme spacing token.
@@ -223,6 +226,14 @@ public extension FilterBar {
                            QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
                     .chipStyle(.outlined).leadingShape(.circle).size(.small)
                     .onFilter { }.onSort { }
+                // Outlined honors the accent — turquoise soft fill + turquoise border.
+                FilterBar([QuickFilter("Beachfront", id: "8"), QuickFilter("Pool"),
+                           QuickFilter("Spa")], selection: $sel)
+                    .accent(.turquoise).chipStyle(.outlined).size(.small)
+                // Unselected chips on a tinted surface.
+                FilterBar([QuickFilter("Breakfast", id: "8"), QuickFilter("Pet friendly"),
+                           QuickFilter("Parking")], selection: $sel)
+                    .chipSurface(.bgSecondaryLight).size(.small)
             }
             .padding(.vertical)
         }

@@ -39,6 +39,7 @@ public struct DatePriceCard: View {
     private var currencyCode: String?
     private var isCheapest = false
     private var pill = false
+    private var surface: Theme.BackgroundColorKey = .bgElevatorPrimary
 
     public init(_ item: DatePriceItem, isSelected: Bool, action: @escaping () -> Void) {   // R1
         self.item = item
@@ -76,7 +77,7 @@ public struct DatePriceCard: View {
             elevation: .none,
             isSelected: isSelected,
             isPressed: false,
-            surfaceKey: .bgElevatorPrimary,
+            surfaceKey: surface,
             radius: .selector))
     }
 
@@ -124,6 +125,8 @@ public extension DatePriceCard {
     func cheapest(_ on: Bool = true) -> Self { copy { $0.isCheapest = on } }
     /// Render as a horizontal-strip pill (rounded capsule) instead of a card.
     func pill(_ on: Bool = true) -> Self { copy { $0.pill = on } }
+    /// Surface token for the carded shell (default `.bgElevatorPrimary`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surface = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
@@ -145,6 +148,7 @@ public struct DatePriceStrip: View {
     private var columns = 3
     private var highlightsCheapest = true
     private var stripLayout = false
+    private var surface: Theme.BackgroundColorKey = .bgElevatorPrimary
     private var onPrev: (() -> Void)?
     private var onNext: (() -> Void)?
 
@@ -189,13 +193,14 @@ public struct DatePriceStrip: View {
                         DatePriceCard(item, isSelected: i == selection) { selection = i }
                             .currency(resolvedCurrency)
                             .cheapest(i == cheapest)
+                            .surface(surface)
                             .pill()
                             .id(i)
                     }
                 }
                 .padding(density.scale(Theme.SpacingKey.sm.value))
             }
-            .background(theme.background(.bgElevatorPrimary))
+            .background(theme.background(surface))
             .onChange(of: selection) { _, new in
                 withAnimation { proxy.scrollTo(new, anchor: .center) }
             }
@@ -209,6 +214,7 @@ public struct DatePriceStrip: View {
                 DatePriceCard(item, isSelected: i == selection) { selection = i }
                     .currency(resolvedCurrency)
                     .cheapest(i == cheapest)
+                    .surface(surface)
             }
         }
     }
@@ -241,6 +247,8 @@ public extension DatePriceStrip {
     func strip(_ on: Bool = true) -> Self { copy { $0.stripLayout = on } }
     /// Auto-highlight the lowest fare in success green (default on).
     func highlightCheapest(_ on: Bool = true) -> Self { copy { $0.highlightsCheapest = on } }
+    /// Surface token for the strip track and the cards it builds (default `.bgElevatorPrimary`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surface = key } }
     /// Adds prev/next paging chevrons flanking the strip.
     func onPage(prev: @escaping () -> Void, next: @escaping () -> Void) -> Self { copy { $0.onPrev = prev; $0.onNext = next } }
 
@@ -262,6 +270,7 @@ public extension DatePriceStrip {
         PreviewCase("Timeline strip (pills)") { DatePriceStrip(items, selection: $sel).strip() }
         PreviewCase("Grid") { DatePriceStrip(items, selection: $sel) }
         PreviewCase("Paged grid") { DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {}) }
+        PreviewCase("Custom surface") { DatePriceStrip(items, selection: $sel).surface(.bgSecondaryLight) }
     }
 }
 

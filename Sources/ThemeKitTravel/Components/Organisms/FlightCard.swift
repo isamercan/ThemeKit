@@ -44,6 +44,7 @@ public struct FlightCard: View {
     private let legs: [FlightLeg]?
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var accent: SemanticColor?
     private var stops: Int = 0
     private var price: Decimal?
     private var currencyCode: String?
@@ -80,6 +81,10 @@ public struct FlightCard: View {
         self.legs = legs
     }
 
+    /// The brand-chrome tint: explicit `.accent(_:)` when set, else the theme's
+    /// hero foreground — `nil` reproduces today's rendering exactly.
+    private var accentBase: Color { accent?.base ?? theme.foreground(.fgHero) }
+
     public var body: some View {
         // The shell (fill, corner clipping, border) is drawn by the active
         // `CardStyle` — built-ins and custom styles go through the same gate.
@@ -110,7 +115,7 @@ public struct FlightCard: View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Image(systemName: airlineSystemImage)
                 .font(.title3)
-                .foregroundStyle(theme.foreground(.fgHero))
+                .foregroundStyle(accentBase)
             Text(airline).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
             if let fareBrand {
                 Text(fareBrand).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary))
@@ -181,7 +186,7 @@ public struct FlightCard: View {
             HStack(spacing: 4) {
                 Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
                 line
-                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(theme.foreground(.fgHero))
+                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(accentBase)
                 line
                 Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
             }
@@ -236,7 +241,7 @@ public struct FlightCard: View {
             HStack(spacing: 4) {
                 Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
                 line
-                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(theme.foreground(.fgHero))
+                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(accentBase)
                 line
                 Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
             }
@@ -258,7 +263,15 @@ public struct FlightCard: View {
             HStack {
                 if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.large).emphasis(.hero) }
                 Spacer()
-                if let onSelect { PrimaryButton(String(themeKit: "Select")) { onSelect() }.size(.small) }
+                if let onSelect {
+                    // Accent set → semantic-colored ThemeButton; nil → the stock
+                    // hero PrimaryButton, byte-for-byte today's rendering.
+                    if let accent {
+                        ThemeButton(String(themeKit: "Select")) { onSelect() }.color(accent).size(.small)
+                    } else {
+                        PrimaryButton(String(themeKit: "Select")) { onSelect() }.size(.small)
+                    }
+                }
             }
         }
     }
@@ -284,6 +297,11 @@ public extension FlightCard {
     /// Surface fill (background token key, default `.bgBase`) — feeds the
     /// active `CardStyle`'s configuration.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+    /// A semantic accent for the brand chrome — the airline icon, the route-path
+    /// planes and the Select button. `nil` (default) keeps the theme's hero
+    /// styling. Semantic colours (favourite red, scarcity, nonstop green) are
+    /// fixed and unaffected.
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Number of stops (0 = nonstop, shown in green).
     func stops(_ count: Int) -> Self { copy { $0.stops = max(0, count) } }
     /// The fare, rendered as a hero `PriceTag` in the footer.
@@ -331,6 +349,9 @@ public extension FlightCard {
             .price(1_299).badge("Cheapest").favorite().onSelect { }
         FlightCard(airline: "Blue Wings", from: "IST", to: "AMS", departure: dep, arrival: dep.addingTimeInterval(4 * 3_600))
             .stops(1).price(3_499).favorite(.constant(true))
+        // Accented brand chrome — icon, route planes and Select follow the accent.
+        FlightCard(airline: "Sunrise Air", from: "IST", to: "LHR", departure: dep, arrival: dep.addingTimeInterval(3 * 3_600))
+            .accent(.success).price(2_199).onSelect { }
     }
     .padding()
 }

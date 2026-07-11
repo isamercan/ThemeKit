@@ -97,6 +97,7 @@ public struct TransportCrossSellCard: View {
     private var variantValue: TransportCrossSellVariant = .ribbon
     private var accentOverride: SemanticColor?
     private var logoSlot: AnyView?
+    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
 
     /// Bespoke coupon geometry (TicketStub-class chrome) — fixed constants,
     /// not knobs: the notch cut radius and the dash inset past the notch.
@@ -215,7 +216,7 @@ public struct TransportCrossSellCard: View {
         let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
         return ZStack {
             shape
-                .fill(theme.background(.bgBase))
+                .fill(theme.background(surfaceKey))
                 .overlay { if let tearX { notches(tearX: tearX, height: size.height) } }
                 .compositingGroup()                       // scope the destinationOut cut
                 .themeShadow(.soft)
@@ -362,6 +363,10 @@ public extension TransportCrossSellCard {
     func logo<L: View>(@ViewBuilder _ content: () -> L) -> Self {
         copy { $0.logoSlot = AnyView(content()) }
     }
+    /// Surface token for the ribbon's coupon fill (default `.bgBase`); the
+    /// notch cut and dashed perforation are unaffected. `.inline` draws no
+    /// surface of its own, so the key applies to the `.ribbon` variant.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -402,6 +407,11 @@ private struct TearXAnchorKey: PreferenceKey {
                 .duration("5h drive")
                 .accent(.success)
                 .onSelect("Rent a car") {}
+            TransportCrossSellCard(.train, from: "Harbor City", to: "Riverton")
+                .price(28)
+                .duration("3h 40m")
+                .surface(.bgWhite)
+                .onSelect {}
         }
         .padding()
     }
