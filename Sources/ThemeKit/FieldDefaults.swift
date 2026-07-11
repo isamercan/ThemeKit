@@ -35,11 +35,25 @@ public struct FieldDefaults: Equatable {
     /// shown). The ", required" accessibility suffix is spoken regardless, so
     /// hiding the asterisk never hides the semantics from VoiceOver.
     public var requiredIndicator: Bool?
+    /// Whether fields show a trailing clear (×) affordance while non-empty
+    /// (Ant ConfigProvider input `allowClear`). Provider field only for now —
+    /// the field family adopts it in a follow-up; a field's own explicit
+    /// clearable modifier will still win over this subtree default.
+    public var clearable: Bool?
+    /// Default `ValidationTrigger` for rule-driven validation — when
+    /// `TextInput.validate(_:)`-style calls omit their `on:` argument
+    /// (`.live` / `.editingEnd` / `.submit`). Provider field only for now —
+    /// the field family adopts it in a follow-up; an explicit per-field `on:`
+    /// argument will still win over this subtree default.
+    public var validationTrigger: ValidationTrigger?
 
-    public init(size: TextInputSize? = nil, messagesAnimated: Bool? = nil, requiredIndicator: Bool? = nil) {
+    public init(size: TextInputSize? = nil, messagesAnimated: Bool? = nil, requiredIndicator: Bool? = nil,
+                clearable: Bool? = nil, validationTrigger: ValidationTrigger? = nil) {
         self.size = size
         self.messagesAnimated = messagesAnimated
         self.requiredIndicator = requiredIndicator
+        self.clearable = clearable
+        self.validationTrigger = validationTrigger
     }
 }
 
@@ -60,11 +74,15 @@ public extension View {
     /// a field's explicit modifier still overrides.
     func fieldDefaults(size: TextInputSize? = nil,
                        messagesAnimated: Bool? = nil,
-                       requiredIndicator: Bool? = nil) -> some View {
+                       requiredIndicator: Bool? = nil,
+                       clearable: Bool? = nil,
+                       validationTrigger: ValidationTrigger? = nil) -> some View {
         transformEnvironment(\.fieldDefaults) { d in
             if let size { d.size = size }
             if let messagesAnimated { d.messagesAnimated = messagesAnimated }
             if let requiredIndicator { d.requiredIndicator = requiredIndicator }
+            if let clearable { d.clearable = clearable }
+            if let validationTrigger { d.validationTrigger = validationTrigger }
         }
     }
 }

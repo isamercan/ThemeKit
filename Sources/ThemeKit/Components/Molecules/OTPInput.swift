@@ -49,6 +49,14 @@ public struct OTPInput: View {
     private var resendInterval: TimeInterval?
     private var onResend: (() -> Void)?
 
+    // Declarative validation (daisyUI Validator) — rules run against the entered
+    // code at `validationTrigger`; failures merge into the rendered messages,
+    // fanning the error state out to every digit cell automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
+
     @Binding private var code: String
     private let onComplete: ((String) -> Void)?
 
@@ -62,11 +70,21 @@ public struct OTPInput: View {
         self.onComplete = onComplete
     }
 
-    /// Validation/hint lines: `infoMessages` plus the optional `errorText` (appended as `.error`).
+    /// Validation/hint lines: `infoMessages`, the optional `errorText` (appended
+    /// as `.error`), plus any current `validate(_:on:)` failures.
     private var messages: [InfoMessage] {
         var messages = infoMessages
         if let errorText { messages.append(InfoMessage(errorText, kind: .error)) }
-        return messages
+        return messages + validationMessages
+    }
+
+    /// Runs the declared rules over the entered code (first failure only, via
+    /// `Validator`); publishes the result and reports validity.
+    private func runValidation() {
+        guard !validationRules.isEmpty else { return }
+        let failures = Validator.validate(code, validationRules)
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
     }
 
     private var hasError: Bool { messages.dominantKind == .error }
@@ -156,6 +174,14 @@ public struct OTPInput: View {
                             }
                         } else {
                             lastFired = ""
+                        }
+                        // E3 — `.live` validates every change; other triggers
+                        // validate at completion (the OTP's editing-end/submit
+                        // moment) and re-validate once a failure is visible so
+                        // the error clears as the user retypes.
+                        if validationTrigger == .live || !validationMessages.isEmpty
+                            || sanitized.count == digitCount {
+                            runValidation()
                         }
                     }
                     .a11y(A11yElement.Field.field, in: accessibilityID)
@@ -352,6 +378,9 @@ private struct OTPDigitBox: View {
                 Text("Completed: \(lastComplete)").textStyle(.bodySm400)
                 OTPInput(code: .constant("4321")).digitCount(4).secure()
                 OTPInput(code: .constant("12")).digitCount(4).errorText("Invalid code")
+                // Declarative validation: rules run live against the entered code.
+                OTPInput(code: $code)
+                    .validate([.minLength(6, "Enter all 6 digits")], on: .live)
                 // Swapped chrome: every digit cell picks up the underlined style.
                 OTPInput(code: .constant("98")).digitCount(4).fieldStyle(.underlined)
                 // HeroUI Group/Separator anatomy: 3 + 3 with a dash between.
@@ -400,6 +429,22 @@ public extension OTPInput {
 
     /// Validation / hint messages displayed below the boxes.
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }
+
+    /// Declarative validation (daisyUI Validator): `rules` run against the
+    /// entered code at `trigger` — `.editingEnd`/`.submit` fire when the last
+    /// box fills (the OTP's completion moment), `.live` on every keystroke.
+    /// Failures merge into the rendered messages, fanning the error state out
+    /// to every digit cell.
+    ///
+    ///     OTPInput(code: $code)
+    ///         .validate([.minLength(6, "Enter all 6 digits")])
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity failure is present.
+    func onValidation(_ handler: @escaping (Bool) -> Void) -> Self { copy { $0.onValidation = handler } }
 
     /// Adds a countdown + "resend code" row. `interval` seconds before re-enabling.
     func resend(interval: TimeInterval, onResend: @escaping () -> Void) -> Self {

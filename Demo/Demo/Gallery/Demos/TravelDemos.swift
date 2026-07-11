@@ -520,7 +520,7 @@ struct LoyaltyCardDemo: View {
         var c = LoyaltyCard(tier: tier, points: Int(points)).unit(unit).animatesValue(animates)
         if memberName { c = c.memberName("Elif Kaya") }
         if progress { c = c.progress(progressValue, toNextTier: "Platinum") }
-        if gradientOverride { c = c.gradient([SemanticColor.purple.base, SemanticColor.pink.base]) }
+        if gradientOverride { c = c.gradient([SemanticColor.purple, SemanticColor.pink]) }
         if logo {
             c = c.logo { Image(systemName: "airplane.circle.fill").font(.title3).foregroundStyle(.white) }
         } else {

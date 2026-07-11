@@ -79,6 +79,8 @@ public struct AlertToast: View {
     private let title: String
     // Appearance/state — mutated only through the modifiers below (R2).
     private var message: String?
+    /// Tappable substrings of `message` (rendered via `InlineText` when non-empty).
+    private var links: [(substring: String, action: () -> Void)] = []
     private var type: AlertToastType = .info
     private var systemImage: String?
     private var isLoading: Bool = false
@@ -141,7 +143,11 @@ public struct AlertToast: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).textStyle(.labelBase600)
                 if let message {
-                    Text(message).textStyle(.bodySm400).opacity(0.9)
+                    if links.isEmpty {
+                        Text(message).textStyle(.bodySm400).opacity(0.9)
+                    } else {
+                        InlineText(message, links: links).inlineStyle(.bodySm400)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -167,7 +173,16 @@ public struct AlertToast: View {
 
 public extension AlertToast {
     /// Secondary line under the title.
-    func message(_ text: String?) -> Self { copy { $0.message = text } }
+    func message(_ text: String?) -> Self { copy { $0.message = text; $0.links = [] } }
+
+    /// Secondary line with tappable inline substrings, rendered via `InlineText`
+    /// (the shipped links idiom — API symmetry with `Callout.links` /
+    /// `HelperText.links`). `InlineText` draws its own body/link tints, so this
+    /// reads best on the light-surface `.neutral` variant or a soft custom
+    /// `ToastStyle`; the trailing `action(_:)` title is unaffected.
+    func message(_ text: String, links: [(substring: String, action: () -> Void)]) -> Self {
+        copy { $0.message = text; $0.links = links }
+    }
 
     /// Status treatment: success / warning / danger / info / neutral / accent
     /// (drives fill + icon).
@@ -202,6 +217,11 @@ public extension AlertToast {
         AlertToast("Pro features unlocked").message("Enjoy the upgrade.").variant(.accent).onClose {}
         AlertToast("Message deleted").variant(.info).action(ToastAction("Undo") {}).onClose {}
         AlertToast("Uploading…").variant(.info).loading()
+        AlertToast("Update available")
+            .message("Read the release notes before installing.",
+                     links: [("release notes", { print("notes") })])
+            .variant(.neutral)
+            .onClose {}
     }
     .padding()
 }

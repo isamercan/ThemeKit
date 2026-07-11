@@ -10,6 +10,7 @@ import SwiftUI
 /// Selection state is owned by the caller (single optional binding).
 public struct RadioGroup<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.fieldDefaults) private var fieldDefaults   // F4 — requiredIndicator default
 
     private let title: String?
     private let options: [Option]
@@ -25,6 +26,8 @@ public struct RadioGroup<Option: Hashable>: View {
     private var accent: SemanticColor?
     private var axis: Axis = .vertical
     private var controlPlacement: HorizontalEdge = .leading   // A4 — forwarded to rows
+    /// `.required()` — group-level asterisk after the title (E2).
+    private var isRequired = false
     private var accessibilityID: String? = nil
     @Environment(\.isReadOnly) private var isReadOnly         // E1 — rows own the tap
 
@@ -53,7 +56,19 @@ public struct RadioGroup<Option: Hashable>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
             if let title {
-                Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
+                // E2 — group-level required mark: the group has no `InputLabel`,
+                // so render the same error-token asterisk manually (the
+                // MultiLineTextInput treatment), honoring `FieldDefaults.requiredIndicator`.
+                HStack(spacing: 2) {
+                    Text(title).foregroundStyle(titleColor)
+                    if isRequired && (fieldDefaults.requiredIndicator ?? true) {
+                        Text(verbatim: "*")
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the title's label suffix
+                    }
+                }
+                .textStyle(.labelMd600)
+                .accessibilityLabel(isRequired ? title + ", " + String(themeKit: "required") : title)
             }
             if let groupDescription {
                 HelperText(groupDescription)   // E5 — group-level supporting text
@@ -85,9 +100,10 @@ public struct RadioGroup<Option: Hashable>: View {
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textPrimary))
                 if let description {
-                    Text(description)
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(theme.text(.textSecondary))
+                    // B7 — route through the HelperText atom so option
+                    // descriptions inherit inline links (B1) and the
+                    // disabled/error text tokens for free.
+                    HelperText(description)
                 }
             }
             Button {
@@ -221,6 +237,8 @@ public struct RadioButtonGroup<Option: Hashable>: View {
                 RadioGroup(title: "Trailing radios", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
                     .controlPlacement(.trailing)                                        // A4
                     .description("Fares are per passenger, taxes included.")            // E5
+                RadioGroup(title: "Required group", options: ["Economy", "Business"], selection: $sel) { $0 }
+                    .required()                                                         // E2
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                     .groupStyle(.outline).fullWidth()
@@ -246,6 +264,11 @@ public extension RadioGroup {
     /// Group-level supporting text rendered under the title via `HelperText`
     /// (Ant/HeroUI group `description`; E5). Distinct from `optionDescription`.
     func description(_ text: String?) -> Self { copy { $0.groupDescription = text } }
+
+    /// Marks the whole group required: an error-token asterisk after the title
+    /// (honoring `FieldDefaults.requiredIndicator`) and ", required" in the
+    /// title's a11y label. (E2 — HeroUI `isRequired`, Ant required mark.)
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
 
     /// Which side of each row's label the radio sits on: `.leading` (default)
     /// or `.trailing`, forwarded to every option row. RTL-safe —

@@ -100,7 +100,7 @@ struct BadgeDemo: View {
                 .badgeStyle(style).variant(variant).size(size)
                 .icon(icon ? "star.fill" : nil)
                 .badgeShape(pill ? .pill : .rounded)
-                .gradient(gradient ? [SemanticColor.primary.base, SemanticColor.purple.base] : nil)
+                .gradient(gradient ? [SemanticColor.primary, SemanticColor.purple] : nil)
                 .highlighted(highlighted)
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)

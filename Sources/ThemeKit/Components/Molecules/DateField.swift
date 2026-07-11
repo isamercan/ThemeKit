@@ -51,6 +51,16 @@ public struct DateField: View {
     private var allowClear = false
     private var leadingSystemImage: String?
     private var accessibilityID: String?
+    /// `.required()` — asterisk on the label + ", required" in the a11y label.
+    private var isRequired = false
+
+    // Declarative validation (daisyUI Validator) — rules run against the
+    // *displayed* date string at `validationTrigger`; failures merge into the
+    // rendered messages, driving the border state automatically.
+    private var validationRules: [ValidationRule] = []
+    private var validationTrigger: ValidationTrigger = .editingEnd
+    private var onValidation: ((Bool) -> Void)?
+    @State private var validationMessages: [InfoMessage] = []
 
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     /// DateField's focus analog is its picker popover: a `true` write opens the
@@ -72,7 +82,9 @@ public struct DateField: View {
     // MARK: - Derived state
 
     private var locale: Locale { explicitLocale ?? environmentLocale }
-    private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
+    /// Explicit `infoMessages(_:)` plus any current `validate(_:on:)` failures.
+    private var messages: [InfoMessage] { infoMessages + validationMessages }
+    private var dominant: InfoMessage.Kind? { messages.dominantKind }
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
     private var showsClear: Bool { allowClear && date != nil && isEnabled }
@@ -88,42 +100,67 @@ public struct DateField: View {
     /// opts in (DateField historically snaps) — still gated by `microAnimations`
     /// + Reduce Motion.
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? false) }
+    /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
+    /// the accessibility ", required" suffix is unaffected).
+    private var showsRequiredIndicator: Bool { fieldDefaults.requiredIndicator ?? true }
+    private var a11yLabel: String {
+        // Fall back to a generic field name — never "" (which would blank the
+        // control's name) and never the placeholder. The chosen date is carried
+        // by accessibilityValue.
+        let base = label ?? String(themeKit: "Date")
+        return isRequired ? base + ", " + String(themeKit: "required") : base
+    }
+
+    /// Runs the declared rules over the displayed date string (first failure
+    /// only, via `Validator`); publishes the result and reports validity.
+    private func runValidation() {
+        guard !validationRules.isEmpty else { return }
+        let failures = Validator.validate(displayText ?? "", validationRules)
+        if failures != validationMessages { validationMessages = failures }
+        onValidation?(!failures.contains { $0.kind == .error })
+    }
 
     // MARK: - Body
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            if let label { InputLabel(label).hasError(hasError) }
+            if let label {
+                InputLabel(label).required(isRequired && showsRequiredIndicator).hasError(hasError)
+            }
 
             fieldBox
                 .contentShape(Rectangle())
                 .onTapGesture { if isEnabled { showPicker = true } }
                 .popover(isPresented: $showPicker) { picker }
                 .a11y(A11yElement.Select.trigger, in: accessibilityID)
-                // Fall back to a generic field name — never "" (which would blank the
-                // control's name) and never the placeholder. The chosen date is carried
-                // by accessibilityValue.
-                .accessibilityLabel(label ?? String(themeKit: "Date"))
+                .accessibilityLabel(a11yLabel)
                 .accessibilityValue(displayText ?? "")
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction { if isEnabled { showPicker = true } }
 
-            if !infoMessages.isEmpty {
-                InfoMessageList(infoMessages)
+            if !messages.isEmpty {
+                InfoMessageList(messages)
                     .a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
         // Message rows animate only when `fieldDefaults(messagesAnimated: true)`
         // opts this field family in; `microAnimations` + Reduce Motion still win.
-        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: infoMessages)
+        .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
+        // `.live` validates every change; other triggers re-validate once a
+        // failure is visible so the error clears as the user fixes it.
+        .onChange(of: date) { _, _ in
+            if validationTrigger == .live || !validationMessages.isEmpty { runValidation() }
+        }
         // External focus bridge (TextInput parity, popover-flavored): a `true`
         // write opens the picker; dismissing it resets the external binding.
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !showPicker && isEnabled { showPicker = true }
         }
+        // Dismissing the picker is this field's blur *and* submit moment.
         .onChange(of: showPicker) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
+            if !now, validationTrigger != .live { runValidation() }
         }
     }
 
@@ -147,7 +184,7 @@ public struct DateField: View {
 
     /// The field row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: the open popover reads as `isFocused`; the dominant
-    /// `infoMessages` kind drives `hasError` / `hasWarning`. `size` is nominal
+    /// message kind drives `hasError` / `hasWarning`. `size` is nominal
     /// `.medium` — `DateField` has no `TextInputSize` axis; its height stays the
     /// component's own scaled 48pt, carried by the content — unless the subtree
     /// `FieldDefaults.size` remaps both the height and the reported preset.
@@ -266,6 +303,25 @@ public extension DateField {
     /// `FieldDefaults.size` default.
     func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
+    /// Marks the field required: an error-token asterisk on the label (honoring
+    /// `FieldDefaults.requiredIndicator`) and ", required" in the a11y label.
+    func required(_ on: Bool = true) -> Self { copy { $0.isRequired = on } }
+
+    /// Declarative validation (daisyUI Validator): `rules` run against the
+    /// *displayed* date string (empty when no date is set) at `trigger` —
+    /// `.editingEnd`/`.submit` fire when the picker is dismissed, `.live` on
+    /// every change. Failures merge into the rendered messages and border state.
+    ///
+    ///     DateField("Check-in", date: $checkIn)
+    ///         .validate([.required("Pick a check-in date")])
+    func validate(_ rules: [ValidationRule], on trigger: ValidationTrigger = .editingEnd) -> Self {
+        copy { $0.validationRules = rules; $0.validationTrigger = trigger }
+    }
+
+    /// Reports validity after each `validate(_:on:)` pass — `true` when no
+    /// error-severity failure is present.
+    func onValidation(_ handler: @escaping (Bool) -> Void) -> Self { copy { $0.onValidation = handler } }
+
     /// Restrict the picker to a selectable date range.
     func range(_ range: ClosedRange<Date>?) -> Self { copy { $0.range = range } }
 
@@ -322,6 +378,10 @@ public extension DateField {
                     .infoMessages(meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
                 // Disabled.
                 DateField("Locked", date: .constant(.now)).disabled(true)
+                // Required + declarative validation (asterisk, rules on dismiss).
+                DateField("Check-out", date: $meeting)
+                    .required()
+                    .validate([.required("Pick a check-out date")])
                 // Underlined chrome via the shared FieldStyle hook.
                 DateField("Departure", date: $checkIn)
                     .icon("calendar")
