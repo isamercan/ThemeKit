@@ -43,6 +43,29 @@ final class FormControlSnapshotTests: SnapshotTestCase {
         )
     }
 
+    // MARK: PhoneField (F1.1)
+
+    func testPhoneField_states() {
+        // Controlled dial codes → deterministic regardless of the host locale.
+        assertComponentSnapshot(VStack(spacing: 12) {
+            PhoneField("Phone", number: .constant("532 123 456 7"),
+                       dialCode: .constant(DialCode(regionCode: "TR", code: "+90")))
+            PhoneField("Phone", number: .constant(""),
+                       dialCode: .constant(DialCode(regionCode: "US", code: "+1")))
+                .required()
+                .infoMessages([InfoMessage("Enter a valid phone number.", kind: .error)])
+        })
+    }
+
+    func testPhoneField_rtl() {
+        // Trigger mirrors to the leading edge; "+90" must not bidi-flip.
+        assertComponentSnapshot(
+            PhoneField("Phone", number: .constant("532 123 456 7"),
+                       dialCode: .constant(DialCode(regionCode: "TR", code: "+90"))),
+            layoutDirection: .rightToLeft
+        )
+    }
+
     // MARK: Checkbox
 
     func testCheckbox_states() {

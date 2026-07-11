@@ -260,6 +260,49 @@ struct TextInputDemo: View {
     }
 }
 
+struct PhoneFieldDemo: View {
+    @State private var number = ""
+    @State private var dial = DialCode(regionCode: "TR", code: "+90")
+    @State private var shortList = false
+    @State private var searchIdx = 0   // 0 auto (>8 → searchable), 1 searchable, 2 menu
+    @State private var formats = true
+    @State private var required = false
+
+    private var codes: [DialCode] { shortList ? Array(DialCode.common.prefix(5)) : DialCode.common }
+    private var resolvedPicker: String {
+        switch searchIdx {
+        case 1: return "sheet"
+        case 2: return "menu"
+        default: return codes.count > 8 ? "sheet (auto)" : "menu (auto)"
+        }
+    }
+
+    var body: some View {
+        ComponentStage("PhoneField", inspector: [
+            ("dialCode", dial.code), ("codes", "\(codes.count)"),
+            ("picker", resolvedPicker), ("value", "\"\(number)\""),
+        ]) {
+            let field = PhoneField("Phone", number: $number, dialCode: $dial)
+                .dialCodes(codes)
+                .formatsNumber(formats)
+                .required(required)
+                .a11yID("demoPhoneField")
+            switch searchIdx {
+            case 1: field.searchablePicker()
+            case 2: field.searchablePicker(false)
+            default: field
+            }
+        } knobs: {
+            Text("Dial code is controlled here (inspector shows it live); the plain init seeds it from the device locale instead. More than 8 codes → searchable sheet by default; 8 or fewer → plain menu.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Short list (5 codes → menu picker)", isOn: $shortList)
+            Picker("Picker", selection: $searchIdx) { Text("Auto").tag(0); Text("Searchable").tag(1); Text("Menu").tag(2) }.pickerStyle(.segmented)
+            Toggle("Group digits (formatsNumber)", isOn: $formats)
+            Toggle("Required", isOn: $required)
+            Button("Reset") { number = ""; dial = DialCode(regionCode: "TR", code: "+90") }
+        }
+    }
+}
+
 struct SliderDemo: View {
     @State private var value = 4.0
     @State private var marks = false

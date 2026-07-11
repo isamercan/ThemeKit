@@ -363,6 +363,9 @@
     "Copy code": {
       "comment": "Accessibility label of the code block copy button."
     },
+    "Country code": {
+      "comment": "PhoneField: accessibility label of the dial-code trigger."
+    },
     "Current": {
       "comment": "Accessibility value of the active step."
     },
@@ -550,6 +553,9 @@
           }
         }
       }
+    },
+    "Phone number": {
+      "comment": "PhoneField: default placeholder for the national-number portion."
     },
     "Poor": {
       "comment": "Rating: default sentiment for the low score band."
