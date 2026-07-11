@@ -12,24 +12,32 @@ public struct ColorField: View {
     @Environment(\.theme) private var theme
     /// The field chrome (fill + border), swappable via `.fieldStyle(_:)`.
     @Environment(\.fieldStyle) private var fieldStyle
+    @Environment(\.fieldDefaults) private var fieldDefaults
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing.
+    @Environment(\.isReadOnly) private var isReadOnly
 
     private let label: String
     @Binding private var selection: Color
 
     // Appearance — mutated only through the modifiers below (R2).
     private var supportsOpacity: Bool = true
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
 
     public init(_ label: String, selection: Binding<Color>) {   // R1 — content + binding
         self.label = label
         self._selection = selection
     }
 
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic 52pt.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+
     /// The field chrome is delegated to the active ``FieldStyle``. Mapping: the
     /// system color well never drives keyboard focus, so `isFocused` is always
     /// `false`; there is no validation axis, so `hasError`/`hasWarning` are
-    /// `false`; `size` is `.medium` — ColorField has no `TextInputSize` axis
-    /// (the row keeps its fixed 52pt height in the content).
+    /// `false`. With no explicit `.size(_:)` and no subtree `FieldDefaults.size`
+    /// the row keeps its classic scaled 52pt height (nominal `.medium`).
     public var body: some View {
         fieldStyle.makeBody(configuration: FieldStyleConfiguration(
             content: AnyView(row),
@@ -37,7 +45,7 @@ public struct ColorField: View {
             isEnabled: isEnabled,
             hasError: false,
             hasWarning: false,
-            size: .medium
+            size: effectiveSize ?? .medium
         ))
     }
 
@@ -51,10 +59,14 @@ public struct ColorField: View {
             Spacer(minLength: 0)
             ColorPicker("", selection: $selection, supportsOpacity: supportsOpacity)
                 .labelsHidden()
+                // Read-only keeps the swatch + normal chrome but never opens
+                // the system picker (E1 — distinct from `.disabled`).
+                .allowsHitTesting(!isReadOnly)
                 .accessibilityLabel(label)
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .frame(height: 52)
+        // Scales with Dynamic Type (G2); a size preset remaps the height (C1).
+        .scaledControlHeight(effectiveSize?.height ?? 52)
     }
 }
 
@@ -63,6 +75,10 @@ public struct ColorField: View {
 public extension ColorField {
     /// Whether the color well lets the user adjust opacity (defaults to true).
     func supportsOpacity(_ on: Bool = true) -> Self { copy { $0.supportsOpacity = on } }
+
+    /// Control-height preset. An explicit size wins over the subtree
+    /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 52pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -79,6 +95,11 @@ public extension ColorField {
                 ColorField("Brand color", selection: $color)
                 // Swapped chrome: underlined field, same behavior.
                 ColorField("Accent color", selection: $color).fieldStyle(.underlined)
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                ColorField("Small", selection: $color).size(.small)
+                ColorField("Large", selection: $color).size(.large)
+                // Read-only: swatch + normal chrome, picker suppressed (E1).
+                ColorField("Theme color (read-only)", selection: $color).readOnly()
             }
             .padding()
         }

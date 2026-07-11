@@ -30,6 +30,8 @@ public struct MultiSelect<Option: Hashable>: View {
     private var searchable: Bool = true
     private var allowClear: Bool = true
     private var maxTagCount: Int? = nil
+    /// Selection-count cap (E13, Ant `maxCount`); `nil` = unlimited.
+    private var maxSelection: Int? = nil
     private var isLoading: Bool = false
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
@@ -68,7 +70,16 @@ public struct MultiSelect<Option: Hashable>: View {
     private var selectedOptions: [Option] { options.filter { selection.contains($0) } }
     private var visibleTags: [Option] { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).visible }
     private var overflowCount: Int { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).overflow }
-    private func optionEnabled(_ option: Option) -> Bool { isOptionEnabled?(option) ?? true }
+    /// Whether the selection is at its `maxSelection(_:)` cap (E13).
+    private var atSelectionCap: Bool {
+        guard let maxSelection, maxSelection > 0 else { return false }
+        return selection.count >= maxSelection
+    }
+    /// A row is selectable when its predicate allows it AND — at the cap —
+    /// it's already selected (so it can still be deselected).
+    private func optionEnabled(_ option: Option) -> Bool {
+        (isOptionEnabled?(option) ?? true) && (selection.contains(option) || !atSelectionCap)
+    }
 
     /// Splits selected options into the chips to render and the "+N" overflow count.
     static func tagLayout(selected: [Option], maxTagCount: Int?) -> (visible: [Option], overflow: Int) {
@@ -223,7 +234,11 @@ public struct MultiSelect<Option: Hashable>: View {
     }
 
     private func toggle(_ opt: Option) {
-        if selection.contains(opt) { selection.remove(opt) } else { selection.insert(opt) }
+        if selection.contains(opt) {
+            selection.remove(opt)
+        } else if !atSelectionCap {   // E13 — VoiceOver activation isn't hit-tested
+            selection.insert(opt)
+        }
     }
 }
 
@@ -259,6 +274,11 @@ public extension MultiSelect {
     /// Caps the visible selected-tag chips, collapsing the rest into a "+N" tag.
     func maxTags(_ count: Int?) -> Self { copy { $0.maxTagCount = count } }
 
+    /// Caps how many options can be selected (E13, Ant `maxCount`). At the cap
+    /// the remaining unselected rows are disabled until something is deselected;
+    /// `nil` (default) = unlimited. Display-only chip capping stays `maxTags(_:)`.
+    func maxSelection(_ count: Int?) -> Self { copy { $0.maxSelection = count } }
+
     /// Shows a loading spinner in place of the chevron (async option fetch).
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
 
@@ -287,6 +307,9 @@ public extension MultiSelect {
         var body: some View {
             VStack(spacing: 16) {
                 MultiSelect("Cities", options: cities, selection: $picks) { $0 }
+                // Selection cap (E13): at 3 picks the remaining rows disable.
+                MultiSelect("Up to 3 cities", options: cities, selection: $picks) { $0 }
+                    .maxSelection(3)
                 // Descriptions + custom leading content, driven by a
                 // controlled isExpanded binding.
                 MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }

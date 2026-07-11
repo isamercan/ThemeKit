@@ -25,12 +25,17 @@ public struct MentionOption: Identifiable, Sendable {
 
 public struct Mentions: View {
     @Environment(\.theme) private var theme
+    @Environment(\.fieldDefaults) private var fieldDefaults
+    /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing.
+    @Environment(\.isReadOnly) private var isReadOnly
 
     @Binding private var text: String
     private let options: [MentionOption]
     // Appearance — mutated only through the modifiers below.
     private var prefix: Character = "@"
     private var placeholder: String = ""
+    /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
+    private var explicitSize: TextInputSize?
 
     @State private var query: String?
 
@@ -39,19 +44,25 @@ public struct Mentions: View {
         self.options = options
     }
 
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic 40pt rows.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             TextField(placeholder, text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .textStyle(.bodyBase400)
                 .lineLimit(3...6)
+                // Read-only keeps the normal chrome + VoiceOver value but
+                // blocks focus/editing (E1 — distinct from `.disabled`).
+                .allowsHitTesting(!isReadOnly)
                 .padding(Theme.SpacingKey.md.value)
                 .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
                 .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value)
                     .strokeBorder(theme.border(query == nil ? .borderPrimary : .borderHero), lineWidth: query == nil ? 1 : 2))
                 .onChange(of: text) { query = activeQuery() }
 
-            if query != nil, !filtered.isEmpty {
+            if query != nil, !filtered.isEmpty, !isReadOnly {
                 suggestions
             }
         }
@@ -69,7 +80,9 @@ public struct Mentions: View {
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, Theme.SpacingKey.md.value)
-                    .frame(height: 40)
+                    // Scales with Dynamic Type (G2); a size preset remaps the
+                    // suggestion-row control height onto the family ramp (C1).
+                    .scaledControlHeight(effectiveSize?.height ?? 40)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                 }
@@ -114,6 +127,10 @@ public extension Mentions {
     func prefix(_ character: Character) -> Self { copy { $0.prefix = character } }
     /// Placeholder shown when empty.
     func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    /// Control-height preset for the suggestion rows (the editor itself is
+    /// multi-line and grows with content). An explicit size wins over the
+    /// subtree `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 40pt`).
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
@@ -127,7 +144,17 @@ public extension Mentions {
         @State private var text = "Great work "
         let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
                       MentionOption("grace", label: "Grace Hopper")]
-        var body: some View { Mentions(text: $text, options: people).placeholder("Write a note…").padding() }
+        var body: some View {
+            VStack(spacing: 16) {
+                Mentions(text: $text, options: people).placeholder("Write a note…")
+                // Larger suggestion rows via the family size ramp (C1).
+                Mentions(text: $text, options: people).size(.medium)
+                // Read-only: normal chrome + text, editing/suggestions suppressed (E1).
+                Mentions(text: .constant("Thanks @ada for the review"), options: people)
+                    .readOnly()
+            }
+            .padding()
+        }
     }
     return Demo().environment(Theme.shared)
 }

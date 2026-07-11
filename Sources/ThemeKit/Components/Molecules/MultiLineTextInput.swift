@@ -26,6 +26,7 @@ public struct MultiLineTextInput: View {
     @Binding private var text: String
     private let label: String
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isReadOnly) private var isReadOnly   // E1 — set by `.readOnly(_:)`
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.fieldDefaults) private var fieldDefaults
@@ -131,7 +132,7 @@ public struct MultiLineTextInput: View {
         // External focus bridge (TextInput parity): a `true` write focuses the
         // editor; blurring resets the external binding so the owner stays in sync.
         .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
-            if want && !isFocused { isFocused = true }
+            if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
         .onChange(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
@@ -153,6 +154,9 @@ public struct MultiLineTextInput: View {
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .disabled(!isEnabled)
+                // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value,
+                // but the editor can't be tapped into. NOT `.disabled` (dims).
+                .allowsHitTesting(!isReadOnly)
                 .a11y(A11yElement.Field.field, in: accessibilityID)
                 .accessibilityLabel(isRequired ? label + ", " + String(themeKit: "required") : label)
                 .accessibilityValue(text)
@@ -288,6 +292,10 @@ public extension MultiLineTextInput {
                     .errorText(showError ? "This field is required." : nil)
                     .fieldStyle(.muted)
                 Button(showError ? "Hide error" : "Show error") { showError.toggle() }
+                // Read-only (E1): normal chrome + value, editing blocked.
+                MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
+                    .size(.xsmall)
+                    .readOnly()
             }
             .padding()
         }
