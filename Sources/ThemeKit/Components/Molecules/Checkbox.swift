@@ -8,12 +8,13 @@ import SwiftUI
 
 extension ControlSize {
     /// Square side for checkbox / radio glyphs — maps the native control size to
-    /// ThemeKit's Figma "Control Items" metrics (Small 20 / Medium 24). Driven by
-    /// the native `.controlSize(_:)` cascade (default `.regular` → 24).
+    /// ThemeKit's Figma "Control Items" metrics (Small 20 / Medium 24 / Large 28).
+    /// Driven by the native `.controlSize(_:)` cascade (default `.regular` → 24).
     var checkboxSide: CGFloat {
         switch self {
         case .mini, .small: return 20
-        default: return 24   // .regular (default) / .large / .extraLarge
+        case .large, .extraLarge: return 28   // C4 — HeroUI `lg` box size
+        default: return 24   // .regular (default)
         }
     }
 }
@@ -55,6 +56,10 @@ public struct Checkbox: View {
     private var alignment: VerticalAlignment = .center
     private var accent: SemanticColor?
     private var accessibilityID: String?
+    private var controlPlacement: HorizontalEdge = .leading   // A2
+    private var customLabel: SlotContent?                     // D1 — `.label { }` slot
+    private var lineThrough = false                           // E4
+    @Environment(\.isReadOnly) private var isReadOnly         // E1
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -86,20 +91,23 @@ public struct Checkbox: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
                 isChecked.toggle()
             } label: {
                 HStack(alignment: alignment, spacing: Theme.SpacingKey.sm.value) {
-                    box
-                    if let label {
-                        Text(label)
-                            .textStyle(.bodyBase400)
-                            .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+                    if controlPlacement == .leading {
+                        box
+                        labelView
+                    } else {
+                        labelView
+                        box
                     }
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!isEnabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, toggling blocked
             .a11y(A11yElement.Control.checkbox, in: accessibilityID)
             .accessibilityLabel(label ?? "")
             .accessibilityValue(isIndeterminate ? String(themeKit: "mixed") : (isChecked ? String(themeKit: "selected") : String(themeKit: "not selected")))
@@ -108,6 +116,20 @@ public struct Checkbox: View {
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
+        }
+    }
+
+    /// Built-in string label, or the `.label { }` slot when set (D1/B8). Both
+    /// inherit the `lineThrough` treatment while checked (E4).
+    @ViewBuilder private var labelView: some View {
+        if let customLabel {
+            customLabel
+                .strikethrough(lineThrough && isChecked)
+        } else if let label {
+            Text(label)
+                .textStyle(.bodyBase400)
+                .strikethrough(lineThrough && isChecked)
+                .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
         }
     }
 
@@ -181,6 +203,22 @@ public extension Checkbox {
     /// Vertical alignment of the box against a multi-line label.
     func alignment(_ a: VerticalAlignment) -> Self { copy { $0.alignment = a } }
 
+    /// Which side of the label the box sits on: `.leading` (default) or
+    /// `.trailing`. RTL-safe — `HorizontalEdge` follows the layout direction.
+    /// (ControlRow `controlPlacement` vocabulary; A2.)
+    func controlPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.controlPlacement = edge } }
+
+    /// Replaces the built-in text label with custom content (the canonical
+    /// `.label { }` slot). The slot inherits the surrounding text environment
+    /// and the `lineThrough()` treatment; pass the string init arg too if the
+    /// control should keep a VoiceOver label.
+    func label<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.customLabel = SlotContent(content) }
+    }
+
+    /// Strikes the label through while checked (HeroUI Checkbox `lineThrough`).
+    func lineThrough(_ on: Bool = true) -> Self { copy { $0.lineThrough = on } }
+
     /// Overrides the box side length, bypassing the native `.controlSize` metric.
     func customSize(_ side: CGFloat?) -> Self { copy { $0.customSize = side } }
 
@@ -211,6 +249,19 @@ public extension Checkbox {
         Checkbox(isChecked: .constant(true)).disabled(true)
         Checkbox("Success accent", isChecked: .constant(true)).accent(.success)
         Checkbox("Warning accent", isChecked: .constant(true)).accent(.warning)
+        Checkbox("Large box", isChecked: .constant(true)).controlSize(.large)          // C4
+        Checkbox("Box on the trailing side", isChecked: .constant(true))
+            .controlPlacement(.trailing)                                               // A2
+        Checkbox("Buy milk", isChecked: .constant(true)).lineThrough()                 // E4
+        Checkbox("Terms", isChecked: .constant(false))
+            .label {                                                                   // D1
+                HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Text("I accept the")
+                    Text("Terms of Service").underline().fontWeight(.semibold)
+                }
+                .textStyle(.bodyBase400)
+            }
+        Checkbox("Read-only (tap does nothing)", isChecked: .constant(true)).readOnly() // E1
     }
     .padding()
 }

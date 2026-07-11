@@ -21,9 +21,12 @@ public struct RadioGroup<Option: Hashable>: View {
     private var infoMessages: [InfoMessage] = []
     private var isOptionEnabled: ((Option) -> Bool)?
     private var description: (Option) -> String? = { _ in nil }
+    private var groupDescription: String?                     // E5
     private var accent: SemanticColor?
     private var axis: Axis = .vertical
+    private var controlPlacement: HorizontalEdge = .leading   // A4 — forwarded to rows
     private var accessibilityID: String? = nil
+    @Environment(\.isReadOnly) private var isReadOnly         // E1 — rows own the tap
 
     public init(
         title: String? = nil,
@@ -52,6 +55,9 @@ public struct RadioGroup<Option: Hashable>: View {
             if let title {
                 Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
+            if let groupDescription {
+                HelperText(groupDescription)   // E5 — group-level supporting text
+            }
             optionsContainer
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
@@ -73,29 +79,38 @@ public struct RadioGroup<Option: Hashable>: View {
         ForEach(Array(options.enumerated()), id: \.element) { index, option in
             let enabled = optionEnabled(option)
             let description = description(option)
+            let radio = RadioButton(isSelected: .constant(selection == option)).accent(accent)
+            let labelBlock = VStack(alignment: .leading, spacing: 2) {
+                Text(label(option))
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textPrimary))
+                if let description {
+                    Text(description)
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                }
+            }
             Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
                 selection = option
             } label: {
                 // Top-align the radio against the label block when supporting text is present.
                 HStack(alignment: description == nil ? .center : .top, spacing: Theme.SpacingKey.sm.value) {
-                    RadioButton(isSelected: .constant(selection == option))
-                        .accent(accent)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(label(option))
-                            .textStyle(.bodyBase400)
-                            .foregroundStyle(theme.text(.textPrimary))
-                        if let description {
-                            Text(description)
-                                .textStyle(.bodySm400)
-                                .foregroundStyle(theme.text(.textSecondary))
-                        }
+                    if controlPlacement == .leading {   // A4 — group-level placement
+                        radio
+                        labelBlock
+                        if axis == .vertical { Spacer() }
+                    } else {
+                        labelBlock
+                        if axis == .vertical { Spacer() }
+                        radio
                     }
-                    if axis == .vertical { Spacer() }
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(!enabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, selection blocked
             .opacity(enabled ? 1 : 0.4)
             .a11y("option.\(index)", in: accessibilityID)
             .accessibilityLabel(label(option))
@@ -203,6 +218,9 @@ public struct RadioButtonGroup<Option: Hashable>: View {
                     .accent(.success)
                 RadioGroup(title: "Horizontal", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
                     .axis(.horizontal)
+                RadioGroup(title: "Trailing radios", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                    .controlPlacement(.trailing)                                        // A4
+                    .description("Fares are per passenger, taxes included.")            // E5
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                 RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                     .groupStyle(.outline).fullWidth()
@@ -224,6 +242,15 @@ public extension RadioGroup {
 
     /// Supporting text rendered under each row's label (return nil for none).
     func optionDescription(_ description: @escaping (Option) -> String?) -> Self { copy { $0.description = description } }
+
+    /// Group-level supporting text rendered under the title via `HelperText`
+    /// (Ant/HeroUI group `description`; E5). Distinct from `optionDescription`.
+    func description(_ text: String?) -> Self { copy { $0.groupDescription = text } }
+
+    /// Which side of each row's label the radio sits on: `.leading` (default)
+    /// or `.trailing`, forwarded to every option row. RTL-safe —
+    /// `HorizontalEdge` follows the layout direction. (A4.)
+    func controlPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.controlPlacement = edge } }
 
     /// Semantic tint forwarded to every radio's selected fill/border; `nil`
     /// (default) uses the hero tokens. (HeroUI item variant / daisyUI `radio-{color}`.)

@@ -21,7 +21,11 @@ public struct CheckboxGroup<Option: Hashable>: View {
     private var infoMessages: [InfoMessage] = []
     private var selectAllTitle: String?
     private var isOptionEnabled: ((Option) -> Bool)?
+    private var groupDescription: String?                     // E5
+    private var axis: Axis = .vertical                        // A6
+    private var controlPlacement: HorizontalEdge = .leading   // A5 — forwarded to rows
     private var accessibilityID: String? = nil
+    @Environment(\.isReadOnly) private var isReadOnly         // E1 — rows own the tap
 
     public init(
         title: String? = nil,
@@ -61,49 +65,91 @@ public struct CheckboxGroup<Option: Hashable>: View {
             if let title {
                 Text(title).textStyle(.labelMd600).foregroundStyle(titleColor)
             }
+            if let groupDescription {
+                HelperText(groupDescription)   // E5 — group-level supporting text
+            }
             if let selectAllTitle {
-                Button(action: toggleAll) {
+                Button {
+                    guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                    toggleAll()
+                } label: {
                     HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Checkbox(isChecked: .constant(allSelected)).indeterminate(someSelected)
-                        Text(selectAllTitle)
-                            .textStyle(.labelBase600)
-                            .foregroundStyle(theme.text(.textPrimary))
-                        Spacer()
+                        if controlPlacement == .leading {   // A5 — group-level placement
+                            Checkbox(isChecked: .constant(allSelected)).indeterminate(someSelected)
+                            selectAllLabel(selectAllTitle)
+                            Spacer()
+                        } else {
+                            selectAllLabel(selectAllTitle)
+                            Spacer()
+                            Checkbox(isChecked: .constant(allSelected)).indeterminate(someSelected)
+                        }
                     }
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(selectableOptions.isEmpty)
+                .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, toggling blocked
                 .opacity(isEnabled ? 1 : 0.4)
                 .accessibilityLabel(selectAllTitle)
                 .accessibilityAddTraits(allSelected ? .isSelected : [])
                 DividerView().size(.small)
             }
-            ForEach(Array(options.enumerated()), id: \.element) { index, option in
-                let isOn = selection.contains(option)
-                let enabled = optionEnabled(option)
-                Button {
-                    if isOn { selection.remove(option) } else { selection.insert(option) }
-                } label: {
-                    HStack(spacing: Theme.SpacingKey.sm.value) {
-                        Checkbox(isChecked: .constant(isOn))
-                        Text(label(option))
-                            .textStyle(.bodyBase400)
-                            .foregroundStyle(theme.text(.textPrimary))
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!enabled)
-                .opacity(enabled ? 1 : 0.4)
-                .a11y("option.\(index)", in: accessibilityID)
-                .accessibilityLabel(label(option))
-                .accessibilityAddTraits(isOn ? .isSelected : [])
-            }
+            optionsContainer
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
+        }
+    }
+
+    private func selectAllLabel(_ title: String) -> some View {
+        Text(title)
+            .textStyle(.labelBase600)
+            .foregroundStyle(theme.text(.textPrimary))
+    }
+
+    /// Lays the option rows out along `axis` (A6 — HStack/VStack mirror for RTL
+    /// automatically; copies RadioGroup's `.axis(_:)` container).
+    @ViewBuilder private var optionsContainer: some View {
+        switch axis {
+        case .horizontal:
+            HStack(alignment: .top, spacing: Theme.SpacingKey.md.value) { optionRows }
+        case .vertical:
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) { optionRows }
+        }
+    }
+
+    private var optionRows: some View {
+        ForEach(Array(options.enumerated()), id: \.element) { index, option in
+            let isOn = selection.contains(option)
+            let enabled = optionEnabled(option)
+            let box = Checkbox(isChecked: .constant(isOn))
+            let rowLabel = Text(label(option))
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+            Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                if isOn { selection.remove(option) } else { selection.insert(option) }
+            } label: {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    if controlPlacement == .leading {   // A5 — group-level placement
+                        box
+                        rowLabel
+                        if axis == .vertical { Spacer() }
+                    } else {
+                        rowLabel
+                        if axis == .vertical { Spacer() }
+                        box
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!enabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, toggling blocked
+            .opacity(enabled ? 1 : 0.4)
+            .a11y("option.\(index)", in: accessibilityID)
+            .accessibilityLabel(label(option))
+            .accessibilityAddTraits(isOn ? .isSelected : [])
         }
     }
 }
@@ -112,8 +158,16 @@ public struct CheckboxGroup<Option: Hashable>: View {
     struct Demo: View {
         @State var sel: Set<String> = ["Wifi"]
         var body: some View {
-            CheckboxGroup(title: "Amenities", options: ["Wifi", "Pool", "Parking", "Breakfast"], selection: $sel) { $0 }
-                .padding()
+            VStack(alignment: .leading, spacing: 24) {
+                CheckboxGroup(title: "Amenities", options: ["Wifi", "Pool", "Parking", "Breakfast"], selection: $sel) { $0 }
+                CheckboxGroup(title: "Horizontal", options: ["Wifi", "Pool", "Parking"], selection: $sel) { $0 }
+                    .axis(.horizontal)                                                  // A6
+                CheckboxGroup(title: "Trailing boxes", options: ["Wifi", "Pool", "Parking"], selection: $sel) { $0 }
+                    .controlPlacement(.trailing)                                        // A5
+                    .selectAll("All amenities")
+                    .description("Filters apply to all room types.")                    // E5
+            }
+            .padding()
         }
     }
     return Demo()
@@ -127,6 +181,20 @@ public extension CheckboxGroup {
 
     /// Adds a "select all" master row with the given title (nil hides it).
     func selectAll(_ title: String?) -> Self { copy { $0.selectAllTitle = title } }
+
+    /// Group-level supporting text rendered under the title via `HelperText`
+    /// (Ant/HeroUI group `description`; E5).
+    func description(_ text: String?) -> Self { copy { $0.groupDescription = text } }
+
+    /// Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
+    /// (Ant `Checkbox.Group` / HeroUI `orientation`; A6.) The "select all"
+    /// master row always keeps its own line above the options.
+    func axis(_ a: Axis) -> Self { copy { $0.axis = a } }
+
+    /// Which side of each row's label the box sits on: `.leading` (default)
+    /// or `.trailing`, forwarded to every option row and the "select all" row.
+    /// RTL-safe — `HorizontalEdge` follows the layout direction. (A5.)
+    func controlPlacement(_ edge: HorizontalEdge) -> Self { copy { $0.controlPlacement = edge } }
 
     /// Per-option enablement predicate (nil enables every option).
     func optionEnabled(_ predicate: ((Option) -> Bool)?) -> Self { copy { $0.isOptionEnabled = predicate } }
