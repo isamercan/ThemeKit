@@ -14,6 +14,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// One toggleable quick-filter chip in a ``FilterBar``.
 public struct QuickFilter: Identifiable, Hashable, Sendable {

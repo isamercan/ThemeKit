@@ -12,6 +12,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 /// Trailing accessory of a ``PassengerRow``.
 public enum PassengerAccessory: Sendable { case none, chevron }

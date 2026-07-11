@@ -34,12 +34,12 @@ public struct CardStyleConfiguration {
     /// The new parameters default to the pre-existing chrome (`.bgWhite` / `.box`,
     /// unselected, unpressed), so `CardStyleConfiguration(content:elevation:)`
     /// call sites keep compiling and rendering identically.
-    init(content: AnyView,
-         elevation: CardElevation,
-         isSelected: Bool = false,
-         isPressed: Bool = false,
-         surfaceKey: Theme.BackgroundColorKey = .bgWhite,
-         radius: Theme.RadiusRole = .box) {
+    public init(content: AnyView,
+                elevation: CardElevation,
+                isSelected: Bool = false,
+                isPressed: Bool = false,
+                surfaceKey: Theme.BackgroundColorKey = .bgWhite,
+                radius: Theme.RadiusRole = .box) {
         self.content = content
         self.elevation = elevation
         self.isSelected = isSelected
@@ -131,19 +131,19 @@ public extension CardStyle where Self == OutlinedCardStyle {
 
 // MARK: - Type erasure + environment plumbing
 
-struct AnyCardStyle: CardStyle {
+public struct AnyCardStyle: CardStyle {
     private let _makeBody: @MainActor (CardStyleConfiguration) -> AnyView
-    init<S: CardStyle>(_ style: sending S) {
+    public init<S: CardStyle>(_ style: sending S) {
         _makeBody = { AnyView(style.makeBody(configuration: $0)) }
     }
-    func makeBody(configuration: CardStyleConfiguration) -> AnyView { _makeBody(configuration) }
+    public func makeBody(configuration: CardStyleConfiguration) -> AnyView { _makeBody(configuration) }
 }
 
 private struct CardStyleKey: EnvironmentKey {
-    static let defaultValue = AnyCardStyle(DefaultCardStyle())
+    nonisolated(unsafe) static let defaultValue = AnyCardStyle(DefaultCardStyle())
 }
 
-extension EnvironmentValues {
+public extension EnvironmentValues {
     var cardStyle: AnyCardStyle {
         get { self[CardStyleKey.self] }
         set { self[CardStyleKey.self] = newValue }

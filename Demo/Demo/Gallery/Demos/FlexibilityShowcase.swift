@@ -10,6 +10,7 @@
 
 import SwiftUI
 import ThemeKit
+import ThemeKitTravel
 
 // MARK: - Page
 

@@ -15,6 +15,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 // Round-trip / multi-leg reuses the shared `FlightLeg` model (see FlightCard.swift).
 

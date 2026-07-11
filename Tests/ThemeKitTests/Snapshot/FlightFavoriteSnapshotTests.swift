@@ -19,6 +19,7 @@ import SnapshotTesting
 import SwiftUI
 import XCTest
 @testable import ThemeKit
+@testable import ThemeKitTravel
 
 @MainActor
 final class FlightFavoriteSnapshotTests: SnapshotTestCase {

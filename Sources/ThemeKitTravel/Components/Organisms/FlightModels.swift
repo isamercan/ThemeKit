@@ -10,6 +10,7 @@
 //
 
 import Foundation
+import ThemeKit
 
 /// A flight status pill's state — on-time / boarding / delayed / gate-closed /
 /// departed / arrived / cancelled. Rendered by ``FlightStatusBadge``.
@@ -107,23 +108,5 @@ public struct FareLine: Identifiable, Sendable, Equatable, Codable {
     /// The emphasised total — rendered as a hero `PriceTag` under a divider.
     public static func total(_ label: String, _ amount: Decimal, info: String? = nil) -> FareLine {
         .init(label: label, amount: amount, kind: .total, info: info)
-    }
-}
-
-/// Whether a fare feature is granted, denied, or neutral info.
-public enum FareFeatureStatus: Sendable { case included, excluded, info }
-
-/// A single fare feature / rule line.
-public struct FareFeature: Identifiable, Sendable {
-    public var id: String { "\(systemImage):\(text)" }
-    public let text: String
-    public let systemImage: String
-    public let detail: String?
-    public let status: FareFeatureStatus
-    public init(_ text: String, systemImage: String, detail: String? = nil, status: FareFeatureStatus = .info) {
-        self.text = text
-        self.systemImage = systemImage
-        self.detail = detail
-        self.status = status
     }
 }

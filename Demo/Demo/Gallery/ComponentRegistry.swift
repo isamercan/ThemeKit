@@ -11,6 +11,7 @@
 
 import SwiftUI
 import ThemeKit
+import ThemeKitTravel
 
 enum ComponentCategory: String, CaseIterable, Identifiable {
     case atoms = "Atoms"

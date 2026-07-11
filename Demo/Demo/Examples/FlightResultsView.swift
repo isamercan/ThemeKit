@@ -10,6 +10,7 @@
 
 import SwiftUI
 import ThemeKit
+import ThemeKitTravel
 
 private struct SampleFlight: Identifiable {
     let id = UUID()

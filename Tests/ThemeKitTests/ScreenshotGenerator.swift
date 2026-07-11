@@ -21,6 +21,7 @@ import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 @testable import ThemeKit
+@testable import ThemeKitTravel
 
 @available(macOS 13.0, *)
 @MainActor

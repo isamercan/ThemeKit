@@ -18,6 +18,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct AncillaryCard: View {
     @Environment(\.theme) private var theme

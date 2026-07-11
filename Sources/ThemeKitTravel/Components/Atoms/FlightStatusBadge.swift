@@ -12,6 +12,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct FlightStatusBadge: View {
     @Environment(\.theme) private var theme

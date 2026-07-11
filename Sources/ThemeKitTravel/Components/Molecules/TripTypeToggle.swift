@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import ThemeKit
 
 public struct TripTypeToggle: View {
     @Environment(\.theme) private var theme

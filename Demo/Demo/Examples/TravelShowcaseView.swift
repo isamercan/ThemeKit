@@ -4,6 +4,7 @@
 //
 import SwiftUI
 import ThemeKit
+import ThemeKitTravel
 
 struct TravelShowcaseView: View {
     @State private var seats: Set<String> = []
