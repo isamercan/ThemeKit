@@ -61,18 +61,23 @@ public extension TextRotate {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        HStack(spacing: 4) {
-            Text("Build").textStyle(.headingSm)
-            TextRotate(["faster.", "themed.", "accessible.", "everywhere."])
+    // Timer-driven word rotation still runs inside each cell; a matrix row is
+    // one representative frame of the loop.
+    PreviewMatrix("TextRotate") {
+        PreviewCase("Default") {
+            HStack(spacing: 4) {
+                Text("Build").textStyle(.headingSm)
+                TextRotate(["faster.", "themed.", "accessible.", "everywhere."])
+            }
         }
-        HStack(spacing: 4) {
-            Text("Fly").textStyle(.labelMd700)
-            TextRotate(["cheaper.", "direct.", "greener."])
-                .textStyle(.labelMd700)
-                .accent(.turquoise)
-                .interval(1.5)
+        PreviewCase("Styled · fast interval") {
+            HStack(spacing: 4) {
+                Text("Fly").textStyle(.labelMd700)
+                TextRotate(["cheaper.", "direct.", "greener."])
+                    .textStyle(.labelMd700)
+                    .accent(.turquoise)
+                    .interval(1.5)
+            }
         }
     }
-    .padding()
 }

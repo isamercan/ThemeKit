@@ -72,7 +72,16 @@ public extension InlineText {
 }
 
 #Preview {
-    InlineText("By continuing you accept the Terms and the Privacy Policy.",
-               links: [("Terms", { print("terms") }), ("Privacy Policy", { print("privacy") })])
-        .padding()
+    PreviewMatrix("InlineText") {
+        PreviewCase("Links") {
+            InlineText("By continuing you accept the Terms and the Privacy Policy.",
+                       links: [("Terms", { print("terms") }), ("Privacy Policy", { print("privacy") })])
+        }
+        PreviewCase("Plain") { InlineText("A plain sentence with no anchors.") }
+        PreviewCase("Accent + style") {
+            InlineText("Read the Guidelines before publishing.", links: [("Guidelines", {})])
+                .accent(.primary)
+                .inlineStyle(.bodyBase400)
+        }
+    }
 }

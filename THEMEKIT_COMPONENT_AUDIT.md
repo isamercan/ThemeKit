@@ -88,7 +88,7 @@ Raw score is kept in the appendix as evidence; **this ordering supersedes it.** 
 
 ## 🟡 P2 — systemic sweeps & enforcement
 
-- [ ] **Dark/themed preview coverage — ~206 components, ONE infra decision.** Standardize on `PreviewMatrix` (or make the snapshot harness render dark automatically) so every `#Preview` gets dark for free. Do **not** file 206 per-component tickets.
+- [~] **Dark/themed preview coverage — standardizing on `PreviewMatrix`** (light + dark columns per `#Preview`). **Atoms done** (PR-2c: ~44 converted → 51/56 covered; the rest are support files). Molecules + Organisms are the same mechanical `#Preview`→`PreviewMatrix` adoption, in progress / follow-up. Preview-only (no runtime/API impact).
 - [ ] **Glyph-font sweep — split the 172:** migrate **text** sites off `.font(.system(size:))` to `textStyle` (real Dynamic-Type debt; e.g. `ThemePicker:98,:127`, `ResultView` 72pt numeral); leave **metric-derived symbol** sites (scaled off fixed container metrics) or move them to the `Icon` atom opportunistically. Do not treat all 172 as violations.
 - [ ] **Magic spacing/radius literals** → `SpacingKey`/`RadiusRole`: Accordion, ActionBar, Agenda, Card (`padding=16`), FareFamilyCard, NotificationCard, ListView, Title, InputLabel, SearchBadge, AnchorNav, Buttons, Chip (tier paddings).
 - [ ] **Native-modifier hygiene:** `StickyBookingBar.enabled()` → native `.disabled(_:)`; deprecate raw-`CGFloat` knobs (`TicketStub.notchRadius`, `RemoteImage.cornerRadius`, `ColumnsGrid` gutter) toward `RadiusRole`/`SpacingKey`.

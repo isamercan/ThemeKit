@@ -168,10 +168,12 @@ private struct RatioModifier: ViewModifier {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        RemoteImage(URL(string: "https://picsum.photos/400/225"), ratio: "16:9").cornerRadius(12)
-            .frame(height: 160)
-        RemoteImage(nil).ratio(1).cornerRadius(12).frame(width: 80, height: 80)  // placeholder
+    PreviewMatrix("RemoteImage") {
+        PreviewCase("16:9") {
+            RemoteImage(URL(string: "https://picsum.photos/400/225"), ratio: "16:9").cornerRadius(12)
+                .frame(height: 120)
+        }
+        PreviewCase("Placeholder") { RemoteImage(nil).ratio(1).cornerRadius(12).frame(width: 80, height: 80) }
+        PreviewCase("Circle placeholder") { RemoteImage(nil).circle().frame(width: 80, height: 80) }
     }
-    .padding()
 }

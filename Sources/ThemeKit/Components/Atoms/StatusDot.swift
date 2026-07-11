@@ -95,11 +95,11 @@ public extension StatusDot {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 12) {
-        StatusDot(.online, label: "Online").pulse()
-        StatusDot(.busy, label: "Busy")
-        StatusDot(.away, label: "Away")
-        StatusDot(.offline, label: "Offline")
+    PreviewMatrix("StatusDot") {
+        PreviewCase("Online · pulse") { StatusDot(.online, label: "Online").pulse() }
+        PreviewCase("Busy") { StatusDot(.busy, label: "Busy") }
+        PreviewCase("Away") { StatusDot(.away, label: "Away") }
+        PreviewCase("Offline") { StatusDot(.offline, label: "Offline") }
+        PreviewCase("Neutral · no label") { StatusDot(.neutral) }
     }
-    .padding()
 }

@@ -82,18 +82,21 @@ public extension Kbd {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        HStack(spacing: 6) {
-            Kbd("⌘"); Kbd("K")
-            Text("then").font(.caption).foregroundStyle(.secondary)
-            Kbd("esc")
+    PreviewMatrix("Kbd") {
+        PreviewCase("Shortcut") {
+            HStack(spacing: 6) {
+                Kbd("⌘"); Kbd("K")
+                Text("then").font(.caption).foregroundStyle(.secondary)
+                Kbd("esc")
+            }
         }
-        HStack(spacing: 6) {
-            Kbd("A").size(.xs)
-            Kbd("A").size(.sm)
-            Kbd("A").size(.md)
-            Kbd("A").size(.lg)
+        PreviewCase("Sizes") {
+            HStack(spacing: 6) {
+                Kbd("A").size(.xs)
+                Kbd("A").size(.sm)
+                Kbd("A").size(.md)
+                Kbd("A").size(.lg)
+            }
         }
     }
-    .padding()
 }

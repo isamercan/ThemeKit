@@ -75,14 +75,27 @@ private struct WatermarkModifier: ViewModifier {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 12) {
-        Text("Boarding pass").textStyle(.headingSm)
-        Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+    PreviewMatrix("Watermark") {
+        PreviewCase("Default") {
+            VStack(spacing: 12) {
+                Text("Boarding pass").textStyle(.headingSm)
+                Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(40)
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+            .watermark("SPECIMEN")
+        }
+        PreviewCase("Custom rotation · size") {
+            VStack(spacing: 12) {
+                Text("Boarding pass").textStyle(.headingSm)
+                Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(40)
+            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+            .watermark("DRAFT", rotation: .degrees(-30), fontSize: 14)
+        }
     }
-    .frame(maxWidth: .infinity)
-    .padding(40)
-    .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-    .watermark("SPECIMEN")
-    .padding(24)
     .environment(Theme.shared)
 }

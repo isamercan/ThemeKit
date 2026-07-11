@@ -105,17 +105,15 @@ private extension Text {
 }
 
 #Preview {
-    struct Demo: View {
-        @State var n = 1234
-        var body: some View {
-            VStack(spacing: 20) {
-                RollingNumber(n).size(40)
-                Button("Roll") { n = Int.random(in: 100...99999) }
-            }
-            .padding()
-        }
+    // The roll animation itself is exercised in the RTL preview below —
+    // matrix cells show one representative frame per state.
+    PreviewMatrix("RollingNumber") {
+        PreviewCase("Default") { RollingNumber(1234) }
+        PreviewCase("Large") { RollingNumber(1234).size(40) }
+        PreviewCase("Light weight") { RollingNumber(1234).weight(.regular) }
+        PreviewCase("Accent") { RollingNumber(98765).accent(.success) }
+        PreviewCase("Negative") { RollingNumber(-42) }
     }
-    return Demo()
 }
 
 #Preview("RTL — digits stay in LTR order") {

@@ -73,9 +73,9 @@ public extension Title {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        Title("Popular destinations").subtitle("Where travellers go").action("See all", action: {})
-        Title("Deals").eyebrow("Limited time")
+    PreviewMatrix("Title") {
+        PreviewCase("Subtitle · action") { Title("Popular destinations").subtitle("Where travellers go").action("See all", action: {}) }
+        PreviewCase("Eyebrow") { Title("Deals").eyebrow("Limited time") }
+        PreviewCase("Title only") { Title("Recently viewed") }
     }
-    .padding()
 }

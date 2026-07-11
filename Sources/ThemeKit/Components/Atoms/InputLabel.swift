@@ -75,13 +75,13 @@ public extension InputLabel {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 8) {
-        InputLabel("Email")
-        InputLabel("Password").required().hasInfo()
-        InputLabel("Invalid").hasError()
-        InputLabel("Disabled").disabled(true)
-        InputLabel("Disabled required").required().hasInfo().disabled(true)
-        InputLabel("Disabled error").hasError().disabled(true)
+    PreviewMatrix("InputLabel") {
+        PreviewCase("Default") { InputLabel("Email") }
+        PreviewCase("Required + info") { InputLabel("Password").required().hasInfo() }
+        PreviewCase("Error") { InputLabel("Invalid").hasError() }
+        PreviewCase("Linked") { InputLabel("Agree to the Terms").links([("Terms", {})]) }
+        PreviewCase("Disabled") { InputLabel("Disabled").disabled(true) }
+        PreviewCase("Disabled required") { InputLabel("Disabled required").required().hasInfo().disabled(true) }
+        PreviewCase("Disabled error") { InputLabel("Disabled error").hasError().disabled(true) }
     }
-    .padding()
 }

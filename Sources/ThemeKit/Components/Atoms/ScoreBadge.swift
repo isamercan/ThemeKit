@@ -69,12 +69,10 @@ public extension ScoreBadge {
 }
 
 #Preview {
-    HStack {
-        ScoreBadge(9.0)
-        ScoreBadge(8.5)
-        ScoreBadge(9.8, large: true)
-        ScoreBadge(7.4).accent(.warning)
-        ScoreBadge(9.2).size(.large).accent(.success)   // C5 — size enum axis
+    PreviewMatrix("ScoreBadge") {
+        PreviewCase("Default") { HStack { ScoreBadge(9.0); ScoreBadge(8.5) } }
+        PreviewCase("Large") { ScoreBadge(9.8).size(.large) }
+        PreviewCase("Warning accent") { ScoreBadge(7.4).accent(.warning) }
+        PreviewCase("Large · success accent") { ScoreBadge(9.2).size(.large).accent(.success) }   // C5 — size enum axis
     }
-    .padding()
 }

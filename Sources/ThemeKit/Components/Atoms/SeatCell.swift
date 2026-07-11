@@ -189,13 +189,13 @@ public struct SeatCell: View {
 
 #Preview {
     @Previewable @State var picked = false
-    HStack(spacing: 8) {
-        SeatCell(Seat("1A"), isSelected: picked, action: { picked.toggle() })
-        SeatCell(Seat("1B", tier: .business))
-        SeatCell(Seat("1C", tier: .exit))
-        SeatCell(Seat("1D", occupied: true))
-        SeatCell(Seat("1E"), isRecommended: true)
-        SeatCell(Seat("1F"), display: .number)
+    PreviewMatrix("SeatCell") {
+        PreviewCase("Selectable (tap)") { SeatCell(Seat("1A"), isSelected: picked, action: { picked.toggle() }) }
+        PreviewCase("Selected") { SeatCell(Seat("1B"), isSelected: true) }
+        PreviewCase("Business") { SeatCell(Seat("1C", tier: .business)) }
+        PreviewCase("Exit row") { SeatCell(Seat("1D", tier: .exit)) }
+        PreviewCase("Occupied") { SeatCell(Seat("1E", occupied: true)) }
+        PreviewCase("Recommended") { SeatCell(Seat("1F"), isRecommended: true) }
+        PreviewCase("Number display") { SeatCell(Seat("1G"), display: .number) }
     }
-    .padding()
 }

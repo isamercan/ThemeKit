@@ -54,12 +54,13 @@ public extension ShareButton {
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        ShareButton(item: "https://github.com/isamercan/ThemeKit")
-        ShareButton("Send", item: "https://github.com/isamercan/ThemeKit")
-            .icon("paperplane.fill")
-            .accent(.success)
-            .size(.small)
+    PreviewMatrix("ShareButton") {
+        PreviewCase("Default") { ShareButton(item: "https://github.com/isamercan/ThemeKit") }
+        PreviewCase("Custom · small") {
+            ShareButton("Send", item: "https://github.com/isamercan/ThemeKit")
+                .icon("paperplane.fill")
+                .accent(.success)
+                .size(.small)
+        }
     }
-    .padding()
 }

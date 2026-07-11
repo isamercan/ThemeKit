@@ -66,5 +66,9 @@ public extension QRCode {
 }
 
 #Preview {
-    QRCode("https://github.com/isamercan/ThemeKit").size(180).padding()
+    // Intentionally not theme-tinted — the code stays high-contrast in dark for scannability.
+    PreviewMatrix("QRCode") {
+        PreviewCase("Default") { QRCode("https://github.com/isamercan/ThemeKit").size(140) }
+        PreviewCase("Small") { QRCode("https://github.com/isamercan/ThemeKit").size(80) }
+    }
 }

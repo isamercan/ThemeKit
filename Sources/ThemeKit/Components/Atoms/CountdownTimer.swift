@@ -249,10 +249,21 @@ public extension CountdownTimer {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
-        CountdownTimer(until: .now.addingTimeInterval(125)).format(.inline).urgentBelow(60).size(.large)
-        CountdownTimer(until: .now.addingTimeInterval(3 * 86_400 + 3_720)).format(.text)
+    PreviewMatrix("CountdownTimer") {
+        PreviewCase("Boxed · urgent · large") {
+            CountdownTimer(until: .now.addingTimeInterval(9 * 60 + 58)).style(.urgent).size(.large)
+        }
+        PreviewCase("Boxed · standard · days") {
+            CountdownTimer(until: .now.addingTimeInterval(3 * 86_400 + 3_720)).showsDays(true)
+        }
+        PreviewCase("Inline · urgentBelow(60)") {
+            CountdownTimer(until: .now.addingTimeInterval(125)).format(.inline).urgentBelow(60).size(.large)
+        }
+        PreviewCase("Text format") {
+            CountdownTimer(until: .now.addingTimeInterval(3 * 86_400 + 3_720)).format(.text)
+        }
+        PreviewCase("Expired") {
+            CountdownTimer(until: .now)
+        }
     }
-    .padding()
 }

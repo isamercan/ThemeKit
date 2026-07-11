@@ -98,18 +98,25 @@ public extension ColorSwatch {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        HStack(spacing: 12) {
-            ForEach(ColorSwatchSize.allCases, id: \.self) { size in
-                ColorSwatch(.blue, label: "Blue").size(size)
+    PreviewMatrix("ColorSwatch") {
+        PreviewCase("Size ramp") {
+            HStack(spacing: 12) {
+                ForEach(ColorSwatchSize.allCases, id: \.self) { size in
+                    ColorSwatch(.blue, label: "Blue").size(size)
+                }
             }
         }
-        HStack(spacing: 12) {
-            ColorSwatch(.red, label: "Red").selected()
-            ColorSwatch(.green, label: "Green").shape(.circle).selected()
-            ColorSwatch(.black, label: "Ink").shape(.circle)
-            ColorSwatch(.purple.opacity(0.4), label: "Faded purple")  // alpha → checkerboard
+        PreviewCase("Selected (square / circle)") {
+            HStack(spacing: 12) {
+                ColorSwatch(.red, label: "Red").selected()
+                ColorSwatch(.green, label: "Green").shape(.circle).selected()
+            }
+        }
+        PreviewCase("Circle / alpha checkerboard") {
+            HStack(spacing: 12) {
+                ColorSwatch(.black, label: "Ink").shape(.circle)
+                ColorSwatch(.purple.opacity(0.4), label: "Faded purple")  // alpha → checkerboard
+            }
         }
     }
-    .padding()
 }

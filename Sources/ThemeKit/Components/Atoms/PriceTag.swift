@@ -231,13 +231,12 @@ public extension PriceTag {
 }
 
 #Preview {
-    VStack(alignment: .leading, spacing: 16) {
-        PriceTag(1_299).size(.small)
-        PriceTag(1_299).original(1_899).unit("/ night").emphasis(.hero).discountBadge()
-        PriceTag(2_499, currencyCode: "EUR").size(.large).emphasis(.hero).from()
-        PriceTag(0).free()
-        PriceTag(1_299).soldOut()
-        PriceTag(3_499).trailing { Badge("Refundable").badgeStyle(.success).size(.small) }
+    PreviewMatrix("PriceTag") {
+        PreviewCase("Small") { PriceTag(1_299).size(.small) }
+        PreviewCase("Discount") { PriceTag(1_299).original(1_899).unit("/ night").emphasis(.hero).discountBadge() }
+        PreviewCase("From") { PriceTag(2_499, currencyCode: "EUR").size(.large).emphasis(.hero).from() }
+        PreviewCase("Free") { PriceTag(0).free() }
+        PreviewCase("Sold out") { PriceTag(1_299).soldOut() }
+        PreviewCase("Trailing badge") { PriceTag(3_499).trailing { Badge("Refundable").badgeStyle(.success).size(.small) } }
     }
-    .padding()
 }

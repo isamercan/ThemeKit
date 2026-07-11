@@ -312,46 +312,55 @@ private struct SpinnerInfinity: View {
 }
 
 #Preview {
-    VStack(spacing: 24) {
-        HStack(spacing: 24) {
-            Spinner().size(16).lineWidth(2)
-            Spinner()
-            Spinner().size(40).lineWidth(4)
+    PreviewMatrix("Spinner") {
+        PreviewCase("Sizes") {
+            HStack(spacing: 24) {
+                Spinner().size(16).lineWidth(2)
+                Spinner()
+                Spinner().size(40).lineWidth(4)
+            }
         }
-        HStack(spacing: 24) {
-            Spinner().style(.dots)
-            Spinner().style(.bars)
-            Spinner().style(.ball)
-            Spinner().style(.infinity)
+        PreviewCase("Styles") {
+            HStack(spacing: 24) {
+                Spinner().style(.dots)
+                Spinner().style(.bars)
+                Spinner().style(.ball)
+                Spinner().style(.infinity)
+            }
         }
-        HStack(spacing: 24) {
-            Spinner().style(.dots).accent(.success).size(32)
-            Spinner().style(.bars).accent(.warning).size(32)
-            Spinner().style(.infinity).accent(.error).size(32)
+        PreviewCase("Semantic accents") {
+            HStack(spacing: 24) {
+                Spinner().style(.dots).accent(.success).size(32)
+                Spinner().style(.bars).accent(.warning).size(32)
+                Spinner().style(.infinity).accent(.error).size(32)
+            }
         }
         // Native size cascade — small ≈ 16/2, regular 24/3, large 40/4;
         // an explicit .size(_:)/.lineWidth(_:) always wins over the preset.
-        HStack(spacing: 24) {
-            Spinner().controlSize(.small)
-            Spinner()
-            Spinner().controlSize(.large)
-            Spinner().size(28).controlSize(.large)
+        PreviewCase("controlSize cascade") {
+            HStack(spacing: 24) {
+                Spinner().controlSize(.small)
+                Spinner()
+                Spinner().controlSize(.large)
+                Spinner().size(28).controlSize(.large)
+            }
         }
         // Custom indicator slot — spun by the shared rotation driver.
         // Under Reduce Motion every style renders static: the ring stays a
         // fixed 270° arc (no rotation), dots/bars/ball settle centered, the
         // infinity keeps a fixed segment, and this slot does not rotate.
-        HStack(spacing: 24) {
-            Spinner().indicator {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .resizable().scaledToFit()
+        PreviewCase("Custom indicator") {
+            HStack(spacing: 24) {
+                Spinner().indicator {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .resizable().scaledToFit()
+                }
+                Spinner().indicator {
+                    Image(systemName: "rays")
+                        .resizable().scaledToFit()
+                }
+                .controlSize(.large)
             }
-            Spinner().indicator {
-                Image(systemName: "rays")
-                    .resizable().scaledToFit()
-            }
-            .controlSize(.large)
         }
     }
-    .padding()
 }

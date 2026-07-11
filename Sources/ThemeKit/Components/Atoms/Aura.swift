@@ -137,23 +137,27 @@ private struct AuraModifier: ViewModifier {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    VStack(spacing: 48) {
-        Text("Featured")
-            .textStyle(.headingSm)
-            .padding(40)
-            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-            .aura()
-
-        Text("Limited offer")
-            .padding(.horizontal, 28).padding(.vertical, 14)
-            .background(theme.background(.bgWhite), in: Capsule())
-            .aura(.purple, radius: 32, intensity: 0.7)
-
-        HStack(spacing: 40) {
-            Aura().accent(.turquoise).size(90)
-            Aura().accent(.pink).intensity(0.9).size(90)
+    PreviewMatrix("Aura") {
+        PreviewCase("Halo (.aura())") {
+            Text("Featured")
+                .textStyle(.headingSm)
+                .padding(40)
+                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                .aura()
+                .padding(24)
+        }
+        PreviewCase("Tinted halo (purple)") {
+            Text("Limited offer")
+                .padding(.horizontal, 28).padding(.vertical, 14)
+                .background(theme.background(.bgWhite), in: Capsule())
+                .aura(.purple, radius: 32, intensity: 0.7)
+                .padding(24)
+        }
+        PreviewCase("Standalone blobs") {
+            HStack(spacing: 40) {
+                Aura().accent(.turquoise).size(90)
+                Aura().accent(.pink).intensity(0.9).size(90)
+            }
         }
     }
-    .padding(48)
-    .background(theme.background(.bgTertiary))
 }

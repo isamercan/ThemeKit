@@ -112,14 +112,22 @@ public extension Ribbon {
 
 #Preview {
     @Previewable @Environment(\.theme) var theme
-    HStack(spacing: 32) {
-        Image(systemName: "bell.fill").font(.title).countBadge(5)
-        Image(systemName: "envelope.fill").font(.title).countBadge(128)
-        Image(systemName: "cart.fill").font(.title).dotBadge(color: .success)
-        Ribbon("New") {
-            RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
+    PreviewMatrix("CountBadge") {
+        PreviewCase("Count") {
+            Image(systemName: "bell.fill").font(.title).countBadge(5).padding(12)
         }
-        .accent(.error)
+        PreviewCase("Overflow (99+)") {
+            Image(systemName: "envelope.fill").font(.title).countBadge(128).padding(12)
+        }
+        PreviewCase("Dot") {
+            Image(systemName: "cart.fill").font(.title).dotBadge(color: .success).padding(12)
+        }
+        PreviewCase("Ribbon") {
+            Ribbon("New") {
+                RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
+            }
+            .accent(.error)
+            .padding(12)
+        }
     }
-    .padding(40)
 }
