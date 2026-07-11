@@ -39,6 +39,16 @@ let package = Package(
             name: "ThemeKitCalendar",
             targets: ["ThemeKitCalendar"]
         ),
+        // Optional domain edition — the flight/booking component family (#229
+        // modular direction). Depends on the full `ThemeKit` catalog and WRAPS its
+        // neutral primitives into booking-flow organisms. NO trait: the edition has
+        // zero external deps, so a plain optional product already gives perfect
+        // opt-in — a consumer who doesn't add `ThemeKitTravel` to a target compiles
+        // nothing from it and downloads the same package they already download.
+        .library(
+            name: "ThemeKitTravel",
+            targets: ["ThemeKitTravel"]
+        ),
     ],
     // Opt-in traits keep the core resolution truly dependency-free. The DEFAULT
     // set is EMPTY, so a plain `.package(url: "…ThemeKit.git")` resolves the core
@@ -117,6 +127,23 @@ let package = Package(
                 .product(name: "Almanac", package: "Almanac", condition: .when(platforms: [.iOS], traits: ["Calendar"])),
             ]
         ),
+        // Domain edition: the flight/booking family, built on the full catalog.
+        // Composition, not forking — it depends on `ThemeKit` (not just Core) so it
+        // can wrap `TextInput`, `Select`, `DateField`, `FormValidator`, … rather than
+        // re-implement the field family. One-way dependency: Core ← ThemeKit ← Travel;
+        // nothing in `ThemeKit` may name a `ThemeKitTravel` type. No `@_exported`:
+        // consumers import both modules explicitly, mirroring `ThemeKitCalendar`.
+        .target(
+            name: "ThemeKitTravel",
+            dependencies: ["ThemeKit"],
+            resources: [
+                .process("Resources"),
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+                .enableUpcomingFeature("InferIsolatedConformances"),
+            ]
+        ),
         .testTarget(
             name: "ThemeKitTests",
             dependencies: [
@@ -124,6 +151,8 @@ let package = Package(
                 // A couple of tests reach engine internals now living in Core
                 // (`Bundle.themeKit`, `ColorContrast`) via `@testable import ThemeKitCore`.
                 "ThemeKitCore",
+                // The edition rides the same snapshot/a11y/RTL harness (ADR-F1).
+                "ThemeKitTravel",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ]
         ),

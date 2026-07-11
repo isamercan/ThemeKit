@@ -5,6 +5,11 @@ All notable changes to **ThemeKit** are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — from **1.0.0** on,
 breaking changes bump the **major**.
 
+## [Unreleased]
+
+### Added
+- **`ThemeKitTravel`** library product — the opt-in flight/booking **domain edition** (composition over forking: it wraps the neutral `ThemeKit` catalog rather than re-implementing it). This first drop is the packaging foundation — the SPM target/product plus the edition's own String Catalog (`String(themeKitTravel:)`); the booking-flow components land in follow-ups. **No package trait and no re-export** (mirroring `ThemeKitCalendar`): add `ThemeKitTravel` to a target and write `import ThemeKitTravel` alongside `import ThemeKit` to opt in — a consumer who doesn't compiles nothing from it and downloads the same package. Part of the [#229](https://github.com/isamercan/ThemeKit/issues/229) modular direction (ADR: `THEMEKITTRAVEL_ARCHITECTURE.md`).
+
 ## [1.1.0] - 2026-07-10
 
 **New `ThemeKitCore` product — the token-only theme layer.** The theme engine,
