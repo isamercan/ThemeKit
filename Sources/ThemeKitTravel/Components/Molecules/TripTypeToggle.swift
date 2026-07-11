@@ -25,6 +25,7 @@ public struct TripTypeToggle: View {
     private var icons: [String] = []
     private var accent: SemanticColor?
     private var fullWidth = true
+    private var surface: Theme.BackgroundColorKey = .bgBase
 
     public init(_ options: [String], selection: Binding<Int>) {   // R1
         self.options = options
@@ -38,7 +39,7 @@ public struct TripTypeToggle: View {
             ForEach(Array(options.enumerated()), id: \.offset) { i, option in pill(i, option) }
         }
         .padding(4)
-        .background(theme.background(.bgSecondary), in: Capsule())
+        .background(theme.background(surface), in: Capsule())
         .frame(maxWidth: fullWidth ? .infinity : nil)
     }
 
@@ -73,6 +74,10 @@ public extension TripTypeToggle {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Stretch pills to fill the width (default on); off = intrinsic width.
     func fullWidth(_ on: Bool = true) -> Self { copy { $0.fullWidth = on } }
+    /// Token-fed track fill behind the pills (default `.bgBase` — a soft,
+    /// low-contrast track that reads well on a white card). Pass `.bgWhite` for a
+    /// flush track or `.bgSecondary` for the stronger grey.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surface = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
