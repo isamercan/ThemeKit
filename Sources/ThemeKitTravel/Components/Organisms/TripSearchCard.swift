@@ -11,10 +11,16 @@
 //    → FieldButton + GuestSelector (bottom sheet) → CabinClassSelector
 //    → PrimaryButton CTA → optional `.promo { }` slot.
 //
-//  The shell is drawn by the active **CardStyle**: the organism wraps its
-//  content in the neutral `Card`, which routes `surface` / `elevation` through
-//  `CardStyleConfiguration` — so `.cardStyle(_:)` set on the subtree re-chromes
-//  this card exactly like every other card-shaped organism.
+//  The *arrangement* is owned by the active ``TripSearchCardStyle`` from the
+//  environment (ADR-0004, Class B): the component builds fully-wired field
+//  units (bindings, sheets, swap spin, debounced lookups) plus typed signals
+//  into a ``TripSearchCardConfiguration`` and hands it to the style — `.card`
+//  (default) is today's stacked editor verbatim; `.hero`, `.compact`,
+//  `.inlineBar` and `.pill` swap the whole layout, and apps can implement
+//  their own. Card-shaped styles keep composing the neutral `Card`, which
+//  routes `surface` / `elevation` through `CardStyleConfiguration` — so
+//  `.cardStyle(_:)` set on the subtree still re-chromes this card exactly
+//  like every other card-shaped organism.
 //
 //  Multi-city (decided in-PR, per the §9.6 "only if cheap" note): `.multiCity`
 //  is accepted in the model and selectable in the toggle, but v1 renders the
@@ -31,13 +37,12 @@
 import SwiftUI
 import ThemeKit
 
-// MARK: - Variant
+// MARK: - Variant (deprecated toward TripSearchCardStyle)
 
-/// How ``TripSearchCard`` presents: the standard `.card`, a larger `.hero`
-/// treatment for landing headers, a `.compact` collapsed summary row that
-/// expands into the full editor on tap, or an `.inlineBar` — a single-row
-/// horizontal bar for wide/iPad headers (narrow widths fall back to the
-/// stacked editor via `ViewThatFits`).
+/// How ``TripSearchCard`` presents. Superseded by ``TripSearchCardStyle``
+/// (ADR-0004) — every case maps 1:1 to a preset (`.card` →
+/// `.tripSearchCardStyle(.card)` and so on, plus the new `.pill`); the enum
+/// remains for source compatibility and is removed at the next major.
 public enum TripSearchVariant: Sendable { case card, hero, compact, inlineBar }
 
 /// Vertical density of the editor: `.regular` (default) or `.compact` —
@@ -56,7 +61,7 @@ public enum TripSearchDensity: Sendable { case compact, regular }
 /// TripSearchCard(draft: $draft) { search($0) }
 ///     .airports(suggestions: results, recent: store.recents, popular: curated)
 ///     .onAirportQuery { lookup($0) }
-///     .variant(.hero)
+///     .tripSearchCardStyle(.hero)
 ///     .promo { PromoBanner("Summer sale") }
 /// ```
 ///
@@ -72,6 +77,8 @@ public struct TripSearchCard: View {
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
+    @Environment(\.componentDensity) private var envDensity
+    @Environment(\.tripSearchCardStyle) private var envStyle
 
     @Binding private var draft: TripSearchDraft
     private let onSearch: (TripSearchDraft) -> Void
@@ -88,9 +95,13 @@ public struct TripSearchCard: View {
     /// Render-time default — re-resolves through the localization chain on
     /// every body pass, so a live language switch is never frozen at init.
     private var ctaTitle: String { ctaTitleOverride ?? String(themeKitTravel: "Search flights") }
-    private var variant: TripSearchVariant = .card
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
-    /// Explicit `.elevation(_:)` wins; otherwise `.hero` lifts to `.elevated`.
+    /// Style set by the deprecated `.variant(_:)`; wins over the environment
+    /// style (ADR-0004 §5 — source-behavior stability during migration).
+    private var explicitStyle: AnyTripSearchCardStyle?
+    /// `nil` → the style's own default surface (the built-ins use `.bgWhite`).
+    private var surfaceKey: Theme.BackgroundColorKey?
+    /// Explicit `.elevation(_:)` wins; otherwise the style picks (`.card`/
+    /// `.compact`/`.inlineBar` → `.soft`, `.hero`/`.pill` → `.elevated`).
     private var explicitElevation: CardElevation?
     private var accentColor: SemanticColor?
     /// Promo slot under the CTA. Local erasure (ThemeKit's `SlotContent` is
@@ -112,6 +123,8 @@ public struct TripSearchCard: View {
     private var passengerDetents: [BottomSheetDetent] = [.medium]
 
     /// UI-only state (house rule 1): sheet + compact-expansion + swap spin.
+    /// Class B contract: this never leaves the component — styles see only
+    /// `isExpanded` and the motion-gated `toggleExpand`.
     @State private var isPassengerSheetPresented = false
     @State private var isExpanded = false
     @State private var swapAngle: Double = 0
@@ -126,10 +139,6 @@ public struct TripSearchCard: View {
 
     private var motion: Animation? {
         MicroMotion.animation(enabled: micro, reduceMotion: reduceMotion)
-    }
-
-    private var effectiveElevation: CardElevation {
-        explicitElevation ?? (variant == .hero ? .elevated : .soft)
     }
 
     /// Past dates are excluded by default (§9.6); an explicit `.dateRange(_:)` wins.
@@ -156,76 +165,40 @@ public struct TripSearchCard: View {
     // MARK: - Body
 
     public var body: some View {
-        Card { cardBody }
-            .contentPadding(variant == .hero ? .lg : .md)
-            .elevation(effectiveElevation)
-            .surface(surfaceKey)
+        // The arrangement is owned by the active `TripSearchCardStyle` (ADR-0004
+        // Class B): the units below are pre-wired and fully interactive; the
+        // style arranges them, never re-wires them. Motion is resolved *here*
+        // (`toggleExpand` is animation-gated, and the expansion/trip-type
+        // animations ride on the component) — styles never read the motion env.
+        let configuration = TripSearchCardConfiguration(
+            tripType: showsTripType ? AnyView(tripTypeToggle) : nil,
+            routeFields: AnyView(routeFields),
+            dateFields: AnyView(dateFields),
+            passengersField: AnyView(passengersTrigger),
+            cabinField: showsCabinPicker ? AnyView(cabinSection) : nil,
+            cta: AnyView(ctaUnit(fullWidth: true, prominent: false)),
+            heroCta: AnyView(ctaUnit(fullWidth: true, prominent: true)),
+            inlineCta: AnyView(ctaUnit(fullWidth: false, prominent: false)),
+            header: headerContent,
+            promo: promoContent,
+            footer: footerContent,
+            draft: draft,
+            isDraftComplete: isDraftComplete,
+            isExpanded: isExpanded,
+            toggleExpand: { withAnimation(motion) { isExpanded.toggle() } },
+            accent: accentColor,
+            surfaceKey: surfaceKey,
+            elevation: explicitElevation,
+            editorDensity: densityValue,
+            density: envDensity,
+            locale: locale)
+        let style = explicitStyle ?? envStyle   // explicit (deprecated .variant) wins — ADR-0004 §5
+        return style.makeBody(configuration: configuration)
             .animation(motion, value: isExpanded)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(String(themeKitTravel: "Flight search"))
-    }
-
-    @ViewBuilder
-    private var cardBody: some View {
-        if variant == .compact && !isExpanded {
-            summaryRow
-        } else {
-            VStack(alignment: .leading, spacing: stackSpacing) {
-                if variant == .compact { collapseHeader }
-                if let headerContent { headerContent }
-                if variant == .inlineBar { inlineRun } else { editorStack }
-                if let promoContent { promoContent }
-                if let footerContent { footerContent }
-            }
             // `.oneWay` hides the return field; gated by `microAnimations` + Reduce Motion.
             .animation(motion, value: draft.tripType)
-        }
-    }
-
-    /// Stack gap from the density axis (token-fed).
-    private var stackSpacing: CGFloat {
-        densityValue == .compact ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
-    }
-
-    // MARK: - Form (the full stacked editor)
-
-    private var editorStack: some View {
-        VStack(alignment: .leading, spacing: stackSpacing) {
-            if showsTripType { tripTypeToggle }
-            routeFields
-            dateFields
-            passengersTrigger
-            if showsCabinPicker { cabinSection }
-            cta(fullWidth: true)
-        }
-    }
-
-    // MARK: - Inline bar (single-row editor for wide/iPad headers)
-
-    /// One horizontal run of the core fields; when the row can't fit (narrow
-    /// widths, accessibility type sizes) `ViewThatFits` falls back to the
-    /// stacked editor — nothing is ever clipped. Trip type and cabin stay
-    /// draft-driven (no room in one row); toggle them with the modifiers on
-    /// a wrapping toolbar if needed.
-    private var inlineRun: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                originPicker
-                if showsSwapValue { swapControl("arrow.left.arrow.right") }
-                destinationPicker
-                DateField(String(themeKitTravel: "Departure"), date: $draft.departureDate)
-                    .range(effectiveDateRange)
-                    .icon(departureIconName ?? "calendar")
-                if showsReturnDate {
-                    DateField(String(themeKitTravel: "Return"), date: $draft.returnDate)
-                        .range(returnDateRange)
-                        .icon(departureIconName ?? "calendar")
-                }
-                passengersTrigger
-                cta(fullWidth: false)
-            }
-            editorStack
-        }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(String(themeKitTravel: "Flight search"))
     }
 
     // MARK: Trip type (TripTypeToggle wrap — TripType ⇄ index)
@@ -253,7 +226,8 @@ public struct TripSearchCard: View {
 
     /// Horizontal at regular sizes; falls to a stacked layout with a floating
     /// swap at accessibility Dynamic Type sizes (§9.6). Both arrangements are
-    /// `HStack`/`VStack`-composed, so they mirror under RTL for free.
+    /// `HStack`/`VStack`-composed, so they mirror under RTL for free. Handed
+    /// to styles welded (ADR-0004 §9.2) — the fallback travels with the unit.
     private var routeFields: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Theme.SpacingKey.sm.value) {
@@ -407,18 +381,19 @@ public struct TripSearchCard: View {
             // (phone width, a sidebar column), where four equal segments can't fit
             // "Premium Economy" without wrapping the labels character-by-character.
             CabinClassSelector(selection: $draft.cabin)
-                .variant(.chips)
                 .accent(accentColor)
+                .cabinClassSelectorStyle(.chips)
         }
     }
 
     // MARK: CTA
 
-    /// The submit control. A `.ctaLabel { }` slot replaces the button's look
-    /// (caller-styled label inside a plain button) while the submit guard and
-    /// completeness-driven `.disabled` wiring stay intact.
+    /// The submit control, built in the three shapes styles arrange
+    /// (`cta`/`heroCta`/`inlineCta`). A `.ctaLabel { }` slot replaces the
+    /// button's look (caller-styled label inside a plain button) while the
+    /// submit guard and completeness-driven `.disabled` wiring stay intact.
     @ViewBuilder
-    private func cta(fullWidth: Bool) -> some View {
+    private func ctaUnit(fullWidth: Bool, prominent: Bool) -> some View {
         if let ctaLabelContent {
             Button {
                 guard !isReadOnly else { return }   // E1 — read-only never submits
@@ -437,91 +412,11 @@ public struct TripSearchCard: View {
                 guard !isReadOnly else { return }   // E1 — read-only never submits
                 onSearch(draft)
             }
-            .size(variant == .hero ? .large : .medium)
+            .size(prominent ? .large : .medium)
             .fullWidth(fullWidth)
             .disabled(!isDraftComplete)
             .allowsHitTesting(!isReadOnly)
         }
-    }
-
-    // MARK: Compact (collapsed summary row → expands to the full editor)
-
-    private var summaryRow: some View {
-        Button {
-            withAnimation(motion) { isExpanded = true }
-        } label: {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                Icon(systemName: "magnifyingglass")
-                    .size(.sm)
-                    .color(theme.text(.textTertiary))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(routeSummary)
-                        .textStyle(.labelBase600)
-                        .foregroundStyle(draft.origin == nil ? theme.text(.textTertiary) : theme.text(.textPrimary))
-                    if !detailSummary.isEmpty {
-                        Text(detailSummary)
-                            .textStyle(.bodySm400)
-                            .foregroundStyle(theme.text(.textSecondary))
-                    }
-                }
-                .lineLimit(1)
-                Spacer(minLength: Theme.SpacingKey.xs.value)
-                Icon(systemName: "chevron.down")
-                    .size(.sm)
-                    .color(theme.text(.textTertiary))
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(String(themeKitTravel: "Edit search"))
-        .accessibilityValue("\(routeSummary), \(detailSummary)")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    private var collapseHeader: some View {
-        HStack {
-            Spacer()
-            Button {
-                withAnimation(motion) { isExpanded = false }
-            } label: {
-                Icon(systemName: "chevron.up")
-                    .size(.sm)
-                    .color(theme.text(.textTertiary))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(String(themeKitTravel: "Collapse search"))
-        }
-    }
-
-    /// "Istanbul (IST) – London (LHR)" — an en dash, not an arrow, so the
-    /// string stays direction-neutral under RTL.
-    private var routeSummary: String {
-        guard let origin = draft.origin, let destination = draft.destination else {
-            return String(themeKitTravel: "Where to?")
-        }
-        return "\(AirportPicker.displayText(origin)) – \(AirportPicker.displayText(destination))"
-    }
-
-    /// "Jan 5 – Jan 12 · 2 travelers · Economy" — captured-locale formatting.
-    private var detailSummary: String {
-        var parts: [String] = []
-        if let departure = draft.departureDate {
-            var dates = format(departure)
-            if showsReturnDate, let ret = draft.returnDate {
-                dates += " – " + format(ret)
-            }
-            parts.append(dates)
-        }
-        let travelers = draft.passengers.total
-        parts.append(travelers == 1
-            ? String(themeKitTravel: "1 traveler")
-            : String(themeKitTravel: "\(travelers) travelers"))
-        parts.append(draft.cabin.label)
-        return parts.joined(separator: " · ")
-    }
-
-    private func format(_ date: Date) -> String {
-        date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(locale))
     }
 }
 
@@ -560,21 +455,34 @@ public extension TripSearchCard {
     /// CTA title (default "Search flights").
     func ctaTitle(_ text: String) -> Self { copy { $0.ctaTitleOverride = text } }
 
-    /// `.card` (default) · `.hero` (larger treatment for landing headers) ·
-    /// `.compact` (collapsed summary row that expands on tap).
-    func variant(_ v: TripSearchVariant) -> Self { copy { $0.variant = v } }
+    /// Maps 1:1 onto the ``TripSearchCardStyle`` presets and, when called,
+    /// wins over the environment style (source-behavior stability during
+    /// migration — ADR-0004 §5).
+    @available(*, deprecated, message: "Use .tripSearchCardStyle(_:) — e.g. .tripSearchCardStyle(.hero)")
+    func variant(_ v: TripSearchVariant) -> Self {
+        copy {
+            switch v {
+            case .card: $0.explicitStyle = AnyTripSearchCardStyle(CardTripSearchCardStyle())
+            case .hero: $0.explicitStyle = AnyTripSearchCardStyle(HeroTripSearchCardStyle())
+            case .compact: $0.explicitStyle = AnyTripSearchCardStyle(CompactTripSearchCardStyle())
+            case .inlineBar: $0.explicitStyle = AnyTripSearchCardStyle(InlineBarTripSearchCardStyle())
+            }
+        }
+    }
 
     /// Surface fill by background token, threaded into the active ``CardStyle``'s
-    /// configuration (e.g. `.bgHero` under a hero header).
+    /// configuration (e.g. `.bgHero` under a hero header). When unset, the
+    /// active ``TripSearchCardStyle`` picks its default (built-ins: `.bgWhite`).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
-    /// Card elevation. Default `.soft` (`.elevated` for the `.hero` variant);
-    /// an explicit call always wins.
+    /// Card elevation. When unset, the active ``TripSearchCardStyle`` picks
+    /// (`.card`/`.compact`/`.inlineBar` → `.soft`, `.hero` and the expanded
+    /// `.pill` → `.elevated`); an explicit call always wins.
     func elevation(_ e: CardElevation) -> Self { copy { $0.explicitElevation = e } }
 
     /// Semantic tint threaded through the composed pieces (trip-type pill,
-    /// airport-picker chips, cabin selector). `nil` (default) keeps the stock
-    /// hero chroma.
+    /// airport-picker chips, cabin selector, the `.pill` search disc). `nil`
+    /// (default) keeps the stock hero chroma.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentColor = color } }
 
     /// Promo slot rendered under the CTA (campaign strip, fare notice…).
@@ -627,7 +535,7 @@ public extension TripSearchCard {
         copy { $0.passengerDetents = detents.isEmpty ? [.medium] : detents }
     }
 
-    /// Seeds the compact variant expanded (previews/snapshots only).
+    /// Seeds the collapsing styles expanded (previews/snapshots only).
     internal func seedExpanded(_ on: Bool = true) -> Self {
         copy { $0._isExpanded = State(initialValue: on) }
     }
@@ -683,11 +591,12 @@ private func previewDraft(roundTrip: Bool = true) -> TripSearchDraft {
     return Demo()
 }
 
-#Preview("One-way · hero · compact · accent") {
+#Preview("One-way · hero · compact · pill · accent") {
     struct Demo: View {
         @State private var oneWay = previewDraft(roundTrip: false)
         @State private var hero = previewDraft()
         @State private var compact = previewDraft()
+        @State private var pill = previewDraft()
         @State private var empty = TripSearchDraft()
         var body: some View {
             ScrollView {
@@ -696,11 +605,14 @@ private func previewDraft(roundTrip: Bool = true) -> TripSearchDraft {
                     TripSearchCard(draft: $oneWay) { _ in }
                     // Hero: larger padding + CTA, elevated by default.
                     TripSearchCard(draft: $hero) { _ in }
-                        .variant(.hero)
                         .accent(.success)
+                        .tripSearchCardStyle(.hero)
                     // Compact: collapsed summary row.
                     TripSearchCard(draft: $compact) { _ in }
-                        .variant(.compact)
+                        .tripSearchCardStyle(.compact)
+                    // Pill: floating capsule that expands into the editor.
+                    TripSearchCard(draft: $pill) { _ in }
+                        .tripSearchCardStyle(.pill)
                     // Empty draft: placeholders + disabled CTA; trimmed axes.
                     TripSearchCard(draft: $empty) { _ in }
                         .showsTripType(false)
@@ -727,11 +639,11 @@ private func previewDraft(roundTrip: Bool = true) -> TripSearchDraft {
                 VStack(spacing: 24) {
                     // Single-row bar for wide hosts (stacks when it can't fit).
                     TripSearchCard(draft: $bar) { _ in }
-                        .variant(.inlineBar)
                         .showsSwap(false)
                         .header {
                             Text("Find your next flight").textStyle(.headingSm)
                         }
+                        .tripSearchCardStyle(.inlineBar)
 
                     // Compact density + custom field icons + custom CTA label
                     // + footer + tall passenger sheet.

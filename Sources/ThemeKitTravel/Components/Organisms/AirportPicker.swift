@@ -18,8 +18,15 @@
 //  `.sheet` renders a `FieldButton` trigger that opens the same search UI in
 //  the shared `BottomSheet` (`.bottomSheet(isPresented:detents:)`).
 //
-//  Rows are fixed anatomy (bold IATA code chip + city/airport text) — no Style
-//  protocol until real archetypes exist (promotion rule).
+//  The *arrangement* is owned by the active ``AirportPickerStyle`` from the
+//  environment (ADR-0004, Class B): the component wires the live search field,
+//  the built sections, rows and chips into an `AirportPickerConfiguration` and
+//  hands those pre-wired units to the style — `.list` (default) is today's
+//  sectioned rows verbatim, `.compact` densifies (the promoted
+//  `AirportPickerDensity.compact` knob), `.codeGrid` renders the browse
+//  sections as an IATA chip grid. `AirportPickerPresentation` stays orthogonal
+//  (presentation ≠ style): the trigger + sheet/popover/cover machinery live
+//  here, never in a style.
 //
 
 import SwiftUI
@@ -34,6 +41,8 @@ public enum AirportPickerPresentation: Sendable { case inline, sheet, popover, f
 
 /// Vertical density of the suggestion rows: `.regular` (default) or
 /// `.compact` (tighter row padding and section gaps for dense pickers).
+/// Promoted to ``AirportPickerStyle`` presets by ADR-0004 — prefer
+/// `.airportPickerStyle(.compact)`.
 public enum AirportPickerDensity: Sendable { case compact, regular }
 
 /// Airport search & select. Controlled selection + caller-owned suggestions;
@@ -51,6 +60,10 @@ public struct AirportPicker: View {
     @Environment(\.isEnabled) private var isEnabled     // R3 — set natively by `.disabled(_:)`
     /// Read-only subtree axis (set with `.readOnly(_:)`) — normal chrome, no editing/selection.
     @Environment(\.isReadOnly) private var isReadOnly
+    /// The active arrangement (ADR-0004) — set once per subtree with `.airportPickerStyle(_:)`.
+    @Environment(\.airportPickerStyle) private var envStyle
+    @Environment(\.componentDensity) private var componentDensity
+    @Environment(\.locale) private var locale
 
     @Binding private var selection: Airport?
     private let suggestions: [Airport]
@@ -84,7 +97,11 @@ public struct AirportPicker: View {
     private var chipVariantValue: FillVariant = .soft
     private var sheetDetents: [BottomSheetDetent] = [.large]
     private var triggerIconName = "airplane"
-    private var densityValue: AirportPickerDensity = .regular
+    /// The deprecated `.density(_:)` knob — `nil` (unset) defers to the
+    /// environment ``AirportPickerStyle``; explicit wins over it (ADR-0004 §5).
+    private var densityOverride: AirportPickerDensity?
+    /// Optional surface fill behind the search UI; `nil` = transparent (today's default).
+    private var surfaceKey: Theme.BackgroundColorKey?
 
     /// Query is internal UI state (§9.4); selection is the controlled outcome.
     @State private var query = ""
@@ -93,6 +110,7 @@ public struct AirportPicker: View {
     /// Genuine dimensions with no semantic token — fixed row-anatomy constants.
     private enum Metrics {
         static let chipMinWidth: CGFloat = 44          // aligns the code column
+        static let chipTapTarget: CGFloat = 44         // HIG minimum for the grid chip unit
         static let skeletonRowCount = 4
         static let skeletonChipHeight: CGFloat = 24
         static let skeletonTitle = CGSize(width: 120, height: 12)
@@ -116,29 +134,94 @@ public struct AirportPicker: View {
         }
     }
 
-    /// Row/section paddings resolved from the density axis (token-fed).
-    private var rowVPad: CGFloat {
-        densityValue == .compact ? Theme.SpacingKey.xs.value : Theme.SpacingKey.sm.value
-    }
-    private var sectionGap: CGFloat {
-        densityValue == .compact ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
+    /// The embedded form — the active style arranges the search field and
+    /// sections directly in the screen (no internal scrolling).
+    private var inlineBody: some View {
+        styledSearch(isPresented: false)
     }
 
-    private var inlineBody: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            searchField
-            listContent
+    // MARK: - Style dispatch (ADR-0004)
+
+    /// Hands the pre-wired units + typed signals to the resolved style. The
+    /// component keeps search/debounce/selection wiring and the presentation
+    /// machinery; the style only arranges.
+    private func styledSearch(isPresented: Bool) -> some View {
+        resolvedStyle.makeBody(configuration: configuration(isPresented: isPresented))
+    }
+
+    /// ADR-0004 §5 precedence: an explicitly-set deprecated `.density(_:)`
+    /// wins over the environment style (source-behaviour stability during
+    /// migration) — `.compact` maps to ``CompactAirportPickerStyle``,
+    /// `.regular` to the default ``ListAirportPickerStyle``.
+    private var resolvedStyle: AnyAirportPickerStyle {
+        guard let densityOverride else { return envStyle }
+        return densityOverride == .compact
+            ? AnyAirportPickerStyle(CompactAirportPickerStyle())
+            : AnyAirportPickerStyle(ListAirportPickerStyle())
+    }
+
+    /// Gathers the pre-wired units (Class B) and typed signals for the style.
+    private func configuration(isPresented: Bool) -> AirportPickerConfiguration {
+        AirportPickerConfiguration(
+            searchField: AnyView(searchField),
+            loadingView: AnyView(loadingContentView),
+            emptyView: AnyView(emptyState),
+            sections: builtSections,
+            sectionView: { AnyView(self.sectionView($0)) },
+            sectionHeader: { AnyView(self.sectionHeaderView($0)) },
+            row: { AnyView(self.row($0)) },
+            selectableRow: { airport, label in AnyView(self.selectableRow(airport, label: label)) },
+            codeChip: { AnyView(self.codeChip($0.code)) },
+            selectableChip: { AnyView(self.selectableChip($0)) },
+            customRowLabel: rowContentSlot.map { slot in
+                { (airport: Airport) -> AnyView in slot(airport, self.isSelected(airport)) }
+            },
+            query: query,
+            isLoading: isLoading,
+            showsEmptyState: !isLoading && !query.isEmpty && suggestions.isEmpty,
+            isPresented: isPresented,
+            selection: selection,
+            select: { self.select($0) },
+            chipVariant: chipVariantValue,
+            accent: accentColor,
+            surfaceKey: surfaceKey,
+            density: componentDensity,
+            locale: locale)
+    }
+
+    /// The sections the active style arranges — pre-filtered (never empty),
+    /// with resolved titles: the browse lists before typing, or the single
+    /// results section while a query has suggestions.
+    private var builtSections: [AirportPickerSection] {
+        if query.isEmpty {
+            var sections: [AirportPickerSection] = []
+            if !nearbyAirports.isEmpty {
+                sections.append(AirportPickerSection(
+                    kind: .nearby, title: nearbyTitle ?? String(themeKitTravel: "Nearby"),
+                    airports: nearbyAirports, onClear: nil))
+            }
+            if !recentAirports.isEmpty {
+                sections.append(AirportPickerSection(
+                    kind: .recent, title: recentTitle ?? String(themeKitTravel: "Recent"),
+                    airports: recentAirports, onClear: onClearRecent))
+            }
+            if !popularAirports.isEmpty {
+                sections.append(AirportPickerSection(
+                    kind: .popular, title: popularTitle ?? String(themeKitTravel: "Popular"),
+                    airports: popularAirports, onClear: nil))
+            }
+            return sections
         }
+        guard !suggestions.isEmpty else { return [] }
+        return [AirportPickerSection(kind: .results, title: nil, airports: suggestions, onClear: nil)]
     }
 
     // MARK: - Presented forms (sheet / popover / full-screen cover)
 
-    /// The shared search UI hosted by every presented form.
+    /// The shared search UI hosted by every presented form — the style pins
+    /// the search field and scrolls the sections (`isPresented` signal).
     private var presentedSearch: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            searchField
-            ScrollView { listContent }
-        }
+        styledSearch(isPresented: true)
     }
 
     /// The field-shaped trigger shared by the presented forms. FieldButton
@@ -217,49 +300,37 @@ public struct AirportPicker: View {
         return String(themeKitTravel: "\(suggestions.count) results")
     }
 
-    // MARK: - Sections
+    // MARK: - Section units (handed to the style)
 
+    /// The full stock section unit: header + rows + hairline dividers, plus
+    /// the results accessibility identifier — `.list` places these verbatim.
     @ViewBuilder
-    private var listContent: some View {
-        if isLoading {
-            if let loadingSlot { loadingSlot } else { loadingRows }
-        } else if query.isEmpty {
-            preTypingSections
-        } else if suggestions.isEmpty {
-            emptyState
-        } else {
-            section(nil, airports: suggestions)
+    private func sectionView(_ section: AirportPickerSection) -> some View {
+        if section.kind == .results {
+            sectionStack(section)
                 .travelA11y("results", in: accessibilityID)
+        } else {
+            sectionStack(section)
         }
     }
 
-    /// Shown before/alongside typing — each section only when it has airports.
-    @ViewBuilder
-    private var preTypingSections: some View {
-        VStack(alignment: .leading, spacing: sectionGap) {
-            if !nearbyAirports.isEmpty {
-                section(nearbyTitle ?? String(themeKitTravel: "Nearby"), airports: nearbyAirports)
-            }
-            if !recentAirports.isEmpty {
-                section(recentTitle ?? String(themeKitTravel: "Recent"),
-                        airports: recentAirports, onClear: onClearRecent)
-            }
-            if !popularAirports.isEmpty {
-                section(popularTitle ?? String(themeKitTravel: "Popular"), airports: popularAirports)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func section(_ title: String?, airports: [Airport], onClear: (() -> Void)? = nil) -> some View {
+    private func sectionStack(_ section: AirportPickerSection) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let title { sectionHeader(title, onClear: onClear) }
-            ForEach(airports) { airport in
+            sectionHeaderView(section)
+            ForEach(section.airports) { airport in
                 row(airport)
-                if airport.id != airports.last?.id {
+                if airport.id != section.airports.last?.id {
                     DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value)
                 }
             }
+        }
+    }
+
+    /// The header-only unit (title + Clear); nothing when the section is untitled.
+    @ViewBuilder
+    private func sectionHeaderView(_ section: AirportPickerSection) -> some View {
+        if let title = section.title {
+            sectionHeader(title, onClear: section.onClear)
         }
     }
 
@@ -286,29 +357,65 @@ public struct AirportPicker: View {
         .padding(.vertical, Theme.SpacingKey.xs.value)
     }
 
-    // MARK: - Row (fixed anatomy: bold IATA code chip + city/airport text)
+    // MARK: - Row & chip units (bold IATA code chip + city/airport text)
 
+    private func isSelected(_ airport: Airport) -> Bool { selection?.id == airport.id }
+
+    /// The stock wired row: label (or the `.rowContent` slot) at regular
+    /// padding, wrapped in the shared selection wiring.
     private func row(_ airport: Airport) -> some View {
-        let isSelected = selection?.id == airport.id
-        return Button { select(airport) } label: {
-            Group {
-                if let rowContentSlot {
-                    rowContentSlot(airport, isSelected)
-                } else {
-                    builtInRowLabel(airport, isSelected: isSelected)
-                }
-            }
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .padding(.vertical, rowVPad)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+        selectableRow(airport, label: AnyView(
+            rowLabel(airport)
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .padding(.vertical, Theme.SpacingKey.sm.value)))
+    }
+
+    @ViewBuilder
+    private func rowLabel(_ airport: Airport) -> some View {
+        if let rowContentSlot {
+            rowContentSlot(airport, isSelected(airport))
+        } else {
+            builtInRowLabel(airport, isSelected: isSelected(airport))
+        }
+    }
+
+    /// The single source of row interaction — tap → select, read-only gating,
+    /// VoiceOver label/traits — reused by every style through the
+    /// configuration's `selectableRow` unit.
+    private func selectableRow(_ airport: Airport, label: AnyView) -> some View {
+        Button { select(airport) } label: {
+            label
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .allowsHitTesting(!isReadOnly)
         // Buttons carry `.isButton`; reads "IST, Istanbul Airport, Istanbul".
         .accessibilityLabel("\(airport.code), \(airport.name), \(airport.city)")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityAddTraits(isSelected(airport) ? .isSelected : [])
         .travelA11y("row.\(airport.code)", in: accessibilityID)
+    }
+
+    /// The wired chip unit for grid/cloud styles: the stock code chip, an
+    /// accent ring when selected, a 44pt hit target and the row's VoiceOver
+    /// treatment.
+    private func selectableChip(_ airport: Airport) -> some View {
+        Button { select(airport) } label: {
+            codeChip(airport.code)
+                .overlay {
+                    if isSelected(airport) {
+                        RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
+                            .strokeBorder(accentColor?.accent ?? theme.foreground(.fgHero), lineWidth: 1)
+                    }
+                }
+                .frame(minWidth: Metrics.chipMinWidth, minHeight: Metrics.chipTapTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .allowsHitTesting(!isReadOnly)
+        .accessibilityLabel("\(airport.code), \(airport.name), \(airport.city)")
+        .accessibilityAddTraits(isSelected(airport) ? .isSelected : [])
+        .travelA11y("chip.\(airport.code)", in: accessibilityID)
     }
 
     /// The stock row anatomy — IATA chip + city/airport + selection checkmark.
@@ -368,6 +475,13 @@ public struct AirportPicker: View {
     }
 
     // MARK: - Loading (Skeleton rows) & empty states
+
+    /// The loading unit handed to the style — the caller's `.loadingContent`
+    /// slot when set, else the built-in Skeleton rows.
+    @ViewBuilder
+    private var loadingContentView: some View {
+        if let loadingSlot { loadingSlot } else { loadingRows }
+    }
 
     private var loadingRows: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -500,9 +614,18 @@ public extension AirportPicker {
     /// SF Symbol on the field-shaped trigger (default `"airplane"`).
     func triggerIcon(_ systemName: String) -> Self { copy { $0.triggerIconName = systemName } }
 
-    /// Row density: `.regular` (default) or `.compact` — tighter row padding
-    /// and section gaps, resolved from spacing tokens.
-    func density(_ d: AirportPickerDensity) -> Self { copy { $0.densityValue = d } }
+    /// Row density: `.regular` (default) or `.compact`. Deprecate-forward
+    /// (ADR-0004): `.compact` maps to the ``CompactAirportPickerStyle`` preset,
+    /// `.regular` to ``ListAirportPickerStyle``; when explicitly set it wins
+    /// over an ancestor `.airportPickerStyle(_:)` for source-behaviour
+    /// stability during migration.
+    @available(*, deprecated, message: "Use .airportPickerStyle(.compact)")
+    func density(_ d: AirportPickerDensity) -> Self { copy { $0.densityOverride = d } }
+
+    /// Surface fill behind the search field and sections (background token
+    /// key); unset keeps the transparent default — the picker rides its
+    /// screen's background.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     /// Replaces the built-in "No airports found" state (T2 slot). Shown when a
     /// typed query has no suggestions and no lookup is in flight.
@@ -640,14 +763,15 @@ private let previewAirports: [Airport] = [
                                 Spacer()
                             }
                         }
-                    // Solid chip variant + custom section titles + compact density.
+                    // Solid chip variant + custom section titles + the compact style
+                    // (the promoted `.density(.compact)` knob, ADR-0004).
                     AirportPicker(selection: .constant(nil), suggestions: [])
                         .chipVariant(.solid)
                         .accent(.info)
-                        .density(.compact)
                         .sectionTitles(recent: "Your searches", popular: "Trending routes")
                         .recent([previewAirports[2], previewAirports[4]])
                         .popular([previewAirports[0], previewAirports[5]])
+                        .airportPickerStyle(.compact)
                     // Outline chips.
                     AirportPicker(selection: .constant(nil), suggestions: [])
                         .chipVariant(.outline)

@@ -4,11 +4,13 @@
 //
 //  Molecule. A recent / saved search summary — the route (from → to, one-way or
 //  round-trip), a dates + passengers caption, and a trailing chevron or remove
-//  button. Tap to re-run. Token-bound.
+//  button. Tap to re-run. Presentation is style-driven (``RecentSearchRowStyle``,
+//  ADR-0004) — set once per list via `.recentSearchRowStyle(_:)`. Token-bound.
 //
 //  ```swift
 //  RecentSearchRow(from: "IST", to: "AYT") { rerun() }
 //      .roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy").onRemove { remove() }
+//      .recentSearchRowStyle(.card)      // .plain (default) / .bordered / .pill
 //  ```
 //
 
@@ -17,8 +19,12 @@ import ThemeKit
 
 /// Chrome of a ``RecentSearchRow``: a flush `.plain` list row (default), a
 /// `.bordered` card, or a fully-rounded `.pill` capsule (the mini search bar).
-/// Consolidates the `.bordered()` / `.pill()` boolean pair — the previously
-/// silently-resolved `.bordered().pill()` conflict is unrepresentable.
+///
+/// Superseded by ``RecentSearchRowStyle`` (each case maps 1:1 to a preset —
+/// `.plain`/`.bordered`/`.pill`, joined by the new `.card` tile); kept for
+/// source compatibility until the next major, together with the deprecated
+/// ``RecentSearchRow/variant(_:)`` / ``RecentSearchRow/bordered(_:)`` /
+/// ``RecentSearchRow/pill(_:)`` modifiers.
 public enum RecentSearchVariant: Sendable { case plain, bordered, pill }
 
 /// Size ramp of the leading icon tile (internal 32/12 · 40/16 · 48/20 pt).
@@ -42,8 +48,9 @@ public enum RecentSearchTileSize: Sendable {
 }
 
 public struct RecentSearchRow: View {
-    @Environment(\.theme) private var theme
+    @Environment(\.recentSearchRowStyle) private var envStyle
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
 
     private let from: String
     private let to: String
@@ -57,12 +64,18 @@ public struct RecentSearchRow: View {
     private var onSearch: (() -> Void)?
     private var searchAccent: SemanticColor = .neutral
     private var accent: SemanticColor?
-    private var variant: RecentSearchVariant = .plain
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var radiusRole: Theme.RadiusRole = .field
+    /// `nil` → the style's own default surface (the built-ins use `.bgBase`).
+    private var surfaceKey: Theme.BackgroundColorKey?
+    /// `nil` → the style's own default role (`.bordered` uses `.field`, `.card` `.box`).
+    private var radiusRole: Theme.RadiusRole?
     private var tileSize: RecentSearchTileSize = .md
     private var viaCodes: [String] = []
     private var customLeading: AnyView?
+    /// Set by the deprecated ``variant(_:)`` / ``bordered(_:)`` / ``pill(_:)``
+    /// modifiers — an explicitly chosen per-instance style wins over an
+    /// ancestor's `.recentSearchRowStyle(_:)` (source-behavior stability
+    /// during the enum's deprecation window, ADR-0004 §5).
+    private var explicitStyle: AnyRecentSearchRowStyle?
 
     public init(from: String, to: String, action: @escaping () -> Void = {}) {   // R1
         self.from = from
@@ -70,94 +83,30 @@ public struct RecentSearchRow: View {
         self.action = action
     }
 
-    private var bordered: Bool { variant == .bordered }
-    private var pill: Bool { variant == .pill }
-
-    private var shape: AnyShape {
-        pill
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous))
-    }
-    private var caption: String? {
-        [dates, passengers].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
-    }
-    /// The full route — origin, any `via` codes, destination.
-    private var routeStops: [String] { [from] + viaCodes + [to] }
-
     public var body: some View {
-        Button(action: action) {
-            HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                if let customLeading {
-                    customLeading
-                } else if let systemImage {
-                    IconTile(systemImage).size(tileSize.tile).iconSize(tileSize.icon).accent(accent)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    routeLine
-                    if let caption { Text(caption).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
-                }
-                Spacer(minLength: 6)
-                trailing
-            }
-            // Uniform tap padding, except the pill "mini search bar" (no leading
-            // tile) insets its content from the left (Figma pl-24 · pr-8 · py-8).
-            .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
-            .padding(.trailing, density.scale(Theme.SpacingKey.sm.value))
-            .padding(.leading, density.scale(pill && systemImage == nil && customLeading == nil
-                                             ? Theme.SpacingKey.base.value
-                                             : Theme.SpacingKey.sm.value))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background((bordered || pill) ? theme.background(surfaceKey) : .clear, in: shape)
-            .overlay { if bordered { shape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
-            .contentShape(shape)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(
-            String(themeKit: "\(from) to \(to)")
-                + (viaCodes.isEmpty ? "" : ", " + String(themeKit: "via \(viaCodes.joined(separator: ", "))"))
-                + (caption.map { ", " + $0 } ?? "")
-        )
+        // The arrangement is owned by the active `RecentSearchRowStyle`; the
+        // component only gathers its typed summary. No motion to resolve here.
+        let configuration = RecentSearchRowConfiguration(
+            from: from,
+            to: to,
+            roundTrip: roundTrip,
+            viaCodes: viaCodes,
+            dates: dates,
+            passengers: passengers,
+            systemImage: systemImage,
+            leading: customLeading,
+            action: action,
+            onSearch: onSearch,
+            onRemove: onRemove,
+            searchAccent: searchAccent,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            radiusRole: radiusRole,
+            tileSize: tileSize,
+            density: density,
+            locale: locale)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
     }
-
-    /// The route — a from → to pair, or a multi-city chain when ``via(_:)`` is set
-    /// (IST → FRA → JFK). Multi-city always renders one-way arrows.
-    private var routeLine: some View {
-        HStack(spacing: 6) {
-            ForEach(Array(routeStops.enumerated()), id: \.offset) { i, code in
-                if i > 0 { routeArrow }
-                Text(code).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-            }
-        }
-    }
-
-    private var routeArrow: some View {
-        Image(systemName: roundTrip && viaCodes.isEmpty ? "arrow.left.arrow.right" : "arrow.right")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(theme.text(.textTertiary))
-            .mirrorsInRTL()
-    }
-
-    @ViewBuilder private var trailing: some View {
-        if let onSearch {
-            ThemeButton(action: onSearch)
-                .icon(leading: "magnifyingglass")
-                .shape(.circle)
-                .color(searchAccent)
-                .size(.small)
-                .accessibilityLabel(String(themeKit: "Search"))
-        } else if let onRemove {
-            Button { onRemove() } label: {
-                Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary))
-                    .frame(width: 44, height: 44).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Remove"))
-        } else {
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
-        }
-    }
-}
-
-private extension String {
-    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
@@ -179,19 +128,49 @@ public extension RecentSearchRow {
     func searchAccent(_ color: SemanticColor) -> Self { copy { $0.searchAccent = color } }
     /// Brand-tints the leading icon tile (default: neutral tile).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
-    /// Chrome: a flush `.plain` list row (default), a `.bordered` card, or the
-    /// fully-rounded `.pill` capsule. Consolidates `.bordered()` / `.pill()`.
-    func variant(_ v: RecentSearchVariant) -> Self { copy { $0.variant = v } }
-    /// Wrap in a bordered surface (default off — flush list row). Sugar for
-    /// `.variant(.bordered)`.
-    func bordered(_ on: Bool = true) -> Self { copy { $0.variant = on ? .bordered : .plain } }
+    /// Chrome — superseded by the style axis: prefer
+    /// `.recentSearchRowStyle(.plain/.bordered/.pill)`, settable once per list
+    /// via the environment (and joined by the new `.card` tile). This modifier
+    /// keeps working and, when called, wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .recentSearchRowStyle(.plain/.bordered/.pill) instead")
+    func variant(_ v: RecentSearchVariant) -> Self {
+        copy {
+            switch v {
+            case .plain: $0.explicitStyle = AnyRecentSearchRowStyle(PlainRecentSearchRowStyle())
+            case .bordered: $0.explicitStyle = AnyRecentSearchRowStyle(BorderedRecentSearchRowStyle())
+            case .pill: $0.explicitStyle = AnyRecentSearchRowStyle(PillRecentSearchRowStyle())
+            }
+        }
+    }
+    /// Wrap in a bordered surface (default off — flush list row). Superseded by
+    /// `.recentSearchRowStyle(.bordered)`; when called it wins over an
+    /// ancestor's environment style.
+    @available(*, deprecated, message: "Use .recentSearchRowStyle(.bordered) instead")
+    func bordered(_ on: Bool = true) -> Self {
+        copy {
+            $0.explicitStyle = on
+                ? AnyRecentSearchRowStyle(BorderedRecentSearchRowStyle())
+                : AnyRecentSearchRowStyle(PlainRecentSearchRowStyle())
+        }
+    }
     /// Fully-rounded **capsule** surface — a pill that sits on a colored band (the
     /// search-result mini bar). Fills with ``surface(_:)`` and drops the hairline.
-    /// Sugar for `.variant(.pill)`.
-    func pill(_ on: Bool = true) -> Self { copy { $0.variant = on ? .pill : .plain } }
-    /// Surface fill of the bordered / pill variant (background token key, default `.bgBase`).
+    /// Superseded by `.recentSearchRowStyle(.pill)`; when called it wins over an
+    /// ancestor's environment style.
+    @available(*, deprecated, message: "Use .recentSearchRowStyle(.pill) instead")
+    func pill(_ on: Bool = true) -> Self {
+        copy {
+            $0.explicitStyle = on
+                ? AnyRecentSearchRowStyle(PillRecentSearchRowStyle())
+                : AnyRecentSearchRowStyle(PlainRecentSearchRowStyle())
+        }
+    }
+    /// Surface fill of surfaced styles (background token key). When unset, the
+    /// active ``RecentSearchRowStyle`` picks its own default (the built-ins
+    /// use `.bgBase`; `.plain` draws no surface).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
-    /// Corner radius role of the `.bordered` variant (default `.field`).
+    /// Corner-radius role of surfaced styles. When unset, the active style
+    /// picks its own default (`.bordered` uses `.field`, `.card` uses `.box`).
     func radius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
     /// Intermediate stops for a multi-city route — renders IST → FRA → JFK
     /// instead of the fixed from → to pair.
@@ -212,13 +191,23 @@ public extension RecentSearchRow {
 
 #Preview {
     PreviewMatrix("RecentSearchRow") {
-        PreviewCase("Round trip") { RecentSearchRow(from: "IST", to: "AYT") { }.roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy") }
-        PreviewCase("Removable") { RecentSearchRow(from: "SAW", to: "ESB") { }.dates("2 Aug").passengers("1 adult").onRemove { } }
-        PreviewCase("Bordered") { RecentSearchRow(from: "IST", to: "LHR") { }.dates("5 Sep").passengers("1 adult").bordered() }
+        PreviewCase("Round trip") {
+            RecentSearchRow(from: "IST", to: "AYT") { }
+                .roundTrip().dates("18 – 27 Jul").passengers("2 adults · Economy")
+        }
+        PreviewCase("Removable") {
+            RecentSearchRow(from: "SAW", to: "ESB") { }.dates("2 Aug").passengers("1 adult").onRemove { }
+        }
+        PreviewCase("Bordered") {
+            RecentSearchRow(from: "IST", to: "LHR") { }
+                .dates("5 Sep").passengers("1 adult")
+                .recentSearchRowStyle(.bordered)
+        }
         PreviewCase("Bordered · box radius · large tile") {
             RecentSearchRow(from: "IST", to: "CDG") { }
                 .dates("12 Oct").passengers("2 adults")
-                .variant(.bordered).radius(.box).tileSize(.lg)
+                .radius(.box).tileSize(.lg)
+                .recentSearchRowStyle(.bordered)
         }
         PreviewCase("Multi-city via") {
             RecentSearchRow(from: "IST", to: "JFK") { }
@@ -240,8 +229,9 @@ public extension RecentSearchRow {
     RecentSearchRow(from: "Istanbul", to: "Antalya") { }
         .icon(nil)
         .dates("14 Jan").passengers("7")
-        .pill().surface(.bgWhite)
+        .surface(.bgWhite)
         .onSearch { }
+        .recentSearchRowStyle(.pill)
         .padding()
         .frame(maxWidth: .infinity)
         .background(SemanticColor.primary.solid)
