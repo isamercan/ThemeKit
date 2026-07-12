@@ -151,11 +151,13 @@ jobs:
       - name: Check modifier signatures against the variant-matrix contract
         run: |
           scripts/check-variant-naming.sh \
-            || echo "::warning::Variant-matrix naming drift — a color/variant/size axis takes a raw Color/CGFloat. Token-feed it, deprecate-and-forward, or allowlist a documented genuine dimension (scripts/check-variant-naming.sh, ADR-3)."
+            || { echo "::error::Variant-matrix naming drift — a color/variant/size axis takes a raw Color/CGFloat. Token-feed it, deprecate-and-forward, or allowlist a documented genuine dimension (scripts/check-variant-naming.sh, ADR-3)."; exit 1; }
 
   # ---------------------------------------------------------------------------
   # Public-API breakage detection. PR-only (diffs against the PR base) and
-  # informational — a public-API change is often intended. See docs/API-STABILITY.md.
+  # BLOCKING (ADR-review P1-1) — a source-breaking change must be intentional and
+  # recorded in .api-breakage-allowlist.txt. Additions are non-breaking and pass.
+  # See docs/API-STABILITY.md and docs/2.0-removal-epoch.md.
   # ---------------------------------------------------------------------------
   api-breakage:
     name: API breakage check
@@ -172,7 +174,7 @@ jobs:
         run: |
           BASELINE="${{ github.event.pull_request.base.sha || 'origin/main' }}"
           scripts/check-api.sh "$BASELINE" \
-            || echo "::warning::Public API changed vs base — confirm the SemVer bump (see docs/API-STABILITY.md)."
+            || { echo "::error::Un-allowlisted source-breaking public-API change vs base. Confirm the SemVer bump and record it in .api-breakage-allowlist.txt (see docs/API-STABILITY.md, docs/2.0-removal-epoch.md)."; exit 1; }
 
   # ---------------------------------------------------------------------------
   # Brand-neutrality & i18n gate — the catalog is brand-neutral and English-only.
