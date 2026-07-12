@@ -102,7 +102,14 @@ public enum ThemeKitStrings {
     /// ``locale``.
     @MainActor public static var languageBinding: Binding<String> {
         Binding(
-            get: { effectiveLocale.identifier },
+            get: {
+                // An explicit override round-trips exactly; the zero-config
+                // initial value is the bare device language code ("tr", not
+                // "tr_TR") so it matches `AppLanguage(code:)` entries.
+                locale?.identifier
+                    ?? Locale.autoupdatingCurrent.language.languageCode?.identifier
+                    ?? Locale.autoupdatingCurrent.identifier
+            },
             set: { locale = Locale(identifier: $0) }
         )
     }

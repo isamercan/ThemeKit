@@ -2,1313 +2,1702 @@
   "sourceLanguage": "en",
   "strings": {
     "%@ %@ to %@ %@, %@, %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ adults": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ card ending %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ children": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ from %@ to %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ infants": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ installments": {
       "comment": "A label indicating the number of installments or a single payment for a given instalment plan. The argument is the number of installments in the plan.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ left": {
       "comment": "Text shown in the trailing corner of a text input, indicating how many characters are left to be entered. The argument is the number of remaining characters.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ more": {
       "comment": "AvatarGroup: spoken count of the overflow bubble (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ of %@": {
       "comment": "StepIndicator: spoken position (position, total). VoiceOver.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ out of %@": {
       "comment": "Rating: spoken value for the star layout (score, max). VoiceOver.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ per month": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ percent": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ results": {
       "comment": "A label displaying the number of search results. The argument is the count of results.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ reviews": {
       "comment": "A text label showing the number of reviews for a product or service. The argument is the number of reviews.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ seats": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ seats left": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ selected": {
       "comment": "MultiSelect accessibility value: number of selected options.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ stops": {
       "comment": "Pluralization key for the text \"\\(stops) stops\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ to %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ total": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@ travelers": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@%% off": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@%% saturation, %@%% brightness": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@%% to %@": {
       "comment": "A text showing the percentage of the loyalty card that is filled, followed by a description of the next tier. The first argument is the percentage of the card that is filled. The second argument is the name of the next tier.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@/mo": {
       "comment": "A label showing the monthly payment amount for a given installment plan. The argument is the monthly payment amount for the plan.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@: scheduled %@, estimated %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@h %@m": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "%@m": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "+%@ more": {
       "comment": "Button that appears when there are more amenities to show.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     ", a digit": {
       "comment": "Password requirement fragment, appended after the length requirement.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     ", a special character": {
       "comment": "Password requirement fragment, appended after the length requirement.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     ", uppercase": {
       "comment": "Password requirement fragment, appended after the length requirement.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "/ mo": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 adult": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 child": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 infant": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 seat": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 seat left": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 stop": {
       "comment": "Pluralization key for \"1 stop\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "1 traveler": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Action": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Add": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Add a photo from your device or take one with the camera.": {
       "comment": "Upload component default prompt.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Add new card": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Add tab": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Add to favourites": {
       "comment": "An accessibility label for a button that adds a flight to the user's favorites.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Added": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Adults": {
       "comment": "Label for the number of adult guests in a ``GuestSelector``.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Age 13+": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Age 2–12": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Aircraft": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Aisle": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "All currencies": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "All day": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Area chart with series %@.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Arrival": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Arrived": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "At least %@ characters": {
       "comment": "Validation: minimum length.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "At most %@ characters": {
       "comment": "Validation: maximum length.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Available": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Available, %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Avatar": {
       "comment": "Default accessibility label for an avatar without initials.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Average": {
       "comment": "Rating: default sentiment for the mid score band.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Away": {
       "comment": "StatusDot: spoken status (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Back": {
       "comment": "Tour: previous-step button.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Back to days": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Back to years": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Baggage belt": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Bar chart with series %@.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Barcode %@": {
       "comment": "A label for the barcode view, including the value. The argument is the value of the barcode.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Bassinet": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Before and after comparison": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Best value": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Between %@ and %@": {
       "comment": "Validation: integer range.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Boarding": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Brightness": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Bus": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Business": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Busy": {
       "comment": "StatusDot: spoken status (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Cabin": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Cabin class": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Cancel": {
       "comment": "Default secondary / dismiss action label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Car": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Card ending %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Card number": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Cardholder name": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Cards you save at checkout will appear here.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Carry-on": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Check-in": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Check-in desk": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Checked bag": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Children": {
       "comment": "Title of a guest row representing children.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Choose file": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Choose year": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "City or airport": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Clear": {
       "comment": "Label for a button that clears the input in a DateField.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Clear all filters": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Clear recent airports": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Clear selection": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Clear text": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Close": {
       "comment": "A button label that dismisses a sheet.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Close %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Collapse": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Collapse actions": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Collapse search": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Collapsed": {
       "comment": "Accessibility value of a closed dropdown trigger.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Completed": {
       "comment": "Accessibility value of a finished step.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Continue": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Copied": {
       "comment": "Accessibility label shown after code was copied.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Copy code": {
       "comment": "Accessibility label of the code block copy button.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Country code": {
       "comment": "PhoneField: accessibility label of the dial-code trigger.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Current": {
       "comment": "Accessibility value of the active step.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Current color": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Date": {
       "comment": "DateField: VoiceOver name used when no explicit label is given.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Date of birth": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Days": {
       "comment": "Counter: day/hour/minute convenience label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Deck %@": {
       "comment": "A button labeled with the deck number, with a background color that changes when selected. The argument is the deck number.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Decrease": {
       "comment": "Label for the \"minus\" stepper in the `InputNumber` molecule.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Decrease %@": {
       "comment": "A button that either decreases or increases a stepper row's value, labeled with the name of the row.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Decrease saturation": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Departed": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Departure": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Details": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Digits only": {
       "comment": "Validation: numeric only.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Direct": {
       "comment": "Localized string key for the text describing a direct flight.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Directions": {
       "comment": "A button label that says \"Directions\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Directions to %@": {
       "comment": "A button that triggers navigation to a specified location in Maps. The label is generated from the title of the LocationCard.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Dismiss": {
       "comment": "Accessibility label for the \"xmark\" button in the Callout.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Document expiry": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Document must be valid on the travel date": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Document number": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Doesn't match": {
       "comment": "Validation: confirm-field mismatch.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Done": {
       "comment": "Tour: finish button on the last step.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Donut chart with slices %@.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Double-tap to show card": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Double-tap to show membership code": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Double-tap to sort": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "EXIT": {
       "comment": "The text displayed in the exit band of a seat map.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Economy": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Edit": {
       "comment": "A button label that says \"Edit\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Edit search": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Enter a valid document number": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Enter a valid email": {
       "comment": "Validation: email format.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Enter a valid phone number": {
       "comment": "Validation: phone format.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Error": {
       "comment": "Accessibility value of a failed step.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Even numbers only": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Excellent": {
       "comment": "Rating: default sentiment for the top score band.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Exit row": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Expand": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Expand actions": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Expanded": {
       "comment": "Accessibility value of an open dropdown trigger.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Expired": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Expires %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Extra legroom": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Family name": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Fare": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Favourite": {
       "comment": "A button label that toggles a \"favourite\" state for a flight.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Female": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Ferry": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Filter": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "First": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Flight": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Flight progress": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Flight search": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Free": {
       "comment": "Chip: default free-badge label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "From": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Gallery": {
       "comment": "Accessibility label of the scrub gallery.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Gate": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Gender": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Given name": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Go to": {
       "comment": "Title for the \"Go to\" text in the quick jumper.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Good": {
       "comment": "Rating: default sentiment for the good score band.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Hex color": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Hide fare breakdown": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Hide password": {
       "comment": "TextInput: accessibility label for the reveal toggle (currently showing).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Hours": {
       "comment": "Counter: day/hour/minute convenience label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Hue": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Increase": {
       "comment": "Label for the \"Increase\" stepper button in the InputNumber molecule.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Increase %@": {
       "comment": "A label describing the action of pressing a button that either decreases or increases a stepper value. The argument is the label for the stepper.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Increase saturation": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Infants": {
       "comment": "Label for the \"Infants\" section in the rooms & guests picker.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Info": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Information": {
       "comment": "Accessibility label for an informational status icon.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Interest-free": {
       "comment": "A label indicating that a payment plan is interest-free.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Language": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Line chart with series %@.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Loading": {
       "comment": "Button accessibility value while loading.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Loading suggestions": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Loading…": {
       "comment": "Default blocking-loading title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "MEMBERSHIP": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Main deck": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Male": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Max": {
       "comment": "RangeSlider: default max input title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Mentions": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Middle": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Min": {
       "comment": "RangeSlider: default min input title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Minutes": {
       "comment": "Counter: day/hour/minute convenience label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Mixed airlines": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "More about %@": {
       "comment": "A button that triggers an action when pressed, with an accessibility label that includes the text of the associated fare line.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "More sort options": {
       "comment": "A button label that announces more sort options are available.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Move down": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Move to %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Move up": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Multi-city": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Mute": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Nationality": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Nearby": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Next": {
       "comment": "Tour: next-step button.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Next month": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Next page": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Next year": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Next years": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No": {
       "comment": "Popconfirm: default cancel title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No airports found": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No commands found": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No data": {
       "comment": "Text to display when a data table has no rows to show.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No file chosen": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No results": {
       "comment": "MultiSelect: empty search result.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "No saved cards": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Nonstop": {
       "comment": "Localized string keys for the stops label in a flight card.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Not included": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Not started": {
       "comment": "Accessibility value of an upcoming step.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Note": {
       "comment": "Accessibility label for a neutral status icon.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Nothing scheduled": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Occupied": {
       "comment": "A description of a seat's state: \"Occupied\", \"Selected\" or \"Available\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Offline": {
       "comment": "StatusDot: spoken status (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "One way": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Online": {
       "comment": "StatusDot: spoken status (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Only https URLs are allowed.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Opacity": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Other": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Page": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Page %@": {
       "comment": "A label for a pagination button, describing the page number it represents. The argument is the page number.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Page %@ of %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Passenger": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Passenger %@, seat %@": {
       "comment": "An accessibility label for each passenger tab, describing both their initials and the seat they are currently assigned to (or \"unassigned\" if none).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Passengers": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Pause": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Payment method, %@ options": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Personal details": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Phone number": {
       "comment": "PhoneField: default placeholder for the national-number portion.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Photo": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Pick a seat": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Play": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Poor": {
       "comment": "Rating: default sentiment for the low score band.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Popular": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Premium": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Premium Economy": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Premium econ.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Previous": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Previous month": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Previous page": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Previous year": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Previous years": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Price details": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Progress": {
       "comment": "ProgressBar / RadialProgress: VoiceOver label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Promo code:": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "QR code": {
       "comment": "A label describing a QR code.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Rating": {
       "comment": "Rating: VoiceOver label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "React with %@, %@ reactions": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Read more": {
       "comment": "BlogCard: default read-more link title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Recent": {
       "comment": "Label for the \"Recent\" section in the search bar's dropdown.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Recommended": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove": {
       "comment": "Accessibility label for the \"Remove\" button in the FileInput.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove %@": {
       "comment": "Aria label for the remove button. The argument is the tag text.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove card": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove card ending %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove from favourites": {
       "comment": "An accessibility label for a button that removes an item from a list of favorites.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Remove saved flight": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Resend code": {
       "comment": "Label for a button that triggers the resend of a verification code.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Resend code in %@s": {
       "comment": "Text that appears when a code is being resent, showing the remaining time. The argument is the remaining time, expressed as a number of seconds.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Resize": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Retry": {
       "comment": "Label for a button that triggers the retry action for a failed file upload.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Return": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Review photo %@ of %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Rooms": {
       "comment": "Label for the \"Rooms\" section in the rooms & guests picker.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Round trip": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Saturation": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Saturation and brightness": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Save": {
       "comment": "A button label that suggests saving an item.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Saved cards, %@ cards": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Score": {
       "comment": "ScoreBadge: VoiceOver label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Search": {
       "comment": "A placeholder text for a search field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Search flights": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Searching…": {
       "comment": "Text shown in the \"Searching…\" row of the autocomplete dropdown when results are being fetched.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Seat": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Seat %@": {
       "comment": "A label showing the seat number in the checkout bar. The argument is the seat number to be displayed.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "See options": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select": {
       "comment": "Default placeholder for select-style fields.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select a date": {
       "comment": "DateField: default placeholder.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select a seat to see its details": {
       "comment": "A placeholder text displayed in the seat-summary bar when no seat is selected.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select a time": {
       "comment": "Default placeholder text for the time field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select dates for price": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Select language": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Selected": {
       "comment": "A description of a seat's state: \"Occupied\", \"Selected\" or \"Available\".",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Share": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show %@ more": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show fare breakdown": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show hidden breadcrumbs": {
       "comment": "Accessibility label for the button that shows the hidden breadcrumbs in the Breadcrumbs view.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show less": {
       "comment": "A button label that collapses expanded review text.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show password": {
       "comment": "TextInput: accessibility label for the reveal toggle (currently hidden).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Show preview": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Single payment": {
       "comment": "A label describing a single payment option.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Sold out": {
       "comment": "A label indicating that a product is currently unavailable.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Something went wrong": {
       "comment": "Default error message shown in a toast when a task fails without a custom message.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Sort": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Source": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Standard": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Status": {
       "comment": "StatusDot: spoken status fallback (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Step": {
       "comment": "StepIndicator: VoiceOver label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Step %@ of %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Success": {
       "comment": "Accessibility label for a success status icon.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Swap": {
       "comment": "A label describing an action that can be performed by tapping a button.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Swap origin and destination": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Target": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Terminal": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "The URL did not return a text/markdown document.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "The design file could not be found.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "The design file could not be read as text.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "The file is larger than the %@ KB limit.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "The server responded with status %@.": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "This field is required": {
       "comment": "Validation: required field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Time": {
       "comment": "Label for a time field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Time's up": {
       "comment": "A static text label displayed when a countdown timer reaches zero.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "To": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Today": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Tomorrow": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Total": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Total: %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Train": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Travel document": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Traveler details": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Unavailable": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Under 2": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Unmute": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Unspecified": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Updated %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Upload Photo": {
       "comment": "Upload component default button title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Upload failed": {
       "comment": "Error message displayed when an upload operation fails.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Uploaded": {
       "comment": "Upload: completed status label.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Upper deck": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Use MM/YY format": {
       "comment": "Validation: credit-card expiry date format.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Value": {
       "comment": "Label for the value displayed in the `InputNumber`.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Verification code": {
       "comment": "OTPInput: accessibility label for the code field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Verified": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Very good": {
       "comment": "Rating: default sentiment for the high score band.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "View more photos": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Visa required": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Warning": {
       "comment": "Accessibility label for a warning status icon.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Where to?": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Window": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "Yes": {
       "comment": "Popconfirm: default confirm title.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "adult": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "adults": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "child": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "children": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "days": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "direct": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "down %@": {
       "comment": "Stat: spoken downward trend with magnitude (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "estimated arrival %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "estimated departure %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "from": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "hrs": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "infant": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "infants": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "layover": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "lowest fare": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "min": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "mixed": {
       "comment": "Checkbox accessibility value: indeterminate state.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "not included": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "not selected": {
       "comment": "Checkbox / radio accessibility value: unselected.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "not sorted": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "off": {
       "comment": "Toggle accessibility value: off.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "on": {
       "comment": "Toggle accessibility value: on.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "pts": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "required": {
       "comment": "Accessibility suffix announced for a required form field.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "reviews": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "room": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "rooms": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "seat %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "sec": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "selected": {
       "comment": "Checkbox / radio accessibility value: selected.",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "sorted ascending": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "sorted descending": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "unassigned": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "unavailable": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "up %@": {
       "comment": "Stat: spoken upward trend with magnitude (VoiceOver).",
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     },
     "via %@": {
-      "extractionState": "manual"
+      "extractionState": "manual",
+      "generatesSymbol": false
     }
   },
   "version": "1.0"

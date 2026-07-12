@@ -187,6 +187,7 @@ enum ComponentRegistry {
         .knob("PhoneField", .molecules, demo: PhoneFieldDemo(), usage: ##"PhoneField("Phone", number: $phone, dialCode: $dial).formatsNumber().required()   // plain init seeds the dial code from the locale"##, isNew: true),
         .knob("CabinClassSelector", .molecules, demo: CabinClassSelectorDemo(), usage: ##"CabinClassSelector(selection: $cabin).variant(.segmented).showsGlyphs()   // ThemeKitTravel"##, isNew: true),
         .knob("LanguageSwitcher", .molecules, demo: LanguageSwitcherDemo(), usage: ##"LanguageSwitcher(languages, selection: $lang).variant(.menu).showsFlags()   // neutral, Locale-derived"##, isNew: true),
+        .knob("Live Localization", .molecules, demo: LiveLocalizationDemo(), usage: ##"RootView().themeKitLocalized()   // + LanguageSwitcher(langs, selection: ThemeKitStrings.languageBinding) — restart-free"##, isNew: true),
         .knob("ThemeToggle", .molecules, demo: ToggleDemo(), usage: #"ThemeToggle(isOn: $on).accent(.success).symbols(on: "checkmark")"#),
         .knob("ToggleGroup", .molecules, demo: ToggleGroupDemo(), usage: #"ToggleGroup(options: items, selection: $set, label: { $0 })"#),
         .knob("Tooltip", .molecules, demo: TooltipDemo(), usage: #"anchorView.tooltip("Hint", isPresented: $shown, edge: .top, color: .primary)"#),

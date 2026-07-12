@@ -301,7 +301,13 @@ def load_comments(catalog_path: pathlib.Path) -> dict:
 def render_catalog(keys, comments) -> str:
     strings = {}
     for key in sorted(keys):
-        entry = {"extractionState": "manual"}
+        # extractionState "manual": Xcode's catalog sync never touches
+        # generator-owned entries. generatesSymbol false: ThemeKit strings
+        # resolve through String(themeKit:), never through Xcode's generated
+        # string symbols — and symbol generation would collide on the many
+        # case-/punctuation-differing keys ("Adults"/"adults", "Loading"/
+        # "Loading…", "Total: %@"/"%@ total"), breaking every Xcode build.
+        entry = {"extractionState": "manual", "generatesSymbol": False}
         if key in comments:
             entry["comment"] = comments[key]
         strings[key] = entry
