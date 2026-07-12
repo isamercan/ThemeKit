@@ -712,6 +712,7 @@ your language, fill the column. Keys **are** ThemeKit's English strings (`Card n
 ```json
 {
   "sourceLanguage" : "en",
+  "version" : "1.0",
   "strings" : {
     "Card number" : { "localizations" : {
       "tr" : { "stringUnit" : { "state" : "translated", "value" : "Kart numarası" } } } },
