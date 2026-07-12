@@ -7,17 +7,25 @@
 //  left and a primary action on the right. Token-bound; pin it with
 //  `.safeAreaInset(edge: .bottom) { StickyBookingBar(…) }`.
 //
-//  Chrome is style-driven: set a ``BarStyle`` with `.barStyle(_:)` and the bar
-//  hands its price + CTA row to the style as a `.bottom`-edge
-//  ``BarStyleConfiguration`` (`surface(_:)` / `showsShadow(_:)` still win over
-//  the style's own fill/shadow). With no style set, the original chrome — flat
-//  fill, top hairline overlay, tab-bar shadow — renders pixel-identically
-//  (that shadowed chrome cannot be produced by the stock `DefaultBarStyle`,
-//  so the untouched default keeps the legacy look).
+//  Two independent style axes (ADR-0004 §6):
+//  - **Content** — set a ``StickyBookingBarStyle`` with `.stickyBookingBarStyle(_:)`
+//    to rearrange the price block / CTA / secondary-CTA units (`.standard`
+//    default, `.stacked`, `.split`, or a custom style). The component still
+//    owns every live control (the CTA's action/`.enabled`/`.loading`, the
+//    price-tap disclosure, the secondary action) — styles arrange the
+//    pre-wired units, never re-wire them (`StickyBookingBarStyle.swift`).
+//  - **Chrome** — set a ``BarStyle`` with `.barStyle(_:)` and the bar hands its
+//    arranged content to the style as a `.bottom`-edge ``BarStyleConfiguration``
+//    (`surface(_:)` / `showsShadow(_:)` still win over the style's own
+//    fill/shadow). With no `BarStyle` set, the original chrome — flat fill,
+//    top hairline overlay, tab-bar shadow — renders pixel-identically (that
+//    shadowed chrome cannot be produced by the stock `DefaultBarStyle`, so the
+//    untouched default keeps the legacy look).
 //
 //  ```swift
 //  StickyBookingBar("Book now") { checkout() }
 //      .price(9_600).original(12_000).discountBadge("-20%").note("2 rooms · 4 nights")
+//      .stickyBookingBarStyle(.stacked)
 //  ```
 //
 
@@ -28,6 +36,7 @@ public struct StickyBookingBar: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.barStyle) private var barStyle
+    @Environment(\.stickyBookingBarStyle) private var style
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
     @Environment(\.controlSize) private var controlSize   // R3 — native size axis
@@ -69,19 +78,21 @@ public struct StickyBookingBar: View {
     }
 
     public var body: some View {
+        let arranged = style.makeBody(configuration: configuration)
         if barStyle.isDefault {
             // No `.barStyle(_:)` set — the original flat fill + top hairline
             // overlay + tab-bar shadow.
-            row
+            arranged
                 .background(theme.background(surfaceOverride ?? .bgWhite))
                 .overlay(alignment: .top) { Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1) }
                 .modifier(BarShadow(on: showsShadowOverride ?? true))
         } else {
-            // The whole price + CTA row is the configuration's content — both
-            // blocks are far wider than the 44pt accessory slots the built-in
-            // styles overlay, so neither maps to leading/trailing.
+            // The active `StickyBookingBarStyle`'s arranged content is the
+            // configuration's content — both blocks are far wider than the
+            // 44pt accessory slots the built-in `BarStyle`s overlay, so
+            // neither maps to leading/trailing.
             barStyle.makeBody(configuration: BarStyleConfiguration(leading: nil,
-                                                                   content: AnyView(row),
+                                                                   content: arranged,
                                                                    trailing: nil,
                                                                    edge: .bottom))
                 .environment(\.barChromeOverrides,
@@ -90,26 +101,31 @@ public struct StickyBookingBar: View {
         }
     }
 
-    private var row: some View {
-        HStack(alignment: .center, spacing: density.scale(Theme.SpacingKey.md.value)) {
-            if let leadingSlot {
-                leadingSlot
-            } else {
-                priceBlock
-            }
-            Spacer(minLength: 8)
-            if let trailingSlot {
-                trailingSlot
-            } else {
-                ctaArea
-            }
-        }
-        .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
-        .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
-        .frame(maxWidth: .infinity)
+    /// The pre-wired units + typed signals handed to the active
+    /// ``StickyBookingBarStyle`` (ADR-0004, Class B) — this component keeps
+    /// every live control (action, `.enabled`, `.loading`, price-tap); styles
+    /// only arrange the units below, never re-wire them.
+    private var configuration: StickyBookingBarConfiguration {
+        StickyBookingBarConfiguration(
+            // `priceBlockContent` also renders a chevron-only tap target when
+            // `.onPriceTap(_:)` is set without a price — nil out only when
+            // there is truly nothing to show (matches the pre-style render).
+            priceBlock: (price == nil && onPriceTapAction == nil) ? nil : AnyView(priceBlockContent),
+            cta: AnyView(ctaButton),
+            secondaryCta: secondaryCtaUnit,
+            leading: leadingSlot,
+            trailing: trailingSlot,
+            hasPrice: price != nil,
+            discountBadge: discountText,
+            isEnabled: isEnabled,
+            isLoading: isLoading,
+            accent: accent,
+            surfaceKey: surfaceOverride,
+            density: density,
+            locale: locale)
     }
 
-    @ViewBuilder private var priceBlock: some View {
+    @ViewBuilder private var priceBlockContent: some View {
         if let onPriceTapAction {
             Button { onPriceTapAction() } label: {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
@@ -136,20 +152,23 @@ public struct StickyBookingBar: View {
         return b
     }
 
-    /// The action cluster: an optional outline secondary button beside the CTA.
-    private var ctaArea: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let secondaryTitle, let onSecondary {
-                ThemeButton(secondaryTitle) { onSecondary() }
-                    .color(accentSemantic).variant(.outline).size(ctaSize)
-                    .disabled(!isEnabled)
-            }
-            button
-        }
+    /// The outline secondary action beside the CTA (`.secondaryAction(_:action:)`),
+    /// or `nil` when unset. `.fullWidth()`-capable so `.stacked`/`.split`
+    /// styles can stretch it; `.standard` restores its intrinsic footprint
+    /// with `.fixedSize(horizontal:vertical:)` (see `StickyBookingBarStyle`).
+    private var secondaryCtaUnit: AnyView? {
+        guard let secondaryTitle, let onSecondary else { return nil }
+        return AnyView(
+            ThemeButton(secondaryTitle) { onSecondary() }
+                .color(accentSemantic).variant(.outline).size(ctaSize).fullWidth()
+                .disabled(!isEnabled)
+        )
     }
 
-    private var button: some View {
-        themeButton.disabled(!isEnabled)
+    /// The primary CTA, `.fullWidth()`-capable for the same reason as
+    /// ``secondaryCtaUnit``.
+    private var ctaButton: some View {
+        themeButton.fullWidth().disabled(!isEnabled)
     }
     private var themeButton: ThemeButton {
         var b = ThemeButton(ctaTitle) { action() }.color(accentSemantic).size(ctaSize).loading(isLoading)

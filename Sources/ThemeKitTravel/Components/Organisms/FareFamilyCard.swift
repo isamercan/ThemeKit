@@ -7,10 +7,18 @@
 //  price + radio row (selectable set). Token-bound; the accent colour brands the
 //  tier. Composes the FareFeatureRow atom, PriceTag, RadioButton and ThemeButton.
 //
+//  Presentation is style-driven (``FareFamilyCardStyle``, ADR-0004) — set once
+//  per screen via `.fareFamilyCardStyle(_:)`. `.stacked` (default) is today's
+//  card verbatim; `.column`/`.row`/`.accordion` swap the whole layout, and apps
+//  can implement their own. Selection stays here in the component (ADR-F4):
+//  every preset only ever *reads* `isSelected`/`showsSelector` and calls
+//  `select()` — the `.selection(_:)` binding and the uncontrolled fallback both
+//  live in this file.
+//
 //  The outer shell (surface fill, hairline, selected hero frame) is drawn by the
-//  active `CardStyle` from the environment: `.surface()` and the selection state
-//  (`.selected()` / `.selection()`) feed the `CardStyleConfiguration`, so
-//  `.cardStyle(_:)` can reskin the shell and restyle the selected frame in one
+//  active `CardStyle` from the environment — card-shaped presets keep routing
+//  their surface, elevation and selection state through `CardStyleConfiguration`,
+//  so `.cardStyle(_:)` can reskin the shell and restyle the selected frame in one
 //  place. The card is flat (no shadow), so it reports `.none` elevation and the
 //  default style draws the classic 1pt hairline.
 //
@@ -19,6 +27,10 @@ import SwiftUI
 import ThemeKit
 
 /// Layout archetype for ``FareFamilyCard``.
+///
+/// Superseded by ``FareFamilyCardStyle`` (each case maps 1:1 to a preset —
+/// `.stacked`/`.column`); kept for source compatibility until the next major,
+/// together with the deprecated ``FareFamilyCard/layout(_:)`` modifier.
 public enum FareFamilyLayout: String, CaseIterable, Sendable {
     /// The classic full-width card — leading chip, feature list, price footer.
     case stacked
@@ -35,18 +47,22 @@ public enum FareFamilyLayout: String, CaseIterable, Sendable {
 ///     .features([FareFeature("Cabin bag", systemImage: "handbag", detail: "55×40×23"),
 ///                FareFeature("Non-refundable", systemImage: "nosign", status: .excluded)])
 ///     .onSelect { book() }
+///     .fareFamilyCardStyle(.row)      // .stacked (default) / .column / .accordion
 /// ```
 public struct FareFamilyCard: View {
     @Environment(\.componentDensity) private var density
-    @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.fareFamilyCardStyle) private var envStyle
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Required content (R1).
     private let name: String
     private let price: Decimal
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    /// `nil` → the active style's own default (every built-in uses `.bgBase`).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var currencyCode: String?
     private var accent: SemanticColor = .success
     private var features: [FareFeature] = []
@@ -58,165 +74,72 @@ public struct FareFamilyCard: View {
     private var ctaTitleOverride: String?
     private var chipVariant: FillVariant = .solid
     private var elevation: CardElevation = .none
-    private var layout: FareFamilyLayout = .stacked
+    /// Expansion state for `.accordion` — ignored by every other preset.
+    /// Uncontrolled by default; `.expanded(_:)` swaps in the caller's binding
+    /// (ADR-F4 via `ControllableState`, mirroring `FlightListItem`).
+    @ControllableState private var expandedState = false
+    /// Set by the deprecated ``layout(_:)`` modifier — an explicitly chosen
+    /// per-instance style wins over an ancestor's `.fareFamilyCardStyle(_:)`
+    /// (source-behavior stability during the enum's deprecation window).
+    private var explicitStyle: AnyFareFamilyCardStyle?
 
     public init(_ name: String, price: Decimal) {   // R1
         self.name = name
         self.price = price
     }
 
-    private var active: Bool { selection?.wrappedValue ?? isSelected }
-
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
-    public var body: some View {
-        // The shell (fill, hairline, selected hero frame) is drawn by the active
-        // `CardStyle`; selection flows through `Configuration.isSelected`, so a
-        // custom style restyles the selected frame too. Flat card → `.none`
-        // elevation keeps the classic hairline (no shadow), as in HotelResultCard.
-        cardStyle.makeBody(configuration: CardStyleConfiguration(
-            content: AnyView(cardContent),
-            elevation: elevation,
-            isSelected: active,
-            isPressed: false,
-            surfaceKey: surfaceKey,
-            radius: .box))
-            .contentShape(Rectangle())
-            .onTapGesture { if selection != nil { select() } }
-            .accessibilityElement(children: .contain)
-            .accessibilityAddTraits(active ? .isSelected : [])
-    }
-
-    /// The card's inner layout — everything inside the shell.
-    @ViewBuilder private var cardContent: some View {
-        switch layout {
-        case .stacked: stackedContent
-        case .column: columnContent
-        }
-    }
-
-    private var stackedContent: some View {
-        VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let headerSlot { headerSlot } else { tierChip }
-
-            if !features.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(features) { FareFeatureRow($0) }
-                }
-            }
-
-            if let footerSlot {
-                footerSlot
-            } else {
-                footer
-            }
-        }
-        .padding(density.scale(Theme.SpacingKey.md.value))
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// The narrow comparison-matrix column: centered chip, condensed features,
-    /// price at the bottom. Designed to sit side by side in an `HStack`.
-    private var columnContent: some View {
-        VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            Group {
-                if let headerSlot { headerSlot } else { tierChip }
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-
-            if !features.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(features) { FareFeatureRow($0) }
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            if let footerSlot {
-                footerSlot
-            } else {
-                columnFooter
-            }
-        }
-        .padding(density.scale(Theme.SpacingKey.sm.value))
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// The tier name chip, rendered per ``FillVariant`` on the accent's ladder.
-    private var tierChip: some View {
-        Text(name.uppercased())
-            .textStyle(.labelSm700)
-            .foregroundStyle(chipForeground)
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(chipBackground,
-                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
-            .overlay {
-                if chipVariant == .outline {
-                    RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
-                        .strokeBorder(accent.border, lineWidth: 1)
-                }
-            }
-    }
-
-    private var chipForeground: Color {
-        switch chipVariant {
-        case .solid: return accent.onSolid
-        case .soft, .outline, .ghost: return accent.accent
-        }
-    }
-    private var chipBackground: Color {
-        switch chipVariant {
-        case .solid: return accent.solid
-        case .soft: return accent.soft
-        case .outline, .ghost: return .clear
-        }
-    }
-
-    @ViewBuilder private var footer: some View {
-        if let selection {
-            HStack {
-                PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero)
-                Spacer()
-                RadioButton(isSelected: selection)
-            }
-            .padding(.top, 2)
-        } else {
-            ThemeButton(ctaText) { select() }
-                .color(accent).shape(.rounded).fullWidth()
-                .padding(.top, 4)
-        }
-    }
-
-    /// Column-mode footer — price and control stacked, centered, pinned at the bottom.
-    @ViewBuilder private var columnFooter: some View {
-        if let selection {
-            VStack(spacing: Theme.SpacingKey.xs.value) {
-                PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero)
-                RadioButton(isSelected: selection)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 2)
-        } else {
-            ThemeButton(ctaText) { select() }
-                .color(accent).shape(.rounded).size(.small).fullWidth()
-                .padding(.top, 4)
-        }
-    }
-
-    private var ctaText: String { ctaTitleOverride ?? priceText }
     private var priceText: String {
         price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(2)))
     }
-    private func select() { selection?.wrappedValue = true; onSelect?() }
+
+    /// Sets the `.selection(_:)` binding (when bound) and fires `.onSelect(_:)`
+    /// (when set) — the one action every preset's selector/CTA calls.
+    private func select() {
+        selection?.wrappedValue = true
+        onSelect?()
+    }
+
+    public var body: some View {
+        // The arrangement is owned by the active `FareFamilyCardStyle`; motion
+        // is resolved *here* (MicroMotion ∧ ¬Reduce Motion) so styles never
+        // read the motion environment. `showsSelector` mirrors the pre-style
+        // `selection != nil` check that used to pick the footer's look.
+        let expandMotion: Animation? = (micro && !reduceMotion) ? Motion.base.spring : nil
+        let configuration = FareFamilyCardConfiguration(
+            name: name,
+            priceAmount: price,
+            currencyCode: resolvedCurrency,
+            features: features,
+            isSelected: selection?.wrappedValue ?? isSelected,
+            showsSelector: selection != nil,
+            select: { select() },
+            ctaTitle: ctaTitleOverride ?? priceText,
+            badgeVariant: chipVariant,
+            header: headerSlot,
+            footer: footerSlot,
+            elevation: elevation,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            isExpanded: expandedState,
+            toggleExpand: { withAnimation(expandMotion) { expandedState.toggle() } },
+            isMotionEnabled: micro && !reduceMotion,
+            density: density,
+            locale: locale)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
+    }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FareFamilyCard {
-    /// Surface fill (background token key, default `.bgBase`).
+    /// Surface fill (background token key). When unset, the active
+    /// ``FareFamilyCardStyle`` picks its own default (every built-in uses
+    /// `.bgBase`); card-shaped presets feed it through to the `CardStyle` shell.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Currency code for the price. Unset, it resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
@@ -227,7 +150,7 @@ public extension FareFamilyCard {
     func features(_ list: [FareFeature]) -> Self { copy { $0.features = list } }
     /// Selected state (for a CTA card without a binding).
     func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
-    /// Bind selection — renders a price + radio row instead of a CTA button.
+    /// Bind selection — presets render a price + radio row instead of a CTA button.
     func selection(_ binding: Binding<Bool>) -> Self { copy { $0.selection = binding } }
     /// Called when the card's CTA is tapped.
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
@@ -243,8 +166,24 @@ public extension FareFamilyCard {
     /// Shell elevation, fed to the active `CardStyle` (default `.none` — today's
     /// flat, hairline-only chrome).
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
-    /// Layout archetype: `.stacked` (default) or a narrow comparison `.column`.
-    func layout(_ v: FareFamilyLayout) -> Self { copy { $0.layout = v } }
+    /// Drives `.accordion`'s expansion from outside — e.g. a fare-compare list
+    /// where only one tier stays open at a time. Without it the card self-manages.
+    func expanded(_ binding: Binding<Bool>) -> Self {
+        copy { $0._expandedState = ControllableState(wrappedValue: false, external: binding) }
+    }
+    /// Layout archetype — superseded by the style axis: prefer
+    /// `.fareFamilyCardStyle(.stacked/.column/.row/.accordion)`, settable once
+    /// per screen via the environment. This modifier keeps working and, when
+    /// called, wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .fareFamilyCardStyle(.stacked) or .fareFamilyCardStyle(.column) instead")
+    func layout(_ v: FareFamilyLayout) -> Self {
+        copy {
+            switch v {
+            case .stacked: $0.explicitStyle = AnyFareFamilyCardStyle(StandardFareFamilyCardStyle())
+            case .column: $0.explicitStyle = AnyFareFamilyCardStyle(ColumnFareFamilyCardStyle())
+            }
+        }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -283,25 +222,49 @@ public extension FareFamilyCard {
 
 #Preview("Comparison columns") {
     HStack(alignment: .top, spacing: 10) {
-        FareFamilyCard("Eco", price: 1_871.99).accent(.success).layout(.column)
+        FareFamilyCard("Eco", price: 1_871.99).accent(.success)
             .features([
                 FareFeature("Cabin bag", systemImage: "handbag", status: .included),
                 FareFeature("Checked", systemImage: "suitcase.fill", status: .excluded),
             ])
             .selection(.constant(false))
-        FareFamilyCard("Flex", price: 3_116.99).accent(.purple).layout(.column)
+            .fareFamilyCardStyle(.column)
+        FareFamilyCard("Flex", price: 3_116.99).accent(.purple)
             .features([
                 FareFeature("Cabin bag", systemImage: "handbag", status: .included),
                 FareFeature("Checked", systemImage: "suitcase.fill", status: .included),
             ])
             .selection(.constant(true))
-        FareFamilyCard("Biz", price: 6_420).accent(.info).layout(.column)
+            .fareFamilyCardStyle(.column)
+        FareFamilyCard("Biz", price: 6_420).accent(.info)
             .badgeVariant(.soft).ctaTitle("Choose")
             .features([FareFeature("Lounge", systemImage: "sofa.fill", status: .included)])
             .onSelect { }
+            .fareFamilyCardStyle(.column)
     }
     .frame(height: 260)
     .padding()
+}
+
+#Preview("Row + accordion presets") {
+    ScrollView {
+        VStack(spacing: 12) {
+            FareFamilyCard("Super Eco", price: 1_871.99).accent(.success)
+                .features([
+                    FareFeature("Cabin bag", systemImage: "handbag", status: .included),
+                    FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
+                ])
+                .onSelect { }
+                .fareFamilyCardStyle(.row)
+            FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple)
+                .features([
+                    FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
+                    FareFeature("Snack", systemImage: "takeoutbag.and.cup.and.straw.fill", status: .included),
+                ])
+                .onSelect { }
+                .fareFamilyCardStyle(.accordion)
+        }.padding()
+    }
 }
 
 #Preview("Selected + outlined style") {

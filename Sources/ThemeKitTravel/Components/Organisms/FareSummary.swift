@@ -3,7 +3,10 @@
 //  ThemeKit
 //
 //  An itemised price breakdown — base fare, taxes/fees, discounts, and an emphasised
-//  total. Token-bound; discounts read green, the total is a hero PriceTag.
+//  total. Token-bound; discounts read green, the total is a hero PriceTag. The entire
+//  layout is a swappable ``FareSummaryStyle`` (ADR-0004) — the component owns the
+//  fare *data*, the style owns the *arrangement*; see FareSummaryStyle.swift for the
+//  three built-ins (`.list` default, `.receipt`, `.collapsed`).
 //
 //  Flexible: per-line info buttons (.onInfo), a footer slot (a note or CTA), an
 //  animated total, and density-aware spacing. Honours `.redacted(.placeholder)`.
@@ -23,12 +26,12 @@ import ThemeKit
 /// ]).onInfo { line in showSheet(line.info) } footer: { TermsLink() }
 /// ```
 public struct FareSummary: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.fareSummaryStyle) private var style
 
     private let lines: [FareLine]
     private var currencyCode: String?
@@ -60,93 +63,26 @@ public struct FareSummary: View {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
-    public var body: some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let headerSlot { headerSlot }
-            // Position-keyed: robust to duplicate labels (two "Fee" lines) which would
-            // collide on the content-derived `id`. Fare lists are fixed-order, so index is stable.
-            ForEach(Array(visibleLines.enumerated()), id: \.offset) { _, line in
-                switch line.kind {
-                case .item:
-                    itemRow(line, value: formatted(line.amount),
-                            color: theme.text(.textSecondary), valueColor: theme.text(.textPrimary))
-                case .discount:
-                    itemRow(line, value: "-\(formatted(line.amount))",
-                            color: theme.foreground(.systemcolorsFgSuccess),
-                            valueColor: theme.foreground(.systemcolorsFgSuccess))
-                case .total:
-                    totalRow(line)
-                }
-            }
-            if let footerSlot { footerSlot }
-        }
-    }
-
-    /// Collapsed (`.expandable…`, chevron up) shows only the total row(s);
-    /// expanded — and the non-expandable default — shows every line in order.
-    @MainActor private var visibleLines: [FareLine] {
-        (isExpandable && !expandedState) ? lines.filter { $0.kind == .total } : lines
-    }
-
+    /// Reduce-Motion-gated toggle animation, resolved here (never by a style) and
+    /// handed to ``FareSummaryConfiguration/toggleExpand`` as a plain closure.
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
-    private func itemRow(_ line: FareLine, value: String, color: Color, valueColor: Color) -> some View {
-        HStack(spacing: Theme.SpacingKey.xs.value) {
-            Text(line.label).textStyle(.bodyBase400).foregroundStyle(color)
-            if line.info != nil, let onInfoHandler {
-                Button { onInfoHandler(line) } label: {
-                    Image(systemName: "info.circle").font(.caption).foregroundStyle(theme.text(.textTertiary))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "More about \(line.label)"))
-            }
-            Spacer()
-            Text(value).textStyle(.bodyBase500).foregroundStyle(valueColor)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(line.label) \(value)")
-    }
-
-    @MainActor
-    @ViewBuilder private func totalRow(_ line: FareLine) -> some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if showsDividerFlag { Divider().overlay(theme.border(.borderPrimary)) }
-            if isExpandable {
-                Button {
-                    withAnimation(motion) { expandedState.toggle() }
-                } label: {
-                    totalContent(line)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(expandedState
-                    ? String(themeKit: "Hide fare breakdown")
-                    : String(themeKit: "Show fare breakdown"))
-            } else {
-                totalContent(line)
-            }
-        }
-    }
-
-    @MainActor
-    private func totalContent(_ line: FareLine) -> some View {
-        HStack {
-            Text(line.label).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-            if isExpandable {
-                Image(systemName: "chevron.down")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(theme.text(.textTertiary))
-                    .rotationEffect(.degrees(expandedState ? 180 : 0))
-                    .accessibilityHidden(true)   // the row's a11y label announces the state
-            }
-            Spacer()
-            PriceTag(line.amount, currencyCode: resolvedCurrency)
-                .size(totalSize).emphasis(totalEmphasis).animatesValue()
-        }
-        .contentShape(Rectangle())
-    }
-
-    private func formatted(_ value: Decimal) -> String {
-        value.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale))
+    public var body: some View {
+        style.makeBody(configuration: FareSummaryConfiguration(
+            lines: lines,
+            total: lines.last(where: { $0.kind == .total }),
+            currencyCode: resolvedCurrency,
+            onInfo: onInfoHandler,
+            header: headerSlot,
+            footer: footerSlot,
+            totalSize: totalSize,
+            totalEmphasis: totalEmphasis,
+            showsDivider: showsDividerFlag,
+            isExpandable: isExpandable,
+            isExpanded: expandedState,
+            toggleExpand: { withAnimation(motion) { expandedState.toggle() } },
+            density: density,
+            locale: locale))
     }
 }
 
