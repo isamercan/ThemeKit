@@ -925,6 +925,7 @@ private struct ThemeKitTravelPage: View {
                     .font(.subheadline).foregroundStyle(.secondary)
             }
             ScrollView(showsIndicators: false) {
+                VStack(spacing: 34) {
                 HStack(alignment: .top, spacing: 16) {
                     VStack(spacing: 16) {
                         TripSearchCard(draft: $trip, onSearch: { _ in })
@@ -976,6 +977,9 @@ private struct ThemeKitTravelPage: View {
                     }
                 }
                 .frame(maxWidth: 1500)
+
+                variantsBand
+                }
                 .padding(.bottom, 36)
             }
         }
@@ -983,6 +987,75 @@ private struct ThemeKitTravelPage: View {
         .padding(.horizontal, 28)
         .padding(.top, 78)
         .padding(.bottom, 18)
+    }
+
+    // MARK: New in the flexibility sweep — alternative variants, layouts & styles
+    private var variantsBand: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 4) {
+                Text("Flexibility sweep").font(.system(size: 22, weight: .bold, design: .rounded))
+                Text("The same components, re-skinned through additive variants, layouts and slots — no forking.")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            HStack(alignment: .top, spacing: 16) {
+                CollageCard("Cabin class · .cards") {
+                    CabinClassSelector(selection: $cabin).variant(.cards).showsGlyphs()
+                }
+                CollageCard("Payment · .grid") {
+                    PaymentMethodSelector(paymentOptions, selection: $method).variant(.grid)
+                }
+                CollageCard("Saved cards · .wallet") {
+                    SavedCardsList(cards, selection: $cardID).variant(.wallet).flagsExpired()
+                }
+                CollageCard("Tracker · .compact") {
+                    FlightTracker(trackerInfo).variant(.compact).progress(0.62)
+                }
+            }
+            HStack(alignment: .top, spacing: 16) {
+                CollageCard("Fare families · .layout(.column)") {
+                    HStack(spacing: 10) {
+                        FareFamilyCard("Eco Fly", price: 3_116).layout(.column)
+                        FareFamilyCard("Extra Fly", price: 4_250).accent(.info).layout(.column)
+                    }
+                }
+                CollageCard("Status badge · .emphasis") {
+                    HStack(spacing: 8) {
+                        FlightStatusBadge(.boarding).emphasis(.soft)
+                        FlightStatusBadge(.boarding).emphasis(.solid)
+                        FlightStatusBadge(.delayed).emphasis(.outline)
+                        FlightStatusBadge(.arrived).emphasis(.dot)
+                    }
+                }
+                CollageCard("Transport · .tile") {
+                    TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
+                        .variant(.tile).size(.small).price(19).duration("6h 30m").onSelect { }
+                }
+            }
+            CollageCard("FlightListItem · new presets — .tile · .hero · .receipt") {
+                HStack(alignment: .top, spacing: 16) {
+                    baseFlightItem().flightListItemStyle(.tile).frame(width: 200)
+                    VStack(spacing: 12) {
+                        baseFlightItem().flightListItemStyle(.hero)
+                        baseFlightItem().flightListItemStyle(.receipt)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: 1500)
+    }
+
+    private func baseFlightItem() -> FlightListItem {
+        let dep = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        return FlightListItem(legs: [
+            FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                      departure: dep, arrival: dep.addingTimeInterval(4 * 3600), stops: 0, layover: nil),
+        ])
+        .cabin("Economy")
+        .baggage("8 kg", checked: "20 kg")
+        .price(214, currencyCode: "USD", caption: "from")
+        .original(320)
+        .badge("Best")
+        .onSelect { }
     }
 
     @ViewBuilder private func checkinPage(_ index: Int) -> some View {
