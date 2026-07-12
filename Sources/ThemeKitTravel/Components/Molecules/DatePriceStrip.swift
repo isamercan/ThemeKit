@@ -7,6 +7,14 @@
 //  build their own layout (a row, a carousel…). The lowest fare is auto-highlighted.
 //  Token-bound.
 //
+//  The *arrangement* is owned by the active ``DatePriceStripStyle`` from the
+//  environment (ADR-0004): the component gathers its typed data into a
+//  `DatePriceStripConfiguration` and hands it to the style — `.grid(columns: 3)`
+//  (default) is today's grid verbatim, `.strip` is the horizontal pill timeline,
+//  `.chart` is a price-bar histogram, and apps can implement their own. The
+//  deprecated `.layout(_:)` / `.strip()` / `.columns(_:)` modifiers forward to the
+//  matching preset and, when called, win over an ancestor's environment style.
+//
 
 import SwiftUI
 import ThemeKit
@@ -32,7 +40,11 @@ public struct DatePriceItem: Identifiable, Sendable {
 
 /// Layout of a ``DatePriceStrip``: a multi-column ``grid(columns:)`` (the stock
 /// three-column presentation) or the horizontal ``strip`` of scrollable pills.
-/// `.strip()` / `.columns(_:)` remain as forwarding sugar.
+///
+/// Superseded by ``DatePriceStripStyle`` (each case maps 1:1 to a preset —
+/// `.grid(columns:)` / `.strip`); kept for source compatibility until the next
+/// major, together with the deprecated ``DatePriceStrip/layout(_:)`` modifier
+/// and its `.strip()` / `.columns(_:)` sugar.
 public enum DatePriceLayout: Sendable {
     case grid(columns: Int)
     case strip
@@ -51,7 +63,9 @@ public enum DatePricePillSize: Sendable {
     }
 }
 
-/// A single selectable date+price card. Public so it can be reused outside ``DatePriceStrip``.
+/// A single selectable date+price card — the built-in cell the strip's `.grid` and
+/// `.strip` presets compose. Public so it can be reused outside ``DatePriceStrip``
+/// (a row, a carousel, a custom ``DatePriceStripStyle``…).
 /// The shell (surface, hairline, selected frame) is drawn by the active `CardStyle`;
 /// selection flows through `Configuration.isSelected`, so `.cardStyle(_:)` reskins it.
 public struct DatePriceCard: View {
@@ -200,123 +214,74 @@ public extension DatePriceCard {
 
 public struct DatePriceStrip: View {
     @Environment(\.componentDensity) private var density
+    @Environment(\.datePriceStripStyle) private var envStyle
+    @Environment(\.formatDefaults) private var formatDefaults
+    @Environment(\.locale) private var locale
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let items: [DatePriceItem]
     @Binding private var selection: Int
     // Appearance/state — mutated only through the modifiers below (R2).
-    @Environment(\.theme) private var theme
-    @Environment(\.formatDefaults) private var formatDefaults
-    @Environment(\.locale) private var locale
     private var currencyCode: String?
-    private var columns = 3
     private var highlightsCheapest = true
-    private var stripLayout = false
-    private var surface: Theme.BackgroundColorKey = .bgElevatorPrimary
+    /// `nil` → the style's own default surface (the built-ins use `.bgElevatorPrimary`).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var accent: SemanticColor?
     private var cheapestToneOverride: SemanticColor?
     private var pillSize: DatePricePillSize = .regular
     private var customCell: ((DatePriceItem, Bool) -> AnyView)?
     private var onPrev: (() -> Void)?
     private var onNext: (() -> Void)?
+    /// Bookkeeping for the deprecated `.layout(_:)` / `.strip()` / `.columns(_:)`
+    /// modifiers — an explicitly chosen per-instance layout wins over an
+    /// ancestor's `.datePriceStripStyle(_:)` (source-behavior stability during
+    /// the enum's deprecation window). `nil` everywhere → environment style.
+    private var explicitStrip: Bool?
+    private var explicitColumns: Int?
 
     public init(_ items: [DatePriceItem], selection: Binding<Int>) {   // R1
         self.items = items
         self._selection = selection
     }
 
-    private var cheapestIndex: Int? {
-        guard highlightsCheapest else { return nil }
-        let bookable = items.indices.filter { !items[$0].unavailable }
-        return bookable.min(by: { items[$0].price < items[$1].price })
-    }
-
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
-    /// Passed down explicitly so every card renders the strip's one resolved code.
+    /// Resolved here so every style renders the strip's one resolved code.
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
+    /// The preset the deprecated layout modifiers mapped to, or `nil` when none
+    /// was called (the normal path — the environment style renders).
+    private var explicitStyle: AnyDatePriceStripStyle? {
+        if explicitStrip == true { return AnyDatePriceStripStyle(StripDatePriceStripStyle()) }
+        if explicitStrip == false || explicitColumns != nil {
+            return AnyDatePriceStripStyle(GridDatePriceStripStyle(columns: explicitColumns ?? 3))
+        }
+        return nil
+    }
+
     public var body: some View {
-        if stripLayout {
-            stripView
-        } else if onPrev != nil || onNext != nil {
-            HStack(spacing: 8) {
-                pageButton("chevron.left", label: String(themeKit: "Previous"), onPrev)
-                gridView.frame(maxWidth: .infinity)
-                pageButton("chevron.right", label: String(themeKit: "Next"), onNext)
-            }
-        } else {
-            gridView
-        }
-    }
-
-    /// The horizontal "Timeline" strip — scrollable pills on a surface, with the
-    /// selected pill auto-centered. The scroll/selection machinery also hosts a
-    /// custom ``cell(_:)`` when one is set.
-    private var stripView: some View {
-        let cheapest = cheapestIndex
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                        cell(i, item, cheapest: cheapest, pill: true)
-                            .id(i)
-                    }
-                }
-                .padding(density.scale(Theme.SpacingKey.sm.value))
-            }
-            .background(theme.background(surface))
-            .onChange(of: selection) { _, new in
-                withAnimation { proxy.scrollTo(new, anchor: .center) }
-            }
-        }
-    }
-
-    private var gridView: some View {
-        let cheapest = cheapestIndex
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: max(1, columns)), spacing: 8) {
-            ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                cell(i, item, cheapest: cheapest, pill: false)
-            }
-        }
-    }
-
-    /// One cell — a fully custom ``cell(_:)`` slot (selection machinery retained)
-    /// or the built-in ``DatePriceCard``, configured with the strip's settings.
-    @ViewBuilder private func cell(_ i: Int, _ item: DatePriceItem, cheapest: Int?, pill: Bool) -> some View {
-        if let customCell {
-            Button { selection = i } label: { customCell(item, i == selection) }
-                .buttonStyle(.plain)
-                .disabled(item.unavailable)
-                .accessibilityAddTraits(i == selection ? .isSelected : [])
-        } else {
-            configuredCard(i, item, cheapest: cheapest, pill: pill)
-        }
-    }
-
-    private func configuredCard(_ i: Int, _ item: DatePriceItem, cheapest: Int?, pill: Bool) -> DatePriceCard {
-        var card = DatePriceCard(item, isSelected: i == selection) { selection = i }
-            .currency(resolvedCurrency)
-            .cheapest(i == cheapest)
-            .surface(surface)
-            .accent(accent)
-        if let cheapestToneOverride { card = card.cheapestTone(cheapestToneOverride) }
-        if pill { card = card.pill().pillSize(pillSize) }
-        return card
-    }
-
-    private func pageButton(_ name: String, label: String, _ action: (() -> Void)?) -> some View {
-        Button { action?() } label: {
-            Image(systemName: name).textStyle(.labelBase600)
-                .foregroundStyle(theme.foreground(.fgHero))
-                .mirrorsInRTL()
-                .frame(width: 30, height: 30)
-                .background(theme.background(.bgSecondaryLight), in: Circle())
-        }
-        .buttonStyle(.plain)
-        .disabled(action == nil)
-        .opacity(action == nil ? 0.4 : 1)
-        .accessibilityLabel(label)
+        // The arrangement is owned by the active `DatePriceStripStyle`; motion
+        // is resolved *here* (MicroMotion ∧ ¬Reduce Motion) so styles never read
+        // the motion environment.
+        let configuration = DatePriceStripConfiguration(
+            items: items,
+            selectedIndex: selection,
+            select: { selection = $0 },
+            currencyCode: resolvedCurrency,
+            accent: accent,
+            cheapestTone: cheapestToneOverride,
+            pillSize: pillSize,
+            highlightsCheapest: highlightsCheapest,
+            surfaceKey: surfaceKey,
+            cellSlot: customCell,
+            onPrev: onPrev,
+            onNext: onNext,
+            isMotionEnabled: micro && !reduceMotion,
+            density: density,
+            locale: locale)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
     }
 }
 
@@ -326,30 +291,40 @@ public extension DatePriceStrip {
     /// Currency code for the prices. Unset, it resolves from `\.formatDefaults`,
     /// then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }
-    /// Number of columns for the grid layout (default 3). Sugar for
-    /// `.layout(.grid(columns:))`.
-    func columns(_ count: Int) -> Self { copy { $0.columns = max(1, count) } }
-    /// Lay the dates out as a horizontal **strip** of scrollable pills (the
-    /// "Timeline" presentation) instead of the multi-column grid. Sugar for
-    /// `.layout(.strip)`.
-    func strip(_ on: Bool = true) -> Self { copy { $0.stripLayout = on } }
-    /// Layout of the strip: `.grid(columns:)` (default, 3 columns) or the
-    /// horizontal `.strip` of scrollable pills. Consolidates `.strip()` / `.columns(_:)`.
+    /// Number of columns for the grid layout — superseded by the style axis:
+    /// prefer `.datePriceStripStyle(.grid(columns:))`, settable once per screen
+    /// via the environment. This modifier keeps working and, when called, wins
+    /// over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .datePriceStripStyle(.grid(columns:)) instead")
+    func columns(_ count: Int) -> Self { copy { $0.explicitColumns = max(1, count) } }
+    /// Horizontal-strip presentation — superseded by the style axis: prefer
+    /// `.datePriceStripStyle(.strip)`, settable once per screen via the
+    /// environment. This modifier keeps working and, when called, wins over an
+    /// ancestor's environment style.
+    @available(*, deprecated, message: "Use .datePriceStripStyle(.strip) instead")
+    func strip(_ on: Bool = true) -> Self { copy { $0.explicitStrip = on } }
+    /// Layout of the strip — superseded by the style axis: prefer
+    /// `.datePriceStripStyle(.grid(columns:))` / `.datePriceStripStyle(.strip)`,
+    /// settable once per screen via the environment. This modifier keeps working
+    /// and, when called, wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .datePriceStripStyle(.grid(columns:)/.strip) instead")
     func layout(_ l: DatePriceLayout) -> Self {
         copy {
             switch l {
             case .grid(let columns):
-                $0.stripLayout = false
-                $0.columns = max(1, columns)
+                $0.explicitStrip = false
+                $0.explicitColumns = max(1, columns)
             case .strip:
-                $0.stripLayout = true
+                $0.explicitStrip = true
             }
         }
     }
     /// Auto-highlight the lowest fare in success green (default on).
     func highlightCheapest(_ on: Bool = true) -> Self { copy { $0.highlightsCheapest = on } }
-    /// Surface token for the strip track and the cards it builds (default `.bgElevatorPrimary`).
-    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surface = key } }
+    /// Surface token for the strip/chart track and the cards the style builds.
+    /// When unset, the active ``DatePriceStripStyle`` picks its own default
+    /// (the built-ins use `.bgElevatorPrimary`).
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Semantic accent for the selected state, forwarded to every card — pill
     /// fill `soft` + border `base`, card date/price `base`, wash `bg`.
     /// `nil` (default) keeps the stock hero chroma.
@@ -381,7 +356,9 @@ public extension DatePriceStrip {
         DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
     ]
     PreviewMatrix("DatePriceStrip") {
-        PreviewCase("Timeline strip (pills)") { DatePriceStrip(items, selection: $sel).strip() }
+        PreviewCase("Timeline strip (pills)") {
+            DatePriceStrip(items, selection: $sel).datePriceStripStyle(.strip)
+        }
         PreviewCase("Grid") { DatePriceStrip(items, selection: $sel) }
         PreviewCase("Paged grid") { DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {}) }
         PreviewCase("Custom surface") { DatePriceStrip(items, selection: $sel).surface(.bgSecondaryLight) }
@@ -389,7 +366,11 @@ public extension DatePriceStrip {
             DatePriceStrip(items, selection: $sel).accent(.info).cheapestTone(.warning)
         }
         PreviewCase("Strip · large pills · accent") {
-            DatePriceStrip(items, selection: $sel).layout(.strip).pillSize(.large).accent(.success)
+            DatePriceStrip(items, selection: $sel).pillSize(.large).accent(.success)
+                .datePriceStripStyle(.strip)
+        }
+        PreviewCase("Price chart") {
+            DatePriceStrip(items, selection: $sel).datePriceStripStyle(.chart)
         }
         PreviewCase("Weekdays + unavailable · 2 columns") {
             DatePriceStrip(
@@ -401,19 +382,21 @@ public extension DatePriceStrip {
                 ],
                 selection: $sel
             )
-            .layout(.grid(columns: 2))
+            .datePriceStripStyle(.grid(columns: 2))
         }
         PreviewCase("Custom cell slot") {
-            DatePriceStrip(items, selection: $sel).strip().cell { item, isSelected in
-                VStack(spacing: 2) {
-                    Text(item.date).textStyle(isSelected ? .labelSm700 : .bodySm400)
-                    Text(item.price.formatted(.currency(code: "USD").precision(.fractionLength(0))))
-                        .textStyle(.overline500)
+            DatePriceStrip(items, selection: $sel)
+                .cell { item, isSelected in
+                    VStack(spacing: 2) {
+                        Text(item.date).textStyle(isSelected ? .labelSm700 : .bodySm400)
+                        Text(item.price.formatted(.currency(code: "USD").precision(.fractionLength(0))))
+                            .textStyle(.overline500)
+                    }
+                    .padding(Theme.SpacingKey.sm.value)
+                    .background(isSelected ? SemanticColor.accent.soft : .clear,
+                                in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
                 }
-                .padding(Theme.SpacingKey.sm.value)
-                .background(isSelected ? SemanticColor.accent.soft : .clear,
-                            in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
-            }
+                .datePriceStripStyle(.strip)
         }
     }
 }
