@@ -19,7 +19,7 @@
 //
 //  Shipped defaults are English (the catalog's source language, regenerated
 //  from source by `make l10n`); consumers add their own localizations via the
-//  generated template at `docs/templates/ThemeKit.xcstrings`.
+//  generated template at `Templates/ThemeKit.xcstrings`.
 //
 
 import Foundation

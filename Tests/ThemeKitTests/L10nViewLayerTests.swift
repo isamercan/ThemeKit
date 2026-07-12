@@ -225,5 +225,43 @@ final class L10nViewLayerTests: XCTestCase {
         hosting.cacheDisplay(in: hosting.bounds, to: rep)
         return try XCTUnwrap(rep.tiffRepresentation)
     }
+
+    // MARK: - Facade: `.themeKit()` folds in live localization (ThemeKit.setLanguage)
+
+    /// The whole consumer story: `.themeKit()` at the root (already there for
+    /// theming) + `ThemeKitStrings.setLanguage(_:)` — no `.themeKitLocalized()`.
+    func testThemeKitProviderAloneFlipsLanguageViaSetLanguage() throws {
+        ThemeKitStrings.register(bundle: fixture)
+        ThemeKitStrings.setLanguage("en")
+
+        host(VStack { EnvironmentChild(); GlobalOnlyChild() }.themeKit())
+        XCTAssertTrue(Journal.entries.contains("env|en|LTR|Hue|Hue"), "initial en: \(Journal.entries)")
+        XCTAssertTrue(Journal.entries.contains("global|Hue"))
+        XCTAssertEqual(ThemeKitStrings.currentLanguage, "en")
+
+        Journal.reset()
+        ThemeKitStrings.setLanguage("tr")   // the facade — no .themeKitLocalized() in sight
+        pump()
+        XCTAssertTrue(Journal.entries.contains("env|tr|LTR|Ton|Ton"),
+                      ".themeKit() alone must flip View + non-View strings: \(Journal.entries)")
+        XCTAssertTrue(Journal.entries.contains("global|Ton"),
+                      ".themeKit()'s folded identity must re-run global-only bodies: \(Journal.entries)")
+        XCTAssertEqual(ThemeKitStrings.currentLanguage, "tr")
+
+        Journal.reset()
+        ThemeKitStrings.setLanguage(nil)    // follow the device again
+        pump()
+        XCTAssertNil(ThemeKitStrings.currentLanguage)
+    }
+
+    /// `.themeKit()` also injects the RTL layout direction on an Arabic switch.
+    func testThemeKitProviderFlipsLayoutDirectionForArabic() throws {
+        ThemeKitStrings.register(bundle: fixture)
+        Theme.setLanguage("ar")             // the short hub-type alias
+        host(EnvironmentChild().themeKit())
+        XCTAssertTrue(try XCTUnwrap(Journal.last).hasPrefix("env|ar|RTL|"),
+                      "ar via .themeKit() must flip layoutDirection: \(Journal.entries)")
+        XCTAssertEqual(Theme.currentLanguage, "ar")
+    }
 }
 #endif

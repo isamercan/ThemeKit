@@ -21,7 +21,7 @@ English per key.
 
 - **Keys are ThemeKit's English source strings** (`Card number`, `Select`,
   `Promo code:`). Start from the generated template at
-  `docs/templates/ThemeKit.xcstrings` — it is the always-current key set (`make l10n`).
+  `Templates/ThemeKit.xcstrings` — it is the always-current key set (`make l10n`).
 - **Interpolated keys use `%@` for every value** (numbers included): the key for
   `"\(count) installments"` is `"%@ installments"`. Reorder with `%1$@`/`%2$@`.
 - **Keep `"generatesSymbol": false`** on template entries — ThemeKit's key set has
@@ -30,16 +30,19 @@ English per key.
 
 ### Restart-free in-app switching
 
-Apply `themeKitLocalized()` once at the app root, then drive
-`ThemeKitStrings.locale` (or bind a picker to `ThemeKitStrings.languageBinding`):
+`.themeKit()` at the app root (the provider you already add for theming) folds in live
+localization — so there's nothing extra to wire. Switch the language from anywhere:
 
 ```swift
-RootView().themeKitLocalized()
+RootView().themeKit()               // root, once — folds in localization
 
 // later, from a settings screen — flips the whole UI live, no relaunch:
-LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
-                 selection: ThemeKitStrings.languageBinding)
+ThemeKitStrings.setLanguage("tr")   // short alias: Theme.setLanguage("tr")
+ThemeKitStrings.setLanguage(nil)    // follow the device
 ```
+
+An explicit, subtree-scoped provider is available as `themeKitLocalized()`; a picker
+can bind to `ThemeKitStrings.languageBinding`.
 
 `themeKitLocalized()` observes `ThemeKitStrings`, re-injects `\.locale` +
 RTL-correct `\.layoutDirection`, and re-identifies the subtree so **every** string

@@ -11,7 +11,7 @@
 //  Since ADR-0003 the body resolves through `ThemeKitStrings` with the
 //  edition's bundle as the module fallback, so the CONSUMER experience stays
 //  one file: the same `ThemeKit.xcstrings` (generated template at
-//  `docs/templates/ThemeKit.xcstrings` — the union of both catalogs' keys)
+//  `Templates/ThemeKit.xcstrings` — the union of both catalogs' keys)
 //  translates neutral and Travel strings alike, and the live in-app language
 //  switch covers the edition for free.
 //

@@ -43,7 +43,7 @@ SPECIFIER STRATEGY (the invariant's crux — decided with the code in front of u
 WHAT IT WRITES (all four are checked by `--check`)
   Sources/ThemeKitCore/Resources/Localizable.xcstrings     (themeKit keys)
   Sources/ThemeKitTravel/Resources/Localizable.xcstrings   (themeKitTravel keys)
-  docs/templates/ThemeKit.xcstrings                        (union — the file a
+  Templates/ThemeKit.xcstrings                             (union — the file a
                                                             consumer copies into
                                                             their app target)
   Tests/ThemeKitTests/Generated/L10nKeyInvariantTests.swift (one assertion per
@@ -72,7 +72,7 @@ BRIDGES = {
     "themeKitTravel": ROOT / "Sources/ThemeKitTravel/Resources/Localizable.xcstrings",
 }
 CALL_RE = re.compile(r"String\(\s*(themeKitTravel|themeKit)\s*:")
-TEMPLATE_OUT = ROOT / "docs/templates/ThemeKit.xcstrings"
+TEMPLATE_OUT = ROOT / "Templates/ThemeKit.xcstrings"
 TEST_OUT = ROOT / "Tests/ThemeKitTests/Generated/L10nKeyInvariantTests.swift"
 
 SIMPLE_ESC = {"n": "\n", "t": "\t", "r": "\r", "0": "\0", "\\": "\\", '"': '"', "'": "'"}

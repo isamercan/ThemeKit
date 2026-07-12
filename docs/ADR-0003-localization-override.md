@@ -185,12 +185,12 @@ Keep the source-English string as the key (`"Phone number"`, not `themekit.phone
 The 117-missing/62-stale drift proves hand-maintenance has already failed. Following the `tools/gen_skill.py` / `make skill` precedent:
 
 - `tools/gen_l10n.py` extracts every `String(themeKit:)` key from both source roots (`Sources/ThemeKit*`), converting interpolations to their specifier form (`\(count)` → `%lld`) with the same mapping as D2.
-- It **regenerates** `Sources/ThemeKitCore/Resources/Localizable.xcstrings` + the Travel catalog (fixing the current drift), and **emits the consumer template** `docs/templates/ThemeKit.xcstrings` — all current keys, English values, existing comments preserved — so consumers never guess the key set.
+- It **regenerates** `Sources/ThemeKitCore/Resources/Localizable.xcstrings` + the Travel catalog (fixing the current drift), and **emits the consumer template** `Templates/ThemeKit.xcstrings` — all current keys, English values, existing comments preserved — so consumers never guess the key set.
 - `make l10n` target; CI check that regeneration is a no-op (same pattern as the skill/llms gate). English copy edits now surface as visible template diffs (D6's mitigation).
 
 ## Consumer authoring guide (normative)
 
-**The file:** `ThemeKit.xcstrings` — start from the generated template at `docs/templates/ThemeKit.xcstrings`, add it to the app target (any group; target membership is what matters). Keep only the keys you translate if you prefer — untranslated keys fall back per D1 (your `en` rewording if present, else ThemeKit's English).
+**The file:** `ThemeKit.xcstrings` — start from the generated template at `Templates/ThemeKit.xcstrings`, add it to the app target (any group; target membership is what matters). Keep only the keys you translate if you prefer — untranslated keys fall back per D1 (your `en` rewording if present, else ThemeKit's English).
 
 **Adding a language:** open the file in Xcode's String Catalog editor → “+” under the language list → pick Turkish → fill the `tr` column. For keys with `%` specifiers, keep every specifier; if your translation reorders them, use positional forms (`%1$@`, `%2$lld`). To pluralize a format key, right-click → *Vary by Plural*.
 
@@ -260,7 +260,7 @@ LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
 
 | Phase | Unit | Effort |
 |---|---|---|
-| 0 | `tools/gen_l10n.py` + `make l10n` + CI gate; regenerate both catalogs (fixes 117 missing / 62 stale); emit `docs/templates/ThemeKit.xcstrings` | M |
+| 0 | `tools/gen_l10n.py` + `make l10n` + CI gate; regenerate both catalogs (fixes 117 missing / 62 stale); emit `Templates/ThemeKit.xcstrings` | M |
 | 1 | `ThemeKitLocalizationValue` + `ThemeKitStrings` + resolver (bridge body swap) + unit fixtures | M |
 | 2 | `.themeKitLocalized()` / `.themeKitLocale(_:)` + `languageBinding` + LanguageSwitcher live demo + snapshot lane + on-device confirmation | M |
 | 3 | Docs: consumer guide page (website), README fix (remove "(with Turkish)"), `Localization.swift` header fix, DocC article | S |
