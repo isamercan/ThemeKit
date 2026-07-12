@@ -112,7 +112,7 @@ public struct NotificationCard<Actions: View>: View {
                 .accessibilityLabel(String(themeKit: "Dismiss"))
             }
         }
-        .padding(16)
+        .padding(Theme.SpacingKey.md.value)   // 16pt == SpacingKey.md
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 

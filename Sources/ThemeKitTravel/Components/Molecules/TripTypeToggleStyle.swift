@@ -148,7 +148,7 @@ private struct PillTripTypeToggleChrome: View {
                 pill(index, option)
             }
         }
-        .padding(4)
+        .padding(Theme.SpacingKey.xs.value)   // 4pt == SpacingKey.xs
         .background(theme.background(configuration.surface(default: .bgBase)), in: configuration.trackShape)
         .frame(maxWidth: configuration.fullWidth ? .infinity : nil)
     }

@@ -139,7 +139,8 @@ public struct LoyaltyCard: View {
     @ViewBuilder private var codeView: some View {
         switch membership {
         case .qr(let value):
-            QRCode(value).size(120).padding(8).background(MediaScrim.onContent, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            QRCode(value).size(120).padding(Theme.SpacingKey.sm.value)   // 8pt == SpacingKey.sm
+                .background(MediaScrim.onContent, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         case .barcode(let value):
             Barcode(value).height(52).showsValue().padding(.horizontal, 8)
         case .none:

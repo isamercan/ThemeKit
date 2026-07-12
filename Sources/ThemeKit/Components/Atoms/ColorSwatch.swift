@@ -63,6 +63,7 @@ public struct ColorSwatch: View {
         if isSelected {
             ZStack {
                 swatchShape.strokeBorder(theme.border(.borderHero), lineWidth: 2)
+                // intentional: 2pt, no token — the "1pt inner light gap" described above, not a spacing role
                 swatchShape.strokeBorder(theme.background(.bgWhite), lineWidth: 1).padding(2)
             }
         }

@@ -197,7 +197,7 @@ private struct SchematicSeatMapChrome: View {
         Image(systemName: "door.left.hand.open")
             .font(.system(size: 9, weight: .semibold))
             .foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
-            .padding(4)
+            .padding(Theme.SpacingKey.xs.value)   // 4pt == SpacingKey.xs
             .background(theme.background(.bgWhite), in: Circle())
             .overlay(Circle().strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
             .accessibilityHidden(true)

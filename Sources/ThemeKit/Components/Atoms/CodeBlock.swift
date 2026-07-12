@@ -103,7 +103,7 @@ public struct CodeBlock: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(6)
+        .padding(6)   // intentional: 6pt, no token — tight hit-target inset for the 28×28 glyph
         .accessibilityLabel(copied ? String(themeKit: "Copied") : String(themeKit: "Copy code"))
     }
 

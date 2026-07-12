@@ -58,7 +58,7 @@ public struct ThemeController: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(4)
+        .padding(Theme.SpacingKey.xs.value)   // 4pt == SpacingKey.xs
         .background(theme.background(.bgBase), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }

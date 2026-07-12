@@ -152,7 +152,7 @@ public struct MultiLineTextInput: View {
                 // Caret / selection tint follows the validation state (HeroUI invalid caret).
                 .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
                 .scrollContentBackground(.hidden)
-                .padding(8)
+                .padding(Theme.SpacingKey.sm.value)   // 8pt == SpacingKey.sm
                 .disabled(!isEnabled)
                 // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value,
                 // but the editor can't be tapped into. NOT `.disabled` (dims).
