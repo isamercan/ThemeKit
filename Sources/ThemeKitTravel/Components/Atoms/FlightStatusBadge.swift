@@ -4,10 +4,13 @@
 //
 //  Atom. A flight status pill — on-time / boarding / delayed / gate-closed /
 //  departed / arrived / cancelled, each with a token-fed semantic colour and icon,
-//  plus an optional time. Token-bound.
+//  plus an optional time. Token-bound. Presentation is style-driven
+//  (``FlightStatusBadgeStyle``): `.soft` (default) / `.solid` / `.outline` /
+//  `.dot`, settable once per screen via `.flightStatusBadgeStyle(_:)`.
 //
 //  ```swift
 //  FlightStatusBadge(.delayed).time("+35m")
+//      .flightStatusBadgeStyle(.solid)
 //  ```
 //
 
@@ -16,6 +19,10 @@ import ThemeKit
 
 /// Fill emphasis of a ``FlightStatusBadge`` — the hue is always the status's
 /// own semantic colour; emphasis only changes how loudly it's applied.
+///
+/// > Deprecated pathway (ADR-0004): each case now maps 1:1 to a
+/// > ``FlightStatusBadgeStyle`` preset (`.soft`/`.solid`/`.outline`/`.dot`).
+/// > Kept public for source compatibility; removed at the next major.
 public enum FlightStatusEmphasis: Sendable {
     /// Soft tint fill (default).
     case soft
@@ -67,9 +74,10 @@ public enum FlightStatusBadgeSize: Sendable {
 public enum FlightStatusBadgeShape: Sendable { case capsule, rounded }
 
 public struct FlightStatusBadge: View {
-    @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.componentDensity) private var density
+    @Environment(\.flightStatusBadgeStyle) private var envStyle
     @State private var pulsePhase = false
 
     private let status: FlightStatus
@@ -77,7 +85,10 @@ public struct FlightStatusBadge: View {
     private var time: String?
     private var customLabel: String?
     private var showsIcon = true
-    private var emphasis: FlightStatusEmphasis = .soft
+    /// Set only by the deprecated `.emphasis(_:)`/`.solid(_:)` pathway — when
+    /// non-nil it wins over any ancestor `.flightStatusBadgeStyle(_:)`
+    /// (source-behavior stability during migration, ADR-0004 §5).
+    private var explicitEmphasis: FlightStatusEmphasis?
     private var size: FlightStatusBadgeSize = .medium
     private var shape: FlightStatusBadgeShape = .capsule
     private var pulses = false
@@ -88,29 +99,26 @@ public struct FlightStatusBadge: View {
 
     public init(_ status: FlightStatus) { self.status = status }   // R1
 
-    private var color: SemanticColor { status.semantic }
+    /// The deprecated explicit emphasis mapped to its preset, else the
+    /// environment's style (default ``SoftFlightStatusBadgeStyle``).
+    private var resolvedStyle: AnyFlightStatusBadgeStyle {
+        guard let explicitEmphasis else { return envStyle }
+        switch explicitEmphasis {
+        case .soft: return AnyFlightStatusBadgeStyle(SoftFlightStatusBadgeStyle())
+        case .solid: return AnyFlightStatusBadgeStyle(SolidFlightStatusBadgeStyle())
+        case .outline: return AnyFlightStatusBadgeStyle(OutlineFlightStatusBadgeStyle())
+        case .dot: return AnyFlightStatusBadgeStyle(DotFlightStatusBadgeStyle())
+        }
+    }
 
-    private var resolvedIcon: String? {
-        guard showsIcon else { return nil }
+    /// The tri-state icon setting flattened for the configuration.
+    private var resolvedIcon: (shows: Bool, override: String?) {
+        guard showsIcon else { return (false, nil) }
         switch iconSetting {
-        case .automatic: return status.icon
-        case .custom(let name): return name
-        case .hidden: return nil
+        case .automatic: return (true, nil)
+        case .custom(let name): return (true, name)
+        case .hidden: return (false, nil)
         }
-    }
-
-    private var foreground: Color {
-        switch emphasis {
-        case .solid: color.onSolid
-        case .dot: theme.text(.textPrimary)
-        case .soft, .outline: color.base
-        }
-    }
-
-    private var badgeShape: AnyShape {
-        shape == .capsule
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
     }
 
     /// Whether the opt-in urgency pulse actually plays — the `microAnimations`
@@ -118,33 +126,26 @@ public struct FlightStatusBadge: View {
     private var pulseActive: Bool { pulses && micro && !reduceMotion }
 
     public var body: some View {
-        HStack(spacing: 4) {
-            if emphasis == .dot {
-                Circle().fill(color.base).frame(width: 6, height: 6)
-            } else if let resolvedIcon {
-                Image(systemName: resolvedIcon).textStyle(size.iconStyle)
-            }
-            Text(customLabel ?? status.label).textStyle(size.labelStyle)
-            if let time { Text(time).textStyle(size.timeStyle).opacity(0.9) }
-        }
-        .foregroundStyle(foreground)
-        .padding(.horizontal, emphasis == .dot ? 0 : Theme.SpacingKey.sm.value)
-        .frame(height: size.height)
-        .background(backgroundFill, in: badgeShape)
-        .overlay { if emphasis == .outline { badgeShape.stroke(color.border, lineWidth: 1) } }
-        .opacity(pulseActive && pulsePhase ? 0.55 : 1)
-        .animation(pulseActive ? Motion.slower.animation.repeatForever(autoreverses: true) : nil, value: pulsePhase)
-        .onAppear { pulsePhase = pulseActive }
-        .onChange(of: pulseActive) { _, active in pulsePhase = active }
-        .accessibilityLabel([customLabel ?? status.label, time].compactMap { $0 }.joined(separator: " "))
-    }
-
-    private var backgroundFill: Color {
-        switch emphasis {
-        case .soft: color.bg
-        case .solid: color.solid
-        case .outline, .dot: .clear
-        }
+        let icon = resolvedIcon
+        let configuration = FlightStatusBadgeConfiguration(
+            status: status,
+            timeText: time,
+            labelOverride: customLabel,
+            showsIcon: icon.shows,
+            iconOverride: icon.override,
+            size: size,
+            shape: shape,
+            isPulsing: pulseActive,
+            density: density
+        )
+        // The pulse and the accessibility label wrap the style's output, so
+        // every style — including custom ones — gets both for free.
+        resolvedStyle.makeBody(configuration: configuration)
+            .opacity(pulseActive && pulsePhase ? 0.55 : 1)
+            .animation(pulseActive ? Motion.slower.animation.repeatForever(autoreverses: true) : nil, value: pulsePhase)
+            .onAppear { pulsePhase = pulseActive }
+            .onChange(of: pulseActive) { _, active in pulsePhase = active }
+            .accessibilityLabel([customLabel ?? status.label, time].compactMap { $0 }.joined(separator: " "))
     }
 }
 
@@ -157,12 +158,17 @@ public extension FlightStatusBadge {
     func label(_ text: String?) -> Self { copy { $0.customLabel = text } }
     /// Show the leading icon (default on).
     func showsIcon(_ on: Bool) -> Self { copy { $0.showsIcon = on } }
-    /// Solid fill (vs the default soft tint). Sugar for `.emphasis(.solid)`.
-    func solid(_ on: Bool = true) -> Self { copy { $0.emphasis = on ? .solid : .soft } }
+    /// Solid fill (vs the default soft tint). Sugar for the deprecated
+    /// `.emphasis(.solid)` — prefer `.flightStatusBadgeStyle(.solid)`.
+    @available(*, deprecated, message: "Use .flightStatusBadgeStyle(.solid)")
+    func solid(_ on: Bool = true) -> Self { copy { $0.explicitEmphasis = on ? .solid : .soft } }
     /// Fill emphasis — `.soft` tint (default), `.solid`, hairline `.outline`,
     /// or a chrome-free `.dot` indicator. The hue stays the status's own
-    /// semantic colour.
-    func emphasis(_ e: FlightStatusEmphasis) -> Self { copy { $0.emphasis = e } }
+    /// semantic colour. An explicit emphasis wins over an ancestor
+    /// `.flightStatusBadgeStyle(_:)` for source-behavior stability.
+    @available(*, deprecated,
+               message: "Use .flightStatusBadgeStyle(_:) — e.g. .emphasis(.solid) becomes .flightStatusBadgeStyle(.solid)")
+    func emphasis(_ e: FlightStatusEmphasis) -> Self { copy { $0.explicitEmphasis = e } }
     /// Size ramp (default `.medium`, 24 pt).
     func size(_ s: FlightStatusBadgeSize) -> Self { copy { $0.size = s } }
     /// Corner treatment — `.capsule` (default) or `.rounded` at the selector
@@ -190,17 +196,17 @@ public extension FlightStatusBadge {
             PreviewCase(status.label) { FlightStatusBadge(status) }
         }
         PreviewCase("Solid + time") {
-            FlightStatusBadge(.delayed).time("+35m").solid()
+            FlightStatusBadge(.delayed).time("+35m").flightStatusBadgeStyle(.solid)
         }
         PreviewCase("No icon, custom label") {
             FlightStatusBadge(.boarding).showsIcon(false).label("Now boarding")
         }
-        PreviewCase("Emphasis ramp") {
+        PreviewCase("Style ramp") {
             HStack(spacing: 8) {
-                FlightStatusBadge(.onTime).emphasis(.soft)
-                FlightStatusBadge(.onTime).emphasis(.solid)
-                FlightStatusBadge(.onTime).emphasis(.outline)
-                FlightStatusBadge(.onTime).emphasis(.dot)
+                FlightStatusBadge(.onTime).flightStatusBadgeStyle(.soft)
+                FlightStatusBadge(.onTime).flightStatusBadgeStyle(.solid)
+                FlightStatusBadge(.onTime).flightStatusBadgeStyle(.outline)
+                FlightStatusBadge(.onTime).flightStatusBadgeStyle(.dot)
             }
         }
         PreviewCase("Sizes") {
@@ -214,7 +220,7 @@ public extension FlightStatusBadge {
             FlightStatusBadge(.cancelled).shape(.rounded).icon("xmark.octagon.fill")
         }
         PreviewCase("Pulsing (urgency, Reduce-Motion gated)") {
-            FlightStatusBadge(.boarding).emphasis(.solid).pulses()
+            FlightStatusBadge(.boarding).pulses().flightStatusBadgeStyle(.solid)
         }
     }
 }

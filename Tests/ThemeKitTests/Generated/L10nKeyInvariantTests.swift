@@ -27,7 +27,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) \(d) to \(d) \(d), \(d), \(d)",
             "%@ %@ to %@ %@, %@, %@", 6,
-            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:121")
+            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:90")
         assertKey(
             "\(d) adults",
             "%@ adults", 1,
@@ -91,7 +91,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) seats left",
             "%@ seats left", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightCard.swift:161")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightCardStyle.swift:179")
         assertKey(
             "\(d) selected",
             "%@ selected", 1,
@@ -99,7 +99,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) stops",
             "%@ stops", 1,
-            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:255")
+            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:97")
         assertKey(
             "\(d) to \(d)",
             "%@ to %@", 2,
@@ -138,11 +138,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)h \(d)m",
             "%@h %@m", 2,
-            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:247")
+            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRouteStyle.swift:82")
         assertKey(
             "\(d)m",
             "%@m", 1,
-            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRoute.swift:247")
+            site: "Sources/ThemeKitTravel/Components/Molecules/FlightRouteStyle.swift:82")
         assertKey(
             "+\(d) more",
             "+%@ more", 1,

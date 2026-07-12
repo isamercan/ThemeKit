@@ -974,7 +974,7 @@ private struct TrayChrome: View {
                 FlightRoute(from: leg.origin, to: leg.destination,
                             departure: leg.departure, arrival: leg.arrival)
                     .stops(leg.stops)
-                    .track(.inline)
+                    .flightRouteStyle(.inline)
                 if configuration.cabin != nil || configuration.baggage != nil {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
                         if let cabin = configuration.cabin {

@@ -7,6 +7,12 @@
 //  baggage chip, a price and a Select action. The row counterpart to ``FlightCard``.
 //  Token-bound; reuses PriceTag, Badge, Icon, ThemeButton.
 //
+//  Presentation is style-driven (ADR-0004): the component gathers its typed data
+//  into a ``FlightResultRowConfiguration`` and hands it to the active
+//  ``FlightResultRowStyle`` from the environment — `.row` (the default, the
+//  classic look), `.stacked`, `.minimal`, or any custom conformance set via
+//  `.flightResultRowStyle(_:)`.
+//
 //  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
 //  active `CardStyle` from the environment — `.surface()` feeds the
 //  `CardStyleConfiguration`, so the default look is unchanged while `.cardStyle(_:)`
@@ -20,9 +26,8 @@ import ThemeKit
 // Round-trip / multi-leg reuses the shared `FlightLeg` model (see FlightCard.swift).
 
 public struct FlightResultRow: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
-    @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.flightResultRowStyle) private var style
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
     @Environment(\.microAnimations) private var micro
@@ -36,7 +41,8 @@ public struct FlightResultRow: View {
     private let departure: Date
     private let arrival: Date
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    /// `nil` lets the style pick its default surface (`.bgBase` for the built-ins).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var accent: SemanticColor?
     private var flightNo: String?
     private var cabinClass: String?
@@ -83,140 +89,67 @@ public struct FlightResultRow: View {
         self.arrival = arrival
     }
 
-    /// The brand-chrome tint: explicit `.accent(_:)` when set, else the theme's
-    /// hero foreground — `nil` reproduces today's rendering exactly.
-    private var accentBase: Color { accent?.base ?? theme.foreground(.fgHero) }
-
-    public var body: some View {
-        // The shell (fill, corner clipping, border) is drawn by the active
-        // `CardStyle` — built-ins and custom styles go through the same gate.
-        // `.none` matches today's chrome: no shadow, hairline border.
-        cardStyle.makeBody(configuration: CardStyleConfiguration(
-            content: AnyView(rowContent),
-            elevation: elevation,
-            isSelected: isSelected,
-            isPressed: false,
-            surfaceKey: surfaceKey,
-            radius: .box))
-    }
-
-    /// The row's inner layout — everything inside the shell.
-    @MainActor
-    private var rowContent: some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            HStack(alignment: .center, spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                airlineBlock.frame(width: 92, alignment: .leading)
-                VStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                    FlightRoute(from: origin, to: destination, departure: departure, arrival: arrival)
-                        .stops(stops).nextDay(crossesMidnight(departure, arrival))
-                    ForEach(extraLegs) { leg in
-                        FlightRoute(from: leg.origin, to: leg.destination, departure: leg.departure, arrival: leg.arrival)
-                            .stops(leg.stops).nextDay(crossesMidnight(leg.departure, leg.arrival))
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                Group {
-                    if let trailingSlot { trailingSlot } else { priceBlock }
-                }
-                .frame(minWidth: 84, alignment: .trailing)
-            }
-            if let footerSlot {
-                footerSlot
-            } else if badge != nil || baggage != nil || urgencyText != nil || onDetails != nil {
-                metaRow
-            }
-        }
-        .padding(density.scale(Theme.SpacingKey.md.value))
-    }
-
-    private var airlineBlock: some View {
-        HStack(spacing: 6) {
-            if let url = airlineLogoURL {
-                RemoteImage(url).ratio(1).frame(width: 22, height: 22)
-            } else {
-                Image(systemName: airlineSystemImage).font(.title3).foregroundStyle(accentBase)
-            }
-            VStack(alignment: .leading, spacing: 1) {
-                Text(airline).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                if let flightNo { Text(flightNo).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary)) }
-                if let cabinClass { Text(cabinClass).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)) }
-            }
-        }
-    }
-
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
+    public var body: some View {
+        // The active `FlightResultRowStyle` owns the entire presentation —
+        // built-ins and custom styles go through the same gate. The default
+        // `.row` reproduces the classic three-column layout verbatim.
+        style.makeBody(configuration: configuration)
+    }
+
+    /// The typed snapshot handed to the style — rebuilt every body pass, so
+    /// render-time defaults (localized titles, environment currency) stay live.
+    /// Motion is resolved *here* (ADR-0004 §4): styles receive the pre-gated
+    /// `favoriteBounceValue` and never read the motion environment themselves.
     @MainActor
-    private var priceBlock: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            if showsFavorite || showsBookmark {
-                HStack(spacing: 6) {
-                    if showsBookmark {
-                        Button { bookmarkState.toggle() } label: {
-                            Image(systemName: bookmarkState ? "bookmark.fill" : "bookmark")
-                                .font(.system(size: 14)).foregroundStyle(bookmarkState ? accentBase : theme.text(.textTertiary))
-                                .frame(width: 40, height: 40).contentShape(Rectangle())
-                        }.buttonStyle(.plain).disabled(isReadOnly)
-                            .accessibilityLabel(bookmarkState ? String(themeKit: "Remove saved flight") : String(themeKit: "Save"))
-                    }
-                    if showsFavorite {
-                        Button { favoriteState.toggle() } label: {
-                            Image(systemName: favoriteState ? "heart.fill" : "heart")
-                                .foregroundStyle(favoriteState ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                                .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
-                                .frame(width: 40, height: 40).contentShape(Rectangle())
-                        }.buttonStyle(.plain).disabled(isReadOnly)
-                            .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
-                    }
-                }
-            }
-            if let price { PriceTag(price, currencyCode: resolvedCurrency).emphasis(.hero).fractionDigits(priceFractionDigits) }
-            if let totalLabel, let totalAmount {
-                Text("\(totalLabel): \(totalAmount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)))")
-                    .textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)).fixedSize()
-            }
-            if let onSelect {
-                // Accent set → semantic-colored Select; nil → the button's stock
-                // resolution (componentDefaults.accent → .primary), unchanged.
-                if let accent {
-                    ThemeButton(selectTitle) { onSelect() }.color(accent).size(.small)
-                } else {
-                    ThemeButton(selectTitle) { onSelect() }.size(.small)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private var metaRow: some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            if let badge { Badge(badge).badgeStyle(badgeStyle).variant(.soft).size(.small) }
-            if let baggage {
-                HStack(spacing: 3) {
-                    Image(systemName: "suitcase.fill").font(.system(size: 11))
-                        .accessibilityHidden(true)   // decorative; the baggage text carries the meaning
-                    Text(baggage).textStyle(.overline500)
-                }.foregroundStyle(theme.text(.textTertiary))
-            }
-            if let urgencyText {
-                Text(urgencyText).textStyle(.overline500).foregroundStyle(theme.foreground(.systemcolorsFgError))
-            }
-            Spacer()
-            if let onDetails { TextLink(detailsTitle) { onDetails() } }
-        }
-    }
-
-    private func crossesMidnight(_ dep: Date, _ arr: Date) -> Bool {
-        !Calendar.current.isDate(dep, inSameDayAs: arr)
+    private var configuration: FlightResultRowConfiguration {
+        FlightResultRowConfiguration(
+            airline: airline,
+            legs: [FlightLeg(airline: airline, from: origin, to: destination,
+                             departure: departure, arrival: arrival, stops: stops)] + extraLegs,
+            flightNo: flightNo,
+            cabin: cabinClass,
+            airlineSystemImage: airlineSystemImage,
+            airlineLogoURL: airlineLogoURL,
+            priceAmount: price,
+            currencyCode: resolvedCurrency,
+            priceFractionDigits: priceFractionDigits,
+            totalAmount: totalAmount,
+            totalLabel: totalLabel,
+            baggage: baggage,
+            badge: badge,
+            badgeStyle: badgeStyle,
+            urgencyText: urgencyText,
+            isSelected: isSelected,
+            isReadOnly: isReadOnly,
+            elevation: elevation,
+            isFavorite: showsFavorite ? favoriteState : nil,
+            toggleFavorite: showsFavorite ? { favoriteState.toggle() } : nil,
+            isBookmarked: showsBookmark ? bookmarkState : nil,
+            toggleBookmark: showsBookmark ? { bookmarkState.toggle() } : nil,
+            favoriteBounceValue: (micro && !reduceMotion) ? favoriteState : false,
+            selectTitle: selectTitle,
+            onSelect: onSelect,
+            detailsTitle: detailsTitle,
+            onDetails: onDetails,
+            footer: footerSlot,
+            trailing: trailingSlot,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            density: density,
+            locale: locale)
     }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightResultRow {
-    /// Surface fill (background token key, default `.bgBase`) — feeds the
-    /// active `CardStyle`'s configuration.
+    /// Surface fill (background token key) — feeds the active style's shell.
+    /// When unset, the style picks its default (`.bgBase` for the built-ins,
+    /// so the classic look is unchanged).
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// A semantic accent for the brand chrome — the airline fallback glyph, the
     /// active bookmark and the Select button. `nil` (default) keeps the theme's
