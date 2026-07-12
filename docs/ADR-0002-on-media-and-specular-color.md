@@ -67,5 +67,18 @@ This mirrors the existing fixed-constant allowance for dimensions. Category B is
 
 ## Open questions
 
-- Final token name/namespace (`SemanticColor.onMedia` vs `theme.foreground(.onScrim)`) and where it enters the **generated** token pipeline vs. a hand-authored semantic slot.
-- Whether `.onMedia` needs a paired scrim/gradient recipe (many on-media designs need a darkening scrim behind the content to guarantee contrast) — possibly a follow-up ADR on scrim strategy.
+- ~~Final token name/namespace and where it enters the **generated** token pipeline~~ —
+  **RESOLVED (2026-07-13).** On-media contrast is intentionally **non-thematic** (near-
+  white/near-black *over media*, brand-independent — the same core reasoning that made
+  specular highlights non-thematic), so it must **NOT** enter the *generated*,
+  theme-derived palette (`ThemeGenerator`/`gen_tokens.py`) — that would make a
+  brand-independent constant vary with the brand. The category-A token therefore lands
+  as the already-shipping **centralized non-thematic constant `MediaScrim.onContent` /
+  `.onContentSecondary`** (`Sources/ThemeKit/Utils/Effects.swift`), NOT a `SemanticColor`
+  slot. This still satisfies alternative-3's requirement — *one tunable source* for a
+  future high-contrast / scrim-strength lever — without misfiling it in the generated
+  pipeline. No pipeline change; the realization is final.
+- Whether `.onContent` needs a paired scrim/gradient recipe (many on-media designs need a
+  darkening scrim behind the content to guarantee contrast) — kept as a deliberate
+  **future** follow-up (a scrim-strategy ADR), not blocking; `MediaScrim` already owns
+  the scrim gradients, so it is the natural home if/when that lands.
