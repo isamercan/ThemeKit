@@ -13,18 +13,45 @@ import SwiftUI
 public extension View {
     /// Draws a border on only the given edges (SwiftUI has no per-side border).
     func edgeBorder(_ edges: [Edge], width: CGFloat = 1, color: Color? = nil) -> some View {
-        overlay(EdgeBorderShape(edges: edges, width: width)
-            .fill(color ?? Theme.shared.border(.borderPrimary)))
+        modifier(EdgeBorderModifier(edges: edges, width: width, color: color))
     }
 
     /// Overlays a gradient scrim fading from `color` (default surface) to clear at
     /// the given edge — e.g. a soft fade at the bottom of a scroll area.
     func fadeEdge(_ edge: Alignment = .bottom, length: CGFloat = 40, color: Color? = nil) -> some View {
-        let fill = color ?? Theme.shared.background(.bgWhite)
+        modifier(FadeEdgeModifier(edge: edge, length: length, color: color))
+    }
+}
+
+// ADR-0006 (D4): `edgeBorder`/`fadeEdge` used to be plain `View` extension
+// functions that fell back to `Theme.shared` when `color` was nil — a free
+// function has no `@Environment`, so it could never honor a `.theme(_:)`
+// subtree. Backing them with a `ViewModifier` gives each a real environment
+// read; public call sites/signatures are unchanged.
+private struct EdgeBorderModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+    let edges: [Edge]
+    let width: CGFloat
+    let color: Color?
+
+    func body(content: Content) -> some View {
+        content.overlay(EdgeBorderShape(edges: edges, width: width)
+            .fill(color ?? theme.border(.borderPrimary)))
+    }
+}
+
+private struct FadeEdgeModifier: ViewModifier {
+    @Environment(\.theme) private var theme
+    let edge: Alignment
+    let length: CGFloat
+    let color: Color?
+
+    func body(content: Content) -> some View {
+        let fill = color ?? theme.background(.bgWhite)
         let vertical = edge == .top || edge == .bottom
         let start: UnitPoint = edge == .top ? .top : edge == .bottom ? .bottom : edge == .leading ? .leading : .trailing
         let end: UnitPoint = edge == .top ? .bottom : edge == .bottom ? .top : edge == .leading ? .trailing : .leading
-        return overlay(alignment: edge) {
+        return content.overlay(alignment: edge) {
             LinearGradient(colors: [fill, fill.opacity(0)], startPoint: start, endPoint: end)
                 .frame(width: vertical ? nil : length, height: vertical ? length : nil)
                 .allowsHitTesting(false)

@@ -79,16 +79,21 @@ enum ChartPalette {
 /// The resolved `domain`/`range` pair for `.chartForegroundStyleScale` — maps
 /// each series/slice label to its palette color so Swift Charts colors, legend
 /// and our annotation dots all stay in lockstep.
+///
+/// ADR-0006 (Class N — non-View builder): takes the building View's `theme:`
+/// explicitly rather than baking `.solid` (which would read `Theme.shared` and
+/// ignore a `.theme(_:)` subtree). Every call site is a chart View that already
+/// holds `@Environment(\.theme)`, so this converts N → P.
 struct ChartColorScale {
     let domain: [String]
     let range: [Color]
 
-    init(series: [ChartSeries]) {
+    init(series: [ChartSeries], theme: Theme) {
         domain = series.map(\.label)
-        range = series.enumerated().map { ChartPalette.hue(explicit: $1.color, at: $0).solid }
+        range = series.enumerated().map { theme.resolve(ChartPalette.hue(explicit: $1.color, at: $0)).solid }
     }
-    init(slices: [ChartSlice]) {
+    init(slices: [ChartSlice], theme: Theme) {
         domain = slices.map(\.label)
-        range = slices.enumerated().map { ChartPalette.hue(explicit: $1.color, at: $0).solid }
+        range = slices.enumerated().map { theme.resolve(ChartPalette.hue(explicit: $1.color, at: $0)).solid }
     }
 }

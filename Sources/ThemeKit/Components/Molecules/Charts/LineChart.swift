@@ -48,7 +48,7 @@ public struct LineChart: View {
     }
 
     private var locale: Locale { localeOverride ?? envLocale }
-    private var scale: ChartColorScale { ChartColorScale(series: series) }
+    private var scale: ChartColorScale { ChartColorScale(series: series, theme: theme) }
     private var showsLegend: Bool { legendVisible ?? (series.count >= 2) }
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
@@ -96,7 +96,7 @@ public struct LineChart: View {
             guard let point = s.points.first(where: { $0.x == x }) else { return nil }
             return ChartScrubRow(label: s.label,
                                  value: chartValueFormatted(point.y, locale: locale),
-                                 color: ChartPalette.hue(explicit: s.color, at: index).solid)
+                                 color: theme.resolve(ChartPalette.hue(explicit: s.color, at: index)).solid)
         }
         return ChartScrubCard(theme: theme, title: x, rows: rows)
     }

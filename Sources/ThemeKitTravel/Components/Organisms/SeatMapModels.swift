@@ -112,22 +112,29 @@ public struct SeatPalette: Sendable {
     public static let `default` = SeatPalette()
 
     /// Fill + stroke for a tier. An overridden tier derives a light fill from its accent.
+    ///
+    /// ADR-0006 (Class P — the split-brain witness): every branch now resolves
+    /// through the passed `theme`, so the accent tiers honor a `.theme(_:)`
+    /// subtree the same way the `.standard`/`.premium` branches already did.
     public func colors(for tier: SeatTier, theme: Theme) -> (fill: Color, stroke: Color) {
         if let accent = overrides[tier] { return (accent.opacity(0.14), accent) }
         switch tier {
         case .standard: return (theme.background(.bgBase), theme.border(.borderPrimary))
-        case .extraLegroom: return (SemanticColor.info.bg, SemanticColor.info.base)
-        case .exit: return (SemanticColor.warning.bg, SemanticColor.warning.base)
+        case .extraLegroom: return (theme.resolve(.info).bg, theme.resolve(.info).base)
+        case .exit: return (theme.resolve(.warning).bg, theme.resolve(.warning).base)
         case .premium: return (theme.background(.bgTurquoiseLight), theme.background(.bgTurquoise))
-        case .business: return (SemanticColor.purple.bg, SemanticColor.purple.base)
-        case .first: return (SemanticColor.pink.bg, SemanticColor.pink.base)
+        case .business: return (theme.resolve(.purple).bg, theme.resolve(.purple).base)
+        case .first: return (theme.resolve(.pink).bg, theme.resolve(.pink).base)
         }
     }
 
     /// Fill + stroke + content colour of a **selected** seat. Defaults to the
     /// theme's hero foreground; an accent override uses its `.solid` / `.onSolid` pair.
     public func selectedColors(theme: Theme) -> (fill: Color, stroke: Color, content: Color) {
-        if let accent = selectedAccent { return (accent.solid, accent.solid, accent.onSolid) }
+        if let accent = selectedAccent {
+            let resolved = theme.resolve(accent)
+            return (resolved.solid, resolved.solid, resolved.onSolid)
+        }
         if let raw = selectedRaw { return (raw, raw, theme.text(.textSecondaryInverse)) }
         return (theme.foreground(.fgHero), theme.foreground(.fgHero), theme.text(.textSecondaryInverse))
     }
@@ -136,7 +143,10 @@ public struct SeatPalette: Sendable {
     /// theme's muted secondary surface; an accent override uses its `.soft` /
     /// `.border` / `.base` shades.
     public func occupiedColors(theme: Theme) -> (fill: Color, stroke: Color, content: Color) {
-        if let accent = occupiedAccent { return (accent.soft, accent.border, accent.base) }
+        if let accent = occupiedAccent {
+            let resolved = theme.resolve(accent)
+            return (resolved.soft, resolved.border, resolved.base)
+        }
         if let raw = occupiedRaw { return (raw.opacity(0.14), raw, theme.text(.textTertiary)) }
         return (theme.background(.bgSecondary), theme.border(.borderPrimary), theme.text(.textTertiary))
     }

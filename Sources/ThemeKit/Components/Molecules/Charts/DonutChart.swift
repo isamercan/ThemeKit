@@ -52,7 +52,7 @@ public struct DonutChart: View {
         return head + [ChartSlice(String(themeKit: "Other"), tail, color: .neutral)]
     }
 
-    private var scale: ChartColorScale { ChartColorScale(slices: effectiveSlices) }
+    private var scale: ChartColorScale { ChartColorScale(slices: effectiveSlices, theme: theme) }
 
     public var body: some View {
         Chart(effectiveSlices) { slice in

@@ -17,80 +17,31 @@ public enum SemanticColor: String, CaseIterable, Sendable {
     /// ladders; fall back to `primary` when a theme doesn't define them.
     case secondary, accent
 
+    // MARK: - Role accessors
+    //
+    // ADR-0006 Phase 0: the role→color logic now lives ONCE in `Resolved`
+    // (`SemanticColorResolved.swift`). These zero-arg accessors forward to
+    // `resolved(in: .shared)`, so they stay byte-identical to before — still
+    // `Theme.shared`-backed, unaware of a subtree's `.theme(_:)` override.
+    // NOT deprecated yet (Phase 2 follow-up); prefer `theme.resolve(_:)` in a
+    // view body, which reads the environment theme instead of the singleton.
+
     /// Background for the `solid` variant.
-    public var solid: Color {
-        switch self {
-        case .primary: return Theme.shared.background(.bgHero)
-        case .neutral: return Theme.shared.background(.bgTertiary)
-        case .info: return Theme.shared.background(.systemcolorsBgInfo)
-        case .success: return Theme.shared.background(.systemcolorsBgSuccess)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarning)
-        case .error: return Theme.shared.background(.systemcolorsBgError)
-        case .turquoise: return Theme.shared.background(.bgTurquoise)
-        case .orange: return Theme.shared.background(.bgOrange)
-        case .purple: return Theme.shared.text(.textPurple)
-        case .pink: return Theme.shared.background(.badgeBgMaximumpinkBase)
-        case .secondary, .accent: return base
-        }
-    }
+    public var solid: Color { resolved(in: .shared).solid }
 
     /// Foreground on top of the `solid` background — **auto-contrasting**: a bright
     /// accent (amber, yellow, light primary) gets dark content, a deep one gets white,
     /// computed from the background's luminance rather than hardcoded per color.
-    public var onSolid: Color {
-        ColorContrast.content(on: solid)
-    }
+    public var onSolid: Color { resolved(in: .shared).onSolid }
 
     /// Light surface for the `soft` variant.
-    public var soft: Color {
-        switch self {
-        case .primary: return Theme.shared.background(.bgElevatorTertiary)
-        case .neutral: return Theme.shared.background(.bgSecondaryLight)
-        case .info: return Theme.shared.background(.systemcolorsBgInfoLight)
-        case .success: return Theme.shared.background(.systemcolorsBgSuccessLight)
-        case .warning: return Theme.shared.background(.systemcolorsBgWarningLight)
-        case .error: return Theme.shared.background(.systemcolorsBgErrorLight)
-        case .turquoise: return Theme.shared.background(.bgTurquoiseLight)
-        case .orange: return Theme.shared.background(.badgeBgOrange)
-        case .purple: return Theme.shared.background(.badgeBgPurple)
-        case .pink: return Theme.shared.background(.badgeBgMaximumpinkLight)
-        case .secondary, .accent: return bg
-        }
-    }
+    public var soft: Color { resolved(in: .shared).soft }
 
     /// Accent foreground for `soft` / `outline` / `ghost` variants.
-    public var accent: Color {
-        switch self {
-        case .primary: return Theme.shared.text(.textHero)
-        case .neutral: return Theme.shared.text(.textPrimary)
-        case .info: return Theme.shared.foreground(.systemcolorsFgInfo)
-        case .success: return Theme.shared.foreground(.systemcolorsFgSuccess)
-        case .warning: return Theme.shared.foreground(.systemcolorsFgWarning)
-        case .error: return Theme.shared.foreground(.systemcolorsFgError)
-        case .turquoise: return Theme.shared.foreground(.fgTurquoise)
-        case .orange: return Theme.shared.foreground(.badgeFgOrange)
-        case .purple: return Theme.shared.text(.textPurple)
-        case .pink: return Theme.shared.foreground(.badgeFgMaximumpink)
-        case .secondary, .accent: return strong
-        }
-    }
+    public var accent: Color { resolved(in: .shared).accent }
 
     /// Border for the `outline` variant.
-    public var border: Color {
-        switch self {
-        case .primary: return Theme.shared.border(.borderHero)
-        case .neutral: return Theme.shared.border(.borderPrimary)
-        case .info: return Theme.shared.border(.systemcolorsBorderInfo)
-        case .success: return Theme.shared.border(.systemcolorsBorderSuccess)
-        case .warning: return Theme.shared.border(.systemcolorsBorderWarning)
-        case .error: return Theme.shared.border(.systemcolorsBorderError)
-        case .turquoise: return Theme.shared.border(.borderTurquoise)
-        case .orange: return Theme.shared.border(.borderOrange)
-        case .purple: return Theme.shared.text(.textPurple)
-        case .pink: return Theme.shared.foreground(.badgeFgMaximumpink)
-        case .secondary, .accent: return base
-        }
-    }
+    public var border: Color { resolved(in: .shared).border }
 
     // MARK: - Ant-style ladder roles
 
@@ -101,16 +52,7 @@ public enum SemanticColor: String, CaseIterable, Sendable {
     }
 
     /// Resolve any ladder step for this color, e.g. `.primary.shade(.s700)`.
-    public func shade(_ step: Shade) -> Color {
-        // Brand secondary/accent live in the additive ladder; fall back to primary
-        // when a theme doesn't define them, so they never resolve to `.clear`.
-        if self == .secondary || self == .accent {
-            return Theme.shared.brandShade(rawValue, step.rawValue)
-                ?? (Theme.PaletteColorKey(rawValue: "palette.primary.\(step.rawValue)").map { Theme.shared.palette($0) } ?? .clear)
-        }
-        guard let key = Theme.PaletteColorKey(rawValue: "palette.\(rawValue).\(step.rawValue)") else { return .clear }
-        return Theme.shared.palette(key)
-    }
+    public func shade(_ step: Shade) -> Color { resolved(in: .shared).shade(step) }
 
     /// Faint container background (Ant `colorXxxBg`, step 50).
     public var bg: Color { shade(.s50) }
