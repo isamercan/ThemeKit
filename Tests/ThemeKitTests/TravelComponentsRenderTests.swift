@@ -70,6 +70,71 @@ final class TravelComponentsRenderTests: XCTestCase {
         renders(FlightTicketCard(from: "NYC", to: "SFO").duration("1h 45m").times(departure: "10:00", arrival: "11:30").price(140), "FlightTicketCard")
         renders(MapCallout(title: "Mirage Park").score(8.9).price(9_600).onSelect { }, "MapCallout")
         renders(SheetHeader("Passengers").onBack { }.onClose { }.progress(0.4), "SheetHeader")
+
+        renderNewFlexibilityVariants(dep)
+    }
+
+    /// New variants / presets / axes added by the #280 full-flexibility sweep —
+    /// exercises the alternate anatomies (variant enums, style presets, emphasis,
+    /// seat shapes) that the default-state `renderAll()` never touches. Runs under
+    /// both the light and dark themes via `renderAll()`.
+    @MainActor
+    private func renderNewFlexibilityVariants(_ dep: Date) {
+        let payments: [PaymentMethodOption] = [
+            .init(id: "card", kind: .card, title: "Credit / debit card"),
+            .init(id: "wallet", kind: .wallet, title: "Digital wallet", subtitle: "Pay in one tap"),
+        ]
+        let cards = [
+            SavedCard(id: "visa", brand: .visa, last4: "4242",
+                      holder: "Alex Morgan", expiryMonth: 8, expiryYear: 2032),
+        ]
+        let info = FlightStatusInfo(
+            leg: FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                           departure: dep, arrival: dep.addingTimeInterval(4 * 3_600)),
+            status: .boarding, gate: "B12", terminal: "1")
+        var draft = TripSearchDraft()
+        draft.origin = Airport(code: "IST", name: "Istanbul Airport", city: "Istanbul", countryCode: "TR")
+        draft.destination = Airport(code: "LHR", name: "Heathrow Airport", city: "London", countryCode: "GB")
+        draft.departureDate = dep
+        let leg = FlightLeg(airline: "Skyline Air", from: "IST", to: "LHR",
+                            departure: dep, arrival: dep.addingTimeInterval(4 * 3_600))
+
+        // Molecules / atoms — new variant enums, emphasis, size/shape
+        renders(CabinClassSelector(selection: .constant(.business)).variant(.cards).showsGlyphs(), "CabinClass.cards")
+        renders(FlightStatusBadge(.boarding).emphasis(.solid), "StatusBadge.solid")
+        renders(FlightStatusBadge(.delayed).emphasis(.outline), "StatusBadge.outline")
+        renders(FlightStatusBadge(.arrived).emphasis(.dot), "StatusBadge.dot")
+        renders(FlightStatusBadge(.boarding).size(.large).shape(.rounded), "StatusBadge.size.shape")
+        renders(RecentSearchRow(from: "IST", to: "AYT") { }.variant(.pill).dates("18 Jul"), "RecentSearch.pill")
+        renders(RecentSearchRow(from: "IST", to: "AYT") { }.variant(.bordered).dates("18 Jul"), "RecentSearch.bordered")
+        renders(LayoverRow(duration: "2h 15m", airport: "Istanbul (IST)").variant(.pill), "Layover.pill")
+        renders(LayoverRow(duration: "2h 15m", airport: "Istanbul (IST)").variant(.banner).warning("Self-transfer"), "Layover.banner")
+        renders(TripTypeToggle(["One way", "Round trip"], selection: .constant(0)).variant(.underline).size(.large), "TripToggle.underline")
+
+        // Organisms — new variant enums / layouts
+        renders(PaymentMethodSelector(payments, selection: .constant("card")).variant(.grid), "Payment.grid")
+        renders(PaymentMethodSelector(payments, selection: .constant("card")).variant(.carousel), "Payment.carousel")
+        renders(PaymentMethodSelector(payments, selection: .constant("card")).variant(.compactList), "Payment.compactList")
+        renders(SavedCardsList(cards, selection: .constant("visa")).variant(.wallet).flagsExpired(), "SavedCards.wallet")
+        renders(FlightTracker(info).variant(.compact).progress(0.62), "FlightTracker.compact")
+        renders(FareFamilyCard("Eco Fly", price: 3_116).layout(.column), "FareFamily.column")
+        renders(TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
+            .variant(.tile).size(.small).price(19).onSelect { }, "Transport.tile")
+        renders(TripSearchCard(draft: .constant(draft), onSearch: { _ in }).variant(.hero), "TripSearch.hero")
+        renders(TripSearchCard(draft: .constant(draft), onSearch: { _ in }).variant(.compact), "TripSearch.compact")
+        renders(TripSearchCard(draft: .constant(draft), onSearch: { _ in }).variant(.inlineBar), "TripSearch.inlineBar")
+
+        // SeatMap — new seat shapes + size ramp
+        renders(SeatMap(columns: "AB CD", rows: Array(1...4), selection: .constant(Set<String>()))
+            .seatShape(.seatback), "SeatMap.seatback")
+        renders(SeatMap(columns: "AB CD", rows: Array(1...4), selection: .constant(Set<String>()))
+            .seatShape(.circle).seatSize(.compact), "SeatMap.circle")
+
+        // FlightListItem — three new style presets
+        let item = FlightListItem(legs: [leg]).price(214, currencyCode: "USD", caption: "from").badge("Best")
+        renders(item.flightListItemStyle(.tile), "FlightListItem.tile")
+        renders(item.flightListItemStyle(.hero), "FlightListItem.hero")
+        renders(item.flightListItemStyle(.receipt), "FlightListItem.receipt")
     }
 
     @MainActor
