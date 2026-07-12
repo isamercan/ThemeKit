@@ -10,6 +10,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "%@ items": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "%@ left": {
       "comment": "Text shown in the trailing corner of a text input, indicating how many characters are left to be entered. The argument is the number of remaining characters.",
       "extractionState": "manual",
@@ -345,6 +349,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Collapse fare details": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Collapsed": {
       "comment": "Accessibility value of a closed dropdown trigger.",
       "extractionState": "manual",
@@ -509,6 +517,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Expand fare details": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Expanded": {
       "comment": "Accessibility value of an open dropdown trigger.",
       "extractionState": "manual",
@@ -564,6 +576,10 @@
       "generatesSymbol": false
     },
     "Hex color": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Hide breakdown": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -1026,6 +1042,10 @@
       "generatesSymbol": false
     },
     "Show %@ more": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Show breakdown": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

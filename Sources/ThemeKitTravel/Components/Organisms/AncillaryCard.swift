@@ -11,19 +11,25 @@
 //      .price(450).quantity($bags, range: 0...4)
 //  ```
 //
-//  The outer shell (surface fill, corner clipping, border, elevation shadow) is drawn
-//  by the active `CardStyle` from the environment — `.surface()/.cornerRadius()` and
-//  the added/quantity "active" state (as `isSelected`) feed the
-//  `CardStyleConfiguration`, so `.cardStyle(_:)` can swap in a different shell.
+//  The *arrangement* is owned by the active ``AncillaryCardStyle`` from the
+//  environment (ADR-0004): the component gathers its typed data — plus the
+//  quantity/added control as pre-wired state + closures — into an
+//  ``AncillaryCardConfiguration`` and hands it to the style. `.row` (default) is
+//  today's card verbatim; `.tile` and `.banner` swap the whole layout, and apps
+//  can implement their own. Every built-in is card-shaped, so it keeps drawing
+//  the outer shell (surface fill, corner clipping, border, elevation shadow)
+//  through the active `CardStyle` — `.surface()/.cornerRadius()` and the
+//  added/quantity "active" state (as `isSelected`) feed the
+//  `CardStyleConfiguration`, so `.cardStyle(_:)` still swaps the chrome
+//  independently of `.ancillaryCardStyle(_:)`.
 //
 
 import SwiftUI
 import ThemeKit
 
 public struct AncillaryCard: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
-    @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.ancillaryCardStyle) private var style
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
 
@@ -54,8 +60,10 @@ public struct AncillaryCard: View {
     /// every body pass, so a live language switch is never frozen at init.
     private var addedTitle: String { addedTitleOverride ?? String(themeKit: "Added") }
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var controlSurfaceKey: Theme.BackgroundColorKey = .bgSecondary
+    /// `nil` → the active ``AncillaryCardStyle``'s own default (`.row` uses `.bgBase`).
+    private var surfaceKey: Theme.BackgroundColorKey?
+    /// `nil` → the active style's own default (`.row`/`.tile` use `.bgSecondary`).
+    private var controlSurfaceKey: Theme.BackgroundColorKey?
     private var radiusRole: Theme.RadiusRole = .box
     private var elevation: CardElevation = .none
     private var leadingSlot: AnyView?
@@ -63,125 +71,45 @@ public struct AncillaryCard: View {
 
     public init(_ title: String) { self.title = title }   // R1
 
-    @Environment(\.componentDefaults) private var defaults
-    @Environment(\.isReadOnly) private var isReadOnly   // E1 — set by `.readOnly(_:)`
-    private var accentSemantic: SemanticColor { accent ?? defaults.accent ?? .primary }
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
-    @MainActor
-    private var isActive: Bool { (showsAdded && addedState) || (showsQuantity && quantityState > 0) }
 
     public var body: some View {
-        // The shell (fill, corner clipping, border, shadow) is drawn by the active
-        // `CardStyle` — built-ins and custom styles go through the same gate. The
-        // added/quantity "active" state feeds `isSelected`, so the selected border is
-        // the style's to draw (the default style uses the hero border token). `.none`
-        // elevation reproduces today's flat look: a 1pt hairline border, no shadow.
-        cardStyle.makeBody(configuration: CardStyleConfiguration(
-            content: AnyView(cardContent),
-            elevation: elevation,
-            isSelected: isActive,
-            isPressed: false,
+        // The arrangement is owned by the active `AncillaryCardStyle`; the
+        // quantity/added `@ControllableState` storage stays *here* (ADR-F4) —
+        // styles only see the current value + a typed step/toggle closure, so
+        // the interaction logic (clamping, toggling) is never re-implemented
+        // per style.
+        let configuration = AncillaryCardConfiguration(
+            title: title,
+            systemImage: systemImage,
+            imageURL: imageURL,
+            subtitle: subtitle,
+            priceAmount: price,
+            currencyCode: resolvedCurrency,
+            priceSuffix: priceSuffix,
+            badgeText: badgeText,
+            badgeStyle: badgeStyle,
+            showsQuantity: showsQuantity,
+            quantity: quantityState,
+            quantityRange: quantityRange,
+            setQuantity: showsQuantity ? { quantityState = $0 } : nil,
+            showsAdded: showsAdded,
+            isAdded: addedState,
+            toggleAdded: showsAdded ? { addedState.toggle() } : nil,
+            addTitle: addTitle,
+            addedTitle: addedTitle,
+            leading: leadingSlot,
+            trailing: trailingSlot,
+            accent: accent,
             surfaceKey: surfaceKey,
-            radius: radiusRole))
-            .contentShape(shape)
-    }
-
-    /// The card's inner layout — everything inside the shell.
-    @MainActor
-    private var cardContent: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            leading
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                    if let badgeText { Badge(badgeText).badgeStyle(badgeStyle).variant(.soft).size(.small).fixedSize() }
-                }
-                if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
-                if let price { priceLine(price) }
-            }
-            Spacer(minLength: 6)
-            control
-        }
-        .padding(density.scale(Theme.SpacingKey.md.value))
-    }
-
-    @ViewBuilder private var leading: some View {
-        if let leadingSlot {
-            leadingSlot
-        } else if let imageURL {
-            RemoteImage(imageURL).contentMode(.fill).frame(width: 46, height: 46)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
-        } else {
-            IconTile(systemImage).accent(accentSemantic)
-        }
-    }
-
-    private func priceLine(_ amount: Decimal) -> some View {
-        HStack(spacing: 2) {
-            Text(amount.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))
-                .textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-            if let priceSuffix { Text(priceSuffix).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
-        }
-    }
-
-    @MainActor
-    @ViewBuilder private var control: some View {
-        if let trailingSlot {
-            trailingSlot
-        } else if showsQuantity {
-            stepper($quantityState)
-        } else if showsAdded {
-            addButton($addedState)
-        }
-    }
-
-    private func stepper(_ qty: Binding<Int>) -> some View {
-        HStack(spacing: 0) {
-            stepButton("minus", label: String(themeKit: "Decrease"), value: qty.wrappedValue, enabled: qty.wrappedValue > quantityRange.lowerBound) {
-                qty.wrappedValue = max(quantityRange.lowerBound, qty.wrappedValue - 1)
-            }
-            Text("\(qty.wrappedValue)").textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-                .frame(minWidth: 28).monospacedDigit()
-            stepButton("plus", label: String(themeKit: "Increase"), value: qty.wrappedValue, enabled: qty.wrappedValue < quantityRange.upperBound) {
-                qty.wrappedValue = min(quantityRange.upperBound, qty.wrappedValue + 1)
-            }
-        }
-        .padding(.horizontal, 4)
-        .background(theme.background(controlSurfaceKey), in: Capsule())
-        .disabled(isReadOnly)   // E1 — read-only surfaces render but don't mutate
-    }
-
-    private func stepButton(_ icon: String, label: String, value: Int, enabled: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon).font(.system(size: 13, weight: .bold))
-                .foregroundStyle(enabled ? accentSemantic.base : theme.text(.textDisabled))
-                .frame(width: 32, height: 32)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .accessibilityLabel(label)
-        .accessibilityValue("\(value)")
-    }
-
-    private func addButton(_ added: Binding<Bool>) -> some View {
-        let on = added.wrappedValue
-        return Button { added.wrappedValue.toggle() } label: {
-            HStack(spacing: 4) {
-                Image(systemName: on ? "checkmark" : "plus").font(.system(size: 12, weight: .bold))
-                Text(on ? addedTitle : addTitle).textStyle(.labelSm700)
-            }
-            .foregroundStyle(on ? accentSemantic.onSolid : accentSemantic.base)
-            .padding(.horizontal, density.scale(Theme.SpacingKey.md.value))
-            .frame(height: 36)
-            .background(on ? accentSemantic.solid : accentSemantic.bg, in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .disabled(isReadOnly)   // E1 — read-only surfaces render but don't mutate
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(on ? .isSelected : [])
+            controlSurfaceKey: controlSurfaceKey,
+            radiusRole: radiusRole,
+            elevation: elevation,
+            density: density,
+            locale: locale)
+        style.makeBody(configuration: configuration)
     }
 }
 
@@ -261,8 +189,10 @@ public extension AncillaryCard {
         @State private var insurance = false
         var body: some View {
             VStack(spacing: 10) {
-                AncillaryCard("Checked baggage").icon("suitcase.fill").subtitle("20 kg").price(450, suffix: "/ bag").quantity($bags, range: 0...4)
-                AncillaryCard("Travel insurance").icon("cross.case.fill").subtitle("Full coverage").price(120).badge("Popular").added($insurance)
+                AncillaryCard("Checked baggage").icon("suitcase.fill").subtitle("20 kg")
+                    .price(450, suffix: "/ bag").quantity($bags, range: 0...4)
+                AncillaryCard("Travel insurance").icon("cross.case.fill").subtitle("Full coverage")
+                    .price(120).badge("Popular").added($insurance)
                 AncillaryCard("Extra legroom").icon("figure.seated.side").subtitle("Row 12").price(75).quantity($bags, range: 0...4)
                     .surface(.bgSecondaryLight)
                     .controlSurface(.bgWhite)

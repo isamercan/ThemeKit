@@ -113,6 +113,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Cards": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Cards you save at checkout will appear here.": {
       "extractionState": "manual",
       "generatesSymbol": false
@@ -134,6 +138,14 @@
       "generatesSymbol": false
     },
     "Clear recent airports": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Collapse": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Collapse saved cards stack": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -265,6 +277,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Other": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Passengers": {
       "extractionState": "manual",
       "generatesSymbol": false
@@ -313,11 +329,19 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Saved cards, %@ cards, collapsed": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Search flights": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
     "See options": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Shows every card in the stack": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -358,6 +382,10 @@
       "generatesSymbol": false
     },
     "Visa required": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Wallets": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

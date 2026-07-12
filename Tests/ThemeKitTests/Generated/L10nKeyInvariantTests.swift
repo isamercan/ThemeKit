@@ -35,7 +35,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) card ending \(d)",
             "%@ card ending %@", 2,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:409")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:171")
         assertKey(
             "\(d) children",
             "%@ children", 1,
@@ -52,6 +52,10 @@ final class L10nKeyInvariantTests: XCTestCase {
             "\(d) installments",
             "%@ installments", 1,
             site: "Sources/ThemeKit/Components/Molecules/InstallmentPicker.swift:56")
+        assertKey(
+            "\(d) items",
+            "%@ items", 1,
+            site: "Sources/ThemeKitTravel/Components/Organisms/FareSummaryStyle.swift:488")
         assertKey(
             "\(d) left",
             "%@ left", 1,
@@ -120,13 +124,13 @@ final class L10nKeyInvariantTests: XCTestCase {
             "\(d)% saturation, \(d)% brightness",
             "%@%% saturation, %@%% brightness", 2,
             site: "Sources/ThemeKit/Components/Molecules/ColorArea.swift:126")
+    }
+
+    func testInterpolatedKeyShapes2() {
         assertKey(
             "\(d)% to \(d)",
             "%@%% to %@", 2,
             site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:169")
-    }
-
-    func testInterpolatedKeyShapes2() {
         assertKey(
             "\(d)/mo",
             "%@/mo", 1,
@@ -178,7 +182,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Card ending \(d)",
             "Card ending %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:408")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:170")
         assertKey(
             "Close \(d)",
             "Close %@", 1,
@@ -202,7 +206,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Expires \(d)",
             "Expires %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:401")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:164")
         assertKey(
             "Increase \(d)",
             "Increase %@", 1,
@@ -214,7 +218,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "More about \(d)",
             "More about %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FareSummary.swift:101")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FareSummaryStyle.swift:154")
         assertKey(
             "Move to \(d)",
             "Move to %@", 1,
@@ -223,13 +227,13 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Page \(d)",
             "Page %@", 1,
             site: "Sources/ThemeKit/Components/Molecules/Pagination.swift:131")
+    }
+
+    func testInterpolatedKeyShapes3() {
         assertKey(
             "Page \(d) of \(d)",
             "Page %@ of %@", 2,
             site: "Sources/ThemeKit/Components/Organisms/PagingCarousel.swift:84")
-    }
-
-    func testInterpolatedKeyShapes3() {
         assertKey(
             "Passenger \(d), seat \(d)",
             "Passenger %@, seat %@", 2,
@@ -237,7 +241,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Payment method, \(d) options",
             "Payment method, %@ options", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/PaymentMethodSelector.swift:118")
+            site: "Sources/ThemeKitTravel/Components/Organisms/PaymentMethodSelector.swift:165")
         assertKey(
             "React with \(d), \(d) reactions",
             "React with %@, %@ reactions", 2,
@@ -249,7 +253,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Remove card ending \(d)",
             "Remove card ending %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:209")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:246")
         assertKey(
             "Resend code in \(d)s",
             "Resend code in %@s", 1,
@@ -261,7 +265,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Saved cards, \(d) cards",
             "Saved cards, %@ cards", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:111")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsList.swift:139")
+        assertKey(
+            "Saved cards, \(d) cards, collapsed",
+            "Saved cards, %@ cards, collapsed", 1,
+            site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:633")
         assertKey(
             "Seat \(d)",
             "Seat %@", 1,

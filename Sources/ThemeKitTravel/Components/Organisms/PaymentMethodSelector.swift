@@ -8,6 +8,12 @@
 //  ThemeKit's neutral `ListRow` anatomy, `RadioButton`, `Badge` and
 //  `InstallmentPicker` — nothing is re-implemented here.
 //
+//  The entire layout is a swappable ``PaymentMethodSelectorStyle`` (ADR-0004):
+//  this component owns the *data* (options, selection, instalments, badges)
+//  and the active style owns the *arrangement*. See
+//  `PaymentMethodSelectorStyle.swift` for the five built-ins
+//  (`.list` `.grid` `.carousel` `.compactList` `.sectioned`).
+//
 //  State follows ADR-F4: controlled-first (`selection: Binding<String?>`) plus
 //  an uncontrolled preview convenience (`initiallySelected:`), both funneled
 //  through `ControllableState`. Currency for the installment amounts is NOT a
@@ -18,6 +24,7 @@
 //  PaymentMethodSelector(options, selection: $method)
 //      .installments([1, 3, 6, 9], selection: $months, total: fareTotal)
 //      .badge("No fee", for: "transfer")
+//      .paymentMethodSelectorStyle(.grid)
 //  ```
 //
 
@@ -27,6 +34,11 @@ import ThemeKit
 /// Layout archetype of a ``PaymentMethodSelector``: radio rows (`.list`),
 /// tiles (`.grid`), horizontally-snapping tiles (`.carousel`), or dense
 /// single-line rows (`.compactList`).
+///
+/// Superseded by ``PaymentMethodSelectorStyle`` (each case maps 1:1 to a
+/// preset, which also adds `.sectioned`); kept for source compatibility until
+/// the next major, together with the deprecated
+/// ``PaymentMethodSelector/variant(_:)`` modifier.
 public enum PaymentMethodVariant: Sendable { case list, grid, carousel, compactList }
 
 /// The per-option selected glyph: a leading `RadioButton` (`.radio`, the list
@@ -42,18 +54,18 @@ public enum TileEmphasis: Sendable { case subtle, strong }
 /// ``PaymentMethodOption`` values, with an optional inline instalment picker
 /// under the selected card option.
 public struct PaymentMethodSelector: View {
-    @Environment(\.theme) private var theme
     @Environment(\.isReadOnly) private var isReadOnly
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
+    @Environment(\.paymentMethodSelectorStyle) private var envStyle
 
     private let options: [PaymentMethodOption]
     /// Selected option id — controlled or uncontrolled per init (ADR-F4).
     @ControllableState private var selection: String?
 
     // Config — mutated only through the modifiers below (R2).
-    private var variantValue: PaymentMethodVariant = .list
     private var installmentMonths: [Int]?
     private var installmentSelection: Binding<Int>?
     private var installmentTotal: Decimal?
@@ -62,9 +74,9 @@ public struct PaymentMethodSelector: View {
     private var accent: SemanticColor?
     private var footerSlot: AnyView?
     private var headerSlot: AnyView?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    /// Selected glyph — `nil` = the variant's default (`.radio` for the row
-    /// variants, `.checkmark` for the tile variants).
+    private var surfaceKey: Theme.BackgroundColorKey?
+    /// Selected glyph — `nil` = the active style's own default (`.radio` for
+    /// row-shaped presets, `.checkmark` for tile-shaped ones).
     private var indicatorOverride: SelectionIndicator?
     private var columnsValue = 2
     /// Per-option replacement (`(option, isSelected)`); nil = built-in anatomy.
@@ -72,6 +84,10 @@ public struct PaymentMethodSelector: View {
     private var badgeStyleValue: BadgeStyle = .info
     private var tileRadiusRole: Theme.RadiusRole = .field
     private var emphasisValue: TileEmphasis = .subtle
+    /// Set by the deprecated ``variant(_:)`` modifier — an explicitly chosen
+    /// per-instance style wins over an ancestor's ``paymentMethodSelectorStyle(_:)``
+    /// (source-behavior stability during the enum's deprecation window).
+    private var explicitStyle: AnyPaymentMethodSelectorStyle?
 
     /// R1 — options + controlled selection (option id). The binding is the
     /// change channel; observe with `.onChange(of:)` at the call site.
@@ -90,287 +106,20 @@ public struct PaymentMethodSelector: View {
     private var motion: Animation? {
         MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
     }
-    private var accentBase: Color { (accent ?? .primary).base }
 
-    /// The variant's effective indicator: the explicit override, or `.radio`
-    /// for row variants / `.checkmark` for tile variants.
-    private var effectiveIndicator: SelectionIndicator {
-        if let indicatorOverride { return indicatorOverride }
-        switch variantValue {
-        case .list, .compactList: return .radio
-        case .grid, .carousel: return .checkmark
-        }
-    }
-
-    public var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            if let headerSlot { headerSlot }
-            switch variantValue {
-            case .list: listBody
-            case .grid: gridBody
-            case .carousel: carouselBody
-            case .compactList: compactListBody
-            }
-            if let footerSlot { footerSlot }
-        }
-        .animation(motion, value: selection)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(String(themeKitTravel: "Payment method, \(options.count) options"))
-    }
-
-    // MARK: List variant — ListRow anatomy with radio semantics
-
-    @MainActor
-    private var listBody: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-                row(option)
-                if showsInstallments(under: option) {
-                    inlineInstallments
-                        .padding(.bottom, Theme.SpacingKey.sm.value)
-                }
-                if index < options.count - 1 {
-                    DividerView().size(.small)
-                }
-            }
-        }
-    }
-
-    @MainActor
-    @ViewBuilder
-    private func row(_ option: PaymentMethodOption) -> some View {
-        let isOn = selection == option.id
-        if let optionSlot {
-            slotButton(option, isOn: isOn) { optionSlot(option, isOn) }
-        } else {
-            builtInRow(option, isOn: isOn)
-        }
-    }
-
-    @MainActor
-    private func builtInRow(_ option: PaymentMethodOption, isOn: Bool) -> some View {
-        var listRow = ListRow(option.title) { select(option.id) }
-            .subtitle(option.subtitle)
-            .leading {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    if effectiveIndicator == .radio {
-                        RadioButton(isSelected: isSelectedBinding(option.id)).accent(accent)
-                    }
-                    Icon(systemName: option.systemImage)
-                        .size(.sm)
-                        .color(isOn ? accentBase : theme.text(.textSecondary))
-                }
-            }
-            .badge(badges[option.id])
-            .selected(isOn)
-        if effectiveIndicator == .checkmark, isOn {
-            listRow = listRow.trailing {
-                Icon(systemName: "checkmark").size(.sm).color(accentBase)
-            }
-        } else {
-            listRow = listRow.trailing(ListRowTrailing.none)
-        }
-        return listRow
-            .disabled(disabledIDs.contains(option.id))
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
-    }
-
-    /// Wraps `.optionContent` slot output in the selection button, preserving
-    /// tap handling, disabling and VoiceOver traits around caller content.
-    @MainActor
-    private func slotButton<Content: View>(
-        _ option: PaymentMethodOption, isOn: Bool, @ViewBuilder content: () -> Content
-    ) -> some View {
-        Button { select(option.id) } label: {
-            content().contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(disabledIDs.contains(option.id))
-        .allowsHitTesting(!isReadOnly)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
-    }
-
-    // MARK: Compact-list variant — dense single-line rows
-
-    @MainActor
-    private var compactListBody: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
-                compactRow(option)
-                if showsInstallments(under: option) {
-                    inlineInstallments
-                        .padding(.bottom, Theme.SpacingKey.sm.value)
-                }
-                if index < options.count - 1 {
-                    DividerView().size(.small)
-                }
-            }
-        }
-    }
-
-    @MainActor
-    @ViewBuilder
-    private func compactRow(_ option: PaymentMethodOption) -> some View {
-        let isOn = selection == option.id
-        let isDisabled = disabledIDs.contains(option.id)
-        slotButton(option, isOn: isOn) {
-            if let optionSlot {
-                optionSlot(option, isOn)
-            } else {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    if effectiveIndicator == .radio {
-                        RadioButton(isSelected: isSelectedBinding(option.id)).accent(accent)
-                    }
-                    Icon(systemName: option.systemImage)
-                        .size(.sm)
-                        .color(isDisabled ? theme.text(.textDisabled) : (isOn ? accentBase : theme.text(.textSecondary)))
-                    Text(option.title)
-                        .textStyle(.labelBase600)
-                        .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
-                        .lineLimit(1)
-                    Spacer(minLength: Theme.SpacingKey.xs.value)
-                    if let badgeText = badges[option.id] {
-                        Badge(badgeText).badgeStyle(badgeStyleValue).variant(.soft).size(.small)
-                    }
-                    if effectiveIndicator == .checkmark, isOn {
-                        Icon(systemName: "checkmark").size(.sm).color(accentBase)
-                    }
-                }
-                .padding(.vertical, Theme.SpacingKey.xs.value)
-            }
-        }
-    }
-
-    // MARK: Carousel variant — horizontal snap tiles
-
-    @MainActor
-    @ViewBuilder
-    private var carouselBody: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                ForEach(options) { option in
-                    tile(option)
-                        .frame(width: Metrics.carouselTileWidth)
-                }
-            }
-            .scrollTargetLayout()
-        }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled()
-        if options.contains(where: { showsInstallments(under: $0) }) {
-            inlineInstallments
-        }
-    }
-
-    /// Genuine dimensions with no semantic token — fixed tile constants.
-    private enum Metrics {
-        static let carouselTileWidth: CGFloat = 148
-        static let tileMinHeight: CGFloat = 88
-    }
-
-    // MARK: Grid variant — selection tiles (vertical fallback at a11y sizes)
-
-    @MainActor
-    @ViewBuilder
-    private var gridBody: some View {
-        let gap = Theme.SpacingKey.sm.value
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(spacing: gap) { ForEach(options) { tile($0) } }
-        } else {
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: gap), count: columnsValue),
-                spacing: gap
-            ) {
-                ForEach(options) { tile($0) }
-            }
-        }
-        if options.contains(where: { showsInstallments(under: $0) }) {
-            inlineInstallments
-        }
-    }
-
-    /// Selected-stroke color/width from the emphasis axis — named semantic
-    /// steps only (`base` / `strong`).
-    private var selectedStroke: (color: Color, width: CGFloat) {
-        switch emphasisValue {
-        case .subtle: return (accentBase, 1.5)
-        case .strong: return ((accent ?? .primary).strong, 2)
-        }
-    }
-
-    @MainActor
-    @ViewBuilder
-    private func tile(_ option: PaymentMethodOption) -> some View {
-        let isOn = selection == option.id
-        let isDisabled = disabledIDs.contains(option.id)
-        let shape = RoundedRectangle(cornerRadius: tileRadiusRole.value, style: .continuous)
-        slotButton(option, isOn: isOn) {
-            Group {
-                if let optionSlot {
-                    optionSlot(option, isOn)
-                } else {
-                    builtInTileLabel(option, isOn: isOn, isDisabled: isDisabled)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: Metrics.tileMinHeight)
-            .padding(Theme.SpacingKey.md.value)
-            .background(isOn ? (accent ?? .primary).bg : theme.background(surfaceKey), in: shape)
-            .overlay(shape.stroke(isOn ? selectedStroke.color : theme.border(.borderPrimary),
-                                  lineWidth: isOn ? selectedStroke.width : 1))
-            .overlay(alignment: .topTrailing) {
-                if let badgeText = badges[option.id] {
-                    Badge(badgeText).badgeStyle(badgeStyleValue).variant(.soft).size(.small)
-                        .padding(Theme.SpacingKey.xs.value)
-                }
-            }
-            .contentShape(shape)
-        }
-    }
-
-    @MainActor
-    private func builtInTileLabel(_ option: PaymentMethodOption, isOn: Bool, isDisabled: Bool) -> some View {
-        VStack(spacing: Theme.SpacingKey.xs.value) {
-            Icon(systemName: option.systemImage)
-                .size(.md)
-                .color(isDisabled ? theme.text(.textDisabled) : (isOn ? accentBase : theme.text(.textSecondary)))
-            Text(option.title)
-                .textStyle(.labelSm600)
-                .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
-                .multilineTextAlignment(.center)
-            if let subtitle = option.subtitle {
-                Text(subtitle)
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textSecondary))
-                    .multilineTextAlignment(.center)
-            }
-            if effectiveIndicator == .checkmark, isOn {
-                Icon(systemName: "checkmark.circle.fill").size(.sm).color(accentBase)
-            }
-        }
-    }
-
-    // MARK: Installments (composes the existing InstallmentPicker)
-
-    /// Whether the inline instalment picker belongs under this option: the
-    /// modifier is configured, the option is the current selection, and it is
-    /// a `.card` method.
-    @MainActor
-    private func showsInstallments(under option: PaymentMethodOption) -> Bool {
-        installmentMonths?.isEmpty == false
-            && installmentSelection != nil
-            && installmentTotal != nil
-            && option.kind == .card
-            && option.id == selection
-    }
-
-    @MainActor
-    @ViewBuilder
-    private var inlineInstallments: some View {
-        if let months = installmentMonths, let picked = installmentSelection, let total = installmentTotal {
-            // Currency deliberately not set: InstallmentPicker resolves it via
-            // the §10 chain (`\.formatDefaults` > locale currency > "USD").
+    /// The pre-built, accent-styled inline instalment picker for the current
+    /// selection, or `nil` when instalments aren't configured, nothing is
+    /// selected, or the selection isn't a `.card` method (composes the
+    /// neutral `InstallmentPicker`; currency deliberately unset — it resolves
+    /// via the §10 chain inside `InstallmentPicker` itself).
+    private var installmentsSlot: AnyView? {
+        guard let months = installmentMonths, !months.isEmpty,
+              let picked = installmentSelection,
+              let total = installmentTotal,
+              let selectedOption = options.first(where: { $0.id == selection }),
+              selectedOption.kind == .card
+        else { return nil }
+        return AnyView(
             InstallmentPicker(months.map { count in
                 InstallmentOption(
                     count: count,
@@ -378,10 +127,42 @@ public struct PaymentMethodSelector: View {
                     monthly: count > 1 ? total / Decimal(count) : nil
                 )
             }, selection: picked)
-            .accent(accent)
-            .padding(.leading, Theme.SpacingKey.lg.value)
-            .transition(.opacity)
-        }
+                .accent(accent)
+                .padding(.leading, density.scale(Theme.SpacingKey.lg.value))
+                .transition(.opacity)
+        )
+    }
+
+    /// The typed configuration handed to the active ``PaymentMethodSelectorStyle``.
+    private var configuration: PaymentMethodSelectorConfiguration {
+        PaymentMethodSelectorConfiguration(
+            options: options,
+            selectedID: selection,
+            select: { select($0) },
+            installmentsSlot: installmentsSlot,
+            badges: badges,
+            disabledMethods: disabledIDs,
+            indicatorOverride: indicatorOverride,
+            columns: columnsValue,
+            optionContent: optionSlot,
+            badgeStyle: badgeStyleValue,
+            header: headerSlot,
+            footer: footerSlot,
+            radiusRole: tileRadiusRole,
+            emphasis: emphasisValue,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            isReadOnly: isReadOnly,
+            density: density,
+            locale: locale
+        )
+    }
+
+    public var body: some View {
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
+            .animation(motion, value: selection)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(String(themeKitTravel: "Payment method, \(options.count) options"))
     }
 
     // MARK: Selection plumbing
@@ -391,28 +172,30 @@ public struct PaymentMethodSelector: View {
         guard !isReadOnly else { return }   // E1 — read-only blocks mutation, not focus
         selection = id
     }
-
-    /// Radio-style binding for one option: setting `true` selects it; a
-    /// payment method can't be deselected by tapping its own radio.
-    @MainActor
-    private func isSelectedBinding(_ id: String) -> Binding<Bool> {
-        Binding(
-            get: { selection == id },
-            set: { if $0 { select(id) } }
-        )
-    }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension PaymentMethodSelector {
-    /// Layout archetype: `.list` radio rows (default), `.grid` tiles,
-    /// `.carousel` horizontal snap tiles, or `.compactList` single-line rows.
-    func variant(_ v: PaymentMethodVariant) -> Self { copy { $0.variantValue = v } }
+    /// Layout archetype — superseded by the style axis: prefer
+    /// `.paymentMethodSelectorStyle(.list/.grid/.carousel/.compactList)`,
+    /// settable once per screen via the environment. This modifier keeps
+    /// working and, when called, wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .paymentMethodSelectorStyle(.grid)")
+    func variant(_ v: PaymentMethodVariant) -> Self {
+        copy {
+            switch v {
+            case .list: $0.explicitStyle = AnyPaymentMethodSelectorStyle(ListPaymentMethodSelectorStyle())
+            case .grid: $0.explicitStyle = AnyPaymentMethodSelectorStyle(GridPaymentMethodSelectorStyle())
+            case .carousel: $0.explicitStyle = AnyPaymentMethodSelectorStyle(CarouselPaymentMethodSelectorStyle())
+            case .compactList: $0.explicitStyle = AnyPaymentMethodSelectorStyle(CompactListPaymentMethodSelectorStyle())
+            }
+        }
+    }
 
-    /// Selected glyph: `.radio` (row variants' default), `.checkmark`
-    /// (tile variants' default), or `.none` — the selected chrome alone
-    /// signals the choice. Tile variants ignore `.radio` (no glyph).
+    /// Selected glyph: `.radio` (row-shaped presets' default), `.checkmark`
+    /// (tile-shaped presets' default), or `.none` — the selected chrome alone
+    /// signals the choice. Tile-shaped presets ignore `.radio` (no glyph).
     func indicator(_ i: SelectionIndicator) -> Self { copy { $0.indicatorOverride = i } }
 
     /// Grid column count, clamped 1…4 (default 2). The accessibility-size
@@ -420,19 +203,20 @@ public extension PaymentMethodSelector {
     func columns(_ n: Int) -> Self { copy { $0.columnsValue = min(4, max(1, n)) } }
 
     /// Replaces the built-in row/tile anatomy with caller content, built per
-    /// `(option, isSelected)` in every variant. Selection tap handling,
-    /// disabling and VoiceOver traits are preserved around the slot; the tile
-    /// variants keep their selected chrome (fill/stroke/badge) around it.
+    /// `(option, isSelected)` in every style. Selection tap handling,
+    /// disabling and VoiceOver traits are preserved around the slot; the
+    /// tile-shaped presets keep their selected chrome (fill/stroke/badge)
+    /// around it.
     func optionContent(@ViewBuilder _ content: @escaping (PaymentMethodOption, Bool) -> some View) -> Self {
         copy { $0.optionSlot = { AnyView(content($0, $1)) } }
     }
 
     /// Style of the per-option badges (default `.info`) — applies wherever
-    /// this component draws the `Badge` itself (tiles, carousel, compact
-    /// rows); the `.list` variant's badge is drawn by `ListRow`.
+    /// the active style draws the `Badge` itself (tiles, carousel, compact
+    /// rows); the `.list`/`.sectioned` row's badge is drawn by `ListRow`.
     func badgeStyle(_ s: BadgeStyle) -> Self { copy { $0.badgeStyleValue = s } }
 
-    /// Corner role for the tile variants (default `.field`).
+    /// Corner role for tile-shaped presets (default `.field`).
     func radius(_ role: Theme.RadiusRole) -> Self { copy { $0.tileRadiusRole = role } }
 
     /// Selected-tile stroke strength: `.subtle` (default, base step) or
@@ -470,8 +254,8 @@ public extension PaymentMethodSelector {
     /// `nil` (default) uses the primary triad.
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 
-    /// Surface token for the *unselected* `.grid` tile fill (default `.bgBase`);
-    /// the selected tile keeps the accent tint and stroke.
+    /// Surface token for the *unselected* tile-shaped presets' fill (default
+    /// `.bgBase`); the selected tile keeps the accent tint and stroke.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     /// Bottom-aligned accessory area (canonical `.footer { }` slot), e.g. a
@@ -537,7 +321,6 @@ public extension PaymentMethodSelector {
                         .init(id: "transfer", kind: .transfer, title: "Transfer"),
                         .init(id: "card2", kind: .card, title: "Corporate"),
                     ], selection: $method)
-                        .variant(.carousel)
                         .emphasis(.strong)
                         .radius(.box)
                         .badge("New", for: "wallet")
@@ -545,6 +328,7 @@ public extension PaymentMethodSelector {
                         .header {
                             Text("How would you like to pay?").textStyle(.headingSm)
                         }
+                        .paymentMethodSelectorStyle(.carousel)
 
                     ListSectionHeader("Compact list · checkmark indicator")
                     PaymentMethodSelector([
@@ -552,8 +336,8 @@ public extension PaymentMethodSelector {
                         .init(id: "wallet", kind: .wallet, title: "Digital wallet"),
                         .init(id: "transfer", kind: .transfer, title: "Bank transfer"),
                     ], selection: $method)
-                        .variant(.compactList)
                         .indicator(.checkmark)
+                        .paymentMethodSelectorStyle(.compactList)
 
                     ListSectionHeader("Grid · 3 columns · custom option slot")
                     PaymentMethodSelector([
@@ -561,7 +345,6 @@ public extension PaymentMethodSelector {
                         .init(id: "wallet", kind: .wallet, title: "Wallet"),
                         .init(id: "transfer", kind: .transfer, title: "Transfer"),
                     ], selection: $method)
-                        .variant(.grid)
                         .columns(3)
                         .indicator(.none)
                         .optionContent { option, isSelected in
@@ -570,6 +353,7 @@ public extension PaymentMethodSelector {
                                 Text(option.title).textStyle(isSelected ? .labelSm700 : .labelSm600)
                             }
                         }
+                        .paymentMethodSelectorStyle(.grid)
                 }
                 .padding()
             }
@@ -578,29 +362,30 @@ public extension PaymentMethodSelector {
     return Demo()
 }
 
-#Preview("Grid · dark") {
+#Preview("Sectioned · grid · dark") {
     struct Demo: View {
         @State private var method: String? = "wallet"
         var body: some View {
             let dark = Theme()
             dark.loadTheme(named: Theme.defaultThemeName, dark: true)
             return VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
+                ListSectionHeader("Sectioned — cards / wallets / other")
                 PaymentMethodSelector([
-                    .init(id: "card", kind: .card, title: "Card"),
-                    .init(id: "wallet", kind: .wallet, title: "Wallet", subtitle: "One tap"),
-                    .init(id: "transfer", kind: .transfer, title: "Transfer"),
+                    .init(id: "card", kind: .card, title: "Visa •••• 4242"),
                     .init(id: "card2", kind: .card, title: "Corporate card"),
+                    .init(id: "wallet", kind: .wallet, title: "Wallet", subtitle: "One tap"),
+                    .init(id: "transfer", kind: .transfer, title: "Bank transfer"),
                 ], selection: $method)
-                    .variant(.grid)
                     .badge("New", for: "wallet")
+                    .paymentMethodSelectorStyle(.sectioned)
 
                 ListSectionHeader("Grid · surface(.bgWhite)")
                 PaymentMethodSelector([
                     .init(id: "card", kind: .card, title: "Card"),
                     .init(id: "wallet", kind: .wallet, title: "Wallet"),
                 ], initiallySelected: "card")
-                    .variant(.grid)
                     .surface(.bgWhite)
+                    .paymentMethodSelectorStyle(.grid)
             }
             .padding()
             .background(dark.background(.bgBase))
