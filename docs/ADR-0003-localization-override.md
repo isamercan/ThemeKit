@@ -37,7 +37,7 @@ A compiled Foundation spike (hand-built bundle with `en`/`tr`/`ru` `.lproj`s car
 | 5 | BCP-47 → `.lproj` matching ("tr-TR" → `tr`, unknown → source language)? | **Works** via `Bundle.preferredLocalizations(from: bundle.localizations, forPreferences: [code])` — returned `["tr"]` for `tr-TR`, `["en"]` for an unknown code. | Use it; never string-munge language codes. |
 | 6 | Detecting a missing key in the consumer catalog? | **Works** via the `value:` sentinel — `localizedString(forKey:value:"\u{7F}")` returns the sentinel on a miss (with `value: nil` it echoes the key, indistinguishable from a real value). | Sentinel probe gates the fallback to `.module`. |
 
-**Remaining assumption (low risk, verify once on device):** Xcode compiles a consumer's `.xcstrings` into `.strings`/`.stringsdict` files inside `.lproj` directories (Apple-documented build behavior); the spike exercised that compiled form directly, not an Xcode-built app bundle. If a future toolchain moves app catalogs to single-file `.loctable`, the sub-bundle path needs re-verification — `sr-ios-dev` confirms once with a real device/simulator build in the test plan below.
+**Remaining assumption (low risk, verify once on device):** Xcode compiles a consumer's `.xcstrings` into `.strings`/`.stringsdict` files inside `.lproj` directories (Apple-documented build behavior); the spike exercised that compiled form directly, not an Xcode-built app bundle. If a future toolchain moves app catalogs to single-file `.loctable`, the sub-bundle path needs re-verification. **Confirmed 2026-07-13 on a real `xcodebuild` Demo app** (`{en,tr,ar}.lproj/ThemeKit.strings`, live in-app switch) — see §Open questions.
 
 ## Decision
 
@@ -279,6 +279,6 @@ LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
 
 - **D2 overload set:** enumerate the interpolated types across the 71 sites (String, Int, Double, formatted Decimals-as-String, …) and compile-verify; decide whether a `CustomStringConvertible` catch-all (→ `%@`) is safe or too permissive vs. `String.LocalizationValue`'s specifier behavior.
 - **`[CVarArg]` sendability** under Swift 6 language mode for the transient capture type (`@unchecked Sendable` vs. structuring resolution to stay isolation-local).
-- **`.xcstrings` compiled form on device** (spike's stated assumption) — confirm `path(forResource:ofType:"lproj")` finds compiled catalogs in a real Xcode-built app, including per-app-language installs.
+- ~~**`.xcstrings` compiled form on device**~~ — **CONFIRMED (2026-07-13).** A real `xcodebuild` build of the Demo app compiled its `ThemeKit.xcstrings` into `Demo.app/{en,tr,ar}.lproj/ThemeKit.strings`; the sub-bundle path resolved Turkish under a `-AppleLanguages (tr)` install, and a live in-app switch (a `LanguageSwitcher` tap while the device language stayed English) flipped both a View string (`"Promo code:"`→`"Promosyon kodu:"`) and non-View enum strings (`ColorChannel` titles). Zero-config `Bundle.main` path verified end-to-end.
 - Whether `ThemeKitTravel`'s (currently empty) catalog merges into the single consumer template or ships as a second `ThemeKitTravel.xcstrings` table — recommendation: **one merged template**, since the consumer experience is one file.
 - Whether `.themeKitLocalized()` should also refresh `\.calendar`/`\.timeZone`-adjacent formatting environment, or leave those to the consumer.

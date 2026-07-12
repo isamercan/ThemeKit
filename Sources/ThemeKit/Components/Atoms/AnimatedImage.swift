@@ -14,15 +14,19 @@ import ImageIO
 ///
 /// **House-Rule-1 exception (sanctioned).** SwiftUI ships no animated-image
 /// primitive — `AsyncImage` decodes a single frame — so, exactly as `RemoteImage`
-/// leans on `AsyncImage`'s built-in networking, this atom performs its own
-/// `URLSession` fetch. It is confined to a single, cancellable `.task(id: url)`
-/// with only view-local `@State` (no `ObservableObject`, no app/shared state), so
-/// the component stays a value type. Callers that must avoid in-view networking
-/// can pre-decode and pass frames; a `Data`/frames-based init is tracked as a
-/// follow-up (would be additive, no API break).
+/// leans on `AsyncImage`'s built-in networking, this atom performs its own byte
+/// fetch. It is confined to a single, cancellable `.task(id: url)` with only
+/// view-local `@State` (no `ObservableObject`, no app/shared state), so the
+/// component stays a value type. The fetch itself goes through an **injectable**
+/// ``AnimatedImageLoader`` (`@Environment(\.animatedImageLoader)`) rather than a
+/// hardcoded `URLSession.shared` call — the default is still `URLSession`-backed
+/// (byte-identical to the pre-injection behavior), but a consumer can substitute
+/// a cache/proxy, and a test can inject a stub with no real network:
+/// `AnimatedImage(url).animatedImageLoader(MyLoader())`.
 public struct AnimatedImage: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.animatedImageLoader) private var loader
 
     private let url: URL?
     // Appearance/config — mutated only through the modifiers below (R2).
@@ -75,7 +79,7 @@ public struct AnimatedImage: View {
     private func load() async {
         guard let url else { failed = true; return }
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let data = try await loader.data(from: url)
             guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
                 await MainActor.run { failed = true }; return
             }
@@ -133,6 +137,45 @@ public extension AnimatedImage {
         var c = self
         mutate(&c)
         return c
+    }
+}
+
+// MARK: - Injectable loader (P1-3 — the sanctioned HR1 exception, made testable)
+
+/// The byte-fetch abstraction behind ``AnimatedImage``. Swap it via
+/// `.animatedImageLoader(_:)` — a consumer with their own image pipeline/cache can
+/// route through it, and tests can inject a stub with no real network.
+public protocol AnimatedImageLoader: Sendable {
+    func data(from url: URL) async throws -> Data
+}
+
+/// The default loader — plain `URLSession.shared.data(from:)`, byte-identical to
+/// `AnimatedImage`'s behavior before the loader became injectable.
+public struct URLSessionAnimatedImageLoader: AnimatedImageLoader {
+    public init() {}
+    public func data(from url: URL) async throws -> Data {
+        try await URLSession.shared.data(from: url).0
+    }
+}
+
+private struct AnimatedImageLoaderKey: EnvironmentKey {
+    static let defaultValue: any AnimatedImageLoader = URLSessionAnimatedImageLoader()
+}
+
+public extension EnvironmentValues {
+    /// The loader ``AnimatedImage`` fetches GIF/APNG bytes through (default: `URLSession`).
+    var animatedImageLoader: any AnimatedImageLoader {
+        get { self[AnimatedImageLoaderKey.self] }
+        set { self[AnimatedImageLoaderKey.self] = newValue }
+    }
+}
+
+public extension View {
+    /// Overrides the byte-loader ``AnimatedImage`` uses in this subtree — swap in a
+    /// custom cache/proxy, or a stub (no network) for tests/previews. Default:
+    /// ``URLSessionAnimatedImageLoader``, unchanged from the pre-injection behavior.
+    func animatedImageLoader(_ loader: any AnimatedImageLoader) -> some View {
+        environment(\.animatedImageLoader, loader)
     }
 }
 

@@ -130,7 +130,7 @@ private struct ThemeCard: View {
                     .background(theme.primaryColor, in: Capsule())
             }
         }
-        .padding(14)
+        .padding(14)   // intentional: 14pt, no token — matches this card's own 14pt corner radius
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(hex: theme.base), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(

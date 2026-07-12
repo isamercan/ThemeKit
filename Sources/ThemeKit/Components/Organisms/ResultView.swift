@@ -112,7 +112,7 @@ public struct ResultView: View {
                 .foregroundStyle(status.color.base)
                 .overlay(alignment: .bottomTrailing) {
                     Icon(systemName: status.systemImage).size(.md).colorOverride(status.color.base)
-                        .padding(6)
+                        .padding(6)   // intentional: 6pt, no token — small emblem badge inset
                         .background(theme.background(.bgWhite), in: Circle())
                         .offset(x: 10, y: 4)
                 }

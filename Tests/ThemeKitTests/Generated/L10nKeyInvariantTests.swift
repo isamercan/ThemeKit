@@ -134,7 +134,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% to \(d)",
             "%@%% to %@", 2,
-            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:169")
+            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:170")
         assertKey(
             "\(d)/mo",
             "%@/mo", 1,

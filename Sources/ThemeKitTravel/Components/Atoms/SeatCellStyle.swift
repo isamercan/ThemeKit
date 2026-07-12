@@ -233,7 +233,7 @@ private struct SeatCellChrome: View {
         Image(systemName: configuration.recommendedSymbol)
             .font(.system(size: 8, weight: .bold))
             .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
-            .padding(2)
+            .padding(2)   // intentional: 2pt, no token — tiny 8pt-glyph recommended-star badge inset
             .background(theme.background(.bgBase), in: Circle())
             .offset(x: 3, y: -3)
     }

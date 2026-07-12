@@ -170,7 +170,7 @@ private struct InlineVideo: View {
                             Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(MediaScrim.onContent)
-                                .padding(8)
+                                .padding(Theme.SpacingKey.sm.value)   // 8pt == SpacingKey.sm
                                 .background(MediaScrim.solid, in: Circle())
                         }
                         .buttonStyle(.plain)

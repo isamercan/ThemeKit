@@ -52,7 +52,7 @@ public struct ThemeToggle: View {
                 .overlay(trackSymbol)   // under the knob so it never overlaps it mid-slide
                 .overlay(
                     knob
-                        .padding(2)
+                        .padding(2)   // intentional: 2pt, no token — knob inset scales off trackHeight, not a spacing role
                         .frame(maxWidth: .infinity, alignment: isOn ? .trailing : .leading)
                 )
         }
@@ -96,7 +96,7 @@ public struct ThemeToggle: View {
                 .font(.system(size: knobSize * 0.55, weight: .bold))
                 .foregroundStyle(trackSymbolColor)
                 .frame(width: knobSize, height: knobSize)   // centered in the knob-sized vacated zone
-                .padding(2)
+                .padding(2)   // intentional: 2pt, no token — mirrors the knob's own inset above
                 .frame(maxWidth: .infinity, alignment: isOn ? .leading : .trailing)
                 .transition(.opacity)
                 .id(glyph)   // crossfade between on/off glyphs under the file's motion
