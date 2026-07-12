@@ -37,6 +37,7 @@ public struct RadialProgress: View {
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.locale) private var locale
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     public init(_ value: Double) {   // R1
@@ -48,6 +49,12 @@ public struct RadialProgress: View {
     /// the success checkmark (value >= 1) hasn't appeared.
     private var percent: Int { value >= 1 ? 100 : min(99, Int((value * 100).rounded())) }
 
+    /// Locale-correct percent string — the `%` sits where the locale puts it
+    /// (e.g. Turkish "%50" prefix vs English "50%"), preserving the cap above.
+    private var percentText: String {
+        (Double(percent) / 100).formatted(.percent.precision(.fractionLength(0)).locale(locale))
+    }
+
     // Raw override wins, then the semantic accent, then the status color.
     private var color: Color { tint ?? semantic?.solid ?? status.semantic.solid }
     /// Semantic driving the success / exception glyph tint (accent-aware).
@@ -58,7 +65,7 @@ public struct RadialProgress: View {
             // The ring fill is purely visual; speak the percentage to VoiceOver.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(accessibilityLabelText ?? String(themeKit: "Progress")))
-            .accessibilityValue(Text("\(percent)%"))
+            .accessibilityValue(Text(percentText))
             .accessibilityAddTraits(status == .active ? .updatesFrequently : [])
             .animation(motion, value: value)
     }
@@ -110,7 +117,7 @@ public struct RadialProgress: View {
             )
         }
         return AnyView(
-            Text("\(percent)%")
+            Text(percentText)
                 .font(.system(size: size * 0.26, weight: .semibold))
                 .foregroundStyle(theme.text(.textPrimary))
         )
