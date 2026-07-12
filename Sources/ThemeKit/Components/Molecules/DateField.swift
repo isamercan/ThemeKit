@@ -42,7 +42,10 @@ public struct DateField: View {
     @Binding private var date: Date?
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var placeholder: String = String(themeKit: "Select a date")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select a date") }
     private var range: ClosedRange<Date>?
     private var style: DateFieldStyle = .abbreviated
     private var explicitLocale: Locale?
@@ -308,7 +311,7 @@ public struct DateField: View {
 
 public extension DateField {
     /// Placeholder shown while no date is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Control-height preset. An explicit size wins over the subtree
     /// `FieldDefaults.size` default.

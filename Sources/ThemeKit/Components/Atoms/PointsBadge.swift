@@ -68,7 +68,10 @@ public struct PointsBadge: View {
 
     private let points: Int
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var unit: String = String(themeKit: "pts")
+    private var unitOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var unit: String { unitOverride ?? String(themeKit: "pts") }
     private var style: PointsStyle = .balance
     private var size: PointsSize = .medium
     private var systemImage: String = "star.circle.fill"
@@ -107,7 +110,7 @@ public struct PointsBadge: View {
 
 public extension PointsBadge {
     /// The points unit, e.g. `"pts"` / `"mil"`.
-    func unit(_ text: String) -> Self { copy { $0.unit = text } }
+    func unit(_ text: String) -> Self { copy { $0.unitOverride = text } }
     /// earn / redeem / balance colour treatment.
     func style(_ s: PointsStyle) -> Self { copy { $0.style = s } }
     /// Size tier: small / medium / large.

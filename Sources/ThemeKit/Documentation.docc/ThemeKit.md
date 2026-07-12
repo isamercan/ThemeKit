@@ -62,6 +62,7 @@ views; the core library stays dependency-free.
 - <doc:GlobalDefaults>
 - <doc:Accessibility>
 - <doc:FormValidation>
+- <doc:Localization>
 
 ### Theme & Tokens
 

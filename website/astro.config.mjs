@@ -54,6 +54,7 @@ export default defineConfig({
             { label: 'Accessibility', link: '/guides/accessibility/' },
             { label: 'Form Validation', link: '/guides/form-validation/' },
             { label: 'RTL Support', link: '/guides/rtl/' },
+            { label: 'Localization', link: '/guides/localization/', badge: { text: 'New', variant: 'success' } },
             { label: 'Motion', link: '/guides/motion/' },
           ],
         },

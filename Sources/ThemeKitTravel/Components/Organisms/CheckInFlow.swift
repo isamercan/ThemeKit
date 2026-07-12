@@ -71,9 +71,18 @@ public struct CheckInFlow<Page: View>: View {
     @State private var movesForward = true
 
     // Config — mutated only through the modifiers below (R2).
-    private var nextTitleValue = String(themeKitTravel: "Continue")
-    private var backTitleValue = String(themeKitTravel: "Back")
-    private var doneTitleValue = String(themeKitTravel: "Done")
+    private var nextTitleValueOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var nextTitleValue: String { nextTitleValueOverride ?? String(themeKitTravel: "Continue") }
+    private var backTitleValueOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var backTitleValue: String { backTitleValueOverride ?? String(themeKitTravel: "Back") }
+    private var doneTitleValueOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var doneTitleValue: String { doneTitleValueOverride ?? String(themeKitTravel: "Done") }
     private var canAdvancePredicate: ((Int) -> Bool)?
     private var onCompleteAction: (() -> Void)?
     private var showsStepperValue = true
@@ -319,15 +328,15 @@ public struct CheckInFlow<Page: View>: View {
 public extension CheckInFlow {
     /// Title of the advancing dock button (default "Continue"); on the last
     /// step the button shows ``doneTitle(_:)`` instead.
-    func nextTitle(_ text: String) -> Self { copy { $0.nextTitleValue = text } }
+    func nextTitle(_ text: String) -> Self { copy { $0.nextTitleValueOverride = text } }
 
     /// Title of the back dock button (default "Back"). Back is disabled on the
     /// first step.
-    func backTitle(_ text: String) -> Self { copy { $0.backTitleValue = text } }
+    func backTitle(_ text: String) -> Self { copy { $0.backTitleValueOverride = text } }
 
     /// Title of the advancing button on the last step (default "Done") — the
     /// tap calls ``onComplete(_:)`` instead of advancing.
-    func doneTitle(_ text: String) -> Self { copy { $0.doneTitleValue = text } }
+    func doneTitle(_ text: String) -> Self { copy { $0.doneTitleValueOverride = text } }
 
     /// Gate advancing (e.g. seat not yet chosen): called with the current step
     /// index; Continue / Done disables when it returns `false`.

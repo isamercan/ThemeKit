@@ -48,12 +48,15 @@ public struct Coupon: View {
     private var isBlock = false
 
     private let code: String
-    private let label: String
+    private let labelOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var label: String { labelOverride ?? String(themeKit: "Promo code:") }
     private let onCopy: () -> Void
 
-    public init(code: String, label: String = "Promo code:", onCopy: @escaping () -> Void = {}) {   // R1
+    public init(code: String, label: String? = nil, onCopy: @escaping () -> Void = {}) {   // R1
         self.code = code
-        self.label = label
+        self.labelOverride = label
         self.onCopy = onCopy
     }
 

@@ -23,7 +23,10 @@ public struct BlogCard<Media: View>: View {
 
     // Appearance/config — mutated only through the modifiers below (R2).
     private var excerpt: String?
-    private var readMoreTitle = String(themeKit: "Read more")
+    private var readMoreTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var readMoreTitle: String { readMoreTitleOverride ?? String(themeKit: "Read more") }
     private var compact = false
     private var onReadMore: () -> Void = {}
     private var overlaySlot: AnyView?
@@ -122,7 +125,7 @@ public extension BlogCard {
 
     /// Read-more link title and tap action.
     func readMore(_ title: String = String(themeKit: "Read more"), action: @escaping () -> Void = {}) -> Self {
-        copy { $0.readMoreTitle = title; $0.onReadMore = action }
+        copy { $0.readMoreTitleOverride = title; $0.onReadMore = action }
     }
 
     /// Compact (media-left) variant.

@@ -59,7 +59,10 @@ public struct SearchBar: View {
     // Appearance/config — mutated only through the modifiers below (R2); the
     // async init seeds a 0.3s debounce baseline, which `.debounce(_:)` can
     // still override. Typeahead / recent-search features are all opt-in.
-    private var placeholder: String = String(themeKit: "Search")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Search") }
     private var source: Source = .none
     private var recent: [String] = []
     private var onSearch: ((String) -> Void)? = nil
@@ -436,7 +439,7 @@ public struct SearchBar: View {
 
 public extension SearchBar {
     /// Placeholder shown while the field is empty.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Control-height preset. An explicit size wins over the subtree
     /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? .small`).

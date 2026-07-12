@@ -59,8 +59,14 @@ public struct FilterBar: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var onFilter: (() -> Void)?
     private var onSort: (() -> Void)?
-    private var filterTitle = String(themeKit: "Filter")
-    private var sortTitle = String(themeKit: "Sort")
+    private var filterTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var filterTitle: String { filterTitleOverride ?? String(themeKit: "Filter") }
+    private var sortTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var sortTitle: String { sortTitleOverride ?? String(themeKit: "Sort") }
     private var filterIcon = "line.3.horizontal.decrease"
     private var sortIcon = "arrow.up.arrow.down"
     private var collapsible = true
@@ -283,11 +289,11 @@ public extension FilterBar {
     func onFilter(_ title: String = String(themeKit: "Filter"),
                   icon: String = "line.3.horizontal.decrease",
                   action: @escaping () -> Void) -> Self {
-        copy { $0.filterTitle = title; $0.filterIcon = icon; $0.onFilter = action }
+        copy { $0.filterTitleOverride = title; $0.filterIcon = icon; $0.onFilter = action }
     }
     /// Adds the pinned leading Sort button (collapses to icon-only on scroll).
     func onSort(_ title: String = String(themeKit: "Sort"), icon: String = "arrow.up.arrow.down", action: @escaping () -> Void) -> Self {
-        copy { $0.sortTitle = title; $0.sortIcon = icon; $0.onSort = action }
+        copy { $0.sortTitleOverride = title; $0.sortIcon = icon; $0.onSort = action }
     }
     /// Whether the leading buttons collapse to icons on scroll (default on).
     func collapsible(_ on: Bool = true) -> Self { copy { $0.collapsible = on } }

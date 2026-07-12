@@ -31,7 +31,10 @@ public struct LayoverRow: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var warningText: String?
     private var warningTone: SemanticColor?
-    private var layoverLabel = "layover"
+    private var layoverLabelOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var layoverLabel: String { layoverLabelOverride ?? String(themeKit: "layover") }
     private var systemImage = "clock.arrow.2.circlepath"
     private var accent: SemanticColor?
     private var variant: LayoverVariant = .line
@@ -128,7 +131,7 @@ public extension LayoverRow {
     /// or `.hidden`.
     func lineStyle(_ s: LayoverLineStyle) -> Self { copy { $0.lineStyleValue = s } }
     /// Localise the "layover" word (English default).
-    func layoverLabel(_ text: String) -> Self { copy { $0.layoverLabel = text } }
+    func layoverLabel(_ text: String) -> Self { copy { $0.layoverLabelOverride = text } }
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
 

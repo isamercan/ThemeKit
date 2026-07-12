@@ -41,7 +41,10 @@ public struct TimeField: View {
     @Binding private var time: Date?
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var placeholder: String = String(themeKit: "Select a time")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select a time") }
     private var range: ClosedRange<Date>?
     private var minuteInterval: Int = 1
     private var hourCycle: TimeFieldHourCycle = .locale
@@ -293,7 +296,7 @@ public struct TimeField: View {
 
 public extension TimeField {
     /// Placeholder shown while no time is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Control-height preset. An explicit size wins over the subtree
     /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 48pt`).

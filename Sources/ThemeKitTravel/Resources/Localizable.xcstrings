@@ -1,7 +1,378 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ adults": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ card ending %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ children": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ from %@ to %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ infants": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ percent": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ results": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ to %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@ travelers": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "%@: scheduled %@, estimated %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 adult": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 child": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 infant": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 traveler": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Add new card": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Aircraft": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Arrival": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Arrived": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Back": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Baggage belt": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Best value": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Boarding": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Bus": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Business": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Cabin": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Cabin class": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Car": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Card ending %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Cards you save at checkout will appear here.": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Check-in": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Check-in desk": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "City or airport": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Clear": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Clear recent airports": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Collapse search": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Date of birth": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Departed": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Departure": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Document expiry": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Document must be valid on the travel date": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Document number": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Done": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Economy": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Edit search": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Enter a valid document number": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Expired": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Expires %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Family name": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Female": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Ferry": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "First": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Flight progress": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Flight search": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "From": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Gate": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Gender": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Given name": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Loading suggestions": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Male": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Multi-city": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Nationality": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Nearby": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "No airports found": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "No saved cards": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "One way": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Passengers": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Payment method, %@ options": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Personal details": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Popular": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Premium": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Premium Economy": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Recent": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Remove card": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Remove card ending %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Return": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Round trip": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Saved cards, %@ cards": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Search flights": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "See options": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Step %@ of %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Swap origin and destination": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Terminal": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "To": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Train": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Travel document": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Traveler details": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Unspecified": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Updated %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Visa required": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Where to?": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "estimated arrival %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "estimated departure %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

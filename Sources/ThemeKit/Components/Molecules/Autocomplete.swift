@@ -37,7 +37,10 @@ public struct Autocomplete: View {
 
     // Appearance/tuning — set via the chainable modifiers below (R2); the async
     // init seeds a 0.3s debounce baseline, which `.debounce(_:)` can still override.
-    private var placeholder: String = "Search"
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Search") }
     private var maxResults: Int = 5
     private var debounce: TimeInterval = 0
     private var isSuggestionEnabled: ((String) -> Bool)? = nil
@@ -302,7 +305,7 @@ public struct Autocomplete: View {
 
 public extension Autocomplete {
     /// Placeholder shown while the field is empty.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Caps the number of suggestion rows (default 5).
     func maxResults(_ count: Int) -> Self { copy { $0.maxResults = count } }

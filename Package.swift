@@ -154,6 +154,17 @@ let package = Package(
                 // The edition rides the same snapshot/a11y/RTL harness (ADR-F1).
                 "ThemeKitTravel",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            // Snapshot references are read by SnapshotTesting straight from the
+            // source tree (`#filePath`), not from the built product — excluded so
+            // declaring `resources:` below doesn't flag them as unhandled.
+            exclude: ["Snapshot/__Snapshots__"],
+            resources: [
+                // Hand-compiled localization fixture (en/tr/ru .lproj with
+                // .strings/.stringsdict — the form Xcode compiles a consumer's
+                // ThemeKit.xcstrings into). `.copy` keeps the .bundle directory
+                // intact for `Bundle(url:)` (ADR-0003 test plan).
+                .copy("Fixtures"),
             ]
         ),
         // iOS-only: the sources are `#if os(iOS)` guarded, so on macOS this builds

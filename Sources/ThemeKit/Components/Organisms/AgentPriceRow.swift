@@ -34,7 +34,10 @@ public struct AgentPriceRow: View {
     private var price: Decimal?
     private var currencyCode: String?
     private var originalPrice: Decimal?
-    private var ctaTitle = String(themeKit: "Select")
+    private var ctaTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var ctaTitle: String { ctaTitleOverride ?? String(themeKit: "Select") }
     private var recommended = false
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
@@ -131,7 +134,7 @@ public extension AgentPriceRow {
     /// then the locale's currency, then "USD".
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
     func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
-    func cta(_ title: String) -> Self { copy { $0.ctaTitle = title } }
+    func cta(_ title: String) -> Self { copy { $0.ctaTitleOverride = title } }
     func recommended(_ on: Bool = true) -> Self { copy { $0.recommended = on } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }

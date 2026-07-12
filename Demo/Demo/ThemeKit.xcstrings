@@ -1,0 +1,83 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Brightness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "السطوع" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Parlaklık" }
+        }
+      }
+    },
+    "Hue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "درجة اللون" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Ton" }
+        }
+      }
+    },
+    "Language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "اللغة" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Dil" }
+        }
+      }
+    },
+    "Opacity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "العتامة" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Opaklık" }
+        }
+      }
+    },
+    "Promo code:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "الرمز الترويجي:" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Promosyon kodu:" }
+        }
+      }
+    },
+    "Saturation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "التشبع" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Doygunluk" }
+        }
+      }
+    },
+    "Select language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : { "state" : "translated", "value" : "اختر اللغة" }
+        },
+        "tr" : {
+          "stringUnit" : { "state" : "translated", "value" : "Dil seçin" }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

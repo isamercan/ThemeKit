@@ -20,7 +20,10 @@ public struct SelectBox<Option: Hashable>: View {
     private let optionTitle: (Option) -> String
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var placeholder: String = String(themeKit: "Select")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select") }
     private var hint: String? = nil
     private var errorText: String? = nil
     private var infoMessages: [InfoMessage] = []
@@ -176,7 +179,7 @@ public struct SelectBox<Option: Hashable>: View {
 
 public extension SelectBox {
     /// Placeholder shown while no option is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Control height on the field family's `TextInputSize` ramp (C1). An
     /// explicit size wins over the subtree `FieldDefaults.size` default; with

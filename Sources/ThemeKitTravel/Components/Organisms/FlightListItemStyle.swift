@@ -832,7 +832,7 @@ private struct SlicesChrome: View {
                 Rectangle().fill(theme.border(.borderPrimary)).frame(height: 0.5)
                 HStack {
                     if configuration.legs.map(\.airline).uniqued().count > 1 {
-                        Text("Mixed airlines").textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
+                        Text(String(themeKit: "Mixed airlines")).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
                     }
                     Spacer()
                     FavoriteHeart(configuration: configuration)

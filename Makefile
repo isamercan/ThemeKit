@@ -2,7 +2,7 @@
 # `make ci` is the same set of checks GitHub runs; see docs/CI.md.
 
 .DEFAULT_GOAL := help
-.PHONY: help ci ci-fast build test lint format hooks screenshots skill mcp-data mcp clean
+.PHONY: help ci ci-fast build test lint format hooks screenshots skill l10n mcp-data mcp clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -37,6 +37,9 @@ record-gif: ## Record a Demo-app interaction → GIF (NAME=SelectBox [SECS=7]); 
 
 skill: ## Regenerate the skill refs + llms.txt/llms-components.txt from source, and publish the llms.* set to website/public/
 	@python3 tools/gen_skill.py
+
+l10n: ## Regenerate the localization catalogs + consumer template + key-invariant test from source (ADR-0003)
+	@python3 tools/gen_l10n.py
 
 mcp-data: ## Rebuild the MCP data from the DocC symbol graph + tokens (mcp/data/themekit.json)
 	@cd mcp && npm install --silent && npm run build:data
