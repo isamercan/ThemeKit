@@ -1,0 +1,96 @@
+name: Snapshots (on-demand)
+
+# Visual-regression (snapshot) suite in CI — DELIBERATELY off the per-PR path.
+#
+# docs/SNAPSHOT-TESTING.md keeps snapshots opt-in because image rendering drifts
+# across OS/GPU/runner images, so a per-PR gate would flake whenever the runner
+# image changes. This lane gives the review's P1-2 ("run snapshots in CI on a
+# pinned simulator") WITHOUT that flake tax: it is `workflow_dispatch` (+ a weekly
+# heartbeat), pinned to iPhone 17, and never blocks a merge. Run it before
+# changing shared tokens/typography/layout, or to spot drift after an Xcode bump.
+#
+# The refs in Tests/**/__Snapshots__ were recorded on iPhone 17 / iOS 26. If the
+# runner's simulator differs enough that clean refs diff, RE-RECORD on the team's
+# pinned machine (RECORD_SNAPSHOTS=1) — do not chase runner drift here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      record:
+        description: "Record mode (regenerate refs instead of verifying)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC — a heartbeat to surface drift early
+
+concurrency:
+  group: snapshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapshots:
+    name: Visual regression (iPhone 17, pinned)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # Boot a known iPhone 17 by UDID so the env we inject lands in the exact
+      # simulator xcodebuild runs the tests on.
+      - name: Boot iPhone 17
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available | awk '/iPhone 17 \(/{gsub(/[()]/,"",$NF); print $NF; exit}')
+          if [ -z "$UDID" ]; then
+            echo "iPhone 17 simulator not found on this runner image" >&2
+            xcrun simctl list devices available | grep -i iphone >&2
+            exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+
+      # Env vars set on the shell do NOT cross into the Simulator's test process
+      # (docs/SNAPSHOT-TESTING.md). launchctl setenv on the booted device's
+      # launchd DOES propagate to processes it launches — the verified path.
+      - name: Inject snapshot gate into the simulator
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl spawn "$UDID" launchctl setenv RUN_SNAPSHOTS 1
+          if [ "${{ inputs.record }}" = "true" ]; then
+            xcrun simctl spawn "$UDID" launchctl setenv RECORD_SNAPSHOTS 1
+          fi
+
+      # Run the whole ThemeKit test target: snapshot cases self-skip unless
+      # RUN_SNAPSHOTS=1 (now injected), so this is the visual suite. Non-blocking:
+      # always exit 0, surface any diff as a ::warning + an artifact.
+      - name: Run the snapshot suite
+        run: |
+          set +e
+          xcodebuild test \
+            -scheme ThemeKit-Package \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -resultBundlePath snapshots.xcresult \
+            2>&1 | tee xcodebuild.log \
+              | grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|__Snapshots__" || true
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            echo "::warning::Snapshot diffs / test failures (exit $rc) — download the snapshot-results artifact. If clean refs diff for this runner image, re-record on the team's pinned machine (RECORD_SNAPSHOTS=1); do not chase runner drift here."
+          else
+            echo "snapshots: green ✓"
+          fi
+          exit 0
+
+      - name: Upload result bundle + any diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-results
+          path: |
+            snapshots.xcresult
+            **/__Snapshots__/**
+          if-no-files-found: ignore
+          retention-days: 14
