@@ -25,7 +25,10 @@ public struct TreeSelect: View {
 
     // Appearance/state/config — mutated only through the modifiers below (R2).
     private var label: String?
-    private var placeholder: String = String(themeKit: "Select")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select") }
     private var cascade: Bool = false
     private var searchable: Bool = false
     private var isLoading: Bool = false
@@ -270,7 +273,7 @@ public struct TreeSelect: View {
 
 public extension TreeSelect {
     /// Placeholder shown in the field when nothing is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Parent ↔ child cascade selection with tri-state (indeterminate) parents.
     func cascade(_ on: Bool = true) -> Self { copy { $0.cascade = on } }

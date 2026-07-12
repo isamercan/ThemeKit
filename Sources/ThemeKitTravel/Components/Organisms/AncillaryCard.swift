@@ -45,8 +45,14 @@ public struct AncillaryCard: View {
     private var quantityRange: ClosedRange<Int> = 0...9
     @ControllableState private var addedState = false
     private var showsAdded = false
-    private var addTitle = String(themeKit: "Add")
-    private var addedTitle = String(themeKit: "Added")
+    private var addTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var addTitle: String { addTitleOverride ?? String(themeKit: "Add") }
+    private var addedTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var addedTitle: String { addedTitleOverride ?? String(themeKit: "Added") }
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var controlSurfaceKey: Theme.BackgroundColorKey = .bgSecondary
@@ -219,14 +225,14 @@ public extension AncillaryCard {
         copy {
             $0.showsAdded = true
             $0._addedState = ControllableState(wrappedValue: false, external: binding)
-            $0.addTitle = title
-            $0.addedTitle = addedTitle
+            $0.addTitleOverride = title
+            $0.addedTitleOverride = addedTitle
         }
     }
     /// A self-managed add/remove toggle (uncontrolled) — same identity caveat
     /// as ``quantity(range:)``.
     func added(title: String = String(themeKit: "Add"), addedTitle: String = String(themeKit: "Added")) -> Self {
-        copy { $0.showsAdded = true; $0.addTitle = title; $0.addedTitle = addedTitle }
+        copy { $0.showsAdded = true; $0.addTitleOverride = title; $0.addedTitleOverride = addedTitle }
     }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     /// Shell elevation, fed to the active `CardStyle` (default `.none` — today's

@@ -58,8 +58,14 @@ public struct PaymentCardField: View {
     private var holder: Binding<String>?
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var numberPlaceholder = String(themeKit: "Card number")
-    private var holderPlaceholder = String(themeKit: "Cardholder name")
+    private var numberPlaceholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var numberPlaceholder: String { numberPlaceholderOverride ?? String(themeKit: "Card number") }
+    private var holderPlaceholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var holderPlaceholder: String { holderPlaceholderOverride ?? String(themeKit: "Cardholder name") }
     /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
     private var explicitSize: TextInputSize?
     private var infoMessages: [InfoMessage] = []
@@ -241,7 +247,7 @@ public extension PaymentCardField {
     /// With the default `.bgBase` the fill is left entirely to the style.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func placeholders(number: String? = nil, holder: String? = nil) -> Self {
-        copy { if let number { $0.numberPlaceholder = number }; if let holder { $0.holderPlaceholder = holder } }
+        copy { if let number { $0.numberPlaceholderOverride = number }; if let holder { $0.holderPlaceholderOverride = holder } }
     }
 
     /// Control-height preset for every row. An explicit size wins over the

@@ -44,7 +44,10 @@ public struct LoyaltyCard: View {
     // Appearance/state — mutated only through the modifiers below (R2).
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var memberName: String?
-    private var unit: String = String(themeKit: "pts")
+    private var unitOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var unit: String { unitOverride ?? String(themeKit: "pts") }
     private var progress: Double?
     private var nextTier: String?
     private var systemImage: String = "seal.fill"
@@ -187,7 +190,7 @@ public extension LoyaltyCard {
     /// The member's name, shown under the tier.
     func memberName(_ name: String?) -> Self { copy { $0.memberName = name } }
     /// The points unit (default `"pts"`).
-    func unit(_ text: String) -> Self { copy { $0.unit = text } }
+    func unit(_ text: String) -> Self { copy { $0.unitOverride = text } }
     /// Progress (0…1) to the next tier, with its name.
     func progress(_ value: Double, toNextTier tier: String? = nil) -> Self { copy { $0.progress = value; $0.nextTier = tier } }
     /// A tier SF Symbol (default `seal.fill`).

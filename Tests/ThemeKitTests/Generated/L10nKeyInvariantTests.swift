@@ -31,7 +31,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) adults",
             "%@ adults", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:382")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:385")
         assertKey(
             "\(d) card ending \(d)",
             "%@ card ending %@", 2,
@@ -39,7 +39,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) children",
             "%@ children", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:386")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:389")
         assertKey(
             "\(d) from \(d) to \(d)",
             "%@ from %@ to %@", 3,
@@ -47,7 +47,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) infants",
             "%@ infants", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:391")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:394")
         assertKey(
             "\(d) installments",
             "%@ installments", 1,
@@ -91,11 +91,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) seats left",
             "%@ seats left", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightCard.swift:158")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightCard.swift:161")
         assertKey(
             "\(d) selected",
             "%@ selected", 1,
-            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:137")
+            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:140")
         assertKey(
             "\(d) stops",
             "%@ stops", 1,
@@ -111,7 +111,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) travelers",
             "%@ travelers", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:515")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:518")
         assertKey(
             "\(d)% off",
             "%@%% off", 1,
@@ -123,7 +123,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% to \(d)",
             "%@%% to %@", 2,
-            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:166")
+            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:169")
     }
 
     func testInterpolatedKeyShapes2() {
@@ -222,7 +222,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Page \(d)",
             "Page %@", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Pagination.swift:128")
+            site: "Sources/ThemeKit/Components/Molecules/Pagination.swift:131")
         assertKey(
             "Page \(d) of \(d)",
             "Page %@ of %@", 2,
@@ -273,7 +273,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Step \(d) of \(d)",
             "Step %@ of %@", 2,
-            site: "Sources/ThemeKitTravel/Components/Organisms/CheckInFlow.swift:188")
+            site: "Sources/ThemeKitTravel/Components/Organisms/CheckInFlow.swift:197")
         assertKey(
             "The file is larger than the \(d) KB limit.",
             "The file is larger than the %@ KB limit.", 1,

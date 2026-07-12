@@ -17,8 +17,14 @@ public struct FileInput: View {
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var fileName: String?
-    private var buttonTitle: String = String(themeKit: "Choose file")
-    private var placeholder: String = String(themeKit: "No file chosen")
+    private var buttonTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var buttonTitle: String { buttonTitleOverride ?? String(themeKit: "Choose file") }
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "No file chosen") }
     private var infoMessages: [InfoMessage] = []
     private var onClear: (() -> Void)?
 
@@ -106,10 +112,10 @@ public extension FileInput {
     func fileName(_ name: String?) -> Self { copy { $0.fileName = name } }
 
     /// Title of the "choose file" segment.
-    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitle = title } }
+    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitleOverride = title } }
 
     /// Placeholder shown when no file is chosen.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Validation / hint messages displayed below the field.
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }

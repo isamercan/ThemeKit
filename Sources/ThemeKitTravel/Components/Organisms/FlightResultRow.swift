@@ -54,7 +54,10 @@ public struct FlightResultRow: View {
     private var priceFractionDigits = 2
     private var footerSlot: AnyView?
     private var trailingSlot: AnyView?
-    private var detailsTitle = String(themeKit: "Details")
+    private var detailsTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var detailsTitle: String { detailsTitleOverride ?? String(themeKit: "Details") }
     /// Favourite/bookmark state — dual-mode via `ControllableState` (ADR-F4);
     /// renamed from `favorite`/`bookmark` so the nullary overloads aren't
     /// invalid redeclarations. Hidden until the `shows…` flags flip.
@@ -65,7 +68,10 @@ public struct FlightResultRow: View {
     private var totalAmount: Decimal?
     private var totalLabel: String?
     private var urgencyText: String?
-    private var selectTitle = String(themeKit: "Select")
+    private var selectTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var selectTitle: String { selectTitleOverride ?? String(themeKit: "Select") }
     private var onSelect: (() -> Void)?
     private var onDetails: (() -> Void)?
 
@@ -285,13 +291,13 @@ public extension FlightResultRow {
     func urgency(_ text: String?) -> Self { copy { $0.urgencyText = text } }
     /// Adds a Select button (with an optional custom title).
     func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
-        copy { $0.selectTitle = title; $0.onSelect = action }
+        copy { $0.selectTitleOverride = title; $0.onSelect = action }
     }
     /// Adds a "Details" link in the meta row.
     func onDetails(_ action: @escaping () -> Void) -> Self { copy { $0.onDetails = action } }
     /// Adds a meta-row link with a custom title (default "Details").
     func onDetails(_ title: String = String(themeKit: "Details"), action: @escaping () -> Void) -> Self {
-        copy { $0.detailsTitle = title; $0.onDetails = action }
+        copy { $0.detailsTitleOverride = title; $0.onDetails = action }
     }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

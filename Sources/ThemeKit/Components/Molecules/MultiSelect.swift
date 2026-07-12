@@ -22,7 +22,10 @@ public struct MultiSelect<Option: Hashable>: View {
 
     // Appearance/config — mutated only through the modifiers below (R2).
     // Search + clear are on by default, matching a tag picker.
-    private var placeholder: String = String(themeKit: "Select")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select") }
     private var infoMessages: [InfoMessage] = []
     private var isOptionEnabled: ((Option) -> Bool)? = nil
     private var describeOption: ((Option) -> String?)? = nil
@@ -254,7 +257,7 @@ public struct MultiSelect<Option: Hashable>: View {
 
 public extension MultiSelect {
     /// Placeholder shown while nothing is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
 
     /// Validation / info messages rendered under the field (drives the border state).
     func infoMessages(_ messages: [InfoMessage]) -> Self { copy { $0.infoMessages = messages } }

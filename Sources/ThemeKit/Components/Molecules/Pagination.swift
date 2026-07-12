@@ -24,7 +24,10 @@ public struct Pagination: View {
     private var siblingCount: Int = 1
     private var boundaryCount: Int = 1
     private var showJumper: Bool = false
-    private var jumperTitle: String = String(themeKit: "Go to")
+    private var jumperTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var jumperTitle: String { jumperTitleOverride ?? String(themeKit: "Go to") }
     private var showTotal: ((Int, Int) -> String)? = nil
 
     @State private var jumpText = ""
@@ -197,7 +200,7 @@ public extension Pagination {
     }
     /// Shows a quick-jumper field that jumps straight to a typed page number.
     func jumper(_ on: Bool = true, title: String = String(themeKit: "Go to")) -> Self {
-        var copy = self; copy.showJumper = on; copy.jumperTitle = title; return copy
+        var copy = self; copy.showJumper = on; copy.jumperTitleOverride = title; return copy
     }
     /// A leading summary label built from `(current, total)` — e.g. "50 pages".
     func showTotal(_ format: ((Int, Int) -> String)?) -> Self { var copy = self; copy.showTotal = format; return copy }

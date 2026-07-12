@@ -140,5 +140,90 @@ final class L10nViewLayerTests: XCTestCase {
         // …and, per the documented limitation, catalog strings do NOT change:
         XCTAssertTrue(entry.hasSuffix("|Hue|Hue"), "catalog strings stay process-language: \(entry)")
     }
+
+    // MARK: - Stored-default freeze regression (ADR-0003 phase 4)
+
+    /// The FIXED pattern every component default uses now: override stored,
+    /// default resolved at render time (`labelOverride ?? String(themeKit:)`).
+    private struct RenderTimeDefaultChild: View {
+        private var titleOverride: String?
+        private var title: String { titleOverride ?? String(themeKit: "Hue") }
+        var body: some View {
+            Journal.entries.append("renderTime|\(title)")
+            return Text(title)
+        }
+    }
+
+    /// The ANTI-PATTERN this phase removed: the default resolved once into a
+    /// stored property at init. Kept here as executable documentation of WHY
+    /// stored localized defaults are forbidden.
+    private struct InitStoredDefaultChild: View {
+        private var title = String(themeKit: "Hue")
+        var body: some View {
+            Journal.entries.append("initStored|\(title)")
+            return Text(title)
+        }
+    }
+
+    /// The exact shape the user hit in the demo: components placed as DIRECT
+    /// children of a raw container (`VStack { … }.themeKitLocalized()`). The
+    /// container's content closure is captured once, so child INITS never
+    /// re-run on a switch — only render-time defaults can flip there.
+    func testRenderTimeDefaultFlipsAsRawContainerDirectChild() throws {
+        ThemeKitStrings.register(bundle: fixture)
+        ThemeKitStrings.locale = Locale(identifier: "en")
+
+        host(VStack {
+            RenderTimeDefaultChild()
+            InitStoredDefaultChild()
+        }.themeKitLocalized())
+        XCTAssertTrue(Journal.entries.contains("renderTime|Hue"), "en baseline: \(Journal.entries)")
+        XCTAssertTrue(Journal.entries.contains("initStored|Hue"))
+
+        Journal.reset()
+        ThemeKitStrings.locale = Locale(identifier: "tr")
+        pump()
+
+        // The regression: render-time defaults flip even in this nesting…
+        XCTAssertTrue(Journal.entries.contains("renderTime|Ton"),
+                      "render-time default must flip under a raw container: \(Journal.entries)")
+        // …while an init-stored default is frozen (bodies re-run, inits don't).
+        XCTAssertTrue(Journal.entries.contains("initStored|Hue"),
+                      "init-stored default stays frozen — the documented anti-pattern: \(Journal.entries)")
+        XCTAssertFalse(Journal.entries.contains("initStored|Ton"))
+    }
+
+    /// The real component from the demo report: Coupon's built-in
+    /// "Promo code:" label, as a direct child of the raw container — asserted
+    /// on RENDERED PIXELS. A frozen label renders identical bitmaps before
+    /// and after the flip (exactly the pre-fix bug); a render-time label
+    /// changes the pixels, and the flipped render matches a hosting that was
+    /// created natively under Turkish.
+    func testCouponBuiltInLabelFlipsLive() throws {
+        ThemeKitStrings.register(bundle: fixture)
+        ThemeKitStrings.locale = Locale(identifier: "en")
+
+        host(VStack { Coupon(code: "THEME25") }.themeKitLocalized())
+        let english = try hostedBitmap()
+
+        ThemeKitStrings.locale = Locale(identifier: "tr")
+        pump()
+        let flipped = try hostedBitmap()
+        XCTAssertNotEqual(english, flipped,
+                          "Coupon's built-in label froze at init — pixels did not change on the switch")
+
+        // The live-flipped render equals a hosting CREATED under Turkish.
+        host(VStack { Coupon(code: "THEME25") }.themeKitLocalized())
+        let freshTurkish = try hostedBitmap()
+        XCTAssertEqual(flipped, freshTurkish,
+                       "the flipped render must match a natively-Turkish render")
+    }
+
+    /// Offscreen raster of the hosted view.
+    private func hostedBitmap() throws -> Data {
+        let rep = try XCTUnwrap(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+        hosting.cacheDisplay(in: hosting.bounds, to: rep)
+        return try XCTUnwrap(rep.tiffRepresentation)
+    }
 }
 #endif

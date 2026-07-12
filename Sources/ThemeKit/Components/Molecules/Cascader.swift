@@ -38,7 +38,10 @@ public struct Cascader: View {
     private let options: [CascaderOption]
     @Binding private var selection: [String]
     // Appearance — mutated only through the modifiers below.
-    private var placeholder: String = String(themeKit: "Select")
+    private var placeholderOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholder: String { placeholderOverride ?? String(themeKit: "Select") }
     private var changeOnSelect = false
     /// Set only by the `.clearable(_:)` modifier, so the subtree
     /// `FieldDefaults.clearable` can fill the default without overriding an
@@ -294,7 +297,7 @@ public struct Cascader: View {
 
 public extension Cascader {
     /// Hint shown when nothing is selected.
-    func placeholder(_ text: String) -> Self { copy { $0.placeholder = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
     /// Commit the path at every level, not only on a leaf (Ant `changeOnSelect`).
     func changeOnSelect(_ on: Bool = true) -> Self { copy { $0.changeOnSelect = on } }
     /// Show a trailing clear button when a path is selected (Ant `allowClear`).

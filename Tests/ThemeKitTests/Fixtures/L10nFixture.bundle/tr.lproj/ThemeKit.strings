@@ -4,6 +4,8 @@
 <dict>
 	<key>Hue</key>
 	<string>Ton</string>
+	<key>Promo code:</key>
+	<string>Promosyon kodu:</string>
 	<key>%@ out of %@</key>
 	<string>%2$@ üzerinden %1$@</string>
 	<key>%@%% off</key>

@@ -52,7 +52,10 @@ public struct FlightCard: View {
     private var airlineLogoURL: URL?
     private var badge: String?
     private var badgeStyle: BadgeStyle = .success
-    private var selectTitle = String(themeKit: "Select")
+    private var selectTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var selectTitle: String { selectTitleOverride ?? String(themeKit: "Select") }
     private var onSelect: (() -> Void)?
     private var elevation: CardElevation = .none
     private var isSelected = false
@@ -339,7 +342,7 @@ public extension FlightCard {
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
     /// Adds a footer button with a custom title (default "Select").
     func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
-        copy { $0.selectTitle = title; $0.onSelect = action }
+        copy { $0.selectTitleOverride = title; $0.onSelect = action }
     }
     /// Replaces the built-in airline / fare-brand / badge / heart header row.
     func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }

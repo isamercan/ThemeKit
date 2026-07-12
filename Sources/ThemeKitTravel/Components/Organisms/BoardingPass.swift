@@ -56,7 +56,10 @@ public struct BoardingPass: View {
     private var date: String?
     private var details: [(String, String)] = []   // gate/seat/boarding/terminal…
     private var bookingRef: String?
-    private var passengerLabel = String(themeKit: "Passenger")
+    private var passengerLabelOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var passengerLabel: String { passengerLabelOverride ?? String(themeKit: "Passenger") }
     private var barcodeValue: String?
     private var qrValue: String?
     private var accent: SemanticColor?
@@ -238,7 +241,7 @@ public extension BoardingPass {
     }
     func bookingRef(_ text: String?) -> Self { copy { $0.bookingRef = text } }
     /// Localise the "Passenger" caption (English default).
-    func passengerLabel(_ text: String) -> Self { copy { $0.passengerLabel = text } }
+    func passengerLabel(_ text: String) -> Self { copy { $0.passengerLabelOverride = text } }
     /// A Code-128 barcode in the stub.
     func barcode(_ value: String?) -> Self { copy { $0.barcodeValue = value; $0.qrValue = nil } }
     /// A QR code in the stub (instead of a barcode).

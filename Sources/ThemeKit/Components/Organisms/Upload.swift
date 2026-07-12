@@ -35,7 +35,10 @@ public struct Upload: View {
     private let onRetry: ((UploadFile) -> Void)?
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var buttonTitle: String = String(themeKit: "Upload Photo")
+    private var buttonTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var buttonTitle: String { buttonTitleOverride ?? String(themeKit: "Upload Photo") }
     private var maxCount: Int? = nil
 
     public init(
@@ -138,7 +141,7 @@ public struct Upload: View {
 
 public extension Upload {
     /// Title of the file-picker button.
-    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitle = title } }
+    func buttonTitle(_ title: String) -> Self { copy { $0.buttonTitleOverride = title } }
 
     /// Cap the number of files; once reached the picker is disabled and a count
     /// is shown. `nil` (default) means no limit.
@@ -220,8 +223,14 @@ public struct UploadList: View {
     private let onPick: () -> Void
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var prompt: String = String(themeKit: "Add a photo from your device or take one with the camera.")
-    private var buttonTitle: String = String(themeKit: "Upload Photo")
+    private var promptOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var prompt: String { promptOverride ?? String(themeKit: "Add a photo from your device or take one with the camera.") }
+    private var buttonTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var buttonTitle: String { buttonTitleOverride ?? String(themeKit: "Upload Photo") }
 
     public init(controller: UploadController, onPick: @escaping () -> Void = {}) {   // R1
         self.controller = controller
@@ -244,10 +253,10 @@ public struct UploadList: View {
 
 public extension UploadList {
     /// Prompt text shown above the picker button.
-    func prompt(_ text: String) -> Self { copy { $0.prompt = text } }
+    func prompt(_ text: String) -> Self { copy { $0.promptOverride = text } }
 
     /// Title of the file-picker button.
-    func buttonTitle(_ text: String) -> Self { copy { $0.buttonTitle = text } }
+    func buttonTitle(_ text: String) -> Self { copy { $0.buttonTitleOverride = text } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

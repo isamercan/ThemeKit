@@ -33,7 +33,10 @@ public struct HotelResultCard: View {
     private var score: Double?
     private var scoreLabel: String?
     private var reviews: Int?
-    private var reviewsSuffix = String(themeKit: "reviews")
+    private var reviewsSuffixOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var reviewsSuffix: String { reviewsSuffixOverride ?? String(themeKit: "reviews") }
     private var features: [String] = []
     private var promos: [String] = []
     private var price: Decimal?
@@ -242,7 +245,7 @@ public extension HotelResultCard {
     func location(_ text: String?, icon: String = "mappin.and.ellipse") -> Self { copy { $0.locationText = text; $0.locationIcon = icon } }
     func score(_ value: Double?, label: String? = nil, reviews: Int? = nil) -> Self { copy { $0.score = value; $0.scoreLabel = label; $0.reviews = reviews } }
     /// Localise the "reviews" suffix (English default).
-    func reviewsSuffix(_ text: String) -> Self { copy { $0.reviewsSuffix = text } }
+    func reviewsSuffix(_ text: String) -> Self { copy { $0.reviewsSuffixOverride = text } }
     func features(_ items: [String]) -> Self { copy { $0.features = items } }
     func promos(_ items: [String]) -> Self { copy { $0.promos = items } }
     func price(_ amount: Decimal?, currencyCode: String = "USD") -> Self { copy { $0.price = amount; $0.currencyCode = currencyCode } }

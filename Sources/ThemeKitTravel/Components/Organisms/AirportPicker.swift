@@ -63,7 +63,10 @@ public struct AirportPicker: View {
     private var popularAirports: [Airport] = []
     private var nearbyAirports: [Airport] = []
     private var isLoading = false
-    private var placeholderText = String(themeKitTravel: "City or airport")
+    private var placeholderTextOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var placeholderText: String { placeholderTextOverride ?? String(themeKitTravel: "City or airport") }
     private var presentationStyle: AirportPickerPresentation = .inline
     /// T2 empty slot. Local erasure (ThemeKit's `SlotContent` is internal to
     /// that module); `nil` = built-in "No airports found" state. The closure is
@@ -455,7 +458,7 @@ public extension AirportPicker {
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
 
     /// Placeholder for the search field / sheet trigger (default "City or airport").
-    func placeholder(_ text: String) -> Self { copy { $0.placeholderText = text } }
+    func placeholder(_ text: String) -> Self { copy { $0.placeholderTextOverride = text } }
 
     /// `.inline` (default) embeds the picker; `.sheet`, `.popover` and
     /// `.fullScreenCover` render a field-shaped trigger that opens the search

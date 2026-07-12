@@ -223,7 +223,10 @@ public struct ChoseChip: View {
     private var description: String? = nil
     private var rating: Double? = nil
     private var showFree: Bool = false
-    private var freeLabel: String = String(themeKit: "Free")
+    private var freeLabelOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var freeLabel: String { freeLabelOverride ?? String(themeKit: "Free") }
     private var systemImage: String? = nil
 
     public init(_ title: String, isSelected: Binding<Bool>) {   // R1
@@ -318,7 +321,7 @@ public extension ChoseChip {
 
     /// Show the gradient "free" badge next to the title (optionally with a custom label).
     func free(_ on: Bool = true, label: String = String(themeKit: "Free")) -> Self {
-        copy { $0.showFree = on; $0.freeLabel = label }
+        copy { $0.showFree = on; $0.freeLabelOverride = label }
     }
 
     /// Leading SF Symbol shown before the texts.

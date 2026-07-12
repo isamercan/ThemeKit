@@ -84,7 +84,10 @@ public struct TripSearchCard: View {
     private var explicitDateRange: ClosedRange<Date>?
     private var showsCabinPicker = true
     private var showsTripType = true
-    private var ctaTitle = String(themeKitTravel: "Search flights")
+    private var ctaTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var ctaTitle: String { ctaTitleOverride ?? String(themeKitTravel: "Search flights") }
     private var variant: TripSearchVariant = .card
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     /// Explicit `.elevation(_:)` wins; otherwise `.hero` lifts to `.elevated`.
@@ -555,7 +558,7 @@ public extension TripSearchCard {
     func showsTripType(_ on: Bool = true) -> Self { copy { $0.showsTripType = on } }
 
     /// CTA title (default "Search flights").
-    func ctaTitle(_ text: String) -> Self { copy { $0.ctaTitle = text } }
+    func ctaTitle(_ text: String) -> Self { copy { $0.ctaTitleOverride = text } }
 
     /// `.card` (default) · `.hero` (larger treatment for landing headers) ·
     /// `.compact` (collapsed summary row that expands on tap).

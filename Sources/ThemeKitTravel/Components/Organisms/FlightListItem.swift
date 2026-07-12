@@ -57,9 +57,15 @@ public struct FlightListItem: View {
     private var baggage: String?
     private var checkedBaggage: String?
     private var isSelected = false
-    private var selectTitle = String(themeKit: "Select")
+    private var selectTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var selectTitle: String { selectTitleOverride ?? String(themeKit: "Select") }
     private var onSelect: (() -> Void)?
-    private var detailsTitle = String(themeKit: "Details")
+    private var detailsTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var detailsTitle: String { detailsTitleOverride ?? String(themeKit: "Details") }
     private var onDetails: (() -> Void)?
     /// Expansion state for `.journey`-class styles — uncontrolled by default;
     /// `.expanded(_:)` swaps in the caller's binding (ADR-F4 via
@@ -190,13 +196,13 @@ public extension FlightListItem {
     }
     /// Secondary "open details" action; styles with a details affordance show it.
     func onDetails(_ title: String = String(themeKit: "Details"), perform action: @escaping () -> Void) -> Self {
-        copy { $0.detailsTitle = title; $0.onDetails = action }
+        copy { $0.detailsTitleOverride = title; $0.onDetails = action }
     }
     /// Marks the item as the current selection (styles accent it).
     func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
     /// Primary action; expandable styles pin it in the expanded footer.
     func onSelect(_ title: String = String(themeKit: "Select"), perform action: @escaping () -> Void) -> Self {
-        copy { $0.selectTitle = title; $0.onSelect = action }
+        copy { $0.selectTitleOverride = title; $0.onSelect = action }
     }
     /// Drives expandable styles (`.journey`) from outside — e.g. an accordion
     /// list where only one item is open. Without it the item self-manages.

@@ -43,7 +43,10 @@ public struct RoomCard: View {
     private var discountText: String?
     private var cornerBadge: String?
     private var selection: Binding<Bool>?
-    private var selectTitle = String(themeKit: "Select")
+    private var selectTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var selectTitle: String { selectTitleOverride ?? String(themeKit: "Select") }
     private var onSelect: (() -> Void)?
     private var footerSlot: AnyView?
     // Styling — token-fed.
@@ -165,7 +168,7 @@ public extension RoomCard {
     func selection(_ binding: Binding<Bool>) -> Self { copy { $0.selection = binding } }
     /// A trailing Select button.
     func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
-        copy { $0.selectTitle = title; $0.onSelect = action }
+        copy { $0.selectTitleOverride = title; $0.onSelect = action }
     }
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
