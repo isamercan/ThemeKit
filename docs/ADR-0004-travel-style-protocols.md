@@ -1,6 +1,6 @@
 # ADR-0004 — Per-component Style protocols across ThemeKitTravel
 
-- **Status:** **Proposed** (2026-07-12) — supersedes the v1 draft's single-promotion decision
+- **Status:** **IMPLEMENTED** (shipped across waves #286/#288/#289/#291/#292; originally Proposed 2026-07-12) — supersedes the v1 draft's single-promotion decision
 - **Date:** 2026-07-12
 - **Deciders:** user directive (explicit override) + ThemeKit architecture (ios-architect); implementation pressure-test by sr-ios-dev
 - **Context source:** full read of `Sources/ThemeKitTravel/Components/**` (29 components, branch `main`), `THEMEKITTRAVEL_ARCHITECTURE.md` §6 (ADR-F5), `docs/ADR-0001-core-kind-in-init.md`, `.claude/skills/themekit-authoring/SKILL.md`
