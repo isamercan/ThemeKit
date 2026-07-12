@@ -6,11 +6,14 @@
 //  codes, a flight-path line with duration and a stops label, and an optional price +
 //  select action. Token-bound; the surface, accent and price all come from the theme.
 //
-//  The outer shell (surface fill, corner clipping, hairline border) is drawn by the
-//  active `CardStyle` from the environment — `.surface()` feeds the
-//  `CardStyleConfiguration`, so the default look is unchanged while `.cardStyle(_:)`
-//  can swap in a completely different shell. The card is shadowless with an
-//  always-on hairline, which is `DefaultCardStyle` at `.none` elevation exactly.
+//  The *arrangement* is owned by the active ``FlightCardStyle`` from the environment
+//  (ADR-0004): the component gathers its typed data into a `FlightCardConfiguration`
+//  and hands it to the style — `.standard` (default) is today's card verbatim,
+//  `.condensed` and `.tile` swap the whole layout, and apps can implement their own.
+//  Card-shaped styles keep drawing the outer shell (surface fill, corner clipping,
+//  hairline border) through the active `CardStyle`, so `.cardStyle(_:)` still swaps
+//  the chrome independently. The default card is shadowless with an always-on
+//  hairline, which is `DefaultCardStyle` at `.none` elevation exactly.
 //
 
 import SwiftUI
@@ -26,14 +29,12 @@ import ThemeKit
 /// FlightCard(legs: [outbound, ret]).price(7_178).scarcity(5).onSelect { }
 /// ```
 public struct FlightCard: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
-    @Environment(\.cardStyle) private var cardStyle
+    @Environment(\.flightCardStyle) private var style
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.isReadOnly) private var isReadOnly
 
     // Required content (R1).
     private let airline: String
@@ -43,7 +44,8 @@ public struct FlightCard: View {
     private let arrival: Date
     private let legs: [FlightLeg]?
     // Appearance/state — mutated only through the modifiers below (R2).
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    /// `nil` → the style's own default surface (`.standard` uses `.bgBase`).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var accent: SemanticColor?
     private var stops: Int = 0
     private var price: Decimal?
@@ -90,225 +92,52 @@ public struct FlightCard: View {
         self.legs = legs
     }
 
-    /// The brand-chrome tint: explicit `.accent(_:)` when set, else the theme's
-    /// hero foreground — `nil` reproduces today's rendering exactly.
-    private var accentBase: Color { accent?.base ?? theme.foreground(.fgHero) }
-
-    public var body: some View {
-        // The shell (fill, corner clipping, border) is drawn by the active
-        // `CardStyle` — built-ins and custom styles go through the same gate.
-        // `.none` matches today's chrome: no shadow, hairline border.
-        cardStyle.makeBody(configuration: CardStyleConfiguration(
-            content: AnyView(cardContent),
-            elevation: elevation,
-            isSelected: isSelected,
-            isPressed: false,
-            surfaceKey: surfaceKey,
-            radius: .box))
-    }
-
-    /// The card's inner layout — everything inside the shell.
-    @MainActor
-    private var cardContent: some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-            if let headerSlot { headerSlot } else { header }
-            routeContent
-            if let scarcity { scarcityRow(scarcity) }
-            if footerSlot != nil || price != nil || onSelect != nil { footer }
-        }
-        .padding(density.scale(Theme.SpacingKey.md.value))
-    }
-
-    @MainActor
-    private var header: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let url = airlineLogoURL {
-                RemoteImage(url).ratio(1).frame(width: 22, height: 22)
-            } else {
-                Image(systemName: airlineSystemImage)
-                    .font(.title3)
-                    .foregroundStyle(accentBase)
-            }
-            Text(airline).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
-            if let fareBrand {
-                Text(fareBrand).textStyle(.overline500).foregroundStyle(theme.text(.textSecondary))
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(theme.background(.bgSecondaryLight), in: Capsule())
-            }
-            Spacer()
-            if let badge { Badge(badge).badgeStyle(badgeStyle).size(.small) }
-            if showsFavorite { favoriteButton }
-        }
-    }
-
-    @MainActor
-    private var favoriteButton: some View {
-        Button { favoriteState.toggle() } label: {
-            Image(systemName: favoriteState ? "heart.fill" : "heart")
-                .font(.body)
-                .foregroundStyle(favoriteState ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
-                .frame(minWidth: 44, minHeight: 44)
-        }
-        .buttonStyle(.plain)
-        .disabled(isReadOnly)
-        .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
-    }
-
-    private func scarcityRow(_ count: Int) -> some View {
-        HStack(spacing: Theme.SpacingKey.xs.value) {
-            Image(systemName: "flame.fill").font(.caption2)
-            Text(count == 1 ? String(themeKit: "1 seat left") : String(themeKit: "\(count) seats left")).textStyle(.bodySm400)
-        }
-        .foregroundStyle(theme.foreground(.systemcolorsFgError))
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder private var routeContent: some View {
-        if let legs {
-            VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-                ForEach(Array(legs.enumerated()), id: \.offset) { index, leg in
-                    if index > 0 { Divider().overlay(theme.border(.borderPrimary)) }
-                    legRow(leg)
-                }
-            }
-        } else {
-            route
-        }
-    }
-
-    private func legRow(_ leg: FlightLeg) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Per-leg airline only when it differs from the header airline (avoids
-            // repeating "Anadolu Air" on the first leg when the header already shows it).
-            if (legs?.count ?? 0) > 1, leg.airline != airline {
-                Text(leg.airline).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
-            }
-            HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-                timeColumn(leg.departure, code: leg.origin, alignment: .leading)
-                legPath(leg)
-                timeColumn(leg.arrival, code: leg.destination, alignment: .trailing)
-            }
-            .accessibilityElement(children: .combine)
-        }
-    }
-
-    private func legPath(_ leg: FlightLeg) -> some View {
-        VStack(spacing: 4) {
-            Text(duration(from: leg.departure, to: leg.arrival)).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-            HStack(spacing: 4) {
-                Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
-                line
-                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(accentBase)
-                line
-                Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
-            }
-            Group {
-                if let layover = leg.layover { Text(layover) } else { Text(stopsLabel(leg.stops)) }
-            }
-            .textStyle(.overline400)
-            .foregroundStyle(leg.stops == 0 ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func duration(from: Date, to: Date) -> String {
-        let minutes = max(0, Int(to.timeIntervalSince(from) / 60))
-        let h = minutes / 60, m = minutes % 60
-        return h > 0 ? "\(h)h \(m)m" : "\(m)m"
-    }
-    private func stopsLabel(_ stops: Int) -> String {
-        switch stops {
-        case 0: return String(themeKit: "Nonstop")
-        case 1: return String(themeKit: "1 stop")
-        default: return String(themeKit: "\(stops) stops")
-        }
-    }
-
-    private var route: some View {
-        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
-            timeColumn(departure, code: origin, alignment: .leading)
-            pathView
-            timeColumn(arrival, code: destination, alignment: .trailing)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
-    private func timeColumn(_ date: Date, code: String, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 2) {
-            // Captured-locale fix (§10): schedule times honour the injected \.locale.
-            Text(date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)))
-                .textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
-            Text(code)
-                .textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
-        }
-    }
-
-    private var pathView: some View {
-        VStack(spacing: 4) {
-            Text(durationText).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-            HStack(spacing: 4) {
-                Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
-                line
-                Image(systemName: "airplane").font(.system(size: 12)).foregroundStyle(accentBase)
-                line
-                Circle().fill(theme.text(.textTertiary)).frame(width: 5, height: 5)
-            }
-            Text(stopsText)
-                .textStyle(.overline400)
-                .foregroundStyle(stops == 0 ? theme.foreground(.systemcolorsFgSuccess) : theme.text(.textTertiary))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private var line: some View {
-        Rectangle().fill(theme.border(.borderPrimary)).frame(height: 1)
-    }
-
-    @ViewBuilder private var footer: some View {
-        if let footerSlot {
-            footerSlot
-        } else {
-            HStack {
-                if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.large).emphasis(.hero) }
-                Spacer()
-                if let onSelect {
-                    // Accent set → semantic-colored ThemeButton; nil → the stock
-                    // hero PrimaryButton, byte-for-byte today's rendering.
-                    if let accent {
-                        ThemeButton(selectTitle) { onSelect() }.color(accent).size(.small)
-                    } else {
-                        PrimaryButton(selectTitle) { onSelect() }.size(.small)
-                    }
-                }
-            }
-        }
-    }
-
-    private var durationText: String {
-        let minutes = max(0, Int(arrival.timeIntervalSince(departure) / 60))
-        let h = minutes / 60, m = minutes % 60
-        return h > 0 ? "\(h)h \(m)m" : "\(m)m"
-    }
-
-    private var stopsText: String {
-        switch stops {
-        case 0: return String(themeKit: "Nonstop")
-        case 1: return String(themeKit: "1 stop")
-        default: return String(themeKit: "\(stops) stops")
-        }
+    public var body: some View {
+        // The arrangement is owned by the active `FlightCardStyle`; motion is
+        // resolved *here* (MicroMotion ∧ ¬Reduce Motion) so styles never read
+        // the motion environment. Single-segment cards synthesize one leg so
+        // every style sees the same typed shape.
+        let configuration = FlightCardConfiguration(
+            airline: airline,
+            legs: legs ?? [FlightLeg(airline: airline, from: origin, to: destination,
+                                     departure: departure, arrival: arrival, stops: stops)],
+            isMultiLeg: legs != nil,
+            airlineSystemImage: airlineSystemImage,
+            logo: airlineLogoURL.map { AnyView(RemoteImage($0).ratio(1)) },
+            fareBrand: fareBrand,
+            badge: badge,
+            badgeStyle: badgeStyle,
+            priceAmount: price,
+            currencyCode: resolvedCurrency,
+            scarcity: scarcity,
+            stops: stops,
+            isSelected: isSelected,
+            selectTitle: selectTitle,
+            onSelect: onSelect,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            elevation: elevation,
+            header: headerSlot,
+            footer: footerSlot,
+            isFavorite: showsFavorite ? favoriteState : nil,
+            toggleFavorite: showsFavorite ? { favoriteState.toggle() } : nil,
+            isMotionEnabled: micro && !reduceMotion,
+            density: density,
+            locale: locale)
+        style.makeBody(configuration: configuration)
     }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension FlightCard {
-    /// Surface fill (background token key, default `.bgBase`) — feeds the
-    /// active `CardStyle`'s configuration.
+    /// Surface fill (background token key). When unset, the active
+    /// ``FlightCardStyle`` picks its own default (`.standard` uses `.bgBase`);
+    /// card-shaped styles feed it through to the `CardStyle` shell.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// A semantic accent for the brand chrome — the airline icon, the route-path
     /// planes and the Select button. `nil` (default) keeps the theme's hero
