@@ -111,6 +111,20 @@ LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
 Flip the picker and the entire library — View strings and non-View enum strings
 alike — switches language instantly, with no relaunch.
 
+## Loading the file from elsewhere (extensions / frameworks)
+
+Zero-config assumes `Bundle.main` + table `"ThemeKit"`. If your catalog ships in an app
+**extension** (whose `.main` is the extension), in a **framework** that embeds ThemeKit,
+or under a different table name, point ThemeKit at it once at launch:
+
+```swift
+ThemeKitStrings.register(bundle: .myFrameworkBundle, table: "ThemeKit")
+```
+
+`register(bundle:table:)` is the public entry point — the `bundle`/`table` are not
+settable individually. Call it before the first ThemeKit view renders (e.g. in your
+`App.init()` or `application(_:didFinishLaunching…)`).
+
 ## Precedence — highest wins
 
 1. **Per-component parameters** you pass in code (`Component(title: "…")`,
