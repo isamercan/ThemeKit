@@ -51,7 +51,7 @@ public struct Coupon: View {
     private let label: String
     private let onCopy: () -> Void
 
-    public init(code: String, label: String = "Promo code:", onCopy: @escaping () -> Void = {}) {   // R1
+    public init(code: String, label: String = String(themeKit: "Promo code:"), onCopy: @escaping () -> Void = {}) {   // R1
         self.code = code
         self.label = label
         self.onCopy = onCopy

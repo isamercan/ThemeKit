@@ -57,9 +57,9 @@ public struct FlightListItem: View {
     private var baggage: String?
     private var checkedBaggage: String?
     private var isSelected = false
-    private var selectTitle = "Select"
+    private var selectTitle = String(themeKit: "Select")
     private var onSelect: (() -> Void)?
-    private var detailsTitle = "Details"
+    private var detailsTitle = String(themeKit: "Details")
     private var onDetails: (() -> Void)?
     /// Expansion state for `.journey`-class styles — uncontrolled by default;
     /// `.expanded(_:)` swaps in the caller's binding (ADR-F4 via
@@ -189,13 +189,13 @@ public extension FlightListItem {
         copy { $0.baggage = carryOn; $0.checkedBaggage = checked }
     }
     /// Secondary "open details" action; styles with a details affordance show it.
-    func onDetails(_ title: String = "Details", perform action: @escaping () -> Void) -> Self {
+    func onDetails(_ title: String = String(themeKit: "Details"), perform action: @escaping () -> Void) -> Self {
         copy { $0.detailsTitle = title; $0.onDetails = action }
     }
     /// Marks the item as the current selection (styles accent it).
     func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
     /// Primary action; expandable styles pin it in the expanded footer.
-    func onSelect(_ title: String = "Select", perform action: @escaping () -> Void) -> Self {
+    func onSelect(_ title: String = String(themeKit: "Select"), perform action: @escaping () -> Void) -> Self {
         copy { $0.selectTitle = title; $0.onSelect = action }
     }
     /// Drives expandable styles (`.journey`) from outside — e.g. an accordion

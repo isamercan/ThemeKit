@@ -284,11 +284,13 @@ public extension FlightResultRow {
     /// An urgency note in the meta row, shown in error red (e.g. "5 seats left!").
     func urgency(_ text: String?) -> Self { copy { $0.urgencyText = text } }
     /// Adds a Select button (with an optional custom title).
-    func onSelect(_ title: String = "Select", action: @escaping () -> Void) -> Self { copy { $0.selectTitle = title; $0.onSelect = action } }
+    func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
+        copy { $0.selectTitle = title; $0.onSelect = action }
+    }
     /// Adds a "Details" link in the meta row.
     func onDetails(_ action: @escaping () -> Void) -> Self { copy { $0.onDetails = action } }
     /// Adds a meta-row link with a custom title (default "Details").
-    func onDetails(_ title: String = "Details", action: @escaping () -> Void) -> Self {
+    func onDetails(_ title: String = String(themeKit: "Details"), action: @escaping () -> Void) -> Self {
         copy { $0.detailsTitle = title; $0.onDetails = action }
     }
 

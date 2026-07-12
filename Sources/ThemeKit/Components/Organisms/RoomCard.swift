@@ -164,7 +164,9 @@ public extension RoomCard {
     /// Radio selection binding (mutually exclusive with ``onSelect(_:action:)``).
     func selection(_ binding: Binding<Bool>) -> Self { copy { $0.selection = binding } }
     /// A trailing Select button.
-    func onSelect(_ title: String = "Select", action: @escaping () -> Void) -> Self { copy { $0.selectTitle = title; $0.onSelect = action } }
+    func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
+        copy { $0.selectTitle = title; $0.onSelect = action }
+    }
     func footer<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.footerSlot = AnyView(content()) } }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }

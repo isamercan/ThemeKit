@@ -58,8 +58,8 @@ public struct PaymentCardField: View {
     private var holder: Binding<String>?
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var numberPlaceholder = "Card number"
-    private var holderPlaceholder = "Cardholder name"
+    private var numberPlaceholder = String(themeKit: "Card number")
+    private var holderPlaceholder = String(themeKit: "Cardholder name")
     /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
     private var explicitSize: TextInputSize?
     private var infoMessages: [InfoMessage] = []

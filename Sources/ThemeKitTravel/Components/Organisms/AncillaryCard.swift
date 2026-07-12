@@ -45,8 +45,8 @@ public struct AncillaryCard: View {
     private var quantityRange: ClosedRange<Int> = 0...9
     @ControllableState private var addedState = false
     private var showsAdded = false
-    private var addTitle = "Add"
-    private var addedTitle = "Added"
+    private var addTitle = String(themeKit: "Add")
+    private var addedTitle = String(themeKit: "Added")
     private var accent: SemanticColor?
     private var surfaceKey: Theme.BackgroundColorKey = .bgBase
     private var controlSurfaceKey: Theme.BackgroundColorKey = .bgSecondary
@@ -215,7 +215,7 @@ public extension AncillaryCard {
         copy { $0.showsQuantity = true; $0.quantityRange = range }
     }
     /// An add/remove toggle bound to `binding` (controlled; English defaults, overridable).
-    func added(_ binding: Binding<Bool>, title: String = "Add", addedTitle: String = "Added") -> Self {
+    func added(_ binding: Binding<Bool>, title: String = String(themeKit: "Add"), addedTitle: String = String(themeKit: "Added")) -> Self {
         copy {
             $0.showsAdded = true
             $0._addedState = ControllableState(wrappedValue: false, external: binding)
@@ -225,7 +225,7 @@ public extension AncillaryCard {
     }
     /// A self-managed add/remove toggle (uncontrolled) — same identity caveat
     /// as ``quantity(range:)``.
-    func added(title: String = "Add", addedTitle: String = "Added") -> Self {
+    func added(title: String = String(themeKit: "Add"), addedTitle: String = String(themeKit: "Added")) -> Self {
         copy { $0.showsAdded = true; $0.addTitle = title; $0.addedTitle = addedTitle }
     }
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }

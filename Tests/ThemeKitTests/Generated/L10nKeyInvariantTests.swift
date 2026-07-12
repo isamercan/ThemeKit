@@ -160,6 +160,10 @@ final class L10nKeyInvariantTests: XCTestCase {
             "At most %@ characters", 1,
             site: "Sources/ThemeKit/Validation/Validation.swift:44")
         assertKey(
+            "Available, \(d)",
+            "Available, %@", 1,
+            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCell.swift:254")
+        assertKey(
             "Bar chart with series \(d).",
             "Bar chart with series %@.", 1,
             site: "Sources/ThemeKit/Components/Molecules/Charts/BarChart.swift:88")
@@ -223,13 +227,13 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Page \(d) of \(d)",
             "Page %@ of %@", 2,
             site: "Sources/ThemeKit/Components/Organisms/PagingCarousel.swift:84")
+    }
+
+    func testInterpolatedKeyShapes3() {
         assertKey(
             "Passenger \(d), seat \(d)",
             "Passenger %@, seat %@", 2,
             site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:459")
-    }
-
-    func testInterpolatedKeyShapes3() {
         assertKey(
             "Payment method, \(d) options",
             "Payment method, %@ options", 1,
@@ -261,7 +265,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Seat \(d)",
             "Seat %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:512")
+            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCell.swift:245")
         assertKey(
             "Show \(d) more",
             "Show %@ more", 1,
@@ -270,6 +274,18 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Step \(d) of \(d)",
             "Step %@ of %@", 2,
             site: "Sources/ThemeKitTravel/Components/Organisms/CheckInFlow.swift:188")
+        assertKey(
+            "The file is larger than the \(d) KB limit.",
+            "The file is larger than the %@ KB limit.", 1,
+            site: "Sources/ThemeKitCore/Theme/DesignMode/DesignSpecCatalog.swift:28")
+        assertKey(
+            "The server responded with status \(d).",
+            "The server responded with status %@.", 1,
+            site: "Sources/ThemeKitCore/Theme/DesignMode/DesignSpecCatalog.swift:29")
+        assertKey(
+            "Total: \(d)",
+            "Total: %@", 1,
+            site: "Sources/ThemeKit/Components/Organisms/ListRow.swift:334")
         assertKey(
             "Updated \(d)",
             "Updated %@", 1,

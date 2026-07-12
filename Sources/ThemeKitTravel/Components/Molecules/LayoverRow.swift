@@ -31,7 +31,7 @@ public struct LayoverRow: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var warningText: String?
     private var warningTone: SemanticColor?
-    private var layoverLabel = "layover"
+    private var layoverLabel = String(themeKit: "layover")
     private var systemImage = "clock.arrow.2.circlepath"
     private var accent: SemanticColor?
     private var variant: LayoverVariant = .line

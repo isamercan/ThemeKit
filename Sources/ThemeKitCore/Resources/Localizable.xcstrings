@@ -110,6 +110,9 @@
     "Action": {
       "extractionState": "manual"
     },
+    "Add": {
+      "extractionState": "manual"
+    },
     "Add a photo from your device or take one with the camera.": {
       "comment": "Upload component default prompt.",
       "extractionState": "manual"
@@ -119,6 +122,9 @@
     },
     "Add to favourites": {
       "comment": "An accessibility label for a button that adds a flight to the user's favorites.",
+      "extractionState": "manual"
+    },
+    "Added": {
       "extractionState": "manual"
     },
     "Adults": {
@@ -149,6 +155,12 @@
     },
     "At most %@ characters": {
       "comment": "Validation: maximum length.",
+      "extractionState": "manual"
+    },
+    "Available": {
+      "extractionState": "manual"
+    },
+    "Available, %@": {
       "extractionState": "manual"
     },
     "Avatar": {
@@ -205,6 +217,12 @@
     },
     "Cancel": {
       "comment": "Default secondary / dismiss action label.",
+      "extractionState": "manual"
+    },
+    "Card number": {
+      "extractionState": "manual"
+    },
+    "Cardholder name": {
       "extractionState": "manual"
     },
     "Carry-on": {
@@ -501,6 +519,9 @@
       "comment": "Counter: day/hour/minute convenience label.",
       "extractionState": "manual"
     },
+    "Mixed airlines": {
+      "extractionState": "manual"
+    },
     "More about %@": {
       "comment": "A button that triggers an action when pressed, with an accessibility label that includes the text of the associated fare line.",
       "extractionState": "manual"
@@ -585,6 +606,9 @@
       "comment": "StatusDot: spoken status (VoiceOver).",
       "extractionState": "manual"
     },
+    "Only https URLs are allowed.": {
+      "extractionState": "manual"
+    },
     "Opacity": {
       "extractionState": "manual"
     },
@@ -651,6 +675,9 @@
     },
     "Progress": {
       "comment": "ProgressBar / RadialProgress: VoiceOver label.",
+      "extractionState": "manual"
+    },
+    "Promo code:": {
       "extractionState": "manual"
     },
     "QR code": {
@@ -834,6 +861,21 @@
     "Terminal": {
       "extractionState": "manual"
     },
+    "The URL did not return a text/markdown document.": {
+      "extractionState": "manual"
+    },
+    "The design file could not be found.": {
+      "extractionState": "manual"
+    },
+    "The design file could not be read as text.": {
+      "extractionState": "manual"
+    },
+    "The file is larger than the %@ KB limit.": {
+      "extractionState": "manual"
+    },
+    "The server responded with status %@.": {
+      "extractionState": "manual"
+    },
     "This field is required": {
       "comment": "Validation: required field.",
       "extractionState": "manual"
@@ -853,6 +895,12 @@
       "extractionState": "manual"
     },
     "Total": {
+      "extractionState": "manual"
+    },
+    "Total: %@": {
+      "extractionState": "manual"
+    },
+    "Unavailable": {
       "extractionState": "manual"
     },
     "Under 2": {
@@ -941,6 +989,9 @@
       "extractionState": "manual"
     },
     "infants": {
+      "extractionState": "manual"
+    },
+    "layover": {
       "extractionState": "manual"
     },
     "lowest fare": {

@@ -22,12 +22,12 @@ public enum DesignSpecError: Error, LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .notFound: return "The design file could not be found."
-        case .unreadable: return "The design file could not be read as text."
-        case .insecureURL: return "Only https URLs are allowed."
-        case .tooLarge(let max): return "The file is larger than the \(max / 1024) KB limit."
-        case .badResponse(let code): return "The server responded with status \(code)."
-        case .notText: return "The URL did not return a text/markdown document."
+        case .notFound: return String(themeKit: "The design file could not be found.")
+        case .unreadable: return String(themeKit: "The design file could not be read as text.")
+        case .insecureURL: return String(themeKit: "Only https URLs are allowed.")
+        case .tooLarge(let max): return String(themeKit: "The file is larger than the \(max / 1024) KB limit.")
+        case .badResponse(let code): return String(themeKit: "The server responded with status \(code).")
+        case .notText: return String(themeKit: "The URL did not return a text/markdown document.")
         }
     }
 }

@@ -37,7 +37,7 @@ public struct Autocomplete: View {
 
     // Appearance/tuning — set via the chainable modifiers below (R2); the async
     // init seeds a 0.3s debounce baseline, which `.debounce(_:)` can still override.
-    private var placeholder: String = "Search"
+    private var placeholder: String = String(themeKit: "Search")
     private var maxResults: Int = 5
     private var debounce: TimeInterval = 0
     private var isSuggestionEnabled: ((String) -> Bool)? = nil

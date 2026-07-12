@@ -338,7 +338,7 @@ public extension FlightCard {
     /// Adds a "Select" button to the footer.
     func onSelect(_ action: (() -> Void)?) -> Self { copy { $0.onSelect = action } }
     /// Adds a footer button with a custom title (default "Select").
-    func onSelect(_ title: String = "Select", action: @escaping () -> Void) -> Self {
+    func onSelect(_ title: String = String(themeKit: "Select"), action: @escaping () -> Void) -> Self {
         copy { $0.selectTitle = title; $0.onSelect = action }
     }
     /// Replaces the built-in airline / fare-brand / badge / heart header row.

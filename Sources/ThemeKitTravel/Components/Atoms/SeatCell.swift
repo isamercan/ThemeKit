@@ -242,16 +242,18 @@ public struct SeatCell: View {
     // MARK: Accessibility
 
     private var a11yLabel: String {
-        var s = "Seat \(seat.id)"
-        if seat.tier != .standard { s += ", \(seat.tier.label)" }
+        var s = String(themeKit: "Seat \(seat.id)")
+        if seat.tier != .standard { s += ", \(seat.tier.label)" }   // tier.label is already bridge-localized
         return s
     }
     private var a11yValue: String {
-        if seat.isOccupied { return "Occupied" }
-        if !isSelectable { return "Unavailable" }
-        if isSelected { return "Selected" }
-        if let price = seat.price { return "Available, \(price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))" }
-        return "Available"
+        if seat.isOccupied { return String(themeKit: "Occupied") }
+        if !isSelectable { return String(themeKit: "Unavailable") }
+        if isSelected { return String(themeKit: "Selected") }
+        if let price = seat.price {
+            return String(themeKit: "Available, \(price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))")
+        }
+        return String(themeKit: "Available")
     }
 }
 
