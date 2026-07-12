@@ -1810,7 +1810,9 @@ struct FlightStatusBadgeDemo: View {
 
     var body: some View {
         ComponentStage("FlightStatusBadge", inspector: [("status", "\(statuses[idx])")]) {
-            FlightStatusBadge(statuses[idx]).solid(solid).time(time ? (statuses[idx] == .delayed ? "+35m" : "13:15") : nil)
+            let badge = FlightStatusBadge(statuses[idx])
+                .time(time ? (statuses[idx] == .delayed ? "+35m" : "13:15") : nil)
+            if solid { badge.flightStatusBadgeStyle(.solid) } else { badge.flightStatusBadgeStyle(.soft) }
         } knobs: {
             Picker("Status", selection: $idx) { ForEach(statuses.indices, id: \.self) { Text(verbatim: "\(statuses[$0])").tag($0) } }
             Toggle("Solid fill (vs soft)", isOn: $solid)

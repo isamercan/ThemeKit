@@ -200,7 +200,7 @@ final class ScreenshotGenerator: XCTestCase {
         shot("FlightStatusBadge", HStack(spacing: 8) {
             FlightStatusBadge(.onTime).time("13:15")
             FlightStatusBadge(.boarding)
-            FlightStatusBadge(.delayed).time("+35m").solid()
+            FlightStatusBadge(.delayed).time("+35m").flightStatusBadgeStyle(.solid)
         })
         shot("IconTile", HStack(spacing: 12) {
             IconTile("airplane")

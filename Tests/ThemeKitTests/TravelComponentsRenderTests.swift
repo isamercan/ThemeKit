@@ -101,9 +101,9 @@ final class TravelComponentsRenderTests: XCTestCase {
 
         // Molecules / atoms — new variant enums, emphasis, size/shape
         renders(CabinClassSelector(selection: .constant(.business)).variant(.cards).showsGlyphs(), "CabinClass.cards")
-        renders(FlightStatusBadge(.boarding).emphasis(.solid), "StatusBadge.solid")
-        renders(FlightStatusBadge(.delayed).emphasis(.outline), "StatusBadge.outline")
-        renders(FlightStatusBadge(.arrived).emphasis(.dot), "StatusBadge.dot")
+        renders(FlightStatusBadge(.boarding).flightStatusBadgeStyle(.solid), "StatusBadge.solid")
+        renders(FlightStatusBadge(.delayed).flightStatusBadgeStyle(.outline), "StatusBadge.outline")
+        renders(FlightStatusBadge(.arrived).flightStatusBadgeStyle(.dot), "StatusBadge.dot")
         renders(FlightStatusBadge(.boarding).size(.large).shape(.rounded), "StatusBadge.size.shape")
         renders(RecentSearchRow(from: "IST", to: "AYT") { }.variant(.pill).dates("18 Jul"), "RecentSearch.pill")
         renders(RecentSearchRow(from: "IST", to: "AYT") { }.variant(.bordered).dates("18 Jul"), "RecentSearch.bordered")

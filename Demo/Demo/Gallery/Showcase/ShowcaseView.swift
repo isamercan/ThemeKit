@@ -1020,10 +1020,10 @@ private struct ThemeKitTravelPage: View {
                 }
                 CollageCard("Status badge · .emphasis") {
                     HStack(spacing: 8) {
-                        FlightStatusBadge(.boarding).emphasis(.soft)
-                        FlightStatusBadge(.boarding).emphasis(.solid)
-                        FlightStatusBadge(.delayed).emphasis(.outline)
-                        FlightStatusBadge(.arrived).emphasis(.dot)
+                        FlightStatusBadge(.boarding).flightStatusBadgeStyle(.soft)
+                        FlightStatusBadge(.boarding).flightStatusBadgeStyle(.solid)
+                        FlightStatusBadge(.delayed).flightStatusBadgeStyle(.outline)
+                        FlightStatusBadge(.arrived).flightStatusBadgeStyle(.dot)
                     }
                 }
                 CollageCard("Transport · .tile") {

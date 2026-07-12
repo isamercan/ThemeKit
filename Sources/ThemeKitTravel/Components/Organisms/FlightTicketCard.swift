@@ -4,22 +4,26 @@
 //
 //  Organism. A boarding-pass / ticket-style flight card — a route header
 //  (from/to codes + cities + a centered duration), a dashed departure→arrival
-//  timeline with a plane, a perforated tear (reusing ``TicketStub``) and a stub
-//  with the airline, price and a favourite. Token-bound; every part is a modifier.
+//  timeline with a plane, a tear and a stub with the airline, price and a
+//  favourite. Token-bound; every part is a modifier. The entire layout is
+//  style-driven (ADR-0004): the component gathers the typed configuration and
+//  the active ``FlightTicketCardStyle`` lays it out — `.classic` (default,
+//  horizontal ``TicketStub`` tear), `.horizontal` (vertical tear, trailing
+//  stub) or `.flat` (tearless dense-list card).
 //
-//  CardStyle exemption (deliberate): the shell here is the decorative perforated
-//  ticket surface — ``TicketStub`` carves the side notches out of its fill with a
-//  `destinationOut` composite, so the fill, notches, perforation and elevation
-//  shadow are one inseparable unit. Routing any of it through the environment
-//  `CardStyle` would paint the notches shut (a style draws a plain rounded-rect
-//  fill/border). The whole shell therefore stays with `TicketStub`;
-//  `.cardStyle(_:)` intentionally has no effect on this component.
+//  CardStyle note (per-preset, ADR-0004 §4): on the tear presets
+//  (`.classic`/`.horizontal`) the perforated shell — fill, notches, perforation
+//  and elevation shadow — is one inseparable unit owned by the preset, so
+//  `.cardStyle(_:)` is a documented no-op there (a card style would paint the
+//  notches shut). `.flat` composes the neutral `Card`, so `.cardStyle(_:)`
+//  applies to it transitively.
 //
 //  ```swift
 //  FlightTicketCard(from: "NYC", to: "SFO")
 //      .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
 //      .times(departure: "10:00 AM", arrival: "11:30 AM")
 //      .airline("Garuda Indonesia").price(140, currencyCode: "USD").favorite($fav)
+//      .flightTicketCardStyle(.classic)   // .horizontal / .flat / custom
 //  ```
 //
 
@@ -27,13 +31,10 @@ import SwiftUI
 import ThemeKit
 
 public struct FlightTicketCard: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
-    @Environment(\.microAnimations) private var micro
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.isReadOnly) private var isReadOnly
+    @Environment(\.flightTicketCardStyle) private var style
 
     private let from: String
     private let to: String
@@ -48,6 +49,7 @@ public struct FlightTicketCard: View {
     private var airlineIcon = "airplane"
     private var airlineLogo: URL?
     private var price: Decimal?
+    private var originalPrice: Decimal?
     private var currencyCode: String?
     /// Favourite state — dual-mode via `ControllableState` (ADR-F4); renamed
     /// from `favorite` so the nullary `func favorite()` overload isn't an
@@ -56,8 +58,10 @@ public struct FlightTicketCard: View {
     private var showsFavorite = false
     private var accent: SemanticColor?
     private var elevation: CardElevation = .soft
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
-    private var radiusRole: Theme.RadiusRole = .box
+    /// `nil` = the active style's default surface (`.bgBase` for the built-ins).
+    private var surfaceKey: Theme.BackgroundColorKey?
+    /// `nil` = the active style's default radius role (`.box` for the built-ins).
+    private var radiusRole: Theme.RadiusRole?
     private var showsPerforation = true
     private var dashKey: Theme.BorderColorKey = .borderPrimary
     private var priceEmphasis: PriceEmphasis = .standard
@@ -69,106 +73,28 @@ public struct FlightTicketCard: View {
         self.to = to
     }
 
-    // deferred: accent-fallback unification — keeps the `.primary` fallback
-    // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
-    private var accentBase: Color { (accent ?? .primary).base }
-
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
     public var body: some View {
-        // Decorative-shell exception: the perforated `TicketStub` surface (fill +
-        // notches + tear line + shadow) is the chrome here and is kept as-is —
-        // see the header note. `.surface()`/`.elevation()` feed it directly.
-        TicketStub {
-            if let headerSlot { headerSlot } else { routeHeader }
-        }
-        .stub { if let customStub { customStub } else { stub } }
-        .cornerRadius(radiusRole)
-        .perforation(showsPerforation)
-        .dashColor(dashKey)
-        .elevation(elevation)
-        .surface(surfaceKey)
-    }
-
-    private var routeHeader: some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(from).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
-                    if let fromCity { Text(fromCity).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
-                }
-                Spacer(minLength: 8)
-                if let duration { Text(duration).textStyle(.labelSm700).foregroundStyle(accentBase) }
-                Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(to).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
-                    if let toCity { Text(toCity).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
-                }
-            }
-            timeline
-        }
-    }
-
-    private var timeline: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let departure { Text(departure).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).fixedSize() }
-            ZStack {
-                DashedLine().stroke(theme.border(.borderPrimary), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4])).frame(height: 1)
-                HStack {
-                    dot; Spacer(); dot
-                }
-                Image(systemName: stops == 0 ? "airplane" : "airplane.circle.fill")
-                    .font(.system(size: 14)).foregroundStyle(accentBase)
-                    .padding(.horizontal, 4).background(theme.background(surfaceKey))
-                    .mirrorsInRTL()
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 18)
-            if let arrival { Text(arrival).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).fixedSize() }
-        }
-    }
-
-    private var dot: some View {
-        Circle().fill(accentBase).frame(width: 7, height: 7)
-            .overlay(Circle().fill(theme.background(surfaceKey)).frame(width: 3, height: 3))
-    }
-
-    @MainActor
-    private var stub: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            if let airlineLogo {
-                RemoteImage(airlineLogo).contentMode(.fit).frame(width: 22, height: 22)
-            } else {
-                Image(systemName: airlineIcon).font(.system(size: 15)).foregroundStyle(theme.text(.textSecondary))
-            }
-            if let airline { Text(airline).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary)).lineLimit(1) }
-            Spacer(minLength: 6)
-            if let price { PriceTag(price, currencyCode: resolvedCurrency).size(.medium).emphasis(priceEmphasis).fractionDigits(0) }
-            if showsFavorite {
-                Button { favoriteState.toggle() } label: {
-                    Image(systemName: favoriteState ? "heart.fill" : "heart")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle((accent ?? .primary).onSolid)
-                        .symbolEffect(.bounce, value: (micro && !reduceMotion) ? favoriteState : false)
-                        .frame(width: 30, height: 30)
-                        .background(favoriteState ? accentBase : theme.text(.textTertiary), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isReadOnly)
-                .accessibilityLabel(favoriteState ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))
-            }
-        }
-    }
-}
-
-private struct DashedLine: Shape {
-    func path(in rect: CGRect) -> Path {
-        Path { p in
-            p.move(to: CGPoint(x: 0, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.width, y: rect.midY))
-        }
+        // The accent's `.primary` fallback (deferred unification) lives in the
+        // configuration's accent resolvers; the heart's motion gating lives in
+        // the style file's shared heart building block.
+        let configuration = FlightTicketCardConfiguration(
+            from: from, to: to, fromCity: fromCity, toCity: toCity,
+            departure: departure, arrival: arrival, duration: duration, stops: stops,
+            airline: airline, airlineIcon: airlineIcon, airlineLogo: airlineLogo,
+            priceAmount: price, originalAmount: originalPrice,
+            currencyCode: resolvedCurrency, priceEmphasis: priceEmphasis,
+            isFavorite: showsFavorite ? favoriteState : nil,
+            toggleFavorite: showsFavorite ? { favoriteState.toggle() } : nil,
+            accent: accent, surfaceKey: surfaceKey, elevation: elevation,
+            radiusRole: radiusRole, showsPerforation: showsPerforation, dashKey: dashKey,
+            header: headerSlot, stub: customStub,
+            density: density, locale: locale
+        )
+        style.makeBody(configuration: configuration)
     }
 }
 
@@ -185,6 +111,9 @@ public extension FlightTicketCard {
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
     func price(_ amount: Decimal?) -> Self { copy { $0.price = amount } }
+    /// Pre-discount price shown struck through next to the price (via
+    /// `PriceTag.original(_:)`); `nil` (the default) hides it.
+    func original(_ amount: Decimal?) -> Self { copy { $0.originalPrice = amount } }
     /// A heart toggle in the stub bound to a favourite flag (controlled — the
     /// caller owns persistence).
     func favorite(_ binding: Binding<Bool>) -> Self {
@@ -201,15 +130,15 @@ public extension FlightTicketCard {
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Replaces the built-in airline / price / favourite stub with custom
-    /// content — forwarded to ``TicketStub``'s stub slot below the tear line.
+    /// content — the active style places it in its tear-off area.
     func stub<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.customStub = AnyView(content()) } }
-    /// Replaces the built-in route header (codes / cities / timeline) above the tear.
+    /// Replaces the built-in route header (codes / cities / timeline).
     func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
-    /// Outer corner radius (radius role token, default `.box`) — forwarded to ``TicketStub``.
+    /// Outer corner radius (radius role token, default `.box`).
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
-    /// Draw the dashed perforation across the tear line (default on) — forwarded to ``TicketStub``.
+    /// Draw the dashed perforation across the tear line (default on) — tear presets only.
     func perforation(_ on: Bool = true) -> Self { copy { $0.showsPerforation = on } }
-    /// Perforation dash colour (border token key, default `.borderPrimary`) — forwarded to ``TicketStub``.
+    /// Perforation dash colour (border token key, default `.borderPrimary`).
     func dashColor(_ key: Theme.BorderColorKey) -> Self { copy { $0.dashKey = key } }
     /// Emphasis of the stub's `PriceTag` (default `.standard`).
     func priceEmphasis(_ e: PriceEmphasis) -> Self { copy { $0.priceEmphasis = e } }
@@ -241,7 +170,7 @@ public extension FlightTicketCard {
                         .duration("3h 30m").times(departure: "07:10", arrival: "09:40")
                         .airline("Blue Wings").price(180, currencyCode: "USD")
                         .perforation(false)
-                    // Custom stub slot — forwarded to TicketStub's tear-off area.
+                    // Custom stub slot — placed in the active style's tear-off area.
                     FlightTicketCard(from: "SAW", to: "ESB")
                         .duration("1h 10m").times(departure: "18:00", arrival: "19:10")
                         .stub {
@@ -259,9 +188,60 @@ public extension FlightTicketCard {
     return Demo()
 }
 
-// The perforated ticket shell is exempt from `CardStyle` (see header note):
-// under `.cardStyle(.outlined)` the card renders identically to the default.
-#Preview("Card-style exempt shell") {
+// Every built-in preset — light + dark via PreviewMatrix — plus a custom
+// in-preview style proving external implementability (token-fed, soft accent
+// banner with the route line and the price).
+#Preview("Styles × light/dark") {
+    struct BannerTicketStyle: FlightTicketCardStyle {
+        func makeBody(configuration: FlightTicketCardConfiguration) -> some View {
+            BannerBody(configuration: configuration)
+        }
+        struct BannerBody: View {
+            @Environment(\.theme) private var theme
+            let configuration: FlightTicketCardConfiguration
+            var body: some View {
+                HStack(spacing: configuration.spacing(.sm)) {
+                    Text(configuration.from).textStyle(.labelMd700).foregroundStyle(theme.text(.textPrimary))
+                    Icon(systemName: "arrow.forward").size(.xs).color(theme.text(.textTertiary))
+                    Text(configuration.to).textStyle(.labelMd700).foregroundStyle(theme.text(.textPrimary))
+                    if let duration = configuration.duration {
+                        Text(duration).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                    Spacer(minLength: configuration.spacing(.sm))
+                    if let price = configuration.priceAmount {
+                        PriceTag(price, currencyCode: configuration.currencyCode).size(.small).fractionDigits(0)
+                    }
+                }
+                .padding(configuration.spacing(.md))
+                .background(
+                    RoundedRectangle(cornerRadius: configuration.cornerRadius, style: .continuous)
+                        .fill((configuration.accent ?? .primary).soft)
+                )
+            }
+        }
+    }
+
+    func ticket() -> FlightTicketCard {
+        FlightTicketCard(from: "NYC", to: "SFO")
+            .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
+            .times(departure: "10:00 AM", arrival: "11:30 AM")
+            .airline("Garuda Indonesia").price(140, currencyCode: "USD").favorite().accent(.info)
+    }
+
+    return PreviewMatrix("FlightTicketCard styles") {
+        PreviewCase("classic (default)") { ticket().frame(width: 300) }
+        PreviewCase("horizontal") { ticket().flightTicketCardStyle(.horizontal).frame(width: 300) }
+        PreviewCase("flat") { ticket().flightTicketCardStyle(.flat).frame(width: 300) }
+        PreviewCase("custom (BannerTicketStyle)") {
+            ticket().flightTicketCardStyle(BannerTicketStyle()).frame(width: 300)
+        }
+    }
+}
+
+// The perforated tear shell is per-preset chrome (see header note): on the
+// `.classic` default, `.cardStyle(.outlined)` renders identically to the
+// default — the no-op is deliberate. Swap to `.flat` and it applies.
+#Preview("Card-style no-op on tear presets") {
     FlightTicketCard(from: "NYC", to: "SFO")
         .cities(from: "New York City", to: "San Francisco").duration("1h 45m")
         .times(departure: "10:00 AM", arrival: "11:30 AM")
