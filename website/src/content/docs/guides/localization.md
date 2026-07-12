@@ -75,9 +75,10 @@ Two rules that matter:
 > (regenerated from source by `make l10n`). Copy it into your app and fill in your
 > language column.
 
-## 2. Live in-app switch — no restart (2 more steps)
+## 2. Switch language in code — no restart
 
-Apply the root provider once, then drive the language from any state:
+`.themeKit()` at your root (the provider you already add for theming) **folds in live
+localization** — so there's no extra provider to wire. Flip the language from anywhere:
 
 ```swift
 import ThemeKit
@@ -88,28 +89,34 @@ struct TravelApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .themeKitLocalized()                                   // root provider, once
-                .onAppear { ThemeKitStrings.locale = Locale(identifier: appLanguage) }
+                .themeKit()                                            // root, once — folds in localization
+                .onAppear { ThemeKitStrings.setLanguage(appLanguage) }
         }
     }
 }
+
+// Anywhere — a settings screen:
+ThemeKitStrings.setLanguage("tr")   // whole UI → Turkish (short alias: Theme.setLanguage("tr"))
+ThemeKitStrings.setLanguage(nil)    // follow the device language again
+ThemeKitStrings.currentLanguage     // "tr"
 ```
 
-`themeKitLocalized()` observes `ThemeKitStrings`, re-injects the effective `\.locale`
-and an RTL-correct `\.layoutDirection`, and re-identifies the subtree so **every**
-string re-resolves on a change — including strings produced *outside* the SwiftUI
-view graph (enum/model helpers), which a plain environment value can never reach.
+`.themeKit()` observes `ThemeKitStrings`, re-injects the effective `\.locale` and an
+RTL-correct `\.layoutDirection`, and re-identifies the subtree so **every** string
+re-resolves on a change — including strings produced *outside* the SwiftUI view graph
+(enum/model helpers), which a plain environment value can never reach.
 
-Drive it from ThemeKit's own [`LanguageSwitcher`](/components/molecules/), bound to
-the ready-made `Binding`:
+Drive it from ThemeKit's own [`LanguageSwitcher`](/components/molecules/), bound to the
+ready-made `Binding`:
 
 ```swift
 LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
-                 selection: ThemeKitStrings.languageBinding)   // getter returns "tr", setter flips the whole UI live
+                 selection: ThemeKitStrings.languageBinding)   // flips the whole UI live
 ```
 
-Flip the picker and the entire library — View strings and non-View enum strings
-alike — switches language instantly, with no relaunch.
+Flip the picker and the entire library — View strings and non-View enum strings alike —
+switches language instantly, with no relaunch. (Prefer an explicit, subtree-scoped
+provider instead of `.themeKit()`? Use `.themeKitLocalized()`.)
 
 ## Loading the file from elsewhere (extensions / frameworks)
 

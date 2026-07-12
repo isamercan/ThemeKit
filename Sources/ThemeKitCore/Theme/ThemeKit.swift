@@ -46,15 +46,34 @@ private struct ThemeKitModifier: ViewModifier {
     let reactToRuntimeChanges: Bool
 
     func body(content: Content) -> some View {
-        Group {
+        // Localization is folded in (ADR-0003): inject the effective locale and
+        // an RTL-correct layout direction, and — with runtime reactions on —
+        // fold ThemeKitStrings' language revision into the identity alongside the
+        // theme revision. So `ThemeKit.setLanguage(_:)` re-renders the whole tree
+        // (View and non-View strings alike) live, with no separate modifier —
+        // `.themeKit()` at the root is all a consumer needs. Reading
+        // `observable.value` here registers this view with Observation.
+        let locale = ThemeKitStrings.effectiveLocale
+        let languageRevision = ThemeKitStrings.observable.value
+        return Group {
             if reactToRuntimeChanges {
                 // Reading `theme.revision` here tracks the @Observable Theme, so a
-                // runtime theme switch bumps the id and rebuilds the whole subtree.
-                content.id(theme.revision)
+                // runtime theme switch bumps the id and rebuilds the whole subtree;
+                // the language revision does the same for a live language switch.
+                content.id(ThemeKitRootIdentity(theme: theme.revision, language: languageRevision))
             } else {
                 content
             }
         }
         .environment(theme)
+        .environment(\.locale, locale)
+        .environment(\.layoutDirection, locale.themeKitLayoutDirection)
     }
+}
+
+/// Composite identity so BOTH a theme swap and a language switch rebuild the
+/// `.themeKit()` subtree — each is an independent `@Observable` revision.
+private struct ThemeKitRootIdentity: Hashable {
+    let theme: Int
+    let language: Int
 }

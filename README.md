@@ -693,6 +693,10 @@ labels…) flows through **one bridge** and resolves against a **String Catalog*
 (source language **English**). So you translate the **whole library into any
 language — with no per-call code** — by adding a single language file to your app.
 
+Prerequisite: you've added the package and put `.themeKit()` at your root — see
+[Installation](#installation) and [Quick start](#quick-start). Then localizing is just
+the two steps below: **drop in the language file**, and (optionally) **`setLanguage`**.
+
 ### Add a language — step by step
 
 **1. Get the language file.** Grab the ready-made template — every key, English
@@ -733,15 +737,21 @@ your language, fill the column. Keys **are** ThemeKit's English strings (`Card n
 **3. Build.** When the device/per-app language matches, **all of ThemeKit renders that
 language**. Untranslated keys fall back to English, per key. That's it — no code.
 
-### Restart-free in-app switch (optional)
+### Switch language in code (restart-free)
 
-For an in-app language picker that flips the whole UI live (no relaunch):
+`.themeKit()` at your root (from [Quick start](#quick-start)) is the **only** provider
+you need — it folds in live localization. Flip the language from anywhere and the whole
+UI updates live, no relaunch:
 
 ```swift
-RootView().themeKitLocalized()                                 // root provider, once
-LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
-                 selection: ThemeKitStrings.languageBinding)   // flips the whole UI live
+ThemeKitStrings.setLanguage("tr")   // whole UI → Turkish  (short alias: Theme.setLanguage("tr"))
+ThemeKitStrings.setLanguage(nil)    // follow the device language again
+ThemeKitStrings.currentLanguage     // "tr"
 ```
+
+Drive it from any picker — e.g. ThemeKit's `LanguageSwitcher` bound to
+`ThemeKitStrings.languageBinding`. (Want an explicit, scoped provider instead of
+`.themeKit()`? Use `.themeKitLocalized()` — see the guide.)
 
 ### Loading the file from elsewhere (extensions / frameworks)
 
