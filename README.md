@@ -62,8 +62,10 @@ import ThemeKit
   no baked files).
 - **Validation** — pure, testable predicates + a SwiftUI presentation layer.
 - **Accessibility** — Dynamic Type and Reduce Motion honored throughout.
-- **Localization** — English-default strings via a bundled String Catalog (with
-  Turkish), every default still overridable.
+- **Localization** — English-default strings via a bundled String Catalog;
+  translate the **entire library** by dropping one `ThemeKit.xcstrings` into your
+  app (no per-call code), with **restart-free** in-app language switching. Every
+  default is also overridable per call.
 - 📅 **Calendar add-on** — `ThemeKitCalendar` adds a token-bound date-range picker
   (`DateRangePicker`, built on [Almanac](https://github.com/isamercan/Almanac)) that
   re-skins with the active theme; opt-in, iOS-only.
@@ -687,17 +689,32 @@ let unique = AsyncValidationRule("Username taken") { await api.isAvailable($0) }
 ## Localization
 
 User-facing default strings (validation messages, placeholders, accessibility
-labels…) come from a bundled **String Catalog** (`Resources/Localizable.xcstrings`).
-The source language is **English**; a **Turkish** translation ships too, and
-consumers can add their own.
+labels…) come from a bundled **String Catalog** (`Resources/Localizable.xcstrings`),
+source language **English**. Every string flows through one bridge, so you can
+translate the **whole library into any language** — with **no per-call code** —
+by dropping a single `ThemeKit.xcstrings` into your app target:
 
-Every such string is also **overridable** via API parameters — e.g.
-`ValidationRule.required("Custom message")` — so the catalog only supplies the
-default.
+```swift
+// 1. Add ThemeKit.xcstrings to your app target, translate the keys (start from
+//    docs/templates/ThemeKit.xcstrings — the always-current key set, `make l10n`).
+// 2. Device/app language Turkish → all of ThemeKit renders Turkish. Nothing to call.
 
-> Note: a plain `swift build` copies `.xcstrings` verbatim (the SwiftPM CLI
-> doesn't run the catalog compiler), so only English resolves there. Xcode /
-> `xcodebuild` compile it, so all bundled localizations resolve in real apps.
+// Restart-free in-app switch:
+RootView().themeKitLocalized()                         // root provider, once
+LanguageSwitcher([.init(code: "en"), .init(code: "tr")],
+                 selection: ThemeKitStrings.languageBinding)   // flips the whole UI live
+```
+
+Resolution: per-call parameter (e.g. `ValidationRule.required("Custom message")`) →
+your catalog (forced locale → device language → your English rewording) → ThemeKit's
+bundled catalog → the English source. Per-call overrides always win; with no consumer
+catalog the output is byte-identical to stock ThemeKit. Full walkthrough:
+**[Localization guide](https://isamercan.github.io/ThemeKit/guides/localization/)**
+· design rationale: [ADR-0003](docs/ADR-0003-localization-override.md).
+
+> Note: `.xcstrings` resolves only when **compiled** — Xcode/`xcodebuild` do this
+> for app targets automatically (a bare `swift build` of the *library* copies it
+> verbatim). Your catalog lives in the app target, so real apps are always fine.
 
 ## ⭐ Advanced — Figma & MCP
 
