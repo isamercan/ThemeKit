@@ -5,20 +5,24 @@
 //  Organism. A wallet-style boarding pass — airline + flight header, a passenger
 //  name, a from→to route with times, a labelled detail grid (gate / seat / boarding
 //  / terminal) and a perforated stub carrying a barcode (or QR) and booking ref.
-//  Reuses ``TicketStub`` (perforation) and ``Barcode`` / ``QRCode``. Token-bound.
+//  Token-bound. The entire layout is style-driven (ADR-0004): the component
+//  gathers the typed configuration and the active ``BoardingPassStyle`` lays it
+//  out — `.classic` (default, horizontal ``TicketStub`` tear + trailing code),
+//  `.wallet` (QR-dominant vertical Apple-Wallet-style pass, two-column details)
+//  or `.strip` (one-row gate strip: passenger name / seat / mini code).
 //
-//  CardStyle exemption (deliberate): the shell here is the decorative perforated
-//  ticket surface — ``TicketStub`` carves the side notches out of its fill with a
-//  `destinationOut` composite, so the fill, notches, perforation and elevation
-//  shadow are one inseparable unit. Routing any of it through the environment
-//  `CardStyle` would paint the notches shut (a style draws a plain rounded-rect
-//  fill/border). The whole shell therefore stays with `TicketStub`;
-//  `.cardStyle(_:)` intentionally has no effect on this component.
+//  CardStyle note (per-preset, ADR-0004 §4): on the tear presets
+//  (`.classic`/`.wallet`) the perforated ``TicketStub`` shell — fill, notches,
+//  perforation and elevation shadow — is one inseparable unit owned by the
+//  preset, so `.cardStyle(_:)` is a documented no-op there (a card style would
+//  paint the notches shut). `.strip` draws no tear and routes its shell through
+//  the active `CardStyle`, so `.cardStyle(_:)` applies to it.
 //
 //  ```swift
-//  BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
+//  BoardingPass(passenger: "Jordan Lee", from: "SAW", to: "BER")
 //      .airline("Pegasus").flightNo("PC 1234").times(departure: "13:15", arrival: "16:05")
-//      .gate("A12").seat("14C").boarding("12:45").barcode("PC1234SAWBER14C")
+//      .gate("A12", seat: "14C", boarding: "12:45").barcode("PC1234SAWBER14C")
+//      .boardingPassStyle(.wallet)   // .classic / .strip / custom
 //  ```
 //
 
@@ -30,7 +34,7 @@ public struct BoardingPass: View {
     /// point constants (medium reproduces the classic 72pt QR / 48pt barcode).
     public enum CodeSize: String, CaseIterable, Sendable { case small, medium, large }
 
-    /// Arrangement of the labelled detail cells.
+    /// Arrangement of the labelled detail cells (honoured by ``ClassicBoardingPassStyle``).
     public enum DetailsLayout: String, CaseIterable, Sendable {
         /// One horizontal row (the classic layout).
         case row
@@ -38,8 +42,9 @@ public struct BoardingPass: View {
         case grid
     }
 
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
+    @Environment(\.boardingPassStyle) private var style
 
     private let passenger: String
     private let from: String
@@ -55,6 +60,13 @@ public struct BoardingPass: View {
     private var arrival: String?
     private var date: String?
     private var details: [(String, String)] = []   // gate/seat/boarding/terminal…
+    /// Typed mirrors of the common detail cells — kept in step with `details`
+    /// by the `.gate(...)` convenience so styles (e.g. `.strip`) can read
+    /// ``BoardingPassConfiguration/seat`` without parsing labelled tuples.
+    private var gateValue: String?
+    private var seatValue: String?
+    private var boardingValue: String?
+    private var terminalValue: String?
     private var bookingRef: String?
     private var passengerLabelOverride: String?
     /// Render-time default — re-resolves through the localization chain on
@@ -63,7 +75,8 @@ public struct BoardingPass: View {
     private var barcodeValue: String?
     private var qrValue: String?
     private var accent: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    /// `nil` = the active style's default surface (`.bgBase` for the built-ins).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var elevation: CardElevation = .elevated
     private var radiusRole: Theme.RadiusRole = .box
     private var showsPerforation = true
@@ -79,141 +92,24 @@ public struct BoardingPass: View {
         self.to = to
     }
 
-    // deferred: accent-fallback unification — keeps the `.primary` fallback
-    // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
-    private var accentBase: Color { (accent ?? .primary).base }
-
-    /// Internal point constants behind the `CodeSize` ramp (token rule: ramp
-    /// enums map to private CGFloats; no raw sizes in the public signature).
-    private var qrSide: CGFloat {
-        switch codeSize { case .small: return 56; case .medium: return 72; case .large: return 96 }
-    }
-    private var barcodeHeight: CGFloat {
-        switch codeSize { case .small: return 36; case .medium: return 48; case .large: return 64 }
-    }
-
     public var body: some View {
-        // Decorative-shell exception: the perforated `TicketStub` surface (fill +
-        // notches + tear line + shadow) is the chrome here and is kept as-is —
-        // see the header note. `.surface()`/`.elevation()` feed it directly.
-        TicketStub {
-            VStack(alignment: .leading, spacing: density.scale(Theme.SpacingKey.md.value)) {
-                if let headerSlot { headerSlot } else { header }
-                route
-                if !details.isEmpty { detailArea }
-            }
-        }
-        .stub { if let customStub { customStub } else { stub } }
-        .cornerRadius(radiusRole)
-        .perforation(showsPerforation)
-        .dashColor(dashKey)
-        .elevation(elevation)
-        .surface(surfaceKey)
-    }
-
-    private var header: some View {
-        HStack {
-            HStack(spacing: 6) {
-                Image(systemName: airlineIcon).font(.system(size: 14)).foregroundStyle(accentBase)
-                    .accessibilityHidden(true)   // decorative airline glyph
-                if let airline { Text(airline).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)) }
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 1) {
-                if let flightNo { Text(flightNo).textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary)) }
-                if let cabin { Text(cabin).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)) }
-            }
-        }
-    }
-
-    private var route: some View {
-        HStack(alignment: .center) {
-            routeCol(from, city: fromCity, time: departure, alignment: .leading)
-            Spacer(minLength: 8)
-            VStack(spacing: 2) {
-                if let date { Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary)) }
-                Image(systemName: "airplane").font(.system(size: 16)).foregroundStyle(accentBase).mirrorsInRTL()
-                    .accessibilityHidden(true)   // decorative route glyph
-            }
-            Spacer(minLength: 8)
-            routeCol(to, city: toCity, time: arrival, alignment: .trailing)
-        }
-    }
-
-    private func routeCol(_ code: String, city: String?, time: String?, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 1) {
-            Text(code).textStyle(.displaySm).foregroundStyle(theme.text(.textPrimary))
-            if let city { Text(city).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)).lineLimit(1) }
-            if let time { Text(time).textStyle(.labelBase700).foregroundStyle(accentBase) }
-        }
-        .fixedSize()
-    }
-
-    @ViewBuilder private var detailArea: some View {
-        switch detailsLayout {
-        case .row: detailRow
-        case .grid: detailTwoColumnGrid
-        }
-    }
-
-    private var detailRow: some View {
-        HStack(alignment: .top, spacing: density.scale(Theme.SpacingKey.md.value)) {
-            ForEach(Array(details.enumerated()), id: \.offset) { _, item in
-                detailCell(item)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    /// Two-column layout — pairs of cells per `GridRow`, so five details wrap
-    /// to three rows instead of clipping off the trailing edge.
-    private var detailTwoColumnGrid: some View {
-        Grid(alignment: .leading,
-             horizontalSpacing: density.scale(Theme.SpacingKey.md.value),
-             verticalSpacing: density.scale(Theme.SpacingKey.sm.value)) {
-            ForEach(Array(stride(from: 0, to: details.count, by: 2)), id: \.self) { index in
-                GridRow {
-                    detailCell(details[index])
-                        .gridColumnAlignment(.leading)
-                    if index + 1 < details.count {
-                        detailCell(details[index + 1])
-                            .gridColumnAlignment(.leading)
-                    } else {
-                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func detailCell(_ item: (String, String)) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(item.0).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
-            Text(item.1).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
-        }
-    }
-
-    private var stub: some View {
-        HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(passengerLabel).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
-                Text(passenger).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                if let bookingRef {
-                    Text(bookingRef).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-                }
-            }
-            Spacer(minLength: 6)
-            code
-        }
-    }
-
-    @ViewBuilder private var code: some View {
-        if let qrValue {
-            QRCode(qrValue).size(qrSide)
-        } else if let barcodeValue {
-            Barcode(barcodeValue).height(barcodeHeight).showsValue()
-        }
+        let configuration = BoardingPassConfiguration(
+            passenger: passenger, from: from, to: to,
+            fromCity: fromCity, toCity: toCity,
+            departure: departure, arrival: arrival, date: date,
+            airline: airline, airlineIcon: airlineIcon,
+            flightNo: flightNo, cabin: cabin,
+            details: details,
+            gate: gateValue, seat: seatValue, boarding: boardingValue, terminal: terminalValue,
+            bookingRef: bookingRef, passengerLabel: passengerLabel,
+            barcodeValue: barcodeValue, qrValue: qrValue,
+            codeSize: codeSize, detailsLayout: detailsLayout,
+            accent: accent, surfaceKey: surfaceKey, elevation: elevation,
+            radiusRole: radiusRole, showsPerforation: showsPerforation, dashKey: dashKey,
+            header: headerSlot, stub: customStub,
+            density: density, locale: locale
+        )
+        style.makeBody(configuration: configuration)
     }
 }
 
@@ -227,10 +123,18 @@ public extension BoardingPass {
     func times(departure: String?, arrival: String?) -> Self { copy { $0.departure = departure; $0.arrival = arrival } }
     func date(_ text: String?) -> Self { copy { $0.date = text } }
     /// The labelled detail cells (gate / seat / boarding / terminal…), in order.
-    func details(_ items: [(String, String)]) -> Self { copy { $0.details = items } }
+    /// Clears the typed ``BoardingPassConfiguration/gate``/``BoardingPassConfiguration/seat``
+    /// mirrors — call `.gate(...)` instead when a style needs the typed fields.
+    func details(_ items: [(String, String)]) -> Self {
+        copy {
+            $0.details = items
+            $0.gateValue = nil; $0.seatValue = nil; $0.boardingValue = nil; $0.terminalValue = nil
+        }
+    }
     /// Convenience for the common gate / seat / boarding trio.
     func gate(_ gate: String? = nil, seat: String? = nil, boarding: String? = nil, terminal: String? = nil) -> Self {
         copy {
+            $0.gateValue = gate; $0.seatValue = seat; $0.boardingValue = boarding; $0.terminalValue = terminal
             var d: [(String, String)] = []
             if let terminal { d.append((String(themeKit: "Terminal"), terminal)) }
             if let gate { d.append((String(themeKit: "Gate"), gate)) }
@@ -249,20 +153,20 @@ public extension BoardingPass {
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accent = color } }
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     func elevation(_ e: CardElevation) -> Self { copy { $0.elevation = e } }
-    /// Replaces the built-in passenger / booking-ref / code stub with custom
-    /// content — forwarded to ``TicketStub``'s stub slot below the tear line.
+    /// Replaces the built-in stub with custom content — forwarded to the active
+    /// style's tear-off / trailing area (ignored by presets with no stub, e.g. `.strip`).
     func stub<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.customStub = AnyView(content()) } }
     /// Replaces the built-in airline / flight-number header row.
     func header<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.headerSlot = AnyView(content()) } }
     /// Footprint of the stub's QR / barcode (default `.medium` — the classic sizes).
     func codeSize(_ s: CodeSize) -> Self { copy { $0.codeSize = s } }
-    /// Detail-cell arrangement: one `.row` (default) or a two-column `.grid`.
+    /// Detail-cell arrangement: one `.row` (default) or a two-column `.grid` — honoured by `.classic`.
     func detailsLayout(_ l: DetailsLayout) -> Self { copy { $0.detailsLayout = l } }
-    /// Outer corner radius (radius role token, default `.box`) — forwarded to ``TicketStub``.
+    /// Outer corner radius (radius role token, default `.box`) — forwarded to the active style.
     func cornerRadius(_ role: Theme.RadiusRole) -> Self { copy { $0.radiusRole = role } }
-    /// Draw the dashed perforation across the tear line (default on) — forwarded to ``TicketStub``.
+    /// Draw the dashed perforation across the tear line (default on) — tear presets only.
     func perforation(_ on: Bool = true) -> Self { copy { $0.showsPerforation = on } }
-    /// Perforation dash colour (border token key, default `.borderPrimary`) — forwarded to ``TicketStub``.
+    /// Perforation dash colour (border token key, default `.borderPrimary`) — tear presets only.
     func dashColor(_ key: Theme.BorderColorKey) -> Self { copy { $0.dashKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
@@ -275,7 +179,7 @@ public extension BoardingPass {
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
-            BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
+            BoardingPass(passenger: "Jordan Lee", from: "SAW", to: "BER")
                 .airline("Pegasus").flightNo("PC 1234").cabin("Economy")
                 .cities(from: "Istanbul", to: "Berlin").times(departure: "13:15", arrival: "16:05").date("13 Sep")
                 .gate("A12", seat: "14C", boarding: "12:45", terminal: "1")
@@ -313,10 +217,11 @@ public extension BoardingPass {
     }
 }
 
-// The perforated ticket shell is exempt from `CardStyle` (see header note):
-// under `.cardStyle(.outlined)` the pass renders identically to the default.
-#Preview("Card-style exempt shell") {
-    BoardingPass(passenger: "İsa Mercan", from: "SAW", to: "BER")
+// The tear shell is per-preset chrome (see header note): on the `.classic`
+// default, `.cardStyle(.outlined)` renders identically to the default — the
+// no-op is deliberate. Swap to `.strip` (`.boardingPassStyle(.strip)`) and it applies.
+#Preview("Card-style no-op on the default tear preset") {
+    BoardingPass(passenger: "Jordan Lee", from: "SAW", to: "BER")
         .airline("Pegasus").flightNo("PC 1234")
         .times(departure: "13:15", arrival: "16:05")
         .gate("A12", seat: "14C", boarding: "12:45")

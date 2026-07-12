@@ -4,22 +4,26 @@
 //
 //  Molecule. A traveller summary row — an avatar or icon, a name with an optional
 //  type badge (Adult / Child / Infant), a subtitle, an optional seat chip and status,
-//  and a trailing edit / chevron. Token-bound; the row of a passengers list.
+//  and a trailing edit / chevron. Presentation is style-driven
+//  (``PassengerRowStyle``, ADR-0004) — set once per list via
+//  `.passengerRowStyle(_:)`. Token-bound; the row of a passengers list.
 //
 //  ```swift
 //  PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345").seat("14C").onEdit { }
+//      .passengerRowStyle(.card)      // .row (default) / .card / .compact
 //  ```
 //
 
 import SwiftUI
 import ThemeKit
 
-/// Trailing accessory of a ``PassengerRow``.
+/// Trailing accessory of a ``PassengerRow`` (the ``RowPassengerRowStyle`` preset).
 public enum PassengerAccessory: Sendable { case none, chevron }
 
 public struct PassengerRow: View {
-    @Environment(\.theme) private var theme
+    @Environment(\.passengerRowStyle) private var style
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
 
     private let name: String
     private let action: () -> Void
@@ -37,7 +41,7 @@ public struct PassengerRow: View {
     private var accessory: PassengerAccessory = .none
     private var accent: SemanticColor?
     private var bordered = false
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var selectionBinding: Binding<Bool>?
     private var customTrailing: AnyView?
 
@@ -46,81 +50,33 @@ public struct PassengerRow: View {
         self.action = action
     }
 
-    private var accentBase: Color { (accent ?? .primary).base }
-    private var isSelected: Bool { selectionBinding?.wrappedValue ?? false }
-    private var rowShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
-    }
-
     public var body: some View {
-        Button {
-            selectionBinding?.wrappedValue.toggle()
-            action()
-        } label: {
-            HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
-                if let selectionBinding {
-                    // Visual-only — the whole row is the toggle target.
-                    Checkbox(isChecked: selectionBinding)
-                        .accent(accent)
-                        .allowsHitTesting(false)
-                }
-                leading
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(name).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                        if let typeText { Badge(typeText).badgeStyle(typeStyle).variant(.soft).size(.small).fixedSize() }
-                    }
-                    if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
-                }
-                Spacer(minLength: 6)
-                trailing
-            }
-            .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
-            .padding(.horizontal, bordered ? density.scale(Theme.SpacingKey.sm.value) : 0)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(bordered ? theme.background(surfaceKey) : .clear, in: rowShape)
-            .overlay { if bordered { rowShape.stroke(theme.border(.borderPrimary), lineWidth: 1) } }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel([name, typeText, seat.map { String(themeKit: "seat \($0)") }, statusText].compactMap { $0 }.joined(separator: ", "))
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    @ViewBuilder private var leading: some View {
-        if let avatarContent {
-            Avatar(avatarContent).size(.md)
-        } else {
-            Image(systemName: systemImage).font(.system(size: 30)).foregroundStyle(accentBase)
-        }
-    }
-
-    @ViewBuilder private var trailing: some View {
-        HStack(spacing: 8) {
-            if let seat {
-                Text(seat).textStyle(.labelSm600).foregroundStyle(theme.text(.textSecondary))
-                    .padding(.horizontal, 8).frame(height: 24)
-                    .background(theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
-            }
-            if let statusText { Badge(statusText).badgeStyle(statusStyle).variant(.soft).size(.small) }
-            if let customTrailing {
-                customTrailing
-            } else if let onEdit {
-                Button { onEdit() } label: {
-                    Image(systemName: "pencil").textStyle(.labelBase600).foregroundStyle(accentBase)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Edit"))
-            } else if let onRemove {
-                Button { onRemove() } label: {
-                    Image(systemName: "xmark").textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Remove"))
-            } else if accessory == .chevron {
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(theme.text(.textTertiary)).mirrorsInRTL()
-                    .accessibilityHidden(true)   // decorative disclosure indicator
-            }
-        }
+        // The arrangement is owned by the active `PassengerRowStyle`; the
+        // component only gathers its typed summary and composes the row's tap
+        // handler (selection toggle + the caller's action, ADR-0004 §4).
+        let configuration = PassengerRowConfiguration(
+            name: name,
+            type: typeText,
+            typeStyle: typeStyle,
+            subtitle: subtitle,
+            seat: seat,
+            status: statusText,
+            statusStyle: statusStyle,
+            avatar: avatarContent,
+            systemImage: systemImage,
+            accessory: accessory,
+            isBordered: bordered,
+            surfaceKey: surfaceKey,
+            isSelected: selectionBinding?.wrappedValue ?? false,
+            selectBinding: selectionBinding,
+            trailing: customTrailing,
+            onEdit: onEdit,
+            onRemove: onRemove,
+            accent: accent,
+            action: { selectionBinding?.wrappedValue.toggle(); action() },
+            density: density,
+            locale: locale)
+        style.makeBody(configuration: configuration)
     }
 }
 

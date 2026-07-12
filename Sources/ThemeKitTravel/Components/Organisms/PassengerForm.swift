@@ -6,10 +6,10 @@
 //  date of birth / nationality / travel document — bound to a `PassengerDraft`.
 //  Distinct from `PassengerRow` (a display row for review screens).
 //
-//  Composes neutral ThemeKit fields (`Fieldset`, `TextInput`, `SelectBox`,
-//  `DateField`); all of them inherit `FieldDefaults` / `FieldStyle` from the
-//  environment, so the form re-skins with the subtree's field chrome and needs
-//  no style protocol of its own (structure, not skinnable chrome).
+//  Composes neutral ThemeKit fields (`TextInput`, `SelectBox`, `DateField`);
+//  all of them inherit `FieldDefaults` / `FieldStyle` from the environment,
+//  so the form re-skins with the subtree's field chrome. Section chrome
+//  (`Fieldset`, `Card`, or none) is now the ``PassengerFormStyle`` axis below.
 //
 //  Controlled-only (ADR-F4): a traveler form the app can't read is useless.
 //  Multi-passenger checkout is the app's `ForEach` of `PassengerForm`s — the
@@ -30,6 +30,15 @@
 //  has validated the field" gate as `.field`). Their focus analogs are
 //  best-effort: DateField opens its picker, SelectBox renders its focus ring.
 //
+//  Style (ADR-0004, Class B): the component owns every live field unit
+//  (bindings, validator wiring, focus) — arrangement is delegated to the
+//  active ``PassengerFormStyle`` (`PassengerFormStyle.swift`) via
+//  `.passengerFormStyle(_:)`. `.stacked`/`.flat`/`.grouped` are the former
+//  `PassengerFormLayout` cases, deprecate-forwarded through `.layout(_:)`;
+//  `.carded` is new. Validation, live re-validation, the `.tint(_:)` accent
+//  and the container accessibility label stay applied by the component
+//  around the style's output — styles only arrange pre-wired field-run units.
+//
 
 import SwiftUI
 import ThemeKit
@@ -47,6 +56,12 @@ public enum PassengerFormField: Hashable, Sendable, CaseIterable {
 /// Section chrome of a ``PassengerForm``: two `Fieldset`s (`.stacked`, the
 /// default), bare fields with plain section titles (`.flat`), or every field
 /// inside one `Fieldset` (`.grouped`).
+///
+/// Superseded by ``PassengerFormStyle`` (ADR-0004) — every case maps 1:1
+/// onto a preset (`.stacked` → `.passengerFormStyle(.stacked)` and so on,
+/// plus the new `.carded`); the enum remains for source compatibility via
+/// the deprecated ``PassengerForm/layout(_:)`` and is removed at the next
+/// major.
 public enum PassengerFormLayout: Sendable { case stacked, flat, grouped }
 
 // MARK: - PassengerForm
@@ -72,6 +87,8 @@ public struct PassengerForm: View {
     @Environment(\.theme) private var theme
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.componentDensity) private var envDensity
+    @Environment(\.passengerFormStyle) private var envStyle
 
     private let title: String
     @Binding private var draft: PassengerDraft
@@ -90,7 +107,9 @@ public struct PassengerForm: View {
     /// Section titles: `nil` = built-in, `""` = section renders without a title.
     private var personalTitleOverride: String?
     private var documentTitleOverride: String?
-    private var layoutValue: PassengerFormLayout = .stacked
+    /// Style set by the deprecated `.layout(_:)`; wins over the environment
+    /// style (ADR-0004 §5 — source-behavior stability during migration).
+    private var explicitStyle: AnyPassengerFormStyle?
     /// Extra caller fields appended after the document section.
     private var additionalFieldsSlot: AnyView?
     private var genderOptions: [PassengerGender] = Array(PassengerGender.allCases)
@@ -147,54 +166,43 @@ public struct PassengerForm: View {
     // MARK: Body
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            if let customHeader {
-                customHeader
-            } else {
-                titleHeader
+        // The arrangement is owned by the active `PassengerFormStyle`
+        // (ADR-0004 Class B): the field-run units below are pre-wired and
+        // fully interactive (bindings, validator wiring, focus); the style
+        // arranges them, never re-wires them.
+        let configuration = PassengerFormConfiguration(
+            personalFields: personalFields.isEmpty ? nil : AnyView(fieldRun(personalFields)),
+            documentFields: documentFields.isEmpty ? nil : AnyView(fieldRun(documentFields)),
+            groupedFields: fieldList.isEmpty ? nil : AnyView(fieldRun(fieldList)),
+            header: customHeader ?? AnyView(titleHeader),
+            footer: customFooter,
+            additionalFields: additionalFieldsSlot,
+            personalTitle: resolvedPersonalTitle,
+            documentTitle: resolvedDocumentTitle,
+            groupedTitle: resolvedGroupedTitle,
+            accent: accent,
+            density: envDensity,
+            locale: locale)
+        let style = explicitStyle ?? envStyle   // explicit (deprecated .layout) wins — ADR-0004 §5
+        return style.makeBody(configuration: configuration)
+            .tint(accent?.base)
+            // Live canonical re-validation for the select/date fields (see
+            // header note): same gate as `.field(_:in:)` — only once the
+            // form has validated the field (a failed submit or a prior
+            // live pass).
+            .onChange(of: draft) { _, newDraft in
+                guard let form else { return }
+                let values = newDraft.formValues
+                for field in Self.canonicalRevalidated
+                where fieldList.contains(field) && form.messages.index(forKey: field) != nil {
+                    form.validate(field, values[field] ?? "")
+                }
             }
-
-            switch layoutValue {
-            case .stacked:
-                if !personalFields.isEmpty {
-                    section(title: resolvedPersonalTitle, fields: personalFields, chrome: true)
-                }
-                if !documentFields.isEmpty {
-                    section(title: resolvedDocumentTitle, fields: documentFields, chrome: true)
-                }
-            case .flat:
-                if !personalFields.isEmpty {
-                    section(title: resolvedPersonalTitle, fields: personalFields, chrome: false)
-                }
-                if !documentFields.isEmpty {
-                    section(title: resolvedDocumentTitle, fields: documentFields, chrome: false)
-                }
-            case .grouped:
-                if !fieldList.isEmpty {
-                    section(title: resolvedGroupedTitle, fields: fieldList, chrome: true)
-                }
-            }
-
-            if let additionalFieldsSlot { additionalFieldsSlot }
-
-            if let customFooter { customFooter }
-        }
-        .tint(accent?.base)
-        // Live canonical re-validation for the select/date fields (see header
-        // note): same gate as `.field(_:in:)` — only once the form has
-        // validated the field (a failed submit or a prior live pass).
-        .onChange(of: draft) { _, newDraft in
-            guard let form else { return }
-            let values = newDraft.formValues
-            for field in Self.canonicalRevalidated
-            where fieldList.contains(field) && form.messages.index(forKey: field) != nil {
-                form.validate(field, values[field] ?? "")
-            }
-        }
-        // A labeled container: VoiceOver announces the traveler ("Passenger 1,
-        // Adult") before stepping into the fields, which self-label.
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(title)
+            // A labeled container: VoiceOver announces the traveler
+            // ("Passenger 1, Adult") before stepping into the fields, which
+            // self-label.
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(title)
     }
 
     // MARK: Sub-views
@@ -232,25 +240,6 @@ public struct PassengerForm: View {
         case nil: return String(themeKitTravel: "Traveler details")
         case "": return nil
         case let custom: return custom
-        }
-    }
-
-    /// One section: `Fieldset` chrome (or a plain labeled stack for `.flat` /
-    /// title-less sections) around the ordered, column-aware field run.
-    @ViewBuilder
-    private func section(title: String?, fields: [PassengerFormField], chrome: Bool) -> some View {
-        if chrome, let title {
-            Fieldset(title) { fieldRun(fields) }
-        } else {
-            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                if let title {
-                    Text(title)
-                        .textStyle(.labelBase700)
-                        .foregroundStyle(theme.text(.textPrimary))
-                        .accessibilityAddTraits(.isHeader)
-                }
-                fieldRun(fields)
-            }
         }
     }
 
@@ -466,8 +455,19 @@ public extension PassengerForm {
 
     /// Section chrome: `.stacked` (two `Fieldset`s, default), `.flat` (bare
     /// fields + plain titles, no fieldset chrome), or `.grouped` (everything
-    /// in one `Fieldset`).
-    func layout(_ l: PassengerFormLayout) -> Self { copy { $0.layoutValue = l } }
+    /// in one `Fieldset`). Maps 1:1 onto the ``PassengerFormStyle`` presets
+    /// and, when called, wins over the environment style (source-behavior
+    /// stability during migration — ADR-0004 §5).
+    @available(*, deprecated, message: "Use .passengerFormStyle(_:) — e.g. .passengerFormStyle(.flat)")
+    func layout(_ l: PassengerFormLayout) -> Self {
+        copy {
+            switch l {
+            case .stacked: $0.explicitStyle = AnyPassengerFormStyle(StackedPassengerFormStyle())
+            case .flat: $0.explicitStyle = AnyPassengerFormStyle(FlatPassengerFormStyle())
+            case .grouped: $0.explicitStyle = AnyPassengerFormStyle(GroupedPassengerFormStyle())
+            }
+        }
+    }
 
     /// Extra caller-owned fields appended after the document section (before
     /// the footer) — e.g. a frequent-flyer number. The slot inherits the
@@ -587,23 +587,23 @@ public extension PassengerForm {
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
-                    // Flat layout, custom labels, side-by-side names, trimmed genders.
+                    // Flat style, custom labels, side-by-side names, trimmed genders.
                     PassengerForm("Traveler 1", draft: $flat)
-                        .layout(.flat)
                         .columns(2)
                         .label("First name", for: .givenName)
                         .label("Last name", for: .familyName)
                         .genders([.female, .male])
                         .sectionTitles(personal: "Who is flying?", document: "")
+                        .passengerFormStyle(.flat)
 
-                    // Grouped layout + additional caller field after the documents.
+                    // Grouped style + additional caller field after the documents.
                     PassengerForm("Traveler 2", draft: $grouped)
-                        .layout(.grouped)
                         .sectionTitles(personal: "Traveler details")
                         .additionalFields {
                             TextInput("Frequent flyer number", text: $loyalty)
                                 .keyboard(capitalization: .characters)
                         }
+                        .passengerFormStyle(.grouped)
                 }
                 .padding()
             }
