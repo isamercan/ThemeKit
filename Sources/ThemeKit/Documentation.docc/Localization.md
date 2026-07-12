@@ -30,7 +30,7 @@ English per key.
 
 ### Restart-free in-app switching
 
-Apply ``SwiftUI/View/themeKitLocalized()`` once at the app root, then drive
+Apply `themeKitLocalized()` once at the app root, then drive
 `ThemeKitStrings.locale` (or bind a picker to `ThemeKitStrings.languageBinding`):
 
 ```swift
@@ -46,7 +46,7 @@ RTL-correct `\.layoutDirection`, and re-identifies the subtree so **every** stri
 re-resolves — including strings produced outside the view graph (enum/model
 helpers), which a plain environment value cannot reach.
 
-Use ``SwiftUI/View/themeKitLocale(_:)`` to scope `\.locale` (formatting and the
+Use `themeKitLocale(_:)` to scope `\.locale` (formatting and the
 locale-reading components) for a subtree; it does not change catalog string language.
 
 ### Precedence (highest wins)
@@ -59,9 +59,9 @@ locale-reading components) for a subtree; it does not change catalog string lang
 
 With no consumer catalog and no override, output is byte-identical to stock ThemeKit.
 
-## Topics
+## API
 
-### Entry points
-
-- ``SwiftUI/View/themeKitLocalized()``
-- ``SwiftUI/View/themeKitLocale(_:)``
+The localization primitives live in the token-only **ThemeKitCore** layer, so their
+symbol reference is in the [ThemeKitCore API](https://isamercan.github.io/ThemeKit/api-core/documentation/themekitcore/):
+`View/themeKitLocalized()`, `View/themeKitLocale(_:)`, `ThemeKitStrings`, and
+`ThemeKitLocalizationValue`.
