@@ -29,6 +29,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "%@ seats selected": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "%@ to %@": {
       "extractionState": "manual",
       "generatesSymbol": false
@@ -50,6 +54,10 @@
       "generatesSymbol": false
     },
     "1 infant": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 seat selected": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

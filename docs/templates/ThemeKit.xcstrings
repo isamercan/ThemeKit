@@ -80,6 +80,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "%@ seats selected": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "%@ selected": {
       "comment": "MultiSelect accessibility value: number of selected options.",
       "extractionState": "manual",
@@ -173,6 +177,10 @@
       "generatesSymbol": false
     },
     "1 seat left": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "1 seat selected": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

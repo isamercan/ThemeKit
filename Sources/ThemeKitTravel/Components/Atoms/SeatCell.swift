@@ -7,8 +7,14 @@
 //  silhouette (rounded / circle / seatback) and a recommended star. Composed by
 //  ``SeatMap`` but reusable on its own for bespoke seat grids.
 //
-//  NOTE: this atom predates the copy-on-write modifier convention — its knobs
-//  are DEFAULTED init params by design. COW migration deferred to next major.
+//  Presentation is style-driven (``SeatCellStyle``, ADR-0004): `.rounded`
+//  (default) / `.circle` / `.seatback`, settable once per screen via
+//  `.seatCellStyle(_:)`. See `SeatCellStyle.swift` for the full anatomy.
+//
+//  NOTE: this atom predates the copy-on-write modifier convention — its other
+//  knobs (palette, display, size…) are DEFAULTED init params by design. Full
+//  COW migration deferred to next major; `SeatCellStyle` is this atom's
+//  modernization path for its one look axis, the silhouette.
 //
 
 import SwiftUI
@@ -25,9 +31,10 @@ public enum SeatSelectionEmphasis: Sendable {
 }
 
 public struct SeatCell: View {
-    @Environment(\.theme) private var theme
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.componentDensity) private var density
+    @Environment(\.seatCellStyle) private var envStyle
 
     // Content (R1) + state.
     private let seat: Seat
@@ -45,6 +52,10 @@ public struct SeatCell: View {
     private let selectionEmphasis: SeatSelectionEmphasis
     private let action: () -> Void
 
+    /// - Parameter shape: **Deprecated** — prefer `.seatCellStyle(_:)`; kept for source
+    ///   compatibility. A non-default value (`.circle`/`.seatback`) still wins over an
+    ///   ancestor `.seatCellStyle(_:)` (ADR-0004 §5's source-behavior stability); the
+    ///   default `.rounded` falls through to the environment style.
     public init(_ seat: Seat,
                 size: CGFloat = 44,
                 isSelected: Bool = false,
@@ -77,6 +88,8 @@ public struct SeatCell: View {
 
     /// Omitted-currency form — resolves the code from the environment:
     /// `formatDefaults.currencyCode` → `locale.currency` → `"USD"` (§10).
+    /// - Parameter shape: **Deprecated** — prefer `.seatCellStyle(_:)`; see the
+    ///   designated init's parameter doc for the explicit/environment precedence rule.
     public init(_ seat: Seat,
                 size: CGFloat = 44,
                 isSelected: Bool = false,
@@ -109,6 +122,8 @@ public struct SeatCell: View {
     /// Token-stepped size overload — `size:` takes a ``SeatSizeRamp`` instead of
     /// raw points (compact 36 · regular 44 · large 52 · xl 60). A `nil`
     /// `currencyCode` resolves from the environment like the omitted-currency init.
+    /// - Parameter shape: **Deprecated** — prefer `.seatCellStyle(_:)`; see the
+    ///   designated init's parameter doc for the explicit/environment precedence rule.
     public init(_ seat: Seat,
                 size ramp: SeatSizeRamp,
                 isSelected: Bool = false,
@@ -142,118 +157,43 @@ public struct SeatCell: View {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
 
+    /// The deprecated `shape:` init param's own preset, when it requested a
+    /// non-default silhouette. `.rounded` is indistinguishable from "not set"
+    /// — it's the shared default of both the parameter and
+    /// ``RoundedSeatCellStyle`` — so it falls through to the environment
+    /// style, letting an ancestor `.seatCellStyle(_:)` take effect for the
+    /// common (default-shape) call site. An explicit `.circle`/`.seatback`
+    /// still wins over the environment (ADR-0004 §5's source-behavior
+    /// stability) — pre-existing call sites (e.g. ``SeatMap``, which forwards
+    /// its own `.seatShape(_:)` knob here) keep rendering exactly what they
+    /// render today.
+    private var explicitStyle: AnySeatCellStyle? {
+        switch shape {
+        case .rounded: return nil
+        case .circle: return AnySeatCellStyle(CircleSeatCellStyle())
+        case .seatback: return AnySeatCellStyle(SeatbackSeatCellStyle())
+        }
+    }
+
     public var body: some View {
-        let cellShape = shape.anyShape(cornerRadius: Theme.RadiusRole.selector.value)
-        Button(action: action) {
-            cellShape
-                .fill(fillColor)
-                .overlay(cellShape.stroke(strokeColor, lineWidth: strokeWidth))
-                .overlay(glyph)
-                .overlay(alignment: .topTrailing) { if showsStar { recommendedStar } }
-                .frame(width: size, height: size)
-                .opacity(isSelectable || isSelected ? 1 : 0.55)
-        }
-        .buttonStyle(.plain)
-        .disabled(!isSelectable && !isSelected)
-        .accessibilityLabel(a11yLabel)
-        .accessibilityValue(a11yValue)
-        .accessibilityHint(isSelectable ? "Double-tap to \(isSelected ? "deselect" : "select")" : "")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    private var showsStar: Bool { isRecommended && isSelectable && !isSelected }
-
-    // MARK: Content
-
-    @ViewBuilder private var glyph: some View {
-        if let customContent {
-            customContent(SeatContext(seat: seat, isSelected: isSelected, isOccupied: seat.isOccupied, assignedInitials: assignedInitials))
-        } else {
-            defaultContent
-        }
-    }
-
-    @ViewBuilder private var defaultContent: some View {
-        switch display {
-        case .number:
-            Text(seat.id).textStyle(.overline500).foregroundStyle(contentColor)
-                .minimumScaleFactor(0.5).lineLimit(1).padding(.horizontal, 2)
-        case .initials where assignedInitials != nil:
-            Text(assignedInitials ?? "").textStyle(.labelSm600).foregroundStyle(contentColor)
-        case .initialsAndNumber:
-            VStack(spacing: 0) {
-                if let assignedInitials { Text(assignedInitials).textStyle(.labelSm600).foregroundStyle(contentColor) }
-                Text(seat.id).textStyle(.overline400).foregroundStyle(contentColor.opacity(0.75))
-                    .minimumScaleFactor(0.5).lineLimit(1)
-            }
-            .padding(.horizontal, 2)
-        case .icon, .initials:
-            iconGlyph
-        }
-    }
-
-    // Glyphs step through the type ramp (Dynamic Type for free) instead of
-    // hardcoded point sizes.
-    @ViewBuilder private var iconGlyph: some View {
-        if let assignedInitials {
-            Text(assignedInitials).textStyle(.labelSm600).foregroundStyle(contentColor)
-        } else if isSelected {
-            Image(systemName: "checkmark").textStyle(.labelSm700).foregroundStyle(contentColor)
-        } else if seat.isOccupied {
-            Image(systemName: "xmark").textStyle(.labelSm600).foregroundStyle(contentColor)
-        } else {
-            Image(systemName: seat.tier.glyph).textStyle(.labelSm600).foregroundStyle(contentColor)
-        }
-    }
-
-    private var recommendedStar: some View {
-        Image(systemName: recommendedSymbol)
-            .font(.system(size: 8, weight: .bold))
-            .foregroundStyle(theme.foreground(.systemcolorsFgWarning))
-            .padding(2)
-            .background(theme.background(.bgBase), in: Circle())
-            .offset(x: 3, y: -3)
-    }
-
-    // MARK: Colours
-
-    private var fillColor: Color {
-        if isSelected { return palette.selectedColors(theme: theme).fill }
-        if seat.isOccupied { return palette.occupiedColors(theme: theme).fill }
-        return palette.colors(for: seat.tier, theme: theme).fill
-    }
-    private var strokeColor: Color {
-        if isSelected {
-            return selectionEmphasis == .border ? palette.selectedColors(theme: theme).stroke : .clear
-        }
-        if seat.isOccupied { return palette.occupiedColors(theme: theme).stroke }
-        return palette.colors(for: seat.tier, theme: theme).stroke
-    }
-    private var strokeWidth: CGFloat {
-        guard isSelected else { return 1 }
-        return selectionEmphasis == .border ? 2 : 0
-    }
-    private var contentColor: Color {
-        if isSelected { return palette.selectedColors(theme: theme).content }
-        if seat.isOccupied { return palette.occupiedColors(theme: theme).content }
-        return theme.text(.textSecondary)
-    }
-
-    // MARK: Accessibility
-
-    private var a11yLabel: String {
-        var s = String(themeKit: "Seat \(seat.id)")
-        if seat.tier != .standard { s += ", \(seat.tier.label)" }   // tier.label is already bridge-localized
-        return s
-    }
-    private var a11yValue: String {
-        if seat.isOccupied { return String(themeKit: "Occupied") }
-        if !isSelectable { return String(themeKit: "Unavailable") }
-        if isSelected { return String(themeKit: "Selected") }
-        if let price = seat.price {
-            return String(themeKit: "Available, \(price.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0))))")
-        }
-        return String(themeKit: "Available")
+        let configuration = SeatCellConfiguration(
+            seat: seat,
+            isSelected: isSelected,
+            isSelectable: isSelectable,
+            isRecommended: isRecommended,
+            recommendedSymbol: recommendedSymbol,
+            assignedInitials: assignedInitials,
+            display: display,
+            customContent: customContent,
+            palette: palette,
+            selectionEmphasis: selectionEmphasis,
+            shape: shape,
+            size: size,
+            currencyCode: resolvedCurrency,
+            density: density,
+            locale: locale,
+            action: action)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
     }
 }
 
