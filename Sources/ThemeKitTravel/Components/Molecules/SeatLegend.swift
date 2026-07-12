@@ -5,14 +5,29 @@
 //  Molecule. A key for a ``SeatMap`` — the fare tiers present, plus Selected and
 //  Occupied — wrapping to rows. Tier *and* selected/occupied colours come from a
 //  ``SeatPalette`` so it matches whatever the map (or a brand override) uses.
-//  Configuration flows through chainable copy-on-write modifiers (R2); the
-//  original init parameters remain for source compatibility.
+//
+//  The *arrangement* is owned by the active ``SeatLegendStyle`` from the
+//  environment (ADR-0004): the component gathers its typed data into a
+//  `SeatLegendConfiguration` and hands it to the style — `.rows(perRow: 3)`
+//  (default) is today's wrapping grid verbatim, `.vertical` stacks one entry
+//  per line, `.inline` draws a single unwrapped row, and apps can implement
+//  their own. The deprecated `.orientation(_:)` / `.perRow(_:)` modifiers
+//  forward to the matching preset and, when called, win over an ancestor's
+//  environment style. Configuration flows through chainable copy-on-write
+//  modifiers (R2); the original init parameters remain for source
+//  compatibility.
 //
 
 import SwiftUI
 import ThemeKit
 
 /// How a ``SeatLegend`` lays out its entries.
+///
+/// Superseded by ``SeatLegendStyle`` (each case maps 1:1 to a preset —
+/// `.rows` → ``RowsSeatLegendStyle``, `.vertical` → ``VerticalSeatLegendStyle``,
+/// `.inline` → ``InlineSeatLegendStyle``); kept for source compatibility until
+/// the next major, together with the deprecated ``SeatLegend/orientation(_:)``
+/// modifier.
 public enum SeatLegendOrientation: Sendable {
     /// Wraps into rows of `perRow(_:)` entries — the default.
     case rows
@@ -23,8 +38,9 @@ public enum SeatLegendOrientation: Sendable {
 }
 
 public struct SeatLegend: View {
-    @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
+    @Environment(\.seatLegendStyle) private var envStyle
 
     // Appearance/state — mutated only through the modifiers below (R2). The
     // init params are kept as a convenience/back-compat surface.
@@ -33,10 +49,14 @@ public struct SeatLegend: View {
     private var perRow: Int
     private var showsSelected = true
     private var showsOccupied = true
-    private var extraEntries: [(label: String, color: SemanticColor)] = []
+    private var extraEntries: [SeatLegendCustomEntry] = []
     private var swatchShape: SeatShape = .rounded
     private var swatchRamp: SeatSizeRamp?
-    private var orientation: SeatLegendOrientation = .rows
+    /// Bookkeeping for the deprecated `.orientation(_:)` modifier — an
+    /// explicitly chosen per-instance orientation wins over an ancestor's
+    /// `.seatLegendStyle(_:)` (source-behavior stability during the enum's
+    /// deprecation window). `nil` → environment style.
+    private var explicitOrientation: SeatLegendOrientation?
 
     public init(tiers: [SeatTier] = [.standard], palette: SeatPalette = .default, perRow: Int = 3) {
         self.tiers = tiers
@@ -44,70 +64,32 @@ public struct SeatLegend: View {
         self.perRow = max(1, perRow)
     }
 
-    private struct Entry: Identifiable { let fill: Color; let border: Color; let label: String; var id: String { label } }
-
-    private var entries: [Entry] {
-        var e = tiers.map { tier -> Entry in
-            let c = palette.colors(for: tier, theme: theme)
-            return Entry(fill: c.fill, border: c.stroke, label: tier.label)
+    /// The style the deprecated `.orientation(_:)` / `.perRow(_:)` modifiers
+    /// mapped to, or `nil` when neither was called (the normal path — the
+    /// environment style renders). `perRow` diverging from the shipped default
+    /// (3) is treated as an explicit signal too, since the pre-ADR `perRow:`
+    /// init parameter fed the exact same knob directly.
+    private var explicitStyle: AnySeatLegendStyle? {
+        switch explicitOrientation {
+        case .vertical: return AnySeatLegendStyle(VerticalSeatLegendStyle())
+        case .inline: return AnySeatLegendStyle(InlineSeatLegendStyle())
+        case .rows: return AnySeatLegendStyle(RowsSeatLegendStyle(perRow: perRow))
+        case nil: return perRow == 3 ? nil : AnySeatLegendStyle(RowsSeatLegendStyle(perRow: perRow))
         }
-        e += extraEntries.map { Entry(fill: $0.color.bg, border: $0.color.base, label: $0.label) }
-        if showsSelected {
-            let selected = palette.selectedColors(theme: theme)
-            e.append(Entry(fill: selected.fill, border: selected.stroke, label: String(themeKit: "Selected")))
-        }
-        if showsOccupied {
-            let occupied = palette.occupiedColors(theme: theme)
-            e.append(Entry(fill: occupied.fill, border: occupied.stroke, label: String(themeKit: "Occupied")))
-        }
-        return e
     }
 
     public var body: some View {
-        let items = entries
-        switch orientation {
-        case .rows:
-            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                ForEach(Array(stride(from: 0, to: items.count, by: perRow)), id: \.self) { start in
-                    HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-                        ForEach(items[start..<min(start + perRow, items.count)]) { swatch($0) }
-                        Spacer(minLength: 0)
-                    }
-                }
-            }
-        case .vertical:
-            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                ForEach(items) { swatch($0) }
-            }
-        case .inline:
-            HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-                ForEach(items) { swatch($0) }
-            }
-        }
-    }
-
-    // Legend swatches are keys, not touch targets — the ramp maps to a scaled-
-    // down side so `.swatchSize(.large)` tracks a larger map without dwarfing
-    // the labels.
-    private var swatchSide: CGFloat {
-        switch swatchRamp {
-        case nil, .regular: return 14
-        case .compact: return 12
-        case .large: return 17
-        case .xl: return 20
-        }
-    }
-
-    private func swatch(_ entry: Entry) -> some View {
-        let shape = swatchShape.anyShape(cornerRadius: 4)
-        return HStack(spacing: Theme.SpacingKey.xs.value) {
-            shape.fill(entry.fill)
-                .overlay(shape.stroke(entry.border, lineWidth: 1))
-                .frame(width: swatchSide, height: swatchSide)
-            Text(entry.label).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-                .fixedSize(horizontal: true, vertical: false)
-        }
-        .accessibilityElement(children: .combine)
+        let configuration = SeatLegendConfiguration(
+            tiers: tiers,
+            palette: palette,
+            showsSelected: showsSelected,
+            showsOccupied: showsOccupied,
+            customEntries: extraEntries,
+            swatchShape: swatchShape,
+            swatchSize: swatchRamp ?? .regular,
+            density: density,
+            locale: locale)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
     }
 
     /// Backward-compatible: adds a "Premium econ." key to the default legend.
@@ -126,7 +108,11 @@ public extension SeatLegend {
     /// The palette the swatches resolve their colours from — pass the same one
     /// the map uses so the key always matches.
     func palette(_ palette: SeatPalette) -> Self { copy { $0.palette = palette } }
-    /// Entries per row in the default `.rows` orientation.
+    /// Entries per row in the `.rows` style — superseded by the style axis:
+    /// prefer `.seatLegendStyle(.rows(perRow:))`, settable once per screen via
+    /// the environment. This modifier keeps working and, when called, wins
+    /// over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .seatLegendStyle(.rows(perRow:)) instead")
     func perRow(_ count: Int) -> Self { copy { $0.perRow = max(1, count) } }
     /// Whether the synthetic "Selected" entry is appended (default `true`).
     func showsSelected(_ on: Bool = true) -> Self { copy { $0.showsSelected = on } }
@@ -136,15 +122,20 @@ public extension SeatLegend {
     /// token's soft background and strokes with its base shade, matching how
     /// tier overrides resolve.
     func entry(_ label: String, color: SemanticColor) -> Self {
-        copy { $0.extraEntries.append((label: label, color: color)) }
+        copy { $0.extraEntries.append(SeatLegendCustomEntry(label: label, color: color)) }
     }
     /// The swatch silhouette — pass the map's ``SeatShape`` so the key matches
     /// the seats (``SeatMap`` forwards its own automatically).
     func swatchShape(_ shape: SeatShape) -> Self { copy { $0.swatchShape = shape } }
     /// Steps the swatch size alongside a map using the same ``SeatSizeRamp``.
     func swatchSize(_ ramp: SeatSizeRamp) -> Self { copy { $0.swatchRamp = ramp } }
-    /// Layout direction of the entries: `.rows` (wrap, default) · `.vertical` · `.inline`.
-    func orientation(_ orientation: SeatLegendOrientation) -> Self { copy { $0.orientation = orientation } }
+    /// Layout direction of the entries — superseded by the style axis: prefer
+    /// `.seatLegendStyle(.rows(perRow:))` / `.seatLegendStyle(.vertical)` /
+    /// `.seatLegendStyle(.inline)`, settable once per screen via the
+    /// environment. This modifier keeps working and, when called, wins over an
+    /// ancestor's environment style.
+    @available(*, deprecated, message: "Use .seatLegendStyle(.rows(perRow:)/.vertical/.inline) instead")
+    func orientation(_ orientation: SeatLegendOrientation) -> Self { copy { $0.explicitOrientation = orientation } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -163,8 +154,9 @@ public extension SeatLegend {
                        palette: SeatPalette().selected(.accent).occupied(.warning))
         }
         PreviewCase("Chained config (R2)") {
-            SeatLegend().tiers([.standard, .business]).perRow(2)
+            SeatLegend().tiers([.standard, .business])
                 .palette(SeatPalette().selected(.purple))
+                .seatLegendStyle(.rows(perRow: 2))
         }
         PreviewCase("Custom entry, tiers only") {
             SeatLegend(tiers: [.standard, .extraLegroom])
@@ -174,9 +166,11 @@ public extension SeatLegend {
         PreviewCase("Seatback swatches, large") {
             SeatLegend(tiers: [.standard, .exit]).swatchShape(.seatback).swatchSize(.large)
         }
-        PreviewCase("Vertical") { SeatLegend(tiers: [.standard, .exit]).orientation(.vertical) }
+        PreviewCase("Vertical (env style)") {
+            SeatLegend(tiers: [.standard, .exit]).seatLegendStyle(.vertical)
+        }
         PreviewCase("Inline, circle") {
-            SeatLegend(tiers: [.standard]).orientation(.inline).swatchShape(.circle)
+            SeatLegend(tiers: [.standard]).swatchShape(.circle).seatLegendStyle(.inline)
         }
     }
 }

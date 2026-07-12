@@ -4,20 +4,22 @@
 //
 //  Edition organism (F3.2 · ADR §9.8). "No flights? Take the bus/train" —
 //  a cross-sell for an alternative transport mode: mode glyph, route,
-//  price-from, optional CTA. Two archetypes: `.ribbon` (default) is a
-//  full-width notched strip that borrows TicketStub's coupon chrome — a
-//  `destinationOut` notch cut plus a dashed perforation — rotated to a
-//  *vertical* tear line between the glyph and the content; `.inline` is a
-//  flat ListRow-anatomy row for embedding between flight results.
+//  price-from, optional CTA. Presentation is style-driven
+//  (``TransportCrossSellCardStyle``, ADR-0004) — set once per screen via
+//  `.transportCrossSellCardStyle(_:)`: `.ribbon` (default, a notched
+//  TicketStub-technique coupon strip), `.inline` (a flat ListRow-anatomy
+//  row), `.tile` (a compact vertical card for grids) or `.banner` (a
+//  full-bleed, mode-tinted promo strip). Token-bound.
 //
-//  CardStyle exception (same as TicketStub): the notched tear-line shell *is*
-//  the ribbon's identity, so it deliberately does not route through CardStyle.
-//
-//  RTL: the strip is an `HStack`, so the sections mirror automatically. The
-//  tear line's x is *measured after layout* via an anchor preference (the
-//  TicketStub technique), so the notches and the dashed perforation are cut
-//  at the mirrored position by construction — no manual flip of the drawn
-//  geometry is needed (flipping the anchor-resolved path would double-mirror).
+//  ```swift
+//  TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
+//      .price(19)                       // currency via the §10 env chain
+//      .duration("6h 30m")
+//      .departures("Every 30 min from Central Station")
+//      .badge("Cheapest")
+//      .onSelect { showBusOptions() }
+//      .transportCrossSellCardStyle(.tile)
+//  ```
 //
 //  Currency: the plain `price(_:caption:)` overload resolves the code through
 //  the §10 chain inside `PriceTag` (`\.formatDefaults` > locale > "USD");
@@ -29,6 +31,11 @@ import ThemeKit
 
 /// Layout archetype of a ``TransportCrossSellCard``: notched strip (`.ribbon`),
 /// flat row (`.inline`), or a compact vertical card for grids (`.tile`).
+///
+/// Superseded by ``TransportCrossSellCardStyle`` (each case maps 1:1 to a
+/// preset — `.ribbon`/`.inline`/`.tile`, joined by the new `.banner` strip);
+/// kept for source compatibility until the next major, together with the
+/// deprecated ``TransportCrossSellCard/variant(_:)`` modifier.
 public enum TransportCrossSellVariant: Sendable { case ribbon, inline, tile }
 
 /// Size ramp of a ``TransportCrossSellCard`` — scales the mode glyph, the
@@ -85,7 +92,9 @@ public struct TransportCrossSellCard: View {
         }
     }
 
-    @Environment(\.theme) private var theme
+    @Environment(\.transportCrossSellCardStyle) private var envStyle
+    @Environment(\.componentDensity) private var density
+    @Environment(\.locale) private var locale
     @Environment(\.isReadOnly) private var isReadOnly
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -108,21 +117,22 @@ public struct TransportCrossSellCard: View {
     private var badgeText: String?
     private var ctaTitle: String?
     private var ctaAction: (() -> Void)?
-    private var variantValue: TransportCrossSellVariant = .ribbon
     private var accentOverride: SemanticColor?
     private var logoSlot: AnyView?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgBase
+    /// `nil` lets the active style pick its own default surface (`.bgBase`
+    /// for `.ribbon`/`.tile`; `.banner` always uses the mode's soft tint).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var sizeValue: TransportCrossSellSize = .medium
     private var tearStyleValue: TearStyle = .notched
     private var badgeFillValue: FillVariant = .soft
-    /// Replaces the ribbon CTA button's built-in label (action preserved).
+    /// Replaces a preset's built-in CTA label/indicator (action preserved).
     private var ctaLabelSlot: AnyView?
     private var shadowStyleValue: ThemeKitCore.ShadowStyle = .soft
-
-    /// Bespoke coupon geometry (TicketStub-class chrome) — fixed constants,
-    /// not knobs: the notch cut radius and the dash inset past the notch.
-    private let notchRadius: CGFloat = 8
-    private let dashInset: CGFloat = 6
+    /// Set by the deprecated ``variant(_:)`` modifier — an explicitly chosen
+    /// per-instance style wins over an ancestor's
+    /// `.transportCrossSellCardStyle(_:)` (source-behavior stability during
+    /// the enum's deprecation window, ADR-0004 §5).
+    private var explicitStyle: AnyTransportCrossSellCardStyle?
 
     /// R1 — mode + route endpoints (display strings; cross-sell has no FlightLeg).
     public init(_ mode: Mode, from: String, to: String) {
@@ -151,290 +161,39 @@ public struct TransportCrossSellCard: View {
         MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
     }
 
-    /// The size ramp, resolved once (token-fed paddings; Icon/PriceTag enums).
-    private var glyphIconSize: IconSize { sizeValue == .small ? .md : .lg }
-    private var sectionPad: CGFloat {
-        sizeValue == .small ? Theme.SpacingKey.sm.value : Theme.SpacingKey.md.value
-    }
-    private var ribbonPriceSize: PriceSize { sizeValue == .small ? .small : .medium }
-
     public var body: some View {
-        Group {
-            switch variantValue {
-            case .ribbon: ribbon
-            case .inline: inline
-            case .tile: tile
-            }
-        }
-        .animation(motion, value: priceAmount)
-        .animation(motion, value: badgeText)
-    }
-
-    // MARK: - Ribbon variant — notched coupon strip (TicketStub chrome, vertical tear)
-
-    private var ribbon: some View {
-        HStack(spacing: 0) {
-            glyphSection
-                .padding(sectionPad)
-            // A zero-width marker whose center is the tear line, reported up so
-            // the background carves its notches at exactly this x (mirrors under
-            // RTL by construction — the anchor resolves after layout).
-            Color.clear.frame(width: 0)
-                .anchorPreference(key: TearXAnchorKey.self, value: .center) { $0 }
-            contentSection
-                .padding(sectionPad)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .backgroundPreferenceValue(TearXAnchorKey.self) { anchor in
-            GeometryReader { proxy in
-                ribbonSurface(tearX: anchor.map { proxy[$0].x }, size: proxy.size)
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(accessibilityText)
-    }
-
-    private var glyphSection: some View {
-        VStack(spacing: Theme.SpacingKey.xs.value) {
-            Group {
-                if let logoSlot {
-                    logoSlot
-                } else {
-                    Icon(systemName: modeGlyph)
-                        .size(glyphIconSize)
-                        .accent(accent)
-                }
-            }
-            .padding(Theme.SpacingKey.sm.value)
-            .background(Circle().fill(accent.soft))
-            Text(modeLabel)
-                .textStyle(.labelSm600)
-                .foregroundStyle(theme.text(.textSecondary))
-        }
-        .accessibilityHidden(true)   // announced by the container label
-    }
-
-    private var contentSection: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                routeLine
-                if let badgeText {
-                    Badge(badgeText).badgeStyle(badgeStyle).variant(badgeFillValue).size(.small)
-                }
-            }
-            if let metaLine {
-                Text(metaLine)
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            if priceAmount != nil || ctaAction != nil {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    if priceAmount != nil { priceTag(size: ribbonPriceSize) }
-                    Spacer(minLength: 0)
-                    if ctaAction != nil {
-                        ctaControl
-                    }
-                }
-            }
-        }
-    }
-
-    /// The ribbon CTA: the caller's `.ctaLabel { }` content wrapped in the
-    /// same select action, or the stock `ThemeButton`.
-    @ViewBuilder
-    private var ctaControl: some View {
-        if let ctaLabelSlot {
-            Button { select() } label: {
-                ctaLabelSlot.contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(.isButton)
-        } else if let ctaTitle {
-            ThemeButton(ctaTitle) { select() }
-                .color(accent)
-                .size(sizeValue == .small ? .xsmall : .small)
-        }
-    }
-
-    private var routeLine: some View {
-        HStack(spacing: Theme.SpacingKey.xs.value) {
-            Text(from).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
-            // arrow.forward is direction-aware — it mirrors under RTL.
-            Icon(systemName: "arrow.forward")
-                .size(.xs)
-                .color(theme.text(.textTertiary))
-            Text(to).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
-        }
-    }
-
-    /// The coupon surface: rounded fill, two `destinationOut` semicircular
-    /// notches on the top/bottom edges at the tear x, and a vertical dashed
-    /// perforation between them (TicketStub's drawing approach, rotated 90°).
-    /// `.tearStyle(.plain)` skips the cut and the perforation entirely.
-    private func ribbonSurface(tearX: CGFloat?, size: CGSize) -> some View {
-        let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-        let notched = tearStyleValue == .notched
-        return ZStack {
-            shape
-                .fill(theme.background(surfaceKey))
-                .overlay { if notched, let tearX { notches(tearX: tearX, height: size.height) } }
-                .compositingGroup()                       // scope the destinationOut cut
-                .themeShadow(shadowStyleValue)
-            if notched, let tearX {
-                dashedLine(x: tearX, height: size.height)
-            }
-        }
-    }
-
-    /// Two circles centered on the top/bottom edges — half of each sits outside
-    /// the card, so `destinationOut` erases a clean semicircular notch.
-    private func notches(tearX: CGFloat, height: CGFloat) -> some View {
-        ZStack {
-            Circle().frame(width: notchRadius * 2, height: notchRadius * 2).position(x: tearX, y: 0)
-            Circle().frame(width: notchRadius * 2, height: notchRadius * 2).position(x: tearX, y: height)
-        }
-        .blendMode(.destinationOut)
-    }
-
-    private func dashedLine(x: CGFloat, height: CGFloat) -> some View {
-        Path { p in
-            p.move(to: CGPoint(x: x, y: notchRadius + dashInset))
-            p.addLine(to: CGPoint(x: x, y: height - notchRadius - dashInset))
-        }
-        .stroke(theme.border(.borderPrimary), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-    }
-
-    // MARK: - Inline variant — flat ListRow anatomy
-
-    private var inline: some View {
-        // En dash between endpoints is direction-neutral; the full route is
-        // spelled out in the accessibility label.
-        ListRow("\(from) – \(to)", action: ctaAction == nil || isReadOnly ? nil : { select() })
-            .subtitle(metaLine)
-            .leading {
-                Group {
-                    if let logoSlot {
-                        logoSlot
-                    } else {
-                        Icon(systemName: modeGlyph)
-                            .size(sizeValue == .small ? .sm : .md)
-                            .accent(accent)
-                    }
-                }
-            }
-            .badge(badgeText)
-            .trailing {
-                HStack(spacing: Theme.SpacingKey.xs.value) {
-                    if priceAmount != nil { priceTag(size: .small) }
-                    if ctaAction != nil {
-                        // chevron.forward mirrors under RTL.
-                        Icon(systemName: "chevron.forward")
-                            .size(.xs)
-                            .color(theme.text(.textTertiary))
-                    }
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(accessibilityText)
-    }
-
-    // MARK: - Tile variant — compact vertical card for grids
-
-    private var tile: some View {
-        let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
-        let face = VStack(spacing: Theme.SpacingKey.xs.value) {
-            Group {
-                if let logoSlot {
-                    logoSlot
-                } else {
-                    Icon(systemName: modeGlyph)
-                        .size(glyphIconSize)
-                        .accent(accent)
-                }
-            }
-            .padding(Theme.SpacingKey.sm.value)
-            .background(Circle().fill(accent.soft))
-            Text(modeLabel)
-                .textStyle(.labelSm600)
-                .foregroundStyle(theme.text(.textSecondary))
-            Text("\(from) – \(to)")   // en dash — direction-neutral under RTL
-                .textStyle(sizeValue == .small ? .labelSm600 : .labelBase600)
-                .foregroundStyle(theme.text(.textPrimary))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-            if let badgeText {
-                Badge(badgeText).badgeStyle(badgeStyle).variant(badgeFillValue).size(.small)
-            }
-            if priceAmount != nil {
-                priceTag(size: sizeValue == .small ? .small : .medium)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(sectionPad)
-        .background(theme.background(surfaceKey), in: shape)
-        .themeShadow(shadowStyleValue)
-
-        return Group {
-            if ctaAction != nil {
-                Button { select() } label: {
-                    face.contentShape(shape)
-                }
-                .buttonStyle(.plain)
-                .allowsHitTesting(!isReadOnly)
-                .accessibilityAddTraits(.isButton)
-            } else {
-                face
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityText)
-    }
-
-    // MARK: - Shared pieces
-
-    @ViewBuilder
-    private func priceTag(size: PriceSize) -> some View {
-        // No explicit code → PriceTag's omitted-currency init resolves it via
-        // the §10 chain (formatDefaults > locale currency > "USD").
-        let base = priceCurrencyCode.map { PriceTag(priceAmount ?? 0, currencyCode: $0) }
-            ?? PriceTag(priceAmount ?? 0)
-        let captioned = priceCaption.map { base.prefix($0) } ?? base.from()
-        captioned.size(size).emphasis(.hero)
-    }
-
-    /// "duration · departures" — the middle-dot separator is direction-neutral.
-    private var metaLine: String? {
-        let parts = [durationText, departuresNote].compactMap(\.self)
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    private var badgeStyle: BadgeStyle {
-        switch accent {
-        case .info: return .info
-        case .success: return .success
-        case .warning: return .warning
-        case .error: return .error
-        case .turquoise: return .turquoise
-        case .orange: return .orange
-        case .purple: return .purple
-        case .pink: return .pink
-        default: return .neutral
-        }
-    }
-
-    private var accessibilityText: String {
-        var parts: [String] = [
-            String(themeKitTravel: "\(modeLabel) from \(from) to \(to)")
-        ]
-        if let durationText { parts.append(durationText) }
-        if let departuresNote { parts.append(departuresNote) }
-        if let badgeText { parts.append(badgeText) }
-        return parts.joined(separator: ", ")
-    }
-
-    private func select() {
-        guard !isReadOnly else { return }
-        ctaAction?()
+        // The active `TransportCrossSellCardStyle` owns the entire
+        // presentation — built-ins and custom styles go through the same
+        // gate. The default `.ribbon` reproduces the classic notched-coupon
+        // look verbatim. Motion is resolved *here* (ADR-0004 §4): styles
+        // never read the motion environment themselves.
+        let configuration = TransportCrossSellCardConfiguration(
+            modeGlyph: modeGlyph,
+            modeLabel: modeLabel,
+            from: from,
+            to: to,
+            priceAmount: priceAmount,
+            priceCurrencyCode: priceCurrencyCode,
+            priceCaption: priceCaption,
+            durationText: durationText,
+            departuresNote: departuresNote,
+            badgeText: badgeText,
+            badgeFillVariant: badgeFillValue,
+            logo: logoSlot,
+            ctaTitle: ctaTitle,
+            ctaLabel: ctaLabelSlot,
+            onSelect: ctaAction,
+            isReadOnly: isReadOnly,
+            size: sizeValue,
+            tearStyle: tearStyleValue,
+            accent: accent,
+            surfaceKey: surfaceKey,
+            shadowStyle: shadowStyleValue,
+            density: density,
+            locale: locale)
+        (explicitStyle ?? envStyle).makeBody(configuration: configuration)
+            .animation(motion, value: priceAmount)
+            .animation(motion, value: badgeText)
     }
 }
 
@@ -457,35 +216,50 @@ public extension TransportCrossSellCard {
     func departures(_ note: String?) -> Self { copy { $0.departuresNote = note } }
     /// A short accent-tinted flag, e.g. `"Cheapest"`.
     func badge(_ text: String?) -> Self { copy { $0.badgeText = text } }
-    /// The call to action. In `.ribbon` it renders a button; in `.inline` the
-    /// whole row becomes tappable (with a mirrored chevron). No-op when the
-    /// subtree is `.readOnly(true)`.
+    /// The call to action. `.ribbon` renders a button; `.inline`/`.tile`/
+    /// `.banner` make the whole surface tappable (with a mirrored trailing
+    /// indicator). No-op when the subtree is `.readOnly(true)`.
     func onSelect(
         _ title: String = String(themeKitTravel: "See options"),
         perform action: @escaping () -> Void
     ) -> Self {
         copy { $0.ctaTitle = title; $0.ctaAction = action }
     }
-    /// Layout archetype: `.ribbon` (default, notched strip), `.inline` (flat
-    /// row), or `.tile` (compact vertical card for grids).
-    func variant(_ v: TransportCrossSellVariant) -> Self { copy { $0.variantValue = v } }
+    /// Layout archetype — superseded by the style axis: prefer
+    /// `.transportCrossSellCardStyle(.ribbon/.inline/.tile)`, settable once
+    /// per list via the environment (and joined by the new `.banner`
+    /// full-bleed strip). This modifier keeps working and, when called,
+    /// wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .transportCrossSellCardStyle(.ribbon/.inline/.tile) instead")
+    func variant(_ v: TransportCrossSellVariant) -> Self {
+        copy {
+            switch v {
+            case .ribbon: $0.explicitStyle = AnyTransportCrossSellCardStyle(RibbonTransportCrossSellCardStyle())
+            case .inline: $0.explicitStyle = AnyTransportCrossSellCardStyle(InlineTransportCrossSellCardStyle())
+            case .tile: $0.explicitStyle = AnyTransportCrossSellCardStyle(TileTransportCrossSellCardStyle())
+            }
+        }
+    }
     /// Size ramp: `.medium` (default) or `.small` — scales the mode glyph,
     /// the `PriceTag` and the paddings together.
     func size(_ s: TransportCrossSellSize) -> Self { copy { $0.sizeValue = s } }
     /// Ribbon tear-line chrome: `.notched` (default — the TicketStub cut +
-    /// dashed perforation) or `.plain` (an uncut rounded strip).
+    /// dashed perforation) or `.plain` (an uncut rounded strip). Ignored by
+    /// every preset except `.ribbon`.
     func tearStyle(_ t: TearStyle) -> Self { copy { $0.tearStyleValue = t } }
     /// Fill variant of the badge (`.soft` default, `.solid`, `.outline`,
     /// `.ghost`); its color keeps following the accent→style mapping.
     func badgeVariant(_ v: FillVariant) -> Self { copy { $0.badgeFillValue = v } }
-    /// Replaces the ribbon CTA button's label with caller content — the
-    /// select action, accent gating and read-only behavior are preserved.
-    /// `.inline` and `.tile` draw no CTA button, so they ignore this slot
-    /// (documented no-op).
+    /// Replaces a preset's built-in CTA button/indicator with caller
+    /// content — the select action, accent gating and read-only behavior
+    /// are preserved. `.inline` and `.tile` draw no CTA button, so they
+    /// ignore this slot (documented no-op); `.banner` renders it as the
+    /// trailing tap indicator (replacing the default chevron) since its
+    /// whole strip is the tap target.
     func ctaLabel<V: View>(@ViewBuilder _ content: () -> V) -> Self {
         copy { $0.ctaLabelSlot = AnyView(content()) }
     }
-    /// Shadow token under the ribbon/tile surface (default `.soft`).
+    /// Shadow token under a preset's drawn surface (default `.soft`).
     func shadow(_ style: ThemeKitCore.ShadowStyle) -> Self { copy { $0.shadowStyleValue = style } }
     /// Overrides the mode-tinted accent (bus `.warning`, train `.info`,
     /// ferry `.turquoise`, car `.neutral`); `nil` restores the default.
@@ -494,24 +268,16 @@ public extension TransportCrossSellCard {
     func logo<L: View>(@ViewBuilder _ content: () -> L) -> Self {
         copy { $0.logoSlot = AnyView(content()) }
     }
-    /// Surface token for the ribbon's coupon fill (default `.bgBase`); the
-    /// notch cut and dashed perforation are unaffected. `.inline` draws no
-    /// surface of its own, so the key applies to the `.ribbon` variant.
+    /// Surface token for `.ribbon`/`.tile`'s drawn fill (default `.bgBase`);
+    /// the ribbon's notch cut and dashed perforation are unaffected.
+    /// `.inline` draws no surface of its own, and `.banner` always uses the
+    /// mode's soft accent tint — both ignore this key.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
         return c
-    }
-}
-
-/// Reports the vertical tear-line x up to the surface so the notches align to
-/// the boundary between the glyph section and the content, whatever their widths.
-private struct TearXAnchorKey: PreferenceKey {
-    static let defaultValue: Anchor<CGPoint>? = nil
-    static func reduce(value: inout Anchor<CGPoint>?, nextValue: () -> Anchor<CGPoint>?) {
-        value = value ?? nextValue()
     }
 }
 
@@ -555,13 +321,13 @@ private struct TearXAnchorKey: PreferenceKey {
             .price(34)
             .duration("4h 15m")
             .badge("Fastest")
-            .variant(.inline)
             .onSelect {}
+            .transportCrossSellCardStyle(.inline)
         TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
             .price(19)
             .duration("6h 30m")
-            .variant(.inline)
             .onSelect {}
+            .transportCrossSellCardStyle(.inline)
             .readOnly()
         TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
             .price(19)
@@ -571,25 +337,25 @@ private struct TearXAnchorKey: PreferenceKey {
     .padding()
 }
 
-#Preview("Tiles · custom mode · sizes · tear/badge/shadow/ctaLabel") {
+#Preview("Tiles · banner · custom mode · sizes · tear/badge/shadow/ctaLabel") {
     ScrollView {
         VStack(spacing: Theme.SpacingKey.md.value) {
             // Tile grid — including a custom mode beyond the 4-case enum.
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                 TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
-                    .variant(.tile)
                     .price(34)
                     .badge("Fastest")
                     .onSelect {}
+                    .transportCrossSellCardStyle(.tile)
                 TransportCrossSellCard(customMode: "figure.wave", label: "Shuttle",
                                        accent: .purple, from: "Airport", to: "Center")
-                    .variant(.tile)
                     .price(9)
                     .onSelect {}
+                    .transportCrossSellCardStyle(.tile)
                 TransportCrossSellCard(.ferry, from: "Harbor", to: "North Isle")
-                    .variant(.tile)
                     .size(.small)
                     .price(12)
+                    .transportCrossSellCardStyle(.tile)
             }
             // Plain tear + solid badge + elevated shadow + custom CTA label.
             TransportCrossSellCard(.bus, from: "Riverton", to: "Lakeside")
@@ -612,6 +378,12 @@ private struct TearXAnchorKey: PreferenceKey {
                 .price(28)
                 .duration("3h 40m")
                 .onSelect {}
+            // Full-bleed promo strip, mode-tinted.
+            TransportCrossSellCard(.ferry, from: "Harbor City", to: "North Isle")
+                .price(12)
+                .departures("3 sailings daily")
+                .onSelect("See sailings") {}
+                .transportCrossSellCardStyle(.banner)
         }
         .padding()
     }
@@ -627,17 +399,20 @@ private struct TearXAnchorKey: PreferenceKey {
             .onSelect {}
         TransportCrossSellCard(.train, from: "Riverton", to: "Lakeside")
             .price(34)
-            .variant(.inline)
             .onSelect {}
+            .transportCrossSellCardStyle(.inline)
     }
     .padding()
     .environment(\.layoutDirection, .rightToLeft)
 }
 
 #Preview("Dark") {
-    let dark = Theme()
-    dark.loadTheme(named: Theme.defaultThemeName, dark: true)
-    return VStack(spacing: Theme.SpacingKey.md.value) {
+    let dark: Theme = {
+        let t = Theme()
+        t.loadTheme(named: Theme.defaultThemeName, dark: true)
+        return t
+    }()
+    VStack(spacing: Theme.SpacingKey.md.value) {
         TransportCrossSellCard(.ferry, from: "Harbor City", to: "North Isle")
             .price(12)
             .departures("3 sailings daily")

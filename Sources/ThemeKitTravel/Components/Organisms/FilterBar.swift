@@ -12,6 +12,12 @@
 //      .size(.large).accent(.turquoise)
 //  ```
 //
+//  The *arrangement* is owned by the active ``FilterBarStyle`` from the environment
+//  (ADR-0004): the component gathers its typed data into a `FilterBarConfiguration`
+//  and hands it to the style — `.chips` (default) is today's bar verbatim, `.segmented`
+//  and `.stacked` swap the whole layout, and apps can implement their own. See
+//  `FilterBarStyle.swift`.
+//
 
 import SwiftUI
 import ThemeKit
@@ -38,7 +44,9 @@ public enum FilterBarSize: Sendable { case small, medium, large }
 /// Chip selection look. `.solid` fills selected chips with the accent; `.outlined`
 /// is the design-system pill — a light hero-soft fill + a 2pt hero border when
 /// selected, a soft hairline when not (matches the Figma "Filter Section" tabs).
-/// `.ghost` draws no chrome at rest — selected chips gain a soft accent fill.
+/// `.ghost` draws no chrome at rest — selected chips gain a soft accent fill. A
+/// paint knob that composes with every ``FilterBarStyle`` preset (ADR-0004 §3) —
+/// it never becomes a style axis of its own.
 public enum FilterChipStyle: Sendable { case solid, outlined, ghost }
 
 /// How chips select. `.multiple` (default) toggles independently; `.single`
@@ -50,7 +58,9 @@ public enum FilterSelectionMode: Sendable { case multiple, single }
 public enum FilterLeadingShape: Sendable { case adaptive, circle }
 
 public struct FilterBar: View {
-    @Environment(\.theme) private var theme
+    @Environment(\.componentDensity) private var density
+    @Environment(\.filterBarStyle) private var style
+    @Environment(\.locale) private var locale
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -77,207 +87,66 @@ public struct FilterBar: View {
     private var leadingShapeVariant: FilterLeadingShape = .adaptive
     private var chipSurfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var selectionModeValue: FilterSelectionMode = .multiple
-    private var clearAllTitle: String?
+    private var clearAllTitleOverride: String?
+    /// Render-time default — re-resolves through the localization chain on
+    /// every body pass, so a live language switch is never frozen at init.
+    private var clearAllTitle: String { clearAllTitleOverride ?? String(themeKit: "Clear") }
     private var onClearAllAction: (() -> Void)?
     private var overflowFadeValue = false
     private var trailingSlot: AnyView?
-
-    @State private var collapsed = false
-    @State private var scrolledID: String?
 
     public init(_ chips: [QuickFilter], selection: Binding<Set<String>>) {   // R1
         self.chips = chips
         self._selection = selection
     }
 
-    // MARK: Derived sizing / colours (token-fed)
-
-    private var controlHeight: CGFloat { switch size { case .small: 34; case .medium: 40; case .large: 48 } }
-    private var chipTextStyle: TextStyle { switch size { case .small: .labelSm600; case .medium: .labelBase600; case .large: .labelMd600 } }
-    private var iconSize: CGFloat { switch size { case .small: 13; case .medium: 15; case .large: 17 } }
-    private var chipHPad: CGFloat { switch size { case .small: 12; case .medium: 16; case .large: 20 } }
-    private var accentBg: Color { accentColor.map { $0.solid } ?? theme.background(.bgHero) }
-    private var accentFg: Color { accentColor.map { $0.onSolid } ?? theme.text(.textSecondaryInverse) }
-    private var chipOffText: Color { accentColor.map { $0.base } ?? theme.foreground(.fgHero) }
-    private var hasLeading: Bool { onFilter != nil || onSort != nil }
-
     // MARK: Body
 
     public var body: some View {
-        HStack(spacing: spacing) {
-            if hasLeading {
-                HStack(spacing: spacing) {
-                    if let onFilter { action(filterIcon, filterTitle, onFilter) }
-                    if let onSort { action(sortIcon, sortTitle, onSort) }
-                }
-                .fixedSize()
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: spacing) {
-                    ForEach(chips) { chipView($0).id($0.id) }
-                    if onClearAllAction != nil, !selection.isEmpty {
-                        clearAllChip
-                    }
-                }
-                .padding(.trailing, 4)
-                .scrollTargetLayout()
-            }
-            .scrollPosition(id: $scrolledID, anchor: .leading)
-            .mask { overflowMask }
-            if let trailingSlot {
-                trailingSlot.fixedSize()
-            }
-        }
-        .frame(height: controlHeight)
-        .onChange(of: scrolledID) { _, newID in
-            // Collapse once the first chip has scrolled past the leading edge. Driven by
-            // the anchored item id (not a measured offset), so it's immune to the frame
-            // change that collapsing the buttons causes.
-            guard collapsible, hasLeading else { return }
-            let shouldCollapse = newID != nil && newID != chips.first?.id
-            if shouldCollapse != collapsed {
-                // Reduce-Motion / microAnimations gate: nil animation snaps.
-                withAnimation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)) {
-                    collapsed = shouldCollapse
-                }
-            }
-        }
+        // The arrangement is owned by the active `FilterBarStyle` (ADR-0004);
+        // motion is resolved *here* (MicroMotion ∧ ¬Reduce Motion) so styles
+        // never read the motion environment. Selection stays a `Binding` in
+        // the component — styles only see the read snapshot + a toggle
+        // closure (ADR-0004's ControllableState rule).
+        let configuration = FilterBarConfiguration(
+            filters: chips,
+            selection: selection,
+            selectionMode: selectionModeValue,
+            toggleFilter: toggle,
+            onFilter: onFilter,
+            onSort: onSort,
+            filterTitle: filterTitle,
+            sortTitle: sortTitle,
+            filterIcon: filterIcon,
+            sortIcon: sortIcon,
+            clearAllTitle: clearAllTitle,
+            onClearAll: onClearAllAction.map { action in
+                { selection.removeAll(); action() }
+            },
+            collapsible: collapsible,
+            size: size,
+            chipStyle: chipStyleVariant,
+            leadingShape: leadingShapeVariant,
+            chipSurfaceKey: chipSurfaceKey,
+            overflowFade: overflowFadeValue,
+            trailing: trailingSlot,
+            accent: accentColor,
+            spacing: spacing,
+            isMotionEnabled: micro && !reduceMotion,
+            density: density,
+            locale: locale)
+        style.makeBody(configuration: configuration)
     }
 
-    /// Trailing-edge gradient fade hinting at overflowed chips. Built with
-    /// `UnitPoint.leading → .trailing`, which resolve against the layout
-    /// direction — so the fade sits on the correct edge under RTL.
-    @ViewBuilder private var overflowMask: some View {
-        if overflowFadeValue {
-            LinearGradient(
-                stops: [
-                    .init(color: .black, location: 0),
-                    .init(color: .black, location: 0.92),
-                    .init(color: .clear, location: 1),
-                ],
-                startPoint: .leading, endPoint: .trailing
-            )
-        } else {
-            Rectangle()
-        }
-    }
-
-    /// The trailing ghost "Clear" chip — visible only while a selection exists.
-    private var clearAllChip: some View {
-        Button {
-            selection.removeAll()
-            onClearAllAction?()
-        } label: {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                Image(systemName: "xmark").font(.system(size: iconSize, weight: .semibold))
-                Text(clearAllTitle ?? String(themeKit: "Clear")).textStyle(chipTextStyle).fixedSize()
-            }
-            .foregroundStyle(accentColor?.base ?? theme.foreground(.fgHero))
-            .padding(.horizontal, chipHPad)
-            .frame(minHeight: controlHeight)
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(String(themeKit: "Clear all filters"))
-    }
-
-    @ViewBuilder private func action(_ icon: String, _ title: String, _ handler: @escaping () -> Void) -> some View {
-        Button(action: handler) {
-            if leadingShapeVariant == .circle {
-                // Fixed accent circle (icon-only) — the Figma "Filter Section" look.
-                Image(systemName: icon).font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(accentFg)
-                    .frame(width: controlHeight, height: controlHeight)
-                    .background(accentBg, in: Circle())
-            } else {
-                HStack(spacing: 6) {
-                    Image(systemName: icon).font(.system(size: iconSize, weight: .semibold))
-                    if !collapsed { Text(title).textStyle(chipTextStyle).fixedSize() }
-                }
-                .foregroundStyle(accentFg)
-                .padding(.horizontal, collapsed ? 0 : chipHPad)
-                .frame(width: collapsed ? controlHeight : nil, height: controlHeight)
-                .background(accentBg, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-    }
-
-    private func chipView(_ chip: QuickFilter) -> some View {
-        let isOn = selection.contains(chip.id)
-        return Button {
-            toggle(chip.id, isOn: isOn)
-        } label: {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                if let symbol = chip.systemImage {
-                    Image(systemName: symbol).font(.system(size: iconSize, weight: .semibold))
-                }
-                Text(chip.title).textStyle(chipTextStyle)
-                if let count = chip.count {
-                    countPill(count, isOn: isOn)
-                }
-            }
-            .foregroundStyle(chipTextColor(isOn: isOn))
-            .padding(.horizontal, chipHPad)
-            .frame(minHeight: controlHeight)
-            .background(chipFill(isOn: isOn), in: Capsule())
-            // strokeBorder (not stroke) insets the line fully inside the pill,
-            // so the 2pt selected border isn't clipped at the tight top/bottom
-            // curves — a centered stroke would bleed outside and look distorted.
-            .overlay(Capsule().strokeBorder(chipBorderColor(isOn: isOn),
-                                            lineWidth: chipStyleVariant == .outlined && isOn ? 2 : 1))
-            .fixedSize()
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(chip.count.map { "\(chip.title), \($0)" } ?? chip.title)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-    }
-
-    /// Selection semantics per ``FilterSelectionMode``.
-    private func toggle(_ id: String, isOn: Bool) {
+    /// Selection semantics per ``FilterSelectionMode`` — the mutation stays on
+    /// the component's `Binding`; styles call this and never touch
+    /// `selection` directly.
+    private func toggle(_ id: String) {
         switch selectionModeValue {
         case .multiple:
-            if isOn { selection.remove(id) } else { selection.insert(id) }
+            if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
         case .single:
-            selection = isOn ? [] : [id]
-        }
-    }
-
-    /// Trailing count pill — SemanticColor ladder steps, no raw colors.
-    private func countPill(_ count: Int, isOn: Bool) -> some View {
-        let tone = accentColor ?? .primary
-        let solidSelected = chipStyleVariant == .solid && isOn
-        return Text("\(count)")
-            .textStyle(.labelSm600)
-            .foregroundStyle(solidSelected ? tone.onSolid : tone.strong)
-            .padding(.horizontal, Theme.SpacingKey.xs.value)
-            .background(solidSelected ? tone.active : tone.soft, in: Capsule())
-    }
-
-    // Chip colors per style (token-fed).
-    private func chipTextColor(isOn: Bool) -> Color {
-        switch chipStyleVariant {
-        case .outlined: return theme.text(.textPrimary)
-        case .ghost: return isOn ? (accentColor?.strong ?? theme.foreground(.fgHero)) : theme.text(.textSecondary)
-        case .solid: return isOn ? accentFg : chipOffText
-        }
-    }
-    private func chipFill(isOn: Bool) -> Color {
-        switch chipStyleVariant {
-        case .outlined: return isOn ? (accentColor?.soft ?? SemanticColor.primary.soft) : theme.background(chipSurfaceKey)
-        case .ghost: return isOn ? (accentColor ?? .primary).soft : .clear
-        case .solid: return isOn ? accentBg : theme.background(chipSurfaceKey)
-        }
-    }
-    private func chipBorderColor(isOn: Bool) -> Color {
-        switch chipStyleVariant {
-        case .outlined:
-            return isOn ? (accentColor?.border ?? theme.border(.borderHero)) : theme.background(.bgElevatorTertiary)
-        case .ghost:
-            return .clear
-        case .solid:
-            return isOn ? Color.clear : theme.border(.borderPrimary)
+            selection = selection.contains(id) ? [] : [id]
         }
     }
 }
@@ -296,11 +165,13 @@ public extension FilterBar {
         copy { $0.sortTitleOverride = title; $0.sortIcon = icon; $0.onSort = action }
     }
     /// Whether the leading buttons collapse to icons on scroll (default on).
+    /// Only the `.chips` style has a scroll axis to gate this on.
     func collapsible(_ on: Bool = true) -> Self { copy { $0.collapsible = on } }
     /// Overall size (heights + typography): small / medium (default) / large.
     func size(_ size: FilterBarSize) -> Self { copy { $0.size = size } }
     /// Chip selection look — `.solid` (accent fill) or `.outlined` (the
-    /// design-system light-blue + hero-border pill).
+    /// design-system light-blue + hero-border pill). Composes with every
+    /// ``FilterBarStyle`` preset.
     func chipStyle(_ style: FilterChipStyle) -> Self { copy { $0.chipStyleVariant = style } }
     /// Leading Filter/Sort button shape — `.adaptive` (collapsing text) or
     /// `.circle` (a fixed accent circle, icon-only).
@@ -322,10 +193,11 @@ public extension FilterBar {
     /// then calls `perform` (analytics, refetch…).
     func onClearAll(_ title: String = String(themeKit: "Clear"),
                     perform action: @escaping () -> Void) -> Self {
-        copy { $0.clearAllTitle = title; $0.onClearAllAction = action }
+        copy { $0.clearAllTitleOverride = title; $0.onClearAllAction = action }
     }
     /// Fades the scroller's trailing edge with a gradient mask as an overflow
     /// hint (RTL-safe — `UnitPoint.leading/.trailing` mirror with the layout).
+    /// Only the `.chips` style has a scroll axis to fade.
     func overflowFade(_ on: Bool = true) -> Self { copy { $0.overflowFadeValue = on } }
     /// Accessory pinned after the chip scroller (canonical `.trailing { }`
     /// slot) — e.g. a results counter or a "View map" link. Evaluated
@@ -342,55 +214,50 @@ public extension FilterBar {
 }
 
 #Preview {
-    struct Demo: View {
-        @State private var sel: Set<String> = ["8"]
-        var body: some View {
-            VStack(spacing: 20) {
-                FilterBar([
-                    QuickFilter("8+ rating", id: "8"), QuickFilter("Ultra all-inclusive"), QuickFilter("All-inclusive"),
-                    QuickFilter("Seafront"), QuickFilter("Aquapark"), QuickFilter("Free cancellation"),
-                ], selection: $sel)
-                .onFilter { }.onSort { }
-                FilterBar([QuickFilter("Cheapest"), QuickFilter("Fastest"), QuickFilter("Direct")], selection: $sel)
-                    .size(.small).accent(.turquoise).onFilter { }
-                // Figma "Filter Section" look — outlined pills + circle buttons.
-                FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
-                           QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
-                    .chipStyle(.outlined).leadingShape(.circle).size(.small)
-                    .onFilter { }.onSort { }
-                // Outlined honors the accent — turquoise soft fill + turquoise border.
-                FilterBar([QuickFilter("Beachfront", id: "8"), QuickFilter("Pool"),
-                           QuickFilter("Spa")], selection: $sel)
-                    .accent(.turquoise).chipStyle(.outlined).size(.small)
-                // Unselected chips on a tinted surface.
-                FilterBar([QuickFilter("Breakfast", id: "8"), QuickFilter("Pet friendly"),
-                           QuickFilter("Parking")], selection: $sel)
-                    .chipSurface(.bgSecondaryLight).size(.small)
-                // Icons + counts, single-select, clear-all ghost chip, overflow fade.
-                FilterBar([
-                    QuickFilter("Beach", id: "8", systemImage: "beach.umbrella", count: 24),
-                    QuickFilter("Pool", systemImage: "figure.pool.swim", count: 9),
-                    QuickFilter("Spa", systemImage: "sparkles", count: 3),
-                    QuickFilter("Gym", systemImage: "dumbbell", count: 12),
-                ], selection: $sel)
-                    .selectionMode(.single)
-                    .onClearAll { }
-                    .overflowFade()
-                    .size(.small)
-                // Ghost chips + a trailing pinned slot.
-                FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
-                           QuickFilter("Direct")], selection: $sel)
-                    .chipStyle(.ghost).size(.small)
-                    .trailing {
-                        Text("128 stays").textStyle(.labelSm600)
-                            .padding(.horizontal, Theme.SpacingKey.sm.value)
-                    }
-                // Token-fed spacing overload.
-                FilterBar([QuickFilter("Nonstop", id: "8"), QuickFilter("Refundable")], selection: $sel)
-                    .spacing(Theme.SpacingKey.md).size(.small).onFilter { }
+    @Previewable @State var sel: Set<String> = ["8"]
+    VStack(spacing: 20) {
+        FilterBar([
+            QuickFilter("8+ rating", id: "8"), QuickFilter("Ultra all-inclusive"), QuickFilter("All-inclusive"),
+            QuickFilter("Seafront"), QuickFilter("Aquapark"), QuickFilter("Free cancellation"),
+        ], selection: $sel)
+        .onFilter { }.onSort { }
+        FilterBar([QuickFilter("Cheapest"), QuickFilter("Fastest"), QuickFilter("Direct")], selection: $sel)
+            .size(.small).accent(.turquoise).onFilter { }
+        // Figma "Filter Section" look — outlined pills + circle buttons.
+        FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
+                   QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
+            .chipStyle(.outlined).leadingShape(.circle).size(.small)
+            .onFilter { }.onSort { }
+        // Outlined honors the accent — turquoise soft fill + turquoise border.
+        FilterBar([QuickFilter("Beachfront", id: "8"), QuickFilter("Pool"),
+                   QuickFilter("Spa")], selection: $sel)
+            .accent(.turquoise).chipStyle(.outlined).size(.small)
+        // Unselected chips on a tinted surface.
+        FilterBar([QuickFilter("Breakfast", id: "8"), QuickFilter("Pet friendly"),
+                   QuickFilter("Parking")], selection: $sel)
+            .chipSurface(.bgSecondaryLight).size(.small)
+        // Icons + counts, single-select, clear-all ghost chip, overflow fade.
+        FilterBar([
+            QuickFilter("Beach", id: "8", systemImage: "beach.umbrella", count: 24),
+            QuickFilter("Pool", systemImage: "figure.pool.swim", count: 9),
+            QuickFilter("Spa", systemImage: "sparkles", count: 3),
+            QuickFilter("Gym", systemImage: "dumbbell", count: 12),
+        ], selection: $sel)
+            .selectionMode(.single)
+            .onClearAll { }
+            .overflowFade()
+            .size(.small)
+        // Ghost chips + a trailing pinned slot.
+        FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
+                   QuickFilter("Direct")], selection: $sel)
+            .chipStyle(.ghost).size(.small)
+            .trailing {
+                Text("128 stays").textStyle(.labelSm600)
+                    .padding(.horizontal, Theme.SpacingKey.sm.value)
             }
-            .padding(.vertical)
-        }
+        // Token-fed spacing overload.
+        FilterBar([QuickFilter("Nonstop", id: "8"), QuickFilter("Refundable")], selection: $sel)
+            .spacing(Theme.SpacingKey.md).size(.small).onFilter { }
     }
-    return Demo()
+    .padding(.vertical)
 }
