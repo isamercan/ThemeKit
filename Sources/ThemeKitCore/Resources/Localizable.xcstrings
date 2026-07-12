@@ -780,6 +780,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Now boarding": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Occupied": {
       "comment": "A description of a seat's state: \"Occupied\", \"Selected\" or \"Available\".",
       "extractionState": "manual",

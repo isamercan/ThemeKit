@@ -13,6 +13,13 @@
 //  position, not by letter (that ambiguity is inherent). Use `.aisleWidth` for a
 //  tighter gap.
 //
+//  The *arrangement* is owned by the active ``SeatMapStyle`` from the environment
+//  (ADR-0004, Class B): the component builds the cabin grid, passenger rail, deck
+//  selector, legend and summary bar — fully wired (selection, pinch-to-zoom, deck
+//  filtering) — into a `SeatMapConfiguration` and hands it to the style. `.cabin`
+//  (default) is today's arrangement verbatim; `.grid` and `.schematic` rearrange
+//  the same units; apps can implement their own. See `SeatMapStyle.swift`.
+//
 
 import SwiftUI
 import ThemeKit
@@ -43,6 +50,7 @@ public struct SeatMap: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    @Environment(\.seatMapStyle) private var style
 
     private let sections: [SeatSection]
     private let index: SeatIndex
@@ -72,6 +80,7 @@ public struct SeatMap: View {
     private var seatShape: SeatShape = .rounded
     private var legendPlacement: LegendPlacement = .bottom
     private var fuselageSurfaceKey: Theme.BackgroundColorKey = .bgSecondaryLight
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var deckLabelProvider: ((Int) -> String)?
     private var zoomBinding: Binding<CGFloat>?
     private var sectionHeaderSlot: ((String) -> AnyView)?
@@ -108,19 +117,33 @@ public struct SeatMap: View {
     }
 
     public var body: some View {
-        VStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
-            if passengerMode {
-                PassengerRail(passengers: passengers, assignment: assignment ?? .constant([:]), active: $activePassenger, accent: accentOverride)
-            }
-            if index.floors.count > 1 {
+        style.makeBody(configuration: configuration)
+    }
+
+    /// The pre-wired units + typed signals handed to the active
+    /// ``SeatMapStyle`` (ADR-0004, Class B): the grid, rail, deck selector,
+    /// legend and summary bar are already *built* — a style arranges them,
+    /// never re-wires selection/zoom/deck state (that stays here).
+    private var configuration: SeatMapConfiguration {
+        SeatMapConfiguration(
+            cabinGrid: AnyView(cabin.modifier(PinchZoom(enabled: zoomable, zoom: zoomBinding ?? $zoom))),
+            passengerRail: passengerMode ? AnyView(
+                PassengerRail(passengers: passengers, assignment: assignment ?? .constant([:]),
+                              active: $activePassenger, accent: accentOverride)
+            ) : nil,
+            deckSelector: index.floors.count > 1 ? AnyView(
                 DeckSelector(floors: index.floors, active: $activeFloor, accent: accentOverride,
                              label: deckLabelProvider ?? { (floor: Int) in String(themeKit: "Deck \(floor)") })
-            }
-            if legendVisible, legendPlacement == .top { legendView }
-            cabin.modifier(PinchZoom(enabled: zoomable, zoom: zoomBinding ?? $zoom))
-            if legendVisible, legendPlacement == .bottom { legendView }
-            if showsInfo || summarySlot != nil { summaryView }
-        }
+            ) : nil,
+            legend: legendVisible ? AnyView(legendView) : nil,
+            summaryBar: (showsInfo || summarySlot != nil) ? AnyView(summaryView) : nil,
+            selectedCount: selection.count,
+            accent: accentOverride,
+            surfaceKey: surfaceKey,
+            seatShape: seatShape,
+            legendPlacement: legendPlacement,
+            density: density,
+            locale: locale)
     }
 
     private var legendVisible: Bool { showsLegend && legendPlacement != .hidden }
@@ -368,6 +391,11 @@ public extension SeatMap {
     func legendPlacement(_ placement: LegendPlacement) -> Self { copy { $0.legendPlacement = placement } }
     /// Surface fill of the fuselage frame (default `.bgSecondaryLight`).
     func fuselageSurface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.fuselageSurfaceKey = key } }
+    /// Explicit surface fill for a ``SeatMapStyle`` preset that draws its own
+    /// chrome around the units (e.g. ``SchematicSeatMapStyle``'s fuselage
+    /// silhouette). `.cabin`/`.grid` don't draw chrome, so they ignore it;
+    /// unset, each preset falls back to its own default.
+    func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
     /// Custom deck-pill titles for multi-deck cabins, e.g. `{ $0 == 1 ? "Main" : "Upper" }`.
     func deckLabel(_ label: @escaping (Int) -> String) -> Self { copy { $0.deckLabelProvider = label } }
     /// Pinch-to-zoom with the zoom scale exposed through the caller's binding —
@@ -571,7 +599,9 @@ private struct ExitBand: View {
 
 /// The aircraft body used by `SeatMap.fuselage()` — a tapered nose + cockpit hint.
 /// `surfaceKey` comes from `SeatMap.fuselageSurface(_:)` (default `.bgSecondaryLight`).
-private struct FuselageView: View {
+/// Internal (not `private`) so ``SchematicSeatMapStyle`` (`SeatMapStyle.swift`)
+/// can reuse the same silhouette for its fuselage-framed preset.
+struct FuselageView: View {
     @Environment(\.theme) private var theme
     var surfaceKey: Theme.BackgroundColorKey = .bgSecondaryLight
     var body: some View {

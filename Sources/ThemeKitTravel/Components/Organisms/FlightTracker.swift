@@ -4,15 +4,20 @@
 //
 //  Edition organism (F3.3 · ADR §9.9). The live status/gate screen — status
 //  badge, route with an en-route progress treatment, schedule vs estimate,
-//  gate/terminal/belt facts and a phase timeline. Composes ThemeKit's neutral
-//  `Card`, `FlightStatusBadge`, `FlightRoute`, `KeyValueTable` and `Steps` —
-//  nothing is re-implemented here.
+//  gate/terminal/belt facts and a phase timeline. The arrangement is owned by
+//  the active ``FlightTrackerStyle`` from the environment (ADR-0004): the
+//  component gathers its typed live-status data into a
+//  ``FlightTrackerConfiguration`` and hands it to the style — `.board`
+//  (default) is today's tracker verbatim, `.compact`/`.timeline`/`.banner`
+//  swap the whole layout, and apps can implement their own. Card-shaped
+//  presets keep composing the neutral `Card`, so `.cardStyle(_:)` still swaps
+//  the chrome independently.
 //
 //  Stateless by construction (house rule 1): the app polls or streams and
 //  re-renders with a fresh `FlightStatusInfo` — no `Task`, no timers. Delay
 //  rendering: when an estimate differs from the scheduled time, the scheduled
 //  time strikes through in `textTertiary` and the estimate renders in the
-//  status tone (`FlightStatus.semantic`).
+//  status tone (`FlightStatus.semantic`) — see `FlightTrackerConfiguration`.
 //
 //  ## Status-change announcement pattern (a11y live region)
 //  The header is one combined VoiceOver element ("Skyline Air, IST to LHR,
@@ -21,33 +26,40 @@
 //  watches that transition with `.onChange(of: info.status)` and posts an
 //  `AccessibilityNotification.Announcement`, gated to an actual value change,
 //  so VoiceOver interrupts with "Delayed, estimated departure 2:20 PM" the
-//  moment the poll flips the status. This only fires while the same
-//  `FlightTracker` stays in the hierarchy (identity-preserving re-render); if
-//  a host rebuilds the screen from scratch it should post its own announcement.
+//  moment the poll flips the status. This lives on the component's card
+//  shell — not in any style — so it keeps firing under every preset. This
+//  only fires while the same `FlightTracker` stays in the hierarchy
+//  (identity-preserving re-render); if a host rebuilds the screen from
+//  scratch it should post its own announcement.
 //
 //  ```swift
 //  FlightTracker(info)
 //      .progress(0.62)
 //      .updated(lastPoll)
 //      .details([("Aircraft", "A321neo")])
+//      .flightTrackerStyle(.timeline)
 //  ```
 //
 
 import SwiftUI
 import ThemeKit
 
-/// Layout archetype of a ``FlightTracker``: the full status board (`.board`,
-/// default) or a one-row status strip (`.compact`) for lists and widgets.
+/// Layout archetype of a ``FlightTracker``. Superseded by ``FlightTrackerStyle``
+/// (ADR-0004) — every case maps 1:1 to a preset (`.board` →
+/// `.flightTrackerStyle(.board)`, `.compact` → `.flightTrackerStyle(.compact)`,
+/// plus the new `.timeline`/`.banner`); the enum remains for source
+/// compatibility and is removed at the next major.
 public enum FlightTrackerVariant: Sendable { case board, compact }
 
 /// The live flight status board — badge, route + progress, schedule vs
 /// estimate, gate/terminal/belt facts and a phase timeline, on a `Card` shell.
 public struct FlightTracker: View {
-    @Environment(\.theme) private var theme
     @Environment(\.locale) private var locale
     @Environment(\.isReadOnly) private var isReadOnly
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.componentDensity) private var density
+    @Environment(\.flightTrackerStyle) private var envStyle
 
     private let info: FlightStatusInfo
 
@@ -57,13 +69,16 @@ public struct FlightTracker: View {
     private var extraDetails: [(String, String)] = []
     private var timelineVisible = true
     private var accentOverride: SemanticColor?
-    private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    /// `nil` → the style's own default surface (the built-ins use `.bgWhite`).
+    private var surfaceKey: Theme.BackgroundColorKey?
     private var elevationValue: CardElevation = .soft
     private var footerSlot: AnyView?
-    private var variantValue: FlightTrackerVariant = .board
+    /// Style set by the deprecated `.variant(_:)`; wins over the environment
+    /// style (ADR-0004 §5 — source-behavior stability during migration).
+    private var explicitStyle: AnyFlightTrackerStyle?
     private var showsFactsValue = true
     private var showsEstimatesValue = true
-    /// Replaces the built-in airline/route/badge header (`.board` only).
+    /// Replaces the built-in airline/route/badge header (`.board`/`.timeline`).
     private var headerSlot: AnyView?
     private var checkInTitleOverride: String?
     private var boardingTitleOverride: String?
@@ -81,9 +96,9 @@ public struct FlightTracker: View {
 
     // MARK: Derived
 
-    /// Tone for the progress treatment and estimates: the explicit accent, or
-    /// the status's own semantic colour (`FlightStatus.semantic`).
-    private var tone: SemanticColor { accentOverride ?? info.status.semantic }
+    /// The active style: the deprecated `.variant(_:)`'s explicit choice wins
+    /// over the ancestor `.flightTrackerStyle(_:)` (ADR-0004 §5).
+    private var resolvedStyle: AnyFlightTrackerStyle { explicitStyle ?? envStyle }
 
     private var motion: Animation? {
         MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion)
@@ -93,292 +108,52 @@ public struct FlightTracker: View {
         progressValue.map { min(max($0, 0), 1) }
     }
 
-    private var timeFormat: Date.FormatStyle {
-        Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)
-    }
-
-    /// An estimate "counts" only when it moves the schedule by a minute or more.
-    private func meaningfulEstimate(_ estimate: Date?, vs scheduled: Date) -> Date? {
-        guard let estimate, abs(estimate.timeIntervalSince(scheduled)) >= 60 else { return nil }
-        return estimate
-    }
-
-    private var departureEstimate: Date? { meaningfulEstimate(info.estimatedDeparture, vs: info.leg.departure) }
-    private var arrivalEstimate: Date? { meaningfulEstimate(info.estimatedArrival, vs: info.leg.arrival) }
-
-    /// "+35m" delay shown on the badge while the flight is delayed.
-    private var delayText: String? {
-        guard info.status == .delayed, let estimate = departureEstimate else { return nil }
-        let minutes = Int(estimate.timeIntervalSince(info.leg.departure) / 60)
-        guard minutes > 0 else { return nil }
-        let h = minutes / 60, m = minutes % 60
-        return h > 0 ? "+\(h)h \(m)m" : "+\(m)m"
+    /// "Updated 2 minutes ago" — formatted with the environment locale.
+    private var updatedText: String? {
+        updatedDate.map {
+            String(themeKitTravel: "Updated \($0.formatted(.relative(presentation: .named).locale(locale)))")
+        }
     }
 
     // MARK: Body
 
     public var body: some View {
-        let card = Card {
-            switch variantValue {
-            case .board: content
-            case .compact: compactStrip
+        // The arrangement is owned by the active `FlightTrackerStyle`; the
+        // status-change announcement and the progress-motion animation stay
+        // *here*, wrapping the style's output, so both keep firing under
+        // every preset (see the header doc's a11y note).
+        let configuration = FlightTrackerConfiguration(
+            statusInfo: info,
+            progress: clampedProgress,
+            updatedText: updatedText,
+            details: extraDetails,
+            showsTimeline: timelineVisible,
+            showsFacts: showsFactsValue,
+            showsEstimates: showsEstimatesValue,
+            checkInTitle: checkInTitleOverride ?? String(themeKitTravel: "Check-in"),
+            boardingTitle: boardingTitleOverride ?? String(themeKitTravel: "Boarding"),
+            departedTitle: departedTitleOverride ?? String(themeKitTravel: "Departed"),
+            arrivedTitle: arrivedTitleOverride ?? String(themeKitTravel: "Arrived"),
+            contentPadding: contentPaddingKey,
+            progressContent: progressSlot,
+            header: headerSlot,
+            footer: footerSlot,
+            timelineSize: timelineSizeValue,
+            accent: accentOverride,
+            surfaceKey: surfaceKey,
+            elevation: elevationValue,
+            isReadOnly: isReadOnly,
+            density: density,
+            locale: locale)
+        resolvedStyle.makeBody(configuration: configuration)
+            .animation(motion, value: clampedProgress)
+            // Live-region pattern: announce the transition, gated to a real change.
+            .onChange(of: info.status) { oldValue, newValue in
+                guard oldValue != newValue else { return }
+                AccessibilityNotification.Announcement(
+                    [newValue.label, configuration.estimateSummary()].compactMap { $0 }.joined(separator: ", ")
+                ).post()
             }
-        }
-            .contentPadding(contentPaddingKey)
-            .surface(surfaceKey)
-            .elevation(elevationValue)
-        Group {
-            if let footerSlot {
-                card.footer {
-                    // Read-only surfaces block interaction in slot-hosted
-                    // actions too — the only tappable area the tracker can host.
-                    footerSlot.allowsHitTesting(!isReadOnly)
-                }
-            } else {
-                card
-            }
-        }
-        .animation(motion, value: clampedProgress)
-        // Live-region pattern: announce the transition, gated to a real change.
-        .onChange(of: info.status) { oldValue, newValue in
-            guard oldValue != newValue else { return }
-            AccessibilityNotification.Announcement(
-                [newValue.label, estimateSummary].compactMap { $0 }.joined(separator: ", ")
-            ).post()
-        }
-    }
-
-    private var content: some View {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-            if let headerSlot { headerSlot } else { header }
-            route
-            if showsEstimatesValue, departureEstimate != nil || arrivalEstimate != nil {
-                estimateRows
-            }
-            if showsFactsValue, !factRows.isEmpty {
-                KeyValueTable(rows: factRows)
-            }
-            if timelineVisible {
-                Steps(phases).size(timelineSizeValue)
-            }
-            if let updatedDate {
-                updatedCaption(updatedDate)
-            }
-        }
-    }
-
-    // MARK: Compact variant — one-row status strip
-
-    /// One combined VoiceOver element, like the board header; the status
-    /// announcement `onChange` on the card shell covers this variant too.
-    private var compactStrip: some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            FlightStatusBadge(info.status).time(delayText)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(info.leg.origin) – \(info.leg.destination)")
-                    .textStyle(.labelBase600)
-                    .foregroundStyle(theme.text(.textPrimary))
-                Text(info.leg.airline)
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .lineLimit(1)
-            Spacer(minLength: Theme.SpacingKey.sm.value)
-            if showsEstimatesValue, let estimate = departureEstimate ?? arrivalEstimate {
-                Text(estimate.formatted(timeFormat))
-                    .textStyle(.labelBase600)
-                    .foregroundStyle(tone.base)
-            } else {
-                Text(info.leg.departure.formatted(timeFormat))
-                    .textStyle(.labelBase600)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(headerSummary)
-    }
-
-    // MARK: Header — one combined VoiceOver element
-
-    private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(info.leg.airline)
-                    .textStyle(.labelLg600)
-                    .foregroundStyle(theme.text(.textPrimary))
-                Text("\(info.leg.origin) – \(info.leg.destination)")
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            Spacer(minLength: Theme.SpacingKey.sm.value)
-            FlightStatusBadge(info.status).time(delayText)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(headerSummary)
-    }
-
-    /// "Skyline Air, IST to LHR, Delayed, estimated departure 2:20 PM".
-    private var headerSummary: String {
-        [
-            info.leg.airline,
-            String(themeKitTravel: "\(info.leg.origin) to \(info.leg.destination)"),
-            info.status.label,
-            estimateSummary,
-        ].compactMap { $0 }.joined(separator: ", ")
-    }
-
-    private var estimateSummary: String? {
-        if let estimate = departureEstimate {
-            return String(themeKitTravel: "estimated departure \(estimate.formatted(timeFormat))")
-        }
-        if let estimate = arrivalEstimate {
-            return String(themeKitTravel: "estimated arrival \(estimate.formatted(timeFormat))")
-        }
-        return nil
-    }
-
-    // MARK: Route + progress treatment
-
-    @ViewBuilder
-    private var route: some View {
-        VStack(spacing: Theme.SpacingKey.sm.value) {
-            FlightRoute(
-                from: info.leg.origin, to: info.leg.destination,
-                departure: info.leg.departure, arrival: info.leg.arrival
-            )
-            .stops(info.leg.stops)
-            if let fraction = clampedProgress {
-                if let progressSlot {
-                    progressSlot(fraction)
-                } else {
-                    RouteProgressTrack(fraction: fraction, tone: tone)
-                }
-            }
-        }
-    }
-
-    // MARK: Schedule vs estimate
-
-    private var estimateRows: some View {
-        VStack(spacing: 0) {
-            if let estimate = departureEstimate {
-                estimateRow(String(themeKitTravel: "Departure"), scheduled: info.leg.departure, estimate: estimate)
-            }
-            if departureEstimate != nil && arrivalEstimate != nil {
-                DividerView().size(.small)
-            }
-            if let estimate = arrivalEstimate {
-                estimateRow(String(themeKitTravel: "Arrival"), scheduled: info.leg.arrival, estimate: estimate)
-            }
-        }
-    }
-
-    private func estimateRow(_ label: String, scheduled: Date, estimate: Date) -> some View {
-        HStack {
-            Text(label)
-                .textStyle(.bodyBase400)
-                .foregroundStyle(theme.text(.textSecondary))
-            Spacer(minLength: Theme.SpacingKey.md.value)
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                Text(scheduled.formatted(timeFormat))
-                    .textStyle(.bodyBase400)
-                    .strikethrough()
-                    .foregroundStyle(theme.text(.textTertiary))
-                Text(estimate.formatted(timeFormat))
-                    .textStyle(.labelBase600)
-                    .foregroundStyle(tone.base)
-            }
-        }
-        .padding(.vertical, Theme.SpacingKey.sm.value)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(
-            themeKitTravel: "\(label): scheduled \(scheduled.formatted(timeFormat)), estimated \(estimate.formatted(timeFormat))"
-        ))
-    }
-
-    // MARK: Facts — gate / terminal / desk / belt (+ caller details)
-
-    private var factRows: [KeyValueTable.Row] {
-        var rows: [KeyValueTable.Row] = []
-        if let terminal = info.terminal { rows.append(.init(String(themeKitTravel: "Terminal"), value: terminal)) }
-        if let gate = info.gate { rows.append(.init(String(themeKitTravel: "Gate"), value: gate)) }
-        if let desk = info.checkInDesk { rows.append(.init(String(themeKitTravel: "Check-in desk"), value: desk)) }
-        if let belt = info.baggageBelt { rows.append(.init(String(themeKitTravel: "Baggage belt"), value: belt)) }
-        if let aircraft = info.aircraft { rows.append(.init(String(themeKitTravel: "Aircraft"), value: aircraft)) }
-        rows.append(contentsOf: extraDetails.map { .init($0.0, value: $0.1) })
-        return rows
-    }
-
-    // MARK: Phase timeline — Check-in → Boarding → Departed → Arrived
-
-    private var phases: [Steps.Step] {
-        let titles = (
-            checkIn: checkInTitleOverride ?? String(themeKitTravel: "Check-in"),
-            boarding: boardingTitleOverride ?? String(themeKitTravel: "Boarding"),
-            departed: departedTitleOverride ?? String(themeKitTravel: "Departed"),
-            arrived: arrivedTitleOverride ?? String(themeKitTravel: "Arrived")
-        )
-        let states: [StepState]
-        switch info.status {
-        case .onTime, .delayed: states = [.active, .todo, .todo, .todo]
-        case .boarding:         states = [.done, .active, .todo, .todo]
-        case .gateClosed:       states = [.done, .done, .active, .todo]
-        case .departed:         states = [.done, .done, .done, .active]
-        case .arrived:          states = [.done, .done, .done, .done]
-        case .cancelled:        states = [.done, .error, .todo, .todo]
-        }
-        return [
-            .init(titles.checkIn, state: states[0]),
-            .init(titles.boarding, state: states[1]),
-            .init(titles.departed, state: states[2]),
-            // While en route, the Ant `percent` ring mirrors the route progress.
-            .init(titles.arrived, state: states[3],
-                  percent: states[3] == .active ? clampedProgress : nil),
-        ]
-    }
-
-    // MARK: Updated caption
-
-    private func updatedCaption(_ date: Date) -> some View {
-        Text(String(themeKitTravel: "Updated \(date.formatted(.relative(presentation: .named).locale(locale)))"))
-            .textStyle(.bodySm400)
-            .foregroundStyle(theme.text(.textTertiary))
-    }
-}
-
-// MARK: - Route progress track (private — the §9.9 "progress treatment")
-
-/// A token-fed en-route bar under the `FlightRoute` path: a hairline track, a
-/// status-tinted fill and an airplane glyph riding the fill's leading→trailing
-/// edge. Built from leading-aligned layout so it mirrors under RTL; the glyph
-/// flips with the layout direction.
-private struct RouteProgressTrack: View {
-    let fraction: Double
-    let tone: SemanticColor
-    @Environment(\.theme) private var theme
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(theme.border(.borderPrimary))
-                    .frame(height: 3)
-                Capsule()
-                    .fill(tone.solid)
-                    .frame(width: max(6, geo.size.width * fraction), height: 3)
-                    .overlay(alignment: .trailing) {
-                        Image(systemName: "airplane")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(tone.base)
-                            .flipsForRightToLeftLayoutDirection(true)
-                    }
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-        }
-        .frame(height: 16)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(themeKitTravel: "Flight progress"))
-        .accessibilityValue(String(themeKitTravel: "\(Int((fraction * 100).rounded())) percent"))
     }
 }
 
@@ -402,8 +177,10 @@ public extension FlightTracker {
     /// `nil` (default) derives from the status (`FlightStatus.semantic`).
     func accent(_ color: SemanticColor?) -> Self { copy { $0.accentOverride = color } }
 
-    /// Surface fill for the card shell (background token key, default `.bgWhite`)
-    /// — threaded into the active `CardStyle` via the composed `Card`.
+    /// Surface fill for the card shell (background token key). When unset,
+    /// the active ``FlightTrackerStyle`` picks its own default (`.board`/
+    /// `.compact`/`.timeline` use `.bgWhite`) — threaded into the active
+    /// `CardStyle` via the composed `Card`.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
 
     /// Card shell elevation: none / soft (default) / elevated.
@@ -416,19 +193,29 @@ public extension FlightTracker {
         copy { $0.footerSlot = AnyView(content()) }
     }
 
-    /// Layout archetype: `.board` (default, the full status card) or
-    /// `.compact` — a one-row badge + route + time strip for lists/widgets.
-    func variant(_ v: FlightTrackerVariant) -> Self { copy { $0.variantValue = v } }
+    /// Layout archetype. Maps 1:1 onto the ``FlightTrackerStyle`` presets and,
+    /// when called, wins over the environment style (source-behavior
+    /// stability during migration — ADR-0004 §5).
+    @available(*, deprecated,
+               message: "Use .flightTrackerStyle(_:) — e.g. .variant(.compact) becomes .flightTrackerStyle(.compact)")
+    func variant(_ v: FlightTrackerVariant) -> Self {
+        copy {
+            switch v {
+            case .board: $0.explicitStyle = AnyFlightTrackerStyle(BoardFlightTrackerStyle())
+            case .compact: $0.explicitStyle = AnyFlightTrackerStyle(CompactFlightTrackerStyle())
+            }
+        }
+    }
 
-    /// Show the gate/terminal/desk/belt facts grid (default on; `.board` only).
+    /// Show the gate/terminal/desk/belt facts grid (default on; `.board`/`.timeline`).
     func showsFacts(_ on: Bool = true) -> Self { copy { $0.showsFactsValue = on } }
 
-    /// Show the schedule-vs-estimate rows (and the `.compact` estimate time)
-    /// when estimates differ meaningfully from the schedule (default on).
+    /// Show the schedule-vs-estimate rows (and the `.compact`/`.banner`
+    /// estimate time) when estimates differ meaningfully from the schedule (default on).
     func showsEstimates(_ on: Bool = true) -> Self { copy { $0.showsEstimatesValue = on } }
 
     /// Replaces the built-in airline/route/badge header (canonical
-    /// `.header { }` slot; `.board` variant). The status-change VoiceOver
+    /// `.header { }` slot; `.board`/`.timeline`). The status-change VoiceOver
     /// announcement lives on the card shell, not the header — it keeps firing
     /// with a custom header.
     func header<V: View>(@ViewBuilder _ content: () -> V) -> Self {
@@ -531,10 +318,10 @@ public extension FlightTracker {
         VStack(spacing: Theme.SpacingKey.lg.value) {
             // Compact strips — delayed shows the estimate in the status tone.
             FlightTracker(.init(leg: leg, status: .departed))
-                .variant(.compact)
+                .flightTrackerStyle(.compact)
             FlightTracker(.init(leg: leg, status: .delayed,
                                 estimatedDeparture: dep.addingTimeInterval(45 * 60)))
-                .variant(.compact)
+                .flightTrackerStyle(.compact)
 
             // Header slot + custom progress content + renamed phases.
             FlightTracker(.init(leg: leg, status: .departed, gate: "B12", terminal: "1"))

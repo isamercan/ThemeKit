@@ -16,6 +16,15 @@
 //  initial states only. Page transitions slide directionally on leading /
 //  trailing edges (mirrored under RTL automatically), gated by `MicroMotion`.
 //
+//  Style (ADR-0004, Class B): the component owns every live unit (selection,
+//  page identity/transition/motion, dock wiring) — arrangement is delegated
+//  to the active ``CheckInFlowStyle`` (`CheckInFlowStyle.swift`) via
+//  `.checkInFlowStyle(_:)`. `.steps`/`.bar` are the former
+//  ``CheckInProgressStyle`` cases, deprecate-forwarded through
+//  `.progressStyle(_:)`; `.paged` is new. Navigation (advance/back/jump) and
+//  the `canAdvance`/`onComplete` gates stay in the component — styles only
+//  arrange the pre-wired `Steps` header, page and dock units.
+//
 //  ```swift
 //  CheckInFlow(steps: [.init("Passengers", state: .active),
 //                      .init("Seats", state: .todo),
@@ -49,7 +58,11 @@ public enum PageTransition: Sendable { case slide, fade, none }
 public enum StepperPlacement: Sendable { case top, leading }
 
 /// The progress chrome itself: the `Steps` markers (default) or a thin
-/// determinate `ProgressBar`.
+/// determinate `ProgressBar`. Superseded by ``CheckInFlowStyle`` (ADR-0004) —
+/// `.steps` and `.bar` map 1:1 onto ``CheckInFlowStyle/steps`` and
+/// ``CheckInFlowStyle/bar`` (plus the new ``CheckInFlowStyle/paged``); the
+/// enum remains for source compatibility via the deprecated
+/// ``CheckInFlow/progressStyle(_:)`` and is removed at the next major.
 public enum CheckInProgressStyle: Sendable { case steps, bar }
 
 /// A check-in journey scaffold — `Steps` header + the current page + a
@@ -60,6 +73,9 @@ public struct CheckInFlow<Page: View>: View {
     @Environment(\.isReadOnly) private var isReadOnly
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.componentDensity) private var envDensity
+    @Environment(\.locale) private var locale
+    @Environment(\.checkInFlowStyle) private var envStyle
 
     private let steps: [Steps.Step]
     private let page: (Int) -> Page
@@ -95,7 +111,10 @@ public struct CheckInFlow<Page: View>: View {
     private var pageTransitionValue: PageTransition = .slide
     private var stepperSizeValue: StepsSize = .medium
     private var stepperPlacementValue: StepperPlacement = .top
-    private var progressStyleValue: CheckInProgressStyle = .steps
+    /// Style set by the deprecated ``progressStyle(_:)`` modifier — wins over
+    /// the environment style (ADR-0004 §5 — source-behavior stability during
+    /// the enum's deprecation window).
+    private var explicitStyle: AnyCheckInFlowStyle?
 
     /// R1 — the step definitions + controlled index + per-step page builder.
     /// The binding is the change channel; observe with `.onChange(of:)` at the
@@ -150,52 +169,41 @@ public struct CheckInFlow<Page: View>: View {
         if steps.isEmpty {
             EmptyView()
         } else {
-            Group {
-                if showsStepperValue, stepperPlacementValue == .leading, progressStyleValue == .steps {
-                    // Leading rail: vertical Steps beside the page area.
-                    HStack(alignment: .top, spacing: 0) {
-                        header(axis: .vertical)
-                            .padding(.horizontal, Theme.SpacingKey.md.value)
-                            .padding(.vertical, Theme.SpacingKey.sm.value)
-                        pageContainer
-                    }
-                } else {
-                    VStack(spacing: 0) {
-                        if showsStepperValue {
-                            progressChrome
-                                .padding(.horizontal, Theme.SpacingKey.md.value)
-                                .padding(.vertical, Theme.SpacingKey.sm.value)
-                        }
-                        pageContainer
-                    }
-                }
-            }
-            .buttonDock {
-                if let dockSlot {
-                    // Custom dock: the caller owns Back/Continue semantics —
-                    // canAdvance gating and onComplete become its job.
-                    dockSlot.allowsHitTesting(!isReadOnly)
-                } else {
-                    dock
-                }
-            }
-            .accessibilityElement(children: .contain)
+            // ADR-0004 §5 — an explicit (deprecated `.progressStyle(_:)`) style
+            // wins over the ancestor `.checkInFlowStyle(_:)` environment style.
+            (explicitStyle ?? envStyle).makeBody(configuration: configuration)
         }
     }
 
-    /// The `.progressStyle(_:)` switch: Steps markers or a determinate bar.
+    /// The pre-wired units + typed signals handed to the active
+    /// ``CheckInFlowStyle``. Built unconditionally every render — styles
+    /// arrange, they never re-wire (ADR-0004 §2.2).
     @MainActor
-    @ViewBuilder
-    private var progressChrome: some View {
-        switch progressStyleValue {
-        case .steps:
-            header(axis: .horizontal)
-        case .bar:
-            // Step titles are internal to the neutral `Steps.Step`, so the
-            // announcement is positional ("Step 2 of 3").
-            ProgressBar(value: Double(currentIndex + 1) / Double(max(steps.count, 1)))
-                .progressLabel(String(themeKitTravel: "Step \(currentIndex + 1) of \(steps.count)"))
+    private var configuration: CheckInFlowConfiguration {
+        CheckInFlowConfiguration(
+            stepsHeader: AnyView(header(axis: stepperPlacementValue == .leading ? .vertical : .horizontal)),
+            page: AnyView(pageContainer),
+            dock: dockUnit,
+            currentIndex: currentIndex,
+            stepCount: steps.count,
+            canAdvance: advanceAllowed,
+            showsStepper: showsStepperValue,
+            placement: stepperPlacementValue,
+            accent: accent,
+            density: envDensity,
+            locale: locale)
+    }
+
+    /// The wired dock unit: the caller's `.dock { }` replacement (read-only
+    /// gated) or the built-in Back/Continue `ButtonGroup`.
+    @MainActor
+    private var dockUnit: AnyView {
+        if let dockSlot {
+            // Custom dock: the caller owns Back/Continue semantics —
+            // canAdvance gating and onComplete become its job.
+            return AnyView(dockSlot.allowsHitTesting(!isReadOnly))
         }
+        return AnyView(dock)
     }
 
     @MainActor
@@ -349,8 +357,9 @@ public extension CheckInFlow {
         copy { $0.onCompleteAction = action }
     }
 
-    /// Show or hide the `Steps` header — hide for compact hosts that provide
-    /// their own progress chrome.
+    /// Show or hide the progress chrome — whichever ``CheckInFlowStyle`` is
+    /// active (`Steps` header, bar or dot pager) — for compact hosts that
+    /// provide their own.
     func showsStepper(_ on: Bool = true) -> Self { copy { $0.showsStepperValue = on } }
 
     /// Semantic tint for the done/active step markers; `nil` (default) keeps
@@ -386,13 +395,24 @@ public extension CheckInFlow {
     func stepperSize(_ s: StepsSize) -> Self { copy { $0.stepperSizeValue = s } }
 
     /// Progress-chrome placement: `.top` (default) or `.leading` — a vertical
-    /// `Steps` rail beside the page (steps style only; the `.bar` progress
-    /// style always renders on top).
+    /// `Steps` rail beside the page. Only ``CheckInFlowStyle/steps`` honors a
+    /// `.leading` rail; `.bar` and `.paged` always render their own chrome
+    /// on top.
     func stepperPlacement(_ p: StepperPlacement) -> Self { copy { $0.stepperPlacementValue = p } }
 
-    /// Progress chrome: `.steps` markers (default) or `.bar` — a thin
-    /// determinate `ProgressBar` announcing "Step N of M".
-    func progressStyle(_ s: CheckInProgressStyle) -> Self { copy { $0.progressStyleValue = s } }
+    /// Progress chrome: `.steps` markers or `.bar` — superseded by the style
+    /// axis: prefer `.checkInFlowStyle(.steps/.bar/.paged)`, settable once per
+    /// screen via the environment. This modifier keeps working and, when
+    /// called, wins over an ancestor's environment style.
+    @available(*, deprecated, message: "Use .checkInFlowStyle(.steps/.bar/.paged) instead")
+    func progressStyle(_ s: CheckInProgressStyle) -> Self {
+        copy {
+            switch s {
+            case .steps: $0.explicitStyle = AnyCheckInFlowStyle(StepsCheckInFlowStyle())
+            case .bar: $0.explicitStyle = AnyCheckInFlowStyle(BarCheckInFlowStyle())
+            }
+        }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -478,11 +498,11 @@ public extension CheckInFlow {
                     ], selection: $barStep) { index in
                         Text("Step \(index + 1)").textStyle(.bodyBase400).padding()
                     }
-                    .progressStyle(.bar)
                     .pageTransition(.fade)
                     .dockLayout(.stretch)
                     .buttonSize(.large)
                     .frame(height: 200)
+                    .checkInFlowStyle(.bar)
 
                     // Leading vertical rail + small tappable markers.
                     CheckInFlow(steps: [

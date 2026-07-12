@@ -43,7 +43,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) from \(d) to \(d)",
             "%@ from %@ to %@", 3,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TransportCrossSellCard.swift:427")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TransportCrossSellCardStyle.swift:148")
         assertKey(
             "\(d) infants",
             "%@ infants", 1,
@@ -91,11 +91,15 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) seats",
             "%@ seats", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:526")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:554")
         assertKey(
             "\(d) seats left",
             "%@ seats left", 1,
             site: "Sources/ThemeKitTravel/Components/Organisms/FlightCardStyle.swift:179")
+        assertKey(
+            "\(d) seats selected",
+            "%@ seats selected", 1,
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMapStyle.swift:299")
         assertKey(
             "\(d) selected",
             "%@ selected", 1,
@@ -120,13 +124,13 @@ final class L10nKeyInvariantTests: XCTestCase {
             "\(d)% off",
             "%@%% off", 1,
             site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:188")
+    }
+
+    func testInterpolatedKeyShapes2() {
         assertKey(
             "\(d)% saturation, \(d)% brightness",
             "%@%% saturation, %@%% brightness", 2,
             site: "Sources/ThemeKit/Components/Molecules/ColorArea.swift:126")
-    }
-
-    func testInterpolatedKeyShapes2() {
         assertKey(
             "\(d)% to \(d)",
             "%@%% to %@", 2,
@@ -138,7 +142,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d): scheduled \(d), estimated \(d)",
             "%@: scheduled %@, estimated %@", 3,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTracker.swift:294")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:368")
         assertKey(
             "\(d)h \(d)m",
             "%@h %@m", 2,
@@ -166,7 +170,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Available, \(d)",
             "Available, %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCell.swift:254")
+            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCellStyle.swift:132")
         assertKey(
             "Bar chart with series \(d).",
             "Bar chart with series %@.", 1,
@@ -190,7 +194,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Deck \(d)",
             "Deck %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:117")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:136")
         assertKey(
             "Decrease \(d)",
             "Decrease %@", 1,
@@ -223,13 +227,13 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Move to \(d)",
             "Move to %@", 1,
             site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:65")
+    }
+
+    func testInterpolatedKeyShapes3() {
         assertKey(
             "Page \(d)",
             "Page %@", 1,
             site: "Sources/ThemeKit/Components/Molecules/Pagination.swift:131")
-    }
-
-    func testInterpolatedKeyShapes3() {
         assertKey(
             "Page \(d) of \(d)",
             "Page %@ of %@", 2,
@@ -237,7 +241,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Passenger \(d), seat \(d)",
             "Passenger %@, seat %@", 2,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:459")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:487")
         assertKey(
             "Payment method, \(d) options",
             "Payment method, %@ options", 1,
@@ -273,7 +277,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Seat \(d)",
             "Seat %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCell.swift:245")
+            site: "Sources/ThemeKitTravel/Components/Atoms/SeatCellStyle.swift:122")
         assertKey(
             "Show \(d) more",
             "Show %@ more", 1,
@@ -281,7 +285,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Step \(d) of \(d)",
             "Step %@ of %@", 2,
-            site: "Sources/ThemeKitTravel/Components/Organisms/CheckInFlow.swift:197")
+            site: "Sources/ThemeKitTravel/Components/Organisms/CheckInFlowStyle.swift:191")
         assertKey(
             "The file is larger than the \(d) KB limit.",
             "The file is larger than the %@ KB limit.", 1,
@@ -297,7 +301,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Updated \(d)",
             "Updated %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTracker.swift:343")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTracker.swift:114")
         assertKey(
             "down \(d)",
             "down %@", 1,
@@ -305,15 +309,15 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "estimated arrival \(d)",
             "estimated arrival %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTracker.swift:235")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:156")
         assertKey(
             "estimated departure \(d)",
             "estimated departure %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTracker.swift:232")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:153")
         assertKey(
             "seat \(d)",
             "seat %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRow.swift:87")
+            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:109")
         assertKey(
             "up \(d)",
             "up %@", 1,
