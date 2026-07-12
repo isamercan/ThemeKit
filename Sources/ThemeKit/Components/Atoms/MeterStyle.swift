@@ -67,6 +67,7 @@ public struct LinearMeterStyle: MeterStyle {
 }
 
 private struct LinearMeterBar: View {
+    @Environment(\.theme) private var theme
     let configuration: MeterStyleConfiguration
 
     var body: some View {
@@ -87,7 +88,7 @@ private struct LinearMeterBar: View {
                     Capsule().fill(configuration.fill)
                         .frame(width: geo.size.width * configuration.fraction)
                     if let successFraction = configuration.successFraction {
-                        Capsule().fill(SemanticColor.success.solid)
+                        Capsule().fill(theme.resolve(.success).solid)
                             .frame(width: geo.size.width * successFraction)
                     }
                 }
@@ -112,6 +113,7 @@ public struct StripedMeterStyle: MeterStyle {
 }
 
 private struct StripedMeterBar: View {
+    @Environment(\.theme) private var theme
     let configuration: MeterStyleConfiguration
 
     var body: some View {
@@ -139,7 +141,7 @@ private struct StripedMeterBar: View {
                         .clipShape(Capsule())
                         .frame(width: geo.size.width * configuration.fraction)
                     if let successFraction = configuration.successFraction {
-                        Capsule().fill(SemanticColor.success.solid)
+                        Capsule().fill(theme.resolve(.success).solid)
                             .frame(width: geo.size.width * successFraction)
                     }
                 }
