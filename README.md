@@ -704,11 +704,11 @@ source — straight into your app target's folder, then drag it into the **app**
 in Xcode:
 
 ```sh
-curl -O https://raw.githubusercontent.com/isamercan/ThemeKit/main/docs/templates/ThemeKit.xcstrings
+curl -O https://raw.githubusercontent.com/isamercan/ThemeKit/main/Templates/ThemeKit.xcstrings
 ```
 
 (It also ships in the SPM checkout under
-[`docs/templates/ThemeKit.xcstrings`](docs/templates/ThemeKit.xcstrings), or make one
+[`Templates/ThemeKit.xcstrings`](Templates/ThemeKit.xcstrings), or make one
 yourself: *File → New → String Catalog* named exactly **`ThemeKit.xcstrings`**.) The
 file name is the strings-table name — ThemeKit looks up the `"ThemeKit"` table in
 `Bundle.main` by default, so there is **nothing to register**. The template is

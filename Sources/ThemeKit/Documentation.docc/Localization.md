@@ -21,7 +21,7 @@ English per key.
 
 - **Keys are ThemeKit's English source strings** (`Card number`, `Select`,
   `Promo code:`). Start from the generated template at
-  `docs/templates/ThemeKit.xcstrings` — it is the always-current key set (`make l10n`).
+  `Templates/ThemeKit.xcstrings` — it is the always-current key set (`make l10n`).
 - **Interpolated keys use `%@` for every value** (numbers included): the key for
   `"\(count) installments"` is `"%@ installments"`. Reorder with `%1$@`/`%2$@`.
 - **Keep `"generatesSymbol": false`** on template entries — ThemeKit's key set has

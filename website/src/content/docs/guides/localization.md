@@ -71,7 +71,7 @@ Two rules that matter:
 
 > **Start from the template, don't hand-list keys.** The full, always-current key
 > set ships at
-> [`docs/templates/ThemeKit.xcstrings`](https://github.com/isamercan/ThemeKit/blob/main/docs/templates/ThemeKit.xcstrings)
+> [`Templates/ThemeKit.xcstrings`](https://github.com/isamercan/ThemeKit/blob/main/Templates/ThemeKit.xcstrings)
 > (regenerated from source by `make l10n`). Copy it into your app and fill in your
 > language column.
 
