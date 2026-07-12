@@ -140,6 +140,24 @@ When a component grows past one screenful, split it. The public component is the
 Keep sub-views `private` in the same file unless independently useful. Models + any
 generic palette (e.g. `SeatPalette`) go in a `<Component>Models.swift`.
 
+**When does a component earn a `<Component>Models.swift`?** Only when its data has one
+of these *shapes* (the D2 test, `docs/ADR-0005-data-intake-taxonomy.md`) — never merely
+because it's "data-rich":
+
+- **collection/graph** — a list/grid/graph of repeating records you can't flatten into
+  modifier args (`Seat` rows, `ChartPoint` series);
+- **shared across a family** — one record read by an atom + molecule + organism (`Seat`
+  by `SeatCell` / `SeatLegend` / `SeatMap`);
+- **a provider-closure return type** — `seat: (id,row,col) -> SeatInfo`.
+
+**Richness ≠ aggregation.** A 20-field component (e.g. `HotelResultCard`) whose fields
+are *independent optional scalars* stays on `init` + chainable modifiers — do NOT bundle
+them into a `<Component>Data` bag. That would break the fluent/additive API, freeze
+default strings against a live language switch, and reintroduce the "backend DTO" rule 1
+forbids. Field **shape** decides, not field **count**. Strings never live in a Model
+either — default copy stays `String(themeKit:)` (a Model holds only the consumer's own
+content: a hotel name, a series label).
+
 ## Style-driven API (organisms with multiple archetypes)
 
 When one component needs several fundamentally different layouts (as `FlightListItem`
