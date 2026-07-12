@@ -1,7 +1,285 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ adults": {
+      "extractionState": "manual"
+    },
+    "%@ card ending %@": {
+      "extractionState": "manual"
+    },
+    "%@ children": {
+      "extractionState": "manual"
+    },
+    "%@ from %@ to %@": {
+      "extractionState": "manual"
+    },
+    "%@ infants": {
+      "extractionState": "manual"
+    },
+    "%@ percent": {
+      "extractionState": "manual"
+    },
+    "%@ results": {
+      "extractionState": "manual"
+    },
+    "%@ to %@": {
+      "extractionState": "manual"
+    },
+    "%@ travelers": {
+      "extractionState": "manual"
+    },
+    "%@: scheduled %@, estimated %@": {
+      "extractionState": "manual"
+    },
+    "1 adult": {
+      "extractionState": "manual"
+    },
+    "1 child": {
+      "extractionState": "manual"
+    },
+    "1 infant": {
+      "extractionState": "manual"
+    },
+    "1 traveler": {
+      "extractionState": "manual"
+    },
+    "Add new card": {
+      "extractionState": "manual"
+    },
+    "Aircraft": {
+      "extractionState": "manual"
+    },
+    "Arrival": {
+      "extractionState": "manual"
+    },
+    "Arrived": {
+      "extractionState": "manual"
+    },
+    "Back": {
+      "extractionState": "manual"
+    },
+    "Baggage belt": {
+      "extractionState": "manual"
+    },
+    "Best value": {
+      "extractionState": "manual"
+    },
+    "Boarding": {
+      "extractionState": "manual"
+    },
+    "Bus": {
+      "extractionState": "manual"
+    },
+    "Business": {
+      "extractionState": "manual"
+    },
+    "Cabin": {
+      "extractionState": "manual"
+    },
+    "Cabin class": {
+      "extractionState": "manual"
+    },
+    "Car": {
+      "extractionState": "manual"
+    },
+    "Card ending %@": {
+      "extractionState": "manual"
+    },
+    "Cards you save at checkout will appear here.": {
+      "extractionState": "manual"
+    },
+    "Check-in": {
+      "extractionState": "manual"
+    },
+    "Check-in desk": {
+      "extractionState": "manual"
+    },
+    "City or airport": {
+      "extractionState": "manual"
+    },
+    "Clear": {
+      "extractionState": "manual"
+    },
+    "Clear recent airports": {
+      "extractionState": "manual"
+    },
+    "Collapse search": {
+      "extractionState": "manual"
+    },
+    "Continue": {
+      "extractionState": "manual"
+    },
+    "Date of birth": {
+      "extractionState": "manual"
+    },
+    "Departed": {
+      "extractionState": "manual"
+    },
+    "Departure": {
+      "extractionState": "manual"
+    },
+    "Document expiry": {
+      "extractionState": "manual"
+    },
+    "Document must be valid on the travel date": {
+      "extractionState": "manual"
+    },
+    "Document number": {
+      "extractionState": "manual"
+    },
+    "Done": {
+      "extractionState": "manual"
+    },
+    "Economy": {
+      "extractionState": "manual"
+    },
+    "Edit search": {
+      "extractionState": "manual"
+    },
+    "Enter a valid document number": {
+      "extractionState": "manual"
+    },
+    "Expired": {
+      "extractionState": "manual"
+    },
+    "Expires %@": {
+      "extractionState": "manual"
+    },
+    "Family name": {
+      "extractionState": "manual"
+    },
+    "Female": {
+      "extractionState": "manual"
+    },
+    "Ferry": {
+      "extractionState": "manual"
+    },
+    "First": {
+      "extractionState": "manual"
+    },
+    "Flight progress": {
+      "extractionState": "manual"
+    },
+    "Flight search": {
+      "extractionState": "manual"
+    },
+    "From": {
+      "extractionState": "manual"
+    },
+    "Gate": {
+      "extractionState": "manual"
+    },
+    "Gender": {
+      "extractionState": "manual"
+    },
+    "Given name": {
+      "extractionState": "manual"
+    },
+    "Loading suggestions": {
+      "extractionState": "manual"
+    },
+    "Male": {
+      "extractionState": "manual"
+    },
+    "Multi-city": {
+      "extractionState": "manual"
+    },
+    "Nationality": {
+      "extractionState": "manual"
+    },
+    "Nearby": {
+      "extractionState": "manual"
+    },
+    "No airports found": {
+      "extractionState": "manual"
+    },
+    "No saved cards": {
+      "extractionState": "manual"
+    },
+    "One way": {
+      "extractionState": "manual"
+    },
+    "Passengers": {
+      "extractionState": "manual"
+    },
+    "Payment method, %@ options": {
+      "extractionState": "manual"
+    },
+    "Personal details": {
+      "extractionState": "manual"
+    },
+    "Popular": {
+      "extractionState": "manual"
+    },
+    "Premium": {
+      "extractionState": "manual"
+    },
+    "Premium Economy": {
+      "extractionState": "manual"
+    },
+    "Recent": {
+      "extractionState": "manual"
+    },
+    "Remove card": {
+      "extractionState": "manual"
+    },
+    "Remove card ending %@": {
+      "extractionState": "manual"
+    },
+    "Return": {
+      "extractionState": "manual"
+    },
+    "Round trip": {
+      "extractionState": "manual"
+    },
+    "Saved cards, %@ cards": {
+      "extractionState": "manual"
+    },
+    "Search flights": {
+      "extractionState": "manual"
+    },
+    "See options": {
+      "extractionState": "manual"
+    },
+    "Step %@ of %@": {
+      "extractionState": "manual"
+    },
+    "Swap origin and destination": {
+      "extractionState": "manual"
+    },
+    "Terminal": {
+      "extractionState": "manual"
+    },
+    "To": {
+      "extractionState": "manual"
+    },
+    "Train": {
+      "extractionState": "manual"
+    },
+    "Travel document": {
+      "extractionState": "manual"
+    },
+    "Traveler details": {
+      "extractionState": "manual"
+    },
+    "Unspecified": {
+      "extractionState": "manual"
+    },
+    "Updated %@": {
+      "extractionState": "manual"
+    },
+    "Visa required": {
+      "extractionState": "manual"
+    },
+    "Where to?": {
+      "extractionState": "manual"
+    },
+    "estimated arrival %@": {
+      "extractionState": "manual"
+    },
+    "estimated departure %@": {
+      "extractionState": "manual"
+    }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

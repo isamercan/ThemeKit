@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>plural.seats</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@seats@</string>
+		<key>seats</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld место (one)</string>
+			<key>few</key>
+			<string>%lld места (few)</string>
+			<key>many</key>
+			<string>%lld мест (many)</string>
+			<key>other</key>
+			<string>%lld мест (other)</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

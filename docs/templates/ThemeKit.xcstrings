@@ -4,6 +4,21 @@
     "%@ %@ to %@ %@, %@, %@": {
       "extractionState": "manual"
     },
+    "%@ adults": {
+      "extractionState": "manual"
+    },
+    "%@ card ending %@": {
+      "extractionState": "manual"
+    },
+    "%@ children": {
+      "extractionState": "manual"
+    },
+    "%@ from %@ to %@": {
+      "extractionState": "manual"
+    },
+    "%@ infants": {
+      "extractionState": "manual"
+    },
     "%@ installments": {
       "comment": "A label indicating the number of installments or a single payment for a given instalment plan. The argument is the number of installments in the plan.",
       "extractionState": "manual"
@@ -58,6 +73,9 @@
     "%@ total": {
       "extractionState": "manual"
     },
+    "%@ travelers": {
+      "extractionState": "manual"
+    },
     "%@%% off": {
       "extractionState": "manual"
     },
@@ -70,6 +88,9 @@
     },
     "%@/mo": {
       "comment": "A label showing the monthly payment amount for a given installment plan. The argument is the monthly payment amount for the plan.",
+      "extractionState": "manual"
+    },
+    "%@: scheduled %@, estimated %@": {
       "extractionState": "manual"
     },
     "%@h %@m": {
@@ -97,6 +118,15 @@
     "/ mo": {
       "extractionState": "manual"
     },
+    "1 adult": {
+      "extractionState": "manual"
+    },
+    "1 child": {
+      "extractionState": "manual"
+    },
+    "1 infant": {
+      "extractionState": "manual"
+    },
     "1 seat": {
       "extractionState": "manual"
     },
@@ -107,11 +137,17 @@
       "comment": "Pluralization key for \"1 stop\".",
       "extractionState": "manual"
     },
+    "1 traveler": {
+      "extractionState": "manual"
+    },
     "Action": {
       "extractionState": "manual"
     },
     "Add a photo from your device or take one with the camera.": {
       "comment": "Upload component default prompt.",
+      "extractionState": "manual"
+    },
+    "Add new card": {
       "extractionState": "manual"
     },
     "Add tab": {
@@ -131,6 +167,9 @@
     "Age 2–12": {
       "extractionState": "manual"
     },
+    "Aircraft": {
+      "extractionState": "manual"
+    },
     "Aisle": {
       "extractionState": "manual"
     },
@@ -141,6 +180,12 @@
       "extractionState": "manual"
     },
     "Area chart with series %@.": {
+      "extractionState": "manual"
+    },
+    "Arrival": {
+      "extractionState": "manual"
+    },
+    "Arrived": {
       "extractionState": "manual"
     },
     "At least %@ characters": {
@@ -173,6 +218,9 @@
     "Back to years": {
       "extractionState": "manual"
     },
+    "Baggage belt": {
+      "extractionState": "manual"
+    },
     "Bar chart with series %@.": {
       "extractionState": "manual"
     },
@@ -186,6 +234,9 @@
     "Before and after comparison": {
       "extractionState": "manual"
     },
+    "Best value": {
+      "extractionState": "manual"
+    },
     "Between %@ and %@": {
       "comment": "Validation: integer range.",
       "extractionState": "manual"
@@ -196,6 +247,9 @@
     "Brightness": {
       "extractionState": "manual"
     },
+    "Bus": {
+      "extractionState": "manual"
+    },
     "Business": {
       "extractionState": "manual"
     },
@@ -203,11 +257,32 @@
       "comment": "StatusDot: spoken status (VoiceOver).",
       "extractionState": "manual"
     },
+    "Cabin": {
+      "extractionState": "manual"
+    },
+    "Cabin class": {
+      "extractionState": "manual"
+    },
     "Cancel": {
       "comment": "Default secondary / dismiss action label.",
       "extractionState": "manual"
     },
+    "Car": {
+      "extractionState": "manual"
+    },
+    "Card ending %@": {
+      "extractionState": "manual"
+    },
+    "Cards you save at checkout will appear here.": {
+      "extractionState": "manual"
+    },
     "Carry-on": {
+      "extractionState": "manual"
+    },
+    "Check-in": {
+      "extractionState": "manual"
+    },
+    "Check-in desk": {
       "extractionState": "manual"
     },
     "Checked bag": {
@@ -223,11 +298,17 @@
     "Choose year": {
       "extractionState": "manual"
     },
+    "City or airport": {
+      "extractionState": "manual"
+    },
     "Clear": {
       "comment": "Label for a button that clears the input in a DateField.",
       "extractionState": "manual"
     },
     "Clear all filters": {
+      "extractionState": "manual"
+    },
+    "Clear recent airports": {
       "extractionState": "manual"
     },
     "Clear selection": {
@@ -249,12 +330,18 @@
     "Collapse actions": {
       "extractionState": "manual"
     },
+    "Collapse search": {
+      "extractionState": "manual"
+    },
     "Collapsed": {
       "comment": "Accessibility value of a closed dropdown trigger.",
       "extractionState": "manual"
     },
     "Completed": {
       "comment": "Accessibility value of a finished step.",
+      "extractionState": "manual"
+    },
+    "Continue": {
       "extractionState": "manual"
     },
     "Copied": {
@@ -280,6 +367,9 @@
       "comment": "DateField: VoiceOver name used when no explicit label is given.",
       "extractionState": "manual"
     },
+    "Date of birth": {
+      "extractionState": "manual"
+    },
     "Days": {
       "comment": "Counter: day/hour/minute convenience label.",
       "extractionState": "manual"
@@ -297,6 +387,12 @@
       "extractionState": "manual"
     },
     "Decrease saturation": {
+      "extractionState": "manual"
+    },
+    "Departed": {
+      "extractionState": "manual"
+    },
+    "Departure": {
       "extractionState": "manual"
     },
     "Details": {
@@ -320,6 +416,15 @@
     },
     "Dismiss": {
       "comment": "Accessibility label for the \"xmark\" button in the Callout.",
+      "extractionState": "manual"
+    },
+    "Document expiry": {
+      "extractionState": "manual"
+    },
+    "Document must be valid on the travel date": {
+      "extractionState": "manual"
+    },
+    "Document number": {
       "extractionState": "manual"
     },
     "Doesn't match": {
@@ -346,8 +451,17 @@
       "comment": "The text displayed in the exit band of a seat map.",
       "extractionState": "manual"
     },
+    "Economy": {
+      "extractionState": "manual"
+    },
     "Edit": {
       "comment": "A button label that says \"Edit\".",
+      "extractionState": "manual"
+    },
+    "Edit search": {
+      "extractionState": "manual"
+    },
+    "Enter a valid document number": {
       "extractionState": "manual"
     },
     "Enter a valid email": {
@@ -382,7 +496,16 @@
       "comment": "Accessibility value of an open dropdown trigger.",
       "extractionState": "manual"
     },
+    "Expired": {
+      "extractionState": "manual"
+    },
+    "Expires %@": {
+      "extractionState": "manual"
+    },
     "Extra legroom": {
+      "extractionState": "manual"
+    },
+    "Family name": {
       "extractionState": "manual"
     },
     "Fare": {
@@ -390,6 +513,12 @@
     },
     "Favourite": {
       "comment": "A button label that toggles a \"favourite\" state for a flight.",
+      "extractionState": "manual"
+    },
+    "Female": {
+      "extractionState": "manual"
+    },
+    "Ferry": {
       "extractionState": "manual"
     },
     "Filter": {
@@ -401,8 +530,17 @@
     "Flight": {
       "extractionState": "manual"
     },
+    "Flight progress": {
+      "extractionState": "manual"
+    },
+    "Flight search": {
+      "extractionState": "manual"
+    },
     "Free": {
       "comment": "Chip: default free-badge label.",
+      "extractionState": "manual"
+    },
+    "From": {
       "extractionState": "manual"
     },
     "Gallery": {
@@ -410,6 +548,12 @@
       "extractionState": "manual"
     },
     "Gate": {
+      "extractionState": "manual"
+    },
+    "Gender": {
+      "extractionState": "manual"
+    },
+    "Given name": {
       "extractionState": "manual"
     },
     "Go to": {
@@ -473,6 +617,9 @@
       "comment": "Button accessibility value while loading.",
       "extractionState": "manual"
     },
+    "Loading suggestions": {
+      "extractionState": "manual"
+    },
     "Loading…": {
       "comment": "Default blocking-loading title.",
       "extractionState": "manual"
@@ -481,6 +628,9 @@
       "extractionState": "manual"
     },
     "Main deck": {
+      "extractionState": "manual"
+    },
+    "Male": {
       "extractionState": "manual"
     },
     "Max": {
@@ -518,7 +668,16 @@
     "Move up": {
       "extractionState": "manual"
     },
+    "Multi-city": {
+      "extractionState": "manual"
+    },
     "Mute": {
+      "extractionState": "manual"
+    },
+    "Nationality": {
+      "extractionState": "manual"
+    },
+    "Nearby": {
       "extractionState": "manual"
     },
     "Next": {
@@ -541,6 +700,9 @@
       "comment": "Popconfirm: default cancel title.",
       "extractionState": "manual"
     },
+    "No airports found": {
+      "extractionState": "manual"
+    },
     "No commands found": {
       "extractionState": "manual"
     },
@@ -553,6 +715,9 @@
     },
     "No results": {
       "comment": "MultiSelect: empty search result.",
+      "extractionState": "manual"
+    },
+    "No saved cards": {
       "extractionState": "manual"
     },
     "Nonstop": {
@@ -579,6 +744,9 @@
     },
     "Offline": {
       "comment": "StatusDot: spoken status (VoiceOver).",
+      "extractionState": "manual"
+    },
+    "One way": {
       "extractionState": "manual"
     },
     "Online": {
@@ -608,7 +776,16 @@
       "comment": "An accessibility label for each passenger tab, describing both their initials and the seat they are currently assigned to (or \"unassigned\" if none).",
       "extractionState": "manual"
     },
+    "Passengers": {
+      "extractionState": "manual"
+    },
     "Pause": {
+      "extractionState": "manual"
+    },
+    "Payment method, %@ options": {
+      "extractionState": "manual"
+    },
+    "Personal details": {
       "extractionState": "manual"
     },
     "Phone number": {
@@ -626,6 +803,15 @@
     },
     "Poor": {
       "comment": "Rating: default sentiment for the low score band.",
+      "extractionState": "manual"
+    },
+    "Popular": {
+      "extractionState": "manual"
+    },
+    "Premium": {
+      "extractionState": "manual"
+    },
+    "Premium Economy": {
       "extractionState": "manual"
     },
     "Premium econ.": {
@@ -683,6 +869,12 @@
       "comment": "Aria label for the remove button. The argument is the tag text.",
       "extractionState": "manual"
     },
+    "Remove card": {
+      "extractionState": "manual"
+    },
+    "Remove card ending %@": {
+      "extractionState": "manual"
+    },
     "Remove from favourites": {
       "comment": "An accessibility label for a button that removes an item from a list of favorites.",
       "extractionState": "manual"
@@ -705,11 +897,17 @@
       "comment": "Label for a button that triggers the retry action for a failed file upload.",
       "extractionState": "manual"
     },
+    "Return": {
+      "extractionState": "manual"
+    },
     "Review photo %@ of %@": {
       "extractionState": "manual"
     },
     "Rooms": {
       "comment": "Label for the \"Rooms\" section in the rooms & guests picker.",
+      "extractionState": "manual"
+    },
+    "Round trip": {
       "extractionState": "manual"
     },
     "Saturation": {
@@ -722,12 +920,18 @@
       "comment": "A button label that suggests saving an item.",
       "extractionState": "manual"
     },
+    "Saved cards, %@ cards": {
+      "extractionState": "manual"
+    },
     "Score": {
       "comment": "ScoreBadge: VoiceOver label.",
       "extractionState": "manual"
     },
     "Search": {
       "comment": "A placeholder text for a search field.",
+      "extractionState": "manual"
+    },
+    "Search flights": {
       "extractionState": "manual"
     },
     "Searching…": {
@@ -739,6 +943,9 @@
     },
     "Seat %@": {
       "comment": "A label showing the seat number in the checkout bar. The argument is the seat number to be displayed.",
+      "extractionState": "manual"
+    },
+    "See options": {
       "extractionState": "manual"
     },
     "Select": {
@@ -820,12 +1027,18 @@
       "comment": "StepIndicator: VoiceOver label.",
       "extractionState": "manual"
     },
+    "Step %@ of %@": {
+      "extractionState": "manual"
+    },
     "Success": {
       "comment": "Accessibility label for a success status icon.",
       "extractionState": "manual"
     },
     "Swap": {
       "comment": "A label describing an action that can be performed by tapping a button.",
+      "extractionState": "manual"
+    },
+    "Swap origin and destination": {
       "extractionState": "manual"
     },
     "Target": {
@@ -846,6 +1059,9 @@
       "comment": "A static text label displayed when a countdown timer reaches zero.",
       "extractionState": "manual"
     },
+    "To": {
+      "extractionState": "manual"
+    },
     "Today": {
       "extractionState": "manual"
     },
@@ -855,10 +1071,25 @@
     "Total": {
       "extractionState": "manual"
     },
+    "Train": {
+      "extractionState": "manual"
+    },
+    "Travel document": {
+      "extractionState": "manual"
+    },
+    "Traveler details": {
+      "extractionState": "manual"
+    },
     "Under 2": {
       "extractionState": "manual"
     },
     "Unmute": {
+      "extractionState": "manual"
+    },
+    "Unspecified": {
+      "extractionState": "manual"
+    },
+    "Updated %@": {
       "extractionState": "manual"
     },
     "Upload Photo": {
@@ -898,8 +1129,14 @@
     "View more photos": {
       "extractionState": "manual"
     },
+    "Visa required": {
+      "extractionState": "manual"
+    },
     "Warning": {
       "comment": "Accessibility label for a warning status icon.",
+      "extractionState": "manual"
+    },
+    "Where to?": {
       "extractionState": "manual"
     },
     "Window": {
@@ -929,6 +1166,12 @@
     },
     "down %@": {
       "comment": "Stat: spoken downward trend with magnitude (VoiceOver).",
+      "extractionState": "manual"
+    },
+    "estimated arrival %@": {
+      "extractionState": "manual"
+    },
+    "estimated departure %@": {
       "extractionState": "manual"
     },
     "from": {
