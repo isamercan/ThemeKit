@@ -695,13 +695,21 @@ language — with no per-call code** — by adding a single language file to you
 
 ### Add a language — step by step
 
-**1. Create the language file.** In your **app** target: *File → New → String
-Catalog*, name it exactly **`ThemeKit.xcstrings`**. The file name is the strings-table
-name; ThemeKit looks up the `"ThemeKit"` table in `Bundle.main` by default — so there
-is **nothing to register**. Start from the shipped template
-[`docs/templates/ThemeKit.xcstrings`](docs/templates/ThemeKit.xcstrings) — the
-always-current key set, regenerated from source by `make l10n` — so you never guess a
-key.
+**1. Get the language file.** Grab the ready-made template — every key, English
+source — straight into your app target's folder, then drag it into the **app** target
+in Xcode:
+
+```sh
+curl -O https://raw.githubusercontent.com/isamercan/ThemeKit/main/docs/templates/ThemeKit.xcstrings
+```
+
+(It also ships in the SPM checkout under
+[`docs/templates/ThemeKit.xcstrings`](docs/templates/ThemeKit.xcstrings), or make one
+yourself: *File → New → String Catalog* named exactly **`ThemeKit.xcstrings`**.) The
+file name is the strings-table name — ThemeKit looks up the `"ThemeKit"` table in
+`Bundle.main` by default, so there is **nothing to register**. The template is
+regenerated from source by `make l10n` (CI-gated), so its key set is always complete
+and current — you never guess a key.
 
 **2. Translate the keys.** Open it in Xcode's String Catalog editor, press **＋**, add
 your language, fill the column. Keys **are** ThemeKit's English strings (`Card number`,
