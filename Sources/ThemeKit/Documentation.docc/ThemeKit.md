@@ -66,15 +66,16 @@ views; the core library stays dependency-free.
 
 ### Theme & Tokens
 
-- `Theme`
-- `ThemeConfig`
-- `ThemeContext`
-- `TextStyle`
-- `SemanticColor`
-- `Theme.SpacingKey`
-- `Theme.RadiusKey`
-- `ShadowStyle`
-- `Motion`
+> The token engine — `Theme`, `SemanticColor`, `TextStyle`, `ThemeConfig`, the
+> spacing/radius/shadow tokens — lives in the token-only **ThemeKitCore** layer, which
+> `ThemeKit` re-exports. Because a re-exported symbol isn't carried into this archive's
+> symbol graph, the full, navigable reference for these types is in the **ThemeKitCore
+> API**: <https://isamercan.github.io/ThemeKit/api-core/documentation/themekitcore/>.
+
+- `Theme` · `ThemeConfig` · `ThemeContext` — the theme + runtime recipe
+- `SemanticColor` · `TextStyle` · `ShadowStyle` — the token vocabulary
+- `Theme.SpacingKey` · `Theme.RadiusKey` — spacing & radius scales
+- `Motion` — motion tokens
 
 ### Buttons
 
