@@ -416,6 +416,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Deselect all": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Details": {
       "extractionState": "manual",
       "generatesSymbol": false
@@ -1025,6 +1029,10 @@
     },
     "Select a time": {
       "comment": "Default placeholder text for the time field.",
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Select all": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
