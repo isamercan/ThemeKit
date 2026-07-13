@@ -3061,3 +3061,62 @@ struct MicroMotionDemo: View {
         }
     }
 }
+
+// MARK: - AlertDialog
+
+struct AlertDialogDemo: View {
+    @State private var show = false
+    @State private var align: AlertHeaderAlignment = .leading
+    @State private var layout: AlertFooterLayout = .auto
+    @State private var size: AlertDialogSize = .sm
+    @State private var destructive = true
+    @State private var closable = true
+    @State private var longLabels = false
+    @State private var result = "—"
+
+    private var primaryLabel: String { longLabels ? "Save and continue editing" : (destructive ? "Delete" : "Confirm") }
+    private var secondaryLabel: String { longLabels ? "Discard all my recent changes" : "Cancel" }
+
+    /// The dialog card, driven entirely by the knobs so the same declaration can
+    /// render inline (below) and as a modal (via `.alertDialog`).
+    private func card(dismiss: @escaping () -> Void) -> AlertDialog {
+        AlertDialog("Delete product",
+                    message: "Are you sure you want to delete this product? This action cannot be undone.")
+            .icon(destructive ? "trash" : "externaldrive")
+            .tone(destructive ? .error : .neutral)
+            .headerAlignment(align)
+            .footerLayout(layout)
+            .size(size)
+            .primaryAction(primaryLabel) { result = primaryLabel; dismiss(); flash("AlertDialog: \(primaryLabel)") }
+            .secondaryAction(secondaryLabel) { result = secondaryLabel; dismiss(); flash("AlertDialog: \(secondaryLabel)") }
+            .closable(closable ? { dismiss(); flash("AlertDialog closed") } : { })
+    }
+
+    var body: some View {
+        ComponentStage("AlertDialog", inspector: [("last action", result), ("footer", "\(layout.rawValue)")]) {
+            VStack(spacing: 16) {
+                // Live inline card — reshapes as the knobs change (Figma "Composition" board).
+                card(dismiss: {})
+                    .frame(maxWidth: .infinity, alignment: .center)
+                OutlineButton("Present as modal") { show = true; flash("AlertDialog opened") }
+            }
+            .frame(maxWidth: .infinity)
+            .alertDialog(isPresented: $show, swipeToDismiss: true) {
+                card(dismiss: { show = false })
+            }
+        } knobs: {
+            Picker("Header", selection: $align) {
+                Text("Leading").tag(AlertHeaderAlignment.leading); Text("Center").tag(AlertHeaderAlignment.center)
+            }.pickerStyle(.segmented)
+            Picker("Footer", selection: $layout) {
+                ForEach(AlertFooterLayout.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                ForEach(AlertDialogSize.allCases, id: \.self) { Text($0.rawValue.uppercased()).tag($0) }
+            }.pickerStyle(.segmented)
+            Toggle("Destructive tone", isOn: $destructive)
+            Toggle("Long labels (footer auto-stacks)", isOn: $longLabels)
+            Toggle("Closable (✕)", isOn: $closable)
+        }
+    }
+}

@@ -89,7 +89,7 @@ private func dialogMaxWidth(_ width: CGFloat?, _ size: DialogSize?, default lega
 /// `dismissDrag` (ADR-7 — this presentation is its reference feel). When
 /// micro-animations are off or Reduce Motion is on, the card transition
 /// collapses to a plain fade and the drag spring-back snaps instantly.
-private struct DialogPresentation<Card: View>: View {
+struct DialogPresentation<Card: View>: View {
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
