@@ -2788,8 +2788,13 @@ struct DialogDemo: View {
     @State private var accepted = false
     @State private var showConfirm = false
     @State private var deleted = false
+    @State private var backdrop: BackdropStyle = .dim
+    @State private var size: DialogSize = .md
+    @State private var placement: DialogPlacement = .center
     var body: some View {
-        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
+        ComponentStage("Dialog",
+                       inspector: [("backdrop", backdrop.rawValue), ("size", size.rawValue),
+                                   ("placement", placement.rawValue), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
                 PrimaryButton("Open agreement") { show = true; flash("Dialog opened") }
                 OutlineButton("Delete account (async)") { deleted = false; showConfirm = true }
@@ -2802,8 +2807,10 @@ struct DialogDemo: View {
                     primaryTitle: "Delete", onPrimary: {
                         try? await Task.sleep(nanoseconds: 1_200_000_000)   // async work; OK spins
                         deleted = true; flash("Account deleted")
-                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error)
-            .dialog(isPresented: $show, title: "Terms of Use", afterClose: {}) {
+                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error,
+                    backdrop: backdrop, size: size, placement: placement)
+            .dialog(isPresented: $show, title: "Terms of Use",
+                    backdrop: backdrop, size: size, placement: placement, afterClose: {}) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(1...8, id: \.self) { i in
                         Text("Article \(i)").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
@@ -2818,6 +2825,15 @@ struct DialogDemo: View {
                 }
             }
         } knobs: {
+            Picker("Backdrop", selection: $backdrop) {
+                ForEach(BackdropStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                ForEach(DialogSize.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Placement", selection: $placement) {
+                ForEach(DialogPlacement.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
             Button("Reset") { accepted = false }
         }
     }
