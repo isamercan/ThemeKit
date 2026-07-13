@@ -12,7 +12,7 @@ import ThemeKit
 import ThemeKitTravel
 
 struct ButtonDemo: View {
-    enum Style: String, CaseIterable { case primary, secondary, outline, ghost, link }
+    enum Style: String, CaseIterable { case primary, secondary, tertiary, outline, ghost, link, danger, dangerSoft }
     @State private var style: Style = .primary
     @State private var size: ButtonSize = .medium
     @State private var title = "Button"
@@ -39,17 +39,23 @@ struct ButtonDemo: View {
                     switch style {
                     case .primary: PrimaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .secondary: SecondaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .tertiary: TertiaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .outline: OutlineButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .ghost: GhostButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
+                    case .danger: DangerButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .dangerSoft: DangerSoftButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     }
                 } else {
                     switch style {
                     case .primary: PrimaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .secondary: SecondaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .tertiary: TertiaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .outline: OutlineButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .ghost: GhostButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
+                    case .danger: DangerButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .dangerSoft: DangerSoftButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     }
                 }
             }

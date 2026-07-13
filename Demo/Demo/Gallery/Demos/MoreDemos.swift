@@ -2056,20 +2056,31 @@ struct ThemeButtonDemo: View {
     @State private var trailingIcon = false
     @State private var loading = false
     @State private var spinnerIdx = 0   // 0 replace label, 1 leading, 2 trailing
+    @State private var compact = false
+    @State private var iconOnlyForce = false
+    @State private var prefixSuffix = false
 
-    private var iconOnly: Bool { shape == .circle || shape == .square }
+    private var iconOnly: Bool { iconOnlyForce || shape == .circle || shape == .square }
 
     var body: some View {
         ComponentStage("ThemeButton", inspector: [
-            ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
+            ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"), ("density", compact ? "compact" : "regular"),
         ]) {
             {
-                let base = ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
-                    .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
-                          trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
+                var base = ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
+                    .icon(leading: ((icon || iconOnly) && !trailingIcon && !prefixSuffix) ? "star.fill" : nil,
+                          trailing: ((icon || iconOnly) && trailingIcon && !prefixSuffix) ? "star.fill" : nil)
                     .color(color).variant(variant).size(size).shape(shape)
+                    .density(compact ? .compact : .regular)
+                    .iconOnly(iconOnlyForce)
                     .fullWidth(block && !iconOnly).loading(loading)
-                return spinnerIdx == 0 ? base : base.spinnerPlacement(spinnerIdx == 1 ? .leading : .trailing)
+                // Prefix/suffix element slots (Figma "Prefix"/"Suffix").
+                if prefixSuffix {
+                    base = base.prefix { Icon(systemName: "sparkles").size(.sm) }
+                        .suffix { Icon(systemName: "arrow.right").size(.sm) }
+                }
+                if spinnerIdx != 0 { base = base.spinnerPlacement(spinnerIdx == 1 ? .leading : .trailing) }
+                return base
             }()
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -2085,6 +2096,9 @@ struct ThemeButtonDemo: View {
             Picker("Spinner placement", selection: $spinnerIdx) {
                 Text("Replace").tag(0); Text("Start").tag(1); Text("End").tag(2)
             }.pickerStyle(.segmented)
+            Toggle("Compact density (sm/md/lg 32·36·40)", isOn: $compact)
+            Toggle("Icon-only (force, rounded)", isOn: $iconOnlyForce)
+            Toggle("Prefix + suffix slots", isOn: $prefixSuffix)
         }
     }
 }
