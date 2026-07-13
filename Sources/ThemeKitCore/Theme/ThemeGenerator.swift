@@ -30,8 +30,13 @@ enum ThemeGenerator {
         return (byte(0), byte(2), byte(4))
     }
 
+    // All rounding here uses `.toNearestOrEven` (banker's rounding) to match Python's
+    // `round()` in `tools/gen_tokens.py` EXACTLY — Swift's default `.rounded()` is
+    // half-away-from-zero and disagreed with the Python source by 1 LSB whenever a
+    // blended channel landed on an `x.5` tie (e.g. seed 5b21b6). Byte-exact parity is
+    // pinned by `ThemeGeneratorGoldenTests`.
     private static func rgbToHex(_ r: Double, _ g: Double, _ b: Double) -> String {
-        String(format: "%02x%02x%02x", Int(r.rounded()), Int(g.rounded()), Int(b.rounded()))
+        String(format: "%02x%02x%02x", Int(r.rounded(.toNearestOrEven)), Int(g.rounded(.toNearestOrEven)), Int(b.rounded(.toNearestOrEven)))
     }
 
     private static func rgbToHSV(_ r0: Double, _ g0: Double, _ b0: Double) -> (Double, Double, Double) {
@@ -64,7 +69,7 @@ enum ThemeGenerator {
     private static let lightCount = 5, darkCount = 4
 
     private static func antHue(_ h0: Double, _ i: Int, _ light: Bool) -> Double {
-        let h = h0.rounded()
+        let h = h0.rounded(.toNearestOrEven)
         let hue: Double
         if h >= 60 && h <= 240 {
             hue = light ? h - hueStep * Double(i) : h + hueStep * Double(i)
@@ -82,12 +87,12 @@ enum ThemeGenerator {
         else { sat = s + satStep2 * Double(i) }
         sat = min(sat, 1)
         if light && i == lightCount && sat > 0.1 { sat = 0.1 }
-        return (max(sat, 0.06) * 100).rounded() / 100
+        return (max(sat, 0.06) * 100).rounded(.toNearestOrEven) / 100
     }
 
     private static func antVal(_ v: Double, _ i: Int, _ light: Bool) -> Double {
         let val = light ? v + briStep1 * Double(i) : v - briStep2 * Double(i)
-        return (min(max(val, 0), 1) * 100).rounded() / 100
+        return (min(max(val, 0), 1) * 100).rounded(.toNearestOrEven) / 100
     }
 
     private static func antGenerate(_ baseHex: String) -> [String] {
@@ -307,15 +312,15 @@ enum ThemeGenerator {
             }
         }
 
-        let radius = radiusBase.map { Theme.AppRadius(name: $0.0, radius: ($0.1 * radiusScale).rounded()) }
-        let spacing = spacingBase.map { Theme.AppSpacing(name: $0.0, spacing: ($0.1 * spacingScale).rounded()) }
+        let radius = radiusBase.map { Theme.AppRadius(name: $0.0, radius: ($0.1 * radiusScale).rounded(.toNearestOrEven)) }
+        let spacing = spacingBase.map { Theme.AppSpacing(name: $0.0, spacing: ($0.1 * spacingScale).rounded(.toNearestOrEven)) }
         let typography = typographyBase.map {
-            Theme.AppTypography(name: $0.0, font: font, size: ($0.1 * fontScale).rounded(),
-                                weight: $0.2, lineHeight: ($0.3 * fontScale).rounded())
+            Theme.AppTypography(name: $0.0, font: font, size: ($0.1 * fontScale).rounded(.toNearestOrEven),
+                                weight: $0.2, lineHeight: ($0.3 * fontScale).rounded(.toNearestOrEven))
         }
         let shadows = shadowBase.map { name, layers in
             Theme.AppShadow(name: name, layers: layers.map {
-                Theme.AppShadowLayer(color: $0.0, radius: ($0.1 * shadowScale).rounded(), x: $0.2, y: ($0.3 * shadowScale).rounded())
+                Theme.AppShadowLayer(color: $0.0, radius: ($0.1 * shadowScale).rounded(.toNearestOrEven), x: $0.2, y: ($0.3 * shadowScale).rounded(.toNearestOrEven))
             })
         }
 
