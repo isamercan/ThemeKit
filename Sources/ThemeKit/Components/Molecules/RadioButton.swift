@@ -83,7 +83,7 @@ public struct RadioButton: View {
     /// Raw override wins, then the semantic accent (enabled only), then the hero token.
     private var fillColor: Color {
         if let backgroundColor { return backgroundColor }
-        if isEnabled, let accent { return accent.solid }
+        if isEnabled, let accent { return theme.resolve(accent).solid }
         return theme.background(isEnabled ? .bgHero : .bgSecondary)
     }
 
@@ -144,7 +144,7 @@ public struct RadioButton: View {
         if dominant == .error { return theme.border(.systemcolorsBorderError) }
         if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
         guard isSelected else { return theme.border(.borderPrimary) }
-        return accent?.border ?? theme.border(.borderHero)
+        return accent.map { theme.resolve($0).border } ?? theme.border(.borderHero)
     }
 
     @ViewBuilder
@@ -156,7 +156,7 @@ public struct RadioButton: View {
             case (.check, .plain):
                 Image(systemName: "checkmark")
                     .font(.system(size: controlSize.checkboxSide * 0.55, weight: .bold))
-                    .foregroundStyle((isEnabled && backgroundColor == nil) ? (accent?.onSolid ?? theme.foreground(.fgSecondary)) : theme.foreground(.fgSecondary))
+                    .foregroundStyle((isEnabled && backgroundColor == nil) ? (accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary)) : theme.foreground(.fgSecondary))
             case (.check, .inner):
                 ZStack {
                     Circle().fill(theme.background(.bgWhite))

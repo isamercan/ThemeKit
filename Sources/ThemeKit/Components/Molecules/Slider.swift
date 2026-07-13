@@ -212,7 +212,7 @@ public struct Slider: View {
 
     private var fillColor: Color {
         guard isEnabled else { return theme.background(.bgSecondary) }
-        return accent?.solid ?? theme.background(.bgHero)
+        return accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero)
     }
 
     /// Attached to the whole track (minimumDistance 0), so a tap anywhere sets

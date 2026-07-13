@@ -56,7 +56,7 @@ public struct RadialProgress: View {
     }
 
     // Raw override wins, then the semantic accent, then the status color.
-    private var color: Color { tint ?? semantic?.solid ?? status.semantic.solid }
+    private var color: Color { tint ?? semantic.map { theme.resolve($0).solid } ?? theme.resolve(status.semantic).solid }
     /// Semantic driving the success / exception glyph tint (accent-aware).
     private var glyphSemantic: SemanticColor { semantic ?? status.semantic }
 
@@ -108,12 +108,12 @@ public struct RadialProgress: View {
         guard showLabel else { return nil }
         if status == .success && value >= 1 {
             return AnyView(
-                Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
+                Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(theme.resolve(glyphSemantic).accent)
             )
         }
         if status == .exception {
             return AnyView(
-                Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(glyphSemantic.accent)
+                Image(systemName: "xmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(theme.resolve(glyphSemantic).accent)
             )
         }
         return AnyView(

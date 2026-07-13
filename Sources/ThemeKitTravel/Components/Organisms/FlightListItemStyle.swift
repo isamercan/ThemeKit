@@ -132,13 +132,13 @@ public struct FlightListItemConfiguration {
     // Accent resolution — the `accent(_:)` override, else the theme's hero tokens
     // (the values the built-ins hardcoded before the accent axis existed).
     /// Selected-state border tint.
-    public func accentBorder(_ theme: Theme) -> Color { accent?.base ?? theme.border(.borderHero) }
+    public func accentBorder(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.border(.borderHero) }
     /// Emphasized foreground tint (selected text/icons).
-    public func accentForeground(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(.fgHero) }
+    public func accentForeground(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
     /// Selected-chip fill.
-    public func accentFill(_ theme: Theme) -> Color { accent?.solid ?? theme.background(.bgHero) }
+    public func accentFill(_ theme: Theme) -> Color { accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero) }
     /// Content colour on top of ``accentFill(_:)``.
-    public func accentOnFill(_ theme: Theme) -> Color { accent?.onSolid ?? theme.foreground(.fgSecondary) }
+    public func accentOnFill(_ theme: Theme) -> Color { accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary) }
 
     // Shared formatting, so all styles speak one language.
     public func time(_ date: Date) -> String {
@@ -312,7 +312,7 @@ private struct Sparkline: View {
                     i == 0 ? p.move(to: CGPoint(x: x, y: y)) : p.addLine(to: CGPoint(x: x, y: y))
                 }
             }
-            .stroke(tone.base, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+            .stroke(theme.resolve(tone).base, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
         }
         .flipsForRightToLeftLayoutDirection(true)
     }
@@ -557,12 +557,12 @@ private struct DealChrome: View {
             if let deal = configuration.dealText {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     Icon(systemName: "chart.line.downtrend.xyaxis").size(.xs).accent(configuration.dealTone)
-                    Text(deal).textStyle(.labelSm700).foregroundStyle(configuration.dealTone.base)
+                    Text(deal).textStyle(.labelSm700).foregroundStyle(theme.resolve(configuration.dealTone).base)
                     Spacer()
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .padding(.vertical, Theme.SpacingKey.xs.value)
-                .background(configuration.dealTone.soft)
+                .background(theme.resolve(configuration.dealTone).soft)
             }
             HStack(spacing: Theme.SpacingKey.md.value) {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
@@ -1124,12 +1124,12 @@ private struct HeroChrome: View {
             if let deal = configuration.dealText {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     Icon(systemName: "flame.fill").size(.xs).accent(configuration.dealTone)
-                    Text(deal).textStyle(.labelSm700).foregroundStyle(configuration.dealTone.base)
+                    Text(deal).textStyle(.labelSm700).foregroundStyle(theme.resolve(configuration.dealTone).base)
                     Spacer()
                 }
                 .padding(.horizontal, configuration.spacing(.md))
                 .padding(.vertical, Theme.SpacingKey.xs.value)
-                .background(configuration.dealTone.soft)
+                .background(theme.resolve(configuration.dealTone).soft)
             }
             VStack(alignment: .leading, spacing: configuration.spacing(.md)) {
                 HStack(spacing: Theme.SpacingKey.sm.value) {

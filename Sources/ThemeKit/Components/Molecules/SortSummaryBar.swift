@@ -42,9 +42,9 @@ public struct SortTab: View {
     }
 
     /// Selected underline/icon tint — semantic accent when set, else the hero token (R4).
-    private var selectionTint: Color { accent?.accent ?? theme.foreground(.fgHero) }
+    private var selectionTint: Color { accent.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero) }
     /// Selected title color — follows the accent when set, else primary text.
-    private var selectedTitle: Color { accent?.accent ?? theme.text(.textPrimary) }
+    private var selectedTitle: Color { accent.map { theme.resolve($0).accent } ?? theme.text(.textPrimary) }
 
     public var body: some View {
         Button(action: action) {

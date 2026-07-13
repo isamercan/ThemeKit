@@ -91,7 +91,11 @@ public struct PaymentMethodSelectorConfiguration {
 
     /// The `accent(_:)` override's base color — the value the built-ins use
     /// for the radio, selected icon tint and selected tile stroke.
-    public var accentBase: Color { (accent ?? .primary).base }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentBase(_ theme:)")
+    public var accentBase: Color { accentBase(.shared) }
+    /// Theme-parameterized twin of ``accentBase`` — resolves against the
+    /// environment theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    public func accentBase(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).base }
 
     /// The explicit `surface(_:)` override, or the style's own default.
     public func surface(default fallback: Theme.BackgroundColorKey) -> Theme.BackgroundColorKey {
@@ -224,14 +228,14 @@ private struct PaymentOptionRow: View {
                     }
                     Icon(systemName: option.systemImage)
                         .size(.sm)
-                        .color(isOn ? configuration.accentBase : theme.text(.textSecondary))
+                        .color(isOn ? configuration.accentBase(theme) : theme.text(.textSecondary))
                 }
             }
             .badge(configuration.badges[option.id])
             .selected(isOn)
         if configuration.indicator(default: .radio) == .checkmark, isOn {
             listRow = listRow.trailing {
-                Icon(systemName: "checkmark").size(.sm).color(configuration.accentBase)
+                Icon(systemName: "checkmark").size(.sm).color(configuration.accentBase(theme))
             }
         } else {
             listRow = listRow.trailing(ListRowTrailing.none)
@@ -278,7 +282,7 @@ private struct PaymentOptionCompactRow: View {
             Icon(systemName: option.systemImage)
                 .size(.sm)
                 .color(isDisabled ? theme.text(.textDisabled)
-                       : (isOn ? configuration.accentBase : theme.text(.textSecondary)))
+                       : (isOn ? configuration.accentBase(theme) : theme.text(.textSecondary)))
             Text(option.title)
                 .textStyle(.labelBase600)
                 .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
@@ -288,7 +292,7 @@ private struct PaymentOptionCompactRow: View {
                 Badge(badgeText).badgeStyle(configuration.badgeStyle).variant(.soft).size(.small)
             }
             if configuration.indicator(default: .radio) == .checkmark, isOn {
-                Icon(systemName: "checkmark").size(.sm).color(configuration.accentBase)
+                Icon(systemName: "checkmark").size(.sm).color(configuration.accentBase(theme))
             }
         }
         .padding(.vertical, configuration.spacing(.xs))
@@ -310,8 +314,8 @@ private struct PaymentOptionTile: View {
     /// steps only (`base` / `strong`).
     private var selectedStroke: (color: Color, width: CGFloat) {
         switch configuration.emphasis {
-        case .subtle: return (configuration.accentBase, 1.5)
-        case .strong: return ((configuration.accent ?? .primary).strong, 2)
+        case .subtle: return (configuration.accentBase(theme), 1.5)
+        case .strong: return (theme.resolve(configuration.accent ?? .primary).strong, 2)
         }
     }
 
@@ -327,7 +331,7 @@ private struct PaymentOptionTile: View {
             }
             .frame(maxWidth: .infinity, minHeight: Metrics.tileMinHeight)
             .padding(configuration.spacing(.md))
-            .background(isOn ? (configuration.accent ?? .primary).bg
+            .background(isOn ? theme.resolve(configuration.accent ?? .primary).bg
                         : theme.background(configuration.surface(default: .bgBase)), in: shape)
             .overlay(shape.stroke(isOn ? selectedStroke.color : theme.border(.borderPrimary),
                                   lineWidth: isOn ? selectedStroke.width : 1))
@@ -346,7 +350,7 @@ private struct PaymentOptionTile: View {
             Icon(systemName: option.systemImage)
                 .size(.md)
                 .color(isDisabled ? theme.text(.textDisabled)
-                       : (isOn ? configuration.accentBase : theme.text(.textSecondary)))
+                       : (isOn ? configuration.accentBase(theme) : theme.text(.textSecondary)))
             Text(option.title)
                 .textStyle(.labelSm600)
                 .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
@@ -358,7 +362,7 @@ private struct PaymentOptionTile: View {
                     .multilineTextAlignment(.center)
             }
             if configuration.indicator(default: .checkmark) == .checkmark, isOn {
-                Icon(systemName: "checkmark.circle.fill").size(.sm).color(configuration.accentBase)
+                Icon(systemName: "checkmark.circle.fill").size(.sm).color(configuration.accentBase(theme))
             }
         }
     }
@@ -606,15 +610,15 @@ private struct AccentCardPaymentMethodSelectorStyle: PaymentMethodSelectorStyle 
                     let isOn = configuration.selectedID == option.id
                     Button { configuration.select(option.id) } label: {
                         HStack(spacing: configuration.spacing(.sm)) {
-                            Icon(systemName: option.systemImage).size(.sm).color(configuration.accentBase)
+                            Icon(systemName: option.systemImage).size(.sm).color(configuration.accentBase(theme))
                             Text(option.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                             Spacer()
                             if isOn {
-                                Icon(systemName: "checkmark.circle.fill").size(.sm).color(configuration.accentBase)
+                                Icon(systemName: "checkmark.circle.fill").size(.sm).color(configuration.accentBase(theme))
                             }
                         }
                         .padding(configuration.spacing(.md))
-                        .background(isOn ? (configuration.accent ?? .primary).bg : theme.background(.bgBase),
+                        .background(isOn ? theme.resolve(configuration.accent ?? .primary).bg : theme.background(.bgBase),
                                     in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
                     }
                     .buttonStyle(.plain)

@@ -28,9 +28,9 @@ public struct ScoreBadge: View {
     }
 
     /// Fill — the accent's solid role when set, else the stock turquoise token.
-    private var fill: Color { accent.map { $0.solid } ?? theme.background(.bgTurquoise) }
+    private var fill: Color { accent.map { theme.resolve($0).solid } ?? theme.background(.bgTurquoise) }
     /// Content on the fill — auto-contrasting on a custom accent.
-    private var content: Color { accent.map { $0.onSolid } ?? theme.foreground(.fgSecondary) }
+    private var content: Color { accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary) }
 
     private var isLarge: Bool { size == .large }
 

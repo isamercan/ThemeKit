@@ -530,7 +530,7 @@ private struct FeedbackHostModifier: ViewModifier {
                 if let custom = note.custom {
                     custom
                 } else {
-                    Icon(systemName: note.kind.systemImage).size(.md).color(note.kind.semanticColor.accent)
+                    Icon(systemName: note.kind.systemImage).size(.md).color(theme.resolve(note.kind.semanticColor).accent)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(note.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
                         if let message = note.message {

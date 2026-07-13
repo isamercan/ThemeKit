@@ -28,8 +28,8 @@ public struct IconTile: View {
 
     public init(_ systemImage: String) { self.systemImage = systemImage }   // R1
 
-    private var bg: Color { accent.map { $0.bg } ?? theme.background(backgroundKey) }
-    private var fg: Color { accent.map { $0.base } ?? iconColorKey.map { theme.text($0) } ?? theme.text(.textSecondary) }
+    private var bg: Color { accent.map { theme.resolve($0).bg } ?? theme.background(backgroundKey) }
+    private var fg: Color { accent.map { theme.resolve($0).base } ?? iconColorKey.map { theme.text($0) } ?? theme.text(.textSecondary) }
 
     public var body: some View {
         Image(systemName: systemImage)

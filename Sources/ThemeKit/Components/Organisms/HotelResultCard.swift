@@ -65,7 +65,7 @@ public struct HotelResultCard: View {
     public init(name: String) { self.name = name }   // R1
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: radiusRole.value, style: .continuous) }
-    private var accentColor: Color { accent.map { $0.base } ?? theme.foreground(.fgHero) }
+    private var accentColor: Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
 
     /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
@@ -108,9 +108,9 @@ public struct HotelResultCard: View {
 
             HStack(alignment: .top) {
                 if let cornerBadge {
-                    Text(cornerBadge).textStyle(.labelSm700).foregroundStyle(accent.map { $0.onSolid } ?? theme.text(.textSecondaryInverse))
+                    Text(cornerBadge).textStyle(.labelSm700).foregroundStyle(accent.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse))
                         .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(accent.map { $0.solid } ?? theme.foreground(.fgHero), in: Capsule())
+                        .background(accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero), in: Capsule())
                 }
                 Spacer()
                 if let favorite { heart(favorite) }
@@ -200,7 +200,8 @@ public struct HotelResultCard: View {
                 ForEach(Array(promos.enumerated()), id: \.offset) { _, promo in
                     Text(promo).textStyle(.labelSm600).foregroundStyle(accentColor)
                         .padding(.horizontal, 10).padding(.vertical, 6)
-                        .background(accent.map { $0.bg } ?? theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+                        .background(accent.map { theme.resolve($0).bg } ?? theme.background(.bgElevatorTertiary),
+                                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous).stroke(accentColor.opacity(0.5), lineWidth: 1))
                 }
             }
@@ -233,7 +234,7 @@ public struct HotelResultCard: View {
             }
         }
         .padding(density.scale(Theme.SpacingKey.sm.value))
-        .background(accent.map { $0.bg } ?? theme.background(.bgSecondary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+        .background(accent.map { theme.resolve($0).bg } ?? theme.background(.bgSecondary), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
     }
 }
 

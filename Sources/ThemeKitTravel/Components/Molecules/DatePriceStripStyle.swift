@@ -98,12 +98,12 @@ public struct DatePriceStripConfiguration {
 
     /// The `accent(_:)` override's base, else the theme's hero foreground — the
     /// selected-state chroma every built-in uses.
-    public func accentForeground(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(.fgHero) }
+    public func accentForeground(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
 
     /// The `cheapestTone(_:)` override's base, else the stock success token —
     /// the lowest-fare chroma every built-in uses.
     public func cheapestForeground(_ theme: Theme) -> Color {
-        cheapestTone?.base ?? theme.foreground(.systemcolorsFgSuccess)
+        cheapestTone.map { theme.resolve($0).base } ?? theme.foreground(.systemcolorsFgSuccess)
     }
 
     /// An item's price, formatted with the strip's resolved currency and the
@@ -387,7 +387,7 @@ private struct ChartDatePriceStripChrome: View {
         if item.unavailable { return theme.background(.bgSecondaryLight) }
         if isSelected { return configuration.accentForeground(theme) }
         if isCheapest { return configuration.cheapestForeground(theme) }
-        return (configuration.accent ?? .primary).soft
+        return theme.resolve(configuration.accent ?? .primary).soft
     }
 
     private func priceColor(_ item: DatePriceItem, isSelected: Bool, isCheapest: Bool) -> Color {
@@ -486,7 +486,7 @@ private struct AgendaDatePriceStripStyle: DatePriceStripStyle {
                 }
                 .padding(configuration.spacing(.sm))
                 .background(
-                    isSelected ? (configuration.accent ?? .primary).soft : theme.background(.bgWhite),
+                    isSelected ? theme.resolve(configuration.accent ?? .primary).soft : theme.background(.bgWhite),
                     in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
             }
             .buttonStyle(.plain)

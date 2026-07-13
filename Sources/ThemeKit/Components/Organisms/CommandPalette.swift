@@ -163,7 +163,7 @@ private struct CommandPaletteView: View {
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .padding(.vertical, Theme.SpacingKey.sm.value)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isHighlighted ? SemanticColor.primary.soft : .clear)
+            .background(isHighlighted ? theme.resolve(.primary).soft : .clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

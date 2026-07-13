@@ -45,6 +45,9 @@ public struct ProgressBar: View {
     private var gradient: Bool = false
     private var steps: Int? = nil
     private var strokeColor: Color? = nil
+    // ADR-0006: the token overload stores the `SemanticColor` (not a resolved
+    // `Color`) so it re-resolves against the environment theme in `body`.
+    private var semanticFill: SemanticColor? = nil
     private var trailColor: Color? = nil
     private var successSegment: Double? = nil
     private var format: ((Double) -> String)? = nil
@@ -110,7 +113,7 @@ public struct ProgressBar: View {
     private var labelView: AnyView? {
         if status == .success && value >= 1 {
             return AnyView(
-                Icon(systemName: "checkmark.circle.fill").size(.sm).colorOverride(status.semantic.accent)
+                Icon(systemName: "checkmark.circle.fill").size(.sm).colorOverride(theme.resolve(status.semantic).accent)
             )
         }
         if showPercentage {
@@ -125,13 +128,17 @@ public struct ProgressBar: View {
     }
 
     private var fillStyle: AnyShapeStyle {
+        if let semanticFill {
+            return AnyShapeStyle(theme.resolve(semanticFill).base)
+        }
         if let strokeColor {
             return AnyShapeStyle(strokeColor)
         }
         if gradient {
-            return AnyShapeStyle(LinearGradient(colors: [status.semantic.base, status.semantic.hover], startPoint: .leading, endPoint: .trailing))
+            let resolved = theme.resolve(status.semantic)
+            return AnyShapeStyle(LinearGradient(colors: [resolved.base, resolved.hover], startPoint: .leading, endPoint: .trailing))
         }
-        return AnyShapeStyle(status.semantic.solid)
+        return AnyShapeStyle(theme.resolve(status.semantic).solid)
     }
 }
 
@@ -148,12 +155,12 @@ public extension ProgressBar {
     func steps(_ count: Int?) -> Self { copy { $0.steps = count } }
     /// Semantic fill override; `nil` (default) keeps the status-derived fill.
     /// Drives only the fill — the track keeps its token default.
-    func accent(_ color: SemanticColor?) -> Self { copy { $0.strokeColor = color?.base } }
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.semanticFill = color; $0.strokeColor = nil } }
     /// Raw fill/track overrides (back-compat); prefer `accent(_:)` for the fill.
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
     func colors(fill: Color? = nil, track: Color? = nil) -> Self {
         copy {
-            if let fill { $0.strokeColor = fill }
+            if let fill { $0.strokeColor = fill; $0.semanticFill = nil }
             if let track { $0.trailColor = track }
         }
     }

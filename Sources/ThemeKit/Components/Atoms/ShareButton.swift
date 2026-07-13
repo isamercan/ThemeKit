@@ -29,8 +29,8 @@ public struct ShareButton: View {
                 .textStyle(size?.textStyle ?? .labelBase600)
                 .padding(.horizontal, size?.horizontalPadding ?? Theme.SpacingKey.md.value)
                 .frame(height: size?.height ?? 44)
-                .foregroundStyle(accent.map { $0.onSolid } ?? theme.foreground(.fgSecondary))
-                .background(accent.map { $0.solid } ?? theme.foreground(.fgHero),
+                .foregroundStyle(accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary))
+                .background(accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero),
                             in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
         }
     }

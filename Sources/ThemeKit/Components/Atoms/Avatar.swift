@@ -115,11 +115,13 @@ public struct Avatar: View {
     /// every other `FillVariant` resolves like `.solid` (documented on `fill(_:)`).
     private var surfaceFill: Color {
         guard let accent = effectiveAccent else { return background.fill(theme) }
-        return fillVariant == .soft ? accent.soft : accent.solid
+        let resolved = theme.resolve(accent)
+        return fillVariant == .soft ? resolved.soft : resolved.solid
     }
     private var contentColor: Color {
         guard let accent = effectiveAccent else { return background.foreground(theme) }
-        return fillVariant == .soft ? accent.accent : accent.onSolid
+        let resolved = theme.resolve(accent)
+        return fillVariant == .soft ? resolved.accent : resolved.onSolid
     }
 
     public var body: some View {
@@ -137,7 +139,7 @@ public struct Avatar: View {
         // set, else the primary border token.
         .overlay {
             if isBordered {
-                clip.stroke(borderAccent?.solid ?? theme.border(.borderPrimary), lineWidth: 2)
+                clip.stroke(borderAccent.map { theme.resolve($0).solid } ?? theme.border(.borderPrimary), lineWidth: 2)
             }
         }
         .overlay(alignment: .bottomTrailing) { presenceDot }

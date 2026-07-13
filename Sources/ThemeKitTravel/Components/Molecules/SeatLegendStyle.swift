@@ -108,7 +108,7 @@ public struct SeatLegendConfiguration {
             let c = palette.colors(for: tier, theme: theme)
             return SeatLegendEntry(fill: c.fill, border: c.stroke, label: tier.label)
         }
-        e += customEntries.map { SeatLegendEntry(fill: $0.color.bg, border: $0.color.base, label: $0.label) }
+        e += customEntries.map { SeatLegendEntry(fill: theme.resolve($0.color).bg, border: theme.resolve($0.color).base, label: $0.label) }
         if showsSelected {
             let selected = palette.selectedColors(theme: theme)
             e.append(SeatLegendEntry(fill: selected.fill, border: selected.stroke, label: String(themeKit: "Selected")))

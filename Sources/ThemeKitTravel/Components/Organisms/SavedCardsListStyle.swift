@@ -114,7 +114,7 @@ public struct SavedCardsListConfiguration {
     public func spacing(_ key: Theme.SpacingKey) -> CGFloat { density.scale(key.value) }
     /// The `accent(_:)` override's base, else the theme's primary triad — the
     /// value the built-ins hardcoded before the accent axis existed.
-    public func accentBase(_ theme: Theme) -> Color { (accent ?? .primary).base }
+    public func accentBase(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).base }
     /// The expired badge's resolved text.
     public func expiredBadgeLabel() -> String { expiredBadgeText ?? String(themeKitTravel: "Expired") }
 

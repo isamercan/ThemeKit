@@ -50,6 +50,9 @@ public struct ThemeButton: View {
     /// The resolved semantic color: explicit modifier ?? subtree
     /// `componentDefaults.accent` ?? `.primary`.
     private var color: SemanticColor { explicitColor ?? componentDefaults.accent ?? .primary }
+    /// Bound once per body read — resolves `color` against the environment
+    /// theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    private var resolvedColor: SemanticColor.Resolved { theme.resolve(color) }
 
     private let title: String?
     private let action: () -> Void
@@ -113,7 +116,7 @@ public struct ThemeButton: View {
             shape: shapeStyle,
             resting: background,
             pressed: pressedBackground,
-            stroke: variant == .outline ? (isEnabled ? color.border : theme.border(.borderPrimary)) : nil
+            stroke: variant == .outline ? (isEnabled ? resolvedColor.border : theme.border(.borderPrimary)) : nil
         ))
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
@@ -182,16 +185,16 @@ public struct ThemeButton: View {
     private var foreground: Color {
         guard isEnabled else { return theme.text(.textDisabled) }
         switch variant {
-        case .solid: return color.onSolid
-        case .soft, .outline, .ghost, .link: return color.accent
+        case .solid: return resolvedColor.onSolid
+        case .soft, .outline, .ghost, .link: return resolvedColor.accent
         }
     }
 
     private var background: Color {
         guard isEnabled else { return variant == .solid ? theme.background(.bgSecondary) : .clear }
         switch variant {
-        case .solid: return color.solid
-        case .soft: return color.soft
+        case .solid: return resolvedColor.solid
+        case .soft: return resolvedColor.soft
         case .outline, .ghost, .link: return .clear
         }
     }
@@ -202,9 +205,9 @@ public struct ThemeButton: View {
     private var pressedBackground: Color {
         guard isEnabled else { return background }
         switch variant {
-        case .solid: return color == .neutral ? background : color.active
-        case .soft: return color.bgHover
-        case .outline, .ghost, .link: return color.bg
+        case .solid: return color == .neutral ? background : resolvedColor.active
+        case .soft: return resolvedColor.bgHover
+        case .outline, .ghost, .link: return resolvedColor.bg
         }
     }
 
@@ -372,7 +375,7 @@ private struct SurfacePressBody: View {
     /// used by the button-sized styles above.
     private static let pressedScale: CGFloat = 0.985
 
-    private var wash: Color { tint?.soft ?? theme.background(.bgElevatorTertiary) }
+    private var wash: Color { tint.map { theme.resolve($0).soft } ?? theme.background(.bgElevatorTertiary) }
 
     var body: some View {
         configuration.label

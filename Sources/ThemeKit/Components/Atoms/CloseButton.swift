@@ -81,7 +81,7 @@ public struct CloseButton: View {
     /// Disabled always wins; then the semantic tint; else the muted default.
     private var glyphColor: Color {
         guard isEnabled else { return theme.text(.textDisabled) }
-        if let tint { return tint.accent }
+        if let tint { return theme.resolve(tint).accent }
         return theme.text(.textTertiary)
     }
 }

@@ -90,7 +90,7 @@ public struct PriceAlertCard: View {
             Spacer(minLength: 6)
             // The Toggle is the card's one VoiceOver element (label = card texts) — a
             // `.combine` on the container would flatten it into a static element.
-            Toggle("", isOn: $isOn).labelsHidden().tint(accentSemantic.base)
+            Toggle("", isOn: $isOn).labelsHidden().tint(theme.resolve(accentSemantic).base)
                 .accessibilityLabel([title, subtitle].compactMap { $0 }.joined(separator: ", "))
         }
         .padding(density.scale(Theme.SpacingKey.md.value))

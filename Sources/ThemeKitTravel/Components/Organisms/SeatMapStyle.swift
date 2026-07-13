@@ -298,7 +298,7 @@ private struct CaptionedSeatMapStyle: SeatMapStyle {
                      ? String(themeKitTravel: "1 seat selected")
                      : String(themeKitTravel: "\(configuration.selectedCount) seats selected"))
                     .textStyle(.labelSm600)
-                    .foregroundStyle(configuration.accent?.base ?? theme.text(.textSecondary))
+                    .foregroundStyle(configuration.accent.map { theme.resolve($0).base } ?? theme.text(.textSecondary))
                 configuration.cabinGrid
             }
         }

@@ -159,11 +159,11 @@ private struct PillTripTypeToggleChrome: View {
             configuration.select(index)
         } label: {
             TripTypeOptionLabel(configuration: configuration, index: index, option: option)
-                .foregroundStyle(isOn ? configuration.resolvedAccent.onSolid : theme.text(.textSecondary))
+                .foregroundStyle(isOn ? theme.resolve(configuration.resolvedAccent).onSolid : theme.text(.textSecondary))
                 .padding(.horizontal, configuration.spacing(.sm))
                 .frame(maxWidth: configuration.fullWidth ? .infinity : nil)
                 .frame(minHeight: configuration.size.minHeight)
-                .background(isOn ? configuration.resolvedAccent.solid : .clear, in: configuration.trackShape)
+                .background(isOn ? theme.resolve(configuration.resolvedAccent).solid : .clear, in: configuration.trackShape)
                 .contentShape(configuration.trackShape)
         }
         .buttonStyle(.plain)
@@ -203,9 +203,9 @@ private struct UnderlineTripTypeToggleChrome: View {
         } label: {
             VStack(spacing: Theme.SpacingKey.xs.value) {
                 TripTypeOptionLabel(configuration: configuration, index: index, option: option)
-                    .foregroundStyle(isOn ? configuration.resolvedAccent.base : theme.text(.textSecondary))
+                    .foregroundStyle(isOn ? theme.resolve(configuration.resolvedAccent).base : theme.text(.textSecondary))
                 Rectangle()
-                    .fill(isOn ? configuration.resolvedAccent.base : Color.clear)
+                    .fill(isOn ? theme.resolve(configuration.resolvedAccent).base : Color.clear)
                     .frame(height: 2)
             }
             .padding(.horizontal, configuration.spacing(.xs))
@@ -256,7 +256,7 @@ private struct MenuTripTypeToggleChrome: View {
             if let symbol = configuration.icon(at: configuration.selectedIndex) {
                 Image(systemName: symbol)
                     .textStyle(configuration.size.iconStyle)
-                    .foregroundStyle(configuration.resolvedAccent.base)
+                    .foregroundStyle(theme.resolve(configuration.resolvedAccent).base)
             }
             Text(configuration.selectedTitle)
                 .textStyle(configuration.size.textStyle)
@@ -349,7 +349,7 @@ private struct RadioListTripTypeToggleStyle: TripTypeToggleStyle {
                 HStack(spacing: configuration.spacing(.sm)) {
                     Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
                         .textStyle(configuration.size.iconStyle)
-                        .foregroundStyle(isOn ? configuration.resolvedAccent.base : theme.text(.textTertiary))
+                        .foregroundStyle(isOn ? theme.resolve(configuration.resolvedAccent).base : theme.text(.textTertiary))
                     Text(option)
                         .textStyle(configuration.size.textStyle)
                         .foregroundStyle(isOn ? theme.text(.textPrimary) : theme.text(.textSecondary))

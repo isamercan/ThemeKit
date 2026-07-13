@@ -12,11 +12,13 @@ import SwiftUI
 /// The three macOS-style window control dots (decorative, token-tinted).
 /// Shared by ``WindowFrame`` and ``BrowserFrame``.
 struct TrafficLights: View {
+    @Environment(\.theme) private var theme
+
     var body: some View {
         HStack(spacing: 6) {
-            Circle().fill(SemanticColor.error.base).frame(width: 10, height: 10)
-            Circle().fill(SemanticColor.warning.base).frame(width: 10, height: 10)
-            Circle().fill(SemanticColor.success.base).frame(width: 10, height: 10)
+            Circle().fill(theme.resolve(.error).base).frame(width: 10, height: 10)
+            Circle().fill(theme.resolve(.warning).base).frame(width: 10, height: 10)
+            Circle().fill(theme.resolve(.success).base).frame(width: 10, height: 10)
         }
         .accessibilityHidden(true)
     }
@@ -70,7 +72,7 @@ public struct WindowFrame<Content: View>: View {
             if let title {
                 Text(title)
                     .textStyle(.labelSm600)
-                    .foregroundStyle(accent.map { $0.accent } ?? theme.text(.textSecondary))
+                    .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textSecondary))
                     .lineLimit(1)
             }
             HStack {
@@ -80,7 +82,7 @@ public struct WindowFrame<Content: View>: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(accent.map { $0.soft } ?? theme.background(.bgSecondary))
+        .background(accent.map { theme.resolve($0).soft } ?? theme.background(.bgSecondary))
     }
 }
 

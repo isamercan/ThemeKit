@@ -112,7 +112,7 @@ public struct FlightCardConfiguration {
 
     /// The `accent(_:)` override's base, else the theme's hero foreground — the
     /// value the built-ins hardcoded before the accent axis existed.
-    public func accentForeground(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(.fgHero) }
+    public func accentForeground(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
 
     // Shared formatting, so all styles speak one language.
     public func time(_ date: Date) -> String {

@@ -58,11 +58,11 @@ public struct ChatBubble: View {
 
     /// Accent tint wins over the side defaults (daisyUI `chat-bubble-{color}`).
     private var bubbleFill: Color {
-        if let accent { return accent.solid }
+        if let accent { return theme.resolve(accent).solid }
         return side == .incoming ? theme.background(.bgElevatorTertiary) : theme.background(.bgHero)
     }
     private var bubbleForeground: Color {
-        if let accent { return accent.onSolid }
+        if let accent { return theme.resolve(accent).onSolid }
         return side == .incoming ? theme.text(.textPrimary) : theme.foreground(.fgSecondary)
     }
 

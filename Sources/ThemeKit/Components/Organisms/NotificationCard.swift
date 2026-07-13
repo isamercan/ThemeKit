@@ -45,7 +45,7 @@ public struct NotificationCard<Actions: View>: View {
     }
 
     private var iconName: String { type?.systemImage ?? "bell" }
-    private var iconColor: Color { type?.semanticColor.accent ?? theme.foreground(.fgHero) }
+    private var iconColor: Color { type.map { theme.resolve($0.semanticColor).accent } ?? theme.foreground(.fgHero) }
 
     public var body: some View {
         // The shell (fill, corner clipping, border, shadow) is drawn by the active

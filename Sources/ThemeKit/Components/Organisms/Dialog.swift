@@ -107,7 +107,7 @@ struct DialogCard: View {
     var body: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
             if let kind {
-                Icon(systemName: kind.systemImage).size(.xl).color(kind.semanticColor.accent)
+                Icon(systemName: kind.systemImage).size(.xl).color(theme.resolve(kind.semanticColor).accent)
             }
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 Text(title)

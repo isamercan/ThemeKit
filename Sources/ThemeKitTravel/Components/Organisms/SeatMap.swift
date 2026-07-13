@@ -75,7 +75,11 @@ public struct SeatMap: View {
     private var seatDisplay: SeatDisplay = .icon
     private var customContent: ((SeatContext) -> AnyView)?
     private var aisleWidthOverride: CGFloat?
-    private var tierOverrides: [SeatTier: Color] = [:]
+    // ADR-0006: the token overload stores `SemanticColor`s (not resolved
+    // `Color`s) so tier overrides re-resolve against the environment theme in
+    // `palette`; `rawTierOverrides` is the raw-`Color` escape hatch.
+    private var semanticTierOverrides: [SeatTier: SemanticColor] = [:]
+    private var rawTierOverrides: [SeatTier: Color] = [:]
     private var accentOverride: SemanticColor?
     private var seatShape: SeatShape = .rounded
     private var legendPlacement: LegendPlacement = .bottom
@@ -89,7 +93,11 @@ public struct SeatMap: View {
     private let gutter: CGFloat = 22
     private var passengerMode: Bool { !passengers.isEmpty && assignment != nil }
     private var gapWidth: CGFloat { aisleWidthOverride ?? seatSize }
-    private var palette: SeatPalette { SeatPalette(tierOverrides) }
+    private var palette: SeatPalette {
+        var overrides = rawTierOverrides
+        for (tier, color) in semanticTierOverrides { overrides[tier] = theme.resolve(color).base }
+        return SeatPalette(overrides)
+    }
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
     }
@@ -353,7 +361,7 @@ public extension SeatMap {
     /// with your own palette. Each tier uses the token's base shade, matching
     /// the palette's own tier defaults.
     func tierColors(_ overrides: [SeatTier: SemanticColor]) -> Self {
-        copy { $0.tierOverrides = overrides.mapValues(\.base) }
+        copy { $0.semanticTierOverrides = overrides }
     }
     /// Accent for the passenger rail's and deck selector's **active** pill — the
     /// token's `.solid` shade fills the pill and `.onSolid` colours its text.
@@ -365,7 +373,7 @@ public extension SeatMap {
     /// overload instead of being ambiguous.
     @_disfavoredOverload
     @available(*, deprecated, message: "Use tierColors(_: [SeatTier: SemanticColor]) — the token-bound overload.")
-    func tierColors(_ overrides: [SeatTier: Color]) -> Self { copy { $0.tierOverrides = overrides } }
+    func tierColors(_ overrides: [SeatTier: Color]) -> Self { copy { $0.rawTierOverrides = overrides } }
 
     /// Token-stepped seat size (compact 36 · regular 44 · large 52 · xl 60).
     /// Unlike the raw overload, `.compact` deliberately drops below the 44 pt
@@ -467,8 +475,8 @@ private struct PassengerRail: View {
     @Binding var active: String?
     let accent: SemanticColor?
 
-    private var activeFill: Color { accent?.solid ?? theme.foreground(.fgHero) }
-    private var activeContent: Color { accent?.onSolid ?? theme.text(.textSecondaryInverse) }
+    private var activeFill: Color { accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero) }
+    private var activeContent: Color { accent.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse) }
 
     var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
@@ -499,8 +507,8 @@ private struct DeckSelector: View {
     /// Pill title per floor — `SeatMap.deckLabel(_:)` or the localized default.
     let label: (Int) -> String
 
-    private var activeFill: Color { accent?.solid ?? theme.foreground(.fgHero) }
-    private var activeContent: Color { accent?.onSolid ?? theme.text(.textSecondaryInverse) }
+    private var activeFill: Color { accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero) }
+    private var activeContent: Color { accent.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse) }
 
     var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {

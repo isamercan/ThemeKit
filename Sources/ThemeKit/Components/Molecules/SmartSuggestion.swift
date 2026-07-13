@@ -31,13 +31,16 @@ public struct SmartSuggestion: View {
     public init(_ message: String) { self.message = message }   // R1
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
+    /// Bound once per body read — resolves `tint` against the environment
+    /// theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    private var resolvedTint: SemanticColor.Resolved { theme.resolve(tint) }
 
     public var body: some View {
         content
             .padding(density.scale(Theme.SpacingKey.md.value))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(tint.bg, in: shape)
-            .overlay { if bordered { shape.stroke(tint.base.opacity(0.35), lineWidth: 1) } }
+            .background(resolvedTint.bg, in: shape)
+            .overlay { if bordered { shape.stroke(resolvedTint.base.opacity(0.35), lineWidth: 1) } }
             .contentShape(shape)
             .onTapGesture { onTap?() }
             .accessibilityElement(children: .combine)
@@ -46,16 +49,16 @@ public struct SmartSuggestion: View {
 
     private var content: some View {
         HStack(alignment: .top, spacing: density.scale(Theme.SpacingKey.sm.value)) {
-            Image(systemName: systemImage).font(.system(size: 15, weight: .semibold)).foregroundStyle(tint.base)
+            Image(systemName: systemImage).font(.system(size: 15, weight: .semibold)).foregroundStyle(resolvedTint.base)
             (labelText + messageText)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
             if let actionTitle, let onAction {
                 Button { onAction() } label: {
-                    Text(actionTitle).textStyle(.labelSm700).foregroundStyle(tint.strong).fixedSize()
+                    Text(actionTitle).textStyle(.labelSm700).foregroundStyle(resolvedTint.strong).fixedSize()
                 }.buttonStyle(.plain)
             } else if onTap != nil {
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(tint.base).mirrorsInRTL()
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(resolvedTint.base).mirrorsInRTL()
             }
         }
     }
@@ -65,7 +68,7 @@ public struct SmartSuggestion: View {
     // raw system font here is a justified constraint, not an oversight.
     private var labelText: Text {
         guard let label else { return Text("") }
-        return Text(label + ": ").font(.system(size: 14, weight: .semibold)).foregroundColor(tint.strong)
+        return Text(label + ": ").font(.system(size: 14, weight: .semibold)).foregroundColor(resolvedTint.strong)
     }
     private var messageText: Text {
         Text(message).font(.system(size: 14, weight: .semibold)).foregroundColor(theme.text(.textPrimary))

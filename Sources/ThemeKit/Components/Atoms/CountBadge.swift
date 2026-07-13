@@ -42,10 +42,10 @@ private struct CountBubble: View {
                 ? "\(overflowCount.formatted(.number.locale(locale)))+"
                 : count.formatted(.number.locale(locale)))
                 .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(color.onSolid)
+                .foregroundStyle(theme.resolve(color).onSolid)
                 .padding(.horizontal, 5)
                 .frame(minWidth: 18, minHeight: 18)
-                .background(color.solid, in: Capsule())
+                .background(theme.resolve(color).solid, in: Capsule())
                 .overlay(Capsule().strokeBorder(theme.background(.bgWhite), lineWidth: 1.5))
                 .offset(x: 9, y: -9)
         }
@@ -57,7 +57,7 @@ private struct DotBadge: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        Circle().fill(color.solid).frame(width: 10, height: 10)
+        Circle().fill(theme.resolve(color).solid).frame(width: 10, height: 10)
             .overlay(Circle().strokeBorder(theme.background(.bgWhite), lineWidth: 1.5))
             .offset(x: 4, y: -4)
             // Color-only status dot — decorative to VoiceOver; the host view
@@ -78,14 +78,16 @@ public struct Ribbon<Content: View>: View {
         self.content = content()
     }
 
+    @Environment(\.theme) private var theme
+
     public var body: some View {
         content.overlay(alignment: .topTrailing) {
             Text(text)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(color.onSolid)
+                .foregroundStyle(theme.resolve(color).onSolid)
                 .padding(.horizontal, Theme.SpacingKey.sm.value)
                 .padding(.vertical, 3)
-                .background(color.solid)
+                .background(theme.resolve(color).solid)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .offset(x: 6, y: 8)
                 .themeShadow(.soft)

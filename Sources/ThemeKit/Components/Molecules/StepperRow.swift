@@ -31,7 +31,7 @@ public struct StepperRow: View {
         self._value = value
     }
 
-    private var accentBase: Color { (accent ?? .primary).base }
+    private var accentBase: Color { theme.resolve(accent ?? .primary).base }
 
     public var body: some View {
         HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {

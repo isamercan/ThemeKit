@@ -118,10 +118,10 @@ public struct DestinationCard: View {
     private func ribbonTag(_ text: String) -> some View {
         Text(text)
             .textStyle(.labelSm700)
-            .foregroundStyle(ribbonColor.onSolid)
+            .foregroundStyle(theme.resolve(ribbonColor).onSolid)
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.vertical, 4)
-            .background(ribbonColor.solid, in: Capsule())
+            .background(theme.resolve(ribbonColor).solid, in: Capsule())
             .padding(Theme.SpacingKey.sm.value)
             .themeShadow(.soft)
     }

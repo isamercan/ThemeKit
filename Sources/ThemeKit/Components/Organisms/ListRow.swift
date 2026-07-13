@@ -417,7 +417,7 @@ public struct ListSectionHeader: View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
             Text(title.uppercased())
                 .textStyle(textStyle)
-                .foregroundStyle(accent?.accent ?? theme.text(.textTertiary))
+                .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textTertiary))
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let trailingSlot { trailingSlot }
         }

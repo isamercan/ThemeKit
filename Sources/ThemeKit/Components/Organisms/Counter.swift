@@ -62,7 +62,7 @@ public struct Counter: View {
     }
 
     /// Digit tint — semantic accent when set, else primary text (R4).
-    private var valueColor: Color { accent?.accent ?? theme.text(.textPrimary) }
+    private var valueColor: Color { accent.map { theme.resolve($0).accent } ?? theme.text(.textPrimary) }
 
     public var body: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {

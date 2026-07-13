@@ -47,6 +47,10 @@ public struct DateRangePicker: View {
     private var accent: SemanticColor?
     private var daySelection: DaySelection = .circle
     private var styleTransform: ((inout CalendarStyle) -> Void)?
+    // ADR-0006: token holidays are queued as `SemanticColor` (not a resolved
+    // ARGB) so the fill re-themes; baked into `HolidayEntry`s against the
+    // environment theme in `resolvedConfiguration`, not at modifier-call time.
+    private var pendingTokenHolidays: [(dates: [ETSCalendarDate], color: SemanticColor, name: String)] = []
     // Composition overrides (bring-your-own views).
     private var dayContent: ((CalendarDayContext) -> AnyView)?
     private var selectedAccessoryContent: ((Date) -> AnyView)?
@@ -84,14 +88,14 @@ public struct DateRangePicker: View {
         switch display {
         case .picker:
             switch purpose {
-            case .range:    CalendarRangePickerView.rangeSelector(configuration: configuration, onApply: onApply, onCancel: onCancel)
-            case .hotel:    CalendarRangePickerView.hotel(configuration: configuration, onApply: onApply, onCancel: onCancel)
-            case .rentACar: CalendarRangePickerView.rentACar(configuration: configuration, onApply: onApply, onCancel: onCancel)
+            case .range:    CalendarRangePickerView.rangeSelector(configuration: resolvedConfiguration, onApply: onApply, onCancel: onCancel)
+            case .hotel:    CalendarRangePickerView.hotel(configuration: resolvedConfiguration, onApply: onApply, onCancel: onCancel)
+            case .rentACar: CalendarRangePickerView.rentACar(configuration: resolvedConfiguration, onApply: onApply, onCancel: onCancel)
             }
         case .month:
-            CalendarGridView(configuration: configuration, onSelectionChange: onApply)
+            CalendarGridView(configuration: resolvedConfiguration, onSelectionChange: onApply)
         case .week:
-            CalendarWeekView(configuration: configuration,
+            CalendarWeekView(configuration: resolvedConfiguration,
                              showsTitle: configuration.chrome.showsTitleBar,
                              showsWeekdayHeader: configuration.chrome.showsWeekdayHeader,
                              onSelectionChange: onApply)
@@ -99,20 +103,34 @@ public struct DateRangePicker: View {
             CalendarYearView(year: configuration.calendar.component(.year, from: Date()),
                              calendar: configuration.calendar, locale: configuration.locale)
         case .browse:
-            CalendarBrowseView(configuration: configuration, onSelectionChange: onApply)
+            CalendarBrowseView(configuration: resolvedConfiguration, onSelectionChange: onApply)
         }
     }
 
     // MARK: Style (ThemeKit tokens + overrides)
 
+    /// `configuration` with any `.holiday(on:color:name:)` token entries baked
+    /// into `HolidayEntry`s against the environment theme — resolved here (in
+    /// `body`'s scope) rather than at modifier-call time, so it honors a
+    /// per-subtree `.theme(_:)` override (ADR-0006).
+    private var resolvedConfiguration: CalendarPickerConfiguration {
+        guard !pendingTokenHolidays.isEmpty else { return configuration }
+        var c = configuration
+        c.holidays += pendingTokenHolidays.map { entry in
+            HolidayEntry(dates: entry.dates, colorARGB: Self.argb(theme.resolve(entry.color).base), description: entry.name)
+        }
+        return c
+    }
+
     private var resolvedStyle: CalendarStyle {
         var s = CalendarStyle.themeKit(theme)
         s.metrics.daySelectionShape = resolvedDayShape
         if let accent {                                  // token-fed brand override (re-themes)
-            s.theme.ink = accent.strong
-            s.theme.onInk = accent.onSolid
-            s.theme.todayRing = accent.base
-            s.theme.inBetweenFill = accent.bg
+            let resolved = theme.resolve(accent)
+            s.theme.ink = resolved.strong
+            s.theme.onInk = resolved.onSolid
+            s.theme.todayRing = resolved.base
+            s.theme.inBetweenFill = resolved.bg
         }
         styleTransform?(&s)
         return s
@@ -200,7 +218,7 @@ public extension DateRangePicker {
     func holidays(_ entries: [HolidayEntry]) -> Self { copy { $0.configuration.holidays = entries } }
     /// Append a token-coloured holiday for the given days.
     func holiday(on dates: [ETSCalendarDate], color: SemanticColor, name: String) -> Self {
-        copy { $0.configuration.holidays.append(HolidayEntry(dates: dates, colorARGB: Self.argb(color.base), description: name)) }
+        copy { $0.pendingTokenHolidays.append((dates: dates, color: color, name: name)) }
     }
     /// BCP-47 locale tag (e.g. "tr", "en-US", "ar" for RTL). nil ⇒ system.
     func locale(_ tag: String?) -> Self { copy { $0.configuration.localeTag = tag } }

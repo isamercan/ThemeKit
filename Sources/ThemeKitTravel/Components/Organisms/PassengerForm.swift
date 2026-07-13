@@ -185,7 +185,7 @@ public struct PassengerForm: View {
             locale: locale)
         let style = explicitStyle ?? envStyle   // explicit (deprecated .layout) wins — ADR-0004 §5
         return style.makeBody(configuration: configuration)
-            .tint(accent?.base)
+            .tint(accent.map { theme.resolve($0).base })
             // Live canonical re-validation for the select/date fields (see
             // header note): same gate as `.field(_:in:)` — only once the
             // form has validated the field (a failed submit or a prior

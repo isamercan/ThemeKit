@@ -54,6 +54,10 @@ final class SemanticColorResolvedTests: XCTestCase {
 
     // MARK: - Backward-compat guarantee (D2 / no behavior change for un-migrated call sites)
 
+    /// Deliberately exercises the deprecated zero-arg accessors — this IS the
+    /// forward-equivalence guarantee ADR-0006 (D2) promises, so the warnings
+    /// here are expected, not a migration gap.
+    @available(*, deprecated, message: "Intentionally tests the deprecated SemanticColor accessors — see ADR-0006 D2.")
     func testDeprecatedZeroArgAccessorsMatchResolvedAgainstThemeShared() {
         for color in SemanticColor.allCases {
             XCTAssertEqual(rgba(color.solid), rgba(Theme.shared.resolve(color).solid), "\(color).solid mismatch")

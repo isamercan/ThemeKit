@@ -395,12 +395,12 @@ private struct ChipRecentSearchRowStyle: RecentSearchRowStyle {
                 HStack(spacing: configuration.spacing(.xs)) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle((configuration.accent ?? .neutral).base)
+                        .foregroundStyle(theme.resolve(configuration.accent ?? .neutral).base)
                     RecentSearchRowRouteLine(configuration: configuration)
                 }
                 .padding(.vertical, configuration.spacing(.xs))
                 .padding(.horizontal, configuration.spacing(.sm))
-                .background((configuration.accent ?? .neutral).soft, in: Capsule(style: .continuous))
+                .background(theme.resolve(configuration.accent ?? .neutral).soft, in: Capsule(style: .continuous))
                 .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)

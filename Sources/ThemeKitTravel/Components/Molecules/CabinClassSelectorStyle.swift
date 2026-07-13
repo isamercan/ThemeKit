@@ -246,7 +246,7 @@ private struct CabinClassCard: View {
 
     var body: some View {
         let isOn = configuration.isSelected(cabin)
-        let tint = configuration.resolvedAccent
+        let tint = theme.resolve(configuration.resolvedAccent)
         let description = configuration.descriptionProvider(cabin)
         let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
         Button { configuration.select(cabin) } label: {
@@ -346,7 +346,7 @@ private struct ChecklistCabinClassSelectorStyle: CabinClassSelectorStyle {
                         HStack(spacing: configuration.spacing(.sm)) {
                             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                                 .textStyle(.labelBase600)
-                                .foregroundStyle(isOn ? configuration.resolvedAccent.base : theme.text(.textTertiary))
+                                .foregroundStyle(isOn ? theme.resolve(configuration.resolvedAccent).base : theme.text(.textTertiary))
                             Text(configuration.labelProvider(cabin))
                                 .textStyle(.labelBase600)
                                 .foregroundStyle(theme.text(.textPrimary))

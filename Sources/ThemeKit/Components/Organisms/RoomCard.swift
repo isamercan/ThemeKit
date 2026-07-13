@@ -140,7 +140,7 @@ public struct RoomCard: View {
         if let selection {
             Button { selection.wrappedValue.toggle() } label: {
                 Image(systemName: selection.wrappedValue ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 22)).foregroundStyle(selection.wrappedValue ? accentSemantic.base : theme.text(.textTertiary))
+                    .font(.system(size: 22)).foregroundStyle(selection.wrappedValue ? theme.resolve(accentSemantic).base : theme.text(.textTertiary))
             }.buttonStyle(.plain).accessibilityLabel(name)
                 .accessibilityAddTraits(selection.wrappedValue ? .isSelected : [])
         } else if let onSelect {

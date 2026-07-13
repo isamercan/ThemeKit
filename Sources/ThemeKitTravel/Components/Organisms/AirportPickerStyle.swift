@@ -156,7 +156,7 @@ public struct AirportPickerConfiguration {
 
     /// The `accent(_:)` override's tint, else the theme's hero foreground —
     /// the value the stock checkmark and Clear button use.
-    public func accentForeground(_ theme: Theme) -> Color { accent?.accent ?? theme.foreground(.fgHero) }
+    public func accentForeground(_ theme: Theme) -> Color { accent.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero) }
 }
 
 // MARK: - Protocol

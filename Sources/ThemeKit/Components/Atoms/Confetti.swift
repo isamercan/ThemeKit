@@ -20,6 +20,7 @@ import SwiftUI
 /// content.confetti(trigger: submissionCount)
 /// ```
 public struct Confetti: View {
+    @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance — mutated only through the modifiers below (R2).
@@ -33,9 +34,9 @@ public struct Confetti: View {
     public init() {}
 
     private var palette: [Color] {
-        colorsOverride.map { $0.map(\.base) } ?? [
-            SemanticColor.primary.base, SemanticColor.purple.base, SemanticColor.pink.base,
-            SemanticColor.orange.base, SemanticColor.success.base, SemanticColor.warning.base,
+        colorsOverride.map { $0.map { theme.resolve($0).base } } ?? [
+            theme.resolve(.primary).base, theme.resolve(.purple).base, theme.resolve(.pink).base,
+            theme.resolve(.orange).base, theme.resolve(.success).base, theme.resolve(.warning).base,
         ]
     }
 
@@ -75,7 +76,7 @@ public struct Confetti: View {
             ConfettiPiece(
                 startX: CGFloat.random(in: 0.05...0.95),
                 drift: CGFloat.random(in: -0.25...0.25),
-                color: palette.randomElement() ?? SemanticColor.primary.base,
+                color: palette.randomElement() ?? theme.resolve(.primary).base,
                 spin: Double.random(in: 240...900) * (Bool.random() ? 1 : -1),
                 delay: reduceMotion ? 0 : CGFloat.random(in: 0...0.25),
                 size: CGFloat.random(in: 6...11)

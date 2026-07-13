@@ -81,7 +81,7 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
         let isOverLimit = column.limit.map { column.items.count > $0 } ?? false
         return VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             HStack(spacing: Theme.SpacingKey.xs.value) {
-                Circle().fill(column.accent?.solid ?? SemanticColor.primary.solid).frame(width: 8, height: 8)
+                Circle().fill(column.accent.map { theme.resolve($0).solid } ?? theme.resolve(.primary).solid).frame(width: 8, height: 8)
                 Text(column.title).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
                 Text(countText(column))
                     .textStyle(.labelSm600)

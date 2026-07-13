@@ -305,12 +305,12 @@ private struct RouteProgressTrack: View {
                     .fill(theme.border(.borderPrimary))
                     .frame(height: 3)
                 Capsule()
-                    .fill(tone.solid)
+                    .fill(theme.resolve(tone).solid)
                     .frame(width: max(6, geo.size.width * fraction), height: 3)
                     .overlay(alignment: .trailing) {
                         Image(systemName: "airplane")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(tone.base)
+                            .foregroundStyle(theme.resolve(tone).base)
                             .flipsForRightToLeftLayoutDirection(true)
                     }
             }
@@ -360,7 +360,7 @@ private struct TrackerEstimateRow: View {
                 Text(configuration.time(scheduled))
                     .textStyle(.bodyBase400).strikethrough().foregroundStyle(theme.text(.textTertiary))
                 Text(configuration.time(estimate))
-                    .textStyle(.labelBase600).foregroundStyle(configuration.tone().base)
+                    .textStyle(.labelBase600).foregroundStyle(theme.resolve(configuration.tone()).base)
             }
         }
         .padding(.vertical, configuration.spacing(.sm))
@@ -406,7 +406,7 @@ private struct TrackerCompactStrip: View {
 
     @ViewBuilder private var trailingTime: some View {
         if configuration.showsEstimates, let estimate = configuration.departureEstimate ?? configuration.arrivalEstimate {
-            Text(configuration.time(estimate)).textStyle(.labelBase600).foregroundStyle(configuration.tone().base)
+            Text(configuration.time(estimate)).textStyle(.labelBase600).foregroundStyle(theme.resolve(configuration.tone()).base)
         } else {
             Text(configuration.time(configuration.statusInfo.leg.departure))
                 .textStyle(.labelBase600).foregroundStyle(theme.text(.textSecondary))
@@ -554,7 +554,7 @@ private struct BannerChrome: View {
             }
         }
         .padding(configuration.spacing(.sm))
-        .background(configuration.tone().soft,
+        .background(theme.resolve(configuration.tone()).soft,
                     in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(configuration.headerSummary())
@@ -562,7 +562,7 @@ private struct BannerChrome: View {
 
     @ViewBuilder private var trailingTime: some View {
         if configuration.showsEstimates, let estimate = configuration.departureEstimate ?? configuration.arrivalEstimate {
-            Text(configuration.time(estimate)).textStyle(.labelBase600).foregroundStyle(configuration.tone().accent)
+            Text(configuration.time(estimate)).textStyle(.labelBase600).foregroundStyle(theme.resolve(configuration.tone()).accent)
         } else {
             Text(configuration.time(configuration.statusInfo.leg.departure))
                 .textStyle(.labelBase600).foregroundStyle(theme.text(.textSecondary))
@@ -633,12 +633,12 @@ private struct DotRowFlightTrackerStyle: FlightTrackerStyle {
 
         var body: some View {
             HStack(spacing: configuration.spacing(.sm)) {
-                Circle().fill(configuration.tone().solid).frame(width: 8, height: 8)
+                Circle().fill(theme.resolve(configuration.tone()).solid).frame(width: 8, height: 8)
                 Text("\(configuration.statusInfo.leg.origin) → \(configuration.statusInfo.leg.destination)")
                     .textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
                 Text(configuration.statusInfo.status.label)
-                    .textStyle(.overline500).foregroundStyle(configuration.tone().base)
+                    .textStyle(.overline500).foregroundStyle(theme.resolve(configuration.tone()).base)
             }
             .padding(configuration.spacing(.sm))
             .background(theme.background(configuration.surface(default: .bgSecondaryLight)),

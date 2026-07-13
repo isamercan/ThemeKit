@@ -119,6 +119,7 @@ public protocol FlightStatusBadgeStyle {
 
 /// The dot-or-glyph + label + time content row every built-in shares.
 private struct StatusContent: View {
+    @Environment(\.theme) private var theme
     let configuration: FlightStatusBadgeConfiguration
     /// `.dot` swaps the glyph for a small plain status dot.
     var showsDot = false
@@ -126,7 +127,7 @@ private struct StatusContent: View {
     var body: some View {
         HStack(spacing: 4) {
             if showsDot {
-                Circle().fill(configuration.tone.base).frame(width: 6, height: 6)
+                Circle().fill(theme.resolve(configuration.tone).base).frame(width: 6, height: 6)
             } else if let icon = configuration.icon {
                 Image(systemName: icon).textStyle(configuration.iconTextStyle)
             }
@@ -138,13 +139,35 @@ private struct StatusContent: View {
     }
 }
 
+/// The `StatusPill` fill/foreground/stroke treatment — a role, not a resolved
+/// `Color`, so the pill can resolve `configuration.tone` against its own
+/// environment theme in `body` (ADR-0006) instead of the caller baking colors
+/// at `makeBody`-call time (`FlightStatusBadgeStyle` conformers are plain
+/// structs with no `@Environment` access of their own).
+private enum PillTreatment { case soft, solid, outline }
+
 /// The pill chrome shared by `.soft`/`.solid`/`.outline`: content row, side
 /// padding, fixed control height, shaped fill and optional hairline stroke.
 private struct StatusPill: View {
+    @Environment(\.theme) private var theme
     let configuration: FlightStatusBadgeConfiguration
-    let fill: Color
-    let foreground: Color
-    var stroke: Color?
+    let treatment: PillTreatment
+
+    private var resolved: SemanticColor.Resolved { theme.resolve(configuration.tone) }
+    private var fill: Color {
+        switch treatment {
+        case .soft: return resolved.bg
+        case .solid: return resolved.solid
+        case .outline: return .clear
+        }
+    }
+    private var foreground: Color {
+        switch treatment {
+        case .soft, .outline: return resolved.base
+        case .solid: return resolved.onSolid
+        }
+    }
+    private var stroke: Color? { treatment == .outline ? resolved.border : nil }
 
     var body: some View {
         StatusContent(configuration: configuration)
@@ -164,9 +187,7 @@ private struct StatusPill: View {
 public struct SoftFlightStatusBadgeStyle: FlightStatusBadgeStyle {
     public init() {}
     public func makeBody(configuration: FlightStatusBadgeConfiguration) -> some View {
-        StatusPill(configuration: configuration,
-                   fill: configuration.tone.bg,
-                   foreground: configuration.tone.base)
+        StatusPill(configuration: configuration, treatment: .soft)
     }
 }
 
@@ -177,9 +198,7 @@ public struct SoftFlightStatusBadgeStyle: FlightStatusBadgeStyle {
 public struct SolidFlightStatusBadgeStyle: FlightStatusBadgeStyle {
     public init() {}
     public func makeBody(configuration: FlightStatusBadgeConfiguration) -> some View {
-        StatusPill(configuration: configuration,
-                   fill: configuration.tone.solid,
-                   foreground: configuration.tone.onSolid)
+        StatusPill(configuration: configuration, treatment: .solid)
     }
 }
 
@@ -189,10 +208,7 @@ public struct SolidFlightStatusBadgeStyle: FlightStatusBadgeStyle {
 public struct OutlineFlightStatusBadgeStyle: FlightStatusBadgeStyle {
     public init() {}
     public func makeBody(configuration: FlightStatusBadgeConfiguration) -> some View {
-        StatusPill(configuration: configuration,
-                   fill: .clear,
-                   foreground: configuration.tone.base,
-                   stroke: configuration.tone.border)
+        StatusPill(configuration: configuration, treatment: .outline)
     }
 }
 

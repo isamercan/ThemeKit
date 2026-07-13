@@ -109,17 +109,17 @@ public struct ResultView: View {
         if let code = status.code {
             Text(code)
                 .font(.system(size: 72, weight: .heavy, design: .rounded))
-                .foregroundStyle(status.color.base)
+                .foregroundStyle(theme.resolve(status.color).base)
                 .overlay(alignment: .bottomTrailing) {
-                    Icon(systemName: status.systemImage).size(.md).colorOverride(status.color.base)
+                    Icon(systemName: status.systemImage).size(.md).colorOverride(theme.resolve(status.color).base)
                         .padding(6)   // intentional: 6pt, no token — small emblem badge inset
                         .background(theme.background(.bgWhite), in: Circle())
                         .offset(x: 10, y: 4)
                 }
         } else {
             ZStack {
-                Circle().fill(status.color.bg).frame(width: 88, height: 88)
-                Icon(systemName: status.systemImage).size(.xl).colorOverride(status.color.base)
+                Circle().fill(theme.resolve(status.color).bg).frame(width: 88, height: 88)
+                Icon(systemName: status.systemImage).size(.xl).colorOverride(theme.resolve(status.color).base)
             }
         }
     }

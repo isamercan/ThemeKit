@@ -46,7 +46,7 @@ public struct PhoneFrame<Content: View>: View {
     private let bezelWidth: CGFloat = 10
     private let aspectRatio: CGFloat = 9.0 / 19.5
 
-    private var bezelColor: Color { bezel.shade(.s900) }
+    private var bezelColor: Color { theme.resolve(bezel).shade(.s900) }
 
     private var screenShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: outerRadius - bezelWidth, style: .continuous)
@@ -85,7 +85,7 @@ public struct PhoneFrame<Content: View>: View {
 
     private var homeIndicator: some View {
         Capsule()
-            .fill(bezel.shade(.s300))
+            .fill(theme.resolve(bezel).shade(.s300))
             .frame(width: 96, height: 4)
             .padding(.bottom, 8)
             .accessibilityHidden(true)

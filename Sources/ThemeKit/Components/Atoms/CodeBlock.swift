@@ -69,7 +69,7 @@ public struct CodeBlock: View {
             .padding(.vertical, Theme.SpacingKey.md.value)
             .padding(.trailing, showsCopyButton ? 36 : 0)
         }
-        .background(SemanticColor.neutral.shade(.s900))
+        .background(theme.resolve(.neutral).shade(.s900))
         .clipShape(shape)
         .overlay(alignment: .topTrailing) {
             if showsCopyButton { copyButton }
@@ -81,24 +81,24 @@ public struct CodeBlock: View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
             Text(line.prefix ?? "")
                 .frame(minWidth: 18, alignment: .trailing)
-                .foregroundStyle(line.highlight.map { $0.onSolid.opacity(0.7) }
-                                 ?? SemanticColor.neutral.shade(.s500))
+                .foregroundStyle(line.highlight.map { theme.resolve($0).onSolid.opacity(0.7) }
+                                 ?? theme.resolve(.neutral).shade(.s500))
             Text(line.text)
-                .foregroundStyle(line.highlight.map { $0.onSolid }
-                                 ?? SemanticColor.neutral.shade(.s100))
+                .foregroundStyle(line.highlight.map { theme.resolve($0).onSolid }
+                                 ?? theme.resolve(.neutral).shade(.s100))
         }
         .font(.system(.footnote, design: .monospaced))
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, 3)
-        .background(line.highlight.map { $0.solid } ?? .clear)
+        .background(line.highlight.map { theme.resolve($0).solid } ?? .clear)
     }
 
     private var copyButton: some View {
         Button(action: copyAll) {
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(copied ? SemanticColor.success.base
-                                        : SemanticColor.neutral.shade(.s400))
+                .foregroundStyle(copied ? theme.resolve(.success).base
+                                        : theme.resolve(.neutral).shade(.s400))
                 .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
         }

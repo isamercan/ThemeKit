@@ -30,7 +30,7 @@ public struct ThemeController: View {
     }
 
     /// Active-label tint — semantic accent when set, else the hero token (R4).
-    private var activeText: Color { accent?.accent ?? theme.text(.textHero) }
+    private var activeText: Color { accent.map { theme.resolve($0).accent } ?? theme.text(.textHero) }
 
     public var body: some View {
         HStack(spacing: 4) {

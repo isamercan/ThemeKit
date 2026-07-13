@@ -35,7 +35,7 @@ public struct Aura: View {
         Circle()
             .fill(
                 RadialGradient(
-                    colors: [color.base.opacity(intensity), color.base.opacity(0)],
+                    colors: [theme.resolve(color).base.opacity(intensity), theme.resolve(color).base.opacity(0)],
                     center: .center,
                     startRadius: 0,
                     endRadius: diameter / 2
@@ -103,6 +103,7 @@ private struct AuraModifier: ViewModifier {
     let radius: CGFloat
     let intensity: Double
 
+    @Environment(\.theme) private var theme
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var breathing = false
@@ -115,7 +116,7 @@ private struct AuraModifier: ViewModifier {
                 // Two ladder steps of the same semantic color give the halo a
                 // subtle direction without introducing a second color knob.
                 LinearGradient(
-                    colors: [color.base, color.hover],
+                    colors: [theme.resolve(color).base, theme.resolve(color).hover],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

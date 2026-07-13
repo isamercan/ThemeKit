@@ -111,14 +111,14 @@ public struct FilterBarConfiguration {
 
     /// The solid accent fill for a selected `.solid` chip / leading action —
     /// the explicit `accent(_:)` override, else the theme's hero background.
-    public func accentFill(_ theme: Theme) -> Color { accent.map { $0.solid } ?? theme.background(.bgHero) }
+    public func accentFill(_ theme: Theme) -> Color { accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero) }
     /// The foreground atop ``accentFill(_:)`` — contrast-safe on the solid fill.
     public func onAccentFill(_ theme: Theme) -> Color {
-        accent.map { $0.onSolid } ?? theme.text(.textSecondaryInverse)
+        accent.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse)
     }
     /// Accent used as a plain text/icon tint on a neutral surface (unselected
     /// `.solid` chip text, the `.ghost` fallback, the Clear affordance).
-    public func accentTint(_ theme: Theme) -> Color { accent.map { $0.base } ?? theme.foreground(.fgHero) }
+    public func accentTint(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
 
     /// A count formatted with the captured locale (grouping separators honor
     /// injected locales) — shared by every preset's trailing count pill.
@@ -170,12 +170,12 @@ private struct FilterChipPalette {
         switch configuration.chipStyle {
         case .outlined:
             text = theme.text(.textPrimary)
-            fill = isOn ? (accent?.soft ?? SemanticColor.primary.soft) : theme.background(configuration.chipSurfaceKey)
-            border = isOn ? (accent?.border ?? theme.border(.borderHero)) : theme.background(.bgElevatorTertiary)
+            fill = isOn ? (accent.map { theme.resolve($0).soft } ?? theme.resolve(.primary).soft) : theme.background(configuration.chipSurfaceKey)
+            border = isOn ? (accent.map { theme.resolve($0).border } ?? theme.border(.borderHero)) : theme.background(.bgElevatorTertiary)
             borderWidth = isOn ? 2 : 1
         case .ghost:
-            text = isOn ? (accent?.strong ?? theme.foreground(.fgHero)) : theme.text(.textSecondary)
-            fill = isOn ? (accent ?? .primary).soft : .clear
+            text = isOn ? (accent.map { theme.resolve($0).strong } ?? theme.foreground(.fgHero)) : theme.text(.textSecondary)
+            fill = isOn ? theme.resolve(accent ?? .primary).soft : .clear
             border = .clear
             borderWidth = 1
         case .solid:
@@ -190,12 +190,13 @@ private struct FilterChipPalette {
 /// The trailing count pill on a chip, e.g. "Seafront · 12". Shared across
 /// presets — `SemanticColor` ladder steps, no raw colors.
 private struct FilterCountPill: View {
+    @Environment(\.theme) private var theme
     let count: Int
     let isOn: Bool
     let configuration: FilterBarConfiguration
 
     var body: some View {
-        let tone = configuration.accent ?? .primary
+        let tone = theme.resolve(configuration.accent ?? .primary)
         let solidSelected = configuration.chipStyle == .solid && isOn
         Text(configuration.formattedCount(count))
             .textStyle(.labelSm600)

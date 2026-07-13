@@ -98,7 +98,7 @@ public struct Agenda: View {
                 timeColumn(event)
                     .frame(width: 60, alignment: .leading)
                 RoundedRectangle(cornerRadius: 1.5)
-                    .fill(event.accent?.solid ?? SemanticColor.primary.solid)
+                    .fill(event.accent.map { theme.resolve($0).solid } ?? theme.resolve(.primary).solid)
                     .frame(width: 3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(event.title).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))

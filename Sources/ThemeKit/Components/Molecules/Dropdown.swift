@@ -364,8 +364,8 @@ public struct Dropdown<Trigger: View>: View {
     @MainActor
     private func row(_ item: DropdownItem, reservesIndicator: Bool, indented: Bool = false) -> some View {
         let destructive = item.role == .destructive
-        let titleColor = destructive ? SemanticColor.error.accent : theme.text(.textPrimary)
-        let iconColor = destructive ? SemanticColor.error.accent : theme.text(.textSecondary)
+        let titleColor = destructive ? theme.resolve(.error).accent : theme.text(.textPrimary)
+        let iconColor = destructive ? theme.resolve(.error).accent : theme.text(.textSecondary)
 
         return Button {
             if closesOnSelect { open = false }
@@ -397,7 +397,7 @@ public struct Dropdown<Trigger: View>: View {
             .padding(.vertical, Theme.SpacingKey.sm.value)
             .contentShape(Rectangle())
         }
-        .buttonStyle(DropdownRowPressStyle(tint: destructive ? SemanticColor.error.soft : accentColor.soft))
+        .buttonStyle(DropdownRowPressStyle(tint: destructive ? theme.resolve(.error).soft : theme.resolve(accentColor).soft))
         .disabled(item.isDisabled)
         .opacity(item.isDisabled ? 0.4 : 1)
         .accessibilityAddTraits(item.isSelected ? .isSelected : [])
@@ -436,7 +436,7 @@ public struct Dropdown<Trigger: View>: View {
             .padding(.vertical, Theme.SpacingKey.sm.value)
             .contentShape(Rectangle())
         }
-        .buttonStyle(DropdownRowPressStyle(tint: accentColor.soft))
+        .buttonStyle(DropdownRowPressStyle(tint: theme.resolve(accentColor).soft))
         .disabled(item.isDisabled)
         .opacity(item.isDisabled ? 0.4 : 1)
         .accessibilityValue(expanded ? Text(String(themeKit: "Expanded")) : Text(String(themeKit: "Collapsed")))

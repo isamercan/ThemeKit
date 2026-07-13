@@ -4,6 +4,8 @@
 # verification never depends on Actions billing. Same checks CI runs:
 #   1. SwiftFormat  (lint mode, if installed)
 #   2. SwiftLint    (if installed)
+#   2.5. Brand neutrality / i18n gate
+#   2.6. Theme.shared allowlist gate (ADR-0006 §D7)
 #   3. swift build --build-tests
 #   4. swift test
 #
@@ -46,6 +48,11 @@ fi
 # 2.5: brand-neutrality & i18n gate (fast grep; hard-fails on brand/Turkish leaks).
 step "Brand neutrality (i18n)"
 if bash scripts/check-neutrality.sh ; then pass "Neutrality"; else die "Neutrality — brand/Turkish leak (see THEMEKIT_COMPONENT_AUDIT.md)"; fi
+
+# 2.6: per-subtree theme resolution gate (ADR-0006 §D7; fast grep; hard-fails
+# on a Theme.shared read outside scripts/theme-shared-allowlist.txt).
+step "Theme.shared allowlist (ADR-0006)"
+if bash scripts/check-theme-shared.sh ; then pass "Theme.shared allowlist"; else die "Theme.shared allowlist — un-allowlisted singleton read defeats per-subtree .theme() (ADR-0006 §D7)"; fi
 
 # 3: build (the package + tests). This is the must-pass gate.
 step "swift build --build-tests"

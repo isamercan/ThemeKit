@@ -55,6 +55,11 @@ public struct Checkbox: View {
     private var isIndeterminate: Bool = false
     private var alignment: VerticalAlignment = .center
     private var accent: SemanticColor?
+    // ADR-0006: the token-bound `customInner(_:)` overload stores the
+    // `SemanticColor` here (not baked into `type`'s `.customInner(color:)`
+    // at modifier-call time), so it re-resolves against the environment
+    // theme in `body`; `type` keeps a `.clear` placeholder as the discriminant.
+    private var semanticSwatch: SemanticColor?
     private var accessibilityID: String?
     private var controlPlacement: HorizontalEdge = .leading   // A2
     private var customLabel: SlotContent?                     // D1 — `.label { }` slot
@@ -79,12 +84,12 @@ public struct Checkbox: View {
 
     /// Selected fill — the semantic accent when set (and enabled), else the hero token.
     private var selectedFill: Color {
-        if isEnabled, let accent { return accent.solid }
+        if isEnabled, let accent { return theme.resolve(accent).solid }
         return theme.background(isEnabled ? .bgHero : .bgSecondary)
     }
     /// Glyph tint on top of the selected fill (auto-contrasts against an accent).
     private var glyphColor: Color {
-        if isEnabled, let accent { return accent.onSolid }
+        if isEnabled, let accent { return theme.resolve(accent).onSolid }
         return theme.foreground(.fgSecondary)
     }
 
@@ -148,6 +153,7 @@ public struct Checkbox: View {
     }
 
     private var fill: Color {
+        if let semanticSwatch { return theme.resolve(semanticSwatch).solid }
         switch type {
         case .customInner(let color):
             return color
@@ -165,7 +171,7 @@ public struct Checkbox: View {
         if dominant == .error { return theme.border(.systemcolorsBorderError) }
         if dominant == .warning { return theme.border(.systemcolorsBorderWarning) }
         guard selected else { return theme.border(.borderPrimary) }
-        return accent?.border ?? theme.border(.borderHero)
+        return accent.map { theme.resolve($0).border } ?? theme.border(.borderHero)
     }
 
     @ViewBuilder
@@ -200,13 +206,13 @@ public extension Checkbox {
     /// Always fills the box with a semantic swatch (the `.customInner` type),
     /// resolved from the token's solid role — the token-bound path.
     func customInner(_ color: SemanticColor) -> Self {
-        copy { $0.type = .customInner(color: color.solid) }
+        copy { $0.type = .customInner(color: .clear); $0.semanticSwatch = color }
     }
 
     /// Raw swatch fill (back-compat); prefer the token-bound `customInner(_:)`.
     @available(*, deprecated, message: "Use customInner(_:) with a SemanticColor token.")
     func customInner(color: Color) -> Self {
-        copy { $0.type = .customInner(color: color) }
+        copy { $0.type = .customInner(color: color); $0.semanticSwatch = nil }
     }
 
     /// Renders the indeterminate (mixed) state instead of a checkmark.
