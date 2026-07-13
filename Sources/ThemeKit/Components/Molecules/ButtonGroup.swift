@@ -10,36 +10,6 @@ public enum ButtonGroupAxis {
     case vertical, horizontal
 }
 
-/// Group size (HeroUI ButtonGroup `size`). Every button in the group inherits
-/// the selected size for visual consistency — a button that sets its own
-/// `.size(_:)` still wins (the same explicit-wins cascade as `.color`).
-public enum ButtonGroupSize: CaseIterable {
-    case sm, md, lg
-
-    /// The ``ButtonSize`` the group's buttons inherit.
-    var buttonSize: ButtonSize {
-        switch self {
-        case .sm: return .small
-        case .md: return .medium
-        case .lg: return .large
-        }
-    }
-
-    /// Length of the between-button divider hairline, scaled per size — a
-    /// vertical line's height in a horizontal group, a horizontal line's width
-    /// in a vertical one (HeroUI: 16 / 20 / 24 and 16 / 18 / 20). A fixed ramp
-    /// with no matching spacing token, so it lives as an in-view constant.
-    func dividerLength(axis: ButtonGroupAxis) -> CGFloat {
-        switch (self, axis) {
-        case (.sm, _):            return 16
-        case (.md, .horizontal):  return 20
-        case (.md, .vertical):    return 18
-        case (.lg, .horizontal):  return 24
-        case (.lg, .vertical):    return 20
-        }
-    }
-}
-
 /// Group width (HeroUI ButtonGroup `width`).
 /// - `hug`: the group wraps tightly around its content — a horizontal group
 ///   flows overflowing buttons onto the next line instead of squeezing them.
@@ -51,8 +21,8 @@ public enum ButtonGroupWidth {
 
 /// Molecule. Lays out related buttons in a vertical stack or a side-by-side row,
 /// mirroring HeroUI's **Button Group** axes: a shared ``size(_:)`` every button
-/// inherits, a ``width(_:)`` mode (`hug` / `fill`) and optional ``dividers(_:)``
-/// between adjacent buttons.
+/// inherits (any ``ButtonSize`` — `xxsmall … xxlarge`), a ``width(_:)`` mode
+/// (`hug` / `fill`) and optional ``dividers(_:)`` between adjacent buttons.
 ///
 /// Buttons are content-width by default (ideal for a horizontal row); give the
 /// group `.width(.fill)` (or the buttons `.fullWidth()`) for a full-width CTA
@@ -71,7 +41,9 @@ public struct ButtonGroup<Content: View>: View {
 
     // Appearance — mutated only through the modifiers below (R2).
     private var axis: ButtonGroupAxis
-    private var size: ButtonGroupSize?
+    /// The size every child button inherits — any ``ButtonSize`` token; `nil`
+    /// leaves the buttons at their own default.
+    private var size: ButtonSize?
     private var width: ButtonGroupWidth = .hug
     private var showsDividers = false
     /// Explicit `.dividerColor(_:)`; `nil` keeps the neutral theme border.
@@ -85,13 +57,9 @@ public struct ButtonGroup<Content: View>: View {
         self.content = content
     }
 
-    /// The button size children inherit — `nil` until `.size(_:)` is set, so an
-    /// un-sized group leaves its buttons at their own default.
-    private var inheritedButtonSize: ButtonSize? { size?.buttonSize }
-
     public var body: some View {
         layout
-            .environment(\.buttonGroupControlSize, inheritedButtonSize)
+            .environment(\.buttonGroupControlSize, size)   // `nil` → buttons keep their own default
     }
 
     @ViewBuilder private var layout: some View {
@@ -119,9 +87,16 @@ public struct ButtonGroup<Content: View>: View {
             spacing: spacing,
             fill: width == .fill,
             showsDividers: showsDividers,
-            dividerLength: (size ?? .md).dividerLength(axis: axis),
+            dividerLength: dividerLength(for: size ?? .medium, axis: axis),
             dividerColor: resolvedDividerColor
         )
+    }
+
+    /// A hairline centered in the gap between buttons, scaled to the button
+    /// height so it reads as a proportional separator at any ``ButtonSize`` —
+    /// a touch shorter on the cross axis of a vertical stack.
+    private func dividerLength(for size: ButtonSize, axis: ButtonGroupAxis) -> CGFloat {
+        (size.height * (axis == .horizontal ? 0.44 : 0.40)).rounded()
     }
 
     /// A `.dividerColor(_:)` resolves to that color's border shade so the line
@@ -203,9 +178,10 @@ public extension ButtonGroup {
     /// chains): `ButtonGroup { … }.axis(.horizontal)`.
     func axis(_ axis: ButtonGroupAxis) -> Self { copy { $0.axis = axis } }
 
-    /// Group size (HeroUI ButtonGroup `size`) — every button inherits it unless
-    /// it set its own `.size(_:)`: `ButtonGroup { … }.size(.lg)`.
-    func size(_ size: ButtonGroupSize) -> Self { copy { $0.size = size } }
+    /// Group size (HeroUI ButtonGroup `size`) — the shared ``ButtonSize`` token
+    /// (`xxsmall … xxlarge`) every button inherits unless it set its own
+    /// `.size(_:)`: `ButtonGroup { … }.size(.large)`.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
 
     /// Width behavior (HeroUI ButtonGroup `width`) — `.hug` (default) wraps
     /// tightly around the buttons; `.fill` stretches the group to the available
@@ -250,10 +226,11 @@ public extension ButtonGroup {
                 PrimaryButton("Continue to payment") {}
             }
         }
-        // Sizes — every button inherits the group size (sm / md / lg).
-        PreviewCase("Sizes (sm · md · lg)") {
+        // Sizes — every button inherits the group's ButtonSize token, the full
+        // control-size ramp (xxsmall … xxlarge), not just three fixed steps.
+        PreviewCase("Sizes (xxsmall … xxlarge)") {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(ButtonGroupSize.allCases, id: \.self) { s in
+                ForEach(ButtonSize.allCases, id: \.self) { s in
                     ButtonGroup(.horizontal) {
                         SecondaryButton("Cancel") {}
                         PrimaryButton("Confirm") {}
@@ -283,7 +260,7 @@ public extension ButtonGroup {
                     PrimaryButton("Save") {}
                     PrimaryButton("Save & new") {}
                 }
-                .width(.fill).dividers().dividerColor(.primary).size(.md)
+                .width(.fill).dividers().dividerColor(.primary).size(.medium)
             }
         }
     }

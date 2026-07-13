@@ -366,27 +366,21 @@ struct TooltipDemo: View {
 }
 
 struct ButtonGroupDemo: View {
+    // The group size is the kit's ButtonSize token — the full control-size ramp,
+    // not a fixed sm/md/lg, so new sizes flow through automatically.
+    private let sizes: [(label: String, size: ButtonSize?)] = [
+        ("Default", nil), ("xxsmall", .xxsmall), ("xsmall", .xsmall),
+        ("small", .small), ("medium", .medium), ("large", .large),
+        ("xlarge", .xlarge), ("xxlarge", .xxlarge),
+    ]
+
     @State private var horizontal = true
-    @State private var sizeSel = 0        // 0 default · 1 sm · 2 md · 3 lg
+    @State private var sizeSel = 0
     @State private var fill = false
     @State private var dividers = false
 
-    private var groupSize: ButtonGroupSize? {
-        switch sizeSel {
-        case 1: return .sm
-        case 2: return .md
-        case 3: return .lg
-        default: return nil
-        }
-    }
-    private var sizeLabel: String {
-        switch sizeSel {
-        case 1: return "sm"
-        case 2: return "md"
-        case 3: return "lg"
-        default: return "—"
-        }
-    }
+    private var groupSize: ButtonSize? { sizes[sizeSel].size }
+    private var sizeLabel: String { sizes[sizeSel].label }
 
     var body: some View {
         ComponentStage(
@@ -402,11 +396,10 @@ struct ButtonGroupDemo: View {
             Toggle("Fill width", isOn: $fill)
             Toggle("Dividers", isOn: $dividers)
             Picker("Size", selection: $sizeSel) {
-                Text("Default").tag(0)
-                Text("sm").tag(1)
-                Text("md").tag(2)
-                Text("lg").tag(3)
-            }.pickerStyle(.segmented)
+                ForEach(Array(sizes.enumerated()), id: \.offset) { index, item in
+                    Text(item.label).tag(index)
+                }
+            }.pickerStyle(.menu)
         }
     }
 

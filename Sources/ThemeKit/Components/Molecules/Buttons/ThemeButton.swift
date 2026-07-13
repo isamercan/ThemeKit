@@ -434,6 +434,7 @@ extension ButtonSize {
         case .xxsmall, .xsmall: return 12
         case .small: return 14
         case .medium, .large: return 16
+        case .xlarge, .xxlarge: return 18
         }
     }
 }
