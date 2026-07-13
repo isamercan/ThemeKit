@@ -744,9 +744,9 @@ you need — it folds in live localization. Flip the language from anywhere and 
 UI updates live, no relaunch:
 
 ```swift
-ThemeKitStrings.setLanguage("tr")   // whole UI → Turkish  (short alias: Theme.setLanguage("tr"))
-ThemeKitStrings.setLanguage(nil)    // follow the device language again
-ThemeKitStrings.currentLanguage     // "tr"
+Theme.setLanguage("tr")   // whole UI → Turkish  (short alias: Theme.setLanguage("tr"))
+Theme.setLanguage(nil)    // follow the device language again
+Theme.currentLanguage     // "tr"
 ```
 
 Drive it from any picker — e.g. ThemeKit's `LanguageSwitcher` bound to

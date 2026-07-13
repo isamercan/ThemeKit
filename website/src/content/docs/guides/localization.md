@@ -90,15 +90,15 @@ struct TravelApp: App {
         WindowGroup {
             RootView()
                 .themeKit()                                            // root, once — folds in localization
-                .onAppear { ThemeKitStrings.setLanguage(appLanguage) }
+                .onAppear { Theme.setLanguage(appLanguage) }
         }
     }
 }
 
 // Anywhere — a settings screen:
-ThemeKitStrings.setLanguage("tr")   // whole UI → Turkish (short alias: Theme.setLanguage("tr"))
-ThemeKitStrings.setLanguage(nil)    // follow the device language again
-ThemeKitStrings.currentLanguage     // "tr"
+Theme.setLanguage("tr")   // whole UI → Turkish (short alias: Theme.setLanguage("tr"))
+Theme.setLanguage(nil)    // follow the device language again
+Theme.currentLanguage     // "tr"
 ```
 
 `.themeKit()` observes `ThemeKitStrings`, re-injects the effective `\.locale` and an

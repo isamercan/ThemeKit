@@ -229,29 +229,29 @@ final class L10nViewLayerTests: XCTestCase {
     // MARK: - Facade: `.themeKit()` folds in live localization (ThemeKit.setLanguage)
 
     /// The whole consumer story: `.themeKit()` at the root (already there for
-    /// theming) + `ThemeKitStrings.setLanguage(_:)` — no `.themeKitLocalized()`.
+    /// theming) + `Theme.setLanguage(_:)` — no `.themeKitLocalized()`.
     func testThemeKitProviderAloneFlipsLanguageViaSetLanguage() throws {
         ThemeKitStrings.register(bundle: fixture)
-        ThemeKitStrings.setLanguage("en")
+        Theme.setLanguage("en")
 
         host(VStack { EnvironmentChild(); GlobalOnlyChild() }.themeKit())
         XCTAssertTrue(Journal.entries.contains("env|en|LTR|Hue|Hue"), "initial en: \(Journal.entries)")
         XCTAssertTrue(Journal.entries.contains("global|Hue"))
-        XCTAssertEqual(ThemeKitStrings.currentLanguage, "en")
+        XCTAssertEqual(Theme.currentLanguage, "en")
 
         Journal.reset()
-        ThemeKitStrings.setLanguage("tr")   // the facade — no .themeKitLocalized() in sight
+        Theme.setLanguage("tr")   // the facade — no .themeKitLocalized() in sight
         pump()
         XCTAssertTrue(Journal.entries.contains("env|tr|LTR|Ton|Ton"),
                       ".themeKit() alone must flip View + non-View strings: \(Journal.entries)")
         XCTAssertTrue(Journal.entries.contains("global|Ton"),
                       ".themeKit()'s folded identity must re-run global-only bodies: \(Journal.entries)")
-        XCTAssertEqual(ThemeKitStrings.currentLanguage, "tr")
+        XCTAssertEqual(Theme.currentLanguage, "tr")
 
         Journal.reset()
-        ThemeKitStrings.setLanguage(nil)    // follow the device again
+        Theme.setLanguage(nil)    // follow the device again
         pump()
-        XCTAssertNil(ThemeKitStrings.currentLanguage)
+        XCTAssertNil(Theme.currentLanguage)
     }
 
     /// `.themeKit()` also injects the RTL layout direction on an Arabic switch.
