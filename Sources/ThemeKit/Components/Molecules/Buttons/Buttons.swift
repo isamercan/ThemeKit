@@ -18,22 +18,25 @@
 
 import SwiftUI
 
-/// Preset visual style. Maps 1:1 to the HeroUI Figma Button variants:
-/// `primary` → ``PrimaryButton`` · `secondary` → ``SecondaryButton`` ·
-/// `tertiary` → ``TertiaryButton`` · `outline` → ``OutlineButton`` ·
-/// `ghost` → ``GhostButton`` · `danger` → ``DangerButton`` ·
-/// `dangerSoft` → ``DangerSoftButton``. (`link` is the ThemeKit text-link
-/// preset.) For arbitrary semantic colors use the flexible ``ThemeButton``
-/// (`variant` × `color`).
+/// Preset visual style (source-stable public surface). The full HeroUI variant
+/// set is exposed through the preset types — `primary` → ``PrimaryButton`` ·
+/// `secondary` → ``SecondaryButton`` · tertiary → ``TertiaryButton`` ·
+/// `outline` → ``OutlineButton`` · `ghost` → ``GhostButton`` ·
+/// danger → ``DangerButton`` · dangerSoft → ``DangerSoftButton`` — and, for
+/// arbitrary semantic colors, the flexible ``ThemeButton`` (`variant` × `color`).
 public enum ThemeButtonStyle {
     case primary
     case secondary
-    case tertiary
     case outline
     case ghost
     case link
-    case danger
-    case dangerSoft
+}
+
+/// Internal rendering kind for `ThemedButton` — the full HeroUI variant set.
+/// Kept out of the public API so the source-stable ``ThemeButtonStyle`` enum
+/// needn't grow new cases; consumers pick a variant via the preset types.
+private enum ThemedButtonKind {
+    case primary, secondary, tertiary, outline, ghost, link, danger, dangerSoft
 }
 
 /// Whether a preset button was created with a sync `action` or an async `task`.
@@ -55,7 +58,7 @@ private struct ThemedButton: View {
     let title: String
     let helperText: String?
     let textStyle: TextStyle?
-    let style: ThemeButtonStyle
+    let kind: ThemedButtonKind
     let size: ButtonSize
     let block: Bool
     let confirmsSuccess: Bool
@@ -106,7 +109,7 @@ private struct ThemedButton: View {
                 } else {
                     Text(title)
                         .textStyle(textStyle ?? size.textStyle)
-                        .underline(style == .link)
+                        .underline(kind == .link)
                         .lineLimit(1)              // a button label stays on one line (truncates, never wraps)
                         .transition(.opacity)
                 }
@@ -130,7 +133,7 @@ private struct ThemedButton: View {
 
     private var foreground: Color {
         guard isEnabled else { return theme.text(.textDisabled) }
-        switch style {
+        switch kind {
         case .primary: return theme.resolve(.primary).onSolid   // auto-contrast on the primary fill
         case .danger: return theme.resolve(.error).onSolid      // auto-contrast on the danger fill
         case .dangerSoft: return theme.resolve(.error).accent   // danger text on the soft tint
@@ -139,7 +142,7 @@ private struct ThemedButton: View {
     }
 
     private var background: Color {
-        switch style {
+        switch kind {
         case .primary:
             return theme.background(isEnabled ? .bgHero : .bgSecondary)
         case .danger:
@@ -157,7 +160,7 @@ private struct ThemedButton: View {
 
     @ViewBuilder
     private var border: some View {
-        switch style {
+        switch kind {
         case .primary, .tertiary, .ghost, .link, .danger, .dangerSoft:
             EmptyView()
         case .secondary, .outline:
@@ -200,7 +203,7 @@ public struct PrimaryButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .primary, size: size, block: block,
+            kind: .primary, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -238,7 +241,7 @@ public struct SecondaryButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .secondary, size: size, block: block,
+            kind: .secondary, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -276,7 +279,7 @@ public struct OutlineButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .outline, size: size, block: block,
+            kind: .outline, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -314,7 +317,7 @@ public struct GhostButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .ghost, size: size, block: block,
+            kind: .ghost, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -338,7 +341,7 @@ public struct LinkButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: nil, textStyle: nil,
-            style: .link, size: size, block: false,
+            kind: .link, size: size, block: false,
             confirmsSuccess: false, accessibilityID: accessibilityID,
             isLoading: false, run: run
         )
@@ -377,7 +380,7 @@ public struct TertiaryButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .tertiary, size: size, block: block,
+            kind: .tertiary, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -417,7 +420,7 @@ public struct DangerButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .danger, size: size, block: block,
+            kind: .danger, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -457,7 +460,7 @@ public struct DangerSoftButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .dangerSoft, size: size, block: block,
+            kind: .dangerSoft, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
