@@ -37,8 +37,8 @@ localization — so there's nothing extra to wire. Switch the language from anyw
 RootView().themeKit()               // root, once — folds in localization
 
 // later, from a settings screen — flips the whole UI live, no relaunch:
-ThemeKitStrings.setLanguage("tr")   // short alias: Theme.setLanguage("tr")
-ThemeKitStrings.setLanguage(nil)    // follow the device
+Theme.setLanguage("tr")   // short alias: Theme.setLanguage("tr")
+Theme.setLanguage(nil)    // follow the device
 ```
 
 An explicit, subtree-scoped provider is available as `themeKitLocalized()`; a picker
