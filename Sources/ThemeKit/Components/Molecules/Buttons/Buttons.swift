@@ -39,6 +39,7 @@ private enum ButtonRunMode {
 private struct ThemedButton: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
+    @Environment(\.buttonGroupControlSize) private var groupSize   // set by an enclosing sized `ButtonGroup`
 
     enum Phase { case idle, running, success }
 
@@ -46,7 +47,8 @@ private struct ThemedButton: View {
     let helperText: String?
     let textStyle: TextStyle?
     let style: ThemeButtonStyle
-    let size: ButtonSize
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    let size: ButtonSize?
     let block: Bool
     let confirmsSuccess: Bool
     let accessibilityID: String?
@@ -55,6 +57,8 @@ private struct ThemedButton: View {
 
     @State private var phase: Phase = .idle
 
+    /// Explicit preset `.size(_:)` ?? enclosing `ButtonGroup` size ?? `.medium`.
+    private var resolvedSize: ButtonSize { size ?? groupSize ?? .medium }
     private var showsSpinner: Bool { isLoading || phase == .running }
 
     var body: some View {
@@ -91,19 +95,19 @@ private struct ThemedButton: View {
                         .transition(.scale.combined(with: .opacity))
                 } else if phase == .success {
                     Image(systemName: "checkmark")
-                        .font(.system(size: size.fontSize + 2, weight: .bold))
+                        .font(.system(size: resolvedSize.fontSize + 2, weight: .bold))
                         .transition(.scale.combined(with: .opacity))
                 } else {
                     Text(title)
-                        .textStyle(textStyle ?? size.textStyle)
+                        .textStyle(textStyle ?? resolvedSize.textStyle)
                         .underline(style == .link)
                         .lineLimit(1)              // a button label stays on one line (truncates, never wraps)
                         .transition(.opacity)
                 }
             }
-            .frame(height: size.height)
+            .frame(height: resolvedSize.height)
             .frame(maxWidth: block ? .infinity : nil)
-            .padding(.horizontal, size.horizontalPadding)
+            .padding(.horizontal, resolvedSize.horizontalPadding)
             .foregroundStyle(foreground)
             .background(background)
             .cornerRadius(.base)
@@ -157,7 +161,8 @@ public struct PrimaryButton: View {
     private let mode: ButtonRunMode
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: ButtonSize = .medium
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    private var size: ButtonSize?
     private var block = false
     private var helperText: String?
     private var titleTextStyle: TextStyle?
@@ -196,7 +201,8 @@ public struct SecondaryButton: View {
     private let mode: ButtonRunMode
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: ButtonSize = .medium
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    private var size: ButtonSize?
     private var block = false
     private var helperText: String?
     private var titleTextStyle: TextStyle?
@@ -234,7 +240,8 @@ public struct OutlineButton: View {
     private let mode: ButtonRunMode
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: ButtonSize = .medium
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    private var size: ButtonSize?
     private var block = false
     private var helperText: String?
     private var titleTextStyle: TextStyle?
@@ -272,7 +279,8 @@ public struct GhostButton: View {
     private let mode: ButtonRunMode
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: ButtonSize = .medium
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    private var size: ButtonSize?
     private var block = false
     private var helperText: String?
     private var titleTextStyle: TextStyle?
@@ -309,7 +317,8 @@ public struct LinkButton: View {
     private let run: () async -> Void
 
     // Appearance/config — mutated only through the modifiers below (R2).
-    private var size: ButtonSize = .medium
+    /// `nil` defers to an enclosing sized ``ButtonGroup``, then `.medium`.
+    private var size: ButtonSize?
     private var accessibilityID: String?
 
     public init(_ title: String, action: @escaping () -> Void) {   // R1

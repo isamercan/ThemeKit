@@ -138,7 +138,7 @@ enum ComponentRegistry {
         .knob("ColorArea", .molecules, demo: ColorAreaDemo(), usage: #"ColorArea(color: $hsba).cornerRadius(.box)   // 2D saturation × brightness plane"#, isNew: true),
         .knob("Autocomplete", .molecules, demo: AutocompleteDemo(), usage: #"Autocomplete("Destination", text: $text, suggestions: items)\n// async: Autocomplete(text: $text, suggest: { await api.search($0) })"#),
         .knob("Button", .molecules, demo: ButtonDemo(), usage: #"PrimaryButton("Continue") { }"#),
-        .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup { PrimaryButton("OK") { } }"#),
+        .knob("ButtonGroup", .molecules, demo: ButtonGroupDemo(), usage: #"ButtonGroup(.horizontal) { SecondaryButton("Cancel"){}; PrimaryButton("Confirm"){} }.size(.md).width(.fill).dividers()"#),
         .knob("Space", .molecules, demo: SpaceDemo(), usage: #"Space { Button("Save"){}; Button("Cancel"){} }.size(.large).wrap()"#),
         .knob("Flex", .molecules, demo: FlexDemo(), usage: #"Flex { Tag("A"); Tag("B"); Tag("C") }.justify(.spaceBetween).align(.center)"#),
         .knob("Anchor", .molecules, demo: AnchorNavDemo(), usage: #"AnchorNav(sections, active: $current).onSelect { proxy.scrollTo($0, anchor: .top) }"#),

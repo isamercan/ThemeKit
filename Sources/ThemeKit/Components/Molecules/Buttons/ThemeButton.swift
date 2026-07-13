@@ -30,13 +30,16 @@ public struct ThemeButton: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     @Environment(\.componentDefaults) private var componentDefaults
+    @Environment(\.buttonGroupControlSize) private var groupSize   // set by an enclosing sized `ButtonGroup`
 
     // Appearance/state — mutated only through the modifiers below (R2).
     /// Explicit `.color(_:)`; `nil` defers to the subtree `componentDefaults`
     /// accent, then `.primary` (provider cascade, F3).
     private var explicitColor: SemanticColor?
     private var variant: ButtonVariant = .solid
-    private var size: ButtonSize = .medium
+    /// Explicit `.size(_:)`; `nil` defers to an enclosing sized ``ButtonGroup``,
+    /// then `.medium` — the same explicit-wins cascade as `.color`.
+    private var explicitSize: ButtonSize?
     private var shape: ButtonShape = .rounded
     private var isFullWidth = false
     private var isLoading = false
@@ -50,6 +53,9 @@ public struct ThemeButton: View {
     /// The resolved semantic color: explicit modifier ?? subtree
     /// `componentDefaults.accent` ?? `.primary`.
     private var color: SemanticColor { explicitColor ?? componentDefaults.accent ?? .primary }
+    /// The resolved control size: explicit modifier ?? enclosing `ButtonGroup`
+    /// size ?? `.medium`.
+    private var size: ButtonSize { explicitSize ?? groupSize ?? .medium }
     /// Bound once per body read — resolves `color` against the environment
     /// theme (ADR-0006), honoring per-subtree `.theme(_:)`.
     private var resolvedColor: SemanticColor.Resolved { theme.resolve(color) }
@@ -231,8 +237,9 @@ public extension ThemeButton {
     /// `.componentDefaults(accent:)`), falling back to `.primary`.
     func color(_ c: SemanticColor) -> Self { copy { $0.explicitColor = c } }
 
-    /// Control size: xxsmall … large.
-    func size(_ s: ButtonSize) -> Self { copy { $0.size = s } }
+    /// Control size: xxsmall … large. When unset, an enclosing sized
+    /// ``ButtonGroup`` supplies it, else `.medium`.
+    func size(_ s: ButtonSize) -> Self { copy { $0.explicitSize = s } }
 
     /// Corner treatment: rounded / pill / circle / square (circle & square are icon-only).
     func shape(_ s: ButtonShape) -> Self { copy { $0.shape = s } }
