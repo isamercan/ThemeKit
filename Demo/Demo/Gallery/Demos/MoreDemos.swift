@@ -1108,26 +1108,40 @@ struct StepsDemo: View {
     @State private var descriptions = true
     @State private var progressDot = false
     @State private var percent = false
+    @State private var subtitles = false
+    @State private var controlled = false
+    @State private var disableReview = false
     private let titles = ["Cart", "Address", "Payment", "Done"]
     private let subs = ["2 items", "Istanbul", "Card ••42", "Confirm"]
+    private let subtitleTexts = ["2 items", "Home", "Visa", "Ready"]
     private var steps: [Steps.Step] {
         titles.enumerated().map { i, t in
+            // With `controlled`, leave state at its default and let `.current(_:)`
+            // derive it; otherwise derive it here as before.
             let state: StepState = (error && i == active) ? .error
+                : controlled ? .todo
                 : i < active ? .done : i == active ? .active : .todo
-            return .init(t, description: descriptions ? subs[i] : nil, state: state,
+            return .init(t, subTitle: subtitles ? subtitleTexts[i] : nil,
+                         description: descriptions ? subs[i] : nil, state: state,
+                         disabled: disableReview && i == 2,
                          percent: (percent && state == .active) ? 0.6 : nil)
         }
     }
     @State private var small = false
     var body: some View {
-        ComponentStage("Steps", inspector: [("active", "\(active)"), ("size", small ? "small" : "medium")]) {
+        ComponentStage("Steps", inspector: [("active", "\(active)"),
+                                            ("current", controlled ? "\(active)" : "—")]) {
             Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
                 .axis(vertical ? .vertical : .horizontal)
                 .progressDot(progressDot)
                 .size(small ? .small : .medium)
+                .current(controlled ? active : nil)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Controlled .current(active)", isOn: $controlled)
+            Toggle("Subtitles", isOn: $subtitles)
+            Toggle("Disable “Payment” step", isOn: $disableReview)
             Toggle("Small size", isOn: $small)
             Toggle("Progress dot", isOn: $progressDot)
             Toggle("Active percent ring (60%)", isOn: $percent)
