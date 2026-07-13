@@ -30,22 +30,27 @@ public struct CardStyleConfiguration {
     public let surfaceKey: Theme.BackgroundColorKey
     /// Radius role for the container corner. Defaults to the large box corner.
     public let radius: Theme.RadiusRole
+    /// HeroUI `transparent` variant: draw a clear fill with a hairline border and
+    /// no shadow (a minimal card, ideal for nesting). Overrides `surfaceKey`.
+    public let isTransparent: Bool
 
     /// The new parameters default to the pre-existing chrome (`.bgWhite` / `.box`,
-    /// unselected, unpressed), so `CardStyleConfiguration(content:elevation:)`
+    /// unselected, unpressed, opaque), so `CardStyleConfiguration(content:elevation:)`
     /// call sites keep compiling and rendering identically.
     public init(content: AnyView,
                 elevation: CardElevation,
                 isSelected: Bool = false,
                 isPressed: Bool = false,
                 surfaceKey: Theme.BackgroundColorKey = .bgWhite,
-                radius: Theme.RadiusRole = .box) {
+                radius: Theme.RadiusRole = .box,
+                isTransparent: Bool = false) {
         self.content = content
         self.elevation = elevation
         self.isSelected = isSelected
         self.isPressed = isPressed
         self.surfaceKey = surfaceKey
         self.radius = radius
+        self.isTransparent = isTransparent
     }
 }
 
@@ -77,21 +82,27 @@ private struct DefaultCardSurface: View {
     }
 
     /// Selection promotes the border to the hero token; otherwise the original
-    /// hairline appears only at `.none` elevation (shadow carries the other levels).
+    /// hairline appears only at `.none` elevation (shadow carries the other levels),
+    /// and the `transparent` variant always shows the hairline.
     private var borderColor: Color {
         theme.border(configuration.isSelected ? .borderHero : .borderPrimary)
     }
     private var borderWidth: CGFloat {
         if configuration.isSelected { return 1.5 }
+        if configuration.isTransparent { return 1 }
         return configuration.elevation == .none ? 1 : 0
+    }
+    /// `transparent` drops the fill and any shadow; otherwise the token surface.
+    private var fill: Color {
+        configuration.isTransparent ? .clear : theme.background(configuration.surfaceKey)
     }
 
     var body: some View {
         configuration.content
-            .background(theme.background(configuration.surfaceKey), in: shape)
+            .background(fill, in: shape)
             .clipShape(shape)   // keeps edge-to-edge content (e.g. media) inside the corner
             .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
-            .modifier(CardShadow(elevation: configuration.elevation))
+            .modifier(CardShadow(elevation: configuration.isTransparent ? .none : configuration.elevation))
     }
 }
 

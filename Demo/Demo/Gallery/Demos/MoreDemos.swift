@@ -524,40 +524,104 @@ struct AutocompleteDemo: View {
 // MARK: - Organisms
 
 struct CardDemo: View {
+    private enum Kind: String, CaseIterable { case text = "Text", form = "Form", image = "Image", overlay = "Overlay" }
+    @State private var kind: Kind = .text
+    @State private var variant: CardVariant = .default
     @State private var elevation: CardElevation = .soft
     @State private var padding: Theme.SpacingKey = .base
-    @State private var tappable = false
     @State private var header = true
     @State private var loading = false
+    @State private var tappable = false
     @State private var outlined = false
+    @State private var email = ""
     @State private var taps = 0
 
-    private var cardBody: some View {
-        Card(header ? "Reservation" : nil,
-             action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
-                Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
-                    .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+    /// A placeholder "photo" standing in for a cover image in the demo.
+    private var coverImage: some View {
+        LinearGradient(colors: [.pink.opacity(0.55), .orange.opacity(0.55)],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+            .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white))
+    }
+
+    @ViewBuilder
+    private var card: some View {
+        switch kind {
+        case .text:
+            Card(header ? "Reservation" : nil,
+                 action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
+                    Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
+                        .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
             }
+            .overline(header ? "NEW" : nil)
+            .subtitle(header ? "2 nights · 2 guests" : nil)
+            .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
+            .loading(loading)
+            .cardVariant(variant).elevation(elevation).contentPadding(padding)
+        case .form:
+            Card(header ? "Log in" : nil) {
+                VStack(spacing: Theme.SpacingKey.sm.value) {
+                    TextInput("Email", text: $email)
+                    ThemeButton("Sign in") { flash("Sign in") }.fullWidth()
+                }
+            }
+            .subtitle(header ? "Welcome back" : nil)
+            .cardVariant(variant).elevation(elevation).contentPadding(padding)
+            .frame(maxWidth: 280)
+        case .image:
+            Card { EmptyView() }
+                .cover { coverImage.frame(height: 140) }
+                .footer {
+                    HStack {
+                        Text("Fruits").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Spacer(minLength: 0)
+                        Text("18 pictures").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                }
+                .cardVariant(variant).elevation(elevation)
+                .frame(width: 220)
+        case .overlay:
+            Card { EmptyView() }
+                .cover(.fill) { coverImage.frame(width: 220, height: 260) }
+                .header {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("NEO").textStyle(.labelSm600).foregroundStyle(.white.opacity(0.85))
+                        Text("Home Robot").textStyle(.labelLg600).foregroundStyle(.white)
+                    }
+                }
+                .footer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Available soon").textStyle(.labelMd600).foregroundStyle(.white)
+                            Text("Get notified").textStyle(.bodySm400).foregroundStyle(.white.opacity(0.85))
+                        }
+                        Spacer(minLength: 0)
+                        ThemeButton("Notify me") { flash("Notify me") }.size(.small)
+                    }
+                }
+                .elevation(elevation)
         }
-        .elevation(elevation)
-        .contentPadding(padding)
-        .subtitle(header ? "2 nights · 2 guests" : nil)
-        .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
-        .loading(loading)
     }
 
     var body: some View {
-        ComponentStage("Card", inspector: [("style", outlined ? "outlined" : "default"), ("elevation", "\(elevation)"), ("header", "\(header)")]) {
-            if outlined {
-                cardBody.cardStyle(.outlined)   // custom CardStyle via the .cardStyle(_:) modifier
+        ComponentStage("Card", inspector: [("kind", kind.rawValue), ("variant", "\(variant)"), ("elevation", "\(elevation)")]) {
+            if outlined && (kind == .text || kind == .form) {
+                card.cardStyle(.outlined)   // custom CardStyle via the .cardStyle(_:) modifier
             } else {
-                cardBody                        // default env CardStyle
+                card                        // default env CardStyle
             }
         } knobs: {
+            Picker("Content", selection: $kind) {
+                ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Variant (surface fill)", selection: $variant) {
+                Text("Default").tag(CardVariant.default); Text("Secondary").tag(CardVariant.secondary)
+                Text("Tertiary").tag(CardVariant.tertiary); Text("Transparent").tag(CardVariant.transparent)
+            }
             Toggle("Outlined style (.cardStyle)", isOn: $outlined)
-            Toggle("Header (title + extra)", isOn: $header)
+            Toggle("Header / overline", isOn: $header)
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
             Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
