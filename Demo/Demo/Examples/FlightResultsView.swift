@@ -147,6 +147,7 @@ struct FlightResultsView: View {
     }
 
     private func styleLabel(_ text: String) -> some View {
+        
         Text(text).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
             .padding(.horizontal, Theme.SpacingKey.md.value)
             .padding(.top, Theme.SpacingKey.sm.value)
