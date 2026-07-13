@@ -274,7 +274,7 @@ enum ComponentRegistry {
         .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", time: "09:24").side(.outgoing).accent(.success)"#),
         .knob("Counter", .organisms, demo: CounterDemo(), usage: #"Counter(days: 2, hours: 8, minutes: 45)"#),
         .knob("DataTable", .organisms, demo: DataTableDemo(), usage: #"DataTable(columns: cols, rows: rows, selection: $selected).pageSize(10)"#),
-        .knob("Drawer", .organisms, demo: DrawerDemo(), usage: #"someView.drawer(isPresented: $open, edge: .leading) { menu }\n// or imperative: install .drawerHost(); @Environment(DrawerPresenter.self) var drawer: DrawerPresenter\ndrawer.present(edge: .leading) { menu }   // drag-to-dismiss built in"#),
+        .knob("Drawer", .organisms, demo: DrawerDemo(), usage: #"someView.drawer(isPresented: $open, edge: .bottom) {\n    Drawer { form }.heading { Text("Edit Profile") }.footer { buttons }.showsCloseButton(true)\n}\n// edges: .bottom (mobile sheet) / .top / .leading / .trailing · drag-to-dismiss + grab handle built in"#),
         .knob("FAB", .organisms, demo: FABDemo(), usage: #"FloatingActionButton(systemImage: "plus", actions: [.init(systemImage: "camera", action: { })])"#),
         .knob("Hero", .organisms, demo: HeroDemo(), usage: #"Hero(title: "…").subtitle("…").cta("Explore", action: { })"#),
         .knob("Stack", .organisms, demo: CardStackDemo(), usage: #"CardStack(items) { item in cardView }"#),

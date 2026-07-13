@@ -1222,39 +1222,64 @@ struct ChatBubbleDemo: View {
 }
 
 struct DrawerDemo: View {
+    @Environment(\.theme) private var theme
     @Environment(DrawerPresenter.self) private var drawer: DrawerPresenter
     @State private var open = false
-    @State private var trailing = false
+    @State private var edge: Edge = .bottom
+    @State private var showClose = true
+    @State private var name = ""
+    @State private var email = ""
+
+    private var edgeLabel: String {
+        switch edge {
+        case .bottom: return "bottom"
+        case .top: return "top"
+        case .leading: return "leading"
+        case .trailing: return "trailing"
+        }
+    }
+
+    /// The Figma "Edit Profile" panel — a slotted drawer reused by both entry points.
+    @ViewBuilder private func editProfile(dismiss: @escaping () -> Void) -> some View {
+        Drawer {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+                TextInput("Name", text: $name)
+                TextInput("Email", text: $email)
+            }
+        }
+        .heading { Text("Edit Profile") }
+        .showsCloseButton(showClose)
+        .footer {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                ThemeButton("Cancel") { dismiss() }.variant(.ghost).size(.small)
+                ThemeButton("Done") { dismiss(); flash("Saved") }.size(.small)
+            }
+        }
+    }
+
     var body: some View {
-        ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", trailing ? "trailing" : "leading")]) {
-            PrimaryButton("Open drawer") { open = true; flash("Drawer opened") }
+        ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", edgeLabel)]) {
+            PrimaryButton("Open \(edgeLabel) drawer") { open = true; flash("Drawer opened") }
                 .frame(maxWidth: .infinity, minHeight: 160)
-                .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", action: { open = false; flash("Drawer: Account") }).icon("person.circle")
-                        ListRow("Settings", action: { open = false; flash("Drawer: Settings") }).icon("gearshape")
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 50)
+                .drawer(isPresented: $open, edge: edge) {
+                    editProfile(dismiss: { open = false })
                 }
         } knobs: {
-            Toggle("Trailing edge", isOn: $trailing)
-            Button("Open (declarative)") { open = true }
+            Picker("Edge", selection: $edge) {
+                Text("Bottom").tag(Edge.bottom)
+                Text("Top").tag(Edge.top)
+                Text("Leading").tag(Edge.leading)
+                Text("Trailing").tag(Edge.trailing)
+            }
+            .pickerStyle(.segmented)
+            Toggle("Close button", isOn: $showClose)
             Button("Open (imperative host)") {
-                drawer.present(edge: trailing ? .trailing : .leading) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", action: { drawer.dismiss(); flash("Drawer: Account") }).icon("person.circle")
-                        ListRow("Settings", action: { drawer.dismiss(); flash("Drawer: Settings") }).icon("gearshape")
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 50)
+                drawer.present(edge: edge) {
+                    editProfile(dismiss: { drawer.dismiss() })
                 }
             }
-            Text("Drag the panel toward its edge to dismiss.").font(.footnote).foregroundStyle(.secondary)
+            Text("Drag the panel toward its edge to dismiss; the handle grabs bottom/top sheets.")
+                .font(.footnote).foregroundStyle(.secondary)
         }
     }
 }
