@@ -129,24 +129,58 @@ struct ChipDemo: View {
     @State private var rating = false
     @State private var exists = true
     @State private var expands = false
+    // HeroUI V3 status mode.
+    @State private var statusMode = false
+    @State private var typeIdx = 0   // accent/neutral/success/warning/danger
+    @State private var variantIdx = 0 // primary/secondary/tertiary/soft
+    @State private var closable = false
+
+    private let types: [ChipType] = [.accent, .neutral, .success, .warning, .danger]
+    private let variants: [ChipVariant] = [.primary, .secondary, .tertiary, .soft]
+    private var type: ChipType { types[typeIdx] }
+    private var variant: ChipVariant { variants[variantIdx] }
 
     var body: some View {
-        ComponentStage("Chip", inspector: [
-            ("isSelected", "\(selected)"), ("size", "\(size)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)"),
-        ]) {
-            Chip(exists ? "Recommended" : "Sold out", isSelected: $selected)
+        ComponentStage("Chip", inspector: statusMode
+            ? [("mode", "status"), ("type", "\(type)"), ("variant", "\(variant)"), ("size", "\(size)")]
+            : [("isSelected", "\(selected)"), ("size", "\(size)"), ("isExist", "\(exists)"), ("isEnabled", "\(enabled)")]
+        ) {
+            if statusMode {
+                Chip(exists ? "Recommended" : "Sold out")
+                    .type(type)
+                    .variant(variant)
+                    .size(size)
+                    .icon(rating ? "sparkles" : nil)
+                    .onClose(closable ? {} : nil)
+                    .disabled(!enabled)
+            } else {
+                Chip(exists ? "Recommended" : "Sold out", isSelected: $selected)
                     .size(size)
                     .chipStyle(solid ? .solid : .tonal)
                     .rating(rating ? 4.6 : nil)
                     .exists(exists)
                     .fullWidth(expands)
                     .disabled(!enabled)
+            }
         } knobs: {
-            Toggle("Selected", isOn: $selected)
-            Toggle("Embedded rating", isOn: $rating)
-            Toggle("isExist (strike-through when off)", isOn: $exists)
-            Toggle("Expands horizontally", isOn: $expands)
-            Toggle("Solid style", isOn: $solid)
+            Toggle("Status mode (HeroUI type × variant)", isOn: $statusMode)
+            if statusMode {
+                Picker("Type", selection: $typeIdx) {
+                    Text("Accent").tag(0); Text("Default").tag(1); Text("Success").tag(2)
+                    Text("Warning").tag(3); Text("Danger").tag(4)
+                }.pickerStyle(.segmented)
+                Picker("Variant", selection: $variantIdx) {
+                    Text("Primary").tag(0); Text("Secondary").tag(1); Text("Tertiary").tag(2); Text("Soft").tag(3)
+                }.pickerStyle(.segmented)
+                Toggle("Prefix icon", isOn: $rating)
+                Toggle("Closable (× suffix)", isOn: $closable)
+            } else {
+                Toggle("Selected", isOn: $selected)
+                Toggle("Embedded rating", isOn: $rating)
+                Toggle("isExist (strike-through when off)", isOn: $exists)
+                Toggle("Expands horizontally", isOn: $expands)
+                Toggle("Solid style", isOn: $solid)
+            }
             Picker("Size", selection: $size) {
                 Text("Small").tag(ChipSize.small); Text("Medium").tag(ChipSize.medium); Text("Large").tag(ChipSize.large)
             }.pickerStyle(.segmented)

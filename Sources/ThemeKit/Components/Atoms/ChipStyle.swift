@@ -112,6 +112,78 @@ private struct SolidChipChrome: View {
     }
 }
 
+/// The HeroUI V3 **status** chroma: a semantic ``ChipType`` painted at one of
+/// the four ``ChipVariant`` emphasis levels. Selection-independent (a status
+/// chip isn't a toggle), so it ignores `configuration.isSelected`. Set
+/// indirectly via `Chip.type(_:)` + `.variant(_:)`; reads
+/// ``SemanticColor/Resolved``, so an injected `.theme(_:)` re-skins it.
+public struct SemanticChipStyle: ChipStyle, Sendable {
+    let type: ChipType
+    let variant: ChipVariant
+    public init(type: ChipType, variant: ChipVariant) {
+        self.type = type
+        self.variant = variant
+    }
+    public func makeBody(configuration: ChipStyleConfiguration) -> some View {
+        SemanticChipChrome(type: type, variant: variant, configuration: configuration)
+    }
+}
+
+private struct SemanticChipChrome: View {
+    let type: ChipType
+    let variant: ChipVariant
+    let configuration: ChipStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        configuration.content
+            .foregroundStyle(foreground)
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .background(background, in: Capsule())
+    }
+
+    private var resolved: SemanticColor.Resolved { theme.resolve(type.semantic) }
+
+    private var foreground: Color {
+        if !configuration.isEnabled { return theme.text(.textDisabled) }
+        switch variant {
+        // `.neutral` has no vivid solid — its "primary" is a light gray chip with
+        // dark text (HeroUI "default" type), so it reads its own text token.
+        case .primary: return type == .neutral ? theme.text(.textPrimary) : resolved.onSolid
+        case .secondary, .tertiary, .soft: return resolved.accent
+        }
+    }
+    private var background: Color {
+        if !configuration.isEnabled { return theme.background(.bgSecondaryLight) }
+        switch variant {
+        // Vivid solid for the colored types; a light neutral surface for `.neutral`.
+        case .primary: return type == .neutral ? theme.background(.bgSecondaryLight) : resolved.solid
+        // HeroUI "secondary" is a neutral gray surface for every type (the hue
+        // shows only through the accent-colored label).
+        case .secondary: return theme.background(.bgSecondaryLight)
+        case .tertiary: return .clear                        // transparent
+        case .soft: return resolved.soft                     // type-tinted surface
+        }
+    }
+    // HeroUI compact ramp: with `Chip`'s ~20pt scaled content floor these
+    // paddings land the capsule on the 20 / 24 / 28pt sm/md/lg heights.
+    private var horizontalPadding: CGFloat {
+        switch configuration.size {
+        case .small: return Theme.SpacingKey.sm.value    // 8
+        case .medium: return Theme.SpacingKey.sm.value   // 8
+        case .large: return Theme.SpacingKey.sm.value + 4 // 12
+        }
+    }
+    private var verticalPadding: CGFloat {
+        switch configuration.size {
+        case .small: return 0
+        case .medium: return 2                            // no 2pt spacing token
+        case .large: return Theme.SpacingKey.xs.value    // 4
+        }
+    }
+}
+
 public extension ChipStyle where Self == TonalChipStyle {
     /// The stock tonal chroma (light hero surface + hero text when selected).
     static var tonal: TonalChipStyle { TonalChipStyle() }
