@@ -84,4 +84,24 @@ final class ThemeGeneratorGoldenTests: XCTestCase {
                            "tinted neutral/\(step) drifted from gen_tokens.py's _tint_neutral()/mix() for seed 5b35ab")
         }
     }
+
+    /// Byte-exact parity on a TIE-hitting seed. `5b21b6` produces an `x.5` blended
+    /// channel on 2 dark-mix steps, where Swift's OLD half-away-from-zero `.rounded()`
+    /// disagreed with Python's half-to-even `round()` by 1 LSB (primary/100 `26173d`
+    /// vs `26173c`; primary/900 `eae2f1` vs `eae2f0`). Now that `ThemeGenerator` uses
+    /// `.toNearestOrEven`, every step matches `gen_tokens.py`'s
+    /// `build_palette("5b21b6", dark=True, tint=0.13)` EXACTLY — this test fails on the
+    /// pre-fix generator and passes after (review R8: byte-exact parity close).
+    func testTieSeedIsByteExactVsGenTokensPy() {
+        let d = ThemeGenerator.generate(primaryHex: "5b21b6", tint: 0.13, dark: true,
+                                        font: "Montserrat", fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1)
+        let goldenPrimaryDark: [Int: String] = [
+            50: "1a1426", 100: "26173c", 200: "322248", 300: "412962", 400: "543285",
+            500: "683ba8", 600: "895fbc", 700: "ad8bd1", 800: "ceb9e2", 900: "eae2f0",
+        ]
+        for (step, expected) in goldenPrimaryDark.sorted(by: { $0.key < $1.key }) {
+            XCTAssertEqual(hex(d, "palette.primary.\(step)"), expected,
+                           "tie-seed dark primary/\(step) must be byte-exact vs gen_tokens.py (banker's-rounding parity) for 5b21b6")
+        }
+    }
 }
