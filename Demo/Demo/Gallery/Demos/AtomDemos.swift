@@ -89,6 +89,7 @@ struct BadgeDemo: View {
     @State private var size: BadgeSize = .medium
     @State private var pill = true
     @State private var icon = false
+    @State private var trailingIcon = false
     @State private var gradient = false
     @State private var highlighted = false
     @State private var tappable = false
@@ -100,7 +101,7 @@ struct BadgeDemo: View {
         ]) {
             Badge(text, action: tappable ? { tapped += 1; flash("Badge tapped") } : nil)
                 .badgeStyle(style).variant(variant).size(size)
-                .icon(icon ? "star.fill" : nil)
+                .icon(leading: icon ? "star.fill" : nil, trailing: trailingIcon ? "xmark" : nil)
                 .badgeShape(pill ? .pill : .rounded)
                 .gradient(gradient ? [SemanticColor.primary, SemanticColor.purple] : nil)
                 .highlighted(highlighted)
@@ -114,6 +115,7 @@ struct BadgeDemo: View {
             }.pickerStyle(.segmented)
             Toggle("Pill shape", isOn: $pill)
             Toggle("Leading icon", isOn: $icon)
+            Toggle("Trailing icon", isOn: $trailingIcon)
             Toggle("Gradient bg", isOn: $gradient)
             Toggle("Highlighted (shadow)", isOn: $highlighted)
             Toggle("Tappable (action)", isOn: $tappable)
