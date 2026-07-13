@@ -12,11 +12,14 @@ import SwiftUI
 import ThemeKit
 
 // The ThemeKitCalendar add-on is behind the package's "Calendar" trait (default
-// OFF, so a plain checkout resolves zero third-party deps). Enable it in Xcode via
-// *Package Dependencies ▸ ThemeKit ▸ Traits ▸ Calendar* to resolve Almanac. This
-// `canImport` guard lets the Demo compile either way: with the trait on you get the
-// real add-on demos; with it off the same knob types render a short "enable it" note
-// (see the `#else` stubs) so the gallery still builds and lists them.
+// OFF, so a plain checkout of the *library* resolves zero third-party deps). For the
+// Demo app the trait is enabled automatically by the local `CalendarTraitShim` package
+// (Demo/CalendarTraitShim): a standard .xcodeproj can't persist a package-trait
+// selection — even in Xcode 26 the UI toggle is dropped on re-resolve — so the shim's
+// manifest turns the trait on and pulls Almanac. This `canImport` guard still lets the
+// Demo compile even without that shim: with the trait on you get the real add-on demos;
+// with it off the same knob types render a short "enable it" note (see the `#else`
+// stubs) so the gallery still builds and lists them.
 #if canImport(Almanac)
 import ThemeKitCalendar
 
