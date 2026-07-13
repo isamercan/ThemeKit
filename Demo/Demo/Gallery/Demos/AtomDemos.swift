@@ -374,6 +374,39 @@ struct HelperTextDemo: View {
     }
 }
 
+struct DescriptionModalDemo: View {
+    @State private var alignmentIdx = 0   // 0 leading, 1 center, 2 trailing
+    @State private var longText = true
+
+    private let alignments: [(String, TextAlignment)] = [
+        ("Leading", .leading), ("Center", .center), ("Trailing", .trailing),
+    ]
+    private let short = "Delete this trip? This action can't be undone."
+    private let long = "California is a state in the Western United States that lies on the Pacific Coast. With almost 40 million residents across an area of 163,696 square miles."
+
+    var body: some View {
+        ComponentStage("DescriptionModal", inspector: [
+            ("textAlignment", alignments[alignmentIdx].0), ("body", longText ? "multi-line" : "short"),
+        ]) {
+            // A mock modal card: title + swappable description body.
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Confirm").textStyle(.labelMd700).foregroundStyle(Theme.shared.text(.textPrimary))
+                DescriptionModal(longText ? long : short)
+                    .textAlignment(alignments[alignmentIdx].1)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.shared.background(.bgWhite)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.shared.border(.borderPrimary)))
+        } knobs: {
+            Picker("Alignment", selection: $alignmentIdx) {
+                Text("Leading").tag(0); Text("Center").tag(1); Text("Trailing").tag(2)
+            }.pickerStyle(.segmented)
+            Toggle("Long multi-line body", isOn: $longText)
+        }
+    }
+}
+
 struct SurfaceViewDemo: View {
     @State private var levelIdx = 0
     @State private var elevationIdx = 0   // 0 none, 1 soft, 2 elevated
