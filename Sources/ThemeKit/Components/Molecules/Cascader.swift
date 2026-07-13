@@ -50,6 +50,11 @@ public struct Cascader: View {
     private var isSearchable = false
     private var isNodeEnabled: ((CascaderOption) -> Bool)?
     private var infoMessages: [InfoMessage] = []
+    /// Set only by `.size(_:)` — an explicit size wins over the subtree
+    /// `FieldDefaults.size` default, matching every sibling field (F5).
+    private var explicitSize: TextInputSize?
+    /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the legacy 44pt.
+    private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
 
     @State private var open = false
     @State private var browse: [String] = []
@@ -106,7 +111,7 @@ public struct Cascader: View {
                         .rotationEffect(.degrees(open ? 180 : 0))
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
-                .scaledControlHeight(44)
+                .scaledControlHeight(effectiveSize?.height ?? 44)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
                 .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value)
@@ -298,6 +303,11 @@ public struct Cascader: View {
 public extension Cascader {
     /// Hint shown when nothing is selected.
     func placeholder(_ text: String) -> Self { copy { $0.placeholderOverride = text } }
+    /// Control-height preset (Ant `size` large/middle/small). An explicit size
+    /// wins over the subtree `FieldDefaults.size` default; unset keeps the 44pt
+    /// field — brings Cascader in line with the other fields, which already
+    /// honour `.size(_:)` / `FieldDefaults.size`.
+    func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
     /// Commit the path at every level, not only on a leaf (Ant `changeOnSelect`).
     func changeOnSelect(_ on: Bool = true) -> Self { copy { $0.changeOnSelect = on } }
     /// Show a trailing clear button when a path is selected (Ant `allowClear`).
@@ -348,6 +358,14 @@ public extension Cascader {
         // Read-only: normal chrome + value, columns suppressed (E1).
         PreviewCase("Read-only") {
             Cascader(options, selection: .constant(["de", "be", "mitte"])).clearable().readOnly()
+        }
+        // Control-height sizes (Ant `size`) — small / medium / large.
+        PreviewCase("Sizes") {
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                Cascader(options, selection: .constant(["de", "be", "mitte"])).size(.small)
+                Cascader(options, selection: .constant(["de", "be", "mitte"])).size(.medium)
+                Cascader(options, selection: .constant(["de", "be", "mitte"])).size(.large)
+            }
         }
     }
     .environment(Theme.shared)

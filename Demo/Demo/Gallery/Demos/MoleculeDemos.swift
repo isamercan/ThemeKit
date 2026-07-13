@@ -721,6 +721,7 @@ struct CascaderDemo: View {
     @State private var searchable = false
     @State private var clearable = false
     @State private var readOnly = false
+    @State private var size: TextInputSize = .medium
     private let options = [
         CascaderOption("tr", label: "Türkiye", children: [
             CascaderOption("34", label: "İstanbul", children: [
@@ -738,7 +739,11 @@ struct CascaderDemo: View {
                 .searchable(searchable)
                 .clearable(clearable)
                 .readOnly(readOnly)
+                .size(size)
         } knobs: {
+            Picker("Size", selection: $size) {
+                Text("S").tag(TextInputSize.small); Text("M").tag(TextInputSize.medium); Text("L").tag(TextInputSize.large)
+            }.pickerStyle(.segmented)
             Toggle("Searchable (filter across levels)", isOn: $searchable)
             Toggle("Clearable (x when selected)", isOn: $clearable)
             Toggle("Read-only (keeps chrome, blocks opening)", isOn: $readOnly)
