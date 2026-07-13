@@ -283,15 +283,22 @@ struct MultiLineDemo: View {
     @State private var error = false
     @State private var helper = false
     @State private var warning = false
+    @State private var autosize = false
+    // All modifiers return `Self`, so the autosize toggle is a plain ternary.
+    private var field: MultiLineTextInput {
+        let base = MultiLineTextInput("Notes", text: $text)
+            .placeholder("Write something…")
+            .characterLimit(limit ? 200 : nil)
+            .helperText(helper ? "Visible to the support team only." : nil)
+            .warningText(warning ? "Avoid sharing personal data." : nil)
+            .errorText(error ? "Required" : nil)
+        return autosize ? base.autosize(minRows: 2, maxRows: 6) : base
+    }
     var body: some View {
-        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
-            MultiLineTextInput("Notes", text: $text)
-                .placeholder("Write something…")
-                .characterLimit(limit ? 200 : nil)
-                .helperText(helper ? "Visible to the support team only." : nil)
-                .warningText(warning ? "Avoid sharing personal data." : nil)
-                .errorText(error ? "Required" : nil)
+        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)"), ("autosize", "\(autosize)")]) {
+            field
         } knobs: {
+            Toggle("Autosize (2…6 rows)", isOn: $autosize)
             Toggle("Character limit", isOn: $limit)
             Toggle("Helper text", isOn: $helper)
             Toggle("Warning text", isOn: $warning)
