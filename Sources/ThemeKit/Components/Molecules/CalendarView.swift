@@ -8,11 +8,21 @@ import SwiftUI
 
 /// Molecule. An inline month calendar with day selection + month navigation.
 /// (daisyUI "Calendar"; complements DateField which presents a popover.)
+///
+/// Two selection shapes: `CalendarView(selection: Binding<Date?>)` picks a single
+/// day, `CalendarView(selection: Binding<Set<Date>>)` picks any number of
+/// non-contiguous days (Ant `multiple`). `.disabledDates { }` greys out and
+/// blocks days a predicate rejects (Ant `disabledDate`).
 public struct CalendarView: View {
     @Environment(\.theme) private var theme
     @Environment(\.locale) private var locale
 
-    @Binding private var selection: Date?
+    /// Single-day (`Date?`) or multi-day (`Set<Date>`) selection, chosen by init.
+    private enum SelectionMode {
+        case single(Binding<Date?>)
+        case multiple(Binding<Set<Date>>)
+    }
+    private let selectionMode: SelectionMode
     @State private var displayed: Date
 
     // Appearance/config — mutated only through the modifiers below (R2).
@@ -20,6 +30,9 @@ public struct CalendarView: View {
     private var showsWeekdayHeader = true
     private var firstWeekdayOverride: Int?
     private var yearPickerEnabled = false
+    /// When set, a day the predicate returns `true` for is greyed and unselectable
+    /// (Ant `disabledDate`). `nil` (default) leaves every day selectable.
+    private var isDateDisabled: ((Date) -> Bool)?
 
     /// The navigation stage of the interior grid. Only ever leaves `.days` when
     /// `.yearPicker()` makes the header tappable, so default calendars are
@@ -41,9 +54,17 @@ public struct CalendarView: View {
         return c
     }
 
+    /// Single-day selection.
     public init(selection: Binding<Date?>) {
-        self._selection = selection
+        self.selectionMode = .single(selection)
         self._displayed = State(initialValue: selection.wrappedValue ?? Date.now)
+    }
+
+    /// Multi-day selection — tap toggles each day in/out of the set (Ant `multiple`).
+    /// The grid opens on the earliest selected day, or today when the set is empty.
+    public init(selection: Binding<Set<Date>>) {
+        self.selectionMode = .multiple(selection)
+        self._displayed = State(initialValue: selection.wrappedValue.min() ?? Date.now)
     }
 
     public var body: some View {
@@ -179,21 +200,58 @@ public struct CalendarView: View {
     }
 
     private func dayCell(_ date: Date) -> some View {
-        let isSelected = selection.map { calendar.isDate($0, inSameDayAs: date) } ?? false
+        let isSelected = isSelected(date)
         let isToday = calendar.isDateInToday(date)
+        let disabled = isDateDisabled?(date) ?? false
         return Button {
-            selection = date
+            toggleSelection(date)
         } label: {
             Text("\(calendar.component(.day, from: date))")
                 .textStyle(.bodyBase400)
-                .foregroundStyle(isSelected ? selectedContent : (isToday ? todayText : theme.text(.textPrimary)))
+                .foregroundStyle(dayColor(isSelected: isSelected, isToday: isToday, disabled: disabled))
                 .frame(width: 36, height: 36)
                 .background(isSelected ? selectedFill : .clear, in: Circle())
-                .overlay { if isToday && !isSelected { Circle().stroke(todayRing, lineWidth: 1) } }
+                .overlay { if isToday && !isSelected && !disabled { Circle().stroke(todayRing, lineWidth: 1) } }
                 .frame(maxWidth: .infinity, minHeight: 44)   // A11y: ≥44pt tap target (circle stays 36)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(disabled)   // greyed + not tappable, and announced unavailable
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func dayColor(isSelected: Bool, isToday: Bool, disabled: Bool) -> Color {
+        if isSelected { return selectedContent }
+        if disabled { return theme.text(.textDisabled) }
+        if isToday { return todayText }
+        return theme.text(.textPrimary)
+    }
+
+    // MARK: - Selection model (single `Date?` or multiple `Set<Date>`)
+
+    /// Whether `date` is currently selected, in either selection mode.
+    private func isSelected(_ date: Date) -> Bool {
+        switch selectionMode {
+        case let .single(binding):
+            return binding.wrappedValue.map { calendar.isDate($0, inSameDayAs: date) } ?? false
+        case let .multiple(binding):
+            return binding.wrappedValue.contains { calendar.isDate($0, inSameDayAs: date) }
+        }
+    }
+
+    /// Single mode selects the day; multiple mode toggles it in/out of the set
+    /// (stored at `startOfDay` so set membership is stable across time-of-day).
+    private func toggleSelection(_ date: Date) {
+        switch selectionMode {
+        case let .single(binding):
+            binding.wrappedValue = date
+        case let .multiple(binding):
+            if let existing = binding.wrappedValue.first(where: { calendar.isDate($0, inSameDayAs: date) }) {
+                binding.wrappedValue.remove(existing)
+            } else {
+                binding.wrappedValue.insert(calendar.startOfDay(for: date))
+            }
+        }
     }
 
     // MARK: - Accent resolution (defaults keep the hero tokens, R4)
@@ -346,6 +404,14 @@ public extension CalendarView {
     /// default, so existing calendars are visually and behaviorally unchanged.
     func yearPicker(_ enabled: Bool = true) -> Self { copy { $0.yearPickerEnabled = enabled } }
 
+    /// Greys out and blocks every day the predicate returns `true` for
+    /// (Ant `disabledDate`) — e.g. weekends, past days, or specific blackout
+    /// dates. `nil` (default) leaves all days selectable.
+    ///
+    ///     CalendarView(selection: $date)
+    ///         .disabledDates { $0 < Date.now }          // no past days
+    func disabledDates(_ isDisabled: ((Date) -> Bool)?) -> Self { copy { $0.isDateDisabled = isDisabled } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -369,6 +435,18 @@ public extension CalendarView {
                 .accent(.success)
                 .firstWeekday(2)   // Monday first
                 .showsWeekdayHeader(false)
+        }
+        // Multiple non-contiguous days (Ant `multiple`).
+        PreviewCase("Multiple selection") {
+            CalendarView(selection: .constant(Set([0, 2, 3, 9].compactMap {
+                Calendar.current.date(byAdding: .day, value: $0,
+                                      to: Calendar.current.startOfDay(for: Date.now))
+            }))).accent(.turquoise)
+        }
+        // Weekends greyed out and unselectable (Ant `disabledDate`).
+        PreviewCase("Disabled weekends") {
+            CalendarView(selection: .constant(Date.now))
+                .disabledDates { Calendar.current.isDateInWeekend($0) }
         }
     }
 }
