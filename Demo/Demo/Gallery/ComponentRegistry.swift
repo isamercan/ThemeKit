@@ -154,6 +154,7 @@ enum ComponentRegistry {
         .knob("ThemeButton", .molecules, demo: ThemeButtonDemo(), usage: #"ThemeButton("Save") { }.color(.success).variant(.soft).size(.medium).shape(.pill)"#),
         .knob("Checkbox", .molecules, demo: CheckboxDemo(), usage: #"Checkbox("Accept terms", isChecked: $on).accent(.success).infoMessages(error ? [.init("Required", kind: .error)] : [])"#),
         .knob("CheckboxGroup", .molecules, demo: CheckboxGroupDemo(), usage: #"CheckboxGroup(options: items, selection: $set) { $0 }"#),
+        .knob("InputGroup", .molecules, demo: InputGroupDemo(), usage: ##"InputGroup("heroui.com", text: $url).variant(.primary).gapSpaced()\n         .prefix { InputAffix().icon("globe") }\n         .suffix { InputAffix("USD", action: pick).arrow().emphasis(.active) }   // type(.text/.number/.password)"##, isNew: true),
         .knob("InputNumber", .molecules, demo: InputNumberDemo(), usage: #"InputNumber("Max price", value: $n, range: 0...10000).step(50).unit("$")"#),
         .knob("MultiLineTextInput", .molecules, demo: MultiLineDemo(), usage: #"MultiLineTextInput("Notes", text: $text).size(.small).characterLimit(200).countStyle(.remaining)"#),
         .knob("OTPInput", .molecules, demo: OTPDemo(), usage: #"OTPInput(code: $code) { verify($0) }\n         .digitCount(6).secure().resend(interval: 30) { resend() }"#),
