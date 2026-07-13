@@ -125,7 +125,7 @@ public struct Transfer: View {
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .frame(height: 34)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isOn && enabled ? SemanticColor.primary.soft.opacity(0.5) : .clear)
+            .background(isOn && enabled ? theme.resolve(.primary).soft.opacity(0.5) : .clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -137,9 +137,9 @@ public struct Transfer: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(enabled ? SemanticColor.primary.onSolid : theme.text(.textDisabled))
+                .foregroundStyle(enabled ? theme.resolve(.primary).onSolid : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
-                .background(enabled ? SemanticColor.primary.solid : theme.background(.bgElevatorTertiary),
+                .background(enabled ? theme.resolve(.primary).solid : theme.background(.bgElevatorTertiary),
                             in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())

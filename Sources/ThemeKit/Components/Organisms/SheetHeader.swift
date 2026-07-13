@@ -40,7 +40,7 @@ public struct SheetHeader: View {
 
     public init(_ title: String) { self.title = title }   // R1
 
-    private var accentBase: Color { (accent ?? .primary).base }
+    private var accentBase: Color { theme.resolve(accent ?? .primary).base }
 
     public var body: some View {
         // `surface(_:)` / `showsDivider(_:)` must beat whatever fill/hairline

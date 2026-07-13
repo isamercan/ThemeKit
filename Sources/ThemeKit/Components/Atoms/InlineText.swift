@@ -17,6 +17,9 @@ public struct InlineText: View {
 
     // Appearance/config — mutated only through the modifiers below (R2).
     private var baseColor: Color? = nil
+    // ADR-0006: the token overload stores the `SemanticColor` (not a resolved
+    // `Color`) so it re-resolves against the environment theme in `body`.
+    private var semanticColor: SemanticColor? = nil
     private var style: TextStyle = .bodySm400
 
     public init(_ text: String, links: [(substring: String, action: () -> Void)] = []) {   // R1
@@ -38,7 +41,7 @@ public struct InlineText: View {
     private var attributed: AttributedString {
         var string = AttributedString(text)
         string.font = style.font
-        string.foregroundColor = baseColor ?? theme.text(.textSecondary)
+        string.foregroundColor = semanticColor.map { theme.resolve($0).base } ?? baseColor ?? theme.text(.textSecondary)
         for (index, link) in links.enumerated() {
             if let range = string.range(of: link.substring) {
                 string[range].foregroundColor = theme.text(.textHero)
@@ -54,11 +57,11 @@ public struct InlineText: View {
 
 public extension InlineText {
     /// Semantic base text color; `nil` (default) uses the theme's secondary text color.
-    func accent(_ color: SemanticColor?) -> Self { copy { $0.baseColor = color?.base } }
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.semanticColor = color; $0.baseColor = nil } }
 
     /// Raw base text color (back-compat); prefer `accent(_:)`.
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
-    func color(_ color: Color?) -> Self { copy { $0.baseColor = color } }
+    func color(_ color: Color?) -> Self { copy { $0.baseColor = color; $0.semanticColor = nil } }
 
     /// Typography token for the body text. Named `inlineStyle` so it doesn't
     /// shadow the kit-wide `.textStyle(_:)` view modifier.

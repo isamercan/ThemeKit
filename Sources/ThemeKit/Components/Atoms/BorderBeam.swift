@@ -90,7 +90,7 @@ private struct BorderBeamModifier: ViewModifier {
     private var beamInset: CGFloat { lineWidth / 2 - outset }
 
     private var palette: [Color] {
-        colors ?? [theme.background(.bgHero), SemanticColor.turquoise.base]
+        colors ?? [theme.background(.bgHero), theme.resolve(.turquoise).base]
     }
 
     func body(content: Content) -> some View {

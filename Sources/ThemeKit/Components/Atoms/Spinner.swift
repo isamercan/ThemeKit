@@ -63,7 +63,7 @@ public struct Spinner: View {
     public init() {}   // R1
 
     /// Raw override wins, then the semantic accent, then the theme hero foreground.
-    private var tint: Color { color ?? semantic?.accent ?? theme.foreground(.fgHero) }
+    private var tint: Color { color ?? semantic.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero) }
 
     /// Explicit override wins; else the `.controlSize(_:)` preset.
     private var resolvedSize: CGFloat { size ?? controlSize.spinnerDiameter }

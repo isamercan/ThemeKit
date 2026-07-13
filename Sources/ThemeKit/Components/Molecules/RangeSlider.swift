@@ -183,13 +183,13 @@ public struct RangeSlider: View {
     /// Track-fill shade — the accent's solid shade when set, else the hero token.
     private var fillColor: Color {
         guard isEnabled else { return theme.background(.bgSecondaryLight) }
-        return accent?.solid ?? theme.background(.bgHero)
+        return accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero)
     }
 
     /// Thumb-ring shade — the accent's solid shade when set, else the hero border.
     private var thumbRingColor: Color {
         guard isEnabled else { return theme.border(.borderPrimary) }
-        return accent?.solid ?? theme.border(.borderHero)
+        return accent.map { theme.resolve($0).solid } ?? theme.border(.borderHero)
     }
 
     // MARK: Marks

@@ -57,7 +57,7 @@ public struct PriceTrendChart: View {
     // MARK: Derived
 
     private var visiblePoints: [PriceTrendPoint] { maxDays.map { Array(points.prefix(max(1, $0))) } ?? points }
-    private var accent: Color { accentColor?.base ?? theme.foreground(.fgHero) }
+    private var accent: Color { accentColor.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
     private var maxPrice: Decimal { visiblePoints.map(\.price).max() ?? 1 }
     private var minPrice: Decimal { visiblePoints.map(\.price).min() ?? 0 }
     private var minFraction: CGFloat { maxPrice > 0 ? CGFloat(NSDecimalNumber(decimal: minPrice / maxPrice).doubleValue) : 0 }
@@ -67,8 +67,8 @@ public struct PriceTrendChart: View {
     private var barFill: AnyShapeStyle {
         useGradient ? AnyShapeStyle(LinearGradient(colors: [accent, accent.opacity(0.5)], startPoint: .bottom, endPoint: .top)) : AnyShapeStyle(accent)
     }
-    private var selectionBg: Color { selectionColorToken?.base ?? theme.text(.textPrimary) }
-    private var selectionFg: Color { selectionColorToken?.onSolid ?? theme.text(.textSecondaryInverse) }
+    private var selectionBg: Color { selectionColorToken.map { theme.resolve($0).base } ?? theme.text(.textPrimary) }
+    private var selectionFg: Color { selectionColorToken.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse) }
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
         currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"

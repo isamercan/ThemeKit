@@ -18,7 +18,7 @@ public enum CalloutType {
         case .success: return theme.foreground(.systemcolorsFgSuccess)
         case .warning: return theme.foreground(.systemcolorsFgWarning)
         case .error: return theme.foreground(.systemcolorsFgError)
-        case .accent: return SemanticColor.primary.base
+        case .accent: return theme.resolve(.primary).base
         }
     }
     func soft(_ theme: Theme) -> Color {
@@ -28,7 +28,7 @@ public enum CalloutType {
         case .success: return theme.background(.systemcolorsBgSuccessLight)
         case .warning: return theme.background(.systemcolorsBgWarningLight)
         case .error: return theme.background(.systemcolorsBgErrorLight)
-        case .accent: return SemanticColor.primary.soft
+        case .accent: return theme.resolve(.primary).soft
         }
     }
     var systemImage: String {

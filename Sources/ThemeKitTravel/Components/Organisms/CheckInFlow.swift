@@ -227,20 +227,21 @@ public struct CheckInFlow<Page: View>: View {
     private func accentMarker(index: Int, color: SemanticColor) -> some View {
         let isDone = index < currentIndex
         let isCurrent = index == currentIndex
+        let resolved = theme.resolve(color)
         return ZStack {
-            Circle().fill(isDone || isCurrent ? color.solid : theme.background(.bgWhite))
+            Circle().fill(isDone || isCurrent ? resolved.solid : theme.background(.bgWhite))
             Circle().strokeBorder(
-                isDone || isCurrent ? color.solid : theme.border(.borderPrimary),
+                isDone || isCurrent ? resolved.solid : theme.border(.borderPrimary),
                 lineWidth: 1.5
             )
             if isDone {
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(color.onSolid)
+                    .foregroundStyle(resolved.onSolid)
             } else {
                 Text("\(index + 1)")
                     .textStyle(.labelSm700)
-                    .foregroundStyle(isCurrent ? color.onSolid : theme.text(.textTertiary))
+                    .foregroundStyle(isCurrent ? resolved.onSolid : theme.text(.textTertiary))
             }
         }
     }

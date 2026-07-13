@@ -118,10 +118,10 @@ public struct CalendarYearPicker: View {
 
     // MARK: - Accent resolution (defaults keep the hero tokens, R4 — CalendarView parity)
 
-    private var selectedFill: Color { accent?.solid ?? theme.background(.bgHero) }
-    private var selectedContent: Color { accent?.onSolid ?? theme.foreground(.fgSecondary) }
-    private var todayText: Color { accent?.accent ?? theme.text(.textHero) }
-    private var todayRing: Color { accent?.border ?? theme.border(.borderHero) }
+    private var selectedFill: Color { accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero) }
+    private var selectedContent: Color { accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary) }
+    private var todayText: Color { accent.map { theme.resolve($0).accent } ?? theme.text(.textHero) }
+    private var todayRing: Color { accent.map { theme.resolve($0).border } ?? theme.border(.borderHero) }
 
     // MARK: - Paging math
 

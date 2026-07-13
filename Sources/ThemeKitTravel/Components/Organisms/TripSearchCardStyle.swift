@@ -127,9 +127,9 @@ public struct TripSearchCardConfiguration {
     // Accent resolution — the `accent(_:)` override, else the theme's hero
     // tokens (mirrors the FlightListItemConfiguration convention).
     /// Emphasized fill (the pill's search glyph disc).
-    public func accentFill(_ theme: Theme) -> Color { accent?.solid ?? theme.background(.bgHero) }
+    public func accentFill(_ theme: Theme) -> Color { accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero) }
     /// Content color on top of ``accentFill(_:)``.
-    public func accentOnFill(_ theme: Theme) -> Color { accent?.onSolid ?? theme.foreground(.fgSecondary) }
+    public func accentOnFill(_ theme: Theme) -> Color { accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary) }
 
     // Shared summaries, so collapsed styles speak one language.
     /// "Istanbul (IST) – London (LHR)" — an en dash, not an arrow, so the

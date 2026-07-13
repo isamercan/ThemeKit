@@ -66,12 +66,12 @@ public struct LayoverRowConfiguration {
     /// foreground (the value the built-ins hardcoded before the tone axis
     /// existed).
     public func warningColor(_ theme: Theme) -> Color {
-        warningTone?.base ?? theme.foreground(.systemcolorsFgWarning)
+        warningTone.map { theme.resolve($0).base } ?? theme.foreground(.systemcolorsFgWarning)
     }
     /// The connector icon/label tint: the warning color while warning, else
     /// the accent's base (neutral by default).
     public func accentColor(_ theme: Theme) -> Color {
-        hasWarning ? warningColor(theme) : (accent ?? .neutral).base
+        hasWarning ? warningColor(theme) : theme.resolve(accent ?? .neutral).base
     }
     /// Semantic tone that tints the pill / banner chrome.
     public var chromeTone: SemanticColor { hasWarning ? (warningTone ?? .warning) : (accent ?? .neutral) }
@@ -197,6 +197,7 @@ public struct PillLayoverRowStyle: LayoverRowStyle {
 }
 
 private struct PillLayoverRowChrome: View {
+    @Environment(\.theme) private var theme
     let configuration: LayoverRowConfiguration
 
     var body: some View {
@@ -206,7 +207,7 @@ private struct PillLayoverRowChrome: View {
                 LayoverRowLabel(configuration: configuration)
                     .padding(.horizontal, configuration.spacing(.sm))
                     .padding(.vertical, Theme.SpacingKey.xs.value)
-                    .background(configuration.chromeTone.soft, in: Capsule(style: .continuous))
+                    .background(theme.resolve(configuration.chromeTone).soft, in: Capsule(style: .continuous))
                 LayoverRowConnectorLine(lineStyle: configuration.lineStyle)
             }
             if configuration.hasWarning { LayoverRowWarningLine(configuration: configuration) }
@@ -225,6 +226,7 @@ public struct BannerLayoverRowStyle: LayoverRowStyle {
 }
 
 private struct BannerLayoverRowChrome: View {
+    @Environment(\.theme) private var theme
     let configuration: LayoverRowConfiguration
 
     var body: some View {
@@ -233,7 +235,7 @@ private struct BannerLayoverRowChrome: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, configuration.spacing(.sm))
                 .padding(.horizontal, Theme.SpacingKey.sm.value)
-                .background(configuration.chromeTone.bg,
+                .background(theme.resolve(configuration.chromeTone).bg,
                             in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
             if configuration.hasWarning { LayoverRowWarningLine(configuration: configuration) }
         }

@@ -85,7 +85,7 @@ public struct AgentPriceRow: View {
         }
         .padding(density.scale(Theme.SpacingKey.md.value))
         .background(theme.background(surfaceKey), in: shape)
-        .overlay(shape.stroke(recommended ? accentSemantic.base : theme.border(.borderPrimary), lineWidth: recommended ? 1.5 : 1))
+        .overlay(shape.stroke(recommended ? theme.resolve(accentSemantic).base : theme.border(.borderPrimary), lineWidth: recommended ? 1.5 : 1))
         .contentShape(shape)
     }
 

@@ -1,0 +1,40 @@
+# theme-shared-allowlist.txt — files that legitimately read `Theme.shared`
+# (ADR-0006 §D7). One repo-relative path per line; `#` starts a comment.
+#
+# Everything else under Sources/ is checked by scripts/check-theme-shared.sh,
+# which also ignores comment-only lines, `@available(*, deprecated, …)`
+# message strings (their prose legitimately names "Theme.shared" as the thing
+# being deprecated away from), and #Preview bodies (previews correctly pin
+# `.environment(Theme.shared)` / read the environment default).
+
+# The singleton's own definition.
+Sources/ThemeKitCore/Theme/Theme.swift
+
+# The environment default (`ThemeEnvironmentKey.defaultValue`) — the
+# documented fallback so a component reads a working theme even when nothing
+# injected one; a subtree/preview/test overrides it with `.theme(_:)`.
+Sources/ThemeKitCore/Theme/ThemeContext.swift
+
+# Root injectors: `.themeKit()` seeds `.environment(Theme.shared)` at the app
+# root; `ThemedHostingController` does the UIKit-hosted equivalent.
+Sources/ThemeKitCore/Theme/ThemeKit.swift
+Sources/ThemeKitCore/Theme/ThemedHostingController.swift
+
+# Apply-to-global mutation entry points — by design, these change the
+# singleton itself (a theme picker / imported design / preset applies to the
+# *app*, not a subtree).
+Sources/ThemeKit/Components/Organisms/ThemePicker.swift
+Sources/ThemeKitCore/Theme/DesignMode/DesignSpec.swift
+Sources/ThemeKitCore/Theme/ThemePresets.swift
+Sources/ThemeKitCore/Theme/ThemeConfig.swift
+
+# The deprecate-forward shims themselves (ADR-0006 D2) — the zero-arg
+# `SemanticColor` accessors forward to `resolved(in: .shared)` so un-migrated
+# call sites stay byte-identical; this file is the shim, not an offender.
+Sources/ThemeKitCore/Theme/SemanticColor.swift
+
+# Deferred per D5: corner radius / spacing / type scale stay process-global
+# in this ADR (metric/type isolation is a documented, bounded limit — see
+# ThemeContext.swift's corrected doc comment — not a silent gap).
+Sources/ThemeKitCore/Theme/ThemeModel.swift
+Sources/ThemeKitCore/Theme/Typography.swift

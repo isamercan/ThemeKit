@@ -345,7 +345,7 @@ public struct AirportPicker: View {
                 Button(action: onClear) {
                     Text(String(themeKitTravel: "Clear"))
                         .textStyle(.labelSm700)
-                        .foregroundStyle(accentColor?.accent ?? theme.foreground(.fgHero))
+                        .foregroundStyle(accentColor.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero))
                 }
                 .buttonStyle(.plain)
                 .disabled(isReadOnly)
@@ -405,7 +405,7 @@ public struct AirportPicker: View {
                 .overlay {
                     if isSelected(airport) {
                         RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
-                            .strokeBorder(accentColor?.accent ?? theme.foreground(.fgHero), lineWidth: 1)
+                            .strokeBorder(accentColor.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero), lineWidth: 1)
                     }
                 }
                 .frame(minWidth: Metrics.chipMinWidth, minHeight: Metrics.chipTapTarget)
@@ -435,7 +435,7 @@ public struct AirportPicker: View {
             if isSelected {
                 Icon(systemName: "checkmark")
                     .size(.sm)
-                    .color(accentColor?.accent ?? theme.foreground(.fgHero))
+                    .color(accentColor.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero))
             }
         }
     }
@@ -443,23 +443,23 @@ public struct AirportPicker: View {
     /// Bold IATA code chip — token-fed fill/foreground, accent-tintable, with
     /// a `FillVariant` axis (`.soft` default, `.solid`, `.outline`, `.ghost`).
     private func codeChip(_ code: String) -> some View {
-        let tone = accentColor ?? .primary
+        let tone = theme.resolve(accentColor ?? .primary)
         let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
         let fill: Color
         let text: Color
         switch chipVariantValue {
         case .soft:
-            fill = accentColor?.soft ?? theme.background(.bgSecondaryLight)
-            text = accentColor?.accent ?? theme.text(.textPrimary)
+            fill = accentColor.map { theme.resolve($0).soft } ?? theme.background(.bgSecondaryLight)
+            text = accentColor.map { theme.resolve($0).accent } ?? theme.text(.textPrimary)
         case .solid:
             fill = tone.solid
             text = tone.onSolid
         case .outline:
             fill = .clear
-            text = accentColor?.accent ?? theme.text(.textPrimary)
+            text = accentColor.map { theme.resolve($0).accent } ?? theme.text(.textPrimary)
         case .ghost:
             fill = .clear
-            text = accentColor?.accent ?? theme.text(.textSecondary)
+            text = accentColor.map { theme.resolve($0).accent } ?? theme.text(.textSecondary)
         }
         return Text(code)
             .textStyle(.labelSm700)
@@ -469,7 +469,7 @@ public struct AirportPicker: View {
             .background(fill, in: shape)
             .overlay {
                 if chipVariantValue == .outline {
-                    shape.strokeBorder(accentColor?.border ?? theme.border(.borderPrimary), lineWidth: 1)
+                    shape.strokeBorder(accentColor.map { theme.resolve($0).border } ?? theme.border(.borderPrimary), lineWidth: 1)
                 }
             }
     }

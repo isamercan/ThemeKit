@@ -154,6 +154,25 @@ jobs:
             || { echo "::error::Variant-matrix naming drift — a color/variant/size axis takes a raw Color/CGFloat. Token-feed it, deprecate-and-forward, or allowlist a documented genuine dimension (scripts/check-variant-naming.sh, ADR-3)."; exit 1; }
 
   # ---------------------------------------------------------------------------
+  # Per-subtree theme resolution gate (ADR-0006 §D7): `Theme.shared` reads
+  # outside the allowlist (scripts/theme-shared-allowlist.txt) silently defeat
+  # per-subtree `.theme(_:)` re-theming (the R1 bug the ADR fixed) — pure grep
+  # → Linux (1× minutes), and BLOCKING (unlike variant-naming's informational
+  # policy): a regression here means the advertised feature quietly breaks
+  # again for the offending component.
+  # ---------------------------------------------------------------------------
+  theme-shared:
+    name: Theme.shared allowlist (ADR-0006)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for un-allowlisted Theme.shared reads
+        run: |
+          scripts/check-theme-shared.sh \
+            || { echo "::error::Un-allowlisted Theme.shared read — it defeats per-subtree .theme() (ADR-0006 §D7). Resolve against @Environment(\\.theme) / thread a theme: param, or document a genuine engine site in scripts/theme-shared-allowlist.txt."; exit 1; }
+
+  # ---------------------------------------------------------------------------
   # Public-API breakage detection. PR-only (diffs against the PR base) and
   # BLOCKING (ADR-review P1-1) — a source-breaking change must be intentional and
   # recorded in .api-breakage-allowlist.txt. Additions are non-breaking and pass.

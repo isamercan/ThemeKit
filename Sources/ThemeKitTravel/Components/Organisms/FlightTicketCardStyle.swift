@@ -110,9 +110,16 @@ public struct FlightTicketCardConfiguration {
     // deferred: accent-fallback unification — keeps the `.primary` fallback
     // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
     /// Accent for the duration, timeline dots/plane and the active heart fill.
-    public var accentBase: Color { (accent ?? .primary).base }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentBase(_ theme:)")
+    public var accentBase: Color { accentBase(.shared) }
+    /// Theme-parameterized twin of ``accentBase`` — resolves against the
+    /// environment theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    public func accentBase(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).base }
     /// Content colour on top of ``accentBase`` (the heart glyph).
-    public var accentOnSolid: Color { (accent ?? .primary).onSolid }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentOnSolid(_ theme:)")
+    public var accentOnSolid: Color { accentOnSolid(.shared) }
+    /// Theme-parameterized twin of ``accentOnSolid``.
+    public func accentOnSolid(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).onSolid }
 }
 
 // MARK: - Protocol
@@ -147,7 +154,7 @@ private struct TicketRouteHeader: View {
                 }
                 Spacer(minLength: 8)
                 if let duration = configuration.duration {
-                    Text(duration).textStyle(.labelSm700).foregroundStyle(configuration.accentBase)
+                    Text(duration).textStyle(.labelSm700).foregroundStyle(configuration.accentBase(theme))
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 1) {
@@ -182,7 +189,7 @@ private struct TicketTimeline: View {
                     dot; Spacer(); dot
                 }
                 Image(systemName: configuration.stops == 0 ? "airplane" : "airplane.circle.fill")
-                    .font(.system(size: 14)).foregroundStyle(configuration.accentBase)
+                    .font(.system(size: 14)).foregroundStyle(configuration.accentBase(theme))
                     .padding(.horizontal, 4).background(theme.background(surfaceKey))
                     .mirrorsInRTL()
             }
@@ -195,7 +202,7 @@ private struct TicketTimeline: View {
     }
 
     private var dot: some View {
-        Circle().fill(configuration.accentBase).frame(width: 7, height: 7)
+        Circle().fill(configuration.accentBase(theme)).frame(width: 7, height: 7)
             .overlay(Circle().fill(theme.background(surfaceKey)).frame(width: 3, height: 3))
     }
 }
@@ -244,10 +251,10 @@ private struct TicketFavoriteHeart: View {
             Button { configuration.toggleFavorite?() } label: {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(configuration.accentOnSolid)
+                    .foregroundStyle(configuration.accentOnSolid(theme))
                     .symbolEffect(.bounce, value: (micro && !reduceMotion) ? isFavorite : false)
                     .frame(width: 30, height: 30)
-                    .background(isFavorite ? configuration.accentBase : theme.text(.textTertiary), in: Circle())
+                    .background(isFavorite ? configuration.accentBase(theme) : theme.text(.textTertiary), in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(isReadOnly)

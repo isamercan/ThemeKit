@@ -118,7 +118,7 @@ public struct FlightResultRowConfiguration {
 
     /// The brand-chrome tint: the `accent(_:)` override's base, else the theme's
     /// hero foreground — `nil` reproduces the classic rendering exactly.
-    public func accentForeground(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(.fgHero) }
+    public func accentForeground(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
 
     /// Whether a leg lands on a different calendar day than it departs
     /// (feeds ``FlightRoute/nextDay(_:)``).

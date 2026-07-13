@@ -32,7 +32,7 @@ public struct TextRotate: View {
     public var body: some View {
         Text(current)
             .textStyle(style)
-            .foregroundStyle(accent.map { $0.accent } ?? theme.text(.textHero))
+            .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textHero))
             .contentTransition(.opacity)
             .animation(.easeInOut(duration: 0.4), value: index)
             .onReceive(Timer.publish(every: interval, on: .main, in: .common).autoconnect()) { _ in

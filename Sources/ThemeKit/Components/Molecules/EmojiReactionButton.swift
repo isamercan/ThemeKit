@@ -73,9 +73,9 @@ public struct EmojiReactionButton: View {
 
     /// Chroma when reacted — the semantic accent when set, else the stock hero
     /// treatment (unchanged default).
-    private var reactedFill: Color { accent?.soft ?? SemanticColor.primary.soft }
-    private var reactedBorder: Color { accent?.border ?? theme.border(.borderHero) }
-    private var reactedCount: Color { accent?.accent ?? theme.text(.textHero) }
+    private var reactedFill: Color { accent.map { theme.resolve($0).soft } ?? theme.resolve(.primary).soft }
+    private var reactedBorder: Color { accent.map { theme.resolve($0).border } ?? theme.border(.borderHero) }
+    private var reactedCount: Color { accent.map { theme.resolve($0).accent } ?? theme.text(.textHero) }
 
     public var body: some View {
         Button(action: toggle) {

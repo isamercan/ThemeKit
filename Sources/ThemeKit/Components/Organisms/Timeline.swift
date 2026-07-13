@@ -185,7 +185,7 @@ public struct Timeline: View {
     }
 
     private func railColor(_ item: Item) -> Color {
-        item.state == .done ? (item.color?.solid ?? theme.background(.bgHero)) : theme.border(.borderPrimary)
+        item.state == .done ? (item.color.map { theme.resolve($0).solid } ?? theme.background(.bgHero)) : theme.border(.borderPrimary)
     }
 
     @ViewBuilder
@@ -204,7 +204,7 @@ public struct Timeline: View {
     private func stockMarker(_ item: Item) -> some View {
         let dotColor = item.state == .error
             ? theme.background(.systemcolorsBgError)
-            : (item.color?.solid ?? theme.background(.bgHero))
+            : (item.color.map { theme.resolve($0).solid } ?? theme.background(.bgHero))
         ZStack {
             Circle().fill(item.state == .todo ? theme.background(.bgWhite) : dotColor).frame(width: 28, height: 28)
             Circle().strokeBorder(item.state == .todo ? theme.border(.borderPrimary) : dotColor, lineWidth: 1.5).frame(width: 28, height: 28)

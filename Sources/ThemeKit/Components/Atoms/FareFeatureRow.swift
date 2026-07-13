@@ -41,7 +41,7 @@ public struct FareFeatureRow: View {
     }
 
     private var iconColor: Color {
-        if let accent { return accent.accent }
+        if let accent { return theme.resolve(accent).accent }
         switch feature.status {
         case .included: return theme.foreground(.systemcolorsFgSuccess)
         case .excluded: return theme.text(.textTertiary)

@@ -132,7 +132,10 @@ public protocol FareFamilyCardStyle {
 /// The tier name chip, rendered per ``FillVariant`` on the accent's ladder —
 /// shared by every built-in preset (`.header { }` replaces it).
 private struct FareFamilyTierChip: View {
+    @Environment(\.theme) private var theme
     let configuration: FareFamilyCardConfiguration
+
+    private var resolvedAccent: SemanticColor.Resolved { theme.resolve(configuration.accent) }
 
     var body: some View {
         Text(configuration.name.uppercased())
@@ -144,21 +147,21 @@ private struct FareFamilyTierChip: View {
             .overlay {
                 if configuration.badgeVariant == .outline {
                     RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous)
-                        .strokeBorder(configuration.accent.border, lineWidth: 1)
+                        .strokeBorder(resolvedAccent.border, lineWidth: 1)
                 }
             }
     }
 
     private var foreground: Color {
         switch configuration.badgeVariant {
-        case .solid: return configuration.accent.onSolid
-        case .soft, .outline, .ghost: return configuration.accent.accent
+        case .solid: return resolvedAccent.onSolid
+        case .soft, .outline, .ghost: return resolvedAccent.accent
         }
     }
     private var background: Color {
         switch configuration.badgeVariant {
-        case .solid: return configuration.accent.solid
-        case .soft: return configuration.accent.soft
+        case .solid: return resolvedAccent.solid
+        case .soft: return resolvedAccent.soft
         case .outline, .ghost: return .clear
         }
     }
@@ -500,7 +503,7 @@ private struct PillFareFamilyCardStyle: FareFamilyCardStyle {
 
         var body: some View {
             HStack(spacing: configuration.spacing(.sm)) {
-                Circle().fill(configuration.accent.base).frame(width: 8, height: 8)
+                Circle().fill(theme.resolve(configuration.accent).base).frame(width: 8, height: 8)
                 Text(configuration.name).textStyle(.labelMd700).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
                 PriceTag(configuration.priceAmount, currencyCode: configuration.currencyCode).size(.small)

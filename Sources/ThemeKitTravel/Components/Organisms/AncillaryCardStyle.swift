@@ -242,7 +242,7 @@ private struct AncillaryCardStepper: View {
     private func stepButton(_ icon: String, label: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon).font(.system(size: 13, weight: .bold))
-                .foregroundStyle(enabled ? accentSemantic.base : theme.text(.textDisabled))
+                .foregroundStyle(enabled ? theme.resolve(accentSemantic).base : theme.text(.textDisabled))
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
@@ -267,10 +267,10 @@ private struct AncillaryCardAddButton: View {
                 Image(systemName: on ? "checkmark" : "plus").font(.system(size: 12, weight: .bold))
                 Text(on ? configuration.addedTitle : configuration.addTitle).textStyle(.labelSm700)
             }
-            .foregroundStyle(on ? accentSemantic.onSolid : accentSemantic.base)
+            .foregroundStyle(on ? theme.resolve(accentSemantic).onSolid : theme.resolve(accentSemantic).base)
             .padding(.horizontal, configuration.spacing(.md))
             .frame(height: 36)
-            .background(on ? accentSemantic.solid : accentSemantic.bg, in: Capsule())
+            .background(on ? theme.resolve(accentSemantic).solid : theme.resolve(accentSemantic).bg, in: Capsule())
         }
         .buttonStyle(.plain)
         .disabled(isReadOnly)

@@ -119,7 +119,12 @@ public struct Badge: View {
     private var shape: BadgeShape = .pill
     private var trailingSystemImage: String?
     private var textColor: Color?
-    private var gradient: [Color]?
+    // ADR-0006: stored as `SemanticColor` (not a resolved `Color`) so the
+    // gradient is re-resolved from the environment theme in `body`, honoring
+    // per-subtree `.theme(_:)`; `rawGradient` is the raw-`Color` escape hatch
+    // (deprecated `gradient(_: [Color]?)`), which has no theme to resolve.
+    private var semanticGradient: [SemanticColor]?
+    private var rawGradient: [Color]?
     private var highlighted: Bool = false
 
     public init(_ text: String, action: (() -> Void)? = nil) {   // R1 — content + action
@@ -157,15 +162,21 @@ public struct Badge: View {
         if let textColor { return textColor }
         switch variant {
         case .soft: return style.foreground(theme)
-        case .solid: return style.semantic.onSolid
-        case .outline, .ghost: return style.semantic.accent
+        case .solid: return theme.resolve(style.semantic).onSolid
+        case .outline, .ghost: return theme.resolve(style.semantic).accent
         }
     }
     private var backgroundStyle: AnyShapeStyle {
-        if let gradient { return AnyShapeStyle(LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing)) }
+        if let semanticGradient {
+            let colors = semanticGradient.map { theme.resolve($0).solid }
+            return AnyShapeStyle(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+        }
+        if let rawGradient {
+            return AnyShapeStyle(LinearGradient(colors: rawGradient, startPoint: .leading, endPoint: .trailing))
+        }
         switch variant {
         case .soft: return AnyShapeStyle(style.background(theme))
-        case .solid: return AnyShapeStyle(style.semantic.solid)
+        case .solid: return AnyShapeStyle(theme.resolve(style.semantic).solid)
         case .outline, .ghost: return AnyShapeStyle(Color.clear)
         }
     }
@@ -173,7 +184,7 @@ public struct Badge: View {
         switch variant {
         case .soft: return style.border(theme)
         case .solid: return .clear
-        case .outline: return style.semantic.border
+        case .outline: return theme.resolve(style.semantic).border
         case .ghost: return .clear
         }
     }
@@ -207,14 +218,14 @@ public extension Badge {
     func badgeColor(_ color: Color?) -> Self { copy { $0.textColor = color } }
     /// Fills the badge with a horizontal gradient of semantic tokens (each
     /// hue's solid shade) instead of the style background; `nil` restores it.
-    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.gradient = colors?.map(\.solid) } }
+    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.semanticGradient = colors; $0.rawGradient = nil } }
     /// Raw-color gradient (back-compat); prefer the token-bound overload.
     /// Disfavored so member-shorthand literals like `[.purple, .pink]` —
     /// valid as both `[Color]` and `[SemanticColor]` — resolve to the token
     /// overload instead of being ambiguous.
     @_disfavoredOverload
     @available(*, deprecated, message: "Use gradient(_: [SemanticColor]?) — the token-bound overload.")
-    func gradient(_ colors: [Color]?) -> Self { copy { $0.gradient = colors } }
+    func gradient(_ colors: [Color]?) -> Self { copy { $0.rawGradient = colors; $0.semanticGradient = nil } }
     /// Lifts the badge off the surface with a subtle drop shadow.
     func highlighted(_ on: Bool = true) -> Self { copy { $0.highlighted = on } }
 

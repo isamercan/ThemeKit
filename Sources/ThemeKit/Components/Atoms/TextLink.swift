@@ -27,7 +27,7 @@ public struct TextLink: View {
             Text(title)
                 .textStyle(.linkBase)
                 .underline(underline)
-                .foregroundStyle(accent?.accent ?? theme.text(.textHero))
+                .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textHero))
         }
         .buttonStyle(.plain)
     }

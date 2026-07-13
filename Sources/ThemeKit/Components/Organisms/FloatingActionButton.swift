@@ -85,9 +85,9 @@ public struct FloatingActionButton: View {
             } label: {
                 Image(systemName: systemImage)
                     .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(color.onSolid)
+                    .foregroundStyle(theme.resolve(color).onSolid)
                     .frame(width: 56, height: 56)
-                    .background(color.solid, in: mainShape)
+                    .background(theme.resolve(color).solid, in: mainShape)
                     .themeShadow(.elevated)
                     .rotationEffect(.degrees(expanded && !actions.isEmpty ? 45 : 0))
                     .countBadge(badge ?? 0)

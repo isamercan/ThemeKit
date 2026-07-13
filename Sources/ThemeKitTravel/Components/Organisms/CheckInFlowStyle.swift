@@ -292,7 +292,7 @@ private struct LabelCheckInFlowStyle: CheckInFlowStyle {
                 if configuration.showsStepper {
                     Text("Step \(configuration.currentIndex + 1) of \(configuration.stepCount)")
                         .textStyle(.overline500)
-                        .foregroundStyle(configuration.accent?.base ?? theme.text(.textSecondary))
+                        .foregroundStyle(configuration.accent.map { theme.resolve($0).base } ?? theme.text(.textSecondary))
                         .padding(.vertical, configuration.spacing(.sm))
                 }
                 configuration.page

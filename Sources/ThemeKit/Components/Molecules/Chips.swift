@@ -303,7 +303,7 @@ public struct ChoseChip: View {
             .foregroundStyle(theme.foreground(.fgSecondary))
             .padding(.vertical, 2).padding(.horizontal, Theme.SpacingKey.xs.value)
             .background(
-                LinearGradient(colors: [SemanticColor.primary.base, SemanticColor.purple.base],
+                LinearGradient(colors: [theme.resolve(.primary).base, theme.resolve(.purple).base],
                                startPoint: .topLeading, endPoint: .bottomTrailing),
                 in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
             )

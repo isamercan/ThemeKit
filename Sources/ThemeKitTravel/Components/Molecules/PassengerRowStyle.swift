@@ -92,7 +92,11 @@ public struct PassengerRowConfiguration {
 
     /// The `accent(_:)` override's base, else the primary semantic's base — the
     /// value the built-ins hardcoded before the accent axis existed.
-    public var accentBase: Color { (accent ?? .primary).base }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentBase(_ theme:)")
+    public var accentBase: Color { accentBase(.shared) }
+    /// Theme-parameterized twin of ``accentBase`` — resolves against the
+    /// environment theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    public func accentBase(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).base }
 
     /// The explicit `surface(_:)` override, or the style's own default.
     public func surface(default fallback: Theme.BackgroundColorKey) -> Theme.BackgroundColorKey {
@@ -128,6 +132,7 @@ public protocol PassengerRowStyle {
 /// ``PassengerRowConfiguration/avatar`` when set, else a person-glyph icon
 /// tinted with ``PassengerRowConfiguration/accentBase``.
 private struct PassengerRowAvatar: View {
+    @Environment(\.theme) private var theme
     let configuration: PassengerRowConfiguration
     var size: AvatarSize = .md
 
@@ -137,7 +142,7 @@ private struct PassengerRowAvatar: View {
         } else {
             Image(systemName: configuration.systemImage)
                 .font(.system(size: size.rawValue * 0.75))
-                .foregroundStyle(configuration.accentBase)
+                .foregroundStyle(configuration.accentBase(theme))
         }
     }
 }
@@ -251,7 +256,7 @@ private struct RowPassengerRowChrome: View {
                 custom
             } else if let onEdit = configuration.onEdit {
                 Button { onEdit() } label: {
-                    Image(systemName: "pencil").textStyle(.labelBase600).foregroundStyle(configuration.accentBase)
+                    Image(systemName: "pencil").textStyle(.labelBase600).foregroundStyle(configuration.accentBase(theme))
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(String(themeKit: "Edit"))
             } else if let onRemove = configuration.onRemove {
@@ -456,12 +461,12 @@ private struct CapsulePassengerRowStyle: PassengerRowStyle {
                 HStack(spacing: configuration.spacing(.sm)) {
                     Text(configuration.name).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
                     if let seat = configuration.seat {
-                        Text(seat).textStyle(.overline500).foregroundStyle(configuration.accentBase)
+                        Text(seat).textStyle(.overline500).foregroundStyle(configuration.accentBase(theme))
                     }
                 }
                 .padding(.vertical, configuration.spacing(.xs))
                 .padding(.horizontal, configuration.spacing(.sm))
-                .background((configuration.accent ?? .primary).soft, in: Capsule(style: .continuous))
+                .background(theme.resolve(configuration.accent ?? .primary).soft, in: Capsule(style: .continuous))
                 .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)

@@ -121,7 +121,7 @@ private struct ThemedButton: View {
     private var foreground: Color {
         guard isEnabled else { return theme.text(.textDisabled) }
         switch style {
-        case .primary: return SemanticColor.primary.onSolid   // auto-contrast on the primary fill
+        case .primary: return theme.resolve(.primary).onSolid   // auto-contrast on the primary fill
         case .secondary, .outline, .ghost, .link: return theme.text(.textHero)
         }
     }

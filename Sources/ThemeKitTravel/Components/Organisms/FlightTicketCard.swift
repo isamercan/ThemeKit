@@ -215,7 +215,7 @@ public extension FlightTicketCard {
                 .padding(configuration.spacing(.md))
                 .background(
                     RoundedRectangle(cornerRadius: configuration.cornerRadius, style: .continuous)
-                        .fill((configuration.accent ?? .primary).soft)
+                        .fill(theme.resolve(configuration.accent ?? .primary).soft)
                 )
             }
         }

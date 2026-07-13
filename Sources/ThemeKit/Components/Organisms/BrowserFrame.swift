@@ -60,13 +60,13 @@ public struct BrowserFrame<Content: View>: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(accent.map { $0.soft } ?? theme.background(.bgSecondary))
+        .background(accent.map { theme.resolve($0).soft } ?? theme.background(.bgSecondary))
     }
 
     private var urlPill: some View {
         Text(url)
             .font(.system(.footnote, design: .monospaced))
-            .foregroundStyle(accent.map { $0.accent } ?? theme.text(.textSecondary))
+            .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textSecondary))
             .lineLimit(1)
             .truncationMode(.middle)
             .padding(.horizontal, Theme.SpacingKey.sm.value)

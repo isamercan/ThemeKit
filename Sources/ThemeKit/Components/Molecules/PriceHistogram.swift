@@ -31,6 +31,9 @@ public struct PriceHistogram: View {
     // Appearance/state — mutated only through the modifiers below (R2).
     private var barHeight: CGFloat = 56
     private var accent: Color?
+    // ADR-0006: the token overload stores the `SemanticColor` (not a resolved
+    // `Color`) so it re-resolves against the environment theme in `body`.
+    private var semanticAccent: SemanticColor?
     private var currencyCode: String?
     private var resultCount: Int?
     private var showsBounds: Bool = false
@@ -78,7 +81,7 @@ public struct PriceHistogram: View {
         }
     }
 
-    private var selectedColor: Color { accent ?? theme.foreground(.fgHero) }
+    private var selectedColor: Color { semanticAccent.map { theme.resolve($0).base } ?? accent ?? theme.foreground(.fgHero) }
 
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
@@ -110,9 +113,9 @@ public extension PriceHistogram {
     func barHeight(_ height: CGFloat) -> Self { copy { $0.barHeight = height } }
     /// Overrides the selected-bar colour (otherwise the theme accent).
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
-    func accent(_ color: Color?) -> Self { copy { $0.accent = color } }
+    func accent(_ color: Color?) -> Self { copy { $0.accent = color; $0.semanticAccent = nil } }
     /// Token-bound overload — selected bars use the semantic colour's base.
-    func accent(_ color: SemanticColor) -> Self { copy { $0.accent = color.base } }
+    func accent(_ color: SemanticColor) -> Self { copy { $0.semanticAccent = color; $0.accent = nil } }
     /// Currency for the range / bound labels. Unset, it resolves from
     /// `\.formatDefaults`, then the locale's currency, then "USD".
     func currency(_ code: String) -> Self { copy { $0.currencyCode = code } }

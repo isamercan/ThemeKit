@@ -94,7 +94,7 @@ public struct FlightRouteConfiguration {
     // Accent resolution — the `accent(_:)` override, else the `pathColor(_:)`
     // token (the value the built-ins used before the accent axis existed).
     /// The route's accent colour — direct-flight track fill, plane glyph, dots.
-    public func pathAccent(_ theme: Theme) -> Color { accent?.base ?? theme.foreground(pathColorKey) }
+    public func pathAccent(_ theme: Theme) -> Color { accent.map { theme.resolve($0).base } ?? theme.foreground(pathColorKey) }
     /// Track-line fill: the accent when direct, a hairline border otherwise.
     public func trackLineColor(_ theme: Theme) -> Color {
         stops == 0 ? pathAccent(theme) : theme.border(.borderPrimary)
@@ -102,7 +102,7 @@ public struct FlightRouteConfiguration {
     /// Stops-label colour: direct keeps the accent, 1+ stops uses ``stopsTone``
     /// (default tertiary).
     public func stopsLabelColor(_ theme: Theme) -> Color {
-        stops == 0 ? pathAccent(theme) : (stopsTone?.base ?? theme.text(.textTertiary))
+        stops == 0 ? pathAccent(theme) : (stopsTone.map { theme.resolve($0).base } ?? theme.text(.textTertiary))
     }
 }
 
@@ -276,7 +276,7 @@ private struct InlineFlightRouteChrome: View {
                 }
                 Text(configuration.stopsText).textStyle(ramp.duration)
                     .foregroundStyle(configuration.stops > 0
-                        ? (configuration.stopsTone?.base ?? theme.text(.textTertiary))
+                        ? (configuration.stopsTone.map { theme.resolve($0).base } ?? theme.text(.textTertiary))
                         : theme.text(.textTertiary))
             }
             .frame(maxWidth: .infinity)

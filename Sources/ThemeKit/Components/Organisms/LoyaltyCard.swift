@@ -51,7 +51,11 @@ public struct LoyaltyCard: View {
     private var progress: Double?
     private var nextTier: String?
     private var systemImage: String = "seal.fill"
-    private var gradientOverride: [Color]?
+    // ADR-0006: the token overload stores `SemanticColor`s (not resolved
+    // `Color`s) so the gradient re-resolves against the environment theme in
+    // `body`; `rawGradientOverride` is the raw-`Color` escape hatch.
+    private var semanticGradientOverride: [SemanticColor]?
+    private var rawGradientOverride: [Color]?
     private var animatesValue: Bool = false
     private var logoSlot: AnyView?
     private var membership: MembershipCode?
@@ -174,7 +178,9 @@ public struct LoyaltyCard: View {
     }
 
     private var gradient: LinearGradient {
-        let colors = gradientOverride ?? [theme.palette(.primary600), theme.palette(.primary900)]
+        let colors = semanticGradientOverride?.map { theme.resolve($0).solid }
+            ?? rawGradientOverride
+            ?? [theme.palette(.primary600), theme.palette(.primary900)]
         return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
@@ -198,14 +204,14 @@ public extension LoyaltyCard {
     func icon(_ systemName: String) -> Self { copy { $0.systemImage = systemName } }
     /// Overrides the brand gradient with semantic tokens (each hue's solid
     /// shade); `nil` restores the theme's primary 600→900 gradient.
-    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.gradientOverride = colors?.map(\.solid) } }
+    func gradient(_ colors: [SemanticColor]?) -> Self { copy { $0.semanticGradientOverride = colors; $0.rawGradientOverride = nil } }
     /// Raw-color gradient override (back-compat); prefer the token-bound
     /// overload. Disfavored so member-shorthand literals like
     /// `[.purple, .pink]` — valid as both `[Color]` and `[SemanticColor]` —
     /// resolve to the token overload instead of being ambiguous.
     @_disfavoredOverload
     @available(*, deprecated, message: "Use gradient(_: [SemanticColor]?) — the token-bound overload.")
-    func gradient(_ colors: [Color]?) -> Self { copy { $0.gradientOverride = colors } }
+    func gradient(_ colors: [Color]?) -> Self { copy { $0.rawGradientOverride = colors; $0.semanticGradientOverride = nil } }
     /// A brand logo slot in the top-trailing corner (replaces the tier icon).
     func logo<V: View>(@ViewBuilder _ content: () -> V) -> Self { copy { $0.logoSlot = AnyView(content()) } }
     /// Animates the points balance on change (numeric-text; no-op under Reduce Motion).

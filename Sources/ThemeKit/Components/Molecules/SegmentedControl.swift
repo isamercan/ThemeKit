@@ -120,7 +120,7 @@ public struct SegmentedControl: View {
 
     /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.
     private var trackFill: Color {
-        selectionStyle == .tinted ? resolvedTint.soft : theme.background(.bgBase)
+        selectionStyle == .tinted ? theme.resolve(resolvedTint).soft : theme.background(.bgBase)
     }
 
     public var body: some View {
@@ -200,8 +200,8 @@ public struct SegmentedControl: View {
             case .outline:
                 // Stock hue keeps the historical hero-border chroma exactly;
                 // an explicit/provider accent re-tints the pill + stroke.
-                thumbShape.fill(resolvedTint.soft)
-                    .overlay(thumbShape.stroke(usesStockTint ? theme.border(.borderHero) : resolvedTint.border, lineWidth: 2))
+                thumbShape.fill(theme.resolve(resolvedTint).soft)
+                    .overlay(thumbShape.stroke(usesStockTint ? theme.border(.borderHero) : theme.resolve(resolvedTint).border, lineWidth: 2))
                     .matchedGeometryEffect(id: "pill", in: pill)
             case .tinted:
                 EmptyView()   // no thumb — the soft track + hero foreground carry selection
@@ -219,7 +219,7 @@ public struct SegmentedControl: View {
         guard enabled else { return theme.text(.textDisabled) }
         guard isActive else { return theme.text(.textSecondary) }
         // The tinted style follows its base color's accent; others use the hero.
-        return selectionStyle == .tinted ? resolvedTint.accent : theme.text(.textHero)
+        return selectionStyle == .tinted ? theme.resolve(resolvedTint).accent : theme.text(.textHero)
     }
 }
 

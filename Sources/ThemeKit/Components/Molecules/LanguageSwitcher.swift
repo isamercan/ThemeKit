@@ -117,7 +117,7 @@ public struct LanguageSwitcher: View {
     // MARK: Resolution
 
     private var resolvedAccent: SemanticColor? { accentColor ?? componentDefaults.accent }
-    private var checkColor: Color { resolvedAccent?.accent ?? theme.foreground(.fgHero) }
+    private var checkColor: Color { resolvedAccent.map { theme.resolve($0).accent } ?? theme.foreground(.fgHero) }
     private var selected: AppLanguage? { languages.first { $0.code == selection } }
 
     /// Primary display name per the `nativeNames` axis.

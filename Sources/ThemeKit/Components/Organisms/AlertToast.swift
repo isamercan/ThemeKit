@@ -20,7 +20,7 @@ public enum AlertToastType {
         case .danger: return theme.background(.systemcolorsBgError)
         case .info: return theme.background(.systemcolorsBgInfo)
         case .neutral: return theme.background(.bgTertiary)
-        case .accent: return SemanticColor.primary.solid
+        case .accent: return theme.resolve(.primary).solid
         }
     }
 
@@ -30,7 +30,7 @@ public enum AlertToastType {
         switch self {
         case .warning: return theme.text(.textPrimary)
         case .success, .danger, .info, .neutral: return theme.foreground(.fgSecondary)
-        case .accent: return SemanticColor.primary.onSolid
+        case .accent: return theme.resolve(.primary).onSolid
         }
     }
 

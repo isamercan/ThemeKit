@@ -14,6 +14,9 @@ public struct RollingNumber: View {
     private var size: CGFloat = 28
     private var weight: Font.Weight = .bold
     private var color: Color?
+    // ADR-0006: the token overload stores the `SemanticColor` (not a resolved
+    // `Color`) so it re-resolves against the environment theme in `body`.
+    private var semanticColor: SemanticColor?
 
     private let value: Int
 
@@ -26,11 +29,15 @@ public struct RollingNumber: View {
 
     private var digits: [Int] { String(abs(value)).compactMap(\.wholeNumberValue) }
 
+    /// Resolved against the environment theme in `body` — never stored eagerly
+    /// at modifier-call time (ADR-0006).
+    private var resolvedColor: Color? { semanticColor.map { theme.resolve($0).base } ?? color }
+
     public var body: some View {
         HStack(spacing: 0) {
-            if value < 0 { Text("-").rollingFont(size, weight, color ?? theme.text(.textPrimary)) }
+            if value < 0 { Text("-").rollingFont(size, weight, resolvedColor ?? theme.text(.textPrimary)) }
             ForEach(Array(digits.enumerated()), id: \.offset) { _, digit in
-                DigitColumn(digit: digit, size: size, weight: weight, color: color)
+                DigitColumn(digit: digit, size: size, weight: weight, color: resolvedColor)
             }
         }
         // Numbers always read left-to-right — pin only the digit row so an
@@ -53,7 +60,7 @@ public extension RollingNumber {
     func weight(_ w: Font.Weight) -> Self { copy { $0.weight = w } }
 
     /// Semantic digit color; `nil` (default) uses `textPrimary`.
-    func accent(_ color: SemanticColor?) -> Self { copy { $0.color = color?.base } }
+    func accent(_ color: SemanticColor?) -> Self { copy { $0.semanticColor = color; $0.color = nil } }
 
     /// Raw digit color override (back-compat); prefer `accent(_:)`.
     @available(*, deprecated, message: "Use accent(_:) with a SemanticColor token.")
@@ -62,7 +69,7 @@ public extension RollingNumber {
     /// Module-internal raw digit color (mirrors `Icon.colorOverride`), so
     /// in-package call sites needing a theme-token `Color` stay off the
     /// deprecated `color(_:)` without changing behavior.
-    internal func colorOverride(_ c: Color?) -> Self { copy { $0.color = c } }
+    internal func colorOverride(_ c: Color?) -> Self { copy { $0.color = c; $0.semanticColor = nil } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self

@@ -41,20 +41,20 @@ public extension View {
     /// Overlays a small status dot at a corner, in the error token — the
     /// classic notification dot.
     func indicatorDot(position: IndicatorPosition = .topTrailing) -> some View {
-        indicator(position) { IndicatorDot(color: nil) }
+        indicator(position) { IndicatorDot(semantic: nil, rawColor: nil) }
     }
 
     /// Overlays a small status dot at a corner, tinted by a semantic color
     /// (e.g. `.success` for an online dot).
     func indicatorDot(_ accent: SemanticColor, position: IndicatorPosition = .topTrailing) -> some View {
-        indicator(position) { IndicatorDot(color: accent.base) }
+        indicator(position) { IndicatorDot(semantic: accent, rawColor: nil) }
     }
 
     /// Raw dot tint (back-compat); prefer the `SemanticColor` overload —
     /// or `indicatorDot(position:)` for the error-token default.
     @available(*, deprecated, message: "Use indicatorDot(_: SemanticColor, position:) — the token-fed overload.")
     func indicatorDot(_ color: Color? = nil, position: IndicatorPosition = .topTrailing) -> some View {
-        indicator(position) { IndicatorDot(color: color) }
+        indicator(position) { IndicatorDot(semantic: nil, rawColor: color) }
     }
 }
 
@@ -72,13 +72,17 @@ private struct IndicatorNudge: ViewModifier {
 }
 
 // Extracted into a View so the dot + halo resolve the injected `\.theme`.
+// `semantic` is resolved here (in `body`), not at modifier-call time, so it
+// honors per-subtree `.theme(_:)` (ADR-0006); `rawColor` is the raw-`Color`
+// escape hatch (deprecated `indicatorDot(_: Color?, position:)`).
 private struct IndicatorDot: View {
-    let color: Color?
+    let semantic: SemanticColor?
+    let rawColor: Color?
     @Environment(\.theme) private var theme
 
     var body: some View {
         Circle()
-            .fill(color ?? theme.foreground(.systemcolorsFgError))
+            .fill(semantic.map { theme.resolve($0).base } ?? rawColor ?? theme.foreground(.systemcolorsFgError))
             .frame(width: 10, height: 10)
             .overlay(Circle().stroke(theme.background(.bgWhite), lineWidth: 2))
             // Color-only status dot — decorative to VoiceOver; the host view

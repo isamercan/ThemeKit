@@ -126,9 +126,16 @@ public struct BoardingPassConfiguration {
     // deferred: accent-fallback unification — keeps the `.primary` fallback
     // (matching AncillaryCard/StickyBookingBar would be visually breaking here).
     /// Accent for the airline glyph, route plane and duration.
-    public var accentBase: Color { (accent ?? .primary).base }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentBase(_ theme:)")
+    public var accentBase: Color { accentBase(.shared) }
+    /// Theme-parameterized twin of ``accentBase`` — resolves against the
+    /// environment theme (ADR-0006), honoring per-subtree `.theme(_:)`.
+    public func accentBase(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).base }
     /// Content colour on top of a solid accent fill.
-    public var accentOnSolid: Color { (accent ?? .primary).onSolid }
+    @available(*, deprecated, message: "Reads Theme.shared and ignores per-subtree .theme(); use accentOnSolid(_ theme:)")
+    public var accentOnSolid: Color { accentOnSolid(.shared) }
+    /// Theme-parameterized twin of ``accentOnSolid``.
+    public func accentOnSolid(_ theme: Theme) -> Color { theme.resolve(accent ?? .primary).onSolid }
 
     /// Internal point constants behind the `CodeSize` ramp (token rule: ramp
     /// enums map to private CGFloats; no raw sizes in the public signature).
@@ -162,7 +169,7 @@ private struct BoardingPassHeaderRow: View {
         HStack {
             HStack(spacing: 6) {
                 Image(systemName: configuration.airlineIcon).font(.system(size: 14))
-                    .foregroundStyle(configuration.accentBase)
+                    .foregroundStyle(configuration.accentBase(theme))
                     .accessibilityHidden(true)   // decorative airline glyph
                 if let airline = configuration.airline {
                     Text(airline).textStyle(.labelBase700).foregroundStyle(theme.text(.textPrimary))
@@ -196,7 +203,7 @@ private struct BoardingPassRouteRow: View {
                     Text(date).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
                 }
                 Image(systemName: "airplane").font(.system(size: 16))
-                    .foregroundStyle(configuration.accentBase).mirrorsInRTL()
+                    .foregroundStyle(configuration.accentBase(theme)).mirrorsInRTL()
                     .accessibilityHidden(true)   // decorative route glyph
             }
             Spacer(minLength: 8)
@@ -208,7 +215,7 @@ private struct BoardingPassRouteRow: View {
         VStack(alignment: alignment, spacing: 1) {
             Text(code).textStyle(.displaySm).foregroundStyle(theme.text(.textPrimary))
             if let city { Text(city).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)).lineLimit(1) }
-            if let time { Text(time).textStyle(.labelBase700).foregroundStyle(configuration.accentBase) }
+            if let time { Text(time).textStyle(.labelBase700).foregroundStyle(configuration.accentBase(theme)) }
         }
         .fixedSize()
     }
@@ -522,24 +529,25 @@ private struct GateAnnouncementBoardingPassStyle: BoardingPassStyle {
     }
 
     private struct GateAnnouncementChrome: View {
+        @Environment(\.theme) private var theme
         let configuration: BoardingPassConfiguration
 
         var body: some View {
             VStack(alignment: .leading, spacing: configuration.spacing(.sm)) {
                 Text(String(themeKit: "Now boarding")).textStyle(.overline500)
-                    .foregroundStyle(configuration.accentOnSolid)
+                    .foregroundStyle(configuration.accentOnSolid(theme))
                 HStack {
                     Text("\(configuration.from) → \(configuration.to)")
-                        .textStyle(.headingSm).foregroundStyle(configuration.accentOnSolid)
+                        .textStyle(.headingSm).foregroundStyle(configuration.accentOnSolid(theme))
                     Spacer()
                     if let gate = configuration.gate {
-                        Text(gate).textStyle(.labelLg700).foregroundStyle(configuration.accentOnSolid)
+                        Text(gate).textStyle(.labelLg700).foregroundStyle(configuration.accentOnSolid(theme))
                     }
                 }
-                Text(configuration.passenger).textStyle(.bodySm400).foregroundStyle(configuration.accentOnSolid)
+                Text(configuration.passenger).textStyle(.bodySm400).foregroundStyle(configuration.accentOnSolid(theme))
             }
             .padding(configuration.spacing(.md))
-            .background((configuration.accent ?? .primary).solid,
+            .background(theme.resolve(configuration.accent ?? .primary).solid,
                         in: RoundedRectangle(cornerRadius: configuration.radiusRole.value, style: .continuous))
         }
     }

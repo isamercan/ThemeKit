@@ -59,6 +59,9 @@ public struct AmenityGrid: View {
     private var columns: Int = 2
     private var size: AmenitySize = .medium
     private var tint: Color?
+    // ADR-0006: the token overload stores the `SemanticColor` (not a resolved
+    // `Color`) so it re-resolves against the environment theme in `body`.
+    private var semanticTint: SemanticColor?
     private var limit: Int?
     private var highlighted: Set<String> = []
 
@@ -99,7 +102,7 @@ public struct AmenityGrid: View {
         return HStack(spacing: density.scale(Theme.SpacingKey.sm.value)) {
             Image(systemName: amenity.systemImage)
                 .font(size.textStyle.font)
-                .foregroundStyle(tint ?? theme.foreground(.fgHero))
+                .foregroundStyle(semanticTint.map { theme.resolve($0).base } ?? tint ?? theme.foreground(.fgHero))
                 .frame(width: size.iconSize + 4)
             Text(amenity.label)
                 .textStyle(size.textStyle)
@@ -126,9 +129,9 @@ public extension AmenityGrid {
     func size(_ s: AmenitySize) -> Self { copy { $0.size = s } }
     /// Overrides the icon tint (otherwise the theme accent).
     @available(*, deprecated, message: "Use tint(_:) with a SemanticColor token.")
-    func tint(_ color: Color?) -> Self { copy { $0.tint = color } }
+    func tint(_ color: Color?) -> Self { copy { $0.tint = color; $0.semanticTint = nil } }
     /// Token-bound overload — icons use the semantic colour's base.
-    func tint(_ color: SemanticColor) -> Self { copy { $0.tint = color.base } }
+    func tint(_ color: SemanticColor) -> Self { copy { $0.semanticTint = color; $0.tint = nil } }
     /// Shows only the first `count`, with a "+N more" expander for the rest.
     func limit(_ count: Int) -> Self { copy { $0.limit = max(1, count) } }
     /// Amenities (by label) to emphasise in the accent colour.

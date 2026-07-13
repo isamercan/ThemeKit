@@ -63,11 +63,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) more",
             "%@ more", 1,
-            site: "Sources/ThemeKit/Components/Atoms/Avatar.swift:330")
+            site: "Sources/ThemeKit/Components/Atoms/Avatar.swift:332")
         assertKey(
             "\(d) of \(d)",
             "%@ of %@", 2,
-            site: "Sources/ThemeKit/Components/Atoms/ProgressBar.swift:213")
+            site: "Sources/ThemeKit/Components/Atoms/ProgressBar.swift:220")
         assertKey(
             "\(d) out of \(d)",
             "%@ out of %@", 2,
@@ -83,7 +83,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) results",
             "%@ results", 1,
-            site: "Sources/ThemeKit/Components/Molecules/PriceHistogram.swift:53")
+            site: "Sources/ThemeKit/Components/Molecules/PriceHistogram.swift:56")
         assertKey(
             "\(d) reviews",
             "%@ reviews", 1,
@@ -91,7 +91,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) seats",
             "%@ seats", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:554")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:562")
         assertKey(
             "\(d) seats left",
             "%@ seats left", 1,
@@ -134,7 +134,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% to \(d)",
             "%@%% to %@", 2,
-            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:170")
+            site: "Sources/ThemeKit/Components/Organisms/LoyaltyCard.swift:174")
         assertKey(
             "\(d)/mo",
             "%@/mo", 1,
@@ -154,7 +154,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "+\(d) more",
             "+%@ more", 1,
-            site: "Sources/ThemeKit/Components/Molecules/AmenityGrid.swift:87")
+            site: "Sources/ThemeKit/Components/Molecules/AmenityGrid.swift:90")
         assertKey(
             "Area chart with series \(d).",
             "Area chart with series %@.", 1,
@@ -194,7 +194,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Deck \(d)",
             "Deck %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:136")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:144")
         assertKey(
             "Decrease \(d)",
             "Decrease %@", 1,
@@ -241,7 +241,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Passenger \(d), seat \(d)",
             "Passenger %@, seat %@", 2,
-            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:487")
+            site: "Sources/ThemeKitTravel/Components/Organisms/SeatMap.swift:495")
         assertKey(
             "Payment method, \(d) options",
             "Payment method, %@ options", 1,
@@ -281,7 +281,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Show \(d) more",
             "Show %@ more", 1,
-            site: "Sources/ThemeKit/Components/Molecules/AmenityGrid.swift:92")
+            site: "Sources/ThemeKit/Components/Molecules/AmenityGrid.swift:95")
         assertKey(
             "Step \(d) of \(d)",
             "Step %@ of %@", 2,
@@ -317,7 +317,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "seat \(d)",
             "seat %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:109")
+            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:113")
         assertKey(
             "up \(d)",
             "up %@", 1,

@@ -99,9 +99,9 @@ public struct DatePriceCard: View {
     }
 
     /// Selected-state foreground — the accent's base shade, or the stock hero.
-    private var selectedColor: Color { accent?.base ?? theme.foreground(.fgHero) }
+    private var selectedColor: Color { accent.map { theme.resolve($0).base } ?? theme.foreground(.fgHero) }
     /// Lowest-fare foreground — the tone's base shade, or the stock success token.
-    private var cheapestColor: Color { cheapestToneOverride?.base ?? theme.foreground(.systemcolorsFgSuccess) }
+    private var cheapestColor: Color { cheapestToneOverride.map { theme.resolve($0).base } ?? theme.foreground(.systemcolorsFgSuccess) }
 
     private var priceColor: Color {
         if item.unavailable { return theme.text(.textDisabled) }
@@ -158,9 +158,9 @@ public struct DatePriceCard: View {
         }
         .padding(.horizontal, Theme.SpacingKey.base.value)
         .frame(height: pillSize.height)
-        .background(isSelected ? (accent ?? .primary).soft : theme.background(.bgWhite), in: shape)
+        .background(isSelected ? theme.resolve(accent ?? .primary).soft : theme.background(.bgWhite), in: shape)
         .overlay {
-            if isSelected { shape.strokeBorder(accent?.base ?? theme.border(.borderHero), lineWidth: 2) }
+            if isSelected { shape.strokeBorder(accent.map { theme.resolve($0).base } ?? theme.border(.borderHero), lineWidth: 2) }
         }
     }
 
@@ -183,7 +183,7 @@ public struct DatePriceCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
         .padding(.horizontal, Theme.SpacingKey.xs.value)
-        .background(isSelected ? (accent ?? .primary).bg : Color.clear)
+        .background(isSelected ? theme.resolve(accent ?? .primary).bg : Color.clear)
     }
 }
 

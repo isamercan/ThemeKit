@@ -34,8 +34,8 @@ public struct MapPriceMarker: View {
 
     public init(_ text: String) { self.text = text }   // R1
 
-    private var accentBg: Color { (accent ?? .primary).solid }
-    private var accentFg: Color { (accent ?? .primary).onSolid }
+    private var accentBg: Color { theme.resolve(accent ?? .primary).solid }
+    private var accentFg: Color { theme.resolve(accent ?? .primary).onSolid }
     private var bg: Color { isSelected ? accentBg : theme.background(.bgWhite) }
     private var fg: Color { isSelected ? accentFg : theme.text(.textPrimary) }
 

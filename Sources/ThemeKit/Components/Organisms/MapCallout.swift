@@ -75,7 +75,7 @@ public struct MapCallout: View {
                 surfaceKey: surfaceKey,
                 radius: .box))
                 .overlay {
-                    if let accent { shape.stroke(accent.base, lineWidth: 1.5) }
+                    if let accent { shape.stroke(theme.resolve(accent).base, lineWidth: 1.5) }
                 }
                 .contentShape(shape)
         }
@@ -101,7 +101,7 @@ public struct MapCallout: View {
             }
             Spacer(minLength: 4)
             if onSelect != nil {
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(accent.map { $0.base } ?? theme.text(.textTertiary)).mirrorsInRTL()
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(accent.map { theme.resolve($0).base } ?? theme.text(.textTertiary)).mirrorsInRTL()
             }
         }
         .padding(density.scale(Theme.SpacingKey.sm.value))

@@ -87,7 +87,7 @@ public struct PaymentCardField: View {
     }
 
     private var brand: CardBrand { CardBrand.detect(number) }
-    private var accentBase: Color { (accent ?? .primary).base }
+    private var accentBase: Color { theme.resolve(accent ?? .primary).base }
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
     /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → the classic 52pt rows.
     private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }

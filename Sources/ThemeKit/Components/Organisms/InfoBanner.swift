@@ -18,7 +18,7 @@ public enum InfoBannerType {
         case .success: return theme.background(.systemcolorsBgSuccessLight)
         case .warning: return theme.background(.systemcolorsBgWarningLight)
         case .error: return theme.background(.systemcolorsBgErrorLight)
-        case .accent: return SemanticColor.primary.soft
+        case .accent: return theme.resolve(.primary).soft
         }
     }
 
@@ -29,7 +29,7 @@ public enum InfoBannerType {
         case .success: return theme.foreground(.systemcolorsFgSuccess)
         case .warning: return theme.foreground(.systemcolorsFgWarning)
         case .error: return theme.foreground(.systemcolorsFgError)
-        case .accent: return SemanticColor.primary.base
+        case .accent: return theme.resolve(.primary).base
         }
     }
 
@@ -40,7 +40,7 @@ public enum InfoBannerType {
         case .success: return theme.border(.systemcolorsBorderSuccessLight)
         case .warning: return theme.border(.systemcolorsBorderWarningLight)
         case .error: return theme.border(.systemcolorsBorderErrorLight)
-        case .accent: return SemanticColor.primary.border
+        case .accent: return theme.resolve(.primary).border
         }
     }
 

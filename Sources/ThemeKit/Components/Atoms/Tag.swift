@@ -94,31 +94,33 @@ public struct Tag: View {
 
     private var foreground: Color {
         if let semantic {
+            let resolved = theme.resolve(semantic)
             switch variant {
-            case .soft, .outline, .ghost: return semantic.accent
-            case .solid: return semantic.onSolid
+            case .soft, .outline, .ghost: return resolved.accent
+            case .solid: return resolved.onSolid
             }
         }
         guard let style else { return theme.text(.textHero) }
         switch variant {
         case .soft: return style.foreground(theme)
-        case .solid: return style.semantic.onSolid
-        case .outline, .ghost: return style.semantic.accent
+        case .solid: return theme.resolve(style.semantic).onSolid
+        case .outline, .ghost: return theme.resolve(style.semantic).accent
         }
     }
 
     private var background: Color {
         if let semantic {
+            let resolved = theme.resolve(semantic)
             switch variant {
-            case .soft: return semantic.soft
-            case .solid: return semantic.solid
+            case .soft: return resolved.soft
+            case .solid: return resolved.solid
             case .outline, .ghost: return .clear
             }
         }
         guard let style else { return theme.background(.bgElevatorTertiary) }
         switch variant {
         case .soft: return style.background(theme)
-        case .solid: return style.semantic.solid
+        case .solid: return theme.resolve(style.semantic).solid
         case .outline, .ghost: return .clear
         }
     }
@@ -127,8 +129,9 @@ public struct Tag: View {
     private var border: Color {
         let hue = semantic ?? style?.semantic
         guard let hue else { return bordered ? theme.border(.borderPrimary) : .clear }
-        if variant == .outline { return hue.border }
-        return bordered ? hue.border : .clear
+        let resolved = theme.resolve(hue)
+        if variant == .outline { return resolved.border }
+        return bordered ? resolved.border : .clear
     }
 }
 
@@ -208,10 +211,10 @@ public struct CheckableTag: View {
                 }
                 Text(text).textStyle(.labelSm600)
             }
-            .foregroundStyle(isChecked ? color.onSolid : theme.text(.textSecondary))
+            .foregroundStyle(isChecked ? theme.resolve(color).onSolid : theme.text(.textSecondary))
             .padding(.horizontal, Theme.SpacingKey.sm.value)
             .padding(.vertical, Theme.SpacingKey.xs.value)   // padding-derived height — Dynamic Type never clips
-            .background(isChecked ? color.solid : theme.background(.bgElevatorTertiary), in: Capsule())
+            .background(isChecked ? theme.resolve(color).solid : theme.background(.bgElevatorTertiary), in: Capsule())
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)

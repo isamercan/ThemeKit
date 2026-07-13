@@ -193,7 +193,7 @@ private struct TransportCrossSellGlyphBadge: View {
                 }
             }
             .padding(configuration.spacing(.sm))
-            .background(Circle().fill(configuration.accent.soft))
+            .background(Circle().fill(theme.resolve(configuration.accent).soft))
             Text(configuration.modeLabel)
                 .textStyle(.labelSm600)
                 .foregroundStyle(theme.text(.textSecondary))
@@ -556,7 +556,7 @@ private struct BannerTransportCrossSellChrome: View {
         }
         .padding(configuration.spacing(.md))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(configuration.accent.soft)
+        .background(theme.resolve(configuration.accent).soft)
         .contentShape(Rectangle())
     }
 
@@ -570,7 +570,7 @@ private struct BannerTransportCrossSellChrome: View {
             if let ctaLabel = configuration.ctaLabel {
                 ctaLabel
             } else if configuration.onSelect != nil {
-                Icon(systemName: "chevron.forward").size(.xs).color(configuration.accent.base)
+                Icon(systemName: "chevron.forward").size(.xs).color(theme.resolve(configuration.accent).base)
             }
         }
     }
@@ -640,7 +640,7 @@ private struct AccentRailTransportCrossSellCardStyle: TransportCrossSellCardStyl
         var body: some View {
             HStack(spacing: configuration.spacing(.sm)) {
                 RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value)
-                    .fill(configuration.accent.base)
+                    .fill(theme.resolve(configuration.accent).base)
                     .frame(width: 4)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(configuration.modeLabel)

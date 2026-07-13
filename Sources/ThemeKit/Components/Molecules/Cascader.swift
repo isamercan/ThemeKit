@@ -188,7 +188,7 @@ public struct Cascader: View {
                         .padding(.horizontal, Theme.SpacingKey.sm.value)
                         .frame(height: 36)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(onPath ? SemanticColor.primary.soft : .clear)
+                        .background(onPath ? theme.resolve(.primary).soft : .clear)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)

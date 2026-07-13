@@ -82,7 +82,7 @@ public struct Breadcrumbs: View {
     /// The current (last) crumb's tint — the accent token when set, else the
     /// primary text token.
     private var currentColor: Color {
-        accent.map { $0.accent } ?? theme.text(.textPrimary)
+        accent.map { theme.resolve($0).accent } ?? theme.text(.textPrimary)
     }
 
     private var separator: some View {

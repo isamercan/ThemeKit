@@ -43,7 +43,7 @@ public struct SuggestionRow: View {
         self.action = action
     }
 
-    private var accentBase: Color { (accent ?? .primary).base }
+    private var accentBase: Color { theme.resolve(accent ?? .primary).base }
     private var rowShape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous) }
     private var tileShape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous) }
 
@@ -68,7 +68,7 @@ public struct SuggestionRow: View {
             .padding(.horizontal, density.scale(Theme.SpacingKey.sm.value))
             .padding(.vertical, density.scale(Theme.SpacingKey.sm.value))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? (accent ?? .primary).bg : .clear, in: rowShape)
+            .background(isSelected ? theme.resolve(accent ?? .primary).bg : .clear, in: rowShape)
             .contentShape(rowShape)
         }
         .buttonStyle(.plain)

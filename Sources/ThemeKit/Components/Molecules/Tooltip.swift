@@ -132,7 +132,7 @@ private struct TooltipBubble: View {
 
     // `color` (full semantic palette, incl. primary/secondary/accent) wins over
     // the badge-style shorthand; nil-nil keeps the dark default.
-    private var bubbleColor: Color { color?.solid ?? style?.semantic.solid ?? theme.background(.bgTertiary) }
+    private var bubbleColor: Color { color.map { theme.resolve($0).solid } ?? style.map { theme.resolve($0.semantic).solid } ?? theme.background(.bgTertiary) }
     // Auto-contrast against whatever bubble is shown (styled solid or the dark default).
     private var textColor: Color { ColorContrast.content(on: bubbleColor) }
 

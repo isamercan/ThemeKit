@@ -108,13 +108,13 @@ public struct ThemeToggle: View {
     /// the secondary background.
     private var trackSymbolColor: Color {
         guard isOn, isEnabled else { return theme.text(.textTertiary) }
-        return accent?.onSolid ?? theme.text(.textHero)
+        return accent.map { theme.resolve($0).onSolid } ?? theme.text(.textHero)
     }
 
     private var track: Color {
         guard isEnabled else { return theme.background(.bgSecondary) }
         guard isOn else { return theme.background(.bgSecondary) }
-        return accent?.solid ?? theme.background(.bgHero)
+        return accent.map { theme.resolve($0).solid } ?? theme.background(.bgHero)
     }
 }
 

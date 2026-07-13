@@ -116,9 +116,9 @@ struct PHFilterButton: View {
 
     var body: some View {
         Button(action: action) {
-            Icon(systemName: systemImage).size(.sm).colorOverride(SemanticColor.primary.onSolid)
+            Icon(systemName: systemImage).size(.sm).colorOverride(theme.resolve(.primary).onSolid)
                 .frame(width: PHMetrics.slot, height: PHMetrics.slot)
-                .background(SemanticColor.primary.solid,
+                .background(theme.resolve(.primary).solid,
                             in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -242,7 +242,7 @@ struct PHAccessory: View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
             ForEach(0..<max(total, 1), id: \.self) { index in
                 Capsule()
-                    .fill(index < current ? SemanticColor.primary.active : theme.background(.bgSecondaryLight))
+                    .fill(index < current ? theme.resolve(.primary).active : theme.background(.bgSecondaryLight))
                     .frame(height: PHMetrics.track)
             }
         }
@@ -399,11 +399,11 @@ private struct BrandChrome: View {
     let color: SemanticColor
     let filled: Bool
 
-    private var foreground: Color { filled ? color.onSolid : theme.text(.textPrimary) }
+    private var foreground: Color { filled ? theme.resolve(color).onSolid : theme.text(.textPrimary) }
 
     var body: some View {
         PHBarRow(configuration: configuration, foreground: foreground)
-            .background(filled ? color.solid : theme.background(.bgWhite))
+            .background(filled ? theme.resolve(color).solid : theme.background(.bgWhite))
     }
 }
 

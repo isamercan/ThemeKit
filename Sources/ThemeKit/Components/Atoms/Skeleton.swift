@@ -68,7 +68,7 @@ struct SkeletonShimmer: View {
     /// The sweep's tint — a semantic color's soft shade when set, else the
     /// token default.
     private var highlightColor: Color {
-        highlight?.soft ?? theme.background(.bgWhite).opacity(0.7)
+        highlight.map { theme.resolve($0).soft } ?? theme.background(.bgWhite).opacity(0.7)
     }
 
     /// Pulse breathes the fill; shimmer / `none` / Reduce Motion keep it solid.
