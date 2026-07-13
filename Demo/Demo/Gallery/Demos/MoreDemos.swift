@@ -3066,23 +3066,27 @@ struct MicroMotionDemo: View {
 
 struct AlertDialogDemo: View {
     @State private var show = false
+    @State private var async = false
     @State private var align: AlertHeaderAlignment = .leading
     @State private var layout: AlertFooterLayout = .auto
     @State private var size: AlertDialogSize = .sm
     @State private var destructive = true
     @State private var closable = true
     @State private var longLabels = false
+    @State private var showIcon = true
+    @State private var showTitle = true
     @State private var result = "—"
 
     private var primaryLabel: String { longLabels ? "Save and continue editing" : (destructive ? "Delete" : "Confirm") }
     private var secondaryLabel: String { longLabels ? "Discard all my recent changes" : "Cancel" }
+    private var iconName: String? { showIcon ? (destructive ? "trash" : "externaldrive") : nil }
 
     /// The dialog card, driven entirely by the knobs so the same declaration can
     /// render inline (below) and as a modal (via `.alertDialog`).
     private func card(dismiss: @escaping () -> Void) -> AlertDialog {
-        AlertDialog("Delete product",
+        AlertDialog(showTitle ? "Delete product" : nil,
                     message: "Are you sure you want to delete this product? This action cannot be undone.")
-            .icon(destructive ? "trash" : "externaldrive")
+            .icon(iconName)
             .tone(destructive ? .error : .neutral)
             .headerAlignment(align)
             .footerLayout(layout)
@@ -3098,12 +3102,24 @@ struct AlertDialogDemo: View {
                 // Live inline card — reshapes as the knobs change (Figma "Composition" board).
                 card(dismiss: {})
                     .frame(maxWidth: .infinity, alignment: .center)
-                OutlineButton("Present as modal") { show = true; flash("AlertDialog opened") }
+                HStack(spacing: 12) {
+                    OutlineButton("Present as modal") { show = true; flash("AlertDialog opened") }
+                    OutlineButton("Async confirm") { async = true; flash("AlertDialog (async) opened") }
+                }
             }
             .frame(maxWidth: .infinity)
             .alertDialog(isPresented: $show, swipeToDismiss: true) {
                 card(dismiss: { show = false })
             }
+            // Param convenience: spinner + auto-dismiss once the async work resolves.
+            .alertDialog(isPresented: $async, title: showTitle ? "Delete product" : nil,
+                         message: "Are you sure you want to delete this product? This action cannot be undone.",
+                         icon: iconName, tone: destructive ? .error : .neutral,
+                         headerAlignment: align, footerLayout: layout, size: size,
+                         primaryTitle: primaryLabel,
+                         onPrimary: { try? await Task.sleep(nanoseconds: 1_200_000_000); result = "\(primaryLabel) (async)"; flash("AlertDialog: \(primaryLabel) done") },
+                         secondaryTitle: secondaryLabel, onSecondary: { result = secondaryLabel },
+                         closable: closable)
         } knobs: {
             Picker("Header", selection: $align) {
                 Text("Leading").tag(AlertHeaderAlignment.leading); Text("Center").tag(AlertHeaderAlignment.center)
@@ -3114,6 +3130,8 @@ struct AlertDialogDemo: View {
             Picker("Size", selection: $size) {
                 ForEach(AlertDialogSize.allCases, id: \.self) { Text($0.rawValue.uppercased()).tag($0) }
             }.pickerStyle(.segmented)
+            Toggle("Show icon", isOn: $showIcon)
+            Toggle("Show title", isOn: $showTitle)
             Toggle("Destructive tone", isOn: $destructive)
             Toggle("Long labels (footer auto-stacks)", isOn: $longLabels)
             Toggle("Closable (✕)", isOn: $closable)

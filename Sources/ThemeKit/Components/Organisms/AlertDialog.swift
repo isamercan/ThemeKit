@@ -6,28 +6,31 @@
 //  Organism. A modal alert dialog for critical confirmations that require the
 //  user's attention and an explicit action (HeroUI Figma Kit V3 · AlertDialog).
 //
-//  Unlike the fixed-layout `Dialog`, this component is a *composition* whose three
-//  regions each appear only when their content/config asks for it:
+//  Unlike the fixed-layout `Dialog`, this is a *composition* of two public
+//  molecules — `AlertHeader` and `AlertFooter` — plus an optional body. Each
+//  region appears only when its content/config asks for it:
 //
 //    ┌───────────────────────────────┐
-//    │  ● icon        (Alert Header)  │   ← icon and/or title, leading | center
+//    │  ● icon        (AlertHeader)   │   ← icon and/or title, leading | center
 //    │  Title                         │
 //    │  Description…  (body / slot)   │   ← message string OR a custom .content slot
-//    │            [Cancel] [Delete]   │   ← Alert Footer, horizontal | vertical | auto
+//    │            [Cancel] [Delete]   │   ← AlertFooter, horizontal | vertical | auto
 //    └───────────────────────────────┘
 //
-//  The Alert Header mirrors the Figma variant properties (Type left|center, Show
-//  icon, Show title). The Alert Footer mirrors its own (Type horizontal|vertical,
+//  `AlertHeader` mirrors the Figma variant properties (Type left|center, Show
+//  icon, Show title). `AlertFooter` mirrors its own (Type horizontal|vertical,
 //  Show Button One/Two, swap) AND fixes the reported overflow bug: in `.auto`
 //  (the default) two side-by-side buttons whose labels don't fit collapse to a
 //  vertical stack via `ViewThatFits`, so long CTAs never clip or overlap. Mobile
 //  (`.size(.mobile)`) stacks by default for reachability, matching the design.
 //
-//  Present it over a dimmed scrim by reusing the shared `DialogPresentation`
-//  chrome (scrim fade, scale+fade card transition, optional swipe-to-dismiss)
-//  through `.alertDialog(isPresented:) { AlertDialog(…) }`. The card is also a
-//  plain `View`, so it can be embedded inline (as the Figma "Composition" and
-//  "Sizes" boards show it) without any presentation chrome.
+//  Present it over a dimmed scrim — either building the card yourself with
+//  `.alertDialog(isPresented:) { AlertDialog(…) }`, or the param convenience
+//  `.alertDialog(isPresented:title:primaryTitle:onPrimary:…)` which drives an
+//  async primary (spinner + auto-dismiss, Ant Modal `confirmLoading`). Both reuse
+//  the shared `DialogPresentation` chrome (scrim fade, scale+fade transition,
+//  optional swipe-to-dismiss). The molecules are plain `View`s too, so any of
+//  them can be embedded inline (as the Figma boards show them).
 //
 
 import SwiftUI
@@ -72,34 +75,41 @@ public enum AlertDialogSize: String, CaseIterable, Sendable {
     var defaultFooterLayout: AlertFooterLayout { self == .mobile ? .vertical : .auto }
 }
 
-// MARK: - Alert Header (molecule)
+// MARK: - AlertHeader (molecule)
 
 /// The Figma `_AlertHeader`: an optional icon "avatar" bubble over an optional
-/// title. Both are presence-driven — omit the icon (no `.icon(_:)`) or the title
-/// (nil) and that row simply doesn't render (Show icon / Show title). The bubble
-/// is a neutral surface; only the glyph carries the intent `tone`, so a
-/// destructive alert reads as a red glyph on the same neutral chip the design
-/// uses across every intent.
-private struct AlertHeaderView: View {
+/// title, aligned leading or center. Both are presence-driven — omit the icon
+/// (no `.icon(_:)`) or the title (`AlertHeader()` with no text) and that row
+/// doesn't render, covering the Show icon / Show title / icon-only / title-only
+/// variants. The bubble is a neutral surface; only the glyph carries the intent
+/// `tone`, so a destructive alert reads as a red glyph on the same neutral chip
+/// the design uses across every intent.
+///
+///     AlertHeader("Delete product").icon("trash").tone(.error)   // icon + title
+///     AlertHeader().icon("trash").tone(.error)                   // icon-only
+///     AlertHeader("Discard changes?").alignment(.center)         // title-only, centered
+public struct AlertHeader: View {
     @Environment(\.theme) private var theme
 
-    let icon: String?
-    let title: String?
-    let tone: SemanticColor
-    let alignment: AlertHeaderAlignment
+    private let title: String?
+    private var icon: String?
+    private var tone: SemanticColor = .neutral
+    private var alignment: AlertHeaderAlignment = .leading
+
+    public init(_ title: String? = nil) { self.title = title }   // R1 — content only
 
     private var stackAlignment: HorizontalAlignment { alignment == .center ? .center : .leading }
     private var frameAlignment: Alignment { alignment == .center ? .center : .leading }
     private var textAlignment: TextAlignment { alignment == .center ? .center : .leading }
 
-    var body: some View {
+    public var body: some View {
         VStack(alignment: stackAlignment, spacing: Theme.SpacingKey.sm.value) {
             if let icon {
                 iconBubble(icon)
             }
             if let title {
                 Text(title)
-                    .textStyle(.bodyMd500)               // Figma "Body base medium" — 16 / medium
+                    .textStyle(.bodyMd500)                       // Figma "Body base medium" — 16 / medium
                     .foregroundStyle(theme.text(.textPrimary))
                     .multilineTextAlignment(textAlignment)
                     .frame(maxWidth: .infinity, alignment: frameAlignment)
@@ -112,21 +122,32 @@ private struct AlertHeaderView: View {
     /// 40×40 neutral-soft circle with the intent-tinted 16pt glyph (Figma Avatar).
     private func iconBubble(_ systemName: String) -> some View {
         Icon(systemName: systemName)
-            .size(.sm)                                   // 16pt — Figma icon size
+            .size(.sm)                                           // 16pt — Figma icon size
             .color(theme.resolve(tone).accent)
             .frame(width: 40, height: 40)
             .background(theme.resolve(.neutral).soft, in: Circle())
-            .accessibilityHidden(true)                   // decorative; the title carries meaning
+            .accessibilityHidden(true)                           // decorative; the title carries meaning
     }
 }
 
-// MARK: - Alert Footer (molecule)
+public extension AlertHeader {
+    /// Icon (SF Symbol) shown in the bubble. Omit to hide it (Figma "Show icon").
+    func icon(_ systemName: String?) -> Self { copy { $0.icon = systemName } }
+
+    /// Intent color for the glyph (default `.neutral`); the bubble stays neutral.
+    func tone(_ color: SemanticColor) -> Self { copy { $0.tone = color } }
+
+    /// `Type`: `.leading` (default) or `.center`.
+    func alignment(_ a: AlertHeaderAlignment) -> Self { copy { $0.alignment = a } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self { var c = self; mutate(&c); return c }
+}
+
+// MARK: - AlertFooter (molecule)
 
 /// A resolved footer button — its title, semantic color, variant and tap action.
-/// Kept as data so the footer can lay the same buttons out horizontally or
-/// vertically (and re-size them) without the call site repeating itself. The
-/// `ThemeButton` itself is built inside `AlertFooterView` (a `@MainActor` view),
-/// not here, so the data type stays a plain value.
+/// The `ThemeButton` is built inside `AlertFooter` (a `@MainActor` view), not
+/// here, so the data type stays a plain value.
 private struct AlertFooterButton {
     let title: String
     let color: SemanticColor
@@ -142,23 +163,58 @@ private struct AlertFooterButton {
 /// is full-width with the primary on top; `.auto` measures the horizontal row
 /// and drops to vertical only when the labels can't fit, so a long CTA pair
 /// never clips or overlaps.
-private struct AlertFooterView: View {
-    let primary: AlertFooterButton?
-    let secondary: AlertFooterButton?
-    let layout: AlertFooterLayout
-    let swap: Bool
+///
+/// The primary action can be sync (`.primaryAction(_:action:)`) or async
+/// (`.primaryAction(_:task:)`); the async form spins the button and blocks taps
+/// until the work resolves (Ant `confirmLoading` / HeroUI pending state).
+///
+///     AlertFooter().tone(.error)
+///         .primaryAction("Delete") { … }
+///         .secondaryAction("Cancel") { … }
+public struct AlertFooter: View {
+    private var primaryTitle: String?
+    private var primaryActionSync: (() -> Void)?
+    private var primaryActionAsync: (() async -> Void)?
+    private var secondaryTitle: String?
+    private var secondaryAction: (() -> Void)?
+    private var tone: SemanticColor = .neutral
+    private var layout: AlertFooterLayout = .auto
+    private var swap = false
+    private var externalLoading = false
+
+    /// Owns the async primary's in-flight state so the same declaration spins
+    /// itself without the caller threading a `@State` through.
+    @State private var isRunning = false
+
+    public init() {}   // R1 — actions arrive via modifiers (ResultView parity)
+
+    private var primaryLoading: Bool { externalLoading || isRunning }
+
+    private var primaryButton: AlertFooterButton? {
+        guard let primaryTitle else { return nil }
+        let action: () -> Void
+        if let async = primaryActionAsync {
+            action = { Task { @MainActor in isRunning = true; await async(); isRunning = false } }
+        } else {
+            action = primaryActionSync ?? {}
+        }
+        return AlertFooterButton(title: primaryTitle, color: tone, variant: .solid,
+                                 a11yID: "alertDialog.primary", isLoading: primaryLoading, action: action)
+    }
+
+    private var secondaryButton: AlertFooterButton? {
+        guard let secondaryTitle, let secondaryAction else { return nil }
+        return AlertFooterButton(title: secondaryTitle, color: .neutral, variant: .soft,
+                                 a11yID: "alertDialog.secondary", action: secondaryAction)
+    }
 
     /// Visual order: horizontal reads [secondary, primary] (primary trailing);
     /// vertical reads [primary, secondary] (primary on top). `swap` reverses both.
-    private var horizontalButtons: [AlertFooterButton] {
-        order([secondary, primary].compactMap { $0 })
-    }
-    private var verticalButtons: [AlertFooterButton] {
-        order([primary, secondary].compactMap { $0 })
-    }
+    private var horizontalButtons: [AlertFooterButton] { order([secondaryButton, primaryButton].compactMap { $0 }) }
+    private var verticalButtons: [AlertFooterButton] { order([primaryButton, secondaryButton].compactMap { $0 }) }
     private func order(_ b: [AlertFooterButton]) -> [AlertFooterButton] { swap ? b.reversed() : b }
 
-    var body: some View {
+    public var body: some View {
         switch layout {
         case .horizontal:
             horizontalRow.frame(maxWidth: .infinity, alignment: .trailing)
@@ -166,9 +222,9 @@ private struct AlertFooterView: View {
             verticalStack
         case .auto:
             // Try the compact horizontal row; when the buttons' natural width
-            // exceeds the card, fall back to the full-width vertical stack.
-            // The alignment frame lives OUTSIDE `ViewThatFits` so it can never
-            // mask the horizontal candidate's true (overflowing) width.
+            // exceeds the card, fall back to the full-width vertical stack. The
+            // alignment frame lives OUTSIDE `ViewThatFits` so it can never mask
+            // the horizontal candidate's true (overflowing) width.
             ViewThatFits(in: .horizontal) {
                 horizontalRow
                 verticalStack
@@ -208,12 +264,45 @@ private struct AlertFooterView: View {
     }
 }
 
+public extension AlertFooter {
+    /// Button One — the primary/confirming action, tinted by `tone`. Sync form.
+    func primaryAction(_ title: String, action: @escaping () -> Void) -> Self {
+        copy { $0.primaryTitle = title; $0.primaryActionSync = action; $0.primaryActionAsync = nil }
+    }
+
+    /// Button One with an async task: the button spins and blocks taps until the
+    /// work resolves (Ant `confirmLoading`). Dismiss inside the task if presented.
+    func primaryAction(_ title: String, task: @escaping () async -> Void) -> Self {
+        copy { $0.primaryTitle = title; $0.primaryActionAsync = task; $0.primaryActionSync = nil }
+    }
+
+    /// Button Two — the secondary/dismissing action, neutral (Figma "Show Button Two").
+    func secondaryAction(_ title: String, action: @escaping () -> Void) -> Self {
+        copy { $0.secondaryTitle = title; $0.secondaryAction = action }
+    }
+
+    /// Intent color for the primary button (default `.neutral`).
+    func tone(_ color: SemanticColor) -> Self { copy { $0.tone = color } }
+
+    /// `Type`: `.auto` (default), `.horizontal`, or `.vertical`.
+    func layout(_ layout: AlertFooterLayout) -> Self { copy { $0.layout = layout } }
+
+    /// Reverse the buttons' visual order (Figma "Swap Button One / Two").
+    func swapActions(_ on: Bool = true) -> Self { copy { $0.swap = on } }
+
+    /// Externally drive the primary button's loading state (in addition to the
+    /// async `task:` form's own spinner).
+    func primaryLoading(_ on: Bool = true) -> Self { copy { $0.externalLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self { var c = self; mutate(&c); return c }
+}
+
 // MARK: - AlertDialog (organism)
 
-/// A modal alert dialog composed of an Alert Header, an optional body (a message
-/// string or a custom `.content { }` slot) and an Alert Footer. Content lives in
-/// the initializer; every appearance/behavior axis is a chainable, order-free
-/// modifier (R1–R5).
+/// A modal alert dialog composed of an ``AlertHeader``, an optional body (a
+/// `message` string or a custom `.content { }` slot) and an ``AlertFooter``.
+/// Content lives in the initializer; every appearance/behavior axis is a
+/// chainable, order-free modifier (R1–R5).
 ///
 ///     AlertDialog("Delete product", message: "This can't be undone.")
 ///         .icon("trash")
@@ -241,7 +330,8 @@ public struct AlertDialog: View {
     private var isPrimaryLoading = false
 
     private var primaryTitle: String?
-    private var primaryAction: (() -> Void)?
+    private var primaryActionSync: (() -> Void)?
+    private var primaryActionAsync: (() async -> Void)?
     private var secondaryTitle: String?
     private var secondaryAction: (() -> Void)?
     private var onClose: (() -> Void)?
@@ -259,7 +349,7 @@ public struct AlertDialog: View {
 
     private var hasHeader: Bool { icon != nil || title != nil }
     private var hasBody: Bool { customBody != nil || message != nil }
-    private var hasFooter: Bool { primaryAction != nil || secondaryAction != nil }
+    private var hasFooter: Bool { primaryTitle != nil || secondaryTitle != nil }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
@@ -267,12 +357,12 @@ public struct AlertDialog: View {
             if hasHeader || hasBody {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
                     if hasHeader {
-                        AlertHeaderView(icon: icon, title: title, tone: tone, alignment: headerAlignment)
+                        AlertHeader(title).icon(icon).tone(tone).alignment(headerAlignment)
                     }
                     if hasBody { bodyView }
                 }
             }
-            if hasFooter { footerView }
+            if hasFooter { footer }
         }
         .padding(Theme.SpacingKey.base.value)                        // Figma spacing/6 (24)
         .frame(maxWidth: size.maxWidth)
@@ -298,23 +388,23 @@ public struct AlertDialog: View {
         }
     }
 
-    private var footerView: some View {
-        AlertFooterView(
-            primary: primaryTitle.flatMap { t in
-                primaryAction.map {
-                    AlertFooterButton(title: t, color: tone, variant: .solid,
-                                      a11yID: "alertDialog.primary", isLoading: isPrimaryLoading, action: $0)
-                }
-            },
-            secondary: secondaryTitle.flatMap { t in
-                secondaryAction.map {
-                    AlertFooterButton(title: t, color: .neutral, variant: .soft,
-                                      a11yID: "alertDialog.secondary", action: $0)
-                }
-            },
-            layout: resolvedFooterLayout,
-            swap: swapActions
-        )
+    private var footer: AlertFooter {
+        var f = AlertFooter()
+            .tone(tone)
+            .layout(resolvedFooterLayout)
+            .swapActions(swapActions)
+            .primaryLoading(isPrimaryLoading)
+        if let primaryTitle {
+            if let primaryActionAsync {
+                f = f.primaryAction(primaryTitle, task: primaryActionAsync)
+            } else {
+                f = f.primaryAction(primaryTitle, action: primaryActionSync ?? {})
+            }
+        }
+        if let secondaryTitle, let secondaryAction {
+            f = f.secondaryAction(secondaryTitle, action: secondaryAction)
+        }
+        return f
     }
 
     @ViewBuilder
@@ -362,7 +452,14 @@ public extension AlertDialog {
     /// Button One — the primary/confirming action, tinted by `tone` (Figma
     /// "Show Button One"). Omit to hide it.
     func primaryAction(_ title: String, action: @escaping () -> Void) -> Self {
-        copy { $0.primaryTitle = title; $0.primaryAction = action }
+        copy { $0.primaryTitle = title; $0.primaryActionSync = action; $0.primaryActionAsync = nil }
+    }
+
+    /// Button One with an async task: spins the button and blocks taps until the
+    /// work resolves (Ant Modal `confirmLoading`). Dismiss inside the task when
+    /// presented, or use the param `.alertDialog(…onPrimary:)` for auto-dismiss.
+    func primaryAction(_ title: String, task: @escaping () async -> Void) -> Self {
+        copy { $0.primaryTitle = title; $0.primaryActionAsync = task; $0.primaryActionSync = nil }
     }
 
     /// Button Two — the secondary/dismissing action, neutral (Figma "Show
@@ -374,8 +471,8 @@ public extension AlertDialog {
     /// Show the top-trailing close (✕) button; `handler` fires on tap.
     func closable(_ handler: @escaping () -> Void) -> Self { copy { $0.onClose = handler } }
 
-    /// Drive the primary button's loading state — the presenter shows a spinner
-    /// and taps are blocked while `on`.
+    /// Externally drive the primary button's loading state (in addition to any
+    /// async `task:` action's own spinner).
     func primaryLoading(_ on: Bool = true) -> Self { copy { $0.isPrimaryLoading = on } }
 
     /// Custom body content replacing the built-in `message` text (Figma
@@ -419,11 +516,84 @@ private struct AlertDialogModifier: ViewModifier {
     }
 }
 
+/// Param-based presenter that owns the async primary's loading + dismissal
+/// (Ant Modal `confirmLoading` + `onOk`). Keeps the dialog up with a spinner
+/// until `onPrimary` resolves, then dismisses.
+private struct AlertDialogConfirmModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let title: String?
+    let message: String?
+    let icon: String?
+    let tone: SemanticColor
+    let headerAlignment: AlertHeaderAlignment
+    let footerLayout: AlertFooterLayout?
+    let size: AlertDialogSize
+    let primaryTitle: String
+    let onPrimary: () async -> Void
+    let secondaryTitle: String?
+    let onSecondary: (() -> Void)?
+    let closable: Bool
+    let maskClosable: Bool
+    let swipeToDismiss: Bool
+
+    @State private var primaryLoading = false
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if isPresented {
+                DialogPresentation(
+                    swipeToDismiss: swipeToDismiss && !primaryLoading,
+                    onScrimTap: { if maskClosable, !primaryLoading { isPresented = false } },
+                    onSwipeDismiss: { isPresented = false }
+                ) {
+                    card.padding(Theme.SpacingKey.base.value)
+                }
+            }
+        }
+        .animation(motion, value: isPresented)
+    }
+
+    private var card: AlertDialog {
+        var d = AlertDialog(title, message: message)
+            .icon(icon)
+            .tone(tone)
+            .headerAlignment(headerAlignment)
+            .size(size)
+            .primaryLoading(primaryLoading)
+            .primaryAction(primaryTitle) {
+                // Keep the dialog open with a spinner until the (possibly async)
+                // work resolves, then dismiss (Ant Modal confirmLoading).
+                Task { @MainActor in
+                    primaryLoading = true
+                    await onPrimary()
+                    primaryLoading = false
+                    isPresented = false
+                }
+            }
+        if let footerLayout { d = d.footerLayout(footerLayout) }
+        if let secondaryTitle {
+            d = d.secondaryAction(secondaryTitle) {
+                guard !primaryLoading else { return }
+                isPresented = false
+                onSecondary?()
+            }
+        }
+        if closable {
+            d = d.closable { if !primaryLoading { isPresented = false } }
+        }
+        return d
+    }
+}
+
 public extension View {
-    /// Present an ``AlertDialog`` as a modal over a dimmed scrim, reusing the
-    /// shared dialog chrome (fade scrim, scale+fade card transition, optional
-    /// swipe-to-dismiss). Wire dismissal inside the card's own
-    /// `primaryAction` / `secondaryAction` / `closable` handlers.
+    /// Present a caller-built ``AlertDialog`` as a modal over a dimmed scrim,
+    /// reusing the shared dialog chrome (fade scrim, scale+fade transition,
+    /// optional swipe-to-dismiss). Wire dismissal inside the card's own
+    /// `primaryAction` / `secondaryAction` / `closable` handlers — this overload
+    /// gives you full control over the card's content.
     ///
     ///     view.alertDialog(isPresented: $show) {
     ///         AlertDialog("Delete product", message: "This can't be undone.")
@@ -431,9 +601,6 @@ public extension View {
     ///             .primaryAction("Delete") { show = false; delete() }
     ///             .secondaryAction("Cancel") { show = false }
     ///     }
-    ///
-    /// `swipeToDismiss` adds the swipe-down drag (HeroUI `isSwipeable`), off by
-    /// default. `maskClosable` (default true) closes on a scrim tap.
     func alertDialog(
         isPresented: Binding<Bool>,
         maskClosable: Bool = true,
@@ -443,6 +610,43 @@ public extension View {
         modifier(AlertDialogModifier(
             isPresented: isPresented, maskClosable: maskClosable,
             swipeToDismiss: swipeToDismiss, card: content
+        ))
+    }
+
+    /// Present an alert dialog from parameters, with the presenter driving the
+    /// primary action's loading + dismissal automatically (Ant Modal
+    /// `confirmLoading` / `onOk`): the dialog stays up with a spinner until the
+    /// (possibly async) `onPrimary` resolves, then closes. Use this for the
+    /// common confirm case; use the builder overload for custom content.
+    ///
+    ///     view.alertDialog(isPresented: $show, title: "Delete product",
+    ///                      message: "This can't be undone.", icon: "trash",
+    ///                      tone: .error, primaryTitle: "Delete",
+    ///                      onPrimary: { await delete() },
+    ///                      secondaryTitle: "Cancel", closable: true)
+    func alertDialog(
+        isPresented: Binding<Bool>,
+        title: String? = nil,
+        message: String? = nil,
+        icon: String? = nil,
+        tone: SemanticColor = .neutral,
+        headerAlignment: AlertHeaderAlignment = .leading,
+        footerLayout: AlertFooterLayout? = nil,
+        size: AlertDialogSize = .sm,
+        primaryTitle: String,
+        onPrimary: @escaping () async -> Void = {},
+        secondaryTitle: String? = nil,
+        onSecondary: (() -> Void)? = nil,
+        closable: Bool = false,
+        maskClosable: Bool = true,
+        swipeToDismiss: Bool = false
+    ) -> some View {
+        modifier(AlertDialogConfirmModifier(
+            isPresented: isPresented, title: title, message: message, icon: icon,
+            tone: tone, headerAlignment: headerAlignment, footerLayout: footerLayout,
+            size: size, primaryTitle: primaryTitle, onPrimary: onPrimary,
+            secondaryTitle: secondaryTitle, onSecondary: onSecondary,
+            closable: closable, maskClosable: maskClosable, swipeToDismiss: swipeToDismiss
         ))
     }
 }
@@ -476,6 +680,32 @@ public extension View {
                 .secondaryAction("Keep editing") {}
                 .footerLayout(.vertical)
                 .size(.xs)
+        }
+    }
+}
+
+#Preview("Header / footer variants") {
+    PreviewMatrix("Alert header & footer") {
+        PreviewCase("Icon-only header") {
+            AlertHeader().icon("bell.badge").tone(.primary)
+                .padding().frame(maxWidth: 240)
+        }
+        PreviewCase("Title-only header") {
+            AlertHeader("Terms updated").padding().frame(maxWidth: 240)
+        }
+        PreviewCase("Center header") {
+            AlertHeader("All set!").icon("checkmark.seal").tone(.success).alignment(.center)
+                .padding().frame(maxWidth: 240)
+        }
+        PreviewCase("Footer · horizontal") {
+            AlertFooter().tone(.error).primaryAction("Delete") {}.secondaryAction("Cancel") {}
+                .layout(.horizontal).padding().frame(maxWidth: 320)
+        }
+        PreviewCase("Footer · auto-stacks long labels") {
+            AlertFooter().tone(.primary)
+                .primaryAction("Save and keep editing") {}
+                .secondaryAction("Discard my changes") {}
+                .padding().frame(maxWidth: 260)
         }
     }
 }
@@ -528,35 +758,41 @@ public extension View {
     .environment(Theme.shared)
 }
 
-#Preview("Presented + custom body slot") {
+#Preview("Presented · async primary + custom body") {
     struct Demo: View {
         @Environment(\.theme) private var theme
-        @State private var show = true
+        @State private var confirm = true
+        @State private var rate = false
         var body: some View {
             Color.gray.opacity(0.1).ignoresSafeArea()
                 .overlay {
-                    PrimaryButton("Show alert") { show = true }
+                    VStack(spacing: 12) {
+                        PrimaryButton("Delete (async)") { confirm = true }
+                        OutlineButton("Rate (custom body)") { rate = true }
+                    }
                 }
-                .alertDialog(isPresented: $show, swipeToDismiss: true) {
+                // Param convenience: spinner + auto-dismiss once the async work resolves.
+                .alertDialog(isPresented: $confirm, title: "Delete product",
+                             message: "Are you sure you want to delete this product? This action cannot be undone.",
+                             icon: "trash", tone: .error, primaryTitle: "Delete",
+                             onPrimary: { try? await Task.sleep(nanoseconds: 1_200_000_000) },
+                             secondaryTitle: "Cancel", closable: true)
+                // Builder overload with a custom body slot.
+                .alertDialog(isPresented: $rate, swipeToDismiss: true) {
                     AlertDialog("Rate your stay")
                         .icon("star").tone(.warning)
                         .headerAlignment(.center)
                         .content {
-                            VStack(spacing: Theme.SpacingKey.sm.value) {
-                                Text("Any layout works here — ratings, forms, media.")
-                                    .textStyle(.bodyBase400)
-                                    .foregroundStyle(theme.text(.textSecondary))
-                                    .multilineTextAlignment(.center)
-                                HStack {
-                                    ForEach(0..<5, id: \.self) { _ in
-                                        Icon(systemName: "star.fill").size(.md).color(theme.resolve(.warning).accent)
-                                    }
+                            HStack {
+                                ForEach(0..<5, id: \.self) { _ in
+                                    Icon(systemName: "star.fill").size(.md).color(theme.resolve(.warning).accent)
                                 }
                             }
+                            .frame(maxWidth: .infinity)
                         }
-                        .primaryAction("Submit") { show = false }
-                        .secondaryAction("Not now") { show = false }
-                        .closable { show = false }
+                        .primaryAction("Submit") { rate = false }
+                        .secondaryAction("Not now") { rate = false }
+                        .closable { rate = false }
                 }
         }
     }
