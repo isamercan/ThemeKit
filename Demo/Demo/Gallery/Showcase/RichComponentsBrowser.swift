@@ -25,6 +25,7 @@ struct RichComponentsBrowser: View {
 
     @State private var selected: ComponentEntry?
     @State private var autoCycle = false
+    @State private var query = ""
     private let ticker = Timer.publish(every: 4.5, on: .main, in: .common).autoconnect()
 
     /// Load the selected preset into the shared Showcase theme.
@@ -42,14 +43,26 @@ struct RichComponentsBrowser: View {
     }
 
     // All components in one ordered row, with a slim marker before each category.
+    // Filtered live by `query` — a marker only shows for categories with matches.
     private var shelfItems: [ShelfItem] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         var items: [ShelfItem] = []
         for category in ComponentCategory.allCases {
-            let entries = ComponentRegistry.entries(in: category)
+            let entries = ComponentRegistry.entries(in: category).filter { matches($0, needle) }
+            guard !entries.isEmpty else { continue }
             items.append(.marker(category, entries.count))
             items.append(contentsOf: entries.map { .component($0) })
         }
         return items
+    }
+
+    /// A component matches when its name, category, or usage snippet contains the
+    /// search text (case-insensitive). An empty query matches everything.
+    private func matches(_ entry: ComponentEntry, _ needle: String) -> Bool {
+        guard !needle.isEmpty else { return true }
+        return entry.name.lowercased().contains(needle)
+            || entry.category.rawValue.lowercased().contains(needle)
+            || (entry.usage?.lowercased().contains(needle) ?? false)
     }
 
     var body: some View {
@@ -64,7 +77,9 @@ struct RichComponentsBrowser: View {
                     header
                     Spacer(minLength: 0)
                     titleBlock
-                    Spacer().frame(height: 28)
+                    Spacer().frame(height: 20)
+                    searchBar
+                    Spacer().frame(height: 20)
                     shelf(cardW: cardW, cardH: cardH)
                     Spacer(minLength: 0)
                 }
@@ -126,23 +141,45 @@ struct RichComponentsBrowser: View {
         .padding(.horizontal, 24)
     }
 
+    // MARK: - Search
+
+    private var searchBar: some View {
+        SearchBar(text: $query)
+            .placeholder("Search \(ComponentRegistry.all.count) components…")
+            .frame(maxWidth: 520)
+            .padding(.horizontal, 24)
+    }
+
     // MARK: - The single horizontal row
 
+    @ViewBuilder
     private func shelf(cardW: CGFloat, cardH: CGFloat) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 18) {
-                ForEach(shelfItems) { item in
-                    switch item {
-                    case let .marker(category, count):
-                        CategoryMarker(category: category, count: count, height: cardH)
-                    case let .component(entry):
-                        ShelfCard(entry: entry, width: cardW, height: cardH) { selected = entry }
+        if shelfItems.isEmpty {
+            VStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.secondary)
+                Text("No components match “\(query)”")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: cardH)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 18) {
+                    ForEach(shelfItems) { item in
+                        switch item {
+                        case let .marker(category, count):
+                            CategoryMarker(category: category, count: count, height: cardH)
+                        case let .component(entry):
+                            ShelfCard(entry: entry, width: cardW, height: cardH) { selected = entry }
+                        }
                     }
                 }
+                .padding(.horizontal, 40)
             }
-            .padding(.horizontal, 40)
+            .frame(height: cardH)
         }
-        .frame(height: cardH)
     }
 
     // MARK: - Auto theme-cycle (off unless the user turns it on)
