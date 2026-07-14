@@ -43,7 +43,13 @@ enum DemoTheme: String, CaseIterable, Identifiable {
     func apply(dark: Bool) {
         UserDefaults.standard.set(rawValue, forKey: Self.storageKey)
         UserDefaults.standard.set(dark, forKey: Self.darkKey)
-        Theme.shared.loadTheme(named: resourceName, dark: dark)
+        if self == .heroui {
+            // Demonstrates the native runtime CSS path: parse the bundled
+            // heroui.css on-device (no JSON, no build step) and apply it.
+            Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter", dark: dark)
+        } else {
+            Theme.shared.loadTheme(named: resourceName, dark: dark)
+        }
     }
 
     /// The currently persisted theme (defaults to `.default`).
@@ -88,11 +94,14 @@ final class DemoThemeStore: ObservableObject {
         if let forced = UserDefaults.standard.string(forKey: "forceTheme"), !forced.isEmpty {
             let dark = UserDefaults.standard.bool(forKey: "forceThemeDark")
             isDark = dark
-            // Keep the switcher highlight in sync when the forced name is a known theme.
-            if let match = DemoTheme.allCases.first(where: { $0.resourceName == forced }) {
+            // Route through DemoTheme when the forced name is a known theme (so
+            // HeroUI takes the native CSS path); otherwise load the JSON directly.
+            if let match = DemoTheme.allCases.first(where: { $0.resourceName == forced || $0.rawValue == forced }) {
                 current = match
+                match.apply(dark: dark)
+            } else {
+                Theme.shared.loadTheme(named: forced, dark: dark)
             }
-            Theme.shared.loadTheme(named: forced, dark: dark)
             return
         }
         // Precedence at launch: a saved custom (generated) recipe wins, then a
