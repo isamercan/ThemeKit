@@ -1374,18 +1374,41 @@ struct CardStackDemo: View {
 
 struct CalendarDemo: View {
     @State private var date: Date? = .now
+    @State private var multiDates: Set<Date> = []
     @State private var yearPicker = false
+    @State private var multiple = false
+    @State private var noWeekends = false
     var body: some View {
-        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil"), ("yearPicker", "\(yearPicker)")]) {
-            if yearPicker {
-                CalendarView(selection: $date).yearPicker()
-            } else {
-                CalendarView(selection: $date)
-            }
+        ComponentStage("Calendar", inspector: [
+            ("selection", multiple ? "\(multiDates.count) day(s)"
+                : (date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")),
+            ("multiple", "\(multiple)"),
+            ("disabledWeekends", "\(noWeekends)")
+        ]) {
+            calendar
         } knobs: {
+            Toggle("Multiple selection", isOn: $multiple)
+            Toggle("Disable weekends", isOn: $noWeekends)
             Toggle("Tappable header (.yearPicker)", isOn: $yearPicker)
-            Button("Clear") { date = nil }
+            Button("Clear") { date = nil; multiDates = [] }
         }
+    }
+
+    // Both selection inits return `CalendarView`, so the shared modifiers apply
+    // uniformly regardless of single/multiple mode.
+    @ViewBuilder private var calendar: some View {
+        if multiple {
+            configured(CalendarView(selection: $multiDates))
+        } else {
+            configured(CalendarView(selection: $date))
+        }
+    }
+
+    private func configured(_ view: CalendarView) -> CalendarView {
+        var view = view
+        if yearPicker { view = view.yearPicker() }
+        if noWeekends { view = view.disabledDates { Calendar.current.isDateInWeekend($0) } }
+        return view
     }
 }
 
