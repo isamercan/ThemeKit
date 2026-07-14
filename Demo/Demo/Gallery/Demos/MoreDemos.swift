@@ -373,16 +373,55 @@ struct TooltipDemo: View {
 }
 
 struct ButtonGroupDemo: View {
-    @State private var horizontal = false
+    // The group size is the kit's ButtonSize token — the full control-size ramp,
+    // not a fixed sm/md/lg, so new sizes flow through automatically.
+    private let sizes: [(label: String, size: ButtonSize?)] = [
+        ("Default", nil), ("xxsmall", .xxsmall), ("xsmall", .xsmall),
+        ("small", .small), ("medium", .medium), ("large", .large),
+        ("xlarge", .xlarge), ("xxlarge", .xxlarge),
+    ]
+
+    @State private var horizontal = true
+    @State private var sizeSel = 0
+    @State private var fill = false
+    @State private var dividers = false
+
+    private var groupSize: ButtonSize? { sizes[sizeSel].size }
+    private var sizeLabel: String { sizes[sizeSel].label }
+
     var body: some View {
-        ComponentStage("ButtonGroup", inspector: [("axis", horizontal ? "horizontal" : "vertical")]) {
-            if horizontal {
-                ButtonGroup(.horizontal) { SecondaryButton("Cancel") { flash("Cancel") }; PrimaryButton("Confirm") { flash("Confirm") } }
-            } else {
-                ButtonGroup { PrimaryButton("Continue") { flash("Continue") }.fullWidth(); SecondaryButton("Not now") { flash("Not now") }.fullWidth() }
-            }
+        ComponentStage(
+            "ButtonGroup",
+            inspector: [("axis", horizontal ? "horizontal" : "vertical"),
+                        ("size", sizeLabel),
+                        ("width", fill ? "fill" : "hug"),
+                        ("dividers", dividers ? "on" : "off")]
+        ) {
+            group
         } knobs: {
             Toggle("Horizontal", isOn: $horizontal)
+            Toggle("Fill width", isOn: $fill)
+            Toggle("Dividers", isOn: $dividers)
+            Picker("Size", selection: $sizeSel) {
+                ForEach(Array(sizes.enumerated()), id: \.offset) { index, item in
+                    Text(item.label).tag(index)
+                }
+            }.pickerStyle(.menu)
+        }
+    }
+
+    @ViewBuilder private var group: some View {
+        let base = ButtonGroup(horizontal ? .horizontal : .vertical) {
+            SecondaryButton("Cancel") { flash("Cancel") }
+            PrimaryButton("Confirm") { flash("Confirm") }
+        }
+        .width(fill ? .fill : .hug)
+        .dividers(dividers)
+
+        if let groupSize {
+            base.size(groupSize)
+        } else {
+            base
         }
     }
 }
