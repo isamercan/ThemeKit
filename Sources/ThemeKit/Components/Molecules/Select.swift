@@ -47,6 +47,14 @@ public struct Select<Option: Hashable>: View {
     private var isOptionEnabled: ((Option) -> Bool)? = nil
     private var describeOption: ((Option) -> String?)? = nil
     private var leadingContent: ((Option) -> AnyView)? = nil
+    /// Max height of the searchable dropdown before it scrolls (Ant `listHeight`,
+    /// default 256). `nil` uses the 256pt default.
+    private var listHeightOverride: CGFloat?
+    /// Custom match predicate (Ant `filterOption`) — `nil` keeps the built-in
+    /// case-insensitive `contains`. Return `true` to keep the option for `query`.
+    private var filterPredicate: ((_ query: String, _ option: Option) -> Bool)?
+    /// Custom ordering for the filtered rows (Ant `filterSort`); `nil` keeps order.
+    private var filterSort: ((Option, Option) -> Bool)?
     private var accessibilityID: String? = nil
     /// Marks the field as required: asterisk after the label + ", required"
     /// appended to the accessibility label (E2, HeroUI `isRequired`).
@@ -253,9 +261,30 @@ public struct Select<Option: Hashable>: View {
     // MARK: Searchable panel
 
     private func filtered(_ options: [Option]) -> [Option] {
-        guard !query.isEmpty else { return options }
-        return options.filter { optionTitle($0).localizedCaseInsensitiveContains(query) }
+        var result = options
+        if !query.isEmpty {
+            if let filterPredicate {
+                result = result.filter { filterPredicate(query, $0) }
+            } else {
+                result = result.filter { optionTitle($0).localizedCaseInsensitiveContains(query) }
+            }
+        }
+        if let filterSort { result.sort(by: filterSort) }
+        return result
     }
+
+    /// Dropdown height cap before scrolling (Ant `listHeight`; default 256).
+    private var effectiveListHeight: CGFloat { listHeightOverride ?? 256 }
+    /// Rough count of visible rows (option rows + section headers) — decides
+    /// whether the results need the capped scroll container.
+    private var visibleRowCount: Int {
+        sections.reduce(0) { acc, section in
+            let opts = filtered(section.options)
+            return acc + (opts.isEmpty ? 0 : opts.count + (section.title != nil ? 1 : 0))
+        }
+    }
+    /// Approx results height at ~44pt/row — only used to pick scroll-vs-plain.
+    private var estimatedResultsHeight: CGFloat { CGFloat(visibleRowCount) * 44 }
 
     @ViewBuilder
     private func panelMessage(spinner: Bool, _ text: String) -> some View {
@@ -266,6 +295,48 @@ public struct Select<Option: Hashable>: View {
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
         .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+
+    /// The scrollable option rows (section headers + option buttons), extracted
+    /// so the panel can wrap them in a capped `ScrollView` when they overflow.
+    @MainActor @ViewBuilder
+    private var panelResults: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                let opts = filtered(section.options)
+                if !opts.isEmpty {
+                    if let title = section.title {
+                        Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.xs.value)
+                    }
+                    ForEach(opts, id: \.self) { option in
+                        let enabled = optionEnabled(option)
+                        Button { selection = option; open = false; query = "" } label: {
+                            HStack(spacing: Theme.SpacingKey.sm.value) {
+                                if let leadingContent { leadingContent(option) }
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
+                                    if let description = describeOption?(option) {
+                                        Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                                    }
+                                }
+                                Spacer()
+                                if selection == option {
+                                    Icon(systemName: "checkmark").size(.sm).color(theme.foreground(.fgHero))
+                                }
+                            }
+                            .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(RowPressStyle())
+                        .disabled(!enabled)
+                        .opacity(enabled ? 1 : 0.4)
+                        .accessibilityAddTraits(selection == option ? .isSelected : [])
+                    }
+                }
+            }
+        }
     }
 
     @MainActor
@@ -283,41 +354,12 @@ public struct Select<Option: Hashable>: View {
                 panelMessage(spinner: true, String(themeKit: "Searching…"))
             } else if !hasAnyResults {
                 panelMessage(spinner: false, String(themeKit: "No results"))
+            } else if estimatedResultsHeight > effectiveListHeight {
+                // Long lists scroll within the `listHeight` cap (Ant `listHeight`).
+                ScrollView(showsIndicators: true) { panelResults }
+                    .frame(height: effectiveListHeight)
             } else {
-                ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
-                    let opts = filtered(section.options)
-                    if !opts.isEmpty {
-                        if let title = section.title {
-                            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textTertiary))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.xs.value)
-                        }
-                        ForEach(opts, id: \.self) { option in
-                            let enabled = optionEnabled(option)
-                            Button { selection = option; open = false; query = "" } label: {
-                                HStack(spacing: Theme.SpacingKey.sm.value) {
-                                    if let leadingContent { leadingContent(option) }
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        Text(optionTitle(option)).textStyle(.bodyBase400).foregroundStyle(theme.text(.textPrimary))
-                                        if let description = describeOption?(option) {
-                                            Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-                                        }
-                                    }
-                                    Spacer()
-                                    if selection == option {
-                                        Icon(systemName: "checkmark").size(.sm).color(theme.foreground(.fgHero))
-                                    }
-                                }
-                                .padding(.horizontal, Theme.SpacingKey.md.value).padding(.vertical, Theme.SpacingKey.sm.value)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(RowPressStyle())
-                            .disabled(!enabled)
-                            .opacity(enabled ? 1 : 0.4)
-                            .accessibilityAddTraits(selection == option ? .isSelected : [])
-                        }
-                    }
-                }
+                panelResults   // short lists size to content — no wasted space
             }
         }
         .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
@@ -341,6 +383,19 @@ public extension Select {
 
     /// Use the searchable inline panel instead of the native menu.
     func searchable(_ on: Bool = true) -> Self { copy { $0.searchable = on } }
+
+    /// Max height of the searchable dropdown before it scrolls (Ant `listHeight`,
+    /// default 256pt). Short lists still size to their content.
+    func listHeight(_ height: CGFloat) -> Self { copy { $0.listHeightOverride = height } }
+
+    /// Custom match predicate for the searchable panel (Ant `filterOption`):
+    /// `keep(query, option)` returns whether to keep the option. `nil` (default)
+    /// keeps the built-in case-insensitive title `contains`. Pass `{ _, _ in true }`
+    /// to disable client filtering (drive results from a server via `.loading`).
+    func filter(_ keep: ((_ query: String, _ option: Option) -> Bool)?) -> Self { copy { $0.filterPredicate = keep } }
+
+    /// Order the filtered rows (Ant `filterSort`); `nil` keeps declaration order.
+    func filterSort(_ areInIncreasingOrder: ((Option, Option) -> Bool)?) -> Self { copy { $0.filterSort = areInIncreasingOrder } }
 
     /// Control height of the trigger field (small / medium / large).
     func size(_ size: TextInputSize) -> Self { copy { $0.size = size } }
@@ -419,6 +474,16 @@ public extension Select {
         PreviewCase("Underlined") {
             Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
                 .fieldStyle(.underlined)
+        }
+        // Long list scrolls within a 180pt `listHeight` cap (Ant `listHeight`),
+        // sorted A→Z via `filterSort`.
+        PreviewCase("listHeight + filterSort") {
+            Select("Country", options: ["Turkey", "Germany", "France", "Spain", "Italy",
+                                        "Poland", "Sweden", "Norway", "Greece", "Portugal"],
+                   selection: $city, isExpanded: .constant(true)) { $0 }
+                .searchable()
+                .listHeight(180)
+                .filterSort(<)
         }
         // Required indicator (E2) — asterisk + ", required" for VoiceOver.
         PreviewCase("Required (E2)") {

@@ -53,6 +53,11 @@ public struct Accordion<Content: View>: View {
     private var paddingSize: AccordionPaddingSize = .default
     private var truncateSubtitle: Bool = false
     private var showDivider: Bool = true
+    /// Custom leading accessory (prefix) — wins over `number` / `leadingSystemImage`.
+    /// AnyView slot storage is the house pattern for optional builders.
+    private var leadingView: AnyView? = nil
+    /// Custom trailing accessory (given the expanded state) — wins over `indicator`.
+    private var trailingAccessory: ((Bool) -> AnyView)? = nil
 
     /// Expansion state — uncontrolled (`initiallyExpanded:` seeds @State) or
     /// controlled (the caller's `isExpanded:` binding drives it), unified by
@@ -88,14 +93,18 @@ public struct Accordion<Content: View>: View {
                 withAnimation(motion) { expanded.toggle() }
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    if let number {
-                        Text(zeroPad2(number))
-                            .textStyle(titleSize.textStyle)
-                            .foregroundStyle(titleColor)
-                            .monospacedDigit()
-                    }
-                    if let leadingSystemImage {
-                        Icon(systemName: leadingSystemImage).size(.sm).colorOverride(titleColor)
+                    if let leadingView {
+                        leadingView
+                    } else {
+                        if let number {
+                            Text(zeroPad2(number))
+                                .textStyle(titleSize.textStyle)
+                                .foregroundStyle(titleColor)
+                                .monospacedDigit()
+                        }
+                        if let leadingSystemImage {
+                            Icon(systemName: leadingSystemImage).size(.sm).colorOverride(titleColor)
+                        }
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
@@ -109,7 +118,11 @@ public struct Accordion<Content: View>: View {
                         }
                     }
                     Spacer(minLength: Theme.SpacingKey.sm.value)
-                    indicatorIcon
+                    if let trailingAccessory {
+                        trailingAccessory(expanded)
+                    } else {
+                        indicatorIcon
+                    }
                 }
                 .padding(.vertical, paddingSize.value)
                 .contentShape(Rectangle())
@@ -170,6 +183,18 @@ public extension Accordion {
     func truncateSubtitle(_ on: Bool = true) -> Self { copy { $0.truncateSubtitle = on } }
     /// Whether to draw the bottom divider (default true).
     func divider(_ on: Bool) -> Self { copy { $0.showDivider = on } }
+    /// Custom leading accessory (prefix) shown before the title — e.g. an
+    /// avatar, colored badge, or a non-SF-Symbol glyph. Wins over
+    /// `number(_:)` / `icon(_:)` (HeroUI Accordion "Prefix" instance swap).
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingView = AnyView(content()) }
+    }
+    /// Custom trailing accessory, given the expanded state — replaces the
+    /// built-in chevron / plus-minus indicator with a fully custom disclosure
+    /// glyph or control.
+    func trailing<V: View>(@ViewBuilder _ content: @escaping (Bool) -> V) -> Self {
+        copy { $0.trailingAccessory = { AnyView(content($0)) } }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -204,6 +229,19 @@ public extension Accordion {
                 Text("Expands with a plus/minus glyph.")
             }
             .indicator(.plusMinus)
+        }
+        // Custom leading (prefix instance swap) + custom trailing view slots.
+        PreviewCase("Custom leading + trailing") {
+            Accordion("Priority support") {
+                Text("Included with every Pro plan.")
+            }
+            .leading {
+                Icon(systemName: "star.fill").size(.sm).colorOverride(Theme.shared.resolve(.warning).base)
+            }
+            .trailing { isOpen in
+                Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle")
+                    .size(.sm).colorOverride(Theme.shared.resolve(.primary).base)
+            }
         }
         // Controlled expansion — the binding drives (and observes) the row.
         PreviewCase("Controlled") {

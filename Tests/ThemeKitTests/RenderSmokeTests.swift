@@ -52,7 +52,7 @@ final class RenderSmokeTests: XCTestCase {
         renders(Flex { Tag("A"); Tag("B") }.justify(.spaceBetween), "Flex")
         renders(AnchorNav([AnchorItem("a", title: "Intro"), AnchorItem("b", title: "API")], active: .constant("a")), "AnchorNav")
         renders(Splitter(.horizontal) { Color.clear } second: { Color.clear }, "Splitter")
-        renders(Cascader([CascaderOption("a", label: "A", children: [CascaderOption("b", label: "B")])], selection: .constant([])), "Cascader")
+        renders(Cascader([CascaderOption("a", label: "A", children: [CascaderOption("b", label: "B")])], selection: .constant([String]())), "Cascader")
         renders(Transfer([TransferItem("a", title: "A"), TransferItem("b", title: "B")], target: .constant(["a"])), "Transfer")
         renders(Mentions(text: .constant("hi @a"), options: [MentionOption("ada")]), "Mentions")
         renders(Masonry { ForEach(0..<4) { _ in Color.clear.frame(height: 30) } }, "Masonry")

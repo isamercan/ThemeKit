@@ -18,12 +18,25 @@
 
 import SwiftUI
 
+/// Preset visual style (source-stable public surface). The full HeroUI variant
+/// set is exposed through the preset types — `primary` → ``PrimaryButton`` ·
+/// `secondary` → ``SecondaryButton`` · tertiary → ``TertiaryButton`` ·
+/// `outline` → ``OutlineButton`` · `ghost` → ``GhostButton`` ·
+/// danger → ``DangerButton`` · dangerSoft → ``DangerSoftButton`` — and, for
+/// arbitrary semantic colors, the flexible ``ThemeButton`` (`variant` × `color`).
 public enum ThemeButtonStyle {
     case primary
     case secondary
     case outline
     case ghost
     case link
+}
+
+/// Internal rendering kind for `ThemedButton` — the full HeroUI variant set.
+/// Kept out of the public API so the source-stable ``ThemeButtonStyle`` enum
+/// needn't grow new cases; consumers pick a variant via the preset types.
+private enum ThemedButtonKind {
+    case primary, secondary, tertiary, outline, ghost, link, danger, dangerSoft
 }
 
 /// Whether a preset button was created with a sync `action` or an async `task`.
@@ -45,7 +58,7 @@ private struct ThemedButton: View {
     let title: String
     let helperText: String?
     let textStyle: TextStyle?
-    let style: ThemeButtonStyle
+    let kind: ThemedButtonKind
     let size: ButtonSize
     let block: Bool
     let confirmsSuccess: Bool
@@ -96,7 +109,7 @@ private struct ThemedButton: View {
                 } else {
                     Text(title)
                         .textStyle(textStyle ?? size.textStyle)
-                        .underline(style == .link)
+                        .underline(kind == .link)
                         .lineLimit(1)              // a button label stays on one line (truncates, never wraps)
                         .transition(.opacity)
                 }
@@ -120,18 +133,26 @@ private struct ThemedButton: View {
 
     private var foreground: Color {
         guard isEnabled else { return theme.text(.textDisabled) }
-        switch style {
+        switch kind {
         case .primary: return theme.resolve(.primary).onSolid   // auto-contrast on the primary fill
-        case .secondary, .outline, .ghost, .link: return theme.text(.textHero)
+        case .danger: return theme.resolve(.error).onSolid      // auto-contrast on the danger fill
+        case .dangerSoft: return theme.resolve(.error).accent   // danger text on the soft tint
+        case .secondary, .tertiary, .outline, .ghost, .link: return theme.text(.textHero)
         }
     }
 
     private var background: Color {
-        switch style {
+        switch kind {
         case .primary:
             return theme.background(isEnabled ? .bgHero : .bgSecondary)
+        case .danger:
+            return isEnabled ? theme.resolve(.error).solid : theme.background(.bgSecondary)
+        case .dangerSoft:
+            return isEnabled ? theme.resolve(.error).soft : .clear
         case .secondary:
             return theme.background(.bgWhite)
+        case .tertiary:
+            return isEnabled ? theme.background(.bgTertiary) : .clear
         case .outline, .ghost, .link:
             return .clear
         }
@@ -139,8 +160,8 @@ private struct ThemedButton: View {
 
     @ViewBuilder
     private var border: some View {
-        switch style {
-        case .primary, .ghost, .link:
+        switch kind {
+        case .primary, .tertiary, .ghost, .link, .danger, .dangerSoft:
             EmptyView()
         case .secondary, .outline:
             RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)
@@ -182,7 +203,7 @@ public struct PrimaryButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .primary, size: size, block: block,
+            kind: .primary, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -220,7 +241,7 @@ public struct SecondaryButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .secondary, size: size, block: block,
+            kind: .secondary, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -258,7 +279,7 @@ public struct OutlineButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .outline, size: size, block: block,
+            kind: .outline, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -296,7 +317,7 @@ public struct GhostButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: helperText, textStyle: titleTextStyle,
-            style: .ghost, size: size, block: block,
+            kind: .ghost, size: size, block: block,
             confirmsSuccess: confirmsSuccess ?? (mode == .task),
             accessibilityID: accessibilityID,
             isLoading: isLoading, run: run
@@ -320,9 +341,129 @@ public struct LinkButton: View {
     public var body: some View {
         ThemedButton(
             title: title, helperText: nil, textStyle: nil,
-            style: .link, size: size, block: false,
+            kind: .link, size: size, block: false,
             confirmsSuccess: false, accessibilityID: accessibilityID,
             isLoading: false, run: run
+        )
+    }
+}
+
+/// Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface,
+/// typically paired alongside a primary or secondary action.
+public struct TertiaryButton: View {
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
+    }
+
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
+    }
+
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            kind: .tertiary, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
+}
+
+/// Solid destructive button (HeroUI `danger`) — for irreversible actions
+/// (delete, remove). Pair only with genuinely destructive actions.
+public struct DangerButton: View {
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
+    }
+
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
+    }
+
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            kind: .danger, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
+        )
+    }
+}
+
+/// Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint
+/// for cautionary actions where urgency is lower than a solid ``DangerButton``.
+public struct DangerSoftButton: View {
+    private let title: String
+    private let run: () async -> Void
+    private let mode: ButtonRunMode
+
+    // Appearance/config — mutated only through the modifiers below (R2).
+    private var size: ButtonSize = .medium
+    private var block = false
+    private var helperText: String?
+    private var titleTextStyle: TextStyle?
+    private var confirmsSuccess: Bool?   // nil = unset → defaults by run mode (action: false, task: true)
+    private var accessibilityID: String?
+    private var isLoading = false
+
+    public init(_ title: String, action: @escaping () -> Void) {   // R1
+        self.title = title
+        self.run = { action() }
+        self.mode = .action
+    }
+
+    /// Async action with automatic loading + (by default) success confirmation.
+    public init(_ title: String, task: @escaping () async -> Void) {   // R1
+        self.title = title
+        self.run = task
+        self.mode = .task
+    }
+
+    public var body: some View {
+        ThemedButton(
+            title: title, helperText: helperText, textStyle: titleTextStyle,
+            kind: .dangerSoft, size: size, block: block,
+            confirmsSuccess: confirmsSuccess ?? (mode == .task),
+            accessibilityID: accessibilityID,
+            isLoading: isLoading, run: run
         )
     }
 }
@@ -459,13 +600,86 @@ public extension LinkButton {
     }
 }
 
+public extension TertiaryButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension DangerButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
+public extension DangerSoftButton {
+    /// Control size: xxsmall … large.
+    func size(_ size: ButtonSize) -> Self { copy { $0.size = size } }
+    /// Stretch to the available width.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.block = on } }
+    /// Caption rendered under the button.
+    func helperText(_ text: String?) -> Self { copy { $0.helperText = text } }
+    /// Override the title's text style (defaults to the size's style).
+    func titleTextStyle(_ style: TextStyle?) -> Self { copy { $0.titleTextStyle = style } }
+    /// Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+    func confirmsSuccess(_ on: Bool = true) -> Self { copy { $0.confirmsSuccess = on } }
+    /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+    func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
+    /// Swap the label for a spinner and block taps while `on`.
+    func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
+
+    private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
+        var c = self
+        mutate(&c)
+        return c
+    }
+}
+
 #Preview {
     PreviewMatrix("Buttons") {
         PreviewCase("Primary") { PrimaryButton("Primary") {} }
         PreviewCase("Secondary") { SecondaryButton("Secondary") {} }
+        PreviewCase("Tertiary") { TertiaryButton("Tertiary") {} }
         PreviewCase("Outline") { OutlineButton("Outline") {} }
         PreviewCase("Ghost") { GhostButton("Ghost") {} }
         PreviewCase("Link") { LinkButton("Link") {} }
+        // HeroUI danger variants — solid + soft.
+        PreviewCase("Danger") { DangerButton("Delete") {} }
+        PreviewCase("Danger soft") { DangerSoftButton("Remove") {} }
         PreviewCase("Disabled") { PrimaryButton("Disabled") {}.disabled(true) }
         PreviewCase("Loading") { PrimaryButton("Loading") {}.loading() }
         PreviewCase("Full-width CTA") { PrimaryButton("Full-width CTA") {}.fullWidth() }

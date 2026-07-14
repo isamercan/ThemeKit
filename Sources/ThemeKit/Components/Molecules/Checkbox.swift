@@ -29,6 +29,17 @@ public enum CheckboxType: Equatable {
     case customInner(color: Color)
 }
 
+/// Surface treatment of the checkbox box. (Figma HeroUI Checkbox `variant`.)
+public enum CheckboxVariant: Equatable {
+    /// Default style intended for regular backgrounds — the resting (unchecked)
+    /// box is transparent (border-only) and fills with the accent when selected.
+    case primary
+    /// A more subtle style designed to work on top of surfaces and elevated
+    /// containers — the resting box carries a soft secondary fill so it reads
+    /// correctly on a raised surface. Selected rendering matches `.primary`.
+    case secondary
+}
+
 /// Figma "Control Items" → Checkboxes. Sizes Small (20) / Medium (24);
 /// states checked / disabled / indeterminate. Colors from theme tokens. Per the
 /// modifier-based architecture (COMPONENT_REFACTOR_RULES R1–R7) the init takes only
@@ -52,6 +63,7 @@ public struct Checkbox: View {
     private var infoMessages: [InfoMessage] = []
     private var customSize: CGFloat?
     private var type: CheckboxType = .plain
+    private var variant: CheckboxVariant = .primary   // Figma variant: primary / secondary
     private var isIndeterminate: Bool = false
     private var alignment: VerticalAlignment = .center
     private var accent: SemanticColor?
@@ -63,6 +75,8 @@ public struct Checkbox: View {
     private var accessibilityID: String?
     private var controlPlacement: HorizontalEdge = .leading   // A2
     private var customLabel: SlotContent?                     // D1 — `.label { }` slot
+    private var descriptionText: String?                      // Figma "Description" line
+    private var descriptionLinks: [(substring: String, action: () -> Void)] = []
     private var lineThrough = false                           // E4
     @Environment(\.isReadOnly) private var isReadOnly         // E1
 
@@ -116,6 +130,7 @@ public struct Checkbox: View {
             .a11y(A11yElement.Control.checkbox, in: accessibilityID)
             .accessibilityLabel(label ?? "")
             .accessibilityValue(isIndeterminate ? String(themeKit: "mixed") : (isChecked ? String(themeKit: "selected") : String(themeKit: "not selected")))
+            .accessibilityHint(descriptionText ?? "")   // description isn't in the label — surface it here
             .accessibilityAddTraits(isChecked ? .isSelected : [])
 
             if !infoMessages.isEmpty {
@@ -124,9 +139,22 @@ public struct Checkbox: View {
         }
     }
 
-    /// Built-in string label, or the `.label { }` slot when set (D1/B8). Both
-    /// inherit the `lineThrough` treatment while checked (E4).
-    @ViewBuilder private var labelView: some View {
+    /// The title + optional description column (Figma "Label" + "Description").
+    private var labelView: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            titleView
+            if let descriptionText {
+                // Description stays muted even while invalid (Figma recolors only
+                // the title + the error line); HelperText dims when disabled.
+                HelperText(descriptionText).links(descriptionLinks)
+            }
+        }
+    }
+
+    /// Built-in string title, or the `.label { }` slot when set (D1/B8). Both
+    /// inherit the `lineThrough` treatment while checked (E4); the string title
+    /// recolors to the error token while invalid (Figma invalid state).
+    @ViewBuilder private var titleView: some View {
         if let customLabel {
             customLabel
                 .strikethrough(lineThrough && isChecked)
@@ -134,8 +162,14 @@ public struct Checkbox: View {
             Text(label)
                 .textStyle(.bodyBase400)
                 .strikethrough(lineThrough && isChecked)
-                .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
+                .foregroundStyle(titleColor)
         }
+    }
+
+    private var titleColor: Color {
+        if !isEnabled { return theme.text(.textDisabled) }
+        if dominant == .error { return theme.foreground(.systemcolorsFgError) }
+        return theme.text(.textPrimary)
     }
 
     private var radius: CGFloat { Theme.RadiusRole.selector.value }
@@ -158,11 +192,18 @@ public struct Checkbox: View {
         case .customInner(let color):
             return color
         case .plain, .inner:
-            guard selected else { return .clear }
+            guard selected else { return restingFill }
             // `.inner` keeps the outer box transparent; the inset square is the fill.
             if case .inner = type { return .clear }
             return selectedFill
         }
+    }
+
+    /// Unchecked box surface, driven by `variant`: `.primary` is transparent
+    /// (border-only, for regular backgrounds); `.secondary` carries a soft fill
+    /// so the box reads on elevated surfaces (Figma Checkbox `variant`).
+    private var restingFill: Color {
+        variant == .secondary ? theme.background(.bgSecondaryLight) : .clear
     }
 
     private var stroke: Color {
@@ -202,6 +243,21 @@ public struct Checkbox: View {
 public extension Checkbox {
     /// Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`.
     func type(_ t: CheckboxType) -> Self { copy { $0.type = t } }
+
+    /// Surface treatment of the box: `.primary` (default — border-only, for
+    /// regular backgrounds) or `.secondary` (soft fill for elevated surfaces).
+    /// (Figma HeroUI Checkbox `variant`.)
+    func variant(_ v: CheckboxVariant) -> Self { copy { $0.variant = v } }
+
+    /// Supporting description rendered under the title (Figma "Description").
+    /// Passing `nil` hides it (Figma "Show Description = false").
+    func description(_ text: String?) -> Self { copy { $0.descriptionText = text } }
+
+    /// Description with inline tappable links — e.g.
+    /// `.description("Read the Terms first.", links: [("Terms", openTerms)])`.
+    func description(_ text: String?, links: [(substring: String, action: () -> Void)]) -> Self {
+        copy { $0.descriptionText = text; $0.descriptionLinks = links }
+    }
 
     /// Always fills the box with a semantic swatch (the `.customInner` type),
     /// resolved from the token's solid role — the token-bound path.
@@ -265,6 +321,19 @@ public extension Checkbox {
         PreviewCase("Indeterminate") { Checkbox(isChecked: .constant(true)).indeterminate() }
         PreviewCase("Small") { Checkbox(isChecked: .constant(true)).controlSize(.small) }
         PreviewCase("Disabled") { Checkbox(isChecked: .constant(true)).disabled(true) }
+        PreviewCase("Title + description") {                                             // Figma Description
+            Checkbox("Email notifications", isChecked: .constant(true))
+                .description("Get notified when someone mentions you")
+        }
+        PreviewCase("Secondary variant") {                                              // Figma variant
+            Checkbox("On an elevated surface", isChecked: .constant(false))
+                .variant(.secondary)
+        }
+        PreviewCase("Invalid") {                                                        // Figma invalid state
+            Checkbox("Accept terms", isChecked: .constant(false))
+                .description("Please read and accept the terms")
+                .infoMessages([InfoMessage("This is required to continue", kind: .error)])
+        }
         PreviewCase("Success accent") { Checkbox("Success accent", isChecked: .constant(true)).accent(.success) }
         PreviewCase("Warning accent") { Checkbox("Warning accent", isChecked: .constant(true)).accent(.warning) }
         PreviewCase("Large box") { Checkbox("Large box", isChecked: .constant(true)).controlSize(.large) }          // C4

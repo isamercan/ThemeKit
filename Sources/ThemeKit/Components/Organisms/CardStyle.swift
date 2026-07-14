@@ -115,7 +115,37 @@ private struct OutlinedCardSurface: View {
     var body: some View {
         configuration.content
             .clipShape(shape)   // keeps edge-to-edge content (e.g. media) inside the corner
-            .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1.5))
+            .overlay(shape.strokeBorder(theme.border(configuration.isSelected ? .borderHero : .borderPrimary), lineWidth: 1.5))
+    }
+}
+
+/// A flat card: the surface fill with rounded corners, no border and no shadow —
+/// the HeroUI `flat` variant. Honors the configuration's `surfaceKey`, `radius`
+/// and (when selected) a hero border.
+public struct FlatCardStyle: CardStyle {
+    public init() {}
+    public func makeBody(configuration: CardStyleConfiguration) -> some View {
+        FlatCardSurface(configuration: configuration)
+    }
+}
+
+private struct FlatCardSurface: View {
+    let configuration: CardStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: configuration.radius.value, style: .continuous)
+    }
+
+    var body: some View {
+        configuration.content
+            .background(theme.background(configuration.surfaceKey), in: shape)
+            .clipShape(shape)
+            .overlay {
+                if configuration.isSelected {
+                    shape.strokeBorder(theme.border(.borderHero), lineWidth: 1.5)
+                }
+            }
     }
 }
 
@@ -127,6 +157,11 @@ public extension CardStyle where Self == DefaultCardStyle {
 public extension CardStyle where Self == OutlinedCardStyle {
     /// A flat, outlined card (transparent fill, full border, no shadow).
     static var outlined: OutlinedCardStyle { OutlinedCardStyle() }
+}
+
+public extension CardStyle where Self == FlatCardStyle {
+    /// A flat card (surface fill, no border, no shadow) — the HeroUI `flat` variant.
+    static var flat: FlatCardStyle { FlatCardStyle() }
 }
 
 // MARK: - Type erasure + environment plumbing

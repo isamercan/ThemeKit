@@ -33,6 +33,41 @@ let theme = Theme()
 theme.applyGenerated(primaryHex: "#7C3AED")  // full palette from one accent
 ```
 
+## Import a CSS theme (HeroUI, Tailwind, shadcn…)
+
+Already have a web design system as CSS custom properties? Hand it to ThemeKit
+**directly** — the `oklch()` / hex variables are parsed on-device at runtime and
+the whole token set is generated for you. No JSON, no build step. ThemeKit even
+ships a ready-made **HeroUI** theme.
+
+Drop a `.css` in your app and apply it in one line:
+
+```swift
+Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter")  // bundled HeroUI theme
+Theme.shared.loadTheme(cssNamed: "brand")                  // your own brand.css in the app bundle
+```
+
+Or apply a CSS string — from a file, a network response, anywhere:
+
+```swift
+let css = try String(contentsOf: url)     // your theme.css
+Theme.shared.setTheme(css: css)           // parsed + applied instantly, no restart
+Theme.shared.setColorScheme(dark: true)   // switches to the CSS's .dark block
+```
+
+Both the `:root`/`.light` and `.dark` blocks are read: `--accent` drives the
+primary/info palette, `--danger` / `--success` / `--warning` the semantic colors,
+and `--background` / `--foreground` / `--border` / `--muted` the neutral surfaces
+and text (`--radius` / `--field-radius` → the box/field radius roles). Anything the
+CSS doesn't define falls back to ThemeKit's defaults, and the CSS is treated as
+untrusted text — only `--var: value;` declarations are read, nothing is executed.
+
+:::tip[Offline alternative]
+Prefer to bundle a static JSON (zero runtime parse)? The same conversion runs
+offline as a Python tool — `python3 tools/import_css_theme.py theme.css --name
+brand --out Sources/ThemeKitCore/Resources`, then `loadTheme(named: "brandTheme")`.
+:::
+
 ## Per-subtree theming
 
 Theming isn't only a global switch. Inject any `Theme` into a single subtree with

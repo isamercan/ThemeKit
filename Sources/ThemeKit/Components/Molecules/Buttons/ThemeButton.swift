@@ -46,6 +46,17 @@ public struct ThemeButton: View {
     private var leadingSystemImage: String?
     private var trailingSystemImage: String?
     private var accessibilityID: String?
+    /// Web/HeroUI density (compact heights); default is the touch ramp.
+    private var density: ButtonDensity = .regular
+    /// Forces a square-footprint icon button at the current shape's corner —
+    /// decoupled from `.circle`/`.square` (HeroUI `iconOnly` property).
+    private var iconOnlyOverride = false
+    /// Prefix/suffix element slots (Figma "Prefix"/"Suffix" — any view). Each
+    /// wins over the SF-Symbol `icon(leading:trailing:)` on its side.
+    private var prefixView: AnyView?
+    private var suffixView: AnyView?
+    /// Drives the visible focus ring (Figma focus state · accessibility).
+    @FocusState private var isFocused: Bool
 
     /// The resolved semantic color: explicit modifier ?? subtree
     /// `componentDefaults.accent` ?? `.primary`.
@@ -89,7 +100,13 @@ public struct ThemeButton: View {
         self.customLabel = AnyView(label())
     }
 
-    private var isIconOnly: Bool { shape == .circle || shape == .square }
+    private var isIconOnly: Bool { iconOnlyOverride || shape == .circle || shape == .square }
+
+    // Density-aware size resolution (regular touch ramp vs compact web ramp).
+    private var sizeHeight: CGFloat { density == .compact ? size.compactHeight : size.height }
+    private var sizePadding: CGFloat { density == .compact ? size.compactHorizontalPadding : size.horizontalPadding }
+    private var sizeTextStyle: TextStyle { density == .compact ? size.compactTextStyle : size.textStyle }
+    private var sizeFontSize: CGFloat { density == .compact ? size.compactFontSize : size.fontSize }
 
     public var body: some View {
         let button = Button {
@@ -103,12 +120,12 @@ public struct ThemeButton: View {
                 // being clipped. Icon-only buttons pin width == height (min==max)
                 // to keep a square footprint.
                 .frame(
-                    minWidth: isIconOnly ? size.height * typeScale : nil,
-                    maxWidth: isIconOnly ? size.height * typeScale : nil,
-                    minHeight: size.height * typeScale
+                    minWidth: isIconOnly ? sizeHeight * typeScale : nil,
+                    maxWidth: isIconOnly ? sizeHeight * typeScale : nil,
+                    minHeight: sizeHeight * typeScale
                 )
                 .frame(maxWidth: isFullWidth && !isIconOnly ? .infinity : nil)
-                .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
+                .padding(.horizontal, isIconOnly ? 0 : sizePadding)
                 .foregroundStyle(foreground)
                 .contentShape(Rectangle())
         }
@@ -121,6 +138,8 @@ public struct ThemeButton: View {
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
         .accessibilityValue(isLoading ? String(themeKit: "Loading") : "")
+        .focused($isFocused)
+        .overlay { focusRing }
 
         // A custom label speaks for itself — overriding it with the (nil) title
         // would silence the slot's text for VoiceOver.
@@ -153,29 +172,39 @@ public struct ThemeButton: View {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if spinnerInline && spinnerEdge == .leading { inlineSpinner }
                 customLabel
-                    .textStyle(size.textStyle)
+                    .textStyle(sizeTextStyle)
                 if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
             }
         } else if isIconOnly {
-            // Icon-only: render the single provided glyph (leading takes
-            // precedence), no label.
-            if let glyph = leadingSystemImage ?? trailingSystemImage {
-                Image(systemName: glyph).font(.system(size: size.fontSize, weight: .semibold))
+            // Icon-only: a single glyph — prefix slot ▸ suffix slot ▸ the
+            // leading/trailing SF Symbol. No label.
+            if let prefixView {
+                prefixView
+            } else if let suffixView {
+                suffixView
+            } else if let glyph = leadingSystemImage ?? trailingSystemImage {
+                Image(systemName: glyph).font(.system(size: sizeFontSize, weight: .semibold))
             }
         } else {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if spinnerInline && spinnerEdge == .leading { inlineSpinner }
-                if let leadingSystemImage {
-                    Image(systemName: leadingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
+                // Leading: the prefix element slot wins over the SF-Symbol icon.
+                if let prefixView {
+                    prefixView
+                } else if let leadingSystemImage {
+                    Image(systemName: leadingSystemImage).font(.system(size: sizeFontSize, weight: .semibold))
                 }
                 if let title {
                     Text(title)
-                        .textStyle(size.textStyle)
+                        .textStyle(sizeTextStyle)
                         .underline(variant == .link)
                         .lineLimit(1)              // a single-word label never wraps; a ButtonGroup flows instead
                 }
-                if let trailingSystemImage {
-                    Image(systemName: trailingSystemImage).font(.system(size: size.fontSize, weight: .semibold))
+                // Trailing: the suffix element slot wins over the SF-Symbol icon.
+                if let suffixView {
+                    suffixView
+                } else if let trailingSystemImage {
+                    Image(systemName: trailingSystemImage).font(.system(size: sizeFontSize, weight: .semibold))
                 }
                 if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
             }
@@ -218,6 +247,18 @@ public struct ThemeButton: View {
         case .pill, .circle: return AnyShape(Capsule())
         }
     }
+
+    /// Visible focus ring drawn just outside the button on keyboard / hardware
+    /// focus (Figma focus state · accessibility). Offset outward via negative
+    /// padding so it reads as a ring, tinted with the button's own accent.
+    @ViewBuilder
+    private var focusRing: some View {
+        shapeStyle
+            .stroke(resolvedColor.accent, lineWidth: 2)
+            .padding(-3)
+            .opacity(isFocused && isEnabled ? 1 : 0)
+            .allowsHitTesting(false)
+    }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
@@ -256,6 +297,27 @@ public extension ThemeButton {
     /// glyph (or the trailing one if no leading) becomes the icon.
     func icon(leading: String? = nil, trailing: String? = nil) -> Self {
         copy { $0.leadingSystemImage = leading; $0.trailingSystemImage = trailing }
+    }
+
+    /// Height/padding density: `.regular` (touch, default) or `.compact`
+    /// (web/HeroUI — sm/md/lg == compact small/medium/large). Pair with `.size(_:)`.
+    func density(_ d: ButtonDensity) -> Self { copy { $0.density = d } }
+
+    /// Render as a square-footprint icon-only button at the current shape's
+    /// corner — decoupled from `.circle`/`.square` (HeroUI `iconOnly`). The
+    /// glyph comes from `prefix`/`suffix` or `icon(leading:trailing:)`.
+    func iconOnly(_ on: Bool = true) -> Self { copy { $0.iconOnlyOverride = on } }
+
+    /// Prefix element slot rendered before the label — any view (icon, spinner,
+    /// badge, avatar). Wins over the leading `icon(_:)` symbol (Figma "Prefix").
+    func prefix<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.prefixView = AnyView(content()) }
+    }
+
+    /// Suffix element slot rendered after the label — any view. Wins over the
+    /// trailing `icon(_:)` symbol (Figma "Suffix").
+    func suffix<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.suffixView = AnyView(content()) }
     }
 
     /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
@@ -421,16 +483,6 @@ private struct FillButtonBody: View {
     }
 }
 
-extension ButtonSize {
-    var fontSize: CGFloat {
-        switch self {
-        case .xxsmall, .xsmall: return 12
-        case .small: return 14
-        case .medium, .large: return 16
-        }
-    }
-}
-
 #Preview {
     PreviewMatrix("ThemeButton") {
         PreviewCase("Variants × colors") {
@@ -450,6 +502,34 @@ extension ButtonSize {
                 ThemeButton { }.icon(leading: "plus").color(.primary).shape(.square)
                 ThemeButton("Pill") {}.color(.success).shape(.pill)
                 ThemeButton("Link") {}.variant(.link)
+            }
+        }
+        // Prefix/suffix element slots (Figma "Prefix"/"Suffix" — any view).
+        PreviewCase("Prefix + suffix slots") {
+            VStack(spacing: 12) {
+                ThemeButton("Continue") {}
+                    .color(.primary)
+                    .prefix { Icon(systemName: "sparkles").size(.sm) }
+                    .suffix { Icon(systemName: "arrow.right").size(.sm) }
+                ThemeButton("Cart") {}
+                    .variant(.soft).color(.primary)
+                    .suffix { Badge("3").badgeStyle(.error).size(.small) }
+            }
+        }
+        // Compact (web/HeroUI) density — small/medium/large == 32/36/40.
+        PreviewCase("Compact density") {
+            HStack {
+                ThemeButton("Small") {}.color(.primary).density(.compact).size(.small)
+                ThemeButton("Medium") {}.color(.primary).density(.compact).size(.medium)
+                ThemeButton("Large") {}.color(.primary).density(.compact).size(.large)
+            }
+        }
+        // Icon-only decoupled from shape — a rounded (not circle) icon button.
+        PreviewCase("Icon-only (rounded)") {
+            HStack {
+                ThemeButton { }.icon(leading: "square.and.arrow.up").color(.primary).iconOnly()
+                ThemeButton { }.icon(leading: "trash").color(.error).variant(.soft).iconOnly()
+                ThemeButton { }.icon(leading: "ellipsis").variant(.ghost).iconOnly().density(.compact).size(.small)
             }
         }
         PreviewCase("Full width") { ThemeButton("Block button") {}.color(.primary).fullWidth() }
