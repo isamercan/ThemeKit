@@ -505,6 +505,8 @@ private struct AlertDialogModifier: ViewModifier {
             if isPresented {
                 DialogPresentation(
                     swipeToDismiss: swipeToDismiss,
+                    backdrop: .dim,
+                    placement: .center,
                     onScrimTap: { if maskClosable { isPresented = false } },
                     onSwipeDismiss: { isPresented = false }
                 ) {
@@ -546,6 +548,8 @@ private struct AlertDialogConfirmModifier: ViewModifier {
             if isPresented {
                 DialogPresentation(
                     swipeToDismiss: swipeToDismiss && !primaryLoading,
+                    backdrop: .dim,
+                    placement: .center,
                     onScrimTap: { if maskClosable, !primaryLoading { isPresented = false } },
                     onSwipeDismiss: { isPresented = false }
                 ) {
