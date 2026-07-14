@@ -176,7 +176,10 @@ public struct DataTable<Row: Identifiable>: View {
         return sortAscending ? sorted : sorted.reversed()
     }
 
-    private var isInteractive: Bool { selection != nil || onRowTap != nil }
+    // In checkbox-column mode the checkbox owns selection, so a row is only an
+    // interactive button when it has an `onRowTap` (navigation). Otherwise a row
+    // tap toggles selection (legacy), so any `selection` binding makes it interactive.
+    private var isInteractive: Bool { onRowTap != nil || (selection != nil && !hasSelectionColumn) }
 
     private var pageCount: Int { Self.pageCount(rowCount: displayRows.count, pageSize: pageSize) }
     private var pagedRows: [Row] {

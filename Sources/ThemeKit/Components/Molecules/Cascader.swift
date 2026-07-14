@@ -113,7 +113,7 @@ public struct Cascader: View {
             switch multiPaths.count {
             case 0: return placeholder
             case 1: return pathLabel(multiPaths[0]) ?? placeholder
-            default: return "\(multiPaths.count) " + String(themeKit: "selected")
+            default: return String(themeKit: "\(multiPaths.count) selected")   // count-aware localized phrase
             }
         }
         return pathLabel(singlePath) ?? placeholder

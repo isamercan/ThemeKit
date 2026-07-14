@@ -383,7 +383,23 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
 
                         // HeroUI ScrollShadow: frost the clipped scroll edges so
                         // long content visibly fades into the header / footer.
-                        ScrollShadow {
+                        // Only on OSes where ScrollShadow can OBSERVE the scroll
+                        // (iOS 18 / macOS 15+) — below that its `.auto` degrades to
+                        // always-on scrims, which would paint permanent top+bottom
+                        // gradients over a short, non-scrollable body. There, fall
+                        // back to the plain ScrollView (the pre-scroll-shadow look).
+                        if #available(iOS 18.0, macOS 15.0, *) {
+                            ScrollShadow {
+                                ScrollView {
+                                    dialogContent()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, Theme.SpacingKey.lg.value)
+                                        .padding(.bottom, Theme.SpacingKey.md.value)
+                                }
+                                .frame(maxHeight: maxContentHeight)
+                            }
+                            .fadeColor(.bgWhite)
+                        } else {
                             ScrollView {
                                 dialogContent()
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -392,7 +408,6 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                             }
                             .frame(maxHeight: maxContentHeight)
                         }
-                        .fadeColor(.bgWhite)
 
                         DividerView().size(.small)
 
