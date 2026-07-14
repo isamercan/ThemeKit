@@ -94,6 +94,10 @@ public struct DataTable<Row: Identifiable>: View {
     private var isLoading = false
     private var size: DataTableSize = .middle
     private var showsHeader = true
+    /// Draw a leading checkbox column + select-all header (Ant `rowSelection`);
+    /// only takes effect when a `selection` binding is present. Off by default,
+    /// so the existing full-row-tap selection is unchanged.
+    private var showsSelectionColumn = false
     private var onRowTap: ((Row) -> Void)?
     private var emptySlot: AnyView?
     private var loadingSlot: AnyView?
@@ -119,6 +123,41 @@ public struct DataTable<Row: Identifiable>: View {
         } else {
             clipped.frame(maxWidth: .infinity, alignment: column.align.alignment)
         }
+    }
+
+    // MARK: Checkbox selection column (Ant `rowSelection`)
+
+    /// Whether the leading checkbox column is drawn (needs a `selection` binding).
+    private var hasSelectionColumn: Bool { showsSelectionColumn && selection != nil }
+    /// Width of the checkbox column.
+    private var selectionColumnWidth: CGFloat { 40 }
+    /// IDs of the rows currently visible (the page's rows) — what select-all acts on.
+    private var visibleIDs: [Row.ID] { pagedRows.map(\.id) }
+    private var allVisibleSelected: Bool {
+        guard let selection, !visibleIDs.isEmpty else { return false }
+        return visibleIDs.allSatisfy { selection.wrappedValue.contains($0) }
+    }
+    private var someVisibleSelected: Bool {
+        guard let selection else { return false }
+        return visibleIDs.contains { selection.wrappedValue.contains($0) }
+    }
+    private func toggleAllVisible() {
+        guard let selection else { return }
+        if allVisibleSelected { visibleIDs.forEach { selection.wrappedValue.remove($0) } }
+        else { visibleIDs.forEach { selection.wrappedValue.insert($0) } }
+    }
+    private func toggleRow(_ id: Row.ID) {
+        guard let selection else { return }
+        if selection.wrappedValue.contains(id) { selection.wrappedValue.remove(id) }
+        else { selection.wrappedValue.insert(id) }
+    }
+
+    /// A selection checkbox glyph — filled when `on`, a dash for the header's
+    /// indeterminate (some-but-not-all) state.
+    private func checkbox(on: Bool, indeterminate: Bool = false) -> some View {
+        Icon(systemName: on ? "checkmark.square.fill" : (indeterminate ? "minus.square.fill" : "square"))
+            .size(.sm)
+            .color(on || indeterminate ? theme.text(.textHero) : theme.text(.textTertiary))
     }
 
     @State private var sortColumn: Int?
@@ -201,6 +240,15 @@ public struct DataTable<Row: Identifiable>: View {
 
     private var headerRow: some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
+            if hasSelectionColumn {
+                Button { toggleAllVisible() } label: {
+                    checkbox(on: allVisibleSelected, indeterminate: !allVisibleSelected && someVisibleSelected)
+                        .frame(width: selectionColumnWidth, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: allVisibleSelected ? "Deselect all" : "Select all"))
+            }
             ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
                 headerCell(column, index: index)
             }
@@ -249,6 +297,16 @@ public struct DataTable<Row: Identifiable>: View {
     private func dataRow(_ row: Row, index: Int) -> some View {
         let isSelected = selection?.wrappedValue.contains(row.id) ?? false
         let base = HStack(spacing: Theme.SpacingKey.sm.value) {
+            if hasSelectionColumn {
+                Button { toggleRow(row.id) } label: {
+                    checkbox(on: isSelected)
+                        .frame(width: selectionColumnWidth, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Select row"))
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
             ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
                 sizedCell(column.content(row), column)
             }
@@ -276,7 +334,9 @@ public struct DataTable<Row: Identifiable>: View {
     }
 
     private func handleTap(_ row: Row) {
-        if let selection {
+        // With the checkbox column, the checkbox owns selection — a row tap is
+        // navigation only. Without it, tapping the row toggles selection (legacy).
+        if !hasSelectionColumn, let selection {
             if selection.wrappedValue.contains(row.id) { selection.wrappedValue.remove(row.id) }
             else { selection.wrappedValue.insert(row.id) }
         }
@@ -336,6 +396,12 @@ public extension DataTable {
 
     /// Show the column-title header strip (Ant `showHeader`; default on).
     func showsHeader(_ on: Bool = true) -> Self { copy { $0.showsHeader = on } }
+
+    /// Draw a leading checkbox column with a select-all header (Ant `rowSelection`
+    /// checkbox mode). Requires the `selection:` binding; when on, the checkbox
+    /// owns selection and a row tap is navigation-only (`onRowTap`). Off by
+    /// default — the existing full-row-tap selection is unchanged.
+    func selectionColumn(_ on: Bool = true) -> Self { copy { $0.showsSelectionColumn = on } }
 
     /// Replace rows with a loading placeholder while content loads.
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
@@ -411,6 +477,14 @@ private struct Booking: Identifiable { let id = UUID(); let hotel: String; let n
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
+        }
+        // Checkbox selection column + select-all header (Ant `rowSelection`).
+        PreviewCase("Checkbox selection column") {
+            DataTable(columns: [
+                .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
+                .init("Price", align: .trailing) { "$\(Int($0.price))" },
+            ], rows: rows, selection: $selected)
+            .selectionColumn()
         }
         // Fixed-width + ellipsis columns, compact density, header hidden.
         PreviewCase("Fixed width · ellipsis · compact") {
