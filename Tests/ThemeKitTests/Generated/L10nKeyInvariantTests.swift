@@ -265,7 +265,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Remove \(d)",
             "Remove %@", 1,
-            site: "Sources/ThemeKit/Components/Atoms/Tag.swift:54")
+            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:203")
         assertKey(
             "Remove card ending \(d)",
             "Remove card ending %@", 1,
