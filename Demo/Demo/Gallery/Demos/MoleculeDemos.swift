@@ -12,7 +12,7 @@ import ThemeKit
 import ThemeKitTravel
 
 struct ButtonDemo: View {
-    enum Style: String, CaseIterable { case primary, secondary, outline, ghost, link }
+    enum Style: String, CaseIterable { case primary, secondary, tertiary, outline, ghost, link, danger, dangerSoft }
     @State private var style: Style = .primary
     @State private var size: ButtonSize = .medium
     @State private var title = "Button"
@@ -39,17 +39,23 @@ struct ButtonDemo: View {
                     switch style {
                     case .primary: PrimaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .secondary: SecondaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .tertiary: TertiaryButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .outline: OutlineButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .ghost: GhostButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
+                    case .danger: DangerButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
+                    case .dangerSoft: DangerSoftButton(title, task: work).size(size).fullWidth(fullWidth).helperText(helperText).disabled(!enabled)
                     }
                 } else {
                     switch style {
                     case .primary: PrimaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .secondary: SecondaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .tertiary: TertiaryButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .outline: OutlineButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .ghost: GhostButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     case .link: LinkButton(title, action: tapped).size(size).disabled(!enabled)
+                    case .danger: DangerButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
+                    case .dangerSoft: DangerSoftButton(title, action: tapped).size(size).fullWidth(fullWidth).helperText(helperText).loading(loading).disabled(!enabled)
                     }
                 }
             }
@@ -77,6 +83,8 @@ struct CheckboxDemo: View {
     @State private var requiredError = true
     @State private var big = false
     @State private var typeIdx = 0   // 0 plain, 1 inner, 2 customInner
+    @State private var variantIdx = 0   // 0 primary, 1 secondary
+    @State private var withDescription = false
     @State private var trailing = false
     @State private var strike = false
     @State private var readOnly = false
@@ -95,11 +103,13 @@ struct CheckboxDemo: View {
     }
 
     var body: some View {
-        ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
+        ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain"), ("variant", variantIdx == 1 ? "secondary" : "primary")]) {
             Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked)
                     .infoMessages(messages)
                     .customSize(big ? 32 : nil)
                     .type(type)
+                    .variant(variantIdx == 1 ? .secondary : .primary)
+                    .description(withDescription ? "Please read and accept the terms" : nil)
                     .indeterminate(indeterminate)
                     .alignment(.top)
                     .controlPlacement(trailing ? .trailing : .leading)
@@ -111,7 +121,9 @@ struct CheckboxDemo: View {
             Toggle("Checked", isOn: $checked)
             Toggle("Custom size (32)", isOn: $big)
             Picker("Type", selection: $typeIdx) { Text("Plain").tag(0); Text("Inner").tag(1); Text("Swatch").tag(2) }.pickerStyle(.segmented)
+            Picker("Variant", selection: $variantIdx) { Text("Primary").tag(0); Text("Secondary").tag(1) }.pickerStyle(.segmented)
             Picker("Size", selection: $sizeIdx) { Text("S (20)").tag(0); Text("M (24)").tag(1); Text("L (28)").tag(2) }.pickerStyle(.segmented)
+            Toggle("Description line", isOn: $withDescription)
             Toggle("Trailing control (.controlPlacement)", isOn: $trailing)
             Toggle("Line-through when checked", isOn: $strike)
             Toggle("Required (error when unchecked)", isOn: $requiredError)
@@ -718,9 +730,12 @@ struct SplitterDemo: View {
 
 struct CascaderDemo: View {
     @State private var path: [String] = []
+    @State private var multiPaths: [[String]] = []
     @State private var searchable = false
     @State private var clearable = false
     @State private var readOnly = false
+    @State private var multiple = false
+    @State private var size: TextInputSize = .medium
     private let options = [
         CascaderOption("tr", label: "Türkiye", children: [
             CascaderOption("34", label: "İstanbul", children: [
@@ -733,17 +748,40 @@ struct CascaderDemo: View {
     ]
 
     var body: some View {
-        ComponentStage("Cascader", inspector: [("path", path.isEmpty ? "—" : path.joined(separator: "/"))]) {
-            Cascader(options, selection: $path).placeholder("Select region")
-                .searchable(searchable)
-                .clearable(clearable)
-                .readOnly(readOnly)
+        ComponentStage("Cascader", inspector: [
+            ("selection", multiple ? "\(multiPaths.count) path(s)" : (path.isEmpty ? "—" : path.joined(separator: "/"))),
+            ("multiple", "\(multiple)"),
+        ]) {
+            cascader
         } knobs: {
+            Toggle("Multiple (checkbox leaves)", isOn: $multiple)
+            Picker("Size", selection: $size) {
+                Text("S").tag(TextInputSize.small); Text("M").tag(TextInputSize.medium); Text("L").tag(TextInputSize.large)
+            }.pickerStyle(.segmented)
             Toggle("Searchable (filter across levels)", isOn: $searchable)
             Toggle("Clearable (x when selected)", isOn: $clearable)
             Toggle("Read-only (keeps chrome, blocks opening)", isOn: $readOnly)
-            Text("Pick through the columns; selecting a leaf commits the path.").font(.caption).foregroundStyle(.secondary)
+            Text("Pick through the columns; a leaf commits (single) or toggles (multiple).").font(.caption).foregroundStyle(.secondary)
         }
+    }
+
+    // Both selection inits return `Cascader`, so shared modifiers apply uniformly.
+    @ViewBuilder private var cascader: some View {
+        if multiple {
+            configured(Cascader(options, selection: $multiPaths))
+        } else {
+            configured(Cascader(options, selection: $path))
+        }
+    }
+
+    private func configured(_ view: Cascader) -> some View {
+        // Cascader's own modifiers first (they return `Cascader`); the kit-wide
+        // `.readOnly(_:)` returns `some View`, so it must come last.
+        view.placeholder("Select region")
+            .searchable(searchable)
+            .clearable(clearable)
+            .size(size)
+            .readOnly(readOnly)
     }
 }
 

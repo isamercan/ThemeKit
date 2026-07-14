@@ -63,6 +63,52 @@ public enum InfoBannerType {
         case .error: return String(themeKit: "Error")
         }
     }
+
+    /// The banner's status mapped to a `SemanticColor` — used to tint a
+    /// first-class trailing action button so it matches the alert by default.
+    var semanticColor: SemanticColor {
+        switch self {
+        case .neutral: return .neutral
+        case .info: return .info
+        case .success: return .success
+        case .warning: return .warning
+        case .error: return .error
+        case .accent: return .primary
+        }
+    }
+}
+
+/// A first-class trailing action button for an `InfoBanner` / alert — a real
+/// `ThemeButton` (label + variant + optional semantic color) whose tap handler
+/// is captured as a stored closure. Mirrors HeroUI Native's trailing
+/// `<Button variant onPress>`; richer than the lightweight text-link
+/// `action(_:onAction:)`.
+public struct AlertAction {
+    public let title: String
+    public let variant: ButtonVariant
+    public let color: SemanticColor?
+    public let size: ButtonSize
+    public let handler: () -> Void
+
+    /// - Parameters:
+    ///   - title: Button label.
+    ///   - variant: `ThemeButton` variant (default `.soft`).
+    ///   - color: Semantic color; `nil` inherits the banner's status color.
+    ///   - size: `ThemeButton` size (default `.small`, matching HeroUI `sm`).
+    ///   - handler: Captured tap closure.
+    public init(
+        _ title: String,
+        variant: ButtonVariant = .soft,
+        color: SemanticColor? = nil,
+        size: ButtonSize = .small,
+        handler: @escaping () -> Void
+    ) {
+        self.title = title
+        self.variant = variant
+        self.color = color
+        self.size = size
+        self.handler = handler
+    }
 }
 
 /// Improved, token-bound rewrite of the reference InfoMessage. Semantic types
@@ -80,6 +126,7 @@ public struct InfoBanner: View {
     private var trailingView: AnyView?
     private var actionTitle: String?
     private var onAction: (() -> Void)?
+    private var actionButton: AlertAction?
     private var onDismiss: (() -> Void)?
 
     private let message: String
@@ -128,13 +175,20 @@ public struct InfoBanner: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Custom trailing accessory (e.g. a small ThemeButton) — richer than
-            // the lightweight `action(_:onAction:)` text link below.
+            // Custom trailing accessory (e.g. a small ThemeButton) — the fully
+            // open escape hatch, richer than the options below.
             if let trailingView {
                 trailingView
             }
 
-            if let actionTitle, let onAction {
+            // First-class action button wins over the lightweight text-link;
+            // its color defaults to the banner's status when unspecified.
+            if let actionButton {
+                ThemeButton(actionButton.title, action: actionButton.handler)
+                    .variant(actionButton.variant)
+                    .color(actionButton.color ?? type.semanticColor)
+                    .size(actionButton.size)
+            } else if let actionTitle, let onAction {
                 Button(action: onAction) {
                     Text(actionTitle).textStyle(.labelSm600).foregroundStyle(type.accent(theme))
                 }
@@ -182,6 +236,17 @@ public struct InfoBanner: View {
                 .variant(.info)
                 .trailing { ThemeButton("Install") {}.size(.small).color(.info) }
         }
+        // First-class action button — captured closure, HeroUI Alert parity.
+        PreviewCase("Action button") {
+            InfoBanner("A new version of the app is available.", title: "Update available")
+                .variant(.accent)
+                .actionButton(AlertAction("Refresh", variant: .solid) {})
+        }
+        PreviewCase("Action button · retry") {
+            InfoBanner("Check your internet connection and try again.", title: "Unable to connect")
+                .variant(.error)
+                .actionButton(AlertAction("Retry") {})
+        }
         PreviewCase("Full-width banner") {
             InfoBanner("Scheduled maintenance tonight.").variant(.warning).fullWidth()
         }
@@ -220,10 +285,16 @@ public extension InfoBanner {
     /// rounded corners / border (Ant Alert `banner`).
     func fullWidth(_ on: Bool = true) -> Self { copy { $0.banner = on } }
 
-    /// Trailing inline action button: its label + handler.
+    /// Trailing inline action as a lightweight text link: its label + handler.
     func action(_ title: String?, onAction: (() -> Void)? = nil) -> Self {
         copy { $0.actionTitle = title; $0.onAction = onAction }
     }
+
+    /// A first-class trailing action button (real `ThemeButton`) whose tap
+    /// handler is captured on the `AlertAction`. Matches HeroUI Native's
+    /// trailing `<Button variant onPress>`; wins over the text-link
+    /// `action(_:onAction:)`.
+    func actionButton(_ action: AlertAction?) -> Self { copy { $0.actionButton = action } }
 
     /// Trailing dismiss (×) button handler.
     func onDismiss(_ handler: (() -> Void)?) -> Self { copy { $0.onDismiss = handler } }

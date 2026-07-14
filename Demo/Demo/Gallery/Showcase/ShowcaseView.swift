@@ -36,6 +36,11 @@ struct ShowcaseView: View {
     @State private var page = UserDefaults.standard.integer(forKey: "startPage")
     @State private var autoCycle = false
     @State private var showBrowser = UserDefaults.standard.bool(forKey: "openBrowser")
+    // Present the list for `-openList YES` *or* `-openPlaygroundFor <name>` — the
+    // playground deep link runs inside ComponentListBrowser.onAppear, so the list
+    // must be shown for it to fire (else the direct-playground link is a no-op).
+    @State private var showList = UserDefaults.standard.bool(forKey: "openList")
+        || !(UserDefaults.standard.string(forKey: "openPlaygroundFor") ?? "").isEmpty
     private let ticker = Timer.publish(every: 4.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -70,6 +75,14 @@ struct ShowcaseView: View {
                 .sheetHost()
                 .drawerHost()
         }
+        .fullScreenCover(isPresented: $showList) {
+            ComponentListBrowser(theme: localTheme, preset: $preset, isDark: $isDark)
+                .theme(localTheme)
+                .environmentObject(themeStore)
+                .feedbackHost()
+                .sheetHost()
+                .drawerHost()
+        }
     }
 
     /// Load the selected preset into the Showcase's own theme (never `Theme.shared`).
@@ -83,6 +96,18 @@ struct ShowcaseView: View {
                 showBrowser = true
             } label: {
                 Label("All components", systemImage: "square.grid.2x2.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .background(localTheme.background(.bgWhite), in: Capsule())
+                    .overlay(Capsule().stroke(localTheme.border(.borderPrimary), lineWidth: 0.5))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                showList = true
+            } label: {
+                Label("Test list", systemImage: "list.bullet.rectangle.portrait.fill")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
@@ -1168,6 +1193,7 @@ struct ThemePresetRow: View {
         case .default: return Color(red: 0.086, green: 0.463, blue: 1.0)
         case .ocean: return Color(red: 0.0, green: 0.60, blue: 0.65)
         case .sunset: return Color(red: 1.0, green: 0.48, blue: 0.20)
+        case .heroui: return Color(red: 0.016, green: 0.522, blue: 0.969) // 0485f7
         }
     }
 }

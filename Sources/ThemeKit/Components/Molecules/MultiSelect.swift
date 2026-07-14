@@ -39,6 +39,10 @@ public struct MultiSelect<Option: Hashable>: View {
     private var maxTagCount: Int? = nil
     /// Selection-count cap (E13, Ant `maxCount`); `nil` = unlimited.
     private var maxSelection: Int? = nil
+    /// Builds an `Option` from typed text (Ant `mode="tags"`) — set only by the
+    /// `where Option == String` `.allowsCustomTags()` modifier, so free-text tag
+    /// creation is available exactly when an `Option` can come from a `String`.
+    private var createTag: ((String) -> Option?)?
     private var isLoading: Bool = false
     private var accessibilityID: String? = nil
     @Environment(\.isEnabled) private var isEnabled
@@ -78,7 +82,32 @@ public struct MultiSelect<Option: Hashable>: View {
     /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → on (tag-picker default, F5).
     private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? true }
 
-    private var selectedOptions: [Option] { options.filter { selection.contains($0) } }
+    /// Selected options in a stable order. In tags mode this also includes
+    /// custom (free-text) values that aren't in `options`, appended after the
+    /// known options and ordered by title.
+    private var selectedOptions: [Option] {
+        let known = options.filter { selection.contains($0) }
+        guard allowsCustomTags else { return known }
+        let custom = selection.filter { !options.contains($0) }.sorted { optionTitle($0) < optionTitle($1) }
+        return known + custom
+    }
+
+    /// Tags mode (free-text creation) is on when a `createTag` builder exists.
+    private var allowsCustomTags: Bool { createTag != nil }
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    /// Whether the current query can become a new tag (non-empty, not already an
+    /// option title or a selected value).
+    private var canCreateTag: Bool {
+        guard allowsCustomTags, !trimmedQuery.isEmpty, !atSelectionCap else { return false }
+        if let opt = createTag?(trimmedQuery), selection.contains(opt) { return false }
+        return !options.contains { optionTitle($0).localizedCaseInsensitiveCompare(trimmedQuery) == .orderedSame }
+    }
+    /// Commit the current query as a new tag (Ant `mode="tags"` + Enter).
+    private func commitTag() {
+        guard canCreateTag, let opt = createTag?(trimmedQuery) else { return }
+        selection.insert(opt)
+        query = ""
+    }
     private var visibleTags: [Option] { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).visible }
     private var overflowCount: Int { Self.tagLayout(selected: selectedOptions, maxTagCount: maxTagCount).overflow }
     /// Whether the selection is at its `maxSelection(_:)` cap (E13).
@@ -186,6 +215,8 @@ public struct MultiSelect<Option: Hashable>: View {
                     TextField("Search", text: $query)
                         .textStyle(.bodyBase400)
                         .tint(theme.foreground(.fgHero))
+                        .submitLabel(allowsCustomTags ? .done : .search)
+                        .onSubmit { commitTag() }   // Ant tags mode: Enter creates a tag
                 }
                 .padding(.horizontal, Theme.SpacingKey.md.value)
                 .scaledControlHeight(44)
@@ -198,12 +229,16 @@ public struct MultiSelect<Option: Hashable>: View {
                     Spacer()
                 }
                 .padding(Theme.SpacingKey.md.value)
-            } else if filtered.isEmpty {
+            } else if filtered.isEmpty && !canCreateTag {
                 Text(String(themeKit: "No results"))
                     .textStyle(.bodySm400)
                     .foregroundStyle(theme.text(.textTertiary))
                     .padding(Theme.SpacingKey.md.value)
             } else {
+                if canCreateTag {
+                    createRow
+                    if !filtered.isEmpty { DividerView().size(.small).padding(.leading, Theme.SpacingKey.md.value) }
+                }
                 ForEach(filtered, id: \.self) { opt in
                     let enabled = optionEnabled(opt)
                     Button { toggle(opt) } label: {
@@ -251,6 +286,33 @@ public struct MultiSelect<Option: Hashable>: View {
             selection.insert(opt)
         }
     }
+
+    /// The "Create ‘…’" row shown in tags mode when the query is a new value.
+    private var createRow: some View {
+        Button { commitTag() } label: {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                Icon(systemName: "plus.circle").size(.sm).color(theme.foreground(.fgHero))
+                Text(String(themeKit: "Create \(trimmedQuery)"))   // one interpolated key — fully localizable
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textPrimary))
+                Spacer()
+            }
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(RowPressStyle())
+        .accessibilityLabel(String(themeKit: "Create \(trimmedQuery)"))
+    }
+}
+
+// MARK: - Tags mode (Ant `mode="tags"`) — free-text tag creation for string options
+
+public extension MultiSelect where Option == String {
+    /// Allow the user to create tags by typing free text and pressing return
+    /// (Ant `mode="tags"`). Typed values that aren't in `options` are inserted
+    /// into the selection and render as removable chips like any other tag.
+    func allowsCustomTags(_ on: Bool = true) -> Self { copy { $0.createTag = on ? { $0 } : nil } }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
@@ -311,6 +373,8 @@ public extension MultiSelect {
     @Previewable @State var picks: Set<String> = ["Istanbul"]
     @Previewable @State var channels: Set<String> = ["Email"]
     @Previewable @State var channelsOpen = true
+    @Previewable @State var tags: Set<String> = ["Swift", "React"]
+    @Previewable @State var tagsOpen = true
     let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
     let channelDetails = [
         "Email": "Daily digest to your inbox",
@@ -335,6 +399,13 @@ public extension MultiSelect {
         PreviewCase("Underlined") {
             MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
                 .fieldStyle(.underlined)
+        }
+        // Tags mode (Ant `mode="tags"`) — type + return to create free-text tags;
+        // "React" here is a custom tag not present in `options`.
+        PreviewCase("Tags (free-text)") {
+            MultiSelect("Skills", options: ["Swift", "Kotlin", "Rust", "Go"],
+                        selection: $tags, isExpanded: $tagsOpen) { $0 }
+                .allowsCustomTags()
         }
     }
 }

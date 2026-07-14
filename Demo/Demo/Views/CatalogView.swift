@@ -12,8 +12,20 @@ import SwiftUI
 import ThemeKit
 
 struct CatalogView: View {
+    @EnvironmentObject private var themeStore: DemoThemeStore
     @State private var query = ""
     @State private var path: [String] = []
+
+    // The "Test list" (ComponentListBrowser) presented full-screen from here so
+    // iPhone gets the same top-to-bottom, live-preview component browser the iPad
+    // Showcase has. It runs on its OWN isolated theme (like the Showcase), so
+    // cycling themes inside it never disturbs the rest of the app.
+    @State private var showTestList = UserDefaults.standard.bool(forKey: "openList")
+    @State private var listTheme: Theme = {
+        let t = Theme(); t.loadTheme(named: DemoTheme.default.resourceName, dark: false); return t
+    }()
+    @State private var listPreset: DemoTheme = .default
+    @State private var listDark = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -44,13 +56,29 @@ struct CatalogView: View {
                 }
             }
             .searchable(text: $query, prompt: "Search components")
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showTestList = true } label: {
+                        Label("Test list", systemImage: "list.bullet.rectangle.portrait")
+                    }
+                    .accessibilityLabel("Test list")
+                }
+                ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() }
+            }
             .onAppear {
                 // Deep-link for screenshots: launch with `-openDemo <name>`.
                 if path.isEmpty, let demo = UserDefaults.standard.string(forKey: "openDemo"), !demo.isEmpty {
                     path = [demo]
                 }
             }
+        }
+        .fullScreenCover(isPresented: $showTestList) {
+            ComponentListBrowser(theme: listTheme, preset: $listPreset, isDark: $listDark)
+                .theme(listTheme)
+                .environmentObject(themeStore)
+                .feedbackHost()
+                .sheetHost()
+                .drawerHost()
         }
     }
 

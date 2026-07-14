@@ -28,6 +28,14 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
     private var showDividers: Bool = true
     private var isCollapsible: Bool = true
     private var isItemDisabled: ((Item) -> Bool)? = nil
+    // Per-item leading prefix (Figma "Prefix" instance swap) + custom trailing.
+    private var iconForItem: ((Item) -> String?)? = nil
+    private var numberForItem: ((Item) -> Int?)? = nil
+    private var trailingForItem: ((Item, Bool) -> AnyView)? = nil
+    // Size axis — title text style + header vertical padding. Defaults preserve
+    // the current compact baseline (labelBase600 title, 16pt row padding).
+    private var titleSize: AccordionTitleSize = .small
+    private var paddingSize: AccordionPaddingSize = .large
 
     /// Open-row ids — uncontrolled (`initiallyExpanded:` seeds @State) or
     /// controlled (the caller's `expanded:` binding drives toggling), unified
@@ -98,9 +106,10 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
                     HStack {
                         headerView(for: item, isOpen: isOpen, isDisabled: isDisabled)
                         Spacer()
-                        indicatorIcon(isOpen: isOpen, isDisabled: isDisabled)
+                        indicatorIcon(for: item, isOpen: isOpen, isDisabled: isDisabled)
                     }
-                    .padding(Theme.SpacingKey.md.value)
+                    .padding(.horizontal, Theme.SpacingKey.md.value)
+                    .padding(.vertical, paddingSize.value)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(RowPressStyle())
@@ -137,23 +146,40 @@ public struct AccordionGroup<Item: Identifiable, Content: View>: View {
             header(item, isOpen)
                 .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
         } else {
-            Text(title?(item) ?? "")
-                .textStyle(.labelBase600)
-                .foregroundStyle(isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary))
+            let titleColor = isDisabled ? theme.text(.textDisabled) : theme.text(.textPrimary)
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                // Leading prefix — number then icon, mirroring the single Accordion.
+                if let number = numberForItem?(item) {
+                    Text(zeroPad2(number))
+                        .textStyle(titleSize.textStyle)
+                        .foregroundStyle(titleColor)
+                        .monospacedDigit()
+                }
+                if let icon = iconForItem?(item) {
+                    Icon(systemName: icon).size(.sm).colorOverride(titleColor)
+                }
+                Text(title?(item) ?? "")
+                    .textStyle(titleSize.textStyle)
+                    .foregroundStyle(titleColor)
+            }
         }
     }
 
     @ViewBuilder
-    private func indicatorIcon(isOpen: Bool, isDisabled: Bool) -> some View {
-        let color = isDisabled ? theme.text(.textDisabled) : theme.text(.textTertiary)
-        switch indicator {
-        case .chevron:
-            Icon(systemName: "chevron.down").size(.sm).colorOverride(color)
-                .rotationEffect(.degrees(isOpen ? 180 : 0))
-        case .plusMinus:
-            Icon(systemName: isOpen ? "minus" : "plus").size(.sm).colorOverride(color)
-        case .custom(let expand, let collapse):
-            Icon(systemName: isOpen ? collapse : expand).size(.sm).colorOverride(color)
+    private func indicatorIcon(for item: Item, isOpen: Bool, isDisabled: Bool) -> some View {
+        if let trailingForItem {
+            trailingForItem(item, isOpen)
+        } else {
+            let color = isDisabled ? theme.text(.textDisabled) : theme.text(.textTertiary)
+            switch indicator {
+            case .chevron:
+                Icon(systemName: "chevron.down").size(.sm).colorOverride(color)
+                    .rotationEffect(.degrees(isOpen ? 180 : 0))
+            case .plusMinus:
+                Icon(systemName: isOpen ? "minus" : "plus").size(.sm).colorOverride(color)
+            case .custom(let expand, let collapse):
+                Icon(systemName: isOpen ? collapse : expand).size(.sm).colorOverride(color)
+            }
         }
     }
 
@@ -189,6 +215,23 @@ public extension AccordionGroup {
     /// Per-item disabled predicate — disabled rows render in the disabled text
     /// token and don't respond to taps.
     func itemDisabled(_ isDisabled: @escaping (Item) -> Bool) -> Self { copy { $0.isItemDisabled = isDisabled } }
+    /// Per-item leading SF Symbol prefix shown before the title (Figma "Prefix"
+    /// icon instance swap). Return `nil` to omit the prefix for a given item.
+    /// Applies to the title-based init; a custom `header:` owns its own leading.
+    func icon(_ systemName: @escaping (Item) -> String?) -> Self { copy { $0.iconForItem = systemName } }
+    /// Per-item leading two-digit number badge shown before the title (numbered
+    /// steps / FAQ). Rendered before `icon(_:)` when both are set.
+    func number(_ value: @escaping (Item) -> Int?) -> Self { copy { $0.numberForItem = value } }
+    /// Per-item custom trailing accessory (item + isExpanded), replacing the
+    /// built-in indicator glyph on every row.
+    func trailing<V: View>(@ViewBuilder _ content: @escaping (Item, Bool) -> V) -> Self {
+        copy { $0.trailingForItem = { AnyView(content($0, $1)) } }
+    }
+    /// Title text size applied to every row (default preserves the compact
+    /// baseline). Pair with `density(_:)` to grow the whole row.
+    func titleSize(_ size: AccordionTitleSize) -> Self { copy { $0.titleSize = size } }
+    /// Header row vertical padding — default / small / large (Figma row height).
+    func density(_ size: AccordionPaddingSize) -> Self { copy { $0.paddingSize = size } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -218,6 +261,22 @@ public extension AccordionGroup {
                 }
             } content: { Text($0.a).textStyle(.bodyBase400) }
                 .indicator(.plusMinus)
+        }
+        // Leading prefix (number + icon) on the title-based init + a larger size.
+        PreviewCase("Prefix + size") {
+            AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+                .number { item in faqs.firstIndex { $0.id == item.id }.map { $0 + 1 } }
+                .icon { _ in "questionmark.circle" }
+                .titleSize(.medium)
+                .density(.large)
+        }
+        // Per-item custom trailing accessory replaces the built-in indicator.
+        PreviewCase("Custom trailing") {
+            AccordionGroup(faqs) { $0.q } content: { Text($0.a).textStyle(.bodyBase400) }
+                .trailing { _, isOpen in
+                    Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle")
+                        .size(.sm).colorOverride(Theme.shared.resolve(.primary).base)
+                }
         }
         // Plain variant — no card chrome, no dividers.
         PreviewCase("Plain (no chrome)") {

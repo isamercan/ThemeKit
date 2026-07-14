@@ -29,6 +29,7 @@ ContentView().themeKit()
 ## Where to go next
 
 - **[[Installation]]** — add the package to your project.
+- **[[Custom Themes|Custom-Themes]]** — import a HeroUI / CSS design system.
 - **[[FAQ]]** — common questions.
 - **[[Troubleshooting]]** — fixes for typical issues.
 - **API reference** → the [live DocC docs](https://isamercan.github.io/ThemeKit/api/documentation/themekit)

@@ -283,15 +283,22 @@ struct MultiLineDemo: View {
     @State private var error = false
     @State private var helper = false
     @State private var warning = false
+    @State private var autosize = false
+    // All modifiers return `Self`, so the autosize toggle is a plain ternary.
+    private var field: MultiLineTextInput {
+        let base = MultiLineTextInput("Notes", text: $text)
+            .placeholder("Write something…")
+            .characterLimit(limit ? 200 : nil)
+            .helperText(helper ? "Visible to the support team only." : nil)
+            .warningText(warning ? "Avoid sharing personal data." : nil)
+            .errorText(error ? "Required" : nil)
+        return autosize ? base.autosize(minRows: 2, maxRows: 6) : base
+    }
     var body: some View {
-        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
-            MultiLineTextInput("Notes", text: $text)
-                .placeholder("Write something…")
-                .characterLimit(limit ? 200 : nil)
-                .helperText(helper ? "Visible to the support team only." : nil)
-                .warningText(warning ? "Avoid sharing personal data." : nil)
-                .errorText(error ? "Required" : nil)
+        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)"), ("autosize", "\(autosize)")]) {
+            field
         } knobs: {
+            Toggle("Autosize (2…6 rows)", isOn: $autosize)
             Toggle("Character limit", isOn: $limit)
             Toggle("Helper text", isOn: $helper)
             Toggle("Warning text", isOn: $warning)
@@ -366,16 +373,55 @@ struct TooltipDemo: View {
 }
 
 struct ButtonGroupDemo: View {
-    @State private var horizontal = false
+    // The group size is the kit's ButtonSize token — the full control-size ramp,
+    // not a fixed sm/md/lg, so new sizes flow through automatically.
+    private let sizes: [(label: String, size: ButtonSize?)] = [
+        ("Default", nil), ("xxsmall", .xxsmall), ("xsmall", .xsmall),
+        ("small", .small), ("medium", .medium), ("large", .large),
+        ("xlarge", .xlarge), ("xxlarge", .xxlarge),
+    ]
+
+    @State private var horizontal = true
+    @State private var sizeSel = 0
+    @State private var fill = false
+    @State private var dividers = false
+
+    private var groupSize: ButtonSize? { sizes[sizeSel].size }
+    private var sizeLabel: String { sizes[sizeSel].label }
+
     var body: some View {
-        ComponentStage("ButtonGroup", inspector: [("axis", horizontal ? "horizontal" : "vertical")]) {
-            if horizontal {
-                ButtonGroup(.horizontal) { SecondaryButton("Cancel") { flash("Cancel") }; PrimaryButton("Confirm") { flash("Confirm") } }
-            } else {
-                ButtonGroup { PrimaryButton("Continue") { flash("Continue") }.fullWidth(); SecondaryButton("Not now") { flash("Not now") }.fullWidth() }
-            }
+        ComponentStage(
+            "ButtonGroup",
+            inspector: [("axis", horizontal ? "horizontal" : "vertical"),
+                        ("size", sizeLabel),
+                        ("width", fill ? "fill" : "hug"),
+                        ("dividers", dividers ? "on" : "off")]
+        ) {
+            group
         } knobs: {
             Toggle("Horizontal", isOn: $horizontal)
+            Toggle("Fill width", isOn: $fill)
+            Toggle("Dividers", isOn: $dividers)
+            Picker("Size", selection: $sizeSel) {
+                ForEach(Array(sizes.enumerated()), id: \.offset) { index, item in
+                    Text(item.label).tag(index)
+                }
+            }.pickerStyle(.menu)
+        }
+    }
+
+    @ViewBuilder private var group: some View {
+        let base = ButtonGroup(horizontal ? .horizontal : .vertical) {
+            SecondaryButton("Cancel") { flash("Cancel") }
+            PrimaryButton("Confirm") { flash("Confirm") }
+        }
+        .width(fill ? .fill : .hug)
+        .dividers(dividers)
+
+        if let groupSize {
+            base.size(groupSize)
+        } else {
+            base
         }
     }
 }
@@ -524,13 +570,24 @@ struct AutocompleteDemo: View {
 // MARK: - Organisms
 
 struct CardDemo: View {
+    @State private var variantIdx = 0   // 0 default (shadow), 1 outlined (bordered), 2 flat
     @State private var elevation: CardElevation = .soft
+    @State private var radius: Theme.RadiusRole = .box     // corner size axis
+    @State private var surfaceIdx = 0   // 0 white, 1 secondary, 2 tertiary
     @State private var padding: Theme.SpacingKey = .base
     @State private var tappable = false
     @State private var header = true
     @State private var loading = false
-    @State private var outlined = false
+    @State private var selected = false
     @State private var taps = 0
+
+    private var surfaceKey: Theme.BackgroundColorKey {
+        switch surfaceIdx {
+        case 1: return .bgSecondaryLight
+        case 2: return .bgTertiary
+        default: return .bgWhite
+        }
+    }
 
     private var cardBody: some View {
         Card(header ? "Reservation" : nil,
@@ -542,25 +599,38 @@ struct CardDemo: View {
             }
         }
         .elevation(elevation)
+        .radius(radius)
+        .surface(surfaceKey)
+        .selected(selected)
         .contentPadding(padding)
         .subtitle(header ? "2 nights · 2 guests" : nil)
         .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
         .loading(loading)
     }
 
+    // Distinct return types per style, so branch through the `.cardStyle(_:)` modifier.
+    @ViewBuilder private var styledCard: some View {
+        switch variantIdx {
+        case 1: cardBody.cardStyle(.outlined)
+        case 2: cardBody.cardStyle(.flat)
+        default: cardBody.cardStyle(.default)
+        }
+    }
+
+    private var variantName: String { variantIdx == 1 ? "outlined" : variantIdx == 2 ? "flat" : "default" }
+
     var body: some View {
-        ComponentStage("Card", inspector: [("style", outlined ? "outlined" : "default"), ("elevation", "\(elevation)"), ("header", "\(header)")]) {
-            if outlined {
-                cardBody.cardStyle(.outlined)   // custom CardStyle via the .cardStyle(_:) modifier
-            } else {
-                cardBody                        // default env CardStyle
-            }
+        ComponentStage("Card", inspector: [("variant", variantName), ("elevation", "\(elevation)"), ("radius", radius.rawValue), ("selected", "\(selected)")]) {
+            styledCard
         } knobs: {
-            Toggle("Outlined style (.cardStyle)", isOn: $outlined)
+            Picker("Variant", selection: $variantIdx) { Text("Default").tag(0); Text("Outlined").tag(1); Text("Flat").tag(2) }.pickerStyle(.segmented)
+            Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
+            Picker("Radius (size)", selection: $radius) { Text("Selector").tag(Theme.RadiusRole.selector); Text("Field").tag(Theme.RadiusRole.field); Text("Box").tag(Theme.RadiusRole.box) }.pickerStyle(.segmented)
+            Picker("Surface", selection: $surfaceIdx) { Text("White").tag(0); Text("Secondary").tag(1); Text("Tertiary").tag(2) }.pickerStyle(.segmented)
+            Toggle("Selected (hero border)", isOn: $selected)
             Toggle("Header (title + extra)", isOn: $header)
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
-            Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
             Picker("Padding", selection: $padding) {
                 ForEach([Theme.SpacingKey.none, .xs, .sm, .md, .base, .lg], id: \.self) { Text($0.rawValue).tag($0) }
             }
@@ -1108,26 +1178,40 @@ struct StepsDemo: View {
     @State private var descriptions = true
     @State private var progressDot = false
     @State private var percent = false
+    @State private var subtitles = false
+    @State private var controlled = false
+    @State private var disableReview = false
     private let titles = ["Cart", "Address", "Payment", "Done"]
     private let subs = ["2 items", "Istanbul", "Card ••42", "Confirm"]
+    private let subtitleTexts = ["2 items", "Home", "Visa", "Ready"]
     private var steps: [Steps.Step] {
         titles.enumerated().map { i, t in
+            // With `controlled`, leave state at its default and let `.current(_:)`
+            // derive it; otherwise derive it here as before.
             let state: StepState = (error && i == active) ? .error
+                : controlled ? .todo
                 : i < active ? .done : i == active ? .active : .todo
-            return .init(t, description: descriptions ? subs[i] : nil, state: state,
+            return .init(t, subTitle: subtitles ? subtitleTexts[i] : nil,
+                         description: descriptions ? subs[i] : nil, state: state,
+                         disabled: disableReview && i == 2,
                          percent: (percent && state == .active) ? 0.6 : nil)
         }
     }
     @State private var small = false
     var body: some View {
-        ComponentStage("Steps", inspector: [("active", "\(active)"), ("size", small ? "small" : "medium")]) {
+        ComponentStage("Steps", inspector: [("active", "\(active)"),
+                                            ("current", controlled ? "\(active)" : "—")]) {
             Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
                 .axis(vertical ? .vertical : .horizontal)
                 .progressDot(progressDot)
                 .size(small ? .small : .medium)
+                .current(controlled ? active : nil)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Controlled .current(active)", isOn: $controlled)
+            Toggle("Subtitles", isOn: $subtitles)
+            Toggle("Disable “Payment” step", isOn: $disableReview)
             Toggle("Small size", isOn: $small)
             Toggle("Progress dot", isOn: $progressDot)
             Toggle("Active percent ring (60%)", isOn: $percent)
@@ -1222,39 +1306,64 @@ struct ChatBubbleDemo: View {
 }
 
 struct DrawerDemo: View {
+    @Environment(\.theme) private var theme
     @Environment(DrawerPresenter.self) private var drawer: DrawerPresenter
     @State private var open = false
-    @State private var trailing = false
+    @State private var edge: Edge = .bottom
+    @State private var showClose = true
+    @State private var name = ""
+    @State private var email = ""
+
+    private var edgeLabel: String {
+        switch edge {
+        case .bottom: return "bottom"
+        case .top: return "top"
+        case .leading: return "leading"
+        case .trailing: return "trailing"
+        }
+    }
+
+    /// The Figma "Edit Profile" panel — a slotted drawer reused by both entry points.
+    @ViewBuilder private func editProfile(dismiss: @escaping () -> Void) -> some View {
+        Drawer {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+                TextInput("Name", text: $name)
+                TextInput("Email", text: $email)
+            }
+        }
+        .heading { Text("Edit Profile") }
+        .showsCloseButton(showClose)
+        .footer {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                ThemeButton("Cancel") { dismiss() }.variant(.ghost).size(.small)
+                ThemeButton("Done") { dismiss(); flash("Saved") }.size(.small)
+            }
+        }
+    }
+
     var body: some View {
-        ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", trailing ? "trailing" : "leading")]) {
-            PrimaryButton("Open drawer") { open = true; flash("Drawer opened") }
+        ComponentStage("Drawer", inspector: [("isPresented", "\(open)"), ("edge", edgeLabel)]) {
+            PrimaryButton("Open \(edgeLabel) drawer") { open = true; flash("Drawer opened") }
                 .frame(maxWidth: .infinity, minHeight: 160)
-                .drawer(isPresented: $open, edge: trailing ? .trailing : .leading) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", action: { open = false; flash("Drawer: Account") }).icon("person.circle")
-                        ListRow("Settings", action: { open = false; flash("Drawer: Settings") }).icon("gearshape")
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 50)
+                .drawer(isPresented: $open, edge: edge) {
+                    editProfile(dismiss: { open = false })
                 }
         } knobs: {
-            Toggle("Trailing edge", isOn: $trailing)
-            Button("Open (declarative)") { open = true }
+            Picker("Edge", selection: $edge) {
+                Text("Bottom").tag(Edge.bottom)
+                Text("Top").tag(Edge.top)
+                Text("Leading").tag(Edge.leading)
+                Text("Trailing").tag(Edge.trailing)
+            }
+            .pickerStyle(.segmented)
+            Toggle("Close button", isOn: $showClose)
             Button("Open (imperative host)") {
-                drawer.present(edge: trailing ? .trailing : .leading) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Menu").textStyle(.headingSm)
-                        ListRow("Account", action: { drawer.dismiss(); flash("Drawer: Account") }).icon("person.circle")
-                        ListRow("Settings", action: { drawer.dismiss(); flash("Drawer: Settings") }).icon("gearshape")
-                        Spacer()
-                    }
-                    .padding()
-                    .padding(.top, 50)
+                drawer.present(edge: edge) {
+                    editProfile(dismiss: { drawer.dismiss() })
                 }
             }
-            Text("Drag the panel toward its edge to dismiss.").font(.footnote).foregroundStyle(.secondary)
+            Text("Drag the panel toward its edge to dismiss; the handle grabs bottom/top sheets.")
+                .font(.footnote).foregroundStyle(.secondary)
         }
     }
 }
@@ -1367,18 +1476,41 @@ struct CardStackDemo: View {
 
 struct CalendarDemo: View {
     @State private var date: Date? = .now
+    @State private var multiDates: Set<Date> = []
     @State private var yearPicker = false
+    @State private var multiple = false
+    @State private var noWeekends = false
     var body: some View {
-        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil"), ("yearPicker", "\(yearPicker)")]) {
-            if yearPicker {
-                CalendarView(selection: $date).yearPicker()
-            } else {
-                CalendarView(selection: $date)
-            }
+        ComponentStage("Calendar", inspector: [
+            ("selection", multiple ? "\(multiDates.count) day(s)"
+                : (date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")),
+            ("multiple", "\(multiple)"),
+            ("disabledWeekends", "\(noWeekends)")
+        ]) {
+            calendar
         } knobs: {
+            Toggle("Multiple selection", isOn: $multiple)
+            Toggle("Disable weekends", isOn: $noWeekends)
             Toggle("Tappable header (.yearPicker)", isOn: $yearPicker)
-            Button("Clear") { date = nil }
+            Button("Clear") { date = nil; multiDates = [] }
         }
+    }
+
+    // Both selection inits return `CalendarView`, so the shared modifiers apply
+    // uniformly regardless of single/multiple mode.
+    @ViewBuilder private var calendar: some View {
+        if multiple {
+            configured(CalendarView(selection: $multiDates))
+        } else {
+            configured(CalendarView(selection: $date))
+        }
+    }
+
+    private func configured(_ view: CalendarView) -> CalendarView {
+        var view = view
+        if yearPicker { view = view.yearPicker() }
+        if noWeekends { view = view.disabledDates { Calendar.current.isDateInWeekend($0) } }
+        return view
     }
 }
 
@@ -2056,20 +2188,31 @@ struct ThemeButtonDemo: View {
     @State private var trailingIcon = false
     @State private var loading = false
     @State private var spinnerIdx = 0   // 0 replace label, 1 leading, 2 trailing
+    @State private var compact = false
+    @State private var iconOnlyForce = false
+    @State private var prefixSuffix = false
 
-    private var iconOnly: Bool { shape == .circle || shape == .square }
+    private var iconOnly: Bool { iconOnlyForce || shape == .circle || shape == .square }
 
     var body: some View {
         ComponentStage("ThemeButton", inspector: [
-            ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"),
+            ("color", color.rawValue), ("variant", variant.rawValue), ("shape", shape.rawValue), ("size", "\(size)"), ("density", compact ? "compact" : "regular"),
         ]) {
             {
-                let base = ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
-                    .icon(leading: ((icon || iconOnly) && !trailingIcon) ? "star.fill" : nil,
-                          trailing: ((icon || iconOnly) && trailingIcon) ? "star.fill" : nil)
+                var base = ThemeButton(iconOnly ? nil : "Button") { flash("ThemeButton tapped") }
+                    .icon(leading: ((icon || iconOnly) && !trailingIcon && !prefixSuffix) ? "star.fill" : nil,
+                          trailing: ((icon || iconOnly) && trailingIcon && !prefixSuffix) ? "star.fill" : nil)
                     .color(color).variant(variant).size(size).shape(shape)
+                    .density(compact ? .compact : .regular)
+                    .iconOnly(iconOnlyForce)
                     .fullWidth(block && !iconOnly).loading(loading)
-                return spinnerIdx == 0 ? base : base.spinnerPlacement(spinnerIdx == 1 ? .leading : .trailing)
+                // Prefix/suffix element slots (Figma "Prefix"/"Suffix").
+                if prefixSuffix {
+                    base = base.prefix { Icon(systemName: "sparkles").size(.sm) }
+                        .suffix { Icon(systemName: "arrow.right").size(.sm) }
+                }
+                if spinnerIdx != 0 { base = base.spinnerPlacement(spinnerIdx == 1 ? .leading : .trailing) }
+                return base
             }()
         } knobs: {
             Picker("Color", selection: $color) { ForEach(SemanticColor.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }
@@ -2085,6 +2228,9 @@ struct ThemeButtonDemo: View {
             Picker("Spinner placement", selection: $spinnerIdx) {
                 Text("Replace").tag(0); Text("Start").tag(1); Text("End").tag(2)
             }.pickerStyle(.segmented)
+            Toggle("Compact density (sm/md/lg 32·36·40)", isOn: $compact)
+            Toggle("Icon-only (force, rounded)", isOn: $iconOnlyForce)
+            Toggle("Prefix + suffix slots", isOn: $prefixSuffix)
         }
     }
 }
@@ -2653,15 +2799,37 @@ struct AccordionGroupDemo: View {
         FAQ(q: "Are pets allowed?", a: "Small-breed pets are allowed for an extra fee."),
     ]
     @State private var multi = false
+    @State private var prefixIdx = 0   // 0 none, 1 icon, 2 number
+    @State private var secondary = true
+    @State private var customTrailing = false
 
     var body: some View {
-        ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single")]) {
-            AccordionGroup(faqs, initiallyExpanded: []) { $0.q } content: {
-                Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
-            }
-            .mode(multi ? .multiple : .single)
+        ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single"), ("variant", secondary ? "secondary" : "default")]) {
+            {
+                var group = AccordionGroup(faqs, initiallyExpanded: []) { $0.q } content: {
+                    Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
+                .mode(multi ? .multiple : .single)
+                .surface(secondary)   // secondary = surface card · default = flat rows
+                // Leading prefix (Figma "Prefix" instance swap) — icon or number.
+                if prefixIdx == 1 {
+                    group = group.icon { _ in "questionmark.circle" }
+                } else if prefixIdx == 2 {
+                    group = group.number { item in faqs.firstIndex { $0.id == item.id }.map { $0 + 1 } }
+                }
+                // Per-item custom trailing view — replaces the indicator glyph.
+                if customTrailing {
+                    group = group.trailing { _, isOpen in
+                        Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle").size(.sm).accent(.primary)
+                    }
+                }
+                return group.id("\(multi)\(prefixIdx)\(secondary)\(customTrailing)")
+            }()
         } knobs: {
             Toggle("Multiple open", isOn: $multi)
+            Toggle("Secondary (surface card)", isOn: $secondary)
+            Toggle("Custom trailing", isOn: $customTrailing)
+            Picker("Prefix", selection: $prefixIdx) { Text("None").tag(0); Text("Icon").tag(1); Text("Number").tag(2) }.pickerStyle(.segmented)
             Text("single = opening one closes the others; multiple = independent.").font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -2788,8 +2956,13 @@ struct DialogDemo: View {
     @State private var accepted = false
     @State private var showConfirm = false
     @State private var deleted = false
+    @State private var backdrop: BackdropStyle = .dim
+    @State private var size: DialogSize = .md
+    @State private var placement: DialogPlacement = .center
     var body: some View {
-        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
+        ComponentStage("Dialog",
+                       inspector: [("backdrop", backdrop.rawValue), ("size", size.rawValue),
+                                   ("placement", placement.rawValue), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
                 PrimaryButton("Open agreement") { show = true; flash("Dialog opened") }
                 OutlineButton("Delete account (async)") { deleted = false; showConfirm = true }
@@ -2802,8 +2975,10 @@ struct DialogDemo: View {
                     primaryTitle: "Delete", onPrimary: {
                         try? await Task.sleep(nanoseconds: 1_200_000_000)   // async work; OK spins
                         deleted = true; flash("Account deleted")
-                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error)
-            .dialog(isPresented: $show, title: "Terms of Use", afterClose: {}) {
+                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error,
+                    backdrop: backdrop, size: size, placement: placement)
+            .dialog(isPresented: $show, title: "Terms of Use",
+                    backdrop: backdrop, size: size, placement: placement, afterClose: {}) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(1...8, id: \.self) { i in
                         Text("Article \(i)").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
@@ -2818,6 +2993,15 @@ struct DialogDemo: View {
                 }
             }
         } knobs: {
+            Picker("Backdrop", selection: $backdrop) {
+                ForEach(BackdropStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                ForEach(DialogSize.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Placement", selection: $placement) {
+                ForEach(DialogPlacement.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
             Button("Reset") { accepted = false }
         }
     }
