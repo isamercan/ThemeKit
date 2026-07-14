@@ -378,7 +378,7 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
-    "Create": {
+    "Create %@": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

@@ -31,7 +31,7 @@ public struct Steps: View {
     @Environment(\.layoutDirection) private var layoutDirection
 
     public struct Step: Identifiable {
-        public let id = UUID()
+        public let id: UUID
         let title: String
         /// Secondary title shown next to the main title in a lighter tone (Ant `subTitle`).
         let subTitle: String?
@@ -45,6 +45,17 @@ public struct Steps: View {
         public init(_ title: String, subTitle: String? = nil, description: String? = nil,
                     systemImage: String? = nil, state: StepState = .todo,
                     disabled: Bool = false, percent: Double? = nil) {
+            self.id = UUID()
+            self.title = title; self.subTitle = subTitle; self.description = description
+            self.systemImage = systemImage; self.state = state
+            self.disabled = disabled; self.percent = percent
+        }
+
+        /// Copy with an explicit id — lets `with(state:)` preserve identity so a
+        /// controlled step doesn't get a fresh UUID (and re-render) each pass.
+        fileprivate init(id: UUID, title: String, subTitle: String?, description: String?,
+                         systemImage: String?, state: StepState, disabled: Bool, percent: Double?) {
+            self.id = id
             self.title = title; self.subTitle = subTitle; self.description = description
             self.systemImage = systemImage; self.state = state
             self.disabled = disabled; self.percent = percent
@@ -161,8 +172,10 @@ public struct Steps: View {
                 // Custom marker replaces the stock circle/number (and the
                 // progress-dot variant), centered in the same dotSize slot so
                 // connectors and layout are unchanged. The Ant `percent` ring
-                // is still drawn around it.
-                markerBuilder(step, index)
+                // is still drawn around it. Pass the *resolved* state (so a
+                // controlled `.current(_:)` step reaches `step.state`-reading
+                // marker closures, not the declared/default state).
+                markerBuilder(step.with(state: state), index)
                 percentRing(step, state: state)
             } else if progressDot {
                 Circle().fill(dotFill(state)).frame(width: 10, height: 10)
@@ -319,8 +332,9 @@ public extension Steps.Step {
     /// `CheckInFlow`) derive header states from a selection index without
     /// re-declaring the steps.
     func with(state: StepState) -> Steps.Step {
-        Steps.Step(title, subTitle: subTitle, description: description, systemImage: systemImage,
-                   state: state, disabled: disabled, percent: percent)
+        // Preserve `id` so identity-sensitive custom markers don't re-render each pass.
+        Steps.Step(id: id, title: title, subTitle: subTitle, description: description,
+                   systemImage: systemImage, state: state, disabled: disabled, percent: percent)
     }
 }
 

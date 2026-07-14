@@ -142,53 +142,67 @@ public struct Upload: View {
     }
 
     private func pictureCardCell(for file: UploadFile) -> some View {
-        let tile = RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-            .fill(theme.background(.bgElevatorTertiary))
-            .frame(width: cardSide, height: cardSide)
-            .overlay { cardStatus(for: file) }
+        // The preview tap covers the tile *background* only; the remove / retry /
+        // download controls are overlaid ABOVE it (not nested inside the preview
+        // button), so their taps reach the intended action.
+        previewBase(for: file)
             .overlay(alignment: .topTrailing) {
                 if showsRemoveIcon {
-                    Button { onRemove(file) } label: {
-                        Icon(systemName: "xmark.circle.fill").size(.sm)
-                            .color(theme.text(.textTertiary))
-                            .padding(4)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(themeKit: "Remove \(file.name)"))
+                    cardControl("xmark.circle.fill", label: String(themeKit: "Remove \(file.name)")) { onRemove(file) }
+                }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                // Only for completed files with a download handler (parity with list mode).
+                if onDownload != nil, case .done = file.status {
+                    cardControl("arrow.down.circle.fill", label: String(themeKit: "Download \(file.name)")) { onDownload?(file) }
+                }
+            }
+            .overlay(alignment: .bottom) {
+                // Retry only when a handler exists (no dead control), like list mode.
+                if onRetry != nil, case .failed = file.status {
+                    cardControl("arrow.clockwise", label: String(themeKit: "Retry"), error: true) { onRetry?(file) }
                 }
             }
             .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
                 .strokeBorder(cardBorder(for: file.status), lineWidth: 1))
-        return Group {
-            if let onPreview {
-                Button { onPreview(file) } label: { tile.contentShape(Rectangle()) }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
-            } else {
-                tile
+    }
+
+    /// The preview-tappable tile: photo glyph + upload progress, and nothing
+    /// interactive nested inside (the action controls are separate overlays).
+    @ViewBuilder
+    private func previewBase(for file: UploadFile) -> some View {
+        let tile = RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+            .fill(theme.background(.bgElevatorTertiary))
+            .frame(width: cardSide, height: cardSide)
+            .overlay {
+                VStack(spacing: Theme.SpacingKey.xs.value) {
+                    Icon(systemName: "photo").size(.md).color(theme.foreground(.fgHero))
+                    if case .uploading(let progress) = file.status {
+                        ProgressBar(value: progress).barHeight(3).frame(width: cardSide - 24)
+                    }
+                }
+                .padding(.horizontal, Theme.SpacingKey.xs.value)
             }
+        if let onPreview {
+            Button { onPreview(file) } label: { tile.contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
+        } else {
+            tile
         }
     }
 
-    /// The card interior: a thumbnail glyph plus a status hint (progress / retry).
-    @ViewBuilder
-    private func cardStatus(for file: UploadFile) -> some View {
-        VStack(spacing: Theme.SpacingKey.xs.value) {
-            Icon(systemName: "photo").size(.md).color(theme.foreground(.fgHero))
-            switch file.status {
-            case .uploading(let progress):
-                ProgressBar(value: progress).barHeight(3).frame(width: cardSide - 24)
-            case .done:
-                EmptyView()
-            case .failed:
-                Button { onRetry?(file) } label: {
-                    Icon(systemName: "arrow.clockwise").size(.xs).color(theme.foreground(.systemcolorsFgError))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "Retry"))
-            }
+    /// A small overlaid card action button (remove / download / retry).
+    private func cardControl(_ systemImage: String, label: String, error: Bool = false,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Icon(systemName: systemImage).size(.sm)
+                .color(error ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
+                .padding(4)
+                .contentShape(Rectangle())
         }
-        .padding(.horizontal, Theme.SpacingKey.xs.value)
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     private func cardBorder(for status: UploadStatus) -> Color {
@@ -252,9 +266,12 @@ public struct Upload: View {
             .frame(width: 36, height: 36)
             .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
         if let onPreview {
-            Button { onPreview(file) } label: { tile.contentShape(Rectangle()) }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
+            Button { onPreview(file) } label: {
+                // >=44pt hit area (WCAG 2.5.5) while the visual thumbnail stays 36pt.
+                tile.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
         } else {
             tile.accessibilityHidden(true)   // decorative thumbnail placeholder
         }

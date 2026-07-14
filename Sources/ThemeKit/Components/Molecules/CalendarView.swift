@@ -210,7 +210,7 @@ public struct CalendarView: View {
                 .textStyle(.bodyBase400)
                 .foregroundStyle(dayColor(isSelected: isSelected, isToday: isToday, disabled: disabled))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? selectedFill : .clear, in: Circle())
+                .background((isSelected && !disabled) ? selectedFill : .clear, in: Circle())   // disabled greys, even if selected
                 .overlay { if isToday && !isSelected && !disabled { Circle().stroke(todayRing, lineWidth: 1) } }
                 .frame(maxWidth: .infinity, minHeight: 44)   // A11y: ≥44pt tap target (circle stays 36)
                 .contentShape(Rectangle())
@@ -221,8 +221,8 @@ public struct CalendarView: View {
     }
 
     private func dayColor(isSelected: Bool, isToday: Bool, disabled: Bool) -> Color {
+        if disabled { return theme.text(.textDisabled) }   // disabled wins, even when selected
         if isSelected { return selectedContent }
-        if disabled { return theme.text(.textDisabled) }
         if isToday { return todayText }
         return theme.text(.textPrimary)
     }

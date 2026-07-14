@@ -292,7 +292,7 @@ public struct MultiSelect<Option: Hashable>: View {
         Button { commitTag() } label: {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 Icon(systemName: "plus.circle").size(.sm).color(theme.foreground(.fgHero))
-                Text(String(themeKit: "Create") + " \u{201C}\(trimmedQuery)\u{201D}")
+                Text(String(themeKit: "Create \(trimmedQuery)"))   // one interpolated key — fully localizable
                     .textStyle(.bodyBase400)
                     .foregroundStyle(theme.text(.textPrimary))
                 Spacer()
@@ -302,7 +302,7 @@ public struct MultiSelect<Option: Hashable>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(RowPressStyle())
-        .accessibilityLabel(String(themeKit: "Create") + " " + trimmedQuery)
+        .accessibilityLabel(String(themeKit: "Create \(trimmedQuery)"))
     }
 }
 
