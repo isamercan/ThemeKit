@@ -12,6 +12,8 @@ import ThemeKit
 struct AccordionDemo: View {
     @State private var expanded = true
     @State private var number = false
+    @State private var leadingIcon = false
+    @State private var customTrailing = false
     @State private var indicatorIdx = 0   // 0 chevron, 1 plusMinus
     @State private var sizeIdx = 1        // 0 large, 1 medium, 2 small
 
@@ -21,17 +23,31 @@ struct AccordionDemo: View {
 
     var body: some View {
         ComponentStage("Accordion", inspector: [("titleSize", sizeIdx == 0 ? "large" : sizeIdx == 2 ? "small" : "medium"), ("indicator", indicatorIdx == 1 ? "plusMinus" : "chevron")]) {
-            Accordion("What is your return policy?", initiallyExpanded: expanded) {
-                Text("You can request a return within 14 days of purchase.")
-            }
-            .number(number ? 1 : nil)
-            .indicator(indicator)
-            .titleSize(titleSize)
-            .density(paddingSize)
-            .id("\(expanded)\(number)\(indicatorIdx)\(sizeIdx)")
+            {
+                var base = Accordion("What is your return policy?", initiallyExpanded: expanded) {
+                    Text("You can request a return within 14 days of purchase.")
+                }
+                .number(number ? 1 : nil)
+                .indicator(indicator)
+                .titleSize(titleSize)
+                .density(paddingSize)
+                // Custom leading (prefix instance swap) — wins over the number.
+                if leadingIcon {
+                    base = base.leading { Icon(systemName: "star.fill").size(.sm).accent(.warning) }
+                }
+                // Custom trailing view — replaces the built-in indicator glyph.
+                if customTrailing {
+                    base = base.trailing { isOpen in
+                        Icon(systemName: isOpen ? "minus.circle.fill" : "plus.circle").size(.sm).accent(.primary)
+                    }
+                }
+                return base.id("\(expanded)\(number)\(leadingIcon)\(customTrailing)\(indicatorIdx)\(sizeIdx)")
+            }()
         } knobs: {
             Toggle("Initially expanded", isOn: $expanded)
             Toggle("Leading number (01)", isOn: $number)
+            Toggle("Leading icon (star)", isOn: $leadingIcon)
+            Toggle("Custom trailing (±)", isOn: $customTrailing)
             Picker("Title/padding size", selection: $sizeIdx) { Text("L").tag(0); Text("M").tag(1); Text("S").tag(2) }.pickerStyle(.segmented)
             Picker("Indicator", selection: $indicatorIdx) { Text("Chevron").tag(0); Text("+/−").tag(1) }.pickerStyle(.segmented)
         }
@@ -107,6 +123,7 @@ struct InfoBannerDemo: View {
     @State private var showIcon = true
     @State private var banner = false
     @State private var action = false
+    @State private var actionBtn = false
     @State private var inlineLink = false
     @State private var tapped = 0
 
@@ -124,6 +141,9 @@ struct InfoBannerDemo: View {
                 .showsIcon(showIcon)
                 .fullWidth(banner)
                 .action(action ? "Undo" : nil, onAction: action ? { flash("InfoBanner: Undo") } : nil)
+                // First-class trailing button — its closure is captured on the
+                // AlertAction (HeroUI Alert parity); wins over the text link.
+                .actionButton(actionBtn ? AlertAction("Refresh", variant: .solid) { flash("InfoBanner: Refresh") } : nil)
                 .onDismiss(dismissable ? { flash("InfoBanner closed") } : nil)
         } knobs: {
             Picker("Type", selection: $type) {
@@ -133,7 +153,8 @@ struct InfoBannerDemo: View {
             Toggle("Title", isOn: $title)
             Toggle("Show icon", isOn: $showIcon)
             Toggle("Banner mode", isOn: $banner)
-            Toggle("Action button", isOn: $action)
+            Toggle("Action link (text)", isOn: $action)
+            Toggle("Action button (real)", isOn: $actionBtn)
             Toggle("Dismissable", isOn: $dismissable)
         }
     }

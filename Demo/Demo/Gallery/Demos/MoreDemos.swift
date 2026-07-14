@@ -2721,15 +2721,37 @@ struct AccordionGroupDemo: View {
         FAQ(q: "Are pets allowed?", a: "Small-breed pets are allowed for an extra fee."),
     ]
     @State private var multi = false
+    @State private var prefixIdx = 0   // 0 none, 1 icon, 2 number
+    @State private var secondary = true
+    @State private var customTrailing = false
 
     var body: some View {
-        ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single")]) {
-            AccordionGroup(faqs, initiallyExpanded: []) { $0.q } content: {
-                Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
-            }
-            .mode(multi ? .multiple : .single)
+        ComponentStage("AccordionGroup", inspector: [("mode", multi ? "multiple" : "single"), ("variant", secondary ? "secondary" : "default")]) {
+            {
+                var group = AccordionGroup(faqs, initiallyExpanded: []) { $0.q } content: {
+                    Text($0.a).textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
+                .mode(multi ? .multiple : .single)
+                .surface(secondary)   // secondary = surface card · default = flat rows
+                // Leading prefix (Figma "Prefix" instance swap) — icon or number.
+                if prefixIdx == 1 {
+                    group = group.icon { _ in "questionmark.circle" }
+                } else if prefixIdx == 2 {
+                    group = group.number { item in faqs.firstIndex { $0.id == item.id }.map { $0 + 1 } }
+                }
+                // Per-item custom trailing view — replaces the indicator glyph.
+                if customTrailing {
+                    group = group.trailing { _, isOpen in
+                        Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle").size(.sm).accent(.primary)
+                    }
+                }
+                return group.id("\(multi)\(prefixIdx)\(secondary)\(customTrailing)")
+            }()
         } knobs: {
             Toggle("Multiple open", isOn: $multi)
+            Toggle("Secondary (surface card)", isOn: $secondary)
+            Toggle("Custom trailing", isOn: $customTrailing)
+            Picker("Prefix", selection: $prefixIdx) { Text("None").tag(0); Text("Icon").tag(1); Text("Number").tag(2) }.pickerStyle(.segmented)
             Text("single = opening one closes the others; multiple = independent.").font(.caption).foregroundStyle(.secondary)
         }
     }
