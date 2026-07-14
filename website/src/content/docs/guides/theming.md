@@ -33,6 +33,45 @@ let theme = Theme()
 theme.applyGenerated(primaryHex: "#7C3AED")  // full palette from one accent
 ```
 
+## Import a CSS theme (HeroUI, Tailwind, shadcn…)
+
+Already have a web design system as CSS custom properties? ThemeKit ships a
+ready-made **HeroUI** theme, and can convert any HeroUI-style CSS token file
+(`oklch()` / hex variables) into a native ThemeKit theme.
+
+Use the bundled HeroUI theme in one line:
+
+```swift
+Theme.shared.loadTheme(named: "herouiTheme")              // light
+Theme.shared.loadTheme(named: "herouiTheme", dark: true)  // dark
+```
+
+To bring **your own** CSS, convert it once with the importer — it produces a
+light + dark JSON pair you can load like any bundled theme:
+
+```bash
+# theme.css → brandTheme.json + brandThemeDark.json
+python3 tools/import_css_theme.py theme.css --name brand \
+    --out Sources/ThemeKitCore/Resources --font Inter
+```
+
+```swift
+Theme.shared.loadTheme(named: "brandTheme")
+```
+
+The importer maps `--accent` onto the primary/info palette, `--danger` /
+`--success` / `--warning` onto the semantic colors, and your `--background` /
+`--foreground` / `--border` / `--muted` onto the neutral surfaces and text.
+Anything the CSS doesn't define falls back to ThemeKit's defaults.
+
+A host app can also apply a generated theme JSON **at runtime**, with no library
+rebuild — the same entry point the localization override uses:
+
+```swift
+let data = try Data(contentsOf: url)    // your generated theme JSON
+Theme.shared.setTheme(jsonData: data)   // applies instantly, no restart
+```
+
 ## Per-subtree theming
 
 Theming isn't only a global switch. Inject any `Theme` into a single subtree with
