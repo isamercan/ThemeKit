@@ -23,6 +23,14 @@ public struct UploadFile: Identifiable, Equatable {
     }
 }
 
+/// How ``Upload`` presents its files (Ant `listType`).
+public enum UploadListType: Sendable {
+    /// A vertical list of rows (thumbnail + name + status). The default.
+    case list
+    /// A grid of square thumbnail cards with an in-grid "add" tile.
+    case pictureCard
+}
+
 /// Organism. A file-upload prompt plus a list of files with per-item status
 /// (uploading / done / failed). State owned by the caller.
 public struct Upload: View {
@@ -50,6 +58,9 @@ public struct Upload: View {
     /// Render the file list at all (Ant `showUploadList`; default on) — off keeps
     /// the picker but hides the rows (the caller shows files elsewhere).
     private var showsList = true
+    /// List presentation (Ant `listType`): `.list` rows (default) or a
+    /// `.pictureCard` grid of thumbnails with an in-grid add tile.
+    private var listType: UploadListType = .list
 
     public init(
         prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
@@ -73,22 +84,116 @@ public struct Upload: View {
             Text(prompt)
                 .textStyle(.bodySm400)
                 .foregroundStyle(theme.text(.textSecondary))
-            PrimaryButton(buttonTitle) { onPick() }.disabled(atLimit)
-            if let maxCount {
-                Text("\(files.count)/\(maxCount)")
-                    .textStyle(.overline400)
-                    .foregroundStyle(theme.text(.textTertiary))
-            }
 
-            if showsList && !files.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(files) { file in
-                        row(for: file)
-                        if file.id != files.last?.id { DividerView().size(.small) }
+            switch listType {
+            case .list:
+                PrimaryButton(buttonTitle) { onPick() }.disabled(atLimit)
+                if let maxCount {
+                    Text("\(files.count)/\(maxCount)")
+                        .textStyle(.overline400)
+                        .foregroundStyle(theme.text(.textTertiary))
+                }
+                if showsList && !files.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(files) { file in
+                            row(for: file)
+                            if file.id != files.last?.id { DividerView().size(.small) }
+                        }
                     }
                 }
+            case .pictureCard:
+                // The add tile IS the picker in card mode; the button is dropped.
+                pictureCardGrid
             }
         }
+    }
+
+    // MARK: - Picture-card grid (Ant `listType="picture-card"`)
+
+    private var cardSide: CGFloat { 88 }
+
+    private var pictureCardGrid: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: cardSide), spacing: Theme.SpacingKey.sm.value)],
+                  spacing: Theme.SpacingKey.sm.value) {
+            if showsList {
+                ForEach(files) { file in pictureCardCell(for: file) }
+            }
+            if !atLimit { addTile }
+        }
+    }
+
+    private var addTile: some View {
+        Button { onPick() } label: {
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .strokeBorder(theme.border(.borderPrimary), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                .frame(width: cardSide, height: cardSide)
+                .overlay {
+                    VStack(spacing: Theme.SpacingKey.xs.value) {
+                        Icon(systemName: "plus").size(.md).color(theme.text(.textTertiary))
+                        Text(buttonTitle).textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
+                            .lineLimit(1)
+                    }
+                    .padding(Theme.SpacingKey.xs.value)
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(buttonTitle)
+    }
+
+    private func pictureCardCell(for file: UploadFile) -> some View {
+        let tile = RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+            .fill(theme.background(.bgElevatorTertiary))
+            .frame(width: cardSide, height: cardSide)
+            .overlay { cardStatus(for: file) }
+            .overlay(alignment: .topTrailing) {
+                if showsRemoveIcon {
+                    Button { onRemove(file) } label: {
+                        Icon(systemName: "xmark.circle.fill").size(.sm)
+                            .color(theme.text(.textTertiary))
+                            .padding(4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(themeKit: "Remove \(file.name)"))
+                }
+            }
+            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .strokeBorder(cardBorder(for: file.status), lineWidth: 1))
+        return Group {
+            if let onPreview {
+                Button { onPreview(file) } label: { tile.contentShape(Rectangle()) }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
+            } else {
+                tile
+            }
+        }
+    }
+
+    /// The card interior: a thumbnail glyph plus a status hint (progress / retry).
+    @ViewBuilder
+    private func cardStatus(for file: UploadFile) -> some View {
+        VStack(spacing: Theme.SpacingKey.xs.value) {
+            Icon(systemName: "photo").size(.md).color(theme.foreground(.fgHero))
+            switch file.status {
+            case .uploading(let progress):
+                ProgressBar(value: progress).barHeight(3).frame(width: cardSide - 24)
+            case .done:
+                EmptyView()
+            case .failed:
+                Button { onRetry?(file) } label: {
+                    Icon(systemName: "arrow.clockwise").size(.xs).color(theme.foreground(.systemcolorsFgError))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Retry"))
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.xs.value)
+    }
+
+    private func cardBorder(for status: UploadStatus) -> Color {
+        if case .failed = status { return theme.border(.systemcolorsBorderError) }
+        return theme.border(.borderPrimary)
     }
 
     private func row(for file: UploadFile) -> some View {
@@ -197,6 +302,10 @@ public extension Upload {
     /// Render the file list (Ant `showUploadList`; default on). Off keeps the
     /// picker but hides the rows — for when the caller lists files elsewhere.
     func showsList(_ on: Bool = true) -> Self { copy { $0.showsList = on } }
+
+    /// Presentation of the file list (Ant `listType`): `.list` rows (default) or
+    /// a `.pictureCard` thumbnail grid whose trailing add tile is the picker.
+    func listType(_ type: UploadListType) -> Self { copy { $0.listType = type } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -333,6 +442,16 @@ public extension UploadList {
                 UploadFile(name: "room-1.jpg", status: .done),
                 UploadFile(name: "room-2.jpg", status: .done),
             ]).maxCount(2)
+        }
+        // Picture-card grid (Ant listType="picture-card") — thumbnails + add tile.
+        PreviewCase("Picture-card grid") {
+            Upload(files: [
+                UploadFile(name: "room-1.jpg", status: .done),
+                UploadFile(name: "room-2.jpg", status: .uploading(0.6)),
+                UploadFile(name: "room-3.jpg", status: .failed("Too large")),
+            ], onRetry: { _ in })
+            .listType(.pictureCard)
+            .maxCount(6)
         }
         // Preview + download affordances (Ant onPreview / onDownload); remove hidden.
         PreviewCase("Preview + download · remove hidden") {
