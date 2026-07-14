@@ -13,6 +13,10 @@ public enum ColumnAlign {
     }
 }
 
+/// Row density for a ``DataTable`` (Ant Table `size` large / middle / small).
+/// `.middle` is the default and reproduces the original spacing.
+public enum DataTableSize: Sendable { case large, middle, small }
+
 /// Type-erased, comparable sort value for a sortable column. `string` uses a
 /// natural (numeric-aware) ordering so "item2" sorts before "item10".
 public enum TableSortKey: Comparable {
@@ -40,18 +44,28 @@ public struct DataTable<Row: Identifiable>: View {
         let title: String
         let align: ColumnAlign
         let sortKey: ((Row) -> TableSortKey)?
+        /// Fixed column width (Ant `column.width`); `nil` = flexible (shares
+        /// remaining space equally with the other flexible columns).
+        let width: CGFloat?
+        /// Clip the cell to one line with a trailing ellipsis (Ant `column.ellipsis`).
+        let ellipsis: Bool
         let content: (Row) -> AnyView
 
-        /// Custom-view cell. Pass `sortKey` to make the column tap-to-sort.
+        /// Custom-view cell. Pass `sortKey` to make the column tap-to-sort,
+        /// `width` for a fixed column, `ellipsis` to truncate to one line.
         public init<V: View>(
             _ title: String,
             align: ColumnAlign = .leading,
             sortKey: ((Row) -> TableSortKey)? = nil,
+            width: CGFloat? = nil,
+            ellipsis: Bool = false,
             @ViewBuilder content: @escaping (Row) -> V
         ) {
             self.title = title
             self.align = align
             self.sortKey = sortKey
+            self.width = width
+            self.ellipsis = ellipsis
             self.content = { AnyView(content($0)) }
         }
 
@@ -60,9 +74,11 @@ public struct DataTable<Row: Identifiable>: View {
             _ title: String,
             align: ColumnAlign = .leading,
             sortKey: ((Row) -> TableSortKey)? = nil,
+            width: CGFloat? = nil,
+            ellipsis: Bool = false,
             value: @escaping (Row) -> String
         ) {
-            self.init(title, align: align, sortKey: sortKey) { row in
+            self.init(title, align: align, sortKey: sortKey, width: width, ellipsis: ellipsis) { row in
                 DefaultTextCell(text: value(row))
             }
         }
@@ -76,11 +92,34 @@ public struct DataTable<Row: Identifiable>: View {
     private var striped = true
     private var pageSize: Int?
     private var isLoading = false
+    private var size: DataTableSize = .middle
+    private var showsHeader = true
     private var onRowTap: ((Row) -> Void)?
     private var emptySlot: AnyView?
     private var loadingSlot: AnyView?
     private var headerSlot: AnyView?
     private var footerSlot: AnyView?
+
+    /// Vertical cell padding for the current density (Ant `size`). `.middle`
+    /// reproduces the original `SpacingKey.sm` metric.
+    private var rowVPadding: CGFloat {
+        switch size {
+        case .large: return Theme.SpacingKey.md.value
+        case .middle: return Theme.SpacingKey.sm.value
+        case .small: return Theme.SpacingKey.xs.value
+        }
+    }
+
+    /// Applies a column's fixed `width` (or flexible fill) + `ellipsis` clip to a cell.
+    @ViewBuilder
+    private func sizedCell<V: View>(_ view: V, _ column: Column) -> some View {
+        let clipped = view.lineLimit(column.ellipsis ? 1 : nil)
+        if let width = column.width {
+            clipped.frame(width: width, alignment: column.align.alignment)
+        } else {
+            clipped.frame(maxWidth: .infinity, alignment: column.align.alignment)
+        }
+    }
 
     @State private var sortColumn: Int?
     @State private var sortAscending = true
@@ -124,7 +163,7 @@ public struct DataTable<Row: Identifiable>: View {
 
     private var tableCard: some View {
         VStack(spacing: 0) {
-            headerRow
+            if showsHeader { headerRow }
             if isLoading {
                 if let loadingSlot {
                     loadingSlot
@@ -167,13 +206,13 @@ public struct DataTable<Row: Identifiable>: View {
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .padding(.vertical, Theme.SpacingKey.sm.value)
+        .padding(.vertical, rowVPadding)
         .background(theme.background(.bgBase))
     }
 
     @ViewBuilder
     private func headerCell(_ column: Column, index: Int) -> some View {
-        let title = HStack(spacing: 4) {
+        let titleContent = HStack(spacing: 4) {
             Text(column.title)
                 .textStyle(.labelSm700)
                 .foregroundStyle(theme.text(.textSecondary))
@@ -183,7 +222,8 @@ public struct DataTable<Row: Identifiable>: View {
                     .color(sortColumn == index ? theme.text(.textPrimary) : theme.text(.textTertiary))
             }
         }
-        .frame(maxWidth: .infinity, alignment: column.align.alignment)
+        // Same width rule as the cells so the header stays column-aligned.
+        let title = sizedCell(titleContent, column)
 
         if column.sortKey != nil {
             Button { toggleSort(index) } label: { title }
@@ -210,12 +250,11 @@ public struct DataTable<Row: Identifiable>: View {
         let isSelected = selection?.wrappedValue.contains(row.id) ?? false
         let base = HStack(spacing: Theme.SpacingKey.sm.value) {
             ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
-                column.content(row)
-                    .frame(maxWidth: .infinity, alignment: column.align.alignment)
+                sizedCell(column.content(row), column)
             }
         }
         .padding(.horizontal, Theme.SpacingKey.md.value)
-        .padding(.vertical, Theme.SpacingKey.sm.value)
+        .padding(.vertical, rowVPadding)
         .background(rowBackground(index: index, isSelected: isSelected))
 
         if isInteractive {
@@ -291,6 +330,13 @@ public extension DataTable {
     /// Paginate rows at `size` per page (nil turns paging off).
     func pageSize(_ size: Int?) -> Self { copy { $0.pageSize = size } }
 
+    /// Row density (Ant Table `size`): large / middle (default) / small — scales
+    /// the header + cell vertical padding. `.middle` keeps the original spacing.
+    func size(_ size: DataTableSize) -> Self { copy { $0.size = size } }
+
+    /// Show the column-title header strip (Ant `showHeader`; default on).
+    func showsHeader(_ on: Bool = true) -> Self { copy { $0.showsHeader = on } }
+
     /// Replace rows with a loading placeholder while content loads.
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
 
@@ -365,6 +411,16 @@ private struct Booking: Identifiable { let id = UUID(); let hotel: String; let n
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
+        }
+        // Fixed-width + ellipsis columns, compact density, header hidden.
+        PreviewCase("Fixed width · ellipsis · compact") {
+            DataTable(columns: [
+                .init("Hotel", ellipsis: true) { $0.hotel },
+                .init("Nights", align: .center, width: 64) { "\($0.nights)" },
+                .init("Price", align: .trailing, width: 88) { "$\(Int($0.price))" },
+            ], rows: rows)
+            .size(.small)
+            .showsHeader(false)
         }
         PreviewCase("Empty · custom slot") {
             DataTable(columns: [
