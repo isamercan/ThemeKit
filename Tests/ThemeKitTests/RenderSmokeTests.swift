@@ -61,6 +61,29 @@ final class RenderSmokeTests: XCTestCase {
         renders(Affix(offsetTop: 0) { Text("Toolbar") }, "Affix")
     }
 
+    // AlertDialog + its two public molecules must render across their variants
+    // (icon-only / title-only header, horizontal / auto-stacking footer, the
+    // composed card with a custom body) — liveness for the composition.
+    @MainActor
+    func testAlertDialogComponentsRender() {
+        Theme.shared.loadTheme(named: "defaultTheme")
+        renders(AlertHeader("Delete product").icon("trash").tone(.error), "AlertHeader")
+        renders(AlertHeader().icon("bell.badge").tone(.primary), "AlertHeader/icon-only")
+        renders(AlertHeader("Terms updated").alignment(.center), "AlertHeader/title-only")
+        renders(AlertFooter().tone(.error).primaryAction("Delete") {}.secondaryAction("Cancel") {}, "AlertFooter/horizontal")
+        renders(AlertFooter().tone(.primary)
+            .primaryAction("Save and keep editing") {}
+            .secondaryAction("Discard everything now") {}, "AlertFooter/auto-stack")
+        renders(AlertFooter().tone(.warning).layout(.vertical).primaryAction("Confirm") {}, "AlertFooter/vertical")
+        renders(AlertDialog("Delete product", message: "This action cannot be undone.")
+            .icon("trash").tone(.error)
+            .primaryAction("Delete") {}.secondaryAction("Cancel") {}.closable {}, "AlertDialog")
+        renders(AlertDialog("Rate your stay")
+            .icon("star").tone(.warning).headerAlignment(.center)
+            .content { Text("★★★★★") }
+            .primaryAction("Submit") {}, "AlertDialog/custom body")
+    }
+
     // Components must also render under a runtime-generated theme + dark mode.
     @MainActor
     func testComponentsRenderUnderGeneratedTheme() {
