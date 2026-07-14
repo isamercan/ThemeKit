@@ -724,9 +724,12 @@ struct SplitterDemo: View {
 
 struct CascaderDemo: View {
     @State private var path: [String] = []
+    @State private var multiPaths: [[String]] = []
     @State private var searchable = false
     @State private var clearable = false
     @State private var readOnly = false
+    @State private var multiple = false
+    @State private var size: TextInputSize = .medium
     private let options = [
         CascaderOption("tr", label: "Türkiye", children: [
             CascaderOption("34", label: "İstanbul", children: [
@@ -739,17 +742,40 @@ struct CascaderDemo: View {
     ]
 
     var body: some View {
-        ComponentStage("Cascader", inspector: [("path", path.isEmpty ? "—" : path.joined(separator: "/"))]) {
-            Cascader(options, selection: $path).placeholder("Select region")
-                .searchable(searchable)
-                .clearable(clearable)
-                .readOnly(readOnly)
+        ComponentStage("Cascader", inspector: [
+            ("selection", multiple ? "\(multiPaths.count) path(s)" : (path.isEmpty ? "—" : path.joined(separator: "/"))),
+            ("multiple", "\(multiple)"),
+        ]) {
+            cascader
         } knobs: {
+            Toggle("Multiple (checkbox leaves)", isOn: $multiple)
+            Picker("Size", selection: $size) {
+                Text("S").tag(TextInputSize.small); Text("M").tag(TextInputSize.medium); Text("L").tag(TextInputSize.large)
+            }.pickerStyle(.segmented)
             Toggle("Searchable (filter across levels)", isOn: $searchable)
             Toggle("Clearable (x when selected)", isOn: $clearable)
             Toggle("Read-only (keeps chrome, blocks opening)", isOn: $readOnly)
-            Text("Pick through the columns; selecting a leaf commits the path.").font(.caption).foregroundStyle(.secondary)
+            Text("Pick through the columns; a leaf commits (single) or toggles (multiple).").font(.caption).foregroundStyle(.secondary)
         }
+    }
+
+    // Both selection inits return `Cascader`, so shared modifiers apply uniformly.
+    @ViewBuilder private var cascader: some View {
+        if multiple {
+            configured(Cascader(options, selection: $multiPaths))
+        } else {
+            configured(Cascader(options, selection: $path))
+        }
+    }
+
+    private func configured(_ view: Cascader) -> some View {
+        // Cascader's own modifiers first (they return `Cascader`); the kit-wide
+        // `.readOnly(_:)` returns `some View`, so it must come last.
+        view.placeholder("Select region")
+            .searchable(searchable)
+            .clearable(clearable)
+            .size(size)
+            .readOnly(readOnly)
     }
 }
 

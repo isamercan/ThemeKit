@@ -42,6 +42,11 @@ public struct MultiLineTextInput: View {
     /// subtree `FieldDefaults.size` default (`explicitSize ?? fieldDefaults.size ?? .medium`).
     private var explicitSize: TextInputSize?
     private var minHeightOverride: CGFloat?
+    /// Set by `.autosize(minRows:maxRows:)` — when non-`nil` the editor grows with
+    /// its content from `min` rows up to `max` rows and then scrolls (Ant
+    /// `autoSize={{minRows,maxRows}}` / HeroUI `minRows`/`maxRows`). `nil` keeps
+    /// the fixed `minHeight`/`size` behaviour.
+    private var autosizeRows: (min: Int, max: Int)?
     private var countStyle: TextInputCountStyle = .count
     private var accessibilityID: String?
 
@@ -140,10 +145,27 @@ public struct MultiLineTextInput: View {
         }
     }
 
-    /// The editor + placeholder overlay, sized to `minHeight` — everything the
-    /// ``FieldStyle`` receives as `configuration.content` (the height stays in
-    /// the content; the style only wraps the chrome).
+    /// Everything the ``FieldStyle`` receives as `configuration.content` (the
+    /// height stays in the content; the style only wraps the chrome). Fixed to
+    /// `minHeight` by default; under `.autosize(minRows:maxRows:)` an invisible
+    /// sizer *drives* the height and the editor is overlaid onto it — the sizer
+    /// takes the taller of "`minRows` blank lines" and "the content clamped to
+    /// `maxRows` lines", so the editor grows with typing and then scrolls at the
+    /// ceiling (an overlay is bounded by its base, so the greedy `TextEditor`
+    /// can never push past the ceiling).
+    @ViewBuilder
     private var editorCore: some View {
+        if let rows = autosizeRows {
+            autosizeDriver(rows)
+                .overlay(alignment: .topLeading) { editorLayer }
+        } else {
+            editorLayer.frame(minHeight: minHeight)
+        }
+    }
+
+    /// The `TextEditor` + empty-state placeholder, with no height of its own —
+    /// its height comes from the fixed `minHeight` frame or the autosize driver.
+    private var editorLayer: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: editorBinding)
                 .focused($isFocused)
@@ -170,7 +192,29 @@ public struct MultiLineTextInput: View {
                     .allowsHitTesting(false)
             }
         }
-        .frame(minHeight: minHeight)
+    }
+
+    /// Invisible sizer that dictates the autosize height: the taller of `minRows`
+    /// blank lines and the current content capped at `maxRows` lines. Rendered
+    /// with the editor's own font + inset so growth tracks the real text.
+    private func autosizeDriver(_ rows: (min: Int, max: Int)) -> some View {
+        ZStack(alignment: .topLeading) {
+            sizingText(Array(repeating: " ", count: rows.min).joined(separator: "\n"))
+            sizingText(text.isEmpty ? (placeholder.isEmpty ? " " : placeholder) : text)
+                .lineLimit(rows.max)
+        }
+    }
+
+    /// An invisible, non-interactive text laid out with the editor's own font and
+    /// insets. It renders nothing — only its natural height matters.
+    private func sizingText(_ string: String) -> some View {
+        Text(string)
+            .textStyle(.bodyBase400)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(Theme.SpacingKey.sm.value)   // match the TextEditor inset
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The editor wrapped in the active ``FieldStyle`` chrome (fill + border).
@@ -251,6 +295,14 @@ public extension MultiLineTextInput {
     /// Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
     func minHeight(_ height: CGFloat) -> Self { copy { $0.minHeightOverride = height } }
 
+    /// Grows the editor with its content between `minRows` and `maxRows` lines,
+    /// then scrolls (Ant `autoSize={{minRows,maxRows}}` / HeroUI `minRows`/`maxRows`).
+    /// When set, this drives the height in place of the fixed `size(_:)` /
+    /// `minHeight(_:)` preset. `maxRows` is floored to `minRows`.
+    func autosize(minRows: Int = 2, maxRows: Int = 6) -> Self {
+        copy { $0.autosizeRows = (min: Swift.max(minRows, 1), max: Swift.max(minRows, maxRows)) }
+    }
+
     /// Drive focus from outside (e.g. `FormValidator.focusBinding`) — TextInput parity.
     func externalFocus(_ binding: Binding<Bool>?) -> Self { copy { $0.externalFocus = binding } }
 
@@ -302,6 +354,14 @@ public extension MultiLineTextInput {
             MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
                 .size(.xsmall)
                 .readOnly()
+        }
+        // Autosize: grows from 2 rows, scrolls past 5 (Ant `autoSize`).
+        PreviewCase("Autosize 2…5 rows") {
+            MultiLineTextInput("Review", text: .constant(
+                "Long enough to spill onto several lines so the editor grows with the "
+                    + "content and then scrolls once it reaches the five-row ceiling."))
+                .placeholder("Tell us about your stay…")
+                .autosize(minRows: 2, maxRows: 5)
         }
     }
 }

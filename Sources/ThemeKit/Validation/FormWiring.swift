@@ -27,14 +27,23 @@ import SwiftUI
 
 public extension FormValidator {
     /// Submission handling: validates every field, focuses the first invalid
-    /// one, and runs `action` only when the form is clean.
+    /// one, runs `action` when the form is clean (Ant `onFinish`), and otherwise
+    /// calls `onInvalid` with the first invalid field (Ant `onFinishFailed`).
     ///
     ///     Button("Pay") { form.submit(values) { pay() } }
+    ///     Button("Pay") {
+    ///         form.submit(values) { pay() } onInvalid: { _ in flash("Check the form") }
+    ///     }
     ///
     /// - Returns: `true` when the form was valid and `action` ran.
     @discardableResult
-    func submit(_ values: [Field: String], onValid action: () -> Void) -> Bool {
-        guard validateAll(values) == nil else { return false }
+    func submit(_ values: [Field: String],
+                onValid action: () -> Void,
+                onInvalid: (Field) -> Void = { _ in }) -> Bool {
+        if let invalid = validateAll(values) {
+            onInvalid(invalid)
+            return false
+        }
         action()
         return true
     }

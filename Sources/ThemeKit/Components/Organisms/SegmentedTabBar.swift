@@ -23,6 +23,10 @@ public struct TabItem {
 /// Visual style of `SegmentedTabBar` (Ant Tabs `type`; `.pill` = daisyUI `tabs-box`).
 public enum SegmentedTabBarStyle { case underline, card, pill }
 
+/// Tab-bar density (Ant Tabs `size` small / middle / large) — scales the label
+/// type, icon glyph and pill/card padding. `.medium` keeps the original metrics.
+public enum SegmentedTabBarSize: Sendable { case small, medium, large }
+
 /// Where a scrollable bar parks the selected tab after a selection change
 /// (HeroUI Tabs.ScrollView `scrollAlign`). `.none` disables auto-scrolling.
 public enum TabScrollAlignment {
@@ -56,9 +60,41 @@ public struct SegmentedTabBar: View {
     // Appearance — mutated only through the modifiers below (R2).
     private var scrollable: Bool = false
     private var style: SegmentedTabBarStyle = .underline
+    private var size: SegmentedTabBarSize = .medium
     private var scrollAlignment: TabScrollAlignment = .center
     private var showsDividers: Bool = false
     private var accessibilityID: String? = nil
+
+    // MARK: Size metrics (Ant `size`) — `.medium` reproduces the original values.
+    private func titleStyle(_ active: Bool) -> TextStyle {
+        switch size {
+        case .small: return active ? .labelSm700 : .labelSm600
+        case .medium: return active ? .labelBase700 : .labelBase600
+        case .large: return active ? .labelMd700 : .labelMd600
+        }
+    }
+    /// Glyph point size for a tab icon at the current density.
+    private func iconPoints(base: CGFloat) -> CGFloat {
+        switch size {
+        case .small: return base - 2
+        case .medium: return base
+        case .large: return base + 2
+        }
+    }
+    private var tabHPadding: CGFloat {
+        switch size {
+        case .small: return Theme.SpacingKey.sm.value
+        case .medium: return Theme.SpacingKey.md.value
+        case .large: return Theme.SpacingKey.lg.value
+        }
+    }
+    private var tabVPadding: CGFloat {
+        switch size {
+        case .small: return Theme.SpacingKey.xs.value
+        case .medium: return Theme.SpacingKey.sm.value
+        case .large: return Theme.SpacingKey.md.value
+        }
+    }
 
     @Namespace private var underline
     @Environment(\.microAnimations) private var micro
@@ -168,9 +204,9 @@ public struct SegmentedTabBar: View {
         } label: {
             HStack(spacing: Theme.SpacingKey.xs.value) {
                 if let icon = item.systemImage {
-                    Image(systemName: icon).font(.system(size: 13, weight: .semibold))
+                    Image(systemName: icon).font(.system(size: iconPoints(base: 13), weight: .semibold))
                 }
-                Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
+                Text(item.title).textStyle(titleStyle(isActive))
                 if let badge = item.badge {
                     Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
                         .padding(.horizontal, 5).padding(.vertical, 1)
@@ -180,8 +216,8 @@ public struct SegmentedTabBar: View {
             .foregroundStyle(item.isEnabled
                              ? (isActive ? theme.foreground(.fgSecondary) : theme.text(.textSecondary))
                              : theme.text(.textDisabled))
-            .padding(.horizontal, Theme.SpacingKey.md.value)
-            .padding(.vertical, Theme.SpacingKey.sm.value)
+            .padding(.horizontal, tabHPadding)
+            .padding(.vertical, tabVPadding)
             .frame(maxWidth: scrollable ? nil : .infinity)
             .background {
                 if isActive {
@@ -205,9 +241,9 @@ public struct SegmentedTabBar: View {
             } label: {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
                     if let icon = item.systemImage {
-                        Image(systemName: icon).font(.system(size: 13, weight: .semibold))
+                        Image(systemName: icon).font(.system(size: iconPoints(base: 13), weight: .semibold))
                     }
-                    Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
+                    Text(item.title).textStyle(titleStyle(isActive))
                     if let badge = item.badge {
                         Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
                             .padding(.horizontal, 5).padding(.vertical, 1)
@@ -228,8 +264,8 @@ public struct SegmentedTabBar: View {
                 .accessibilityLabel(String(themeKit: "Close \(item.title)"))
             }
         }
-        .padding(.horizontal, Theme.SpacingKey.md.value)
-        .padding(.vertical, Theme.SpacingKey.sm.value)
+        .padding(.horizontal, tabHPadding)
+        .padding(.vertical, tabVPadding)
         .background(
             (isActive ? theme.background(.bgWhite) : theme.background(.bgElevatorTertiary)),
             in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -250,9 +286,9 @@ public struct SegmentedTabBar: View {
                 VStack(spacing: 1) {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
                         if let icon = item.systemImage {
-                            Image(systemName: icon).font(.system(size: 14, weight: .semibold))
+                            Image(systemName: icon).font(.system(size: iconPoints(base: 14), weight: .semibold))
                         }
-                        Text(item.title).textStyle(isActive ? .labelBase700 : .labelBase600)
+                        Text(item.title).textStyle(titleStyle(isActive))
                         if let trailing = item.trailingSystemImage {
                             Image(systemName: trailing).font(.system(size: 13, weight: .semibold))
                         }
@@ -322,6 +358,14 @@ public struct SegmentedTabBar: View {
         PreviewCase("Pill") {
             SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
         }
+        // Density axis (Ant `size`) — small / medium / large on the pill style.
+        PreviewCase("Sizes (small · medium · large)") {
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.small)
+                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.medium)
+                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.large)
+            }
+        }
         PreviewCase("Card · closable + add") {
             SegmentedTabBar(["Search", "Results", "Booking"], selection: $sel,
                             onClose: { _ in }, onAdd: { }).tabStyle(.card)
@@ -357,6 +401,10 @@ public extension SegmentedTabBar {
 
     /// Visual treatment: underline / card / pill (boxed track, filled active tab).
     func tabStyle(_ s: SegmentedTabBarStyle) -> Self { copy { $0.style = s } }
+
+    /// Tab-bar density (Ant Tabs `size`): small / medium (default) / large —
+    /// scales the label type, icon glyph and pill/card padding together.
+    func size(_ s: SegmentedTabBarSize) -> Self { copy { $0.size = s } }
 
     /// Where a scrollable bar parks the selected tab on selection change
     /// (HeroUI Tabs `scrollAlign`; default `.center`). `.none` turns auto-scroll
