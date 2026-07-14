@@ -13,6 +13,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
     case `default`
     case ocean
     case sunset
+    case heroui
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
         case .default: return "defaultTheme"
         case .ocean: return "oceanTheme"
         case .sunset: return "sunsetTheme"
+        case .heroui: return "herouiTheme"
         }
     }
 
@@ -30,6 +32,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
         case .default: return "Default"
         case .ocean: return "Ocean"
         case .sunset: return "Sunset"
+        case .heroui: return "HeroUI"
         }
     }
 
@@ -40,7 +43,13 @@ enum DemoTheme: String, CaseIterable, Identifiable {
     func apply(dark: Bool) {
         UserDefaults.standard.set(rawValue, forKey: Self.storageKey)
         UserDefaults.standard.set(dark, forKey: Self.darkKey)
-        Theme.shared.loadTheme(named: resourceName, dark: dark)
+        if self == .heroui {
+            // Demonstrates the native runtime CSS path: parse the bundled
+            // heroui.css on-device (no JSON, no build step) and apply it.
+            Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter", dark: dark)
+        } else {
+            Theme.shared.loadTheme(named: resourceName, dark: dark)
+        }
     }
 
     /// The currently persisted theme (defaults to `.default`).
@@ -79,6 +88,22 @@ final class DemoThemeStore: ObservableObject {
     init() {
         current = DemoTheme.stored
         isDark = DemoTheme.storedDark
+        // Screenshot/deep-link override: `-forceTheme <resourceName> [-forceThemeDark YES]`
+        // pins a bundled JSON theme at launch, bypassing the saved preset/custom
+        // precedence below (used to verify a specific theme in the simulator).
+        if let forced = UserDefaults.standard.string(forKey: "forceTheme"), !forced.isEmpty {
+            let dark = UserDefaults.standard.bool(forKey: "forceThemeDark")
+            isDark = dark
+            // Route through DemoTheme when the forced name is a known theme (so
+            // HeroUI takes the native CSS path); otherwise load the JSON directly.
+            if let match = DemoTheme.allCases.first(where: { $0.resourceName == forced || $0.rawValue == forced }) {
+                current = match
+                match.apply(dark: dark)
+            } else {
+                Theme.shared.loadTheme(named: forced, dark: dark)
+            }
+            return
+        }
         // Precedence at launch: a saved custom (generated) recipe wins, then a
         // preset, then the bundled JSON theme.
         if let data = UserDefaults.standard.data(forKey: Self.customKey),

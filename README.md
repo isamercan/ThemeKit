@@ -202,6 +202,52 @@ ThemePicker(selection: $active)             // a tappable grid of all 33 themes
 
 <p align="center"><img src="Screenshots/ThemePresets.png" width="680" alt="ThemePicker — a grid of all 33 theme presets, each card painted in its own colors"></p>
 
+## Import a CSS theme (HeroUI, Tailwind, shadcn…)
+
+Already have a web design system as CSS custom properties? Hand it to ThemeKit
+**directly** — the `oklch()` / hex variables are parsed on-device at runtime and
+the whole token set is generated for you. No JSON, no build step. ThemeKit even
+ships a ready-made **HeroUI** theme.
+
+**Drop a `.css` in your app and apply it** — one line:
+
+```swift
+Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter")   // bundled HeroUI theme
+Theme.shared.loadTheme(cssNamed: "brand")                   // your own brand.css in the app bundle
+```
+
+**Or apply a CSS string** — from a file, a network response, anywhere:
+
+```swift
+let css = try String(contentsOf: url)     // your theme.css
+Theme.shared.setTheme(css: css)           // parsed + applied instantly, no restart
+Theme.shared.setColorScheme(dark: true)   // switches to the CSS's .dark block
+```
+
+Both the `:root`/`.light` and `.dark` blocks are read; `--accent` drives the
+primary/info palette, `--danger` / `--success` / `--warning` the semantic colors,
+and `--background` / `--foreground` / `--border` / `--muted` the neutral surfaces
+and text (`--radius` / `--field-radius` → the box/field radius roles). Anything
+the CSS doesn't define falls back to ThemeKit's defaults, and the CSS is treated
+as untrusted text — only `--var: value;` declarations are read, nothing is executed.
+
+<details>
+<summary><b>Offline alternative</b> — pre-convert CSS → theme JSON at build time</summary>
+
+Prefer to bundle a static JSON (zero runtime parse)? The same conversion runs
+offline as a Python tool:
+
+```bash
+# theme.css → brandTheme.json + brandThemeDark.json (light + dark)
+python3 tools/import_css_theme.py theme.css --name brand \
+    --out Sources/ThemeKitCore/Resources --font Inter
+```
+
+```swift
+Theme.shared.loadTheme(named: "brandTheme")   // then apply like any bundled JSON theme
+```
+</details>
+
 ## Screenshots
 
 The demo app on device — the component catalog, live theming, the design-token
@@ -943,5 +989,6 @@ copyright notice; the software is provided without warranty.
 
 - **Theme presets** — the 32 built-in color sets are inspired by [daisyUI](https://daisyui.com/docs/themes/).
 - **Palette ramps** — follow an Ant Design-style tonal scale.
-- **Montserrat** — the bundled type family (SIL Open Font License).
+- **Montserrat** & **[Inter](https://github.com/rsms/inter)** — the bundled type families (SIL Open Font License).
+- **HeroUI theme** — the bundled `herouiTheme` is derived from [HeroUI](https://heroui.com/)'s default token set.
 - **Lottie** ([`lottie-ios`](https://github.com/airbnb/lottie-ios)) — powers the optional `ThemeKitLottie` add-on.

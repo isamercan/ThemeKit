@@ -270,7 +270,7 @@ enum ComponentRegistry {
         .knob("BlogCard", .organisms, demo: BlogCardDemo(), usage: #"BlogCard(title: "…") { mediaView }.excerpt("…").readMore { }"#),
         .knob("BottomSheet", .organisms, demo: BottomSheetDemo(), usage: #"// install once: .sheetHost()\n@Environment(SheetPresenter.self) var sheet: SheetPresenter\nsheet.present(detents: [.height(280), .large]) { FilterView() }\n// or declarative: someView.bottomSheet(isPresented: $open, detents: [.medium]) { … }"#),
         .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message").variant(.success).calloutStyle(.plain)"#),
-        .knob("Card", .organisms, demo: CardDemo(), usage: #"Card { content }.elevation(.soft)"#),
+        .knob("Card", .organisms, demo: CardDemo(), usage: #"Card("Title") { content }.elevation(.soft).radius(.box).surface(.bgSecondaryLight).selected(sel)\n// variants: .cardStyle(.default) | .cardStyle(.outlined) | .cardStyle(.flat)"#),
         .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", time: "09:24").side(.outgoing).accent(.success)"#),
         .knob("Counter", .organisms, demo: CounterDemo(), usage: #"Counter(days: 2, hours: 8, minutes: 45)"#),
         .knob("DataTable", .organisms, demo: DataTableDemo(), usage: #"DataTable(columns: cols, rows: rows, selection: $selected).pageSize(10)"#),

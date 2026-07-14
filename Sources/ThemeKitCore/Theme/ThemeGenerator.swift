@@ -145,18 +145,26 @@ enum ThemeGenerator {
 
     /// `family/step` -> hex. Primary & info follow the chosen accent; neutral is
     /// tinted toward it; the rest use Ant's HSV generator (or dark-mix).
-    private static func buildPalette(primaryBase: String, dark: Bool, tint: Double) -> [String: String] {
+    ///
+    /// `seeds` overrides a family's base hex (e.g. a CSS import reseeding
+    /// success/warning/error from `--success/--warning/--danger`). `neutralRamp`
+    /// replaces the curated gray ramp with a caller-supplied 50..900 ladder (used
+    /// when importing a design system's own neutral scale). Both default to the
+    /// built-in values, so the generator's output is unchanged without them.
+    private static func buildPalette(primaryBase: String, dark: Bool, tint: Double,
+                                     seeds: [String: String] = [:],
+                                     neutralRamp: [String]? = nil) -> [String: String] {
         var table: [String: String] = [:]
         for (family, base) in paletteBases {
             let shades: [String]
             if family == "neutral" {
-                let raw = dark ? neutralDark : neutralLight
+                let raw = neutralRamp ?? (dark ? neutralDark : neutralLight)
                 // The UNTINTED ladder stays addressable: base-100 surfaces must
                 // remain true neutral on a re-skin (no accent wash on cards).
                 for (step, hex) in zip(steps, raw) { table["neutral-raw/\(step)"] = hex }
                 shades = tintNeutral(raw, primaryBase, tint)
             } else {
-                let seed = (family == "primary" || family == "info") ? primaryBase : base
+                let seed = (family == "primary" || family == "info") ? primaryBase : (seeds[family] ?? base)
                 shades = dark ? antGenerateDark(seed) : antGenerate(seed)
             }
             for (step, hex) in zip(steps, shades) { table["\(family)/\(step)"] = hex }
@@ -264,10 +272,16 @@ enum ThemeGenerator {
     static func generate(
         primaryHex: String, tint: Double, dark: Bool,
         font: String, fontScale: Double, radiusScale: Double, spacingScale: Double, shadowScale: Double,
-        baseHex: String? = nil, secondaryHex: String? = nil, accentHex: String? = nil
+        baseHex: String? = nil, secondaryHex: String? = nil, accentHex: String? = nil,
+        // Additive import hooks (all default to no-op → byte-identical output):
+        paletteSeeds: [String: String] = [:],       // family -> seed hex (e.g. success/warning/error)
+        neutralRamp: [String]? = nil,               // 10 hexes, step 50..900, overrides the gray ramp
+        semanticOverrides: [String: String] = [:],  // "category.token" -> exact hex, applied last
+        radiusOverrides: [String: CGFloat] = [:]    // "radius-box"/"radius-field"/... -> px
     ) -> Theme.ThemeData {
         let primary = primaryHex.hasPrefix("#") ? String(primaryHex.dropFirst()) : primaryHex
-        let palette = buildPalette(primaryBase: primary, dark: dark, tint: tint)
+        let palette = buildPalette(primaryBase: primary, dark: dark, tint: tint,
+                                   seeds: paletteSeeds, neutralRamp: neutralRamp)
         let surfaceTint = tint * 0.25
 
         // When a base tone is supplied (e.g. a daisyUI theme's `base-100`), the
@@ -312,7 +326,20 @@ enum ThemeGenerator {
             }
         }
 
-        let radius = radiusBase.map { Theme.AppRadius(name: $0.0, radius: ($0.1 * radiusScale).rounded(.toNearestOrEven)) }
+        // Exact semantic overrides applied last (a CSS import pins tokens like
+        // bg-hero / bg-error to the design system's own hexes, past ladder rounding).
+        if !semanticOverrides.isEmpty {
+            colors = colors.map { color in
+                if let hex = semanticOverrides[color.name] {
+                    return Theme.AppColor(name: color.name, hex: hex)
+                }
+                return color
+            }
+        }
+
+        let radius = radiusBase.map {
+            Theme.AppRadius(name: $0.0, radius: radiusOverrides[$0.0] ?? ($0.1 * radiusScale).rounded(.toNearestOrEven))
+        }
         let spacing = spacingBase.map { Theme.AppSpacing(name: $0.0, spacing: ($0.1 * spacingScale).rounded(.toNearestOrEven)) }
         let typography = typographyBase.map {
             Theme.AppTypography(name: $0.0, font: font, size: ($0.1 * fontScale).rounded(.toNearestOrEven),

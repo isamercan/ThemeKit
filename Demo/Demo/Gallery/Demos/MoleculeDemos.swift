@@ -77,6 +77,8 @@ struct CheckboxDemo: View {
     @State private var requiredError = true
     @State private var big = false
     @State private var typeIdx = 0   // 0 plain, 1 inner, 2 customInner
+    @State private var variantIdx = 0   // 0 primary, 1 secondary
+    @State private var withDescription = false
     @State private var trailing = false
     @State private var strike = false
     @State private var readOnly = false
@@ -95,11 +97,13 @@ struct CheckboxDemo: View {
     }
 
     var body: some View {
-        ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain")]) {
+        ComponentStage("Checkbox", inspector: [("isChecked", "\(checked)"), ("type", typeIdx == 1 ? "inner" : typeIdx == 2 ? "customInner" : "plain"), ("variant", variantIdx == 1 ? "secondary" : "primary")]) {
             Checkbox(withLabel ? "I accept the terms and conditions" : nil, isChecked: $checked)
                     .infoMessages(messages)
                     .customSize(big ? 32 : nil)
                     .type(type)
+                    .variant(variantIdx == 1 ? .secondary : .primary)
+                    .description(withDescription ? "Please read and accept the terms" : nil)
                     .indeterminate(indeterminate)
                     .alignment(.top)
                     .controlPlacement(trailing ? .trailing : .leading)
@@ -111,7 +115,9 @@ struct CheckboxDemo: View {
             Toggle("Checked", isOn: $checked)
             Toggle("Custom size (32)", isOn: $big)
             Picker("Type", selection: $typeIdx) { Text("Plain").tag(0); Text("Inner").tag(1); Text("Swatch").tag(2) }.pickerStyle(.segmented)
+            Picker("Variant", selection: $variantIdx) { Text("Primary").tag(0); Text("Secondary").tag(1) }.pickerStyle(.segmented)
             Picker("Size", selection: $sizeIdx) { Text("S (20)").tag(0); Text("M (24)").tag(1); Text("L (28)").tag(2) }.pickerStyle(.segmented)
+            Toggle("Description line", isOn: $withDescription)
             Toggle("Trailing control (.controlPlacement)", isOn: $trailing)
             Toggle("Line-through when checked", isOn: $strike)
             Toggle("Required (error when unchecked)", isOn: $requiredError)

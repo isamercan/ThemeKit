@@ -16,6 +16,7 @@ public struct InputLabel: View {
     private var isRequired = false
     private var hasInfo = false
     private var hasError = false
+    private var infoAction: (() -> Void)?
     private var links: [(substring: String, action: () -> Void)] = []
 
     private let text: String
@@ -37,11 +38,24 @@ public struct InputLabel: View {
                 Text("*").textStyle(.labelSm600)
                     .foregroundStyle(isEnabled ? theme.foreground(.systemcolorsFgError) : theme.text(.textDisabled))
             }
-            if hasInfo {
-                Image(systemName: "info.circle").font(.system(size: 11))
-                    .foregroundStyle(isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled))
+            if hasInfo || infoAction != nil {
+                if let infoAction {
+                    // Tappable info glyph — captured via `onInfo(_:)`. Plain
+                    // button style so it doesn't tint; disabled state handled
+                    // natively by the `.disabled(_:)` environment (R5).
+                    Button(action: infoAction) { infoGlyph }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(String(themeKit: "Info"))
+                } else {
+                    infoGlyph
+                }
             }
         }
+    }
+
+    private var infoGlyph: some View {
+        Image(systemName: "info.circle").font(.system(size: 11))
+            .foregroundStyle(isEnabled ? theme.text(.textTertiary) : theme.text(.textDisabled))
     }
 
     private var textColor: Color {
@@ -64,6 +78,11 @@ public extension InputLabel {
     /// Show a trailing info glyph.
     func hasInfo(_ on: Bool = true) -> Self { copy { $0.hasInfo = on } }
 
+    /// Make the trailing info glyph tappable, capturing the tap via `action`
+    /// (e.g. to present a tooltip or help sheet). Implies `hasInfo()` — the
+    /// glyph shows whenever an action is attached. Pass `nil` to clear.
+    func onInfo(_ action: (() -> Void)?) -> Self { copy { $0.infoAction = action } }
+
     /// Render the label in the error color.
     func hasError(_ on: Bool = true) -> Self { copy { $0.hasError = on } }
 
@@ -78,6 +97,7 @@ public extension InputLabel {
     PreviewMatrix("InputLabel") {
         PreviewCase("Default") { InputLabel("Email") }
         PreviewCase("Required + info") { InputLabel("Password").required().hasInfo() }
+        PreviewCase("Tappable info") { InputLabel("Coverage").onInfo { print("info tapped") } }
         PreviewCase("Error") { InputLabel("Invalid").hasError() }
         PreviewCase("Linked") { InputLabel("Agree to the Terms").links([("Terms", {})]) }
         PreviewCase("Disabled") { InputLabel("Disabled").disabled(true) }

@@ -531,13 +531,24 @@ struct AutocompleteDemo: View {
 // MARK: - Organisms
 
 struct CardDemo: View {
+    @State private var variantIdx = 0   // 0 default (shadow), 1 outlined (bordered), 2 flat
     @State private var elevation: CardElevation = .soft
+    @State private var radius: Theme.RadiusRole = .box     // corner size axis
+    @State private var surfaceIdx = 0   // 0 white, 1 secondary, 2 tertiary
     @State private var padding: Theme.SpacingKey = .base
     @State private var tappable = false
     @State private var header = true
     @State private var loading = false
-    @State private var outlined = false
+    @State private var selected = false
     @State private var taps = 0
+
+    private var surfaceKey: Theme.BackgroundColorKey {
+        switch surfaceIdx {
+        case 1: return .bgSecondaryLight
+        case 2: return .bgTertiary
+        default: return .bgWhite
+        }
+    }
 
     private var cardBody: some View {
         Card(header ? "Reservation" : nil,
@@ -549,25 +560,38 @@ struct CardDemo: View {
             }
         }
         .elevation(elevation)
+        .radius(radius)
+        .surface(surfaceKey)
+        .selected(selected)
         .contentPadding(padding)
         .subtitle(header ? "2 nights · 2 guests" : nil)
         .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
         .loading(loading)
     }
 
+    // Distinct return types per style, so branch through the `.cardStyle(_:)` modifier.
+    @ViewBuilder private var styledCard: some View {
+        switch variantIdx {
+        case 1: cardBody.cardStyle(.outlined)
+        case 2: cardBody.cardStyle(.flat)
+        default: cardBody.cardStyle(.default)
+        }
+    }
+
+    private var variantName: String { variantIdx == 1 ? "outlined" : variantIdx == 2 ? "flat" : "default" }
+
     var body: some View {
-        ComponentStage("Card", inspector: [("style", outlined ? "outlined" : "default"), ("elevation", "\(elevation)"), ("header", "\(header)")]) {
-            if outlined {
-                cardBody.cardStyle(.outlined)   // custom CardStyle via the .cardStyle(_:) modifier
-            } else {
-                cardBody                        // default env CardStyle
-            }
+        ComponentStage("Card", inspector: [("variant", variantName), ("elevation", "\(elevation)"), ("radius", radius.rawValue), ("selected", "\(selected)")]) {
+            styledCard
         } knobs: {
-            Toggle("Outlined style (.cardStyle)", isOn: $outlined)
+            Picker("Variant", selection: $variantIdx) { Text("Default").tag(0); Text("Outlined").tag(1); Text("Flat").tag(2) }.pickerStyle(.segmented)
+            Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
+            Picker("Radius (size)", selection: $radius) { Text("Selector").tag(Theme.RadiusRole.selector); Text("Field").tag(Theme.RadiusRole.field); Text("Box").tag(Theme.RadiusRole.box) }.pickerStyle(.segmented)
+            Picker("Surface", selection: $surfaceIdx) { Text("White").tag(0); Text("Secondary").tag(1); Text("Tertiary").tag(2) }.pickerStyle(.segmented)
+            Toggle("Selected (hero border)", isOn: $selected)
             Toggle("Header (title + extra)", isOn: $header)
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
-            Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
             Picker("Padding", selection: $padding) {
                 ForEach([Theme.SpacingKey.none, .xs, .sm, .md, .base, .lg], id: \.self) { Text($0.rawValue).tag($0) }
             }
