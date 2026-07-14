@@ -210,7 +210,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Download \(d)",
             "Download %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:125")
+            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:230")
         assertKey(
             "Expires \(d)",
             "Expires %@", 1,
@@ -253,7 +253,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Preview \(d)",
             "Preview %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:152")
+            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:166")
         assertKey(
             "React with \(d), \(d) reactions",
             "React with %@, %@ reactions", 2,
