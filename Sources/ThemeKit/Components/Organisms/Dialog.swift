@@ -18,8 +18,68 @@
 //  fade-only scrim, scale+fade card transition, optional swipe-to-dismiss —
 //  all motion gated by `microAnimations` + Reduce Motion.
 //
+//  HeroUI Modal parity axes shared by every overload: `backdrop:` (`.dim` /
+//  `.blur` / `.transparent`), `size:` (a named max-width ramp `.sm…​.xl` + `.full`),
+//  and `placement:` (`.center` / `.top` / `.bottom`). The `content:footer:`
+//  overload also frosts its scroll edges (HeroUI `ScrollShadow`) and takes an
+//  optional custom `header:` slot in place of the plain title string.
+//
 
 import SwiftUI
+
+// MARK: - Modal parity axes (backdrop / size / placement)
+
+/// A named max-width for a dialog card (HeroUI Modal `size`). An explicit
+/// `width:` always overrides this; `.full` stretches the card edge-to-edge
+/// within the presentation insets.
+public enum DialogSize: String, CaseIterable, Sendable {
+    case sm, md, lg, xl, full
+
+    /// Max card width in points; `.full` fills the available width (`.infinity`).
+    var width: CGFloat {
+        switch self {
+        case .sm: return 320
+        case .md: return 400
+        case .lg: return 480
+        case .xl: return 560
+        case .full: return .infinity
+        }
+    }
+}
+
+/// Where a dialog card sits over the scrim (HeroUI Modal `placement`). `.top` /
+/// `.bottom` inset the card off the anchored screen edge and dismiss toward it.
+public enum DialogPlacement: String, CaseIterable, Sendable {
+    case center, top, bottom
+
+    var alignment: Alignment {
+        switch self {
+        case .center: return .center
+        case .top: return .top
+        case .bottom: return .bottom
+        }
+    }
+
+    /// The edge a swipe dismisses toward — up for a top card, down otherwise.
+    var dragEdge: Edge { self == .top ? .top : .bottom }
+
+    /// Which screen edge to inset the card off (none when centered).
+    var edgeInset: Edge.Set {
+        switch self {
+        case .center: return []
+        case .top: return .top
+        case .bottom: return .bottom
+        }
+    }
+}
+
+/// Resolves a card's max width: an explicit `width` wins, then a named `size`,
+/// then the overload's own legacy default. `.full` yields `.infinity`.
+private func dialogMaxWidth(_ width: CGFloat?, _ size: DialogSize?, default legacyDefault: CGFloat) -> CGFloat {
+    if let width { return width }
+    if let size { return size.width }
+    return legacyDefault
+}
 
 // MARK: - Shared presentation chrome (scrim + transitions + swipe-to-dismiss)
 
@@ -35,6 +95,10 @@ private struct DialogPresentation<Card: View>: View {
 
     /// Swipe-down-to-dismiss enabled (callers also gate this on loading state).
     let swipeToDismiss: Bool
+    /// Scrim look (`.dim` / `.blur` / `.transparent`).
+    let backdrop: BackdropStyle
+    /// Where the card sits over the scrim (`.center` / `.top` / `.bottom`).
+    let placement: DialogPlacement
     /// Scrim tap handler; the closure decides whether dismissal applies.
     let onScrimTap: () -> Void
     /// Called when a drag is released past the dismiss threshold.
@@ -48,20 +112,23 @@ private struct DialogPresentation<Card: View>: View {
     private var motionEnabled: Bool { micro && !reduceMotion }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: placement.alignment) {
             Backdrop(fade: 1 - dragProgress)
+                .material(backdrop)
                 .onTapGesture(perform: onScrimTap)
                 .transition(.opacity)   // Scrim always fades only.
 
             card()
-                // Downward drag offsets the card with the finger; releasing past
-                // a third of the card height dismisses, anything less springs
-                // back (instantly when motion is gated off).
-                .dismissDrag(edge: .bottom,
+                // The drag offsets the card toward the placement edge with the
+                // finger; releasing past a third of the card height dismisses,
+                // anything less springs back (instantly when motion is gated off).
+                .dismissDrag(edge: placement.dragEdge,
                              isEnabled: swipeToDismiss,
                              progress: $dragProgress,
                              onDismiss: onSwipeDismiss)
                 .transition(cardTransition)
+                // Top / bottom placements inset the card off the anchored edge.
+                .padding(placement.edgeInset, Theme.SpacingKey.xl.value)
                 // Modal presenter: VoiceOver ignores the dimmed scrim and the
                 // background content behind the card while the dialog is up.
                 .accessibilityAddTraits(.isModal)
@@ -164,6 +231,9 @@ private struct DialogModifier: ViewModifier {
     let closable: Bool
     let maskClosable: Bool
     let swipeToDismiss: Bool
+    let backdrop: BackdropStyle
+    let size: DialogSize?
+    let placement: DialogPlacement
     let width: CGFloat?
 
     @State private var primaryLoading = false
@@ -176,6 +246,8 @@ private struct DialogModifier: ViewModifier {
             if isPresented {
                 DialogPresentation(
                     swipeToDismiss: swipeToDismiss && !primaryLoading,
+                    backdrop: backdrop,
+                    placement: placement,
                     onScrimTap: { if maskClosable, !primaryLoading { isPresented = false } },
                     onSwipeDismiss: { isPresented = false }
                 ) {
@@ -197,7 +269,7 @@ private struct DialogModifier: ViewModifier {
                         primaryColor: kind?.semanticColor,
                         kind: kind,
                         onClose: (closable && !primaryLoading) ? { isPresented = false } : nil,
-                        width: width,
+                        width: dialogMaxWidth(width, size, default: 320),
                         isPrimaryLoading: primaryLoading
                     )
                     .padding(Theme.SpacingKey.lg.value)
@@ -211,6 +283,10 @@ private struct DialogModifier: ViewModifier {
 public extension View {
     /// `swipeToDismiss` adds a swipe-down-to-dismiss drag on the card
     /// (HeroUI Dialog `isSwipeable`); off by default.
+    ///
+    /// - `backdrop`: scrim style — `.dim` (default), `.blur`, or `.transparent`.
+    /// - `size`: a named max-width ramp (`.sm…​.xl` + `.full`); `width:` overrides it.
+    /// - `placement`: `.center` (default), `.top`, or `.bottom`.
     func dialog(
         isPresented: Binding<Bool>,
         title: String,
@@ -223,6 +299,9 @@ public extension View {
         closable: Bool = false,
         maskClosable: Bool = true,
         swipeToDismiss: Bool = false,
+        backdrop: BackdropStyle = .dim,
+        size: DialogSize? = nil,
+        placement: DialogPlacement = .center,
         width: CGFloat? = nil
     ) -> some View {
         modifier(DialogModifier(
@@ -230,7 +309,8 @@ public extension View {
             primaryTitle: primaryTitle, onPrimary: onPrimary,
             secondaryTitle: secondaryTitle, onSecondary: onSecondary,
             kind: kind, closable: closable, maskClosable: maskClosable,
-            swipeToDismiss: swipeToDismiss, width: width
+            swipeToDismiss: swipeToDismiss, backdrop: backdrop, size: size,
+            placement: placement, width: width
         ))
     }
 }
@@ -242,9 +322,14 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
 
     @Binding var isPresented: Bool
     let title: String?
+    /// Custom header slot; `nil` → the built-in `title` string (or no header).
+    let customHeader: SlotContent?
     let closable: Bool
     let maskClosable: Bool
     let swipeToDismiss: Bool
+    let backdrop: BackdropStyle
+    let size: DialogSize?
+    let placement: DialogPlacement
     let width: CGFloat?
     let maxContentHeight: CGFloat
     let afterClose: (() -> Void)?
@@ -254,6 +339,8 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+
+    private var hasHeader: Bool { customHeader != nil || title != nil || closable }
 
     private func close() {
         isPresented = false
@@ -265,13 +352,21 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
             if isPresented {
                 DialogPresentation(
                     swipeToDismiss: swipeToDismiss,
+                    backdrop: backdrop,
+                    placement: placement,
                     onScrimTap: { if maskClosable { close() } },
                     onSwipeDismiss: close
                 ) {
                     VStack(spacing: 0) {
-                        if title != nil || closable {
+                        if hasHeader {
                             HStack {
-                                if let title {
+                                if let customHeader {
+                                    // The slot styles itself, but a bare `Text`
+                                    // header inherits the title's look by default.
+                                    customHeader
+                                        .textStyle(.headingSm)
+                                        .foregroundStyle(theme.text(.textPrimary))
+                                } else if let title {
                                     Text(title).textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
                                 }
                                 Spacer(minLength: Theme.SpacingKey.sm.value)
@@ -286,20 +381,40 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                             .padding(Theme.SpacingKey.lg.value)
                         }
 
-                        ScrollView {
-                            dialogContent()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, Theme.SpacingKey.lg.value)
-                                .padding(.bottom, Theme.SpacingKey.md.value)
+                        // HeroUI ScrollShadow: frost the clipped scroll edges so
+                        // long content visibly fades into the header / footer.
+                        // Only on OSes where ScrollShadow can OBSERVE the scroll
+                        // (iOS 18 / macOS 15+) — below that its `.auto` degrades to
+                        // always-on scrims, which would paint permanent top+bottom
+                        // gradients over a short, non-scrollable body. There, fall
+                        // back to the plain ScrollView (the pre-scroll-shadow look).
+                        if #available(iOS 18.0, macOS 15.0, *) {
+                            ScrollShadow {
+                                ScrollView {
+                                    dialogContent()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, Theme.SpacingKey.lg.value)
+                                        .padding(.bottom, Theme.SpacingKey.md.value)
+                                }
+                                .frame(maxHeight: maxContentHeight)
+                            }
+                            .fadeColor(.bgWhite)
+                        } else {
+                            ScrollView {
+                                dialogContent()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, Theme.SpacingKey.lg.value)
+                                    .padding(.bottom, Theme.SpacingKey.md.value)
+                            }
+                            .frame(maxHeight: maxContentHeight)
                         }
-                        .frame(maxHeight: maxContentHeight)
 
                         DividerView().size(.small)
 
                         footer()
                             .padding(Theme.SpacingKey.lg.value)
                     }
-                    .frame(maxWidth: width ?? 360)
+                    .frame(maxWidth: dialogMaxWidth(width, size, default: 360))
                     .background(theme.background(.bgWhite),
                                 in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
                     .themeShadow(.elevated)
@@ -313,15 +428,23 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
 
 public extension View {
     /// A modal with custom scrollable content and a pinned footer slot
-    /// (Ant Modal `footer` + long-content scroll + `afterClose`).
+    /// (Ant Modal `footer` + long-content scroll + `afterClose`). The scroll
+    /// edges frost (HeroUI `ScrollShadow`) so long content fades into the chrome.
     /// `swipeToDismiss` adds a swipe-down-to-dismiss drag on the card
     /// (HeroUI Dialog `isSwipeable`); off by default.
+    ///
+    /// - `backdrop`: scrim style — `.dim` (default), `.blur`, or `.transparent`.
+    /// - `size`: a named max-width ramp (`.sm…​.xl` + `.full`); `width:` overrides it.
+    /// - `placement`: `.center` (default), `.top`, or `.bottom`.
     func dialog<DialogContent: View, Footer: View>(
         isPresented: Binding<Bool>,
         title: String? = nil,
         closable: Bool = true,
         maskClosable: Bool = true,
         swipeToDismiss: Bool = false,
+        backdrop: BackdropStyle = .dim,
+        size: DialogSize? = nil,
+        placement: DialogPlacement = .center,
         width: CGFloat? = nil,
         maxContentHeight: CGFloat = 420,
         afterClose: (() -> Void)? = nil,
@@ -329,8 +452,43 @@ public extension View {
         @ViewBuilder footer: @escaping () -> Footer
     ) -> some View {
         modifier(CustomDialogModifier(
-            isPresented: isPresented, title: title, closable: closable, maskClosable: maskClosable,
-            swipeToDismiss: swipeToDismiss, width: width,
+            isPresented: isPresented, title: title, customHeader: nil,
+            closable: closable, maskClosable: maskClosable,
+            swipeToDismiss: swipeToDismiss, backdrop: backdrop, size: size,
+            placement: placement, width: width,
+            maxContentHeight: maxContentHeight, afterClose: afterClose,
+            dialogContent: dialogContent, footer: footer
+        ))
+    }
+
+    /// The same scrollable-content + pinned-footer modal, but with a fully custom
+    /// `header:` slot in place of the plain title string (HeroUI's `ModalHeader`
+    /// slot) — put an icon, a subtitle, a stepper, anything. The close button (if
+    /// `closable`) still floats top-trailing beside the slot.
+    ///
+    /// - `backdrop`: scrim style — `.dim` (default), `.blur`, or `.transparent`.
+    /// - `size`: a named max-width ramp (`.sm…​.xl` + `.full`); `width:` overrides it.
+    /// - `placement`: `.center` (default), `.top`, or `.bottom`.
+    func dialog<Header: View, DialogContent: View, Footer: View>(
+        isPresented: Binding<Bool>,
+        closable: Bool = true,
+        maskClosable: Bool = true,
+        swipeToDismiss: Bool = false,
+        backdrop: BackdropStyle = .dim,
+        size: DialogSize? = nil,
+        placement: DialogPlacement = .center,
+        width: CGFloat? = nil,
+        maxContentHeight: CGFloat = 420,
+        afterClose: (() -> Void)? = nil,
+        @ViewBuilder header: @escaping () -> Header,
+        @ViewBuilder content dialogContent: @escaping () -> DialogContent,
+        @ViewBuilder footer: @escaping () -> Footer
+    ) -> some View {
+        modifier(CustomDialogModifier(
+            isPresented: isPresented, title: nil, customHeader: SlotContent(header),
+            closable: closable, maskClosable: maskClosable,
+            swipeToDismiss: swipeToDismiss, backdrop: backdrop, size: size,
+            placement: placement, width: width,
             maxContentHeight: maxContentHeight, afterClose: afterClose,
             dialogContent: dialogContent, footer: footer
         ))
@@ -346,6 +504,9 @@ private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
     let closable: Bool
     let maskClosable: Bool
     let swipeToDismiss: Bool
+    let backdrop: BackdropStyle
+    let size: DialogSize?
+    let placement: DialogPlacement
     let width: CGFloat?
     let afterClose: (() -> Void)?
     let dialogContent: () -> DialogContent
@@ -364,12 +525,14 @@ private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
             if isPresented {
                 DialogPresentation(
                     swipeToDismiss: swipeToDismiss,
+                    backdrop: backdrop,
+                    placement: placement,
                     onScrimTap: { if maskClosable { close() } },
                     onSwipeDismiss: close
                 ) {
                     dialogContent()
                         .padding(Theme.SpacingKey.lg.value)
-                        .frame(maxWidth: width ?? 320)
+                        .frame(maxWidth: dialogMaxWidth(width, size, default: 320))
                         // Same floating modal chrome as `DialogCard`.
                         .glassChrome(in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
                         .overlay(alignment: .topTrailing) {
@@ -399,18 +562,26 @@ public extension View {
     /// `content:footer:` overloads remain unchanged next to this one.
     /// `swipeToDismiss` adds a swipe-down-to-dismiss drag on the card
     /// (HeroUI Dialog `isSwipeable`); off by default.
+    ///
+    /// - `backdrop`: scrim style — `.dim` (default), `.blur`, or `.transparent`.
+    /// - `size`: a named max-width ramp (`.sm…​.xl` + `.full`); `width:` overrides it.
+    /// - `placement`: `.center` (default), `.top`, or `.bottom`.
     func dialog<DialogContent: View>(
         isPresented: Binding<Bool>,
         closable: Bool = false,
         maskClosable: Bool = true,
         swipeToDismiss: Bool = false,
+        backdrop: BackdropStyle = .dim,
+        size: DialogSize? = nil,
+        placement: DialogPlacement = .center,
         width: CGFloat? = nil,
         afterClose: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> DialogContent
     ) -> some View {
         modifier(FreeformDialogModifier(
             isPresented: isPresented, closable: closable, maskClosable: maskClosable,
-            swipeToDismiss: swipeToDismiss, width: width,
+            swipeToDismiss: swipeToDismiss, backdrop: backdrop, size: size,
+            placement: placement, width: width,
             afterClose: afterClose, dialogContent: content
         ))
     }
@@ -443,6 +614,37 @@ public extension View {
                     }
                 } footer: {
                     PrimaryButton("Done") {}
+                }
+        }
+        PreviewCase("Blur backdrop · lg size") {
+            Color.clear.frame(height: 300)
+                .dialog(isPresented: .constant(true), title: "Enable notifications?",
+                        message: "We'll only ping you about gate changes and delays.",
+                        primaryTitle: "Allow", secondaryTitle: "Not now", onSecondary: {},
+                        backdrop: .blur, size: .lg)
+        }
+        PreviewCase("Bottom placement") {
+            Color.clear.frame(height: 340)
+                .dialog(isPresented: .constant(true), title: "Sign out?",
+                        message: "You'll need to log in again next time.",
+                        primaryTitle: "Sign out", secondaryTitle: "Cancel", onSecondary: {},
+                        placement: .bottom)
+        }
+        PreviewCase("Custom header slot") {
+            Color.clear.frame(height: 340)
+                .dialog(isPresented: .constant(true)) {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Icon(systemName: "airplane.departure").size(.md)
+                        VStack(alignment: .leading) {
+                            Text("Flight IST → LHR").textStyle(.headingSm)
+                            Text("Today · 14:20").textStyle(.bodySm400)
+                        }
+                    }
+                } content: {
+                    Text("Custom header slots hold icons, subtitles, steppers — anything.")
+                        .textStyle(.bodyBase400)
+                } footer: {
+                    PrimaryButton("Got it") {}
                 }
         }
     }

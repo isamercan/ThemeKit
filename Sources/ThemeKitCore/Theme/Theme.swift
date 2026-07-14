@@ -87,6 +87,7 @@ public final class Theme: @unchecked Sendable {
     /// Falls back to the light variant if a dark JSON isn't bundled.
     public func loadTheme(named jsonName: String, dark: Bool = false) {
         currentConfig = nil
+        currentCSS = nil
         baseThemeName = jsonName
         isDark = dark
         let resource = dark ? jsonName + "Dark" : jsonName
@@ -102,7 +103,9 @@ public final class Theme: @unchecked Sendable {
     /// Switches the active theme between its light and dark variants. Works for
     /// both bundled named themes and a live `ThemeConfig`.
     public func setColorScheme(dark: Bool) {
-        if var config = currentConfig {
+        if let css = currentCSS {
+            setTheme(css: css, font: currentCSSFont, dark: dark)
+        } else if var config = currentConfig {
             config.dark = dark
             apply(config)
         } else {
@@ -113,21 +116,64 @@ public final class Theme: @unchecked Sendable {
     public func setTheme(jsonData: Data) {
         do {
             let decoded = try JSONDecoder().decode(ThemeData.self, from: jsonData)
+            currentConfig = nil
+            currentCSS = nil
             apply(decoded)
         } catch {
             assertionFailure("Failed to decode theme JSON: \(error)")
         }
     }
 
+    /// Applies a HeroUI-style CSS theme (OKLCH / hex custom properties) **natively**
+    /// — no offline conversion, no build step. Both the light and dark blocks are
+    /// parsed; `dark` picks which to show now (defaults to the current scheme), and
+    /// `setColorScheme(dark:)` then switches between them from the same CSS.
+    ///
+    /// `font` names the type family for the generated ramp — it must be bundled and
+    /// registered in your app to render, otherwise the system font is used. The CSS
+    /// is treated as untrusted text: only `--var: value;` declarations and color
+    /// literals are read; nothing is executed.
+    public func setTheme(css: String, font: String = "System", dark: Bool? = nil) {
+        let parsed = CSSTheme.parse(css)
+        let useDark = dark ?? isDark
+        currentConfig = nil
+        currentCSS = css
+        currentCSSFont = font
+        baseThemeName = "css"
+        isDark = useDark
+        apply(parsed.themeData(dark: useDark, font: font))
+    }
+
+    /// Loads a bundled `.css` theme and applies it via ``setTheme(css:font:dark:)``.
+    /// Searches the ThemeKit resource bundle first, then the host app's main bundle —
+    /// so a consumer can drop `brand.css` into their app and call
+    /// `loadTheme(cssNamed: "brand")`.
+    public func loadTheme(cssNamed name: String, font: String = "System", dark: Bool? = nil) {
+        let url = Bundle.module.url(forResource: name, withExtension: "css")
+            ?? Bundle.main.url(forResource: name, withExtension: "css")
+        guard let url, let css = try? String(contentsOf: url, encoding: .utf8) else {
+            assertionFailure("CSS theme '\(name).css' not found in bundle")
+            return
+        }
+        setTheme(css: css, font: font, dark: dark)
+    }
+
     /// The `ThemeConfig` currently applied via `apply(_:)` / `applyGenerated(...)`,
     /// or `nil` if a bundled named theme is active. Re-encode it to persist/share.
     public private(set) var currentConfig: ThemeConfig?
+
+    /// The raw CSS currently applied via `setTheme(css:)` / `loadTheme(cssNamed:)`,
+    /// or `nil` when a JSON / config theme is active. Retained so `setColorScheme(dark:)`
+    /// can re-derive the other scheme from the same source.
+    public private(set) var currentCSS: String?
+    private var currentCSSFont: String = "System"
 
     /// Applies a `ThemeConfig` — the whole token set is regenerated on-device from
     /// its few inputs (`ThemeGenerator`), no bundled JSON needed. This is the
     /// entry point a host app uses to apply a configurator export.
     public func apply(_ config: ThemeConfig) {
         currentConfig = config
+        currentCSS = nil
         baseThemeName = "custom"
         isDark = config.dark
         apply(ThemeGenerator.generate(

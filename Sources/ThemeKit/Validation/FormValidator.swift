@@ -65,6 +65,15 @@ public final class FormValidator<Field: Hashable> {
         order.allSatisfy { (messages[$0]?.dominantKind ?? .info) != .error }
     }
 
+    /// Fields currently in an error state, in declaration order (Ant
+    /// `getFieldsError`). Empty when the form is valid.
+    public var errorFields: [Field] {
+        order.filter { messages[$0]?.dominantKind == .error }
+    }
+
+    /// The first field currently in error, in declaration order (nil when valid).
+    public var firstError: Field? { errorFields.first }
+
     public func reset() {
         messages = [:]
         focusedField = nil

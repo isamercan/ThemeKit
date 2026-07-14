@@ -34,12 +34,12 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **235** components (51 atoms · 104 molecules · 80 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **236** components (52 atoms · 104 molecules · 80 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
 
-# Atoms (51)
+# Atoms (52)
 
 _Smallest building blocks — a single visual/interactive primitive._
 
@@ -240,6 +240,17 @@ CountdownTimer(until:)
 - `.urgentBelow` — Auto-escalates to the urgent palette once fewer than `seconds` remain, and pulses on the final 10 seconds (no-op under Reduce Motion).
 - `.onFinish` — Called once when the deadline passes (also immediately if already past).
 
+## DescriptionModal
+
+```swift
+DescriptionModal(text)
+```
+
+**Modifiers**
+
+- `.textAlignment` — Align the wrapped body text (default `.leading`, which mirrors under RTL).
+- `.a11yID` — Namespaced accessibility identifier for UI tests (the text gets `"<id>.message"`).
+
 ## DividerView
 
 A theme-driven divider: horizontal / vertical, solid / dashed, with an optional inline text label (left / center / right).
@@ -361,6 +372,10 @@ init(_ axis: Axis = .horizontal, @ViewBuilder content: () -> Content)
 
 // usage: Join(@ViewBuilder: { })
 ```
+
+**Modifiers**
+
+- `.axis` — Layout axis of the joined controls.
 
 ## Kbd
 
@@ -775,6 +790,11 @@ FlightStatusBadge(status)
 - `.label` — Override the label text.
 - `.showsIcon` — Show the leading icon (default on).
 - `.solid` — Solid fill (vs the default soft tint).
+- `.emphasis`
+- `.size` — Size ramp (default `.medium`, 24 pt).
+- `.shape` — Corner treatment — `.capsule` (default) or `.rounded` at the selector radius role.
+- `.pulses` — Opt-in gentle opacity pulse for urgent statuses (boarding, gate closing).
+- `.icon` — Per-instance glyph override; `nil` hides the icon (≡ `showsIcon(false)`).
 
 ## SeatCell
 
@@ -870,6 +890,10 @@ init(_ axis: ButtonGroupAxis = .vertical, @ViewBuilder content: @escaping () -> 
 
 // usage: ButtonGroup(@ViewBuilder: <@escaping () -> Content>)
 ```
+
+**Modifiers**
+
+- `.axis` — Layout axis — a vertical stack or a wrapping side-by-side row.
 
 ## PrimaryButton
 
@@ -2269,13 +2293,18 @@ CabinClassSelector(selection:)
 **Modifiers**
 
 - `.classes` — Subset + order of the offered cabins (default: all four).
-- `.variant` — Presentation: `.segmented` (default), a `.chips` row, or `.list` (RadioGroup-style rows for sheet contexts).
-- `.showsGlyphs` — Show each cabin's SF Symbol next to its label (`.segmented` / `.chips`; the `.list` rows stay text-only, matching `RadioGroup` anatomy).
-- `.accent` — Semantic tint: `.segmented` switches to the tinted selection style, `.list` tints the radios, `.chips` feeds the subtree accent cascade.
+- `.variant` — Presentation — superseded by the style axis: prefer `.cabinClassSelectorStyle(.segmented/.chips/.list/.cards)`, settable once per screen via the environment.
+- `.showsGlyphs` — Show each cabin's SF Symbol next to its label (the `.segmented` / `.chips` styles; the `.list` rows stay text-only, matching `RadioGroup` anatomy).
+- `.accent` — Semantic tint: `.segmented` switches to the tinted selection style, `.list` tints the radios, `.chips` feeds the subtree accent cascade, `.cards` tints the selected card.
+- `.size` — Control-size ramp forwarded to the wrapped `SegmentedControl` / `Chip` (and the `.cards` padding step).
+- `.chipsWrap` — Lay the `.chips` style out as a wrapping ``FlowLayout`` (RTL-aware) instead of a horizontal `ScrollView` — every option visible at once.
+- `.label` — Override the display label per cabin (default: the canonical ``CabinClass/label``), e.g.
+- `.glyph` — Override the SF Symbol per cabin (default: the canonical ``CabinClass/glyph``).
+- `.description` — Per-cabin description line, rendered by the `.cards` style beneath the label (`nil` for no description on that card).
 
 ## DatePriceCard
 
-A single selectable date+price card.
+A single selectable date+price card — the built-in cell the strip's `.grid` and `.strip` presets compose.
 
 ```swift
 DatePriceCard(item, isSelected:, action:)
@@ -2286,8 +2315,13 @@ DatePriceCard(item, isSelected:, action:)
 - `.currency` — Currency code for the price.
 - `.cheapest` — Highlights this as the lowest fare (price shown in success green).
 - `.pill` — Render as a horizontal-strip pill (rounded capsule) instead of a card.
-- `.columns` — Number of columns for the grid layout (default 3).
-- `.strip` — Lay the dates out as a horizontal **strip** of scrollable pills (the "Timeline" presentation) instead of the multi-column grid.
+- `.surface` — Surface token for the carded shell (default `.bgElevatorPrimary`).
+- `.accent` — Semantic accent for the selected state — pill fill `soft` + border `base`, card date/price `base`, wash `bg`.
+- `.cheapestTone` — Semantic tone for the lowest-fare highlight (default `.success`).
+- `.pillSize` — Height ramp for the pill presentation (default `.regular`, 40 pt).
+- `.columns` — Number of columns for the grid layout — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))`, settable once per screen via the environment.
+- `.strip` — Horizontal-strip presentation — superseded by the style axis: prefer `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
+- `.layout` — Layout of the strip — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))` / `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
 - `.highlightCheapest` — Auto-highlight the lowest fare in success green (default on).
 - `.onPage` — Adds prev/next paging chevrons flanking the strip.
 
@@ -2308,7 +2342,12 @@ FlightRoute(from:, to:, departure:, arrival:)
 - `.stops` — Number of stops (0 = direct, shown in the accent colour).
 - `.nextDay` — Marks the arrival as landing the next day (adds a "+1").
 - `.pathColor` — Path/direct-label colour (foreground token key, default success green).
-- `.track` — Track presentation — the stock `.path` capsule or the design-system `.inline` hairline layout (see ``FlightRouteTrack``).
+- `.accent` — Semantic accent override for the track/glyph/direct label; `nil` (the default) keeps the ``pathColor(_:)`` token.
+- `.track` — Track presentation — superseded by the style axis: prefer `.flightRouteStyle(.path/.inline/.arc/.dots)`, settable once per screen via the environment.
+- `.size` — Type ramp — steps the time / code / duration styles together (default `.regular`, the stock mapping).
+- `.cityNames` — Optional city names rendered as a second line under each airport code.
+- `.durationText` — Override the computed duration label ("2h 30m"); `nil` restores the computed text.
+- `.stopsTone` — Semantic tone for the 1+-stop label (default tertiary text).
 
 ## LayoverRow
 
@@ -2319,6 +2358,8 @@ LayoverRow(duration:, airport:)
 **Modifiers**
 
 - `.warning` — A short/long-connection warning shown below (in warning colour).
+- `.variant` — Presentation — superseded by the style axis: prefer `.layoverRowStyle(.line/.pill/.banner)`, settable once per screen via the environment.
+- `.lineStyle` — Style of the flanking connector lines — `.dashed` (default), `.solid`, or `.hidden`.
 - `.layoverLabel` — Localise the "layover" word (English default).
 - `.icon`
 - `.accent`
@@ -2338,8 +2379,12 @@ PassengerRow(name, action:)
 - `.avatar` — Use an ``Avatar`` (initials / image / symbol) instead of the default person icon.
 - `.icon`
 - `.onEdit` — Adds a trailing edit (pencil) button.
+- `.onRemove` — Adds a trailing remove (✕) button (``onEdit(_:)`` takes precedence).
 - `.accessory`
 - `.accent`
+- `.bordered` — Wrap in a bordered card surface (default off — flush list row).
+- `.surface` — Surface fill of the bordered card (background token key, default `.bgBase`).
+- `.selectable` — Selectable mode — a leading checkbox mirrors the binding and tapping the row toggles it (the row `action` still fires).
 
 ## RecentSearchRow
 
@@ -2357,9 +2402,13 @@ RecentSearchRow(from:, to:, action:)
 - `.onSearch` — Trailing filled **search** button (magnifier) instead of the chevron/remove — turns the row into a "mini search bar" summary that re-runs the search when tapped.
 - `.searchAccent` — Fill color of the ``onSearch(_:)`` button (default `.neutral` ink).
 - `.accent` — Brand-tints the leading icon tile (default: neutral tile).
+- `.variant` — Chrome — superseded by the style axis: prefer `.recentSearchRowStyle(.plain/.bordered/.pill)`, settable once per list via the environment (and joined by the new `.card` tile).
 - `.bordered` — Wrap in a bordered surface (default off — flush list row).
 - `.pill` — Fully-rounded **capsule** surface — a pill that sits on a colored band (the search-result mini bar).
-- `.surface` — Surface fill of the bordered / pill variant (background token key, default `.bgBase`).
+- `.surface` — Surface fill of surfaced styles (background token key).
+- `.radius` — Corner-radius role of surfaced styles.
+- `.via` — Intermediate stops for a multi-city route — renders IST → FRA → JFK instead of the fixed from → to pair.
+- `.tileSize` — Size ramp of the leading icon tile (default `.md`).
 
 ## SeatLegend
 
@@ -2370,6 +2419,15 @@ SeatLegend(tiers:, palette:, perRow:)
 **Modifiers**
 
 - `.showsPremium` — Backward-compatible: adds a "Premium econ." key to the default legend.
+- `.tiers` — The fare tiers to key (replaces the current set).
+- `.palette` — The palette the swatches resolve their colours from — pass the same one the map uses so the key always matches.
+- `.perRow` — Entries per row in the `.rows` style — superseded by the style axis: prefer `.seatLegendStyle(.rows(perRow:))`, settable once per screen via the environment.
+- `.showsSelected` — Whether the synthetic "Selected" entry is appended (default `true`).
+- `.showsOccupied` — Whether the synthetic "Occupied" entry is appended (default `true`).
+- `.entry` — Appends a custom key (e.g.
+- `.swatchShape` — The swatch silhouette — pass the map's ``SeatShape`` so the key matches the seats (``SeatMap`` forwards its own automatically).
+- `.swatchSize` — Steps the swatch size alongside a map using the same ``SeatSizeRamp``.
+- `.orientation` — Layout direction of the entries — superseded by the style axis: prefer `.seatLegendStyle(.rows(perRow:))` / `.seatLegendStyle(.vertical)` / `.seatLegendStyle(.inline)`, settable once per screen via the environment.
 
 ## TripTypeToggle
 
@@ -2382,6 +2440,10 @@ TripTypeToggle(options, selection:)
 - `.icons` — Per-option leading SF Symbols (aligned to `options` by index).
 - `.accent` — Token-fed accent for the selected pill (default primary).
 - `.fullWidth` — Stretch pills to fill the width (default on); off = intrinsic width.
+- `.surface` — Token-fed track fill behind the pills (default `.bgBase` — a soft, low-contrast track that reads well on a white card).
+- `.size` — Size ramp — steps the option height and the icon + label styles (default `.regular`).
+- `.variant` — Look — superseded by the style axis: prefer `.tripTypeToggleStyle(.pill/.underline/.menu)`, settable once per screen via the environment.
+- `.shape` — Corner treatment of the pill track + thumb: `.capsule` (default) or `.rounded(_:)` at a radius role.
 
 ---
 
@@ -3386,7 +3448,14 @@ AirportPicker(selection:, suggestions:)
 - `.nearby` — Airports near the user shown before typing (the caller resolves location).
 - `.loading` — Skeleton rows while the caller's lookup is in flight.
 - `.placeholder` — Placeholder for the search field / sheet trigger (default "City or airport").
-- `.presentation` — `.inline` (default) embeds the picker; `.sheet` renders a field-shaped trigger opening the search UI in a `BottomSheet`.
+- `.presentation` — `.inline` (default) embeds the picker; `.sheet`, `.popover` and `.fullScreenCover` render a field-shaped trigger that opens the search UI in the matching container (`.fullScreenCover` degrades to a sheet on macOS).
+- `.rowContent` — Replaces the built-in suggestion row with caller content, built per `(airport, isSelected)`.
+- `.sectionTitles` — Overrides the pre-typing section headers; `nil` keeps the stock English-generic titles ("Nearby" / "Recent" / "Popular").
+- `.chipVariant` — Fill style of the IATA code chip: `.soft` (default), `.solid`, `.outline` or `.ghost` — all resolved from the accent's semantic ladder.
+- `.detents` — Detents for the `.sheet` presentation (default `[.large]`).
+- `.triggerIcon` — SF Symbol on the field-shaped trigger (default `"airplane"`).
+- `.density` — Row density: `.regular` (default) or `.compact`.
+- `.surface` — Surface fill behind the search field and sections (background token key); unset keeps the transparent default — the picker rides its screen's background.
 - `.accent` — Semantic tint for the code chips, selection checkmark and Clear action; `nil` (default) keeps the hero/neutral tokens.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`, e.g.
 
@@ -3403,10 +3472,12 @@ AncillaryCard(title)
 - `.subtitle`
 - `.price`
 - `.badge`
-- `.quantity` — A quantity stepper bound to `binding` (mutually exclusive with ``added(_:)``).
-- `.added` — An add/remove toggle bound to `binding` (English defaults, overridable).
+- `.quantity` — A quantity stepper bound to `binding` (controlled — mutually exclusive with ``added(_:title:addedTitle:)``).
+- `.added` — An add/remove toggle bound to `binding` (controlled; English defaults, overridable).
 - `.accent`
+- `.elevation` — Shell elevation, fed to the active `CardStyle` (default `.none` — today's flat, hairline-only chrome).
 - `.surface`
+- `.controlSurface` — Surface token for the quantity stepper's capsule track (default `.bgSecondary`) — distinct from ``surface(_:)``, which fills the card shell.
 - `.cornerRadius`
 
 ## BoardingPass
@@ -3432,6 +3503,11 @@ BoardingPass(passenger:, from:, to:)
 - `.accent`
 - `.surface`
 - `.elevation`
+- `.codeSize` — Footprint of the stub's QR / barcode (default `.medium` — the classic sizes).
+- `.detailsLayout` — Detail-cell arrangement: one `.row` (default) or a two-column `.grid` — honoured by `.classic`.
+- `.cornerRadius` — Outer corner radius (radius role token, default `.box`) — forwarded to the active style.
+- `.perforation` — Draw the dashed perforation across the tear line (default on) — tear presets only.
+- `.dashColor` — Perforation dash colour (border token key, default `.borderPrimary`) — tear presets only.
 
 ## CheckInFlow
 
@@ -3448,8 +3524,15 @@ CheckInFlow(steps:, selection:, page:)
 - `.doneTitle` — Title of the advancing button on the last step (default "Done") — the tap calls ``onComplete(_:)`` instead of advancing.
 - `.canAdvance` — Gate advancing (e.g.
 - `.onComplete` — Called when the advancing button is tapped on the last step.
-- `.showsStepper` — Show or hide the `Steps` header — hide for compact hosts that provide their own progress chrome.
+- `.showsStepper` — Show or hide the progress chrome — whichever ``CheckInFlowStyle`` is active (`Steps` header, bar or dot pager) — for compact hosts that provide their own.
 - `.accent` — Semantic tint for the done/active step markers; `nil` (default) keeps the stock theme-hero markers.
+- `.dockLayout` — Built-in dock alignment: `.trailing` (default, packed buttons) or `.stretch` (full-width buttons).
+- `.buttonSize` — Control size of the built-in dock buttons (default `.medium`).
+- `.stepsTappable` — Lets a tap on a *done* marker jump back to that step (markers gain the button trait).
+- `.pageTransition` — Page-change motion: `.slide` (default, RTL-mirrored), `.fade`, or `.none` — all applied through the `MicroMotion` / Reduce-Motion gate.
+- `.stepperSize` — Marker/label size of the `Steps` header (default `.medium`).
+- `.stepperPlacement` — Progress-chrome placement: `.top` (default) or `.leading` — a vertical `Steps` rail beside the page.
+- `.progressStyle` — Progress chrome: `.steps` markers or `.bar` — superseded by the style axis: prefer `.checkInFlowStyle(.steps/.bar/.paged)`, settable once per screen via the environment.
 
 ## FareFamilyCard
 
@@ -3461,13 +3544,18 @@ FareFamilyCard(name, price:)
 
 **Modifiers**
 
-- `.surface` — Surface fill (background token key, default `.bgBase`).
+- `.surface` — Surface fill (background token key).
 - `.currency` — Currency code for the price.
 - `.accent` — The tier accent colour — brands the name badge and CTA (green / orange / purple…).
 - `.features` — The feature & rule lines.
 - `.selected` — Selected state (for a CTA card without a binding).
-- `.selection` — Bind selection — renders a price + radio row instead of a CTA button.
+- `.selection` — Bind selection — presets render a price + radio row instead of a CTA button.
 - `.onSelect` — Called when the card's CTA is tapped.
+- `.ctaTitle` — A custom CTA title (e.g.
+- `.badgeVariant` — Fill treatment of the tier name chip (default `.solid`).
+- `.elevation` — Shell elevation, fed to the active `CardStyle` (default `.none` — today's flat, hairline-only chrome).
+- `.expanded` — Drives `.accordion`'s expansion from outside — e.g.
+- `.layout` — Layout archetype — superseded by the style axis: prefer `.fareFamilyCardStyle(.stacked/.column/.row/.accordion)`, settable once per screen via the environment.
 
 ## FareSummary
 
@@ -3480,6 +3568,11 @@ FareSummary(lines, currencyCode:)
 **Modifiers**
 
 - `.onInfo` — Called when a line's info button is tapped (only lines created with `info:` show one).
+- `.expandable` — Makes the breakdown collapsible behind the total row, bound to the caller's expansion flag (controlled).
+- `.totalSize` — Size of the total `PriceTag` (default `.large`).
+- `.totalEmphasis` — Emphasis of the total `PriceTag` (default `.hero`).
+- `.showsDivider` — Draw the divider above the total row (default on).
+- `.currency` — Currency code for every line.
 
 ## FilterBar
 
@@ -3496,7 +3589,11 @@ FilterBar(chips, selection:)
 - `.chipStyle` — Chip selection look — `.solid` (accent fill) or `.outlined` (the design-system light-blue + hero-border pill).
 - `.leadingShape` — Leading Filter/Sort button shape — `.adaptive` (collapsing text) or `.circle` (a fixed accent circle, icon-only).
 - `.accent` — Token-fed accent for the leading buttons and selected chips (default hero).
+- `.chipSurface` — Surface token for the unselected chip fill (default `.bgWhite`).
 - `.spacing` — Gap between controls (default 8).
+- `.selectionMode` — `.multiple` (default) toggles chips independently; `.single` keeps at most one chip on — tapping another chip replaces the selection.
+- `.onClearAll` — Appends a trailing ghost "Clear" chip to the scroller, shown only while the selection is non-empty.
+- `.overflowFade` — Fades the scroller's trailing edge with a gradient mask as an overflow hint (RTL-safe — `UnitPoint.leading/.trailing` mirror with the layout).
 
 ## FlightCard
 
@@ -3508,11 +3605,15 @@ FlightCard(airline:, from:, to:, departure:, arrival:)
 
 **Modifiers**
 
-- `.surface` — Surface fill (background token key, default `.bgBase`) — feeds the active `CardStyle`'s configuration.
+- `.surface` — Surface fill (background token key).
+- `.accent` — A semantic accent for the brand chrome — the airline icon, the route-path planes and the Select button.
 - `.stops` — Number of stops (0 = nonstop, shown in green).
 - `.price` — The fare, rendered as a hero `PriceTag` in the footer.
 - `.airlineIcon` — A leading airline SF Symbol (default `airplane.circle.fill`).
 - `.badge` — A success badge in the header, e.g.
+- `.airlineLogo` — A remote airline logo in the header (overrides the SF Symbol) — parity with ``FlightResultRow/airlineLogo(_:)``.
+- `.elevation` — Shell elevation, fed to the active `CardStyle` (default `.none` — today's flat, hairline-only chrome).
+- `.selected` — Selected state, fed to the active `CardStyle` (the default style draws a hero border).
 - `.onSelect` — Adds a "Select" button to the footer.
 - `.favorite` — A heart toggle in the header bound to a favourite flag (controlled — the caller owns persistence).
 - `.scarcity` — Shows a "N seats left" scarcity line (urgent colour).
@@ -3545,6 +3646,11 @@ FlightListItem(legs:)
 - `.onSelect` — Primary action; expandable styles pin it in the expanded footer.
 - `.expanded` — Drives expandable styles (`.journey`) from outside — e.g.
 - `.favorite` — Self-managed favourite heart (uncontrolled): every built-in style renders the heart in its identity/price corner and the item owns the flag.
+- `.accent` — Selection accent — tints the selected border, fare/time chips and other emphasis colours the styles otherwise take from the theme's hero tokens.
+- `.radius` — Corner-radius role of the card shell (default `.box`).
+- `.meta` — Generic icon + text meta pairs, e.g.
+- `.selectedFare` — Drives fare-chip selection (`.fareBoard`) from outside — e.g.
+- `.selectedDeparture` — Drives departure-chip selection (`.timetable`) from outside — mirrors ``selectedFare(_:)``.
 
 ## FlightResultRow
 
@@ -3554,7 +3660,8 @@ FlightResultRow(airline:, from:, to:, departure:, arrival:)
 
 **Modifiers**
 
-- `.surface` — Surface fill (background token key, default `.bgBase`) — feeds the active `CardStyle`'s configuration.
+- `.surface` — Surface fill (background token key) — feeds the active style's shell.
+- `.accent` — A semantic accent for the brand chrome — the airline fallback glyph, the active bookmark and the Select button.
 - `.flightNo` — Flight number, e.g.
 - `.cabin` — Cabin class caption, e.g.
 - `.stops` — Number of stops on the outbound leg (0 = direct, in green).
@@ -3565,6 +3672,9 @@ FlightResultRow(airline:, from:, to:, departure:, arrival:)
 - `.airlineLogo` — A remote airline logo (overrides the SF Symbol).
 - `.baggage` — A baggage chip, e.g.
 - `.badge` — A success badge, e.g.
+- `.selected` — Selected state, fed to the active `CardStyle` (the default style draws a hero border).
+- `.elevation` — Shell elevation, fed to the active `CardStyle` (default `.none` — today's flat, hairline-only chrome).
+- `.priceFractionDigits` — Fraction digits for the fare `PriceTag` (default 2).
 - `.favorite` — A heart toggle bound to a favourite flag (controlled — the caller owns persistence).
 - `.bookmark` — A bookmark (save) toggle bound to a flag (controlled).
 - `.totalPrice` — A secondary total-price line under the fare, e.g.
@@ -3587,10 +3697,15 @@ FlightTicketCard(from:, to:)
 - `.airline`
 - `.airlineLogo`
 - `.price`
+- `.original` — Pre-discount price shown struck through next to the price (via `PriceTag.original(_:)`); `nil` (the default) hides it.
 - `.favorite` — A heart toggle in the stub bound to a favourite flag (controlled — the caller owns persistence).
 - `.accent`
 - `.elevation`
 - `.surface`
+- `.cornerRadius` — Outer corner radius (radius role token, default `.box`).
+- `.perforation` — Draw the dashed perforation across the tear line (default on) — tear presets only.
+- `.dashColor` — Perforation dash colour (border token key, default `.borderPrimary`).
+- `.priceEmphasis` — Emphasis of the stub's `PriceTag` (default `.standard`).
 
 ## FlightTracker
 
@@ -3607,8 +3722,15 @@ FlightTracker(info)
 - `.details` — Extra fact rows appended to the facts grid, e.g.
 - `.showsTimeline` — Show the Check-in → Boarding → Departed → Arrived phase timeline (default on).
 - `.accent` — Semantic tint for the progress treatment and estimate emphasis; `nil` (default) derives from the status (`FlightStatus.semantic`).
-- `.surface` — Surface fill for the card shell (background token key, default `.bgWhite`) — threaded into the active `CardStyle` via the composed `Card`.
+- `.surface` — Surface fill for the card shell (background token key).
 - `.elevation` — Card shell elevation: none / soft (default) / elevated.
+- `.variant`
+- `.showsFacts` — Show the gate/terminal/desk/belt facts grid (default on; `.board`/`.timeline`).
+- `.showsEstimates` — Show the schedule-vs-estimate rows (and the `.compact`/`.banner` estimate time) when estimates differ meaningfully from the schedule (default on).
+- `.phaseTitles` — Overrides the phase-timeline titles; `nil` keeps the stock English-generic titles ("Check-in" / "Boarding" / "Departed" / "Arrived").
+- `.contentPadding` — Inner padding of the card shell as a spacing token (default `.md`) — forwarded to the composed `Card`.
+- `.progressContent` — Replaces the built-in route progress track, built per clamped 0…1 fraction.
+- `.timelineSize` — Marker/label size of the phase timeline (default `.small`).
 
 ## PassengerForm
 
@@ -3626,6 +3748,11 @@ PassengerForm(title, draft:)
 - `.birthDateRange` — Selectable date-of-birth window (default: 120 years back … today).
 - `.validator` — Wires every rendered field into the given validator (ADR-F6): messages, focus and live re-validation flow through it, keyed by `PassengerFormField`.
 - `.accent` — Accent tint for the interactive chrome (date pickers, menu checkmarks).
+- `.label` — Overrides one field's built-in title (e.g.
+- `.sectionTitles` — Overrides the section titles.
+- `.layout` — Section chrome: `.stacked` (two `Fieldset`s, default), `.flat` (bare fields + plain titles, no fieldset chrome), or `.grouped` (everything in one `Fieldset`).
+- `.genders` — The gender selector's options (default: all ``PassengerGender`` cases) — e.g.
+- `.columns` — `2` renders given/family side-by-side (via `ViewThatFits`, so narrow widths still stack); accessibility type sizes always fall back to stacked.
 
 ## PaymentMethodSelector
 
@@ -3637,11 +3764,18 @@ PaymentMethodSelector(options, selection:)
 
 **Modifiers**
 
-- `.variant` — Layout archetype: `.list` radio rows (default) or `.grid` tiles.
+- `.variant` — Layout archetype — superseded by the style axis: prefer `.paymentMethodSelectorStyle(.list/.grid/.carousel/.compactList)`, settable once per screen via the environment.
+- `.indicator` — Selected glyph: `.radio` (row-shaped presets' default), `.checkmark` (tile-shaped presets' default), or `.none` — the selected chrome alone signals the choice.
+- `.columns` — Grid column count, clamped 1…4 (default 2).
+- `.optionContent` — Replaces the built-in row/tile anatomy with caller content, built per `(option, isSelected)` in every style.
+- `.badgeStyle` — Style of the per-option badges (default `.info`) — applies wherever the active style draws the `Badge` itself (tiles, carousel, compact rows); the `.list`/`.sectioned` row's badge is drawn by `ListRow`.
+- `.radius` — Corner role for tile-shaped presets (default `.field`).
+- `.emphasis` — Selected-tile stroke strength: `.subtle` (default, base step) or `.strong` (the 700 "strong" step at 2pt).
 - `.installments` — Instalment plans shown inline under the selected `.card` option.
 - `.badge` — Per-option badge, e.g.
 - `.disabledMethods` — Options rendered disabled and excluded from selection.
 - `.accent` — Semantic tint for the radio / selected chrome / instalment rows; `nil` (default) uses the primary triad.
+- `.surface` — Surface token for the *unselected* tile-shaped presets' fill (default `.bgBase`); the selected tile keeps the accent tint and stroke.
 
 ## SavedCardsList
 
@@ -3657,6 +3791,13 @@ SavedCardsList(cards, selection:)
 - `.onAddNew` — Appends an "Add new card" row (and wires the empty state's primary action) that invokes `action`.
 - `.flagsExpired` — Expired cards (per `SavedCard.isExpired`) carry an "Expired" badge and auto-disable (default on); pass `false` to keep them selectable.
 - `.accent` — Semantic tint for the radio / brand glyph / add-new chrome; `nil` (default) uses the primary triad.
+- `.variant` — Layout archetype — superseded by the style axis: prefer `.savedCardsListStyle(.list/.wallet/.stack/.grid)`, settable once per screen via the environment.
+- `.brandLogo` — Replaces the stock brand symbol with caller content, built per ``CardBrand`` — e.g.
+- `.expiredBadge` — Overrides the expired flag's badge.
+- `.showsDividers` — Show the hairline dividers between list rows (default on).
+- `.surface` — Surface token: the `.list` style's backing fill, or the tile-shaped styles' card-face fill (default `.bgWhite` there).
+- `.deleteStyle` — Which delete affordances render once ``onDelete(_:)`` is wired: `.button` (trailing trash), `.contextMenu`, or `.both` (default).
+- `.rowContent` — Replaces the built-in row/tile anatomy with caller content, built per `(card, isSelected)`.
 
 ## SeatMap
 
@@ -3682,6 +3823,14 @@ SeatMap(sections:, selection:)
 - `.seatDisplay` — How seats are labelled: `.icon` · `.number` · `.initials` · `.initialsAndNumber`.
 - `.aisleWidth` — Width of a `.space` (gap) cell.
 - `.tierColors` — Override fare-tier accent colours with semantic tokens — brand the tiers with your own palette.
+- `.accent` — Accent for the passenger rail's and deck selector's **active** pill — the token's `.solid` shade fills the pill and `.onSolid` colours its text.
+- `.seatShape` — The silhouette every seat is drawn with (`.rounded` default · `.circle` · `.seatback`).
+- `.sectionHeader` — Replaces the built-in cabin-section header — receives the section title.
+- `.summaryBar` — Replaces the built-in seat-summary bar — receives a live ``SeatSummary`` (focused seat, selection count, running total).
+- `.legendPlacement` — Where the legend renders relative to the cabin: `.top` · `.bottom` (default) · `.hidden` (suppresses a `legend()` set upstream).
+- `.fuselageSurface` — Surface fill of the fuselage frame (default `.bgSecondaryLight`).
+- `.surface` — Explicit surface fill for a ``SeatMapStyle`` preset that draws its own chrome around the units (e.g.
+- `.deckLabel` — Custom deck-pill titles for multi-deck cabins, e.g.
 
 ## StickyBookingBar
 
@@ -3700,6 +3849,9 @@ StickyBookingBar(ctaTitle, action:)
 - `.accent`
 - `.surface` — Surface fill (background token key).
 - `.showsShadow` — Show the bar's shadow (default on).
+- `.secondaryAction` — An outline secondary action beside the primary CTA (e.g.
+- `.onPriceTap` — Makes the price block tappable (adds a disclosure chevron) — open a fare-breakdown sheet from the bar.
+- `.loading` — Show the CTA's loading spinner and block taps while `on` (forwarded to `ThemeButton.loading(_:)`).
 
 ## TransportCrossSellCard
 
@@ -3716,8 +3868,13 @@ TransportCrossSellCard(mode, from:, to:)
 - `.departures` — Frequency/terminal note, e.g.
 - `.badge` — A short accent-tinted flag, e.g.
 - `.onSelect` — The call to action.
-- `.variant` — Layout archetype: `.ribbon` (default, notched strip) or `.inline` (flat row).
+- `.variant` — Layout archetype — superseded by the style axis: prefer `.transportCrossSellCardStyle(.ribbon/.inline/.tile)`, settable once per list via the environment (and joined by the new `.banner` full-bleed strip).
+- `.size` — Size ramp: `.medium` (default) or `.small` — scales the mode glyph, the `PriceTag` and the paddings together.
+- `.tearStyle` — Ribbon tear-line chrome: `.notched` (default — the TicketStub cut + dashed perforation) or `.plain` (an uncut rounded strip).
+- `.badgeVariant` — Fill variant of the badge (`.soft` default, `.solid`, `.outline`, `.ghost`); its color keeps following the accent→style mapping.
+- `.shadow` — Shadow token under a preset's drawn surface (default `.soft`).
 - `.accent` — Overrides the mode-tinted accent (bus `.warning`, train `.info`, ferry `.turquoise`, car `.neutral`); `nil` restores the default.
+- `.surface` — Surface token for `.ribbon`/`.tile`'s drawn fill (default `.bgBase`); the ribbon's notch cut and dashed perforation are unaffected.
 
 ## TripSearchCard
 
@@ -3733,7 +3890,11 @@ TripSearchCard(draft:, onSearch:)
 - `.showsCabinPicker` — Show the inline ``CabinClassSelector`` (default true).
 - `.showsTripType` — Show the ``TripTypeToggle`` row (default true).
 - `.ctaTitle` — CTA title (default "Search flights").
-- `.variant` — `.card` (default) · `.hero` (larger treatment for landing headers) · `.compact` (collapsed summary row that expands on tap).
+- `.variant` — Maps 1:1 onto the ``TripSearchCardStyle`` presets and, when called, wins over the environment style (source-behavior stability during migration — ADR-0004 §5).
 - `.surface` — Surface fill by background token, threaded into the active ``CardStyle``'s configuration (e.g.
 - `.elevation` — Card elevation.
-- `.accent` — Semantic tint threaded through the composed pieces (trip-type pill, airport-picker chips, cabin selector).
+- `.accent` — Semantic tint threaded through the composed pieces (trip-type pill, airport-picker chips, cabin selector, the `.pill` search disc).
+- `.density` — Editor density: `.regular` (default) or `.compact` — tighter stacks resolved from spacing tokens.
+- `.fieldIcons` — Overrides the field icons (SF Symbol names); `nil` keeps each field's stock symbol (origin/destination "airplane", departure "calendar", passengers "person.2").
+- `.showsSwap` — Show the origin/destination swap affordance (default on).
+- `.passengerSheetDetents` — Detents for the passengers bottom sheet (default `[.medium]`).

@@ -85,4 +85,30 @@ final class ValidationTests: XCTestCase {
         XCTAssertNil(form.focusedField)
         XCTAssertTrue(form.isValid)
     }
+
+    func testFormValidatorOnInvalidAndErrorFields() {
+        enum Field { case email, password }
+        let form = FormValidator<Field>([
+            .email: [.required(), .email()],
+            .password: [.required(), .minLength(8)],
+        ])
+
+        // Invalid: onInvalid fires with the first invalid field; onValid does not.
+        var invalidField: Field?
+        var ran = false
+        let ok = form.submit([.email: "nope", .password: "short"]) { ran = true } onInvalid: { invalidField = $0 }
+        XCTAssertFalse(ok)
+        XCTAssertFalse(ran)
+        XCTAssertEqual(invalidField, .email)               // Ant onFinishFailed → first invalid
+        XCTAssertEqual(form.errorFields, [.email, .password])   // Ant getFieldsError, declaration order
+        XCTAssertEqual(form.firstError, .email)
+
+        // Valid: errorFields empties, onInvalid not called.
+        invalidField = nil
+        let ok2 = form.submit([.email: "a@b.co", .password: "longenough"]) { ran = true } onInvalid: { invalidField = $0 }
+        XCTAssertTrue(ok2)
+        XCTAssertNil(invalidField)
+        XCTAssertTrue(form.errorFields.isEmpty)
+        XCTAssertNil(form.firstError)
+    }
 }

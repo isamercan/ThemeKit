@@ -22,8 +22,16 @@ public struct TransferItem: Identifiable, Sendable {
     public var id: String { key }
 }
 
+/// Which way a ``Transfer`` move went (Ant `onChange` direction).
+public enum TransferDirection: Sendable { case toTarget, toSource }
+
+/// Validation tint for a ``Transfer``'s list borders (Ant `status`).
+public enum TransferStatus: Sendable { case normal, error, warning }
+
 public struct Transfer: View {
     @Environment(\.theme) private var theme
+    /// Whole-control disable (Ant `disabled`) — set natively by `.disabled(_:)`.
+    @Environment(\.isEnabled) private var isEnabled
 
     private let items: [TransferItem]
     @Binding private var target: Set<String>
@@ -33,6 +41,13 @@ public struct Transfer: View {
     /// Per-item enablement predicate (nil enables every item) — the
     /// kit-standard `optionEnabled` idiom (Ant Transfer per-item `disabled`).
     private var isItemEnabled: ((TransferItem) -> Bool)?
+    /// Header select-all checkbox in each box (Ant `showSelectAll`); off by default.
+    private var showsSelectAll = false
+    /// Validation tint for the list borders (Ant `status`).
+    private var status: TransferStatus = .normal
+    /// Fired after a move with the new target set, the direction, and moved keys
+    /// (Ant `onChange(targetKeys, direction, moveKeys)`).
+    private var onChangeHandler: ((_ target: Set<String>, _ direction: TransferDirection, _ movedKeys: [String]) -> Void)?
 
     @State private var checked: Set<String> = []
     @State private var sourceQuery = ""
@@ -67,11 +82,51 @@ public struct Transfer: View {
             }
             listBox(titles.1, items: targeted, query: $targetQuery)
         }
+        // Whole-control disabled (Ant `disabled`): native `.disabled` inert-ifies
+        // the inner buttons; the dim makes the state visible.
+        .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    // MARK: Select-all (Ant `showSelectAll`)
+
+    /// The enabled, currently-visible (post-filter) items in a box — the set a
+    /// header select-all toggles.
+    private func selectableKeys(_ items: [TransferItem], query: String) -> [String] {
+        filtered(items, query: query).filter(itemEnabled).map(\.key)
+    }
+
+    private func allChecked(_ keys: [String]) -> Bool {
+        !keys.isEmpty && keys.allSatisfy { checked.contains($0) }
+    }
+
+    private func toggleAll(_ keys: [String]) {
+        if allChecked(keys) { checked.subtract(keys) } else { checked.formUnion(keys) }
+    }
+
+    /// The list-box border tint for the current `status` (Ant `status`).
+    private var borderColor: Color {
+        switch status {
+        case .normal: return theme.border(.borderPrimary)
+        case .error: return theme.border(.systemcolorsBorderError)
+        case .warning: return theme.border(.systemcolorsBorderWarning)
+        }
     }
 
     private func listBox(_ title: String, items: [TransferItem], query: Binding<String>) -> some View {
-        VStack(spacing: 0) {
-            HStack {
+        let selectable = selectableKeys(items, query: query.wrappedValue)
+        return VStack(spacing: 0) {
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                if showsSelectAll {
+                    Button { toggleAll(selectable) } label: {
+                        Image(systemName: allChecked(selectable) ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 15))
+                            .foregroundStyle(selectable.isEmpty ? theme.text(.textDisabled)
+                                             : (allChecked(selectable) ? theme.text(.textHero) : theme.text(.textTertiary)))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectable.isEmpty)
+                    .accessibilityLabel(String(themeKit: allChecked(selectable) ? "Deselect all" : "Select all"))
+                }
                 Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
                 Spacer()
                 Text("\(items.count)").textStyle(.overline400).foregroundStyle(theme.text(.textTertiary))
@@ -105,7 +160,8 @@ public struct Transfer: View {
         .frame(maxWidth: .infinity)
         .frame(height: 220)
         .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
-        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value).strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value)
+            .strokeBorder(borderColor, lineWidth: status == .normal ? 1 : 2))
     }
 
     private func row(_ item: TransferItem) -> some View {
@@ -151,14 +207,18 @@ public struct Transfer: View {
 
     private func moveToTarget() {
         let moving = source.filter { checked.contains($0.key) && itemEnabled($0) }.map(\.key)
+        guard !moving.isEmpty else { return }
         target.formUnion(moving)
         checked.subtract(moving)
+        onChangeHandler?(target, .toTarget, moving)
     }
 
     private func moveToSource() {
         let moving = targeted.filter { checked.contains($0.key) && itemEnabled($0) }.map(\.key)
+        guard !moving.isEmpty else { return }
         target.subtract(moving)
         checked.subtract(moving)
+        onChangeHandler?(target, .toSource, moving)
     }
 }
 
@@ -177,6 +237,19 @@ public extension Transfer {
     /// idiom, Ant Transfer per-item `disabled`).
     func itemEnabled(_ predicate: ((TransferItem) -> Bool)?) -> Self { copy { $0.isItemEnabled = predicate } }
 
+    /// Show a select-all checkbox in each box header that toggles every
+    /// enabled, currently-visible row in that box (Ant `showSelectAll`).
+    func showsSelectAll(_ on: Bool = true) -> Self { copy { $0.showsSelectAll = on } }
+
+    /// Validation tint for the list borders (Ant `status`): normal / error / warning.
+    func status(_ status: TransferStatus) -> Self { copy { $0.status = status } }
+
+    /// Called after items move, with the new target set, the direction, and the
+    /// moved keys (Ant `onChange(targetKeys, direction, moveKeys)`).
+    func onChange(_ handler: @escaping (_ target: Set<String>, _ direction: TransferDirection, _ movedKeys: [String]) -> Void) -> Self {
+        copy { $0.onChangeHandler = handler }
+    }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {
         var c = self
         mutate(&c)
@@ -192,6 +265,13 @@ public extension Transfer {
     PreviewMatrix("Transfer") {
         PreviewCase("Default") {
             Transfer(items, target: $target).titles("Available", "Included")
+        }
+        // Header select-all (Ant `showSelectAll`) + error status border.
+        PreviewCase("Select-all + error status") {
+            Transfer(items, target: $target)
+                .titles("Available", "Included")
+                .showsSelectAll()
+                .status(.error)
         }
     }
     .environment(Theme.shared)

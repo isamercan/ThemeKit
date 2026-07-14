@@ -34,6 +34,8 @@ public struct Card<Content: View>: View {
     private var customHeader: SlotContent?
     private var footerContent: SlotContent?
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
+    private var radius: Theme.RadiusRole = .box   // corner size axis (threaded into CardStyle)
+    private var isSelected = false                // selection state → hero border in the default style
 
     @Environment(\.theme) private var theme
     @Environment(\.cardStyle) private var cardStyle
@@ -132,7 +134,9 @@ public struct Card<Content: View>: View {
         cardStyle.makeBody(configuration: CardStyleConfiguration(
             content: AnyView(cardContent),
             elevation: elevation,
-            surfaceKey: surfaceKey
+            isSelected: isSelected,
+            surfaceKey: surfaceKey,
+            radius: radius
         ))
     }
 
@@ -195,6 +199,15 @@ public extension Card {
     /// `secondary` → `.bgSecondaryLight`, `tertiary` → `.bgTertiary`;
     /// HeroUI `transparent` ≈ `.cardStyle(.outlined)` instead.
     func surface(_ key: Theme.BackgroundColorKey) -> Self { copy { $0.surfaceKey = key } }
+
+    /// Corner-radius role — the card "size" axis: `.box` (default, 16),
+    /// `.field` (8), or `.selector` (6). Threaded into the active ``CardStyle``,
+    /// so custom styles honor it too.
+    func radius(_ role: Theme.RadiusRole) -> Self { copy { $0.radius = role } }
+
+    /// Marks the card as selected — the default / outlined styles promote the
+    /// border to the hero token (HeroUI `isSelected`).
+    func selected(_ on: Bool = true) -> Self { copy { $0.isSelected = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -307,6 +320,31 @@ public extension View {
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .cardStyle(.outlined)
+        }
+        // Flat variant (HeroUI `flat`) — surface fill, no border, no shadow.
+        PreviewCase("Flat style") {
+            Card("Flat") {
+                Text("Surface fill with no border or shadow.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .surface(.bgSecondaryLight)   // Card modifier — before the style env modifier
+            .cardStyle(.flat)
+        }
+        // Size axis — a tighter corner-radius role.
+        PreviewCase("Compact radius") {
+            Card("Field radius") {
+                Text("Corner from the `.field` radius role (8).").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .radius(.field)
+        }
+        // Selection state — hero border.
+        PreviewCase("Selected") {
+            Card("Selected") {
+                Text("Promoted to the hero border while selected.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .selected()
         }
     }
 }

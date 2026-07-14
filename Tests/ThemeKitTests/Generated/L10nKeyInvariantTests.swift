@@ -103,7 +103,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) selected",
             "%@ selected", 1,
-            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:140")
+            site: "Sources/ThemeKit/Components/Molecules/Cascader.swift:116")
         assertKey(
             "\(d) stops",
             "%@ stops", 1,
@@ -190,7 +190,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Close \(d)",
             "Close %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/SegmentedTabBar.swift:228")
+            site: "Sources/ThemeKit/Components/Organisms/SegmentedTabBar.swift:264")
+        assertKey(
+            "Create \(d)",
+            "Create %@", 1,
+            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:295")
         assertKey(
             "Deck \(d)",
             "Deck %@", 1,
@@ -208,6 +212,10 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Donut chart with slices %@.", 1,
             site: "Sources/ThemeKit/Components/Molecules/Charts/DonutChart.swift:76")
         assertKey(
+            "Download \(d)",
+            "Download %@", 1,
+            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:157")
+        assertKey(
             "Expires \(d)",
             "Expires %@", 1,
             site: "Sources/ThemeKitTravel/Components/Organisms/SavedCardsListStyle.swift:164")
@@ -219,6 +227,9 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Line chart with series \(d).",
             "Line chart with series %@.", 1,
             site: "Sources/ThemeKit/Components/Molecules/Charts/LineChart.swift:107")
+    }
+
+    func testInterpolatedKeyShapes3() {
         assertKey(
             "More about \(d)",
             "More about %@", 1,
@@ -226,10 +237,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Move to \(d)",
             "Move to %@", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:65")
-    }
-
-    func testInterpolatedKeyShapes3() {
+            site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:80")
         assertKey(
             "Page \(d)",
             "Page %@", 1,
@@ -246,6 +254,10 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Payment method, \(d) options",
             "Payment method, %@ options", 1,
             site: "Sources/ThemeKitTravel/Components/Organisms/PaymentMethodSelector.swift:165")
+        assertKey(
+            "Preview \(d)",
+            "Preview %@", 1,
+            site: "Sources/ThemeKit/Components/Organisms/Upload.swift:189")
         assertKey(
             "React with \(d), \(d) reactions",
             "React with %@, %@ reactions", 2,
@@ -318,6 +330,9 @@ final class L10nKeyInvariantTests: XCTestCase {
             "seat \(d)",
             "seat %@", 1,
             site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:113")
+    }
+
+    func testInterpolatedKeyShapes4() {
         assertKey(
             "up \(d)",
             "up %@", 1,

@@ -510,6 +510,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Create %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Current": {
       "comment": "Accessibility value of the active step.",
       "extractionState": "manual",
@@ -557,6 +561,10 @@
       "generatesSymbol": false
     },
     "Departure": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Deselect all": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -624,6 +632,10 @@
       "generatesSymbol": false
     },
     "Double-tap to sort": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Download %@": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -1127,6 +1139,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Preview %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Previous": {
       "extractionState": "manual",
       "generatesSymbol": false
@@ -1324,11 +1340,19 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Select all": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Select dates for price": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
     "Select language": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Select row": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
