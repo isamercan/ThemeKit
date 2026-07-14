@@ -631,6 +631,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Download %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "EXIT": {
       "comment": "The text displayed in the exit band of a seat map.",
       "extractionState": "manual",
@@ -1128,6 +1132,10 @@
       "generatesSymbol": false
     },
     "Premium econ.": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Preview %@": {
       "extractionState": "manual",
       "generatesSymbol": false
     },

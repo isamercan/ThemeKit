@@ -40,6 +40,16 @@ public struct Upload: View {
     /// every body pass, so a live language switch is never frozen at init.
     private var buttonTitle: String { buttonTitleOverride ?? String(themeKit: "Upload Photo") }
     private var maxCount: Int? = nil
+    /// Tapping a file's thumbnail fires this (Ant `onPreview`); `nil` = inert thumbnail.
+    private var onPreview: ((UploadFile) -> Void)?
+    /// Shows a per-file download icon on completed files and fires this (Ant
+    /// `onDownload` / `showDownloadIcon`); `nil` = no download affordance.
+    private var onDownload: ((UploadFile) -> Void)?
+    /// Show the per-file remove (trash) icon (Ant `showRemoveIcon`; default on).
+    private var showsRemoveIcon = true
+    /// Render the file list at all (Ant `showUploadList`; default on) — off keeps
+    /// the picker but hides the rows (the caller shows files elsewhere).
+    private var showsList = true
 
     public init(
         prompt: String = String(themeKit: "Add a photo from your device or take one with the camera."),
@@ -70,7 +80,7 @@ public struct Upload: View {
                     .foregroundStyle(theme.text(.textTertiary))
             }
 
-            if !files.isEmpty {
+            if showsList && !files.isEmpty {
                 VStack(spacing: 0) {
                     ForEach(files) { file in
                         row(for: file)
@@ -83,11 +93,7 @@ public struct Upload: View {
 
     private func row(for file: UploadFile) -> some View {
         HStack(spacing: Theme.SpacingKey.sm.value) {
-            RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
-                .fill(theme.background(.bgElevatorTertiary))
-                .frame(width: 36, height: 36)
-                .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
-                .accessibilityHidden(true)   // decorative thumbnail placeholder
+            thumbnail(for: file)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(file.name)
@@ -108,15 +114,45 @@ public struct Upload: View {
                 .accessibilityLabel(String(themeKit: "Retry"))
             }
 
-            Button { onRemove(file) } label: {
-                Icon(systemName: "trash").size(.sm).color(theme.text(.textTertiary))
-                    .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays .sm
-                    .contentShape(Rectangle())
+            // Download affordance on completed files (Ant `showDownloadIcon` / `onDownload`).
+            if let onDownload, case .done = file.status {
+                Button { onDownload(file) } label: {
+                    Icon(systemName: "arrow.down.circle").size(.sm).color(theme.text(.textTertiary))
+                        .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Download \(file.name)"))
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(String(themeKit: "Remove \(file.name)"))
+
+            if showsRemoveIcon {
+                Button { onRemove(file) } label: {
+                    Icon(systemName: "trash").size(.sm).color(theme.text(.textTertiary))
+                        .frame(minWidth: 44, minHeight: 44)   // >=44pt hit area (WCAG 2.5.5); glyph stays .sm
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Remove \(file.name)"))
+            }
         }
         .padding(.vertical, Theme.SpacingKey.sm.value)
+    }
+
+    /// The file's thumbnail placeholder — a tappable preview button when
+    /// `onPreview` is set (Ant `onPreview`), otherwise a decorative tile.
+    @ViewBuilder
+    private func thumbnail(for file: UploadFile) -> some View {
+        let tile = RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous)
+            .fill(theme.background(.bgElevatorTertiary))
+            .frame(width: 36, height: 36)
+            .overlay(Icon(systemName: "photo").size(.sm).color(theme.foreground(.fgHero)))
+        if let onPreview {
+            Button { onPreview(file) } label: { tile.contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Preview \(file.name)"))
+        } else {
+            tile.accessibilityHidden(true)   // decorative thumbnail placeholder
+        }
     }
 
     @ViewBuilder
@@ -146,6 +182,21 @@ public extension Upload {
     /// Cap the number of files; once reached the picker is disabled and a count
     /// is shown. `nil` (default) means no limit.
     func maxCount(_ count: Int?) -> Self { copy { $0.maxCount = count } }
+
+    /// Make each file's thumbnail a tappable preview (Ant `onPreview`) — e.g. to
+    /// open a full-size viewer. Omit for an inert thumbnail.
+    func onPreview(_ handler: ((UploadFile) -> Void)?) -> Self { copy { $0.onPreview = handler } }
+
+    /// Show a download icon on completed files and fire this when tapped
+    /// (Ant `onDownload` / `showDownloadIcon`). Omit for no download affordance.
+    func onDownload(_ handler: ((UploadFile) -> Void)?) -> Self { copy { $0.onDownload = handler } }
+
+    /// Show the per-file remove (trash) icon (Ant `showRemoveIcon`; default on).
+    func showsRemoveIcon(_ on: Bool = true) -> Self { copy { $0.showsRemoveIcon = on } }
+
+    /// Render the file list (Ant `showUploadList`; default on). Off keeps the
+    /// picker but hides the rows — for when the caller lists files elsewhere.
+    func showsList(_ on: Bool = true) -> Self { copy { $0.showsList = on } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -282,6 +333,16 @@ public extension UploadList {
                 UploadFile(name: "room-1.jpg", status: .done),
                 UploadFile(name: "room-2.jpg", status: .done),
             ]).maxCount(2)
+        }
+        // Preview + download affordances (Ant onPreview / onDownload); remove hidden.
+        PreviewCase("Preview + download · remove hidden") {
+            Upload(files: [
+                UploadFile(name: "room-1.jpg", status: .done),
+                UploadFile(name: "room-2.jpg", status: .done),
+            ])
+            .onPreview { _ in }
+            .onDownload { _ in }
+            .showsRemoveIcon(false)
         }
     }
 }
