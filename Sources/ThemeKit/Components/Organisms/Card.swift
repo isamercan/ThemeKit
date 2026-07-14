@@ -10,6 +10,17 @@ public enum CardElevation {
     case none, soft, elevated
 }
 
+/// Where a ``Card`` renders its `cover(_:)` media.
+public enum CardCoverPlacement {
+    /// Full-bleed media above the header/body — the image bleeds to the card
+    /// edges and is clipped to the top corners (HeroUI "with image" cards).
+    case top
+    /// Media fills the whole card as a background; the header floats at the top
+    /// and the footer at the bottom, over the image (HeroUI cover cards). The
+    /// `content` body is omitted in this mode — drive the card from cover + slots.
+    case fill
+}
+
 /// Organism. A surface container with token padding / radius / elevation. An
 /// optional header (title / subtitle + a trailing `extra` action, divided from
 /// the body) and an `isLoading` skeleton bring it toward Ant Card.
@@ -33,6 +44,9 @@ public struct Card<Content: View>: View {
     private var isLoading = false
     private var customHeader: SlotContent?
     private var footerContent: SlotContent?
+    private var coverContent: SlotContent?
+    private var coverPlacement: CardCoverPlacement = .top
+    private var overlineText: String?
     private var surfaceKey: Theme.BackgroundColorKey = .bgWhite
     private var radius: Theme.RadiusRole = .box   // corner size axis (threaded into CardStyle)
     private var isSelected = false                // selection state → hero border in the default style
@@ -47,7 +61,7 @@ public struct Card<Content: View>: View {
     }
 
     private var hasHeader: Bool {
-        customHeader != nil || title != nil || subtitle != nil || (extraTitle != nil && onExtra != nil)
+        customHeader != nil || overlineText != nil || title != nil || subtitle != nil || (extraTitle != nil && onExtra != nil)
     }
 
     /// A custom header slot replaces the string title/subtitle header entirely;
@@ -71,6 +85,10 @@ public struct Card<Content: View>: View {
     private var titleHeader: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
             VStack(alignment: .leading, spacing: 2) {
+                if let overlineText {
+                    Text(overlineText).textCase(.uppercase).textStyle(.labelSm600)
+                        .foregroundStyle(theme.text(.textSecondary))
+                }
                 if let title {
                     Text(title).textStyle(.labelLg600).foregroundStyle(theme.text(.textPrimary))
                 }
@@ -110,22 +128,43 @@ public struct Card<Content: View>: View {
         }
     }
 
-    /// The composed content (header + body, padded) — the surface chrome around it
-    /// is supplied by the active ``CardStyle``.
+    /// True when the caller supplied a real body (not `EmptyView()`), so a
+    /// cover / slot-only card doesn't reserve an empty padded body region.
+    private var hasBody: Bool { Content.self != EmptyView.self }
+
+    /// The composed content — the surface chrome around it is supplied by the
+    /// active ``CardStyle``. Layout depends on `cover(_:)`: a `.top` cover sits
+    /// full-bleed above the header/body; a `.fill` cover becomes the background
+    /// with the header/footer floating over it. Non-cover cards keep the classic
+    /// divided header / body / footer chrome; a cover drops the dividers (the
+    /// HeroUI look).
+    @ViewBuilder
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if hasHeader {
-                header
-                DividerView().size(.small)
-            }
-            Group {
-                if isLoading { loadingPlaceholder } else { content() }
-            }
-            .padding(resolvedPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            if footerContent != nil {
-                DividerView().size(.small)
-                footer
+        if coverPlacement == .fill, let coverContent {
+            coverContent
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .top) { if hasHeader { header } }
+                .overlay(alignment: .bottom) { if footerContent != nil { footer } }
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                if let coverContent {
+                    coverContent.frame(maxWidth: .infinity)   // full-bleed, clipped to the top corners
+                }
+                if hasHeader {
+                    header
+                    if coverContent == nil { DividerView().size(.small) }
+                }
+                if isLoading {
+                    loadingPlaceholder
+                        .padding(resolvedPadding).frame(maxWidth: .infinity, alignment: .leading)
+                } else if hasBody {
+                    content()
+                        .padding(resolvedPadding).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if footerContent != nil {
+                    if coverContent == nil { DividerView().size(.small) }
+                    footer
+                }
             }
         }
     }
@@ -192,6 +231,21 @@ public extension Card {
     /// it, mirroring the header treatment.
     func footer<F: View>(@ViewBuilder _ footer: () -> F) -> Self {
         copy { $0.footerContent = SlotContent(footer) }
+    }
+
+    /// A small eyebrow/overline label above the title (HeroUI "NEW" tag) —
+    /// uppercased in a muted label style. Part of the string header, so it also
+    /// works when only a `title`/`subtitle` is set.
+    func overline(_ text: String?) -> Self { copy { $0.overlineText = text } }
+
+    /// Full-bleed cover media (the HeroUI "with image" cards). `.top` (default)
+    /// renders it above the header/body, edge-to-edge and clipped to the card's
+    /// top corners; `.fill` makes it the card background with the header floating
+    /// at the top and the footer at the bottom, over the image. A cover drops the
+    /// header/footer dividers. Size the media yourself, e.g.
+    /// `Image(…).resizable().aspectRatio(contentMode: .fill).frame(height: 180)`.
+    func cover<C: View>(_ placement: CardCoverPlacement = .top, @ViewBuilder _ content: () -> C) -> Self {
+        copy { $0.coverContent = SlotContent(content); $0.coverPlacement = placement }
     }
 
     /// Surface fill by background token, threaded into the active ``CardStyle``'s
@@ -345,6 +399,70 @@ public extension View {
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .selected()
+        }
+        // Overline eyebrow above the title.
+        PreviewCase("Overline") {
+            Card("Home Robot") {
+                Text("An eyebrow label sits above the title.").textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .overline("New")
+            .subtitle("Available soon")
+        }
+        // With image (HeroUI): full-bleed cover on top + a meta footer, no body.
+        PreviewCase("With image (cover)") {
+            Card { EmptyView() }
+                .cover {
+                    LinearGradient(colors: [.pink.opacity(0.55), .orange.opacity(0.55)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .frame(height: 130)
+                        .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white))
+                }
+                .footer {
+                    HStack {
+                        Text("Fruits").textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
+                        Spacer(minLength: 0)
+                        Text("18 pictures").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                }
+                .frame(width: 200)
+        }
+        // Cover overlay (HeroUI): media fills the card, header + footer float over it.
+        PreviewCase("Cover overlay") {
+            Card { EmptyView() }
+                .cover(.fill) {
+                    LinearGradient(colors: [.blue.opacity(0.65), .black.opacity(0.55)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(width: 220, height: 260)
+                }
+                .header {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("NEO").textStyle(.labelSm600).foregroundStyle(.white.opacity(0.85))
+                        Text("Home Robot").textStyle(.labelLg600).foregroundStyle(.white)
+                    }
+                }
+                .footer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Available soon").textStyle(.labelMd600).foregroundStyle(.white)
+                            Text("Get notified").textStyle(.bodySm400).foregroundStyle(.white.opacity(0.85))
+                        }
+                        Spacer(minLength: 0)
+                        ThemeButton("Notify me") {}.size(.small)
+                    }
+                }
+        }
+        // Card as a form container (HeroUI "with form"): custom content = fields.
+        PreviewCase("With form") {
+            Card("Log in") {
+                VStack(spacing: Theme.SpacingKey.sm.value) {
+                    TextInput("Email", text: .constant(""))
+                    TextInput("Password", text: .constant(""))
+                    ThemeButton("Sign in") {}.fullWidth()
+                }
+            }
+            .subtitle("Welcome back")
+            .frame(width: 260)
         }
     }
 }
