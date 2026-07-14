@@ -1348,6 +1348,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Select row": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Selected": {
       "comment": "A description of a seat's state: \"Occupied\", \"Selected\" or \"Available\".",
       "extractionState": "manual",
