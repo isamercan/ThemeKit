@@ -234,9 +234,6 @@ final class L10nKeyInvariantTests: XCTestCase {
             "Move to \(d)",
             "Move to %@", 1,
             site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:80")
-    }
-
-    func testInterpolatedKeyShapes3() {
         assertKey(
             "Page \(d)",
             "Page %@", 1,
