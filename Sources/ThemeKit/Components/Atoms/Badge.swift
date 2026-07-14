@@ -207,12 +207,19 @@ public extension Badge {
     func variant(_ v: FillVariant) -> Self { copy { $0.variant = v } }
     /// Size tier: small / medium / large / xlarge.
     func size(_ s: BadgeSize) -> Self { copy { $0.size = s } }
-    /// Leading SF Symbol before the text.
+    /// Leading SF Symbol before the text (the Figma "Prefix" slot).
     func icon(_ systemName: String?) -> Self { copy { $0.leadingSystemImage = systemName } }
+    /// Leading and/or trailing SF Symbols in one call — the Figma "Prefix" and
+    /// "Suffix" slots. Mirrors `ThemeButton.icon(leading:trailing:)`; pass `nil`
+    /// to clear either side (e.g. `.icon(leading: "star.fill", trailing: "xmark")`).
+    func icon(leading: String? = nil, trailing: String? = nil) -> Self {
+        copy { $0.leadingSystemImage = leading; $0.trailingSystemImage = trailing }
+    }
+    /// A trailing SF Symbol after the text — the Figma "Suffix" slot (e.g. a
+    /// dismiss `xmark` or a chevron). Also settable via `icon(leading:trailing:)`.
+    func trailingIcon(_ systemName: String?) -> Self { copy { $0.trailingSystemImage = systemName } }
     /// Pill (default) or rounded-rectangle outline.
     func badgeShape(_ shape: BadgeShape) -> Self { copy { $0.shape = shape } }
-    /// A trailing SF Symbol after the text (e.g. a dismiss chevron).
-    func trailingIcon(_ systemName: String?) -> Self { copy { $0.trailingSystemImage = systemName } }
     /// Overrides the text/foreground color (otherwise derived from style + variant).
     @available(*, deprecated, message: "Use badgeStyle(_:) with a semantic BadgeStyle (plus variant(_:)) instead of a raw color.")
     func badgeColor(_ color: Color?) -> Self { copy { $0.textColor = color } }
@@ -267,6 +274,14 @@ private struct BadgeHighlight: ViewModifier {
                 Badge("Solid").badgeStyle(.error).variant(.solid)
                 Badge("Outline").badgeStyle(.info).variant(.outline)
                 Badge("Ghost").badgeStyle(.success).variant(.ghost)
+            }
+        }
+        // Prefix + Suffix slots (Figma): leading, trailing, or both.
+        PreviewCase("Prefix + Suffix icons") {
+            HStack {
+                Badge("Prefix").badgeStyle(.info).icon("star.fill")
+                Badge("Suffix").badgeStyle(.info).trailingIcon("xmark")
+                Badge("Both").badgeStyle(.purple).icon(leading: "sparkles", trailing: "chevron.right")
             }
         }
         // G5 — token gradient twin (solid shades of semantic hues); `.solid`

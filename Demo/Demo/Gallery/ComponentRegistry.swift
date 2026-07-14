@@ -56,7 +56,7 @@ enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
         .knob("Avatar", .atoms, demo: AvatarDemo(), usage: #"Avatar(.initials("AB")).size(.md).presence(.online)"#),
-        .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label").badgeStyle(.info).icon("star.fill")"#),
+        .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label").badgeStyle(.info).icon(leading: "star", trailing: "xmark")"#),
         .knob("Chip", .atoms, demo: ChipDemo(), usage: #"Chip("Recommended", isSelected: $selected).chipStyle(.tonal)"#),
         .knob("Color Palette", .atoms, demo: ColorLadderDemo(), usage: #"SemanticColor.primary.shade(.s500)   // base · .bg .hover .active .strong"#),
         .knob("ColorSwatch", .atoms, demo: ColorSwatchDemo(), usage: #"ColorSwatch(.red, label: "Crimson").shape(.circle).size(.large).selected()"#, isNew: true),
