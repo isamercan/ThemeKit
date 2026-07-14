@@ -283,15 +283,22 @@ struct MultiLineDemo: View {
     @State private var error = false
     @State private var helper = false
     @State private var warning = false
+    @State private var autosize = false
+    // All modifiers return `Self`, so the autosize toggle is a plain ternary.
+    private var field: MultiLineTextInput {
+        let base = MultiLineTextInput("Notes", text: $text)
+            .placeholder("Write something…")
+            .characterLimit(limit ? 200 : nil)
+            .helperText(helper ? "Visible to the support team only." : nil)
+            .warningText(warning ? "Avoid sharing personal data." : nil)
+            .errorText(error ? "Required" : nil)
+        return autosize ? base.autosize(minRows: 2, maxRows: 6) : base
+    }
     var body: some View {
-        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)")]) {
-            MultiLineTextInput("Notes", text: $text)
-                .placeholder("Write something…")
-                .characterLimit(limit ? 200 : nil)
-                .helperText(helper ? "Visible to the support team only." : nil)
-                .warningText(warning ? "Avoid sharing personal data." : nil)
-                .errorText(error ? "Required" : nil)
+        ComponentStage("MultiLineTextInput", inspector: [("count", "\(text.count)"), ("autosize", "\(autosize)")]) {
+            field
         } knobs: {
+            Toggle("Autosize (2…6 rows)", isOn: $autosize)
             Toggle("Character limit", isOn: $limit)
             Toggle("Helper text", isOn: $helper)
             Toggle("Warning text", isOn: $warning)
@@ -1108,26 +1115,40 @@ struct StepsDemo: View {
     @State private var descriptions = true
     @State private var progressDot = false
     @State private var percent = false
+    @State private var subtitles = false
+    @State private var controlled = false
+    @State private var disableReview = false
     private let titles = ["Cart", "Address", "Payment", "Done"]
     private let subs = ["2 items", "Istanbul", "Card ••42", "Confirm"]
+    private let subtitleTexts = ["2 items", "Home", "Visa", "Ready"]
     private var steps: [Steps.Step] {
         titles.enumerated().map { i, t in
+            // With `controlled`, leave state at its default and let `.current(_:)`
+            // derive it; otherwise derive it here as before.
             let state: StepState = (error && i == active) ? .error
+                : controlled ? .todo
                 : i < active ? .done : i == active ? .active : .todo
-            return .init(t, description: descriptions ? subs[i] : nil, state: state,
+            return .init(t, subTitle: subtitles ? subtitleTexts[i] : nil,
+                         description: descriptions ? subs[i] : nil, state: state,
+                         disabled: disableReview && i == 2,
                          percent: (percent && state == .active) ? 0.6 : nil)
         }
     }
     @State private var small = false
     var body: some View {
-        ComponentStage("Steps", inspector: [("active", "\(active)"), ("size", small ? "small" : "medium")]) {
+        ComponentStage("Steps", inspector: [("active", "\(active)"),
+                                            ("current", controlled ? "\(active)" : "—")]) {
             Steps(steps) { active = $0; flash("Step \($0 + 1) selected") }
                 .axis(vertical ? .vertical : .horizontal)
                 .progressDot(progressDot)
                 .size(small ? .small : .medium)
+                .current(controlled ? active : nil)
         } knobs: {
             Stepper("Active: \(active)", value: $active, in: 0...3)
             Text("Tip: tap a step to jump to it.").font(.caption).foregroundStyle(.secondary)
+            Toggle("Controlled .current(active)", isOn: $controlled)
+            Toggle("Subtitles", isOn: $subtitles)
+            Toggle("Disable “Payment” step", isOn: $disableReview)
             Toggle("Small size", isOn: $small)
             Toggle("Progress dot", isOn: $progressDot)
             Toggle("Active percent ring (60%)", isOn: $percent)
@@ -1367,18 +1388,41 @@ struct CardStackDemo: View {
 
 struct CalendarDemo: View {
     @State private var date: Date? = .now
+    @State private var multiDates: Set<Date> = []
     @State private var yearPicker = false
+    @State private var multiple = false
+    @State private var noWeekends = false
     var body: some View {
-        ComponentStage("Calendar", inspector: [("selection", date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil"), ("yearPicker", "\(yearPicker)")]) {
-            if yearPicker {
-                CalendarView(selection: $date).yearPicker()
-            } else {
-                CalendarView(selection: $date)
-            }
+        ComponentStage("Calendar", inspector: [
+            ("selection", multiple ? "\(multiDates.count) day(s)"
+                : (date.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "nil")),
+            ("multiple", "\(multiple)"),
+            ("disabledWeekends", "\(noWeekends)")
+        ]) {
+            calendar
         } knobs: {
+            Toggle("Multiple selection", isOn: $multiple)
+            Toggle("Disable weekends", isOn: $noWeekends)
             Toggle("Tappable header (.yearPicker)", isOn: $yearPicker)
-            Button("Clear") { date = nil }
+            Button("Clear") { date = nil; multiDates = [] }
         }
+    }
+
+    // Both selection inits return `CalendarView`, so the shared modifiers apply
+    // uniformly regardless of single/multiple mode.
+    @ViewBuilder private var calendar: some View {
+        if multiple {
+            configured(CalendarView(selection: $multiDates))
+        } else {
+            configured(CalendarView(selection: $date))
+        }
+    }
+
+    private func configured(_ view: CalendarView) -> CalendarView {
+        var view = view
+        if yearPicker { view = view.yearPicker() }
+        if noWeekends { view = view.disabledDates { Calendar.current.isDateInWeekend($0) } }
+        return view
     }
 }
 
@@ -2788,8 +2832,13 @@ struct DialogDemo: View {
     @State private var accepted = false
     @State private var showConfirm = false
     @State private var deleted = false
+    @State private var backdrop: BackdropStyle = .dim
+    @State private var size: DialogSize = .md
+    @State private var placement: DialogPlacement = .center
     var body: some View {
-        ComponentStage("Dialog", inspector: [("accepted", "\(accepted)"), ("deleted", "\(deleted)")]) {
+        ComponentStage("Dialog",
+                       inspector: [("backdrop", backdrop.rawValue), ("size", size.rawValue),
+                                   ("placement", placement.rawValue), ("deleted", "\(deleted)")]) {
             VStack(spacing: 12) {
                 PrimaryButton("Open agreement") { show = true; flash("Dialog opened") }
                 OutlineButton("Delete account (async)") { deleted = false; showConfirm = true }
@@ -2802,8 +2851,10 @@ struct DialogDemo: View {
                     primaryTitle: "Delete", onPrimary: {
                         try? await Task.sleep(nanoseconds: 1_200_000_000)   // async work; OK spins
                         deleted = true; flash("Account deleted")
-                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error)
-            .dialog(isPresented: $show, title: "Terms of Use", afterClose: {}) {
+                    }, secondaryTitle: "Cancel", onSecondary: { flash("Dismissed") }, kind: .error,
+                    backdrop: backdrop, size: size, placement: placement)
+            .dialog(isPresented: $show, title: "Terms of Use",
+                    backdrop: backdrop, size: size, placement: placement, afterClose: {}) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(1...8, id: \.self) { i in
                         Text("Article \(i)").textStyle(.labelBase700).foregroundStyle(Theme.shared.text(.textPrimary))
@@ -2818,6 +2869,15 @@ struct DialogDemo: View {
                 }
             }
         } knobs: {
+            Picker("Backdrop", selection: $backdrop) {
+                ForEach(BackdropStyle.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                ForEach(DialogSize.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Placement", selection: $placement) {
+                ForEach(DialogPlacement.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
             Button("Reset") { accepted = false }
         }
     }

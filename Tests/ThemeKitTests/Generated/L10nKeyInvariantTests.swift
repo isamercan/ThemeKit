@@ -190,7 +190,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Close \(d)",
             "Close %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/SegmentedTabBar.swift:228")
+            site: "Sources/ThemeKit/Components/Organisms/SegmentedTabBar.swift:264")
         assertKey(
             "Deck \(d)",
             "Deck %@", 1,
@@ -233,7 +233,10 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Move to \(d)",
             "Move to %@", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:65")
+            site: "Sources/ThemeKit/Components/Molecules/Transfer.swift:80")
+    }
+
+    func testInterpolatedKeyShapes3() {
         assertKey(
             "Page \(d)",
             "Page %@", 1,
