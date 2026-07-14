@@ -13,6 +13,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
     case `default`
     case ocean
     case sunset
+    case heroui
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
         case .default: return "defaultTheme"
         case .ocean: return "oceanTheme"
         case .sunset: return "sunsetTheme"
+        case .heroui: return "herouiTheme"
         }
     }
 
@@ -30,6 +32,7 @@ enum DemoTheme: String, CaseIterable, Identifiable {
         case .default: return "Default"
         case .ocean: return "Ocean"
         case .sunset: return "Sunset"
+        case .heroui: return "HeroUI"
         }
     }
 
@@ -79,6 +82,19 @@ final class DemoThemeStore: ObservableObject {
     init() {
         current = DemoTheme.stored
         isDark = DemoTheme.storedDark
+        // Screenshot/deep-link override: `-forceTheme <resourceName> [-forceThemeDark YES]`
+        // pins a bundled JSON theme at launch, bypassing the saved preset/custom
+        // precedence below (used to verify a specific theme in the simulator).
+        if let forced = UserDefaults.standard.string(forKey: "forceTheme"), !forced.isEmpty {
+            let dark = UserDefaults.standard.bool(forKey: "forceThemeDark")
+            isDark = dark
+            // Keep the switcher highlight in sync when the forced name is a known theme.
+            if let match = DemoTheme.allCases.first(where: { $0.resourceName == forced }) {
+                current = match
+            }
+            Theme.shared.loadTheme(named: forced, dark: dark)
+            return
+        }
         // Precedence at launch: a saved custom (generated) recipe wins, then a
         // preset, then the bundled JSON theme.
         if let data = UserDefaults.standard.data(forKey: Self.customKey),

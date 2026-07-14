@@ -1189,6 +1189,7 @@ struct ThemePresetRow: View {
         case .default: return Color(red: 0.086, green: 0.463, blue: 1.0)
         case .ocean: return Color(red: 0.0, green: 0.60, blue: 0.65)
         case .sunset: return Color(red: 1.0, green: 0.48, blue: 0.20)
+        case .heroui: return Color(red: 0.016, green: 0.522, blue: 0.969) // 0485f7
         }
     }
 }
