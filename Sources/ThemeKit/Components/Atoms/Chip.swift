@@ -197,7 +197,10 @@ public struct Chip: View {
                     Image(systemName: "xmark").font(.system(size: closeGlyphSize, weight: .semibold))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "Remove"))
+                // Include the chip title so VoiceOver distinguishes each close
+                // button when several closable chips share a row (matches Tag /
+                // ChipGroup.removable).
+                .accessibilityLabel(String(themeKit: "Remove \(title)"))
             }
         }
         .frame(maxWidth: expandsHorizontally ? .infinity : nil)
