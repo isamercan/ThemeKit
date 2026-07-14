@@ -61,6 +61,33 @@ final class RenderSmokeTests: XCTestCase {
         renders(Affix(offsetTop: 0) { Text("Toolbar") }, "Affix")
     }
 
+    // InputGroup + InputAffix must render across the Figma axes (variant ×
+    // type × affix positioning × gapSpace) and with real-world affix content.
+    @MainActor
+    func testInputGroupComponentsRender() {
+        Theme.shared.loadTheme(named: "defaultTheme")
+        // Standalone affix content (mute / active, icon / label / arrow, button).
+        renders(InputAffix("USD").arrow().emphasis(.active), "InputAffix/selector")
+        renders(InputAffix(action: {}).icon("doc.on.doc"), "InputAffix/icon-button")
+        // Both affixes, primary/text — the base variant.
+        renders(InputGroup("heroui.com", text: .constant("heroui.com"))
+            .prefix { InputAffix().icon("globe") }
+            .suffix { InputAffix(action: {}).icon("doc.on.doc").emphasis(.active) }, "InputGroup/text-both")
+        // Secondary + number + gapSpaced divider + prefix/suffix.
+        renders(InputGroup("0", text: .constant("10"))
+            .variant(.secondary).type(.number).gapSpaced()
+            .prefix { InputAffix("$") }
+            .suffix { InputAffix("USD", action: {}).arrow().emphasis(.active) }, "InputGroup/number-secondary-gap")
+        // Password + suffix-only reveal affix.
+        renders(InputGroup("Password", text: .constant("secret"))
+            .type(.password)
+            .suffix { InputAffix(action: {}).icon("eye") }, "InputGroup/password-suffix")
+        // Prefix-only.
+        renders(InputGroup("(000) 000 - 0000", text: .constant(""))
+            .type(.number).gapSpaced()
+            .prefix { InputAffix("+1", action: {}).icon("phone").arrow().emphasis(.active) }, "InputGroup/prefix-only")
+    }
+
     // AlertDialog + its two public molecules must render across their variants
     // (icon-only / title-only header, horizontal / auto-stacking footer, the
     // composed card with a custom body) — liveness for the composition.

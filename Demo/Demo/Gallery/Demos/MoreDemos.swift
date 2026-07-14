@@ -170,6 +170,94 @@ struct SearchBarDemo: View {
     }
 }
 
+struct InputGroupDemo: View {
+    @State private var value = "heroui.com"
+    @State private var variant: InputGroupVariant = .primary
+    @State private var type: InputGroupType = .text
+    @State private var affix = 0            // 0 both · 1 prefix · 2 suffix
+    @State private var gap = false
+    @State private var reveal = false
+    // Standalone example fields.
+    @State private var phone = ""
+    @State private var command = ""
+    @State private var email = ""
+
+    private var showPrefix: Bool { affix == 0 || affix == 1 }
+    private var showSuffix: Bool { affix == 0 || affix == 2 }
+    private var placeholder: String {
+        switch type { case .text: return "heroui.com"; case .number: return "0"; case .password: return "Password" }
+    }
+    /// Password reveals as plain text while the eye toggle is on.
+    private var effectiveType: InputGroupType { type == .password && reveal ? .text : type }
+
+    /// Built imperatively so the prefix/suffix slots stay conditional on the knob.
+    private var live: InputGroup {
+        var g = InputGroup(placeholder, text: $value).variant(variant).type(effectiveType).gapSpaced(gap)
+        if showPrefix { g = g.prefix { prefixAffix } }
+        if showSuffix { g = g.suffix { suffixAffix } }
+        return g
+    }
+
+    @ViewBuilder private var prefixAffix: some View {
+        switch type {
+        case .text:     InputAffix().icon("globe")
+        case .number:   InputAffix("$")
+        case .password: InputAffix().icon("lock")
+        }
+    }
+
+    @ViewBuilder private var suffixAffix: some View {
+        switch type {
+        case .text:
+            InputAffix(action: { flash("Copied") }).icon("doc.on.doc").emphasis(.active).accessibilityLabel("Copy")
+        case .number:
+            InputAffix("USD", action: { flash("Currency") }).arrow().emphasis(.active)
+        case .password:
+            InputAffix(action: { reveal.toggle() })
+                .icon(reveal ? "eye.slash" : "eye")
+                .accessibilityLabel(reveal ? "Hide password" : "Show password")
+        }
+    }
+
+    var body: some View {
+        ComponentStage("InputGroup",
+                       inspector: [("value", "\"\(value)\""), ("variant", variant.rawValue),
+                                   ("type", type.rawValue), ("gapSpace", "\(gap)")]) {
+            VStack(alignment: .leading, spacing: 20) {
+                live.frame(width: 280)
+
+                Text("Examples").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+                // Country selector prefix (phone).
+                InputGroup("(000) 000 - 0000", text: $phone)
+                    .variant(variant).type(.number).gapSpaced()
+                    .prefix { InputAffix("+1", action: { flash("Country") }).icon("phone").arrow().emphasis(.active) }
+                    .frame(width: 280)
+                // Keyboard-shortcut hint suffix.
+                InputGroup("Command", text: $command)
+                    .variant(variant)
+                    .suffix { InputAffix("⌘ K") }
+                    .frame(width: 280)
+                // Badge suffix.
+                InputGroup("Email address", text: $email)
+                    .variant(variant)
+                    .suffix { Badge("PRO").badgeStyle(.info) }
+                    .frame(width: 280)
+            }
+        } knobs: {
+            Picker("Variant", selection: $variant) {
+                ForEach(InputGroupVariant.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Type", selection: $type) {
+                ForEach(InputGroupType.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Affix", selection: $affix) {
+                Text("Both").tag(0); Text("Prefix").tag(1); Text("Suffix").tag(2)
+            }.pickerStyle(.segmented)
+            Toggle("Gap spaced (divider)", isOn: $gap)
+        }
+    }
+}
+
 struct SelectDemo: View {
     @State private var city: String?
     @State private var clearable = true
