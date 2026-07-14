@@ -204,41 +204,49 @@ ThemePicker(selection: $active)             // a tappable grid of all 33 themes
 
 ## Import a CSS theme (HeroUI, Tailwind, shadcn…)
 
-Already have a web design system as CSS custom properties? ThemeKit ships a
-ready-made **HeroUI** theme, and can convert any HeroUI-style CSS token file
-(`oklch()` / hex variables) into a native ThemeKit theme.
+Already have a web design system as CSS custom properties? Hand it to ThemeKit
+**directly** — the `oklch()` / hex variables are parsed on-device at runtime and
+the whole token set is generated for you. No JSON, no build step. ThemeKit even
+ships a ready-made **HeroUI** theme.
 
-**1. Use the bundled HeroUI theme** — one line:
+**Drop a `.css` in your app and apply it** — one line:
 
 ```swift
-Theme.shared.loadTheme(named: "herouiTheme")              // light
-Theme.shared.loadTheme(named: "herouiTheme", dark: true)  // dark
+Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter")   // bundled HeroUI theme
+Theme.shared.loadTheme(cssNamed: "brand")                   // your own brand.css in the app bundle
 ```
 
-**2. Bring your own CSS** — convert it once with the importer:
+**Or apply a CSS string** — from a file, a network response, anywhere:
+
+```swift
+let css = try String(contentsOf: url)     // your theme.css
+Theme.shared.setTheme(css: css)           // parsed + applied instantly, no restart
+Theme.shared.setColorScheme(dark: true)   // switches to the CSS's .dark block
+```
+
+Both the `:root`/`.light` and `.dark` blocks are read; `--accent` drives the
+primary/info palette, `--danger` / `--success` / `--warning` the semantic colors,
+and `--background` / `--foreground` / `--border` / `--muted` the neutral surfaces
+and text (`--radius` / `--field-radius` → the box/field radius roles). Anything
+the CSS doesn't define falls back to ThemeKit's defaults, and the CSS is treated
+as untrusted text — only `--var: value;` declarations are read, nothing is executed.
+
+<details>
+<summary><b>Offline alternative</b> — pre-convert CSS → theme JSON at build time</summary>
+
+Prefer to bundle a static JSON (zero runtime parse)? The same conversion runs
+offline as a Python tool:
 
 ```bash
-# turns theme.css → brandTheme.json + brandThemeDark.json (light + dark)
+# theme.css → brandTheme.json + brandThemeDark.json (light + dark)
 python3 tools/import_css_theme.py theme.css --name brand \
     --out Sources/ThemeKitCore/Resources --font Inter
 ```
 
 ```swift
-Theme.shared.loadTheme(named: "brandTheme")   // then apply like any bundled theme
+Theme.shared.loadTheme(named: "brandTheme")   // then apply like any bundled JSON theme
 ```
-
-The importer maps `--accent` → the primary/info palette, `--danger/--success/
---warning` → the semantic colors, and the neutral surfaces/text to your
-`--background/--foreground/--border/--muted`. Families the CSS doesn't define
-fall back to ThemeKit's defaults.
-
-**3. Apply a CSS theme at runtime** — a host app can hand ThemeKit a generated
-JSON directly, no library rebuild (mirrors the localization override):
-
-```swift
-let data = try Data(contentsOf: url)    // your generated theme JSON
-Theme.shared.setTheme(jsonData: data)   // applies instantly, no restart
-```
+</details>
 
 ## Screenshots
 

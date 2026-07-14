@@ -1,19 +1,52 @@
 # Custom Themes — import a CSS design system
 
 Already have a web design system as CSS custom properties (HeroUI, Tailwind,
-shadcn…)? ThemeKit ships a ready-made **HeroUI** theme, and can convert any
-HeroUI-style CSS token file (`oklch()` / hex variables) into a native theme.
+shadcn…)? Hand it to ThemeKit **directly** — the `oklch()` / hex variables are
+parsed on-device at runtime and the whole token set is generated for you. No JSON,
+no build step. ThemeKit even ships a ready-made **HeroUI** theme.
 
-## 1. Use the bundled HeroUI theme
+## Drop a `.css` and apply it
 
 ```swift
-Theme.shared.loadTheme(named: "herouiTheme")              // light
-Theme.shared.loadTheme(named: "herouiTheme", dark: true)  // dark
+Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter")  // bundled HeroUI theme
+Theme.shared.loadTheme(cssNamed: "brand")                  // your own brand.css in the app bundle
 ```
 
-## 2. Bring your own CSS
+`loadTheme(cssNamed:)` searches the ThemeKit bundle first, then your app's main
+bundle — so a consumer just drops `brand.css` into their app.
 
-Convert a CSS token file once — it writes a light + dark JSON pair:
+## Apply a CSS string
+
+From a file, a network response, anywhere:
+
+```swift
+let css = try String(contentsOf: url)     // your theme.css
+Theme.shared.setTheme(css: css)           // parsed + applied instantly, no restart
+Theme.shared.setColorScheme(dark: true)   // switches to the CSS's .dark block
+```
+
+## What maps to what
+
+Both the `:root`/`.light` and `.dark` blocks are read:
+
+| CSS variable | ThemeKit |
+| --- | --- |
+| `--accent` | primary + info palette, `bg-hero`, focus |
+| `--danger` / `--success` / `--warning` | the semantic colors |
+| `--background` / `--foreground` | page surface / primary text |
+| `--border` / `--muted` | borders / secondary text |
+| `--surface*` / `--default` | elevated surfaces |
+| `--radius` / `--field-radius` | box / field radius roles |
+
+Anything the CSS doesn't define falls back to ThemeKit's defaults. The CSS is
+treated as untrusted text — only `--var: value;` declarations are read, nothing is
+executed. Custom fonts (e.g. Inter) must be bundled and registered in your app to
+render; otherwise the type ramp uses the system font.
+
+## Offline alternative
+
+Prefer to bundle a static JSON (zero runtime parse)? The same conversion runs
+offline as a Python tool:
 
 ```bash
 # theme.css → brandTheme.json + brandThemeDark.json
@@ -21,30 +54,9 @@ python3 tools/import_css_theme.py theme.css --name brand \
     --out Sources/ThemeKitCore/Resources --font Inter
 ```
 
-Then load it like any bundled theme:
-
 ```swift
 Theme.shared.loadTheme(named: "brandTheme")
 ```
-
-The importer maps `--accent` → the primary/info palette, `--danger` /
-`--success` / `--warning` → the semantic colors, and `--background` /
-`--foreground` / `--border` / `--muted` → the neutral surfaces and text.
-`--radius` / `--field-radius` become the box/field radius roles. Anything the CSS
-doesn't define falls back to ThemeKit's defaults.
-
-## 3. Apply a CSS theme at runtime
-
-A host app can hand ThemeKit a generated JSON directly — no library rebuild,
-applied instantly (the same entry point the localization override uses):
-
-```swift
-let data = try Data(contentsOf: url)    // your generated theme JSON
-Theme.shared.setTheme(jsonData: data)   // applies instantly, no restart
-```
-
-> Custom fonts (e.g. Inter) must be bundled and registered in your app to render;
-> otherwise the type ramp falls back to the system font.
 
 See also the [Theming guide](https://isamercan.github.io/ThemeKit/guides/theming/)
 on the docs site.

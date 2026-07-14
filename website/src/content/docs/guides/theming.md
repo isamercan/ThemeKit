@@ -35,42 +35,38 @@ theme.applyGenerated(primaryHex: "#7C3AED")  // full palette from one accent
 
 ## Import a CSS theme (HeroUI, Tailwind, shadcn…)
 
-Already have a web design system as CSS custom properties? ThemeKit ships a
-ready-made **HeroUI** theme, and can convert any HeroUI-style CSS token file
-(`oklch()` / hex variables) into a native ThemeKit theme.
+Already have a web design system as CSS custom properties? Hand it to ThemeKit
+**directly** — the `oklch()` / hex variables are parsed on-device at runtime and
+the whole token set is generated for you. No JSON, no build step. ThemeKit even
+ships a ready-made **HeroUI** theme.
 
-Use the bundled HeroUI theme in one line:
-
-```swift
-Theme.shared.loadTheme(named: "herouiTheme")              // light
-Theme.shared.loadTheme(named: "herouiTheme", dark: true)  // dark
-```
-
-To bring **your own** CSS, convert it once with the importer — it produces a
-light + dark JSON pair you can load like any bundled theme:
-
-```bash
-# theme.css → brandTheme.json + brandThemeDark.json
-python3 tools/import_css_theme.py theme.css --name brand \
-    --out Sources/ThemeKitCore/Resources --font Inter
-```
+Drop a `.css` in your app and apply it in one line:
 
 ```swift
-Theme.shared.loadTheme(named: "brandTheme")
+Theme.shared.loadTheme(cssNamed: "heroui", font: "Inter")  // bundled HeroUI theme
+Theme.shared.loadTheme(cssNamed: "brand")                  // your own brand.css in the app bundle
 ```
 
-The importer maps `--accent` onto the primary/info palette, `--danger` /
-`--success` / `--warning` onto the semantic colors, and your `--background` /
-`--foreground` / `--border` / `--muted` onto the neutral surfaces and text.
-Anything the CSS doesn't define falls back to ThemeKit's defaults.
-
-A host app can also apply a generated theme JSON **at runtime**, with no library
-rebuild — the same entry point the localization override uses:
+Or apply a CSS string — from a file, a network response, anywhere:
 
 ```swift
-let data = try Data(contentsOf: url)    // your generated theme JSON
-Theme.shared.setTheme(jsonData: data)   // applies instantly, no restart
+let css = try String(contentsOf: url)     // your theme.css
+Theme.shared.setTheme(css: css)           // parsed + applied instantly, no restart
+Theme.shared.setColorScheme(dark: true)   // switches to the CSS's .dark block
 ```
+
+Both the `:root`/`.light` and `.dark` blocks are read: `--accent` drives the
+primary/info palette, `--danger` / `--success` / `--warning` the semantic colors,
+and `--background` / `--foreground` / `--border` / `--muted` the neutral surfaces
+and text (`--radius` / `--field-radius` → the box/field radius roles). Anything the
+CSS doesn't define falls back to ThemeKit's defaults, and the CSS is treated as
+untrusted text — only `--var: value;` declarations are read, nothing is executed.
+
+:::tip[Offline alternative]
+Prefer to bundle a static JSON (zero runtime parse)? The same conversion runs
+offline as a Python tool — `python3 tools/import_css_theme.py theme.css --name
+brand --out Sources/ThemeKitCore/Resources`, then `loadTheme(named: "brandTheme")`.
+:::
 
 ## Per-subtree theming
 
