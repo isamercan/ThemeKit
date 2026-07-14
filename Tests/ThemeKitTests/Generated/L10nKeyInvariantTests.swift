@@ -103,7 +103,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) selected",
             "%@ selected", 1,
-            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:140")
+            site: "Sources/ThemeKit/Components/Molecules/MultiSelect.swift:169")
         assertKey(
             "\(d) stops",
             "%@ stops", 1,
