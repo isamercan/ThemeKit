@@ -36,7 +36,11 @@ struct ShowcaseView: View {
     @State private var page = UserDefaults.standard.integer(forKey: "startPage")
     @State private var autoCycle = false
     @State private var showBrowser = UserDefaults.standard.bool(forKey: "openBrowser")
+    // Present the list for `-openList YES` *or* `-openPlaygroundFor <name>` — the
+    // playground deep link runs inside ComponentListBrowser.onAppear, so the list
+    // must be shown for it to fire (else the direct-playground link is a no-op).
     @State private var showList = UserDefaults.standard.bool(forKey: "openList")
+        || !(UserDefaults.standard.string(forKey: "openPlaygroundFor") ?? "").isEmpty
     private let ticker = Timer.publish(every: 4.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
