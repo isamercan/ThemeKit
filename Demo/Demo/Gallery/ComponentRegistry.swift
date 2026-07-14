@@ -56,7 +56,7 @@ enum ComponentRegistry {
     static let all: [ComponentEntry] = [
         // MARK: Atoms
         .knob("Avatar", .atoms, demo: AvatarDemo(), usage: #"Avatar(.initials("AB")).size(.md).presence(.online)"#),
-        .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label").badgeStyle(.info).icon("star.fill")"#),
+        .knob("Badge", .atoms, demo: BadgeDemo(), usage: #"Badge("Label").badgeStyle(.info).icon(leading: "star", trailing: "xmark")"#),
         .knob("Chip", .atoms, demo: ChipDemo(), usage: #"Chip("Recommended", isSelected: $selected).chipStyle(.tonal)"#),
         .knob("Color Palette", .atoms, demo: ColorLadderDemo(), usage: #"SemanticColor.primary.shade(.s500)   // base · .bg .hover .active .strong"#),
         .knob("ColorSwatch", .atoms, demo: ColorSwatchDemo(), usage: #"ColorSwatch(.red, label: "Crimson").shape(.circle).size(.large).selected()"#, isNew: true),
@@ -272,7 +272,7 @@ enum ComponentRegistry {
         .knob("BlogCard", .organisms, demo: BlogCardDemo(), usage: #"BlogCard(title: "…") { mediaView }.excerpt("…").readMore { }"#),
         .knob("BottomSheet", .organisms, demo: BottomSheetDemo(), usage: #"// install once: .sheetHost()\n@Environment(SheetPresenter.self) var sheet: SheetPresenter\nsheet.present(detents: [.height(280), .large]) { FilterView() }\n// or declarative: someView.bottomSheet(isPresented: $open, detents: [.medium]) { … }"#),
         .knob("Callout", .organisms, demo: CalloutDemo(), usage: #"Callout("Message").variant(.success).calloutStyle(.plain)"#),
-        .knob("Card", .organisms, demo: CardDemo(), usage: #"Card("Title") { content }.elevation(.soft).radius(.box).surface(.bgSecondaryLight).selected(sel)\n// variants: .cardStyle(.default) | .cardStyle(.outlined) | .cardStyle(.flat)"#),
+        .knob("Card", .organisms, demo: CardDemo(), usage: #"Card("Title") { content }.overline("NEW").elevation(.soft).radius(.box).surface(.bgSecondaryLight).selected(sel)\n// media: .cover { image } | .cover(.fill) { image }  // variants: .cardStyle(.default) | .cardStyle(.outlined) | .cardStyle(.flat)"#),
         .knob("ChatBubble", .organisms, demo: ChatBubbleDemo(), usage: #"ChatBubble("Hi!", time: "09:24").side(.outgoing).accent(.success)"#),
         .knob("Counter", .organisms, demo: CounterDemo(), usage: #"Counter(days: 2, hours: 8, minutes: 45)"#),
         .knob("DataTable", .organisms, demo: DataTableDemo(), usage: #"DataTable(columns: cols, rows: rows, selection: $selected).pageSize(10)"#),
@@ -308,6 +308,7 @@ enum ComponentRegistry {
         .knob("KanbanBoard", .organisms, demo: KanbanBoardDemo(), usage: #"KanbanBoard(columns: $columns) { item in Card(item) }   // cross-column drag + a11y moves"#, isNew: true),
         .knob("Tour", .organisms, demo: TourDemo(), usage: ##"view.tourTarget("search");  root.tourHost(tour, steps: [TourStep("search", title: "…", message: "…")])"##),
         .knob("Dialog", .organisms, demo: DialogDemo(), usage: #"view.dialog(isPresented: $show, title: "…") { content } footer: { buttons }"#),
+        .knob("AlertDialog", .organisms, demo: AlertDialogDemo(), usage: ##"// builder: view.alertDialog(isPresented: $show) { AlertDialog("Delete product", message: "…").icon("trash").tone(.error).primaryAction("Delete") { … }.secondaryAction("Cancel") { … }.footerLayout(.auto) }\n// async confirm (spinner + auto-dismiss): view.alertDialog(isPresented: $show, title: "Delete product", icon: "trash", tone: .error, primaryTitle: "Delete", onPrimary: { await delete() }, secondaryTitle: "Cancel", closable: true)\n// molecules: AlertHeader("Title").icon("trash").tone(.error).alignment(.center);  AlertFooter().tone(.error).primaryAction("Delete") { … }.secondaryAction("Cancel") { … }"##, isNew: true),
         .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i).tabStyle(.pill)"#),
         .knob("SelectionCards", .organisms, demo: SelectionCardsDemo(), usage: #"RadioCard("Standard", isSelected: sel == id) { sel = id }.description("…")"#),
         .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@State var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),

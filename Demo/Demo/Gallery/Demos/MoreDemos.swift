@@ -658,6 +658,8 @@ struct AutocompleteDemo: View {
 // MARK: - Organisms
 
 struct CardDemo: View {
+    private enum Kind: String, CaseIterable { case text = "Text", form = "Form", image = "Image", overlay = "Overlay" }
+    @State private var kind: Kind = .text
     @State private var variantIdx = 0   // 0 default (shadow), 1 outlined (bordered), 2 flat
     @State private var elevation: CardElevation = .soft
     @State private var radius: Theme.RadiusRole = .box     // corner size axis
@@ -667,6 +669,7 @@ struct CardDemo: View {
     @State private var header = true
     @State private var loading = false
     @State private var selected = false
+    @State private var email = ""
     @State private var taps = 0
 
     private var surfaceKey: Theme.BackgroundColorKey {
@@ -677,23 +680,73 @@ struct CardDemo: View {
         }
     }
 
+    /// A placeholder "photo" standing in for a cover image in the demo.
+    private var coverImage: some View {
+        LinearGradient(colors: [.pink.opacity(0.55), .orange.opacity(0.55)],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+            .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white))
+    }
+
+    @ViewBuilder
     private var cardBody: some View {
-        Card(header ? "Reservation" : nil,
-             action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
-                Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
-                    .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+        switch kind {
+        case .text:
+            Card(header ? "Reservation" : nil,
+                 action: tappable ? { taps += 1; flash("Card tapped") } : nil) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(tappable ? "Tappable card" : "Card body").textStyle(.headingSm)
+                    Text(tappable ? "Press me — scales with feedback." : "Supporting body text inside a card surface.")
+                        .textStyle(.bodyBase400).foregroundStyle(Theme.shared.text(.textSecondary))
+                }
             }
+            .overline(header ? "NEW" : nil)
+            .subtitle(header ? "2 nights · 2 guests" : nil)
+            .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
+            .loading(loading)
+            .elevation(elevation).radius(radius).surface(surfaceKey).selected(selected).contentPadding(padding)
+        case .form:
+            Card(header ? "Log in" : nil) {
+                VStack(spacing: Theme.SpacingKey.sm.value) {
+                    TextInput("Email", text: $email)
+                    ThemeButton("Sign in") { flash("Sign in") }.fullWidth()
+                }
+            }
+            .subtitle(header ? "Welcome back" : nil)
+            .elevation(elevation).radius(radius).surface(surfaceKey).selected(selected).contentPadding(padding)
+            .frame(maxWidth: 280)
+        case .image:
+            Card { EmptyView() }
+                .cover { coverImage.frame(height: 140) }
+                .footer {
+                    HStack {
+                        Text("Fruits").textStyle(.labelMd600).foregroundStyle(Theme.shared.text(.textPrimary))
+                        Spacer(minLength: 0)
+                        Text("18 pictures").textStyle(.bodySm400).foregroundStyle(Theme.shared.text(.textSecondary))
+                    }
+                }
+                .elevation(elevation).radius(radius).surface(surfaceKey).selected(selected)
+                .frame(width: 220)
+        case .overlay:
+            Card { EmptyView() }
+                .cover(.fill) { coverImage.frame(width: 220, height: 260) }
+                .header {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("NEO").textStyle(.labelSm600).foregroundStyle(.white.opacity(0.85))
+                        Text("Home Robot").textStyle(.labelLg600).foregroundStyle(.white)
+                    }
+                }
+                .footer {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Available soon").textStyle(.labelMd600).foregroundStyle(.white)
+                            Text("Get notified").textStyle(.bodySm400).foregroundStyle(.white.opacity(0.85))
+                        }
+                        Spacer(minLength: 0)
+                        ThemeButton("Notify me") { flash("Notify me") }.size(.small)
+                    }
+                }
+                .elevation(elevation).radius(radius).selected(selected)
         }
-        .elevation(elevation)
-        .radius(radius)
-        .surface(surfaceKey)
-        .selected(selected)
-        .contentPadding(padding)
-        .subtitle(header ? "2 nights · 2 guests" : nil)
-        .extraAction(header ? "Details" : nil, action: header ? { flash("Details") } : nil)
-        .loading(loading)
     }
 
     // Distinct return types per style, so branch through the `.cardStyle(_:)` modifier.
@@ -708,15 +761,18 @@ struct CardDemo: View {
     private var variantName: String { variantIdx == 1 ? "outlined" : variantIdx == 2 ? "flat" : "default" }
 
     var body: some View {
-        ComponentStage("Card", inspector: [("variant", variantName), ("elevation", "\(elevation)"), ("radius", radius.rawValue), ("selected", "\(selected)")]) {
+        ComponentStage("Card", inspector: [("kind", kind.rawValue), ("variant", variantName), ("elevation", "\(elevation)"), ("radius", radius.rawValue), ("selected", "\(selected)")]) {
             styledCard
         } knobs: {
+            Picker("Content", selection: $kind) {
+                ForEach(Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }.pickerStyle(.segmented)
             Picker("Variant", selection: $variantIdx) { Text("Default").tag(0); Text("Outlined").tag(1); Text("Flat").tag(2) }.pickerStyle(.segmented)
             Picker("Elevation", selection: $elevation) { Text("None").tag(CardElevation.none); Text("Soft").tag(CardElevation.soft); Text("Elevated").tag(CardElevation.elevated) }.pickerStyle(.segmented)
             Picker("Radius (size)", selection: $radius) { Text("Selector").tag(Theme.RadiusRole.selector); Text("Field").tag(Theme.RadiusRole.field); Text("Box").tag(Theme.RadiusRole.box) }.pickerStyle(.segmented)
             Picker("Surface", selection: $surfaceIdx) { Text("White").tag(0); Text("Secondary").tag(1); Text("Tertiary").tag(2) }.pickerStyle(.segmented)
             Toggle("Selected (hero border)", isOn: $selected)
-            Toggle("Header (title + extra)", isOn: $header)
+            Toggle("Header (title + overline + extra)", isOn: $header)
             Toggle("Loading (skeleton)", isOn: $loading)
             Toggle("Tappable (press feedback)", isOn: $tappable)
             Picker("Padding", selection: $padding) {
@@ -3146,6 +3202,83 @@ struct MicroMotionDemo: View {
             Toggle("Micro-animations (this subtree)", isOn: $enabled)
             Text("Theme-wide: Configurator → “Micro-animations”. Reduce Motion always wins.")
                 .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - AlertDialog
+
+struct AlertDialogDemo: View {
+    @State private var show = false
+    @State private var async = false
+    @State private var align: AlertHeaderAlignment = .leading
+    @State private var layout: AlertFooterLayout = .auto
+    @State private var size: AlertDialogSize = .sm
+    @State private var destructive = true
+    @State private var closable = true
+    @State private var longLabels = false
+    @State private var showIcon = true
+    @State private var showTitle = true
+    @State private var result = "—"
+
+    private var primaryLabel: String { longLabels ? "Save and continue editing" : (destructive ? "Delete" : "Confirm") }
+    private var secondaryLabel: String { longLabels ? "Discard all my recent changes" : "Cancel" }
+    private var iconName: String? { showIcon ? (destructive ? "trash" : "externaldrive") : nil }
+
+    /// The dialog card, driven entirely by the knobs so the same declaration can
+    /// render inline (below) and as a modal (via `.alertDialog`).
+    private func card(dismiss: @escaping () -> Void) -> AlertDialog {
+        AlertDialog(showTitle ? "Delete product" : nil,
+                    message: "Are you sure you want to delete this product? This action cannot be undone.")
+            .icon(iconName)
+            .tone(destructive ? .error : .neutral)
+            .headerAlignment(align)
+            .footerLayout(layout)
+            .size(size)
+            .primaryAction(primaryLabel) { result = primaryLabel; dismiss(); flash("AlertDialog: \(primaryLabel)") }
+            .secondaryAction(secondaryLabel) { result = secondaryLabel; dismiss(); flash("AlertDialog: \(secondaryLabel)") }
+            .closable(closable ? { dismiss(); flash("AlertDialog closed") } : { })
+    }
+
+    var body: some View {
+        ComponentStage("AlertDialog", inspector: [("last action", result), ("footer", "\(layout.rawValue)")]) {
+            VStack(spacing: 16) {
+                // Live inline card — reshapes as the knobs change (Figma "Composition" board).
+                card(dismiss: {})
+                    .frame(maxWidth: .infinity, alignment: .center)
+                HStack(spacing: 12) {
+                    OutlineButton("Present as modal") { show = true; flash("AlertDialog opened") }
+                    OutlineButton("Async confirm") { async = true; flash("AlertDialog (async) opened") }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .alertDialog(isPresented: $show, swipeToDismiss: true) {
+                card(dismiss: { show = false })
+            }
+            // Param convenience: spinner + auto-dismiss once the async work resolves.
+            .alertDialog(isPresented: $async, title: showTitle ? "Delete product" : nil,
+                         message: "Are you sure you want to delete this product? This action cannot be undone.",
+                         icon: iconName, tone: destructive ? .error : .neutral,
+                         headerAlignment: align, footerLayout: layout, size: size,
+                         primaryTitle: primaryLabel,
+                         onPrimary: { try? await Task.sleep(nanoseconds: 1_200_000_000); result = "\(primaryLabel) (async)"; flash("AlertDialog: \(primaryLabel) done") },
+                         secondaryTitle: secondaryLabel, onSecondary: { result = secondaryLabel },
+                         closable: closable)
+        } knobs: {
+            Picker("Header", selection: $align) {
+                Text("Leading").tag(AlertHeaderAlignment.leading); Text("Center").tag(AlertHeaderAlignment.center)
+            }.pickerStyle(.segmented)
+            Picker("Footer", selection: $layout) {
+                ForEach(AlertFooterLayout.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
+            }.pickerStyle(.segmented)
+            Picker("Size", selection: $size) {
+                ForEach(AlertDialogSize.allCases, id: \.self) { Text($0.rawValue.uppercased()).tag($0) }
+            }.pickerStyle(.segmented)
+            Toggle("Show icon", isOn: $showIcon)
+            Toggle("Show title", isOn: $showTitle)
+            Toggle("Destructive tone", isOn: $destructive)
+            Toggle("Long labels (footer auto-stacks)", isOn: $longLabels)
+            Toggle("Closable (✕)", isOn: $closable)
         }
     }
 }
