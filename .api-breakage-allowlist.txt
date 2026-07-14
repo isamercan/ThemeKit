@@ -131,3 +131,7 @@ API breakage: constructor LottieIllustration.init(_:bundle:loop:) has been remov
 API breakage: constructor LottieIllustration.init(dotLottieNamed:bundle:loop:) has been removed
 API breakage: constructor LottieIllustration.init(url:loop:) has been removed
 API breakage: constructor LottieIllustration.init(dotLottieURL:loop:) has been removed
+
+# --- ButtonGroup Size/Width/Divider axes (#308): new ButtonSize cases ---
+API breakage: enumelement ButtonSize.xlarge has been added as a new enum case
+API breakage: enumelement ButtonSize.xxlarge has been added as a new enum case
