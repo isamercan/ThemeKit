@@ -135,3 +135,7 @@ API breakage: constructor LottieIllustration.init(dotLottieURL:loop:) has been r
 # --- ButtonGroup Size/Width/Divider axes (#308): new ButtonSize cases ---
 API breakage: enumelement ButtonSize.xlarge has been added as a new enum case
 API breakage: enumelement ButtonSize.xxlarge has been added as a new enum case
+
+# --- Drawer 4-edge slots (#311): edge axis widened HorizontalEdge → Edge (top/bottom/leading/trailing) ---
+API breakage: func DrawerPresenter.present(edge:width:dismissOnScrimTap:_:) has parameter 0 type change from SwiftUI.HorizontalEdge to SwiftUI.Edge
+API breakage: func View.drawer(isPresented:edge:width:dismissOnScrimTap:content:) has parameter 1 type change from SwiftUI.HorizontalEdge to SwiftUI.Edge
