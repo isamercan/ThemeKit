@@ -145,30 +145,30 @@ public enum CSSTheme {
     /// Returns `nil` when no anchor resolves, so the generator keeps its own ramp.
     private static func neutralRamp(vars: [String: String],
                                     anchors: [(step: Int, css: String)], hue: Double) -> [String]? {
-        var known: [(step: Int, L: Double)] = []
+        var known: [(step: Int, lightness: Double)] = []
         for (step, css) in anchors {
-            if let c = parseColor(vars[css] ?? ""), let L = c.approxL {
-                known.append((step, L))
+            if let c = parseColor(vars[css] ?? ""), let lightness = c.approxL {
+                known.append((step, lightness))
             }
         }
         guard !known.isEmpty else { return nil }
         known.sort { $0.step < $1.step }
-        let firstL = known.first!.L, lastL = known.last!.L
+        let firstL = known.first!.lightness, lastL = known.last!.lightness
         return steps.map { step -> String in
-            let L: Double
+            let value: Double
             if let exact = known.first(where: { $0.step == step }) {
-                L = exact.L
+                value = exact.lightness
             } else if step <= known.first!.step {
-                L = firstL
+                value = firstL
             } else if step >= known.last!.step {
-                L = lastL
+                value = lastL
             } else {
                 let lo = known.last { $0.step < step }!
                 let hi = known.first { $0.step > step }!
                 let t = Double(step - lo.step) / Double(hi.step - lo.step)
-                L = lo.L + (hi.L - lo.L) * t
+                value = lo.lightness + (hi.lightness - lo.lightness) * t
             }
-            return oklchToHex(L: L, C: 0, H: hue)
+            return oklchToHex(lightness: value, chroma: 0, hue: hue)
         }
     }
 
@@ -176,12 +176,12 @@ public enum CSSTheme {
 
     struct CSSColor {
         let hex: String
-        let L: Double?
+        let lightness: Double?
         let hue: Double
-        /// `L` is present for `oklch()`; for hex/rgb it's estimated from luminance
-        /// so those inputs can still anchor a neutral ramp.
+        /// `lightness` is present for `oklch()`; for hex/rgb it's estimated from
+        /// luminance so those inputs can still anchor a neutral ramp.
         var approxL: Double? {
-            if let L { return L }
+            if let lightness { return lightness }
             let r = Double(Int(hex.prefix(2), radix: 16) ?? 0) / 255
             let g = Double(Int(hex.dropFirst(2).prefix(2), radix: 16) ?? 0) / 255
             let b = Double(Int(hex.dropFirst(4).prefix(2), radix: 16) ?? 0) / 255
@@ -198,15 +198,17 @@ public enum CSSTheme {
             let inner = raw[open.upperBound..<close.lowerBound]
             let parts = inner.split(whereSeparator: { $0 == " " || $0 == "," || $0 == "/" })
                 .map { $0.replacingOccurrences(of: "%", with: "") }
-            if parts.count >= 3, let L = Double(parts[0]), let C = Double(parts[1]), let H = Double(parts[2]) {
-                return CSSColor(hex: oklchToHex(L: L, C: C, H: H), L: L, hue: H)
+            if parts.count >= 3, let lightness = Double(parts[0]),
+               let chroma = Double(parts[1]), let hue = Double(parts[2]) {
+                return CSSColor(hex: oklchToHex(lightness: lightness, chroma: chroma, hue: hue),
+                                lightness: lightness, hue: hue)
             }
             return nil
         }
         if raw.hasPrefix("#") {
             var h = String(raw.dropFirst()).lowercased().filter(\.isHexDigit)
             if h.count == 3 { h = h.map { "\($0)\($0)" }.joined() }
-            if h.count >= 6 { return CSSColor(hex: String(h.prefix(6)), L: nil, hue: 0) }
+            if h.count >= 6 { return CSSColor(hex: String(h.prefix(6)), lightness: nil, hue: 0) }
             return nil
         }
         if let open = raw.range(of: "rgb", options: .caseInsensitive),
@@ -217,7 +219,7 @@ public enum CSSTheme {
                 .compactMap { Double($0) }
             if comps.count >= 3 {
                 return CSSColor(hex: String(format: "%02x%02x%02x", Int(comps[0]), Int(comps[1]), Int(comps[2])),
-                                L: nil, hue: 0)
+                                lightness: nil, hue: 0)
             }
         }
         return nil
@@ -225,13 +227,13 @@ public enum CSSTheme {
 
     /// OKLCH (L in %, C chroma, H degrees) -> sRGB "rrggbb". Banker's rounding
     /// matches `import_css_theme.py` (Python `round()`), for byte-identical output.
-    static func oklchToHex(L L0: Double, C: Double, H: Double) -> String {
-        let L = L0 / 100
-        let h = H * .pi / 180
-        let a = C * cos(h), b = C * sin(h)
-        let l_ = L + 0.3963377774 * a + 0.2158037573 * b
-        let m_ = L - 0.1055613458 * a - 0.0638541728 * b
-        let s_ = L - 0.0894841775 * a - 1.2914855480 * b
+    static func oklchToHex(lightness: Double, chroma: Double, hue: Double) -> String {
+        let lNorm = lightness / 100
+        let hRad = hue * .pi / 180
+        let a = chroma * cos(hRad), b = chroma * sin(hRad)
+        let l_ = lNorm + 0.3963377774 * a + 0.2158037573 * b
+        let m_ = lNorm - 0.1055613458 * a - 0.0638541728 * b
+        let s_ = lNorm - 0.0894841775 * a - 1.2914855480 * b
         let l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_
         let r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
         let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
