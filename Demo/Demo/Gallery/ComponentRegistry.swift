@@ -128,6 +128,7 @@ enum ComponentRegistry {
         },
         .knob("CloseButton", .atoms, demo: CloseButtonDemo(), usage: #"CloseButton { dismiss() }.tint(.error).controlSize(.small)   // .plain() ghost glyph for image overlays"#, isNew: true),
         .knob("HelperText", .atoms, demo: HelperTextDemo(), usage: #"HelperText("Min. 8 characters, one number.").hasError(invalid).hidesOnError()"#, isNew: true),
+        .knob("DescriptionModal", .atoms, demo: DescriptionModalDemo(), usage: #"DescriptionModal("Delete this trip? This can't be undone.").textAlignment(.center)   // muted modal body copy"#, isNew: true),
         .knob("Surface", .atoms, demo: SurfaceViewDemo(), usage: #"SurfaceView { content }.level(.secondary).elevation(.soft).radius(.box)   // nestable; or view.surfaceChrome(.secondary)"#, isNew: true),
         .knob("SkeletonGroup", .atoms, demo: SkeletonGroupDemo(), usage: #"SkeletonGroup { rows.skeleton() }.loading(isLoading)   // .skeletonOnly() collapses when loaded"#, isNew: true),
 
