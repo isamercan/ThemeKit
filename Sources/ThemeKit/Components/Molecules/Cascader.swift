@@ -36,7 +36,12 @@ public struct Cascader: View {
     @Environment(\.fieldDefaults) private var fieldDefaults
 
     private let options: [CascaderOption]
-    @Binding private var selection: [String]
+    /// Single-path (`[String]`) or multi-path (`[[String]]`) selection, by init.
+    private enum SelectionMode {
+        case single(Binding<[String]>)
+        case multiple(Binding<[[String]]>)
+    }
+    private let selectionMode: SelectionMode
     // Appearance — mutated only through the modifiers below.
     private var placeholderOverride: String?
     /// Render-time default — re-resolves through the localization chain on
@@ -60,9 +65,38 @@ public struct Cascader: View {
     @State private var browse: [String] = []
     @State private var query = ""
 
+    /// Single-path selection — the chosen path commits on a leaf tap.
     public init(_ options: [CascaderOption], selection: Binding<[String]>) {   // R1
         self.options = options
-        self._selection = selection
+        self.selectionMode = .single(selection)
+    }
+
+    /// Multi-path selection (Ant `multiple`) — leaves carry checkboxes; tapping a
+    /// leaf toggles its path in/out of the set and the columns stay open.
+    public init(_ options: [CascaderOption], selection: Binding<[[String]]>) {
+        self.options = options
+        self.selectionMode = .multiple(selection)
+    }
+
+    private var isMultiple: Bool { if case .multiple = selectionMode { return true }; return false }
+    /// Single-mode selected path (empty in multi mode).
+    private var singlePath: [String] {
+        get { if case let .single(b) = selectionMode { return b.wrappedValue }; return [] }
+        nonmutating set { if case let .single(b) = selectionMode { b.wrappedValue = newValue } }
+    }
+    /// Multi-mode selected paths (empty in single mode).
+    private var multiPaths: [[String]] {
+        get { if case let .multiple(b) = selectionMode { return b.wrappedValue }; return [] }
+        nonmutating set { if case let .multiple(b) = selectionMode { b.wrappedValue = newValue } }
+    }
+    private var hasSelection: Bool { isMultiple ? !multiPaths.isEmpty : !singlePath.isEmpty }
+    private func isPathSelected(_ path: [String]) -> Bool { multiPaths.contains(path) }
+    private func togglePath(_ path: [String]) {
+        if let i = multiPaths.firstIndex(of: path) { multiPaths.remove(at: i) } else { multiPaths.append(path) }
+    }
+    /// The full option-value path to `opt` shown at `level` (browse prefix + opt).
+    private func fullPath(_ opt: CascaderOption, level: Int) -> [String] {
+        Array(browse.prefix(level)) + [opt.value]
     }
 
     private var dominant: InfoMessage.Kind? { infoMessages.dominantKind }
@@ -70,7 +104,20 @@ public struct Cascader: View {
     private var hasWarning: Bool { dominant == .warning }
     /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → off (F5).
     private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? false }
-    private var showsClear: Bool { effectiveClearable && !selection.isEmpty && isEnabled && !isReadOnly }
+    private var showsClear: Bool { effectiveClearable && hasSelection && isEnabled && !isReadOnly }
+
+    /// The field's summary text: placeholder when empty, the single path in single
+    /// mode, or "N selected" / the sole path in multi mode.
+    private var fieldSummary: String {
+        if isMultiple {
+            switch multiPaths.count {
+            case 0: return placeholder
+            case 1: return pathLabel(multiPaths[0]) ?? placeholder
+            default: return "\(multiPaths.count) " + String(themeKit: "selected")
+            }
+        }
+        return pathLabel(singlePath) ?? placeholder
+    }
     private func nodeEnabled(_ node: CascaderOption) -> Bool { isNodeEnabled?(node) ?? true }
 
     public var body: some View {
@@ -98,12 +145,12 @@ public struct Cascader: View {
                 // opens the columns (E1 — distinct from `.disabled`).
                 guard !isReadOnly else { return }
                 open.toggle()
-                if open { browse = selection; query = "" }
+                if open { browse = isMultiple ? [] : singlePath; query = "" }
             } label: {
                 HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Text(pathLabel(selection) ?? placeholder)
+                    Text(fieldSummary)
                         .textStyle(.bodyBase400)
-                        .foregroundStyle(selection.isEmpty ? theme.text(.textTertiary) : theme.text(.textPrimary))
+                        .foregroundStyle(hasSelection ? theme.text(.textPrimary) : theme.text(.textTertiary))
                     Spacer(minLength: Theme.SpacingKey.sm.value)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 12, weight: .semibold))
@@ -119,10 +166,10 @@ public struct Cascader: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityValue(pathLabel(selection) ?? "")
+            .accessibilityValue(hasSelection ? fieldSummary : "")
 
             if showsClear {
-                Button { selection = []; browse = [] } label: {
+                Button { if isMultiple { multiPaths = [] } else { singlePath = [] }; browse = [] } label: {
                     Icon(systemName: "xmark.circle.fill").size(.sm).color(theme.text(.textTertiary))
                 }
                 .buttonStyle(.plain)
@@ -177,12 +224,19 @@ public struct Cascader: View {
             VStack(spacing: 0) {
                 ForEach(opts) { opt in
                     let onPath = level < browse.count && browse[level] == opt.value
+                    let checked = isMultiple && opt.isLeaf && isPathSelected(fullPath(opt, level: level))
+                    let highlighted = checked || onPath
                     let enabled = nodeEnabled(opt)
                     Button { pick(opt, level: level) } label: {
                         HStack(spacing: Theme.SpacingKey.xs.value) {
+                            if isMultiple && opt.isLeaf {
+                                Image(systemName: checked ? "checkmark.square.fill" : "square")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(checked ? theme.text(.textHero) : theme.text(.textTertiary))
+                            }
                             Text(opt.label)
-                                .textStyle(onPath ? .labelSm600 : .bodySm400)
-                                .foregroundStyle(onPath ? theme.text(.textHero) : theme.text(.textPrimary))
+                                .textStyle(highlighted ? .labelSm600 : .bodySm400)
+                                .foregroundStyle(highlighted ? theme.text(.textHero) : theme.text(.textPrimary))
                             Spacer(minLength: 4)
                             if !opt.isLeaf {
                                 Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
@@ -193,12 +247,13 @@ public struct Cascader: View {
                         .padding(.horizontal, Theme.SpacingKey.sm.value)
                         .frame(height: 36)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(onPath ? theme.resolve(.primary).soft : .clear)
+                        .background(highlighted ? theme.resolve(.primary).soft : .clear)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .disabled(!enabled)
                     .opacity(enabled ? 1 : 0.4)
+                    .accessibilityAddTraits(checked ? .isSelected : [])
                 }
             }
         }
@@ -240,19 +295,33 @@ public struct Cascader: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     ForEach(Array(paths.enumerated()), id: \.offset) { _, path in
+                        let values = path.map(\.value)
+                        let checked = isMultiple && isPathSelected(values)
                         Button {
-                            selection = path.map(\.value)
-                            browse = selection
-                            open = false
-                            query = ""
+                            if isMultiple {
+                                togglePath(values)   // stay open to pick more
+                            } else {
+                                singlePath = values
+                                browse = values
+                                open = false
+                                query = ""
+                            }
                         } label: {
-                            Text(path.map(\.label).joined(separator: " / "))
-                                .textStyle(.bodySm400)
-                                .foregroundStyle(theme.text(.textPrimary))
-                                .padding(.horizontal, Theme.SpacingKey.md.value)
-                                .frame(height: 36)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
+                            HStack(spacing: Theme.SpacingKey.xs.value) {
+                                if isMultiple {
+                                    Image(systemName: checked ? "checkmark.square.fill" : "square")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(checked ? theme.text(.textHero) : theme.text(.textTertiary))
+                                }
+                                Text(path.map(\.label).joined(separator: " / "))
+                                    .textStyle(.bodySm400)
+                                    .foregroundStyle(theme.text(.textPrimary))
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, Theme.SpacingKey.md.value)
+                            .frame(height: 36)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -276,12 +345,17 @@ public struct Cascader: View {
 
     private func pick(_ opt: CascaderOption, level: Int) {
         guard nodeEnabled(opt) else { return }
-        browse = Array(browse.prefix(level)) + [opt.value]
         if opt.isLeaf {
-            selection = browse
-            open = false
-        } else if changeOnSelect {
-            selection = browse
+            if isMultiple {
+                togglePath(fullPath(opt, level: level))   // multi: toggle, keep columns open
+            } else {
+                browse = fullPath(opt, level: level)
+                singlePath = browse
+                open = false
+            }
+        } else {
+            browse = Array(browse.prefix(level)) + [opt.value]
+            if !isMultiple && changeOnSelect { singlePath = browse }
         }
     }
 
@@ -342,7 +416,7 @@ public extension Cascader {
     ]
     PreviewMatrix("Cascader") {
         PreviewCase("Placeholder") {
-            Cascader(options, selection: .constant([])).placeholder("Region")
+            Cascader(options, selection: .constant([String]())).placeholder("Region")
         }
         // Searchable + clearable, with a disabled branch (E7 axes).
         PreviewCase("Selected · searchable + clearable") {
@@ -352,7 +426,7 @@ public extension Cascader {
         }
         // Validation message drives the error border.
         PreviewCase("Error message") {
-            Cascader(options, selection: .constant([]))
+            Cascader(options, selection: .constant([String]()))
                 .infoMessages([InfoMessage("Pick a region", kind: .error)])
         }
         // Read-only: normal chrome + value, columns suppressed (E1).
@@ -366,6 +440,12 @@ public extension Cascader {
                 Cascader(options, selection: .constant(["de", "be", "mitte"])).size(.medium)
                 Cascader(options, selection: .constant(["de", "be", "mitte"])).size(.large)
             }
+        }
+        // Multi-path selection (Ant `multiple`) — leaves carry checkboxes; the
+        // field summarises the count.
+        PreviewCase("Multiple") {
+            Cascader(options, selection: .constant([["us", "ca", "sf"], ["de", "be", "mitte"]]))
+                .clearable()
         }
     }
     .environment(Theme.shared)
