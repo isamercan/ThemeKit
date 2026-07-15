@@ -41,6 +41,10 @@ struct ContentView: View {
             FlightResultsView()
                 .tabItem { Label("Flights", systemImage: "airplane.departure") }
                 .tag(11)
+
+            LoginModalView()
+                .tabItem { Label("Login", systemImage: "person.crop.circle") }
+                .tag(5)
         }
         // A top "did fire" toast for every component callback (`flash("…")`).
         .modifier(ActionFlashOverlay())
