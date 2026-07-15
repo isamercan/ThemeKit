@@ -101,7 +101,11 @@ public extension InputLabel {
     /// Label "show tooltip" affordance). Implies `hasInfo()`. An alternative to
     /// `onInfo(_:)` — if both are attached the tooltip wins. Pass `maxWidth: nil`
     /// to keep the bubble on a single line.
-    func tooltip(_ text: String, edge: TooltipEdge = .top, maxWidth: CGFloat? = 220) -> Self {
+    ///
+    /// Named `infoTooltip` (not `tooltip`) so it never shadows the generic
+    /// `View.tooltip(_:)` on an `InputLabel`: `InputLabel("…").tooltip("…")` keeps
+    /// attaching a tooltip to the *whole label*, while this targets just the glyph.
+    func infoTooltip(_ text: String, edge: TooltipEdge = .top, maxWidth: CGFloat? = 220) -> Self {
         copy { $0.hasInfo = true; $0.tooltipText = text; $0.tooltipEdge = edge; $0.tooltipMaxWidth = maxWidth }
     }
 
@@ -120,7 +124,7 @@ public extension InputLabel {
         PreviewCase("Default") { InputLabel("Email") }
         PreviewCase("Required + info") { InputLabel("Password").required().hasInfo() }
         PreviewCase("Tappable info") { InputLabel("Coverage").onInfo { print("info tapped") } }
-        PreviewCase("Tooltip") { InputLabel("Your name").required().tooltip("Shown on your public profile.") }
+        PreviewCase("Tooltip") { InputLabel("Your name").required().infoTooltip("Shown on your public profile.") }
         PreviewCase("Error") { InputLabel("Invalid").hasError() }
         PreviewCase("Linked") { InputLabel("Agree to the Terms").links([("Terms", {})]) }
         PreviewCase("Disabled") { InputLabel("Disabled").disabled(true) }

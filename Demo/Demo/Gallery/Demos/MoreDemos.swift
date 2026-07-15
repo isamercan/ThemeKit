@@ -75,7 +75,7 @@ struct InputLabelDemo: View {
         let base = InputLabel(link ? "Email (why do we ask?)" : text)
             .required(required).hasInfo(info).hasError(error)
             .links(link ? [("why do we ask?", { flash("InputLabel link") })] : [])
-        return tooltip ? base.tooltip("Shown on your public profile.") : base
+        return tooltip ? base.infoTooltip("Shown on your public profile.") : base
     }
 }
 
