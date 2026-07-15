@@ -18,6 +18,9 @@ public struct InputLabel: View {
     private var hasError = false
     private var infoAction: (() -> Void)?
     private var links: [(substring: String, action: () -> Void)] = []
+    private var tooltipText: String?
+    private var tooltipEdge: TooltipEdge = .top
+    private var tooltipMaxWidth: CGFloat? = 220
 
     private let text: String
 
@@ -38,18 +41,28 @@ public struct InputLabel: View {
                 Text("*").textStyle(.labelSm600)
                     .foregroundStyle(isEnabled ? theme.foreground(.systemcolorsFgError) : theme.text(.textDisabled))
             }
-            if hasInfo || infoAction != nil {
-                if let infoAction {
-                    // Tappable info glyph — captured via `onInfo(_:)`. Plain
-                    // button style so it doesn't tint; disabled state handled
-                    // natively by the `.disabled(_:)` environment (R5).
-                    Button(action: infoAction) { infoGlyph }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(String(themeKit: "Info"))
-                } else {
-                    infoGlyph
-                }
+            if hasInfo || infoAction != nil || tooltipText != nil {
+                infoAffordance
             }
+        }
+    }
+
+    // The trailing info affordance. A `tooltip(_:)` turns the glyph into a
+    // tap-to-reveal tooltip trigger; otherwise `onInfo(_:)` makes it a plain
+    // tap target; otherwise it's a static hint glyph. (If both a tooltip and an
+    // info action are attached, the tooltip wins.)
+    @ViewBuilder private var infoAffordance: some View {
+        if let tooltipText, isEnabled {
+            infoGlyph.tooltip(tooltipText, edge: tooltipEdge, maxWidth: tooltipMaxWidth)
+        } else if let infoAction {
+            // Tappable info glyph — captured via `onInfo(_:)`. Plain button
+            // style so it doesn't tint; disabled state handled natively by the
+            // `.disabled(_:)` environment (R5).
+            Button(action: infoAction) { infoGlyph }
+                .buttonStyle(.plain)
+                .accessibilityLabel(String(themeKit: "Info"))
+        } else {
+            infoGlyph
         }
     }
 
@@ -83,6 +96,15 @@ public extension InputLabel {
     /// glyph shows whenever an action is attached. Pass `nil` to clear.
     func onInfo(_ action: (() -> Void)?) -> Self { copy { $0.infoAction = action } }
 
+    /// Attach a tooltip to the trailing info glyph, turning it into a
+    /// tap-to-reveal target that shows `text` for secondary context (the HeroUI
+    /// Label "show tooltip" affordance). Implies `hasInfo()`. An alternative to
+    /// `onInfo(_:)` — if both are attached the tooltip wins. Pass `maxWidth: nil`
+    /// to keep the bubble on a single line.
+    func tooltip(_ text: String, edge: TooltipEdge = .top, maxWidth: CGFloat? = 220) -> Self {
+        copy { $0.hasInfo = true; $0.tooltipText = text; $0.tooltipEdge = edge; $0.tooltipMaxWidth = maxWidth }
+    }
+
     /// Render the label in the error color.
     func hasError(_ on: Bool = true) -> Self { copy { $0.hasError = on } }
 
@@ -98,6 +120,7 @@ public extension InputLabel {
         PreviewCase("Default") { InputLabel("Email") }
         PreviewCase("Required + info") { InputLabel("Password").required().hasInfo() }
         PreviewCase("Tappable info") { InputLabel("Coverage").onInfo { print("info tapped") } }
+        PreviewCase("Tooltip") { InputLabel("Your name").required().tooltip("Shown on your public profile.") }
         PreviewCase("Error") { InputLabel("Invalid").hasError() }
         PreviewCase("Linked") { InputLabel("Agree to the Terms").links([("Terms", {})]) }
         PreviewCase("Disabled") { InputLabel("Disabled").disabled(true) }

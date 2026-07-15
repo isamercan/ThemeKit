@@ -50,24 +50,32 @@ struct IconDemo: View {
 }
 
 struct InputLabelDemo: View {
-    @State private var text = "Email"
-    @State private var required = false
-    @State private var info = true
+    @State private var text = "Your name"
+    @State private var required = true
+    @State private var info = false
+    @State private var tooltip = true
     @State private var error = false
     @State private var link = false
 
     var body: some View {
-        ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("hasError", "\(error)")]) {
-            InputLabel(link ? "Email (why do we ask?)" : text)
-                .required(required).hasInfo(info).hasError(error)
-                .links(link ? [("why do we ask?", { flash("InputLabel link") })] : [])
+        ComponentStage("InputLabel", inspector: [("required", "\(required)"), ("tooltip", "\(tooltip)"), ("hasError", "\(error)")]) {
+            label
         } knobs: {
             TextField("Text", text: $text).textFieldStyle(.roundedBorder)
             Toggle("Inline tappable link", isOn: $link)
             Toggle("Required", isOn: $required)
             Toggle("Info glyph", isOn: $info)
+            Toggle("Tooltip trigger", isOn: $tooltip)
             Toggle("Error", isOn: $error)
         }
+    }
+
+    // The tooltip trigger implies the info glyph, so it is applied last.
+    private var label: some View {
+        let base = InputLabel(link ? "Email (why do we ask?)" : text)
+            .required(required).hasInfo(info).hasError(error)
+            .links(link ? [("why do we ask?", { flash("InputLabel link") })] : [])
+        return tooltip ? base.tooltip("Shown on your public profile.") : base
     }
 }
 
