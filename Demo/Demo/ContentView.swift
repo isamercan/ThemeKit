@@ -38,29 +38,13 @@ struct ContentView: View {
                 .tabItem { Label("Layout", systemImage: "ruler") }
                 .tag(4)
 
-            HotelSearchView()
-                .tabItem { Label("Example", systemImage: "sparkles") }
-                .tag(5)
-
             FlightResultsView()
                 .tabItem { Label("Flights", systemImage: "airplane.departure") }
                 .tag(11)
 
-            NavigationStack { LoginLandingView() }
-                .tabItem { Label("Sign In", systemImage: "person.crop.circle.badge.checkmark") }
-                .tag(9)
-
-            NavigationStack { LoginView() }
+            LoginModalView()
                 .tabItem { Label("Login", systemImage: "person.crop.circle") }
-                .tag(7)
-
-            NavigationStack { FigmaProfileTestView() }
-                .tabItem { Label("MCP", systemImage: "cpu") }
-                .tag(8)
-
-            NavigationStack { TravelShowcaseView() }
-                .tabItem { Label("Travel", systemImage: "airplane") }
-                .tag(10)
+                .tag(5)
         }
         // A top "did fire" toast for every component callback (`flash("…")`).
         .modifier(ActionFlashOverlay())
