@@ -316,6 +316,7 @@ public extension AlertFooter {
 /// primary button, so one token drives the dialog's intent.
 public struct AlertDialog: View {
     @Environment(\.theme) private var theme
+    @Environment(\.dialogCornerRadius) private var cornerRadiusRole
 
     private let title: String?
     private let message: String?
@@ -368,7 +369,7 @@ public struct AlertDialog: View {
         .frame(maxWidth: size.maxWidth)
         .background(
             theme.background(.bgWhite),
-            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous)   // rounded-3xl (24)
+            in: RoundedRectangle(cornerRadius: theme.radius(cornerRadiusRole), style: .continuous)
         )
         .overlay(alignment: .topTrailing) { closeButton }
         .themeShadow(.elevated)
