@@ -13,7 +13,10 @@ So this importer:
   4. builds a pure-neutral gray ramp interpolated from the CSS's own L anchors
      (background / border / muted / foreground), so surfaces stay HeroUI-neutral,
   5. overrides the exact semantic tokens the CSS specifies with their exact hexes,
-  6. maps `--radius` / `--field-radius` onto the `radius-box`/`-field` roles.
+  6. maps `--radius` / `--field-radius` onto the `radius-box`/`-field` roles,
+  7. mints per-component spacing tokens from `--card-padding` (aliases
+     `--card-p` / `--padding-card`) and `--card-header/-body/-footer-padding`
+     — declared-only, 1:1 (no cascade flattening; Card resolves precedence).
 
 Everything the CSS does NOT specify (turquoise/orange/purple/pink families,
 badges, shadows) falls back to ThemeKit's defaults.
@@ -155,6 +158,18 @@ NEUTRAL_ANCHORS_DARK = {50: "background", 100: "surface", 200: "border",
                         500: "muted", 900: "foreground"}
 STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
 
+# CSS var(s) -> the demand-minted spacing token each mints, DECLARED-ONLY:
+# a var maps 1:1 onto exactly ONE token — no cascade flattening here
+# (`--card-padding` does not write header/body/footer entries). Precedence
+# between the tokens lives in the component (Card) at render time.
+# First name in the alias list wins within a scheme block.
+SPACING_VAR_MAP = [
+    ("card-padding", ["card-padding", "card-p", "padding-card"]),
+    ("card-header-padding", ["card-header-padding"]),
+    ("card-body-padding", ["card-body-padding"]),
+    ("card-footer-padding", ["card-footer-padding"]),
+]
+
 
 def _lum_L(color, fallback):
     """L (0..100) of a parsed color; approximates from luminance when the source
@@ -262,6 +277,14 @@ def build_theme(ns, vars_, dark, hue, font):
         roles.append({"name": "radius-field", "radius": field})
     have = {r["name"] for r in data["radius"]}
     data["radius"] += [r for r in roles if r["name"] not in have]
+
+    # 6) per-component spacing tokens from --card-padding & friends (declared-only)
+    have_spacing = {s["name"] for s in data["spacing"]}
+    for token, names in SPACING_VAR_MAP:
+        raw = next((vars_[n] for n in names if n in vars_), None)
+        px = _rem_px(raw) if raw is not None else None
+        if px is not None and token not in have_spacing:
+            data["spacing"].append({"name": token, "spacing": px})
     return data
 
 
@@ -285,6 +308,14 @@ def main():
         for k in ("radius", "field-radius"):
             if k in light:
                 dark.setdefault(k, light[k])
+        # Spacing tokens inherit per-TOKEN (not per-alias): a dark block that
+        # declares ANY alias of a token keeps its own alias order — light's
+        # higher-priority alias must not shadow it (mirrors CSSTheme.swift).
+        for _, names in SPACING_VAR_MAP:
+            if not any(n in dark for n in names):
+                for n in names:
+                    if n in light:
+                        dark[n] = light[n]
 
     hue_c = parse_color(light["accent"])
     hue = hue_c.H if hue_c and hue_c.H is not None else 253.83

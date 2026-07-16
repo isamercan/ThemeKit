@@ -21,9 +21,32 @@ public enum CardCoverPlacement {
     case fill
 }
 
+// Demand-minted spacing tokens Card reads from the active theme. The naming
+// grammar is `<component>-<slot>-padding` (umbrella `<component>-padding`),
+// resolving down to `Theme.SpacingRole.box`, then `.md` (16). Private on
+// purpose — consumers use the modifiers below; themes/CSS declare these names
+// (`--card-padding`, `--card-header-padding`, …).
+private let cardPaddingToken = "card-padding"
+private let cardHeaderPaddingToken = "card-header-padding"
+private let cardBodyPaddingToken = "card-body-padding"
+private let cardFooterPaddingToken = "card-footer-padding"
+
 /// Organism. A surface container with token padding / radius / elevation. An
 /// optional header (title / subtitle + a trailing `extra` action, divided from
 /// the body) and an `isLoading` skeleton bring it toward Ant Card.
+///
+/// **Padding contract.** Each slot's inner padding resolves through one chain
+/// (first hit wins):
+///
+///     instance modifier (.headerPadding / .footerPadding / .contentPadding)
+///       → deprecated raw CGFloat escape hatch
+///       → slot theme token   ("card-header-padding" / "card-body-padding" / "card-footer-padding")
+///       → umbrella theme token ("card-padding" — CSS `--card-padding`)
+///       → spacing role       (`Theme.SpacingRole.box`, default 16)
+///       → `Theme.SpacingKey.md` (16, bundled themes)
+///
+/// The `sm` (8) gaps between a slot and its divider are deliberately NOT part
+/// of this contract — they are fixed chrome, not themeable padding.
 public struct Card<Content: View>: View {
     private let title: String?
     private let action: (() -> Void)?
@@ -32,12 +55,39 @@ public struct Card<Content: View>: View {
     // Appearance/config — mutated only through the modifiers below (R2).
     private var elevation: CardElevation = .soft
     /// Raw padding (deprecated escape hatch); `paddingKey` wins when set.
-    private var padding: CGFloat = 16
+    /// `nil` by default so the theme tokens / spacing role decide.
+    private var padding: CGFloat?
     /// Token padding (`contentPadding(_ key:)`) — resolved against the
     /// environment theme so it re-skins with a spacing-scale change.
     private var paddingKey: Theme.SpacingKey?
+    /// Per-slot token padding (`headerPadding(_:)` / `footerPadding(_:)`).
+    private var headerPaddingKey: Theme.SpacingKey?
+    private var footerPaddingKey: Theme.SpacingKey?
 
-    private var resolvedPadding: CGFloat { paddingKey.map { theme.spacing($0) } ?? padding }
+    /// General (umbrella) padding — see the padding contract in the type doc.
+    private var resolvedPadding: CGFloat {
+        paddingKey.map { theme.spacing($0) }
+            ?? padding
+            ?? theme.spacing(token: cardPaddingToken)
+            ?? theme.spacing(.box)
+    }
+    private var resolvedHeaderPadding: CGFloat {
+        headerPaddingKey.map { theme.spacing($0) }
+            ?? theme.spacing(token: cardHeaderPaddingToken)
+            ?? resolvedPadding
+    }
+    private var resolvedBodyPadding: CGFloat {
+        paddingKey.map { theme.spacing($0) }
+            ?? padding
+            ?? theme.spacing(token: cardBodyPaddingToken)
+            ?? theme.spacing(token: cardPaddingToken)
+            ?? theme.spacing(.box)
+    }
+    private var resolvedFooterPadding: CGFloat {
+        footerPaddingKey.map { theme.spacing($0) }
+            ?? theme.spacing(token: cardFooterPaddingToken)
+            ?? resolvedPadding
+    }
     private var subtitle: String?
     private var extraTitle: String?
     private var onExtra: (() -> Void)?
@@ -76,8 +126,8 @@ public struct Card<Content: View>: View {
                 titleHeader
             }
         }
-        .padding(.horizontal, resolvedPadding)
-        .padding(.top, resolvedPadding)
+        .padding(.horizontal, resolvedHeaderPadding)
+        .padding(.top, resolvedHeaderPadding)
         .padding(.bottom, Theme.SpacingKey.sm.value)
     }
 
@@ -113,9 +163,9 @@ public struct Card<Content: View>: View {
         if let footerContent {
             footerContent
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, resolvedPadding)
+                .padding(.horizontal, resolvedFooterPadding)
                 .padding(.top, Theme.SpacingKey.sm.value)
-                .padding(.bottom, resolvedPadding)
+                .padding(.bottom, resolvedFooterPadding)
         }
     }
 
@@ -156,10 +206,10 @@ public struct Card<Content: View>: View {
                 }
                 if isLoading {
                     loadingPlaceholder
-                        .padding(resolvedPadding).frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(resolvedBodyPadding).frame(maxWidth: .infinity, alignment: .leading)
                 } else if hasBody {
                     content()
-                        .padding(resolvedPadding).frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(resolvedBodyPadding).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if footerContent != nil {
                     if coverContent == nil { DividerView().size(.small) }
@@ -201,6 +251,9 @@ public extension Card {
     /// Inner content padding by spacing token (named so it doesn't shadow the
     /// native `.padding`; the `SurfaceView`/`TicketStub` twin) — resolved
     /// against the environment theme, so it re-skins with a spacing change.
+    /// This is the *general* override; `headerPadding(_:)` / `footerPadding(_:)`
+    /// tune single slots. Unset, the theme decides (`--card-padding` /
+    /// `Theme.SpacingRole.box`, default 16).
     func contentPadding(_ key: Theme.SpacingKey) -> Self {
         copy { $0.paddingKey = key }
     }
@@ -209,6 +262,20 @@ public extension Card {
     @available(*, deprecated, message: "Use contentPadding(_: Theme.SpacingKey) — the token-bound overload.")
     func contentPadding(_ padding: CGFloat) -> Self {
         copy { $0.padding = padding; $0.paddingKey = nil }
+    }
+
+    /// Header-slot padding by spacing token — overrides the general
+    /// `contentPadding(_:)` / theme padding for the header area only
+    /// (theme twin: `--card-header-padding`).
+    func headerPadding(_ key: Theme.SpacingKey) -> Self {
+        copy { $0.headerPaddingKey = key }
+    }
+
+    /// Footer-slot padding by spacing token — overrides the general
+    /// `contentPadding(_:)` / theme padding for the footer area only
+    /// (theme twin: `--card-footer-padding`).
+    func footerPadding(_ key: Theme.SpacingKey) -> Self {
+        copy { $0.footerPaddingKey = key }
     }
 
     /// Trailing header action (Ant `extra`) — renders when both title and action are set.
@@ -352,6 +419,41 @@ public extension View {
                     .foregroundStyle(theme.text(.textSecondary))
             }
             .surface(.bgSecondaryLight)
+        }
+        // Theme-driven padding: a CSS theme minting `--card-padding` /
+        // `--card-header-padding`, scoped to this subtree via `.theme(_:)`.
+        PreviewCase("CSS-padded theme") {
+            let cssTheme: Theme = {
+                let t = Theme()
+                t.setTheme(css: """
+                    :root {
+                      --accent: #056bfd;
+                      --card-padding: 24px;
+                      --card-header-padding: 8px;
+                    }
+                    """)
+                return t
+            }()
+            Card("CSS-padded") {
+                Text("24pt body from `--card-padding`; 8pt header from `--card-header-padding`.")
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .theme(cssTheme)
+        }
+        // Per-slot instance overrides: header/footer tokens beat the general padding.
+        PreviewCase("Slot padding overrides") {
+            Card("Slot overrides") {
+                Text("Header at `.base` (24), footer at `.sm` (8), body default.")
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            .headerPadding(.base)
+            .footerPadding(.sm)
+            .footer {
+                Text("Tight footer").textStyle(.labelSm600)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
         }
         // Token content padding (G5): the SpacingKey overload.
         PreviewCase("Compact padding") {

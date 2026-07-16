@@ -61,6 +61,9 @@ final class CSSThemeTests: XCTestCase {
     private func radius(_ d: Theme.ThemeData, _ name: String) -> CGFloat? {
         d.radius?.first(where: { $0.name == name })?.radius
     }
+    private func spacing(_ d: Theme.ThemeData, _ name: String) -> CGFloat? {
+        d.spacing?.first(where: { $0.name == name })?.spacing
+    }
 
     func testLightSchemeMatchesImporterOutput() {
         let d = CSSTheme.parse(css).themeData(dark: false, font: "Inter")
@@ -97,6 +100,39 @@ final class CSSThemeTests: XCTestCase {
         // Radius declared once in :root is inherited by the dark scheme.
         XCTAssertEqual(radius(d, "radius-box"), 8)
         XCTAssertEqual(radius(d, "radius-field"), 12)
+    }
+
+    /// Card padding vars are minted DECLARED-ONLY (no cascade flattening: an
+    /// umbrella `--card-padding` writes only `card-padding`), and — declared once
+    /// in `:root` — they reach the dark scheme exactly like the radius roles.
+    func testCardPaddingTokensMintedDeclaredOnlyAndInheritedByDark() {
+        let padded = css.replacingOccurrences(of: "--radius: 0.5rem;", with: """
+        --radius: 0.5rem;
+          --card-padding: 1.5rem;
+          --card-header-padding: 8px;
+        """)
+        for dark in [false, true] {
+            let d = CSSTheme.parse(padded).themeData(dark: dark, font: "Inter")
+            XCTAssertEqual(spacing(d, "card-padding"), 24, "dark=\(dark)")       // 1.5rem = 24
+            XCTAssertEqual(spacing(d, "card-header-padding"), 8, "dark=\(dark)")
+            // Declared-only: undeclared slot vars mint nothing (Card walks its
+            // own precedence chain down to card-padding / spacing-box).
+            XCTAssertNil(spacing(d, "card-body-padding"), "dark=\(dark)")
+            XCTAssertNil(spacing(d, "card-footer-padding"), "dark=\(dark)")
+            // The spacing role is generated for every theme.
+            XCTAssertEqual(spacing(d, "spacing-box"), 16, "dark=\(dark)")
+        }
+        // A CSS theme without the vars mints no card tokens at all.
+        let plain = CSSTheme.parse(css).themeData(dark: false, font: "Inter")
+        XCTAssertNil(spacing(plain, "card-padding"))
+    }
+
+    /// `--card-p` / `--padding-card` alias onto the same `card-padding` token.
+    func testCardPaddingAliasesResolve() {
+        let aliased = css.replacingOccurrences(of: "--radius: 0.5rem;",
+                                               with: "--card-p: 20px;\n  --radius: 0.5rem;")
+        let d = CSSTheme.parse(aliased).themeData(dark: false, font: "Inter")
+        XCTAssertEqual(spacing(d, "card-padding"), 20)
     }
 
     func testParseDetectsDarkBlock() {

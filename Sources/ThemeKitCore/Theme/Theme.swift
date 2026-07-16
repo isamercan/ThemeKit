@@ -316,6 +316,21 @@ public final class Theme: @unchecked Sendable {
     }
     public func spacing(_ key: SpacingKey) -> CGFloat { spacingList[key.rawValue] ?? 0 }
 
+    /// Resolved spacing for a semantic *role* (box). Reads the theme's role token
+    /// if present, otherwise the role's fallback size key — so themes without
+    /// role tokens (bundled JSON) keep their existing insets.
+    public func spacing(_ role: SpacingRole) -> CGFloat {
+        spacingList[role.rawValue] ?? spacing(role.fallback)
+    }
+
+    /// A demand-minted component spacing token (`card-padding`,
+    /// `card-header-padding`, …), or `nil` when the active theme doesn't declare
+    /// it — deliberately unlike the `?? 0` key accessor, so a component can walk
+    /// its precedence chain (slot token → umbrella token → spacing role).
+    /// `package`: stringly token names stay inside the library — consumers go
+    /// through component modifiers or theme/CSS files.
+    package func spacing(token name: String) -> CGFloat? { spacingList[name] }
+
     // MARK: - Typography accessor
 
     /// The active theme's resolved style for a `TextStyle` (font + line spacing).

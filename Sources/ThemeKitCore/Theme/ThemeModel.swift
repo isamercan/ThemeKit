@@ -119,6 +119,25 @@ extension Theme {
         /// Resolved spacing from the active theme.
         public var value: CGFloat { Theme.shared.spacing(self) }
     }
+
+    /// Semantic spacing *roles* — the spacing twin of ``RadiusRole``. Name an
+    /// inset by the component's *role* instead of a fixed size, so a theme can
+    /// re-pad a whole category at once. A theme that omits the role token falls
+    /// back to the matching size key (so existing/bundled themes are unaffected).
+    public enum SpacingRole: String, CaseIterable {
+        /// Inner padding of box-class surfaces (cards, dialogs, sheets).
+        /// Demand-minted per-component override tokens follow the grammar
+        /// `<component>-<slot>-padding` (umbrella `<component>-padding`) and
+        /// resolve down to this role, then `.md`. Mint a component token ONLY
+        /// when a shipped component reads it — never pre-generate.
+        case box = "spacing-box"
+
+        /// Size key used when a theme doesn't define this role token.
+        public var fallback: SpacingKey { .md }   // 16
+
+        /// Resolved spacing from the active theme (role token, else the fallback size).
+        public var value: CGFloat { Theme.shared.spacing(self) }
+    }
 }
 
 // MARK: - Radius capping (HeroUI `min()` cap + concentric nesting)

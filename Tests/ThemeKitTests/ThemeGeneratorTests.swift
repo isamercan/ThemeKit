@@ -86,6 +86,40 @@ final class ThemeGeneratorTests: XCTestCase {
         Theme.shared.loadTheme(named: Theme.defaultThemeName)
     }
 
+    private func spacing(_ data: Theme.ThemeData, _ name: String) -> CGFloat? {
+        data.spacing?.first(where: { $0.name == name })?.spacing
+    }
+
+    func testSpacingOverridesApplyVerbatimAndUnknownKeysAppend() {
+        let d = ThemeGenerator.generate(primaryHex: "056bfd", tint: 0, dark: false,
+                                        font: "System", fontScale: 1, radiusScale: 1, spacingScale: 2, shadowScale: 1,
+                                        spacingOverrides: ["spacing-box": 20, "card-padding": 24])
+        // Known key: the override wins VERBATIM (no spacingScale multiplication) —
+        // mirroring how radiusOverrides bypass radiusScale…
+        XCTAssertEqual(spacing(d, "spacing-box"), 20)
+        // …while unoverridden base keys still scale.
+        XCTAssertEqual(spacing(d, "sp-md"), 32)
+        // Unknown (demand-minted component) keys are APPENDED, not silently dropped.
+        XCTAssertEqual(spacing(d, "card-padding"), 24)
+    }
+
+    func testSpacingBoxRoleGeneratedAndRoleFallback() {
+        // Generated themes mint the role token at 16 (× spacingScale).
+        let d = ThemeGenerator.generate(primaryHex: "056bfd", tint: 0, dark: false,
+                                        font: "System", fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1)
+        XCTAssertEqual(spacing(d, "spacing-box"), 16)
+
+        // Bundled JSON themes predate `spacing-box` — the role accessor must fall
+        // back to `.md` (16), never 0 (a 0 would zero every Card's padding).
+        let t = Theme()
+        t.loadTheme(named: Theme.defaultThemeName)
+        XCTAssertNil(t.spacing(token: "spacing-box"))
+        XCTAssertEqual(t.spacing(.box), t.spacing(Theme.SpacingKey.md))
+        XCTAssertEqual(t.spacing(.box), 16)
+        // Demand-minted tokens are nil (not 0) when the theme doesn't declare them.
+        XCTAssertNil(t.spacing(token: "card-padding"))
+    }
+
     func testDefaultMatchesBakedSeed() {
         let d = ThemeGenerator.generate(primaryHex: "056bfd", tint: 0.06, dark: false,
                                         font: "Montserrat", fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1)
