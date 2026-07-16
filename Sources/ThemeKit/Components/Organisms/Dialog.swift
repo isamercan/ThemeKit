@@ -152,6 +152,7 @@ struct DialogPresentation<Card: View>: View {
 
 struct DialogCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.dialogCornerRadius) private var cornerRadiusRole
 
     let title: String
     let message: String?
@@ -204,7 +205,7 @@ struct DialogCard: View {
         .padding(Theme.SpacingKey.lg.value)
         .frame(maxWidth: width ?? 320)
         // Floating modal chrome → Liquid Glass on OS 26+, Material below, opaque under Reduce Transparency.
-        .glassChrome(in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
+        .glassChrome(in: RoundedRectangle(cornerRadius: theme.radius(cornerRadiusRole), style: .continuous))
         .overlay(alignment: .topTrailing) {
             if let onClose {
                 Button(action: onClose) {
@@ -315,10 +316,45 @@ public extension View {
     }
 }
 
+// MARK: - Configurable card corner radius (the modifier twin of `Card.radius(_:)`)
+
+/// Corner-radius *role* for every `.dialog(…)` and `AlertDialog` card presented
+/// in a subtree. Defaults to `.box` — the token contract's "large container"
+/// role that `Card`, modals, sheets and alerts share — resolved through the
+/// active theme (`radius-box`, 16 by default; a brand wanting the old 32 sets
+/// `radius-box: 32` in its theme).
+private struct DialogCornerRadiusKey: EnvironmentKey {
+    // Immutable enum constant — safe (mirrors ``ButtonGroupControlSizeKey``).
+    nonisolated(unsafe) static let defaultValue: Theme.RadiusRole = .box
+}
+
+public extension EnvironmentValues {
+    /// The radius role applied to dialog / alert-dialog cards (see ``SwiftUICore/View/dialogCornerRadius(_:)``).
+    var dialogCornerRadius: Theme.RadiusRole {
+        get { self[DialogCornerRadiusKey.self] }
+        set { self[DialogCornerRadiusKey.self] = newValue }
+    }
+}
+
+public extension View {
+    /// Sets the corner-radius role for any `.dialog(…)` and `AlertDialog` card
+    /// presented within this subtree — the modifier-based twin of `Card`'s
+    /// `.radius(_:)`. Defaults to `.box` (16); pass `.field` (8) or `.selector`
+    /// (6) for tighter chrome. Apply it on (or above) the view carrying `.dialog`.
+    ///
+    ///     content
+    ///         .dialog(isPresented: $show, title: "Log in") { … } footer: { … }
+    ///         .dialogCornerRadius(.field)
+    func dialogCornerRadius(_ role: Theme.RadiusRole) -> some View {
+        environment(\.dialogCornerRadius, role)
+    }
+}
+
 // MARK: - Custom content + footer slot (Ant Modal footer / scroll / afterClose)
 
 private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModifier {
     @Environment(\.theme) private var theme
+    @Environment(\.dialogCornerRadius) private var cornerRadiusRole
 
     @Binding var isPresented: Bool
     let title: String?
@@ -416,7 +452,7 @@ private struct CustomDialogModifier<DialogContent: View, Footer: View>: ViewModi
                     }
                     .frame(maxWidth: dialogMaxWidth(width, size, default: 360))
                     .background(theme.background(.bgWhite),
-                                in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
+                                in: RoundedRectangle(cornerRadius: theme.radius(cornerRadiusRole), style: .continuous))
                     .themeShadow(.elevated)
                     .padding(Theme.SpacingKey.lg.value)
                 }
@@ -499,6 +535,7 @@ public extension View {
 
 private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
     @Environment(\.theme) private var theme
+    @Environment(\.dialogCornerRadius) private var cornerRadiusRole
 
     @Binding var isPresented: Bool
     let closable: Bool
@@ -534,7 +571,7 @@ private struct FreeformDialogModifier<DialogContent: View>: ViewModifier {
                         .padding(Theme.SpacingKey.lg.value)
                         .frame(maxWidth: dialogMaxWidth(width, size, default: 320))
                         // Same floating modal chrome as `DialogCard`.
-                        .glassChrome(in: RoundedRectangle(cornerRadius: Theme.RadiusKey.lg.value, style: .continuous))
+                        .glassChrome(in: RoundedRectangle(cornerRadius: theme.radius(cornerRadiusRole), style: .continuous))
                         .overlay(alignment: .topTrailing) {
                             if closable {
                                 Button(action: close) {
