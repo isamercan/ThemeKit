@@ -90,7 +90,10 @@ def resolve_token(token, palette, dark):
     return darkv if dark else light
 
 RADIUS = {"radius-none": 0, "rd-xs": 6, "rd-sm": 8, "rd-md": 16, "rd-base": 24, "rd-lg": 32, "rd-xl": 40, "rd-4xl": 64}
-SPACING = {"spacing-none": 0, "sp-xs": 4, "sp-sm": 8, "sp-md": 16, "sp-base": 24, "sp-lg": 32, "sp-xl": 40, "sp-4xl": 64}
+SPACING = {"spacing-none": 0, "sp-xs": 4, "sp-sm": 8, "sp-md": 16, "sp-base": 24, "sp-lg": 32, "sp-xl": 40, "sp-4xl": 64,
+           # Semantic spacing role — inner padding of box-class surfaces (Theme.SpacingRole.box).
+           # Default 16 (== sp-md); scales with the theme like the rest of the scale.
+           "spacing-box": 16}
 
 # ---- Typography ramp (name -> size, weight, lineHeight). Themed via JSON so a
 # theme switch can change the font family + metrics, not just colors. ----

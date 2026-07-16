@@ -34,7 +34,7 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **236** components (52 atoms · 104 molecules · 80 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **245** components (52 atoms · 109 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
@@ -116,9 +116,9 @@ init(_ text: String, action: (() -> Void)? = nil)
 - `.badgeStyle` — Semantic style (system + brand variants) driving fill/foreground/border (renamed from the bare `style:` to avoid the generic clash + match `BadgeStyle`).
 - `.variant` — Fill treatment: soft / solid / outline / ghost.
 - `.size` — Size tier: small / medium / large / xlarge.
-- `.icon` — Leading SF Symbol before the text.
+- `.icon` — Leading SF Symbol before the text (the Figma "Prefix" slot).
+- `.trailingIcon` — A trailing SF Symbol after the text — the Figma "Suffix" slot (e.g.
 - `.badgeShape` — Pill (default) or rounded-rectangle outline.
-- `.trailingIcon` — A trailing SF Symbol after the text (e.g.
 - `.badgeColor` — Overrides the text/foreground color (otherwise derived from style + variant).
 - `.gradient` — Fills the badge with a horizontal gradient of semantic tokens (each hue's solid shade) instead of the style background; `nil` restores it.
 - `.highlighted` — Lifts the badge off the surface with a subtle drop shadow.
@@ -150,6 +150,9 @@ init(_ title: String, isSelected: Binding<Bool>)
 
 - `.size` — Control size: small / medium / large — drives paddings and the enforced min-height ramp (36 / 40 / 44pt at the default text size).
 - `.chipStyle` — How a selected chip is filled: tonal / solid.
+- `.type` — Semantic hue — the HeroUI V3 Chip **Type** (accent / neutral / success / warning / danger).
+- `.variant` — Emphasis level of a semantic chip — the HeroUI V3 Chip **Variant** (primary / secondary / tertiary / soft).
+- `.onClose` — A trailing dismiss (`×`) button (HeroUI suffix remove).
 - `.icon` — A leading SF Symbol before the title.
 - `.rating` — A leading star + numeric rating before the title.
 - `.exists` — Whether the represented item still exists; `false` strikes through and dims the chip (e.g.
@@ -363,6 +366,8 @@ init(_ text: String)
 - `.required` — Append a required asterisk after the label text.
 - `.links` — Turn substrings of the label into inline tappable links (rendered via `InlineText`) — e.g.
 - `.hasInfo` — Show a trailing info glyph.
+- `.onInfo` — Make the trailing info glyph tappable, capturing the tap via `action` (e.g.
+- `.infoTooltip` — Attach a tooltip to the trailing info glyph, turning it into a tap-to-reveal target that shows `text` for secondary context (the HeroUI Label "show tooltip" affordance).
 - `.hasError` — Render the label in the error color.
 
 ## Join
@@ -804,7 +809,7 @@ SeatCell(seat, size:, isSelected:, isSelectable:, isRecommended:, assignedInitia
 
 ---
 
-# Molecules (104)
+# Molecules (109)
 
 _Compositions of atoms — inputs, buttons, selectors, small layouts._
 
@@ -894,6 +899,10 @@ init(_ axis: ButtonGroupAxis = .vertical, @ViewBuilder content: @escaping () -> 
 **Modifiers**
 
 - `.axis` — Layout axis — a vertical stack or a wrapping side-by-side row.
+- `.size` — Group size (HeroUI ButtonGroup `size`) — the shared ``ButtonSize`` token (`xxsmall … xxlarge`) every button inherits unless it set its own `.size(_:)`: `ButtonGroup { … }.size(.large)`.
+- `.width` — Width behavior (HeroUI ButtonGroup `width`) — `.hug` (default) wraps tightly around the buttons; `.fill` stretches the group to the available width and distributes the buttons evenly.
+- `.dividers` — Draw a hairline between adjacent buttons (HeroUI ButtonGroup dividers).
+- `.dividerColor` — Tint the between-button dividers to match the buttons' context (HeroUI Divider `variant`) — pass a semantic color token; `nil` keeps the neutral theme border.
 
 ## PrimaryButton
 
@@ -945,6 +954,30 @@ init(_ title: String, action: @escaping () -> Void)
 // usage: LinkButton("title", action: { })
 ```
 
+## TertiaryButton
+
+Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface, typically paired alongside a primary or secondary action.
+
+```swift
+TertiaryButton()
+```
+
+## DangerButton
+
+Solid destructive button (HeroUI `danger`) — for irreversible actions (delete, remove).
+
+```swift
+DangerButton()
+```
+
+## DangerSoftButton
+
+Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint for cautionary actions where urgency is lower than a solid ``DangerButton``.
+
+```swift
+DangerSoftButton()
+```
+
 ## ThemeButton
 
 ```swift
@@ -963,6 +996,8 @@ init(_ title: String? = nil, action: @escaping () -> Void)
 - `.loading` — Show the loading spinner and block taps while `on`.
 - `.spinnerPlacement` — Keep the label while loading and render the spinner beside it on the given edge (HeroUI `spinnerPlacement="start"/"end"`; Ant Button `loading: { icon }`).
 - `.icon` — Leading and/or trailing SF Symbol.
+- `.density` — Height/padding density: `.regular` (touch, default) or `.compact` (web/HeroUI — sm/md/lg == compact small/medium/large).
+- `.iconOnly` — Render as a square-footprint icon-only button at the current shape's corner — decoupled from `.circle`/`.square` (HeroUI `iconOnly`).
 - `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
 
 ## CalendarView
@@ -979,6 +1014,7 @@ init(selection: Binding<Date?>)
 - `.showsWeekdayHeader` — Show or hide the weekday-initials row (default on).
 - `.firstWeekday` — Override the first day of the week — `1` = Sunday … `7` = Saturday (clamped); `nil` (default) follows the locale's convention.
 - `.yearPicker` — Make the month-year header tappable to jump across months and years: day grid → year grid → month grid, then back to the chosen month.
+- `.disabledDates` — Greys out and blocks every day the predicate returns `true` for (Ant `disabledDate`) — e.g.
 
 ## CalendarYearPicker
 
@@ -1000,6 +1036,7 @@ Cascader(options, selection:)
 **Modifiers**
 
 - `.placeholder` — Hint shown when nothing is selected.
+- `.size` — Control-height preset (Ant `size` large/middle/small).
 - `.changeOnSelect` — Commit the path at every level, not only on a leaf (Ant `changeOnSelect`).
 - `.clearable` — Show a trailing clear button when a path is selected (Ant `allowClear`).
 - `.searchable` — Add a search field atop the dropdown; typing filters to a flat list of matching leaf paths (Ant `showSearch`).
@@ -1075,6 +1112,8 @@ init(_ label: String? = nil, isChecked: Binding<Bool>)
 **Modifiers**
 
 - `.type` — Visual style of the box: `.plain`, `.inner`, or `.customInner(color:)`.
+- `.variant` — Surface treatment of the box: `.primary` (default — border-only, for regular backgrounds) or `.secondary` (soft fill for elevated surfaces).
+- `.description` — Supporting description rendered under the title (Figma "Description").
 - `.customInner` — Always fills the box with a semantic swatch (the `.customInner` type), resolved from the token's solid role — the token-bound path.
 - `.indeterminate` — Renders the indeterminate (mixed) state instead of a checkmark.
 - `.alignment` — Vertical alignment of the box against a multi-line label.
@@ -1411,6 +1450,30 @@ GuestSelector(selection:)
 - `.maxTotal` — Caps the combined guest count (adults + children + infants) — e.g.
 - `.onChange` — Called whenever the selection changes.
 
+## InputAffix
+
+The leading / trailing content of an ``InputGroup`` (Figma "Input Affix").
+
+```swift
+InputAffix(content, action:)
+```
+
+**Modifiers**
+
+- `.icon` — Leading SF Symbol glyph (16pt).
+- `.arrow` — Show a trailing selector arrow (chevron), e.g.
+- `.emphasis` — Visual emphasis — `.mute` for passive units/hints, `.active` for interactive content.
+- `.variant` — Surface variant — `.primary` (white + elevation) or `.secondary` (on-card muted).
+- `.type` — Value kind — drives keyboard type and secure entry.
+- `.gapSpaced` — Separate the affixes from the input with a divider + wider gap (Figma `gapSpace`).
+- `.a11yID` — Stable accessibility identifier for UI tests.
+
+## InputGroup
+
+```swift
+InputGroup()
+```
+
 ## InputNumber
 
 ```swift
@@ -1535,6 +1598,7 @@ init(_ label: String, text: Binding<String>)
 - `.warningText` — Convenience warning appended to the message list as a `.warning` `InfoMessage` (parity with `TextInput.warningText`).
 - `.infoMessages` — Validation / hint messages rendered beneath the editor.
 - `.minHeight` — Minimum editor height (defaults to 120, R4); overrides the `size(_:)` preset.
+- `.autosize` — Grows the editor with its content between `minRows` and `maxRows` lines, then scrolls (Ant `autoSize={{minRows,maxRows}}` / HeroUI `minRows`/`maxRows`).
 - `.externalFocus` — Drive focus from outside (e.g.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
@@ -1550,6 +1614,7 @@ init(_ label: String? = nil, options: [Option], selection: Binding<Set<Option>>,
 
 **Modifiers**
 
+- `.allowsCustomTags` — Allow the user to create tags by typing free text and pressing return (Ant `mode="tags"`).
 - `.placeholder` — Placeholder shown while nothing is selected.
 - `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
 - `.optionEnabled` — Per-option enable predicate; disabled rows are shown greyed and unselectable.
@@ -1934,6 +1999,9 @@ init(_ label: String, options: [Option], selection: Binding<Option?>, optionTitl
 - `.placeholder` — Placeholder shown while no option is selected.
 - `.clearable` — Show a trailing clear button when an option is selected.
 - `.searchable` — Use the searchable inline panel instead of the native menu.
+- `.listHeight` — Max height of the searchable dropdown before it scrolls (Ant `listHeight`, default 256pt).
+- `.filter` — Custom match predicate for the searchable panel (Ant `filterOption`): `keep(query, option)` returns whether to keep the option.
+- `.filterSort` — Order the filtered rows (Ant `filterSort`); `nil` keeps declaration order.
 - `.size` — Control height of the trigger field (small / medium / large).
 - `.required` — Marks the field as required: renders an error-token asterisk after the floating label (the `InputLabel` treatment, honoring the subtree `FieldDefaults.requiredIndicator`) and appends ", required" to the trigger's accessibility label (E2, HeroUI `isRequired`).
 - `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
@@ -2087,6 +2155,7 @@ init(_ steps: [Steps.Step], onSelect: ((Int) -> Void)? = nil)
 - `.size` — Marker + label size: medium (default) / small — the kit's uniform size-enum axis.
 - `.small` — Compact markers and labels — the boolean twin of `size(.small)`.
 - `.progressDot` — Render minimal progress dots instead of numbered markers (Ant `progressDot`).
+- `.current` — Drive the flow from a single controlled index (Ant `current`): steps before it read as done, the one at it as active, those after as todo — derived automatically, so steps can be declared without per-item state.
 
 ## SuggestionRow
 
@@ -2255,6 +2324,9 @@ Transfer(items, target:)
 - `.titles` — Header labels for the source and target boxes (Ant `titles`).
 - `.searchable` — Show a search field in each list box, filtering its rows by title (Ant Transfer `showSearch`).
 - `.itemEnabled` — Per-item enablement predicate — disabled rows dim, can't be checked and never move (nil enables every item; the kit-standard `optionEnabled` idiom, Ant Transfer per-item `disabled`).
+- `.showsSelectAll` — Show a select-all checkbox in each box header that toggles every enabled, currently-visible row in that box (Ant `showSelectAll`).
+- `.status` — Validation tint for the list borders (Ant `status`): normal / error / warning.
+- `.onChange` — Called after items move, with the new target set, the direction, and the moved keys (Ant `onChange(targetKeys, direction, moveKeys)`).
 
 ## TreeSelect
 
@@ -2447,7 +2519,7 @@ TripTypeToggle(options, selection:)
 
 ---
 
-# Organisms (80)
+# Organisms (84)
 
 _Full sections — cards, tables, navigation, banners, domain surfaces._
 
@@ -2490,6 +2562,10 @@ init(_ items: [Item], initiallyExpanded: Set<Item.ID> = [], title: @escaping (It
 - `.dividers` — Whether to draw the dividers between rows (default true).
 - `.collapsible` — Whether an open item can be collapsed again (default true).
 - `.itemDisabled` — Per-item disabled predicate — disabled rows render in the disabled text token and don't respond to taps.
+- `.icon` — Per-item leading SF Symbol prefix shown before the title (Figma "Prefix" icon instance swap).
+- `.number` — Per-item leading two-digit number badge shown before the title (numbered steps / FAQ).
+- `.titleSize` — Title text size applied to every row (default preserves the compact baseline).
+- `.density` — Header row vertical padding — default / small / large (Figma row height).
 
 ## ActionBar
 
@@ -2529,6 +2605,45 @@ AgentPriceRow(provider, action:)
 - `.accent`
 - `.surface`
 - `.cornerRadius`
+
+## AlertHeader
+
+The Figma `_AlertHeader`: an optional icon "avatar" bubble over an optional title, aligned leading or center.
+
+```swift
+AlertHeader(title)
+```
+
+**Modifiers**
+
+- `.icon` — Icon (SF Symbol) shown in the bubble.
+- `.tone` — Intent color for the glyph (default `.neutral`); the bubble stays neutral.
+- `.alignment` — `Type`: `.leading` (default) or `.center`.
+- `.primaryAction` — Button One — the primary/confirming action, tinted by `tone`.
+- `.secondaryAction` — Button Two — the secondary/dismissing action, neutral (Figma "Show Button Two").
+- `.layout` — `Type`: `.auto` (default), `.horizontal`, or `.vertical`.
+- `.swapActions` — Reverse the buttons' visual order (Figma "Swap Button One / Two").
+- `.primaryLoading` — Externally drive the primary button's loading state (in addition to the async `task:` form's own spinner).
+- `.headerAlignment` — Header `Type`: `.leading` (default) or `.center`.
+- `.size` — Card size tier: `.xs` / `.sm` (default) / `.md` / `.lg` / `.mobile`.
+- `.footerLayout` — Footer `Type`: `.auto` (horizontal, wrapping to vertical when the labels don't fit), `.horizontal`, or `.vertical`.
+- `.closable` — Show the top-trailing close (✕) button; `handler` fires on tap.
+
+## AlertFooter
+
+The Figma `_AlertFooter`.
+
+```swift
+AlertFooter()
+```
+
+## AlertDialog
+
+A modal alert dialog composed of an ``AlertHeader``, an optional body (a `message` string or a custom `.content { }` slot) and an ``AlertFooter``.
+
+```swift
+AlertDialog()
+```
 
 ## AlertToast
 
@@ -2607,9 +2722,14 @@ init(_ title: String? = nil, action: (() -> Void)? = nil, @ViewBuilder content: 
 - `.subtitle` — Secondary line under the title in the card header.
 - `.elevation` — Surface elevation: none / soft / elevated.
 - `.contentPadding` — Inner content padding by spacing token (named so it doesn't shadow the native `.padding`; the `SurfaceView`/`TicketStub` twin) — resolved against the environment theme, so it re-skins with a spacing change.
+- `.headerPadding` — Header-slot padding by spacing token — overrides the general `contentPadding(_:)` / theme padding for the header area only (theme twin: `--card-header-padding`).
+- `.footerPadding` — Footer-slot padding by spacing token — overrides the general `contentPadding(_:)` / theme padding for the footer area only (theme twin: `--card-footer-padding`).
 - `.extraAction` — Trailing header action (Ant `extra`) — renders when both title and action are set.
 - `.loading` — Replace the body with a skeleton placeholder while content loads.
+- `.overline` — A small eyebrow/overline label above the title (HeroUI "NEW" tag) — uppercased in a muted label style.
 - `.surface` — Surface fill by background token, threaded into the active ``CardStyle``'s configuration (HeroUI `Card` `variant`): default → `.bgWhite`, `secondary` → `.bgSecondaryLight`, `tertiary` → `.bgTertiary`; HeroUI `transparent` ≈ `.cardStyle(.outlined)` instead.
+- `.radius` — Corner-radius role — the card "size" axis: `.box` (default, 16), `.field` (8), or `.selector` (6).
+- `.selected` — Marks the card as selected — the default / outlined styles promote the border to the hero token (HeroUI `isSelected`).
 
 ## CardStack
 
@@ -2712,6 +2832,9 @@ init(columns: [DataTable<Row>.Column], rows: [Row], selection: Binding<Set<Row.I
 
 - `.striped` — Zebra striping on alternate rows (on by default; pass `false` to disable).
 - `.pageSize` — Paginate rows at `size` per page (nil turns paging off).
+- `.size` — Row density (Ant Table `size`): large / middle (default) / small — scales the header + cell vertical padding.
+- `.showsHeader` — Show the column-title header strip (Ant `showHeader`; default on).
+- `.selectionColumn` — Draw a leading checkbox column with a select-all header (Ant `rowSelection` checkbox mode).
 - `.loading` — Replace rows with a loading placeholder while content loads.
 - `.onRowTap` — Callback invoked when a row is tapped (also makes rows interactive).
 
@@ -2749,6 +2872,21 @@ init(@ViewBuilder before: @escaping () -> Before, @ViewBuilder after: @escaping 
 **Modifiers**
 
 - `.aspect` — Aspect ratio of the comparison stage (default 16:9).
+
+## Drawer
+
+The drawer's content surface — a `heading` / body / `footer` slot stack with an optional close button and (on `.bottom` / `.top`) a grab handle.
+
+```swift
+Drawer(content:)
+```
+
+**Modifiers**
+
+- `.showsCloseButton` — Toggles the top-trailing close button (default on).
+- `.showsHandle` — Overrides the grab-handle visibility.
+- `.edge` — Explicit entry edge for a standalone panel (previews, custom hosts).
+- `.onClose` — Close action for the close button when the panel isn't driven by a presenter binding.
 
 ## EmptyState
 
@@ -2911,7 +3049,8 @@ init(_ message: String, title: String? = nil, links: [(substring: String, action
 - `.showsIcon` — Show or hide the type's leading icon.
 - `.icon` — Override the leading status glyph (otherwise derived from the variant); `nil` restores the variant's default.
 - `.fullWidth` — Edge-to-edge banner treatment: stretch to full width and drop the rounded corners / border (Ant Alert `banner`).
-- `.action` — Trailing inline action button: its label + handler.
+- `.action` — Trailing inline action as a lightweight text link: its label + handler.
+- `.actionButton` — A first-class trailing action button (real `ThemeButton`) whose tap handler is captured on the `AlertAction`.
 - `.onDismiss` — Trailing dismiss (×) button handler.
 
 ## KanbanBoard
@@ -3273,6 +3412,7 @@ init(_ items: [TabItem], selection: Binding<Int>, onClose: ((Int) -> Void)? = ni
 
 - `.scrollable` — Let the bar scroll horizontally instead of distributing tabs evenly.
 - `.tabStyle` — Visual treatment: underline / card / pill (boxed track, filled active tab).
+- `.size` — Tab-bar density (Ant Tabs `size`): small / medium (default) / large — scales the label type, icon glyph and pill/card padding together.
 - `.scrollAlign` — Where a scrollable bar parks the selected tab on selection change (HeroUI Tabs `scrollAlign`; default `.center`).
 - `.dividers` — Draw a hairline in the border token between adjacent tabs (HeroUI Tabs.Separator).
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
@@ -3390,6 +3530,11 @@ init(prompt: String = String(themeKit: "Add a photo from your device or take one
 
 - `.buttonTitle` — Title of the file-picker button.
 - `.maxCount` — Cap the number of files; once reached the picker is disabled and a count is shown.
+- `.onPreview` — Make each file's thumbnail a tappable preview (Ant `onPreview`) — e.g.
+- `.onDownload` — Show a download icon on completed files and fire this when tapped (Ant `onDownload` / `showDownloadIcon`).
+- `.showsRemoveIcon` — Show the per-file remove (trash) icon (Ant `showRemoveIcon`; default on).
+- `.showsList` — Render the file list (Ant `showUploadList`; default on).
+- `.listType` — Presentation of the file list (Ant `listType`): `.list` rows (default) or a `.pictureCard` thumbnail grid whose trailing add tile is the picker.
 - `.prompt` — Prompt text shown above the picker button.
 
 ## UploadList
