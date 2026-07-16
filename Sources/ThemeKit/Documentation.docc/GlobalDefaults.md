@@ -20,7 +20,7 @@ struct MyApp: App {
         WindowGroup {
             RootView()
                 .themeKit()                                          // theme + tokens
-                .componentDefaults(radius: .field, accent: .turquoise) // chrome defaults
+                .componentDefaults(accent: .turquoise)               // house accent
                 .fieldDefaults(size: .large)                          // field family defaults
                 .feedbackDefaults(toastPosition: .top, toastDuration: 3) // toast defaults
                 .microAnimations(true)                                // motion switch
@@ -39,7 +39,7 @@ fills the gap, the component's own default is the last resort.**
 | Modifier | Scope | Axes |
 | --- | --- | --- |
 | `.themeKit()` / `.theme(_:)` | Tokens | The active `Theme` — colors, radii, spacing, type, shadows |
-| `.componentDefaults(...)` | Chrome | `radius` (corner role), `elevation` (card shadow), `accent` (semantic hue) |
+| `.componentDefaults(accent:)` | Chrome | `accent` (semantic house tint for accent-driven components) |
 | `.fieldDefaults(...)` | Field family | `size`, `messagesAnimated`, `requiredIndicator` |
 | `.feedbackDefaults(...)` | Toasts / notifications | `toastPosition`, `toastDuration`, `maxVisibleToasts` |
 | `.microAnimations(_:)` | Motion | Built-in micro-animation switch (Reduce Motion always wins) |

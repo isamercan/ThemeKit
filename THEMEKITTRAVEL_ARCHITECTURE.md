@@ -225,7 +225,7 @@ The DocC "provider recipe" (HEROUI plan T1) gains two lines:
 ```swift
 RootView()
     .themeKit()
-    .componentDefaults(radius: .field, accent: .turquoise)
+    .componentDefaults(accent: .turquoise)
     .formatDefaults(currencyCode: "EUR")
     .flightDefaults(airlineSymbol: "airplane.circle", timeFormat: .dateTime.hour().minute())
     .fieldDefaults(size: .large)          // HEROUI unit 5
