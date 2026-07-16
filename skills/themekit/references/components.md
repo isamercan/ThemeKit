@@ -7,8 +7,8 @@
 
 - `AnimatedImage(url)` — Animated GIF / APNG playback with NO third-party dependency — frames and per-frame delays are decoded natively via ImageIO (`CGImageSource`) and driven by a `TimelineView(.animation)`. · modifiers: `.contentMode()`, `.cornerRadius()`
 - `Aura` — Atom. · modifiers: `.accent()`, `.color()`, `.size()`, `.intensity()`
-- `Avatar(content)` — Atom. · modifiers: `.size()`, `.dimension()`, `.accent()`, `.fill()`, `.fillColor()`, `.shape()`, `.bordered()`, `.presence()`, `.maxVisible()`
-- `AvatarGroup` — Overlapping stack of avatars with a "+N" overflow bubble.
+- `Avatar(content)` — Atom. · modifiers: `.size()`, `.dimension()`, `.accent()`, `.fill()`, `.fillColor()`, `.shape()`, `.bordered()`, `.presence()`
+- `AvatarGroup(avatars)` — Overlapping stack of avatars with a "+N" overflow bubble. · modifiers: `.size()`, `.maxVisible()`, `.accent()`, `.fill()`, `.fillColor()`
 - `Badge(text, action:)` — Improved, token-bound rewrite of the reference BadgeView. · modifiers: `.badgeStyle()`, `.variant()`, `.size()`, `.icon()`, `.trailingIcon()`, `.badgeShape()`, `.badgeColor()`, `.gradient()`, `.highlighted()`
 - `Barcode(value)` — A token-sized (but high-contrast) Code 128 barcode with an optional caption. · modifiers: `.height()`, `.showsValue()`
 - `Chip(title, isSelected:)` — Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix. · modifiers: `.size()`, `.chipStyle()`, `.type()`, `.variant()`, `.onClose()`, `.icon()`, `.rating()`, `.exists()`, `.interactive()`, `.fullWidth()`, `.expands()`
@@ -32,7 +32,7 @@
 - `PointsBadge(points)` — A token-bound loyalty-points pill. · modifiers: `.unit()`, `.style()`, `.size()`, `.icon()`, `.showsSign()`, `.animatesValue()`
 - `PriceTag(amount, currencyCode:)` — A token-bound price label. · modifiers: `.original()`, `.originalBelow()`, `.unit()`, `.size()`, `.emphasis()`, `.discountBadge()`, `.fractionDigits()`, `.free()`, `.soldOut()`, `.prefix()`, `.from()`, `.animatesValue()`
 - `ProgressBar(value:)` — Linear determinate progress with status colors, an optional ladder gradient, a segmented (steps) variant and a custom format label. · modifiers: `.showsPercentage()`, `.status()`, `.barHeight()`, `.gradient()`, `.steps()`, `.accent()`, `.colors()`, `.successSegment()`, `.valueFormat()`, `.progressLabel()`
-- `StepIndicator` — Segmented step indicator (e.g.
+- `StepIndicator(current:, total:)` — Segmented step indicator (e.g.
 - `QRCode(value)` — A token-sized (but high-contrast) QR code. · modifiers: `.size()`
 - `RadialProgress(value)` — Atom. · modifiers: `.size()`, `.lineWidth()`, `.showsLabel()`, `.status()`, `.dashboard()`, `.accent()`, `.ringColor()`, `.a11yLabel()`
 - `Rating(value:)` — Star rating with two layouts (stars / numeric-leading), continuous fractional fill (display) or half-step interaction, a tappable review count, a custom character and a disabled state. · modifiers: `.layout()`, `.countLabel()`, `.maxValue()`, `.starSize()`, `.allowHalf()`, `.allowClear()`, `.symbol()`, `.sentiment()`, `.onRate()`, `.onReviewTap()`
@@ -49,7 +49,7 @@
 - `Swap(isOn:)` — Atom. · modifiers: `.symbols()`, `.size()`, `.rotate()`, `.a11yID()`
 - `SwapButton(systemImage, action:)` · modifiers: `.size()`, `.bordered()`
 - `Tag(text, onRemove:)` — Atom. · modifiers: `.size()`, `.icon()`, `.tagStyle()`, `.variant()`, `.color()`, `.bordered()`, `.closable()`
-- `CheckableTag` — Ant's **CheckableTag** — a tag that toggles a bound boolean, like a lightweight selectable filter.
+- `CheckableTag(text, isChecked:)` — Ant's **CheckableTag** — a tag that toggles a bound boolean, like a lightweight selectable filter. · modifiers: `.icon()`, `.color()`
 - `TextLink(title, action:)` — Atom. · modifiers: `.underline()`, `.accent()`
 - `TextRotate(words, interval:)` — Atom. · modifiers: `.textStyle()`, `.accent()`, `.interval()`
 - `TiltCard(content:)` — Atom. · modifiers: `.maxAngle()`, `.shine()`, `.radius()`
@@ -67,13 +67,13 @@
 - `Breadcrumbs(title, action:)` — Molecule. · modifiers: `.separator()`, `.accent()`
 - `ButtonGroup(axis, content:)` — Molecule. · modifiers: `.axis()`, `.size()`, `.width()`, `.dividers()`, `.dividerColor()`
 - `PrimaryButton(title, action:)` · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
-- `SecondaryButton`
-- `OutlineButton`
-- `GhostButton`
-- `LinkButton`
-- `TertiaryButton` — Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface, typically paired alongside a primary or secondary action.
-- `DangerButton` — Solid destructive button (HeroUI `danger`) — for irreversible actions (delete, remove).
-- `DangerSoftButton` — Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint for cautionary actions where urgency is lower than a solid ``DangerButton``.
+- `SecondaryButton(title, action:)` · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
+- `OutlineButton(title, action:)` · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
+- `GhostButton(title, action:)` · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
+- `LinkButton(title, action:)` · modifiers: `.size()`, `.a11yID()`
+- `TertiaryButton(title, action:)` — Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface, typically paired alongside a primary or secondary action. · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
+- `DangerButton(title, action:)` — Solid destructive button (HeroUI `danger`) — for irreversible actions (delete, remove). · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
+- `DangerSoftButton(title, action:)` — Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint for cautionary actions where urgency is lower than a solid ``DangerButton``. · modifiers: `.size()`, `.fullWidth()`, `.helperText()`, `.titleTextStyle()`, `.confirmsSuccess()`, `.a11yID()`, `.loading()`
 - `ThemeButton(title, action:)` · modifiers: `.variant()`, `.color()`, `.size()`, `.shape()`, `.fullWidth()`, `.loading()`, `.spinnerPlacement()`, `.icon()`, `.density()`, `.iconOnly()`, `.a11yID()`
 - `CalendarView(selection:)` — Molecule. · modifiers: `.accent()`, `.showsWeekdayHeader()`, `.firstWeekday()`, `.yearPicker()`, `.disabledDates()`
 - `CalendarYearPicker(selection:)` — Molecule. · modifiers: `.range()`, `.accent()`
@@ -84,11 +84,11 @@
 - `LineChart(series)` — Molecule. · modifiers: `.height()`, `.showsLegend()`, `.showsGrid()`, `.curved()`, `.showsPoints()`, `.locale()`
 - `Checkbox(label, isChecked:)` — Figma "Control Items" → Checkboxes. · modifiers: `.type()`, `.variant()`, `.description()`, `.customInner()`, `.indeterminate()`, `.alignment()`, `.controlPlacement()`, `.lineThrough()`, `.customSize()`, `.accent()`, `.infoMessages()`, `.a11yID()`
 - `CheckboxGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.infoMessages()`, `.selectAll()`, `.description()`, `.required()`, `.axis()`, `.controlPlacement()`, `.optionEnabled()`, `.a11yID()`
-- `ImageChip(isSelected:, url:)` — A selectable remote-image tile with a selection border. · modifiers: `.size()`, `.imageURL()`, `.rating()`, `.description()`, `.free()`, `.icon()`, `.shape()`, `.closable()`, `.chipStyle()`, `.optionEnabled()`, `.removable()`, `.infoMessages()`
-- `CompactChip` — A selectable card: an optional rating + label row, then an optional logo + price row.
-- `ChoseChip` — A selectable card: a leading icon, a title with an optional "free" gradient badge, and a rating + description row.
-- `FilterChip` — A dismissible filter chip in a pill (with a soft shadow) or square shape.
-- `ChipGroup` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
+- `ImageChip(isSelected:, url:)` — A selectable remote-image tile with a selection border. · modifiers: `.size()`
+- `CompactChip(text, price:, isSelected:)` — A selectable card: an optional rating + label row, then an optional logo + price row. · modifiers: `.imageURL()`, `.rating()`
+- `ChoseChip(title, isSelected:)` — A selectable card: a leading icon, a title with an optional "free" gradient badge, and a rating + description row. · modifiers: `.description()`, `.rating()`, `.free()`, `.icon()`
+- `FilterChip(title, onDismiss:)` — A dismissible filter chip in a pill (with a soft shadow) or square shape. · modifiers: `.shape()`, `.closable()`
+- `ChipGroup(//:, options:, selection:, label:)` — A horizontally-scrolling, multi-select chip group backed by a `Set` binding. · modifiers: `.chipStyle()`, `.optionEnabled()`, `.removable()`, `.infoMessages()`
 - `ColorArea(color:)` — Molecule. · modifiers: `.cornerRadius()`
 - `ColorField(label, selection:)` — Molecule. · modifiers: `.supportsOpacity()`, `.size()`
 - `ColorSlider(channel, color:)` — Molecule. · modifiers: `.trackHeight()`
@@ -106,8 +106,8 @@
 - `FilterRow(title, isOn:)` · modifiers: `.count()`, `.icon()`, `.showsSeparator()`
 - `Flex(content:)` · modifiers: `.direction()`, `.vertical()`, `.gap()`, `.justify()`, `.align()`, `.wrap()`
 - `GuestSelector(selection:)` — A token-bound rooms & guests picker. · modifiers: `.showsRooms()`, `.showsInfants()`, `.adultRange()`, `.childRange()`, `.infantRange()`, `.roomRange()`, `.maxTotal()`, `.onChange()`
-- `InputAffix(content, action:)` — The leading / trailing content of an ``InputGroup`` (Figma "Input Affix"). · modifiers: `.icon()`, `.arrow()`, `.emphasis()`, `.variant()`, `.type()`, `.gapSpaced()`, `.a11yID()`
-- `InputGroup`
+- `InputAffix(content, action:)` — The leading / trailing content of an ``InputGroup`` (Figma "Input Affix"). · modifiers: `.icon()`, `.arrow()`, `.emphasis()`
+- `InputGroup(placeholder, text:)` · modifiers: `.variant()`, `.type()`, `.gapSpaced()`, `.a11yID()`
 - `InputNumber(label, value:, range:)` — Molecule. · modifiers: `.step()`, `.precision()`, `.unit()`, `.hint()`, `.errorText()`, `.size()`, `.required()`, `.validate()`, `.large()`, `.editable()`, `.hasInfo()`, `.onValueChange()`, `.a11yID()`
 - `InstallmentPicker(options, selection:)` · modifiers: `.currency()`, `.accent()`
 - `InstallmentSelector(total:, options:, selection:, currencyCode:)` — A token-bound instalment plan picker. · modifiers: `.interestFreeUpTo()`, `.recommended()`, `.surcharge()`
@@ -127,8 +127,8 @@
 - `ProgressIndicator(variant:, current:, total:)` — Segmented position/progress indicator (Reference ProgressIndicator parity). · modifiers: `.size()`, `.videoProgress()`, `.stepText()`, `.cornerRadius()`
 - `QuantityStepper(//:, range:)` — A token-bound quantity stepper (− value +), bounded by a range. · modifiers: `.a11yID()`, `.step()`
 - `RadioButton(label, isSelected:)` — Figma "Control Items" → Radioboxes. · modifiers: `.type()`, `.radioStyle()`, `.gap()`, `.fillColor()`, `.accent()`, `.infoMessages()`, `.alignment()`, `.controlPlacement()`, `.a11yID()`
-- `RadioGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.infoMessages()`, `.optionEnabled()`, `.optionDescription()`, `.description()`, `.required()`, `.controlPlacement()`, `.accent()`, `.axis()`, `.a11yID()`, `.groupStyle()`, `.fullWidth()`
-- `RadioButtonGroup` — A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`.
+- `RadioGroup(title:, options:, selection:, label:)` — Molecule. · modifiers: `.infoMessages()`, `.optionEnabled()`, `.optionDescription()`, `.description()`, `.required()`, `.controlPlacement()`, `.accent()`, `.axis()`, `.a11yID()`
+- `RadioButtonGroup(options:, selection:, label:)` — A connected, segmented button-style single-select radio group — a distinct API from the stacked `RadioGroup` and the enclosed `SegmentedControl`. · modifiers: `.groupStyle()`, `.fullWidth()`, `.optionEnabled()`, `.a11yID()`
 - `RangeSlider(//:, upperValue:, in:)` — Improved, token-bound rewrite of the reference RangeSliderView — a self-contained dual-thumb slider over a numeric range (decoupled from the reference's text-field wiring). · modifiers: `.a11yID()`, `.step()`, `.marks()`, `.axis()`, `.accent()`, `.inputs()`, `.onChangeEnd()`, `.valueLabel()`
 - `ScrollShadow(content:)` — Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`. · modifiers: `.axis()`, `.visibility()`, `.length()`, `.fadeColor()`
 - `ScrubGallery(count:, content:)` — Molecule. · modifiers: `.indicator()`, `.accent()`, `.radius()`
@@ -140,8 +140,8 @@
 - `SelectBox(//:, options:, selection:, optionTitle:)` — Molecule. · modifiers: `.placeholder()`, `.size()`, `.required()`, `.hint()`, `.errorText()`, `.infoMessages()`, `.externalFocus()`, `.a11yID()`
 - `Slider(//:, in:, label:)` — Molecule. · modifiers: `.a11yID()`, `.step()`, `.marks()`, `.axis()`, `.showsValueTooltip()`, `.valueLabel()`, `.accent()`, `.onChangeEnd()`
 - `SmartSuggestion(message)` · modifiers: `.label()`, `.icon()`, `.accent()`, `.tint()`, `.onTap()`, `.action()`, `.bordered()`
-- `SortTab(option, isSelected:, action:)` — One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline. · modifiers: `.accent()`, `.onMore()`
-- `SortSummaryBar`
+- `SortTab(option, isSelected:, action:)` — One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline. · modifiers: `.accent()`
+- `SortSummaryBar(options, selection:)` · modifiers: `.onMore()`
 - `Space(content:)` · modifiers: `.direction()`, `.vertical()`, `.size()`, `.align()`, `.wrap()`
 - `Splitter(axis, initialFraction:, first:)` · modifiers: `.bounds()`, `.vertical()`
 - `Stat(title:, value:)` — Molecule. · modifiers: `.prefix()`, `.suffix()`, `.loading()`, `.description()`, `.icon()`, `.trend()`
@@ -149,9 +149,9 @@
 - `Steps(title, subTitle:, description:, systemImage:, state:, disabled: …)` — A horizontal or vertical step / progress indicator with done / active / todo / error states, an optional progress dot, and tap-to-navigate. · modifiers: `.axis()`, `.size()`, `.small()`, `.progressDot()`, `.current()`
 - `SuggestionRow(title, action:)` · modifiers: `.icon()`, `.iconColor()`, `.iconTile()`, `.code()`, `.subtitle()`, `.nested()`, `.selected()`, `.highlight()`, `.accessory()`, `.accent()`
 - `TableToggleCell(isOn:, label:)` — A row-height boolean toggle.
-- `TableSelectCell` — A compact menu picker over string options.
-- `TableSliderCell` — A compact value slider, tinted with the hero token.
-- `TableColorCell` — A system color well for editing a `Color` in place.
+- `TableSelectCell(options, selection:, label:)` — A compact menu picker over string options.
+- `TableSliderCell(value:, in:, label:)` — A compact value slider, tinted with the hero token.
+- `TableColorCell(selection:, label:)` — A system color well for editing a `Color` in place.
 - `TextInput(model, text:, externalFocus:)` — Single floating-label text field. · modifiers: `.placeholder()`, `.icon()`, `.addons()`, `.required()`, `.secure()`, `.clearable()`, `.maxLength()`, `.showsCount()`, `.size()`, `.formatter()`, `.helperText()`, `.errorText()`, `.warningText()`, `.infoMessages()`, `.validate()`, `.onValidation()`, `.externalFocus()`, `.keyboard()`, `.autocorrectionDisabled()`, `.onCommit()`, `.a11yID()`
 - `ThemeController(name:, label:)` — Molecule. · modifiers: `.accent()`, `.fullWidth()`
 - `ThemeToggle(isOn:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.loading()`, `.symbols()`, `.trackSymbols()`, `.accent()`, `.a11yID()`
@@ -161,8 +161,8 @@
 - `TreeSelect(label, nodes:, selection:, initiallyExpanded:, must:)` — Hierarchical (nested) select with expand/collapse and multi-selection. · modifiers: `.placeholder()`, `.cascade()`, `.searchable()`, `.loading()`, `.nodeEnabled()`
 - `TreeView(nodes, selection:)` · modifiers: `.checkable()`
 - `CabinClassSelector(selection:)` — Molecule. · modifiers: `.classes()`, `.variant()`, `.showsGlyphs()`, `.accent()`, `.size()`, `.chipsWrap()`, `.label()`, `.glyph()`, `.description()`
-- `DatePriceCard(item, isSelected:, action:)` — A single selectable date+price card — the built-in cell the strip's `.grid` and `.strip` presets compose. · modifiers: `.currency()`, `.cheapest()`, `.pill()`, `.surface()`, `.accent()`, `.cheapestTone()`, `.pillSize()`, `.columns()`, `.strip()`, `.layout()`, `.highlightCheapest()`, `.onPage()`
-- `DatePriceStrip`
+- `DatePriceCard(item, isSelected:, action:)` — A single selectable date+price card — the built-in cell the strip's `.grid` and `.strip` presets compose. · modifiers: `.currency()`, `.cheapest()`, `.pill()`, `.surface()`, `.accent()`, `.cheapestTone()`, `.pillSize()`
+- `DatePriceStrip(items, selection:)` · modifiers: `.currency()`, `.columns()`, `.strip()`, `.layout()`, `.highlightCheapest()`, `.surface()`, `.accent()`, `.cheapestTone()`, `.pillSize()`, `.onPage()`
 - `FlightRoute(from:, to:, departure:, arrival:)` · modifiers: `.stops()`, `.nextDay()`, `.pathColor()`, `.accent()`, `.track()`, `.size()`, `.cityNames()`, `.durationText()`, `.stopsTone()`
 - `LayoverRow(duration:, airport:)` · modifiers: `.warning()`, `.variant()`, `.lineStyle()`, `.layoverLabel()`, `.icon()`, `.accent()`
 - `PassengerRow(name, action:)` · modifiers: `.type()`, `.subtitle()`, `.seat()`, `.status()`, `.avatar()`, `.icon()`, `.onEdit()`, `.onRemove()`, `.accessory()`, `.accent()`, `.bordered()`, `.surface()`, `.selectable()`
@@ -177,9 +177,9 @@
 - `ActionBar(count:, actions:, onClear:)` — Organism.
 - `Agenda(events)` — Organism. · modifiers: `.showsDayHeaders()`, `.locale()`
 - `AgentPriceRow(provider, action:)` · modifiers: `.logo()`, `.icon()`, `.subtitle()`, `.rating()`, `.badge()`, `.warning()`, `.price()`, `.original()`, `.cta()`, `.recommended()`, `.accent()`, `.surface()`, `.cornerRadius()`
-- `AlertHeader(title)` — The Figma `_AlertHeader`: an optional icon "avatar" bubble over an optional title, aligned leading or center. · modifiers: `.icon()`, `.tone()`, `.alignment()`, `.primaryAction()`, `.secondaryAction()`, `.layout()`, `.swapActions()`, `.primaryLoading()`, `.headerAlignment()`, `.size()`, `.footerLayout()`, `.closable()`
-- `AlertFooter` — The Figma `_AlertFooter`.
-- `AlertDialog` — A modal alert dialog composed of an ``AlertHeader``, an optional body (a `message` string or a custom `.content { }` slot) and an ``AlertFooter``.
+- `AlertHeader(title)` — The Figma `_AlertHeader`: an optional icon "avatar" bubble over an optional title, aligned leading or center. · modifiers: `.icon()`, `.tone()`, `.alignment()`
+- `AlertFooter` — The Figma `_AlertFooter`. · modifiers: `.primaryAction()`, `.secondaryAction()`, `.tone()`, `.layout()`, `.swapActions()`, `.primaryLoading()`
+- `AlertDialog(title, message:)` — A modal alert dialog composed of an ``AlertHeader``, an optional body (a `message` string or a custom `.content { }` slot) and an ``AlertFooter``. · modifiers: `.icon()`, `.tone()`, `.headerAlignment()`, `.size()`, `.footerLayout()`, `.swapActions()`, `.primaryAction()`, `.secondaryAction()`, `.closable()`, `.primaryLoading()`
 - `AlertToast(title)` — Improved, token-bound rewrite of the reference AlertView — a solid-fill status banner (complements the light-surface InfoBanner). · modifiers: `.message()`, `.variant()`, `.icon()`, `.loading()`, `.action()`, `.onClose()`
 - `BlogCard(title:, media:)` — Organism. · modifiers: `.excerpt()`, `.compact()`, `.surface()`, `.cornerRadius()`, `.elevation()`
 - `BrowserFrame(url:, content:)` — Organism. · modifiers: `.elevation()`, `.accent()`
@@ -207,8 +207,8 @@
 - `InfoBanner(message, title:, links:)` — Improved, token-bound rewrite of the reference InfoMessage. · modifiers: `.variant()`, `.showsIcon()`, `.icon()`, `.fullWidth()`, `.action()`, `.actionButton()`, `.onDismiss()`
 - `KanbanBoard(columns:, card:)` — Organism. · modifiers: `.columnWidth()`, `.spacing()`
 - `KeyValueTable(label, value:, style:)` — Organism. · modifiers: `.title()`, `.bordered()`, `.surface()`
-- `ListRow(title, action:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view. · modifiers: `.subtitle()`, `.number()`, `.size()`, `.icon()`, `.leadingImage()`, `.leadingSelection()`, `.alertCount()`, `.badge()`, `.meta()`, `.infos()`, `.selected()`, `.multilineTitle()`, `.trailing()`, `.onInfo()`, `.textStyle()`, `.accent()`
-- `ListSectionHeader` — A non-interactive section-header row inside a list (Reference menu `.secondary`).
+- `ListRow(title, action:)` — A flexible list row that consolidates the reference ListItem family (Default / Chevron / Checkbox / Radio / Menu / Quick-action) into one token-bound view. · modifiers: `.subtitle()`, `.number()`, `.size()`, `.icon()`, `.leadingImage()`, `.leadingSelection()`, `.alertCount()`, `.badge()`, `.meta()`, `.infos()`, `.selected()`, `.multilineTitle()`, `.trailing()`, `.onInfo()`
+- `ListSectionHeader(title)` — A non-interactive section-header row inside a list (Reference menu `.secondary`). · modifiers: `.textStyle()`, `.accent()`
 - `ListView(items, row:)` — Ant-style List container: optional header/footer, surface variants, row dividers (split), and a loading (skeleton) state. · modifiers: `.header()`, `.footer()`, `.surface()`, `.bordered()`, `.loading()`, `.split()`, `.emptyText()`
 - `LocationCard(title:, coordinate:)` · modifiers: `.surface()`, `.subtitle()`, `.distance()`, `.mapHeight()`, `.spanMeters()`, `.onTap()`, `.pois()`, `.directions()`, `.onDirections()`, `.snapshot()`
 - `LoyaltyCard(tier:, points:)` — A token-bound loyalty membership card. · modifiers: `.surface()`, `.memberName()`, `.unit()`, `.progress()`, `.icon()`, `.gradient()`, `.animatesValue()`, `.membership()`, `.flippable()`
@@ -227,14 +227,14 @@
 - `RoomCard(name:)` · modifiers: `.image()`, `.board()`, `.occupancy()`, `.features()`, `.price()`, `.original()`, `.unit()`, `.discountBadge()`, `.badge()`, `.selection()`, `.onSelect()`, `.accent()`, `.cornerRadius()`, `.elevation()`, `.surface()`
 - `SegmentedTabBar(items, selection:, onClose:)` — Tab bar with a selection binding and an animated underline. · modifiers: `.scrollable()`, `.tabStyle()`, `.size()`, `.scrollAlign()`, `.dividers()`, `.a11yID()`
 - `RadioCard(title, isSelected:, action:)` — Organisms. · modifiers: `.description()`
-- `CheckboxCard`
+- `CheckboxCard(title, isChecked:, action:)` · modifiers: `.description()`
 - `SheetHeader(title)` · modifiers: `.subtitle()`, `.onBack()`, `.onClose()`, `.progress()`, `.showsDivider()`, `.accent()`, `.surface()`
 - `Sidebar(tag:, label, systemImage:, badge:)` — Organism. · modifiers: `.header()`, `.footer()`, `.width()`, `.a11yID()`
 - `ThemePicker(selection:, themes:, onSelect:)` — A grid of `ThemePreset` preview cards. · modifiers: `.columns()`, `.spacing()`
 - `TicketStub(content:)` — A token-bound ticket / boarding-pass surface. · modifiers: `.perforation()`, `.notchRadius()`, `.cornerRadius()`, `.elevation()`, `.surface()`, `.dashColor()`, `.contentPadding()`
 - `Timeline(title:, time:, description:, systemImage:, state:, color:)` — Organism. · modifiers: `.axis()`, `.mode()`, `.reversed()`, `.pending()`
-- `Upload(prompt:, files:, onPick:)` — Organism. · modifiers: `.buttonTitle()`, `.maxCount()`, `.onPreview()`, `.onDownload()`, `.showsRemoveIcon()`, `.showsList()`, `.listType()`, `.prompt()`
-- `UploadList` — `Upload` wired to an `UploadController` — renders its files with remove + retry.
+- `Upload(prompt:, files:, onPick:)` — Organism. · modifiers: `.buttonTitle()`, `.maxCount()`, `.onPreview()`, `.onDownload()`, `.showsRemoveIcon()`, `.showsList()`, `.listType()`
+- `UploadList(controller:, onPick:)` — `Upload` wired to an `UploadController` — renders its files with remove + retry. · modifiers: `.prompt()`, `.buttonTitle()`
 - `VideoPlayerView(url, progress:, isMuted:, onTap:)` — Inline video on AVKit (reference `InlineVideoPlayerView`): autoplay, loop, mute, aspect-fill, and active-gating (only the visible item plays). · modifiers: `.autoplay()`, `.loop()`, `.muted()`, `.muteToggle()`, `.tapToToggle()`
 - `WindowFrame(title, content:)` — Organism. · modifiers: `.elevation()`, `.accent()`
 - `AirportPicker(selection:, suggestions:)` — Airport search & select. · modifiers: `.onQueryChange()`, `.debounce()`, `.recent()`, `.popular()`, `.nearby()`, `.loading()`, `.placeholder()`, `.presentation()`, `.rowContent()`, `.sectionTitles()`, `.chipVariant()`, `.detents()`, `.triggerIcon()`, `.density()`, `.surface()`, `.accent()`, `.a11yID()`

@@ -89,7 +89,6 @@ init(_ content: AvatarContent)
 - `.shape` — Circle (default) or rounded square.
 - `.bordered` — Draws a token stroke ring around the avatar (HeroUI `isBordered`) — e.g.
 - `.presence` — Corner presence dot (online / away / busy …); `nil` hides it.
-- `.maxVisible` — How many avatars show before collapsing into the "+N" bubble (default 4, floored at 1).
 
 ## AvatarGroup
 
@@ -100,6 +99,14 @@ init(_ avatars: [AvatarContent])
 
 // usage: AvatarGroup(<[AvatarContent]>)
 ```
+
+**Modifiers**
+
+- `.size` — Size tier for every avatar in the group: xs / sm / md / lg.
+- `.maxVisible` — How many avatars show before collapsing into the "+N" bubble (default 4, floored at 1).
+- `.accent` — Semantic tint for every member avatar's surface (content auto-contrasts); `nil` (default) keeps the `AvatarBackground` palette.
+- `.fill` — Fill treatment for every member avatar's semantic surface (`.solid` default · `.soft`); the "+N" overflow bubble keeps its dark palette.
+- `.fillColor` — Surface fill behind the avatars' icon/initials (matches Avatar's `.fillColor`, R5).
 
 ## Badge
 
@@ -715,8 +722,13 @@ init(_ text: String, onRemove: (() -> Void)? = nil)
 Ant's **CheckableTag** — a tag that toggles a bound boolean, like a lightweight selectable filter.
 
 ```swift
-CheckableTag()
+CheckableTag(text, isChecked:)
 ```
+
+**Modifiers**
+
+- `.icon` — Leading SF Symbol.
+- `.color` — Fill color when checked (Ant CheckableTag stays hero; override per brand).
 
 ## TextLink
 
@@ -930,6 +942,16 @@ init(_ title: String, action: @escaping () -> Void)
 // usage: SecondaryButton("title", action: { })
 ```
 
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
+
 ## OutlineButton
 
 ```swift
@@ -937,6 +959,16 @@ init(_ title: String, action: @escaping () -> Void)
 
 // usage: OutlineButton("title", action: { })
 ```
+
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
 
 ## GhostButton
 
@@ -946,6 +978,16 @@ init(_ title: String, action: @escaping () -> Void)
 // usage: GhostButton("title", action: { })
 ```
 
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
+
 ## LinkButton
 
 ```swift
@@ -954,29 +996,64 @@ init(_ title: String, action: @escaping () -> Void)
 // usage: LinkButton("title", action: { })
 ```
 
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+
 ## TertiaryButton
 
 Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface, typically paired alongside a primary or secondary action.
 
 ```swift
-TertiaryButton()
+TertiaryButton(title, action:)
 ```
+
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
 
 ## DangerButton
 
 Solid destructive button (HeroUI `danger`) — for irreversible actions (delete, remove).
 
 ```swift
-DangerButton()
+DangerButton(title, action:)
 ```
+
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
 
 ## DangerSoftButton
 
 Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint for cautionary actions where urgency is lower than a solid ``DangerButton``.
 
 ```swift
-DangerSoftButton()
+DangerSoftButton(title, action:)
 ```
+
+**Modifiers**
+
+- `.size` — Control size: xxsmall … large.
+- `.fullWidth` — Stretch to the available width.
+- `.helperText` — Caption rendered under the button.
+- `.titleTextStyle` — Override the title's text style (defaults to the size's style).
+- `.confirmsSuccess` — Morph the label into a success checkmark after the action completes (default: on for `task:`, off for `action:`).
+- `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
+- `.loading` — Swap the label for a spinner and block taps while `on`.
 
 ## ThemeButton
 
@@ -1156,17 +1233,6 @@ init(isSelected: Binding<Bool>, url: URL?)
 **Modifiers**
 
 - `.size` — Tile size: small / medium / large.
-- `.imageURL` — Remote logo image shown next to the price.
-- `.rating` — Star rating shown before the label (nil hides it).
-- `.description` — Secondary line shown under the title.
-- `.free` — Show the gradient "free" badge next to the title (optionally with a custom label).
-- `.icon` — Leading SF Symbol shown before the texts.
-- `.shape` — Chip shape: pill (with a soft shadow) or square.
-- `.closable` — Whether to show the trailing close button (default true).
-- `.chipStyle` — Visual style applied to every chip (matches `Chip.chipStyle`).
-- `.optionEnabled` — Per-option enablement predicate (nil enables every option).
-- `.removable` — Appends a trailing remove button to every chip; the callback receives the option to remove (HeroUI TagGroup `onRemove`).
-- `.infoMessages` — Validation / info messages rendered under the chips (drive the title color).
 
 ## CompactChip
 
@@ -1178,6 +1244,11 @@ init(_ text: String, price: String, isSelected: Binding<Bool>)
 // usage: CompactChip("text", price: "price", isSelected: $isSelected)
 ```
 
+**Modifiers**
+
+- `.imageURL` — Remote logo image shown next to the price.
+- `.rating` — Star rating shown before the label (nil hides it).
+
 ## ChoseChip
 
 A selectable card: a leading icon, a title with an optional "free" gradient badge, and a rating + description row.
@@ -1187,6 +1258,13 @@ init(_ title: String, isSelected: Binding<Bool>)
 
 // usage: ChoseChip("title", isSelected: $isSelected)
 ```
+
+**Modifiers**
+
+- `.description` — Secondary line shown under the title.
+- `.rating` — Star rating shown before the description (nil hides it).
+- `.free` — Show the gradient "free" badge next to the title (optionally with a custom label).
+- `.icon` — Leading SF Symbol shown before the texts.
 
 ## FilterChip
 
@@ -1198,6 +1276,11 @@ init(_ title: String, onDismiss: (() -> Void)? = nil)
 // usage: FilterChip("title")
 ```
 
+**Modifiers**
+
+- `.shape` — Chip shape: pill (with a soft shadow) or square.
+- `.closable` — Whether to show the trailing close button (default true).
+
 ## ChipGroup
 
 A horizontally-scrolling, multi-select chip group backed by a `Set` binding.
@@ -1207,6 +1290,13 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 
 // usage: ChipGroup(options: <[Option]>, selection: $selection, label: "label")
 ```
+
+**Modifiers**
+
+- `.chipStyle` — Visual style applied to every chip (matches `Chip.chipStyle`).
+- `.optionEnabled` — Per-option enablement predicate (nil enables every option).
+- `.removable` — Appends a trailing remove button to every chip; the callback receives the option to remove (HeroUI TagGroup `onRemove`).
+- `.infoMessages` — Validation / info messages rendered under the chips (drive the title color).
 
 ## ColorArea
 
@@ -1463,16 +1553,19 @@ InputAffix(content, action:)
 - `.icon` — Leading SF Symbol glyph (16pt).
 - `.arrow` — Show a trailing selector arrow (chevron), e.g.
 - `.emphasis` — Visual emphasis — `.mute` for passive units/hints, `.active` for interactive content.
-- `.variant` — Surface variant — `.primary` (white + elevation) or `.secondary` (on-card muted).
-- `.type` — Value kind — drives keyboard type and secure entry.
-- `.gapSpaced` — Separate the affixes from the input with a divider + wider gap (Figma `gapSpace`).
-- `.a11yID` — Stable accessibility identifier for UI tests.
 
 ## InputGroup
 
 ```swift
-InputGroup()
+InputGroup(placeholder, text:)
 ```
+
+**Modifiers**
+
+- `.variant` — Surface variant — `.primary` (white + elevation) or `.secondary` (on-card muted).
+- `.type` — Value kind — drives keyboard type and secure entry.
+- `.gapSpaced` — Separate the affixes from the input with a divider + wider gap (Figma `gapSpace`).
+- `.a11yID` — Stable accessibility identifier for UI tests.
 
 ## InputNumber
 
@@ -1831,8 +1924,6 @@ init(title: String? = nil, options: [Option], selection: Binding<Option?>, label
 - `.accent` — Semantic tint forwarded to every radio's selected fill/border; `nil` (default) uses the hero tokens.
 - `.axis` — Layout axis of the option rows: `.vertical` (default) or `.horizontal`.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
-- `.groupStyle` — Fill style of the group: `.solid` or `.outline`.
-- `.fullWidth` — Expands the group to fill the available width, sharing it across segments.
 
 ## RadioButtonGroup
 
@@ -1843,6 +1934,13 @@ init(options: [Option], selection: Binding<Option?>, label: @escaping (Option) -
 
 // usage: RadioButtonGroup(options: <[Option]>, selection: $selection, label: "label")
 ```
+
+**Modifiers**
+
+- `.groupStyle` — Fill style of the group: `.solid` or `.outline`.
+- `.fullWidth` — Expands the group to fill the available width, sharing it across segments.
+- `.optionEnabled` — Per-option enablement predicate (nil enables every option).
+- `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## RangeSlider
 
@@ -2075,13 +2173,16 @@ SortTab(option, isSelected:, action:)
 **Modifiers**
 
 - `.accent` — Token-fed tint for the selected underline, icon and title; `nil` (default) keeps the hero token.
-- `.onMore` — Adds a trailing "more sort" button (default a sliders icon).
 
 ## SortSummaryBar
 
 ```swift
-SortSummaryBar()
+SortSummaryBar(options, selection:)
 ```
+
+**Modifiers**
+
+- `.onMore` — Adds a trailing "more sort" button (default a sliders icon).
 
 ## Space
 
@@ -2189,7 +2290,7 @@ TableToggleCell(isOn:, label:)
 A compact menu picker over string options.
 
 ```swift
-TableSelectCell()
+TableSelectCell(options, selection:, label:)
 ```
 
 ## TableSliderCell
@@ -2197,7 +2298,7 @@ TableSelectCell()
 A compact value slider, tinted with the hero token.
 
 ```swift
-TableSliderCell()
+TableSliderCell(value:, in:, label:)
 ```
 
 ## TableColorCell
@@ -2205,7 +2306,7 @@ TableSliderCell()
 A system color well for editing a `Color` in place.
 
 ```swift
-TableColorCell()
+TableColorCell(selection:, label:)
 ```
 
 ## TextInput
@@ -2391,17 +2492,25 @@ DatePriceCard(item, isSelected:, action:)
 - `.accent` — Semantic accent for the selected state — pill fill `soft` + border `base`, card date/price `base`, wash `bg`.
 - `.cheapestTone` — Semantic tone for the lowest-fare highlight (default `.success`).
 - `.pillSize` — Height ramp for the pill presentation (default `.regular`, 40 pt).
-- `.columns` — Number of columns for the grid layout — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))`, settable once per screen via the environment.
-- `.strip` — Horizontal-strip presentation — superseded by the style axis: prefer `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
-- `.layout` — Layout of the strip — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))` / `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
-- `.highlightCheapest` — Auto-highlight the lowest fare in success green (default on).
-- `.onPage` — Adds prev/next paging chevrons flanking the strip.
 
 ## DatePriceStrip
 
 ```swift
-DatePriceStrip()
+DatePriceStrip(items, selection:)
 ```
+
+**Modifiers**
+
+- `.currency` — Currency code for the prices.
+- `.columns` — Number of columns for the grid layout — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))`, settable once per screen via the environment.
+- `.strip` — Horizontal-strip presentation — superseded by the style axis: prefer `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
+- `.layout` — Layout of the strip — superseded by the style axis: prefer `.datePriceStripStyle(.grid(columns:))` / `.datePriceStripStyle(.strip)`, settable once per screen via the environment.
+- `.highlightCheapest` — Auto-highlight the lowest fare in success green (default on).
+- `.surface` — Surface token for the strip/chart track and the cards the style builds.
+- `.accent` — Semantic accent for the selected state, forwarded to every card — pill fill `soft` + border `base`, card date/price `base`, wash `bg`.
+- `.cheapestTone` — Semantic tone for the lowest-fare highlight (default `.success`).
+- `.pillSize` — Height ramp for the strip-layout pills (default `.regular`, 40 pt).
+- `.onPage` — Adds prev/next paging chevrons flanking the strip.
 
 ## FlightRoute
 
@@ -2619,15 +2728,6 @@ AlertHeader(title)
 - `.icon` — Icon (SF Symbol) shown in the bubble.
 - `.tone` — Intent color for the glyph (default `.neutral`); the bubble stays neutral.
 - `.alignment` — `Type`: `.leading` (default) or `.center`.
-- `.primaryAction` — Button One — the primary/confirming action, tinted by `tone`.
-- `.secondaryAction` — Button Two — the secondary/dismissing action, neutral (Figma "Show Button Two").
-- `.layout` — `Type`: `.auto` (default), `.horizontal`, or `.vertical`.
-- `.swapActions` — Reverse the buttons' visual order (Figma "Swap Button One / Two").
-- `.primaryLoading` — Externally drive the primary button's loading state (in addition to the async `task:` form's own spinner).
-- `.headerAlignment` — Header `Type`: `.leading` (default) or `.center`.
-- `.size` — Card size tier: `.xs` / `.sm` (default) / `.md` / `.lg` / `.mobile`.
-- `.footerLayout` — Footer `Type`: `.auto` (horizontal, wrapping to vertical when the labels don't fit), `.horizontal`, or `.vertical`.
-- `.closable` — Show the top-trailing close (✕) button; `handler` fires on tap.
 
 ## AlertFooter
 
@@ -2637,13 +2737,35 @@ The Figma `_AlertFooter`.
 AlertFooter()
 ```
 
+**Modifiers**
+
+- `.primaryAction` — Button One — the primary/confirming action, tinted by `tone`.
+- `.secondaryAction` — Button Two — the secondary/dismissing action, neutral (Figma "Show Button Two").
+- `.tone` — Intent color for the primary button (default `.neutral`).
+- `.layout` — `Type`: `.auto` (default), `.horizontal`, or `.vertical`.
+- `.swapActions` — Reverse the buttons' visual order (Figma "Swap Button One / Two").
+- `.primaryLoading` — Externally drive the primary button's loading state (in addition to the async `task:` form's own spinner).
+
 ## AlertDialog
 
 A modal alert dialog composed of an ``AlertHeader``, an optional body (a `message` string or a custom `.content { }` slot) and an ``AlertFooter``.
 
 ```swift
-AlertDialog()
+AlertDialog(title, message:)
 ```
+
+**Modifiers**
+
+- `.icon` — Header icon (SF Symbol).
+- `.tone` — Intent color tinting the header glyph and the primary button (default `.neutral`).
+- `.headerAlignment` — Header `Type`: `.leading` (default) or `.center`.
+- `.size` — Card size tier: `.xs` / `.sm` (default) / `.md` / `.lg` / `.mobile`.
+- `.footerLayout` — Footer `Type`: `.auto` (horizontal, wrapping to vertical when the labels don't fit), `.horizontal`, or `.vertical`.
+- `.swapActions` — Reverse the footer buttons' visual order (Figma "Swap Button One / Two").
+- `.primaryAction` — Button One — the primary/confirming action, tinted by `tone` (Figma "Show Button One").
+- `.secondaryAction` — Button Two — the secondary/dismissing action, neutral (Figma "Show Button Two").
+- `.closable` — Show the top-trailing close (✕) button; `handler` fires on tap.
+- `.primaryLoading` — Externally drive the primary button's loading state (in addition to any async `task:` action's own spinner).
 
 ## AlertToast
 
@@ -3104,8 +3226,6 @@ init(_ title: String, action: (() -> Void)? = nil)
 - `.multilineTitle` — Allow the title/subtitle to wrap instead of truncating.
 - `.trailing` — Trailing accessory: chevron / value / toggle / checkmark / checkbox / button / price / status.
 - `.onInfo` — Trailing info button with its own action.
-- `.textStyle` — Typography of the header label (default `.labelSm700`).
-- `.accent` — Token-fed tint for the header label; `nil` (default) keeps tertiary text.
 
 ## ListSectionHeader
 
@@ -3116,6 +3236,11 @@ init(_ title: String)
 
 // usage: ListSectionHeader("title")
 ```
+
+**Modifiers**
+
+- `.textStyle` — Typography of the header label (default `.labelSm700`).
+- `.accent` — Token-fed tint for the header label; `nil` (default) keeps tertiary text.
 
 ## ListView
 
@@ -3439,6 +3564,10 @@ init(_ title: String, isChecked: Bool, action: @escaping () -> Void)
 // usage: CheckboxCard("title", isChecked: true, action: { })
 ```
 
+**Modifiers**
+
+- `.description` — Secondary description line under the title.
+
 ## SheetHeader
 
 ```swift
@@ -3535,7 +3664,6 @@ init(prompt: String = String(themeKit: "Add a photo from your device or take one
 - `.showsRemoveIcon` — Show the per-file remove (trash) icon (Ant `showRemoveIcon`; default on).
 - `.showsList` — Render the file list (Ant `showUploadList`; default on).
 - `.listType` — Presentation of the file list (Ant `listType`): `.list` rows (default) or a `.pictureCard` thumbnail grid whose trailing add tile is the picker.
-- `.prompt` — Prompt text shown above the picker button.
 
 ## UploadList
 
@@ -3546,6 +3674,11 @@ init(controller: UploadController, onPick: @escaping () -> Void = {})
 
 // usage: UploadList(controller: <UploadController>)
 ```
+
+**Modifiers**
+
+- `.prompt` — Prompt text shown above the picker button.
+- `.buttonTitle` — Title of the file-picker button.
 
 ## VideoPlayerView
 
