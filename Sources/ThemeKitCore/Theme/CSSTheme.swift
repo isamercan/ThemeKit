@@ -39,7 +39,7 @@ public enum CSSTheme {
         /// Internal: `Theme.ThemeData` is an internal type — apply via `Theme.setTheme(css:)`.
         func themeData(dark: Bool, font: String = "System") -> Theme.ThemeData {
             CSSTheme.build(vars: dark ? self.dark : self.light,
-                           radiusFallback: self.light,   // radius is usually declared once, in :root
+                           rootFallback: self.light,   // structural tokens (radius, padding) are usually declared once, in :root
                            dark: dark, hue: hue, font: font)
         }
     }
@@ -99,9 +99,21 @@ public enum CSSTheme {
         (50, "background"), (100, "surface"), (200, "border"), (500, "muted"), (900, "foreground")]
     private static let steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
 
+    /// CSS var(s) -> the demand-minted spacing token each mints, DECLARED-ONLY:
+    /// a var maps 1:1 onto exactly ONE token — no cascade flattening here
+    /// (`--card-padding` does not write header/body/footer entries). Precedence
+    /// between the tokens lives in the component (Card) at render time.
+    /// First name in the alias list wins within a scheme block.
+    private static let spacingVarMap: [(token: String, cssNames: [String])] = [
+        ("card-padding", ["card-padding", "card-p", "padding-card"]),
+        ("card-header-padding", ["card-header-padding"]),
+        ("card-body-padding", ["card-body-padding"]),
+        ("card-footer-padding", ["card-footer-padding"]),
+    ]
+
     // MARK: - Build
 
-    private static func build(vars: [String: String], radiusFallback: [String: String],
+    private static func build(vars: [String: String], rootFallback: [String: String],
                               dark: Bool, hue: Double, font: String) -> Theme.ThemeData {
         let accent = parseColor(vars["accent"] ?? "")?.hex ?? "056bfd"
 
@@ -124,12 +136,22 @@ public enum CSSTheme {
         // 4) radius roles (--radius -> box/selector, --field-radius -> field);
         //    inherit from the light block when the scheme omits them.
         var radii: [String: CGFloat] = [:]
-        if let box = remToPx(vars["radius"] ?? radiusFallback["radius"] ?? "") {
+        if let box = remToPx(vars["radius"] ?? rootFallback["radius"] ?? "") {
             radii["radius-box"] = box
             radii["radius-selector"] = box
         }
-        if let field = remToPx(vars["field-radius"] ?? radiusFallback["field-radius"] ?? "") {
+        if let field = remToPx(vars["field-radius"] ?? rootFallback["field-radius"] ?? "") {
             radii["radius-field"] = field
+        }
+
+        // 5) per-component spacing tokens (--card-padding & friends) — declared-only
+        //    (a key is written ONLY when the var is present), inheriting from the
+        //    light block when the scheme omits them, exactly like radius.
+        var spacings: [String: CGFloat] = [:]
+        for entry in spacingVarMap {
+            let declared = entry.cssNames.lazy.compactMap { vars[$0] }.first
+                ?? entry.cssNames.lazy.compactMap { rootFallback[$0] }.first
+            if let declared, let px = remToPx(declared) { spacings[entry.token] = px }
         }
 
         return ThemeGenerator.generate(
@@ -137,7 +159,8 @@ public enum CSSTheme {
             font: font, fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1,
             baseHex: nil, secondaryHex: nil, accentHex: nil,
             paletteSeeds: seeds, neutralRamp: ramp,
-            semanticOverrides: overrides, radiusOverrides: radii
+            semanticOverrides: overrides, radiusOverrides: radii,
+            spacingOverrides: spacings
         )
     }
 

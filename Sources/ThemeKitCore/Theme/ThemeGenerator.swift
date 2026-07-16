@@ -233,6 +233,8 @@ enum ThemeGenerator {
     ]
     private static let spacingBase: [(String, CGFloat)] = [
         ("spacing-none", 0), ("sp-xs", 4), ("sp-sm", 8), ("sp-md", 16), ("sp-base", 24), ("sp-lg", 32), ("sp-xl", 40), ("sp-4xl", 64),
+        // Semantic spacing role — inner padding of box-class surfaces (Card, …).
+        ("spacing-box", 16),
     ]
     // name, size, weight, lineHeight
     private static let typographyBase: [(String, CGFloat, String, CGFloat)] = [
@@ -277,7 +279,8 @@ enum ThemeGenerator {
         paletteSeeds: [String: String] = [:],       // family -> seed hex (e.g. success/warning/error)
         neutralRamp: [String]? = nil,               // 10 hexes, step 50..900, overrides the gray ramp
         semanticOverrides: [String: String] = [:],  // "category.token" -> exact hex, applied last
-        radiusOverrides: [String: CGFloat] = [:]    // "radius-box"/"radius-field"/... -> px
+        radiusOverrides: [String: CGFloat] = [:],   // "radius-box"/"radius-field"/... -> px
+        spacingOverrides: [String: CGFloat] = [:]   // "spacing-box"/"card-padding"/... -> px
     ) -> Theme.ThemeData {
         let primary = primaryHex.hasPrefix("#") ? String(primaryHex.dropFirst()) : primaryHex
         let palette = buildPalette(primaryBase: primary, dark: dark, tint: tint,
@@ -340,7 +343,19 @@ enum ThemeGenerator {
         let radius = radiusBase.map {
             Theme.AppRadius(name: $0.0, radius: radiusOverrides[$0.0] ?? ($0.1 * radiusScale).rounded(.toNearestOrEven))
         }
-        let spacing = spacingBase.map { Theme.AppSpacing(name: $0.0, spacing: ($0.1 * spacingScale).rounded(.toNearestOrEven)) }
+        // Overrides are explicit theme values — applied verbatim, bypassing
+        // `spacingScale` (exactly like `radiusOverrides` bypasses `radiusScale`).
+        var spacing = spacingBase.map {
+            Theme.AppSpacing(name: $0.0, spacing: spacingOverrides[$0.0] ?? ($0.1 * spacingScale).rounded(.toNearestOrEven))
+        }
+        // Demand-minted component tokens (`card-padding`, …) aren't in the base
+        // table — append any override key the table doesn't know, so a theme/CSS
+        // can mint them without the generator pre-declaring every component.
+        let knownSpacing = Set(spacingBase.map(\.0))
+        spacing += spacingOverrides
+            .filter { !knownSpacing.contains($0.key) }
+            .sorted { $0.key < $1.key }
+            .map { Theme.AppSpacing(name: $0.key, spacing: $0.value) }
         let typography = typographyBase.map {
             Theme.AppTypography(name: $0.0, font: font, size: ($0.1 * fontScale).rounded(.toNearestOrEven),
                                 weight: $0.2, lineHeight: ($0.3 * fontScale).rounded(.toNearestOrEven))
