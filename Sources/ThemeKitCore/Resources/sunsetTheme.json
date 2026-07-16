@@ -687,6 +687,10 @@
     {
       "name": "sp-4xl",
       "spacing": 58
+    },
+    {
+      "name": "spacing-box",
+      "spacing": 14
     }
   ],
   "typography": [

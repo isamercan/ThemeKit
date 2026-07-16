@@ -109,11 +109,13 @@ final class ThemeGeneratorTests: XCTestCase {
                                         font: "System", fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1)
         XCTAssertEqual(spacing(d, "spacing-box"), 16)
 
-        // Bundled JSON themes predate `spacing-box` — the role accessor must fall
-        // back to `.md` (16), never 0 (a 0 would zero every Card's padding).
+        // Bundled JSON themes now declare `spacing-box` too (regenerated via
+        // gen_tokens.py / import_css_theme.py); the role accessor reads it and
+        // stays `.md`-equal (16). For a theme that omits it, `spacing(_:)` still
+        // falls back to `.md`, never 0 (a 0 would zero every Card's padding).
         let t = Theme()
         t.loadTheme(named: Theme.defaultThemeName)
-        XCTAssertNil(t.spacing(token: "spacing-box"))
+        XCTAssertEqual(t.spacing(token: "spacing-box"), 16)
         XCTAssertEqual(t.spacing(.box), t.spacing(Theme.SpacingKey.md))
         XCTAssertEqual(t.spacing(.box), 16)
         // Demand-minted tokens are nil (not 0) when the theme doesn't declare them.

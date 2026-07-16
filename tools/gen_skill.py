@@ -75,6 +75,10 @@ STRUCT_RE = re.compile(r"^public struct (\w+)(?:<[^>]*>)?\s*:\s*View\b", re.M)
 # copy-on-write `copy(_:)`) can be filtered out — only the public surface is documented.
 MODIFIER_RE = re.compile(r"\b(private|fileprivate|internal|public)?\s*func (\w+)\s*\(([^;{]*?)\)\s*->\s*Self\b", re.S)
 INIT_RE = re.compile(r"public init\(\s*(.*?)\)\s*\{", re.S)
+# `extension Name` / `public extension Name` — used to attribute each chainable
+# modifier to the type whose extension block it sits in (a file can declare several
+# View structs, e.g. AlertHeader/AlertFooter/AlertDialog or the button family).
+EXTENSION_RE = re.compile(r"^\s*(?:public\s+)?extension (\w+)\b", re.M)
 
 
 def split_top(body: str):
@@ -138,21 +142,15 @@ def doc_above(lines, idx) -> str:
     return text.split(". ")[0].rstrip(".") + ("." if text else "")  # first sentence
 
 
-def parse_modifiers(swift, lines):
-    found = {}
-    for m in MODIFIER_RE.finditer(swift):
-        access = m.group(1)
-        # Skip non-public helpers (a `public extension`'s members are public when
-        # unannotated; an explicit `private`/`fileprivate`/`internal` is not API).
-        if access in ("private", "fileprivate", "internal"):
-            continue
-        name = m.group(2)
-        if name in found:
-            continue
-        params = re.sub(r"\s+", " ", m.group(3)).strip()
-        ln = swift.count("\n", 0, m.start())
-        found[name] = {"name": name, "signature": f"{name}({params})", "doc": doc_above(lines, ln)}
-    return found
+def _owner_at(regions, offset):
+    """The type whose declaration (struct/extension) most closely precedes `offset`."""
+    owner = None
+    for start, name in regions:
+        if start <= offset:
+            owner = name
+        else:
+            break
+    return owner
 
 
 def collect():
@@ -168,16 +166,37 @@ def collect():
             structs = [(m.group(1), m.start()) for m in STRUCT_RE.finditer(swift)]
             if not structs:
                 continue
-            mods = parse_modifiers(swift, lines)
-            for i, (name, off) in enumerate(structs):
-                is_primary = i == 0
+            struct_names = {name for name, _ in structs}
+            # Attribute each modifier to the type whose `struct`/`extension` block it
+            # sits under, so a multi-struct file (button family, AlertHeader/Footer/
+            # Dialog, InputAffix/InputGroup) doesn't dump every modifier onto the first
+            # struct. Modifiers under `extension View` or non-View helpers are dropped.
+            regions = sorted(
+                [(off, name) for name, off in structs]
+                + [(m.start(), m.group(1)) for m in EXTENSION_RE.finditer(swift)]
+            )
+            mods_by_owner = {}
+            for m in MODIFIER_RE.finditer(swift):
+                if m.group(1) in ("private", "fileprivate", "internal"):
+                    continue
+                owner = _owner_at(regions, m.start())
+                if owner not in struct_names:
+                    continue
+                mname = m.group(2)
+                bucket = mods_by_owner.setdefault(owner, {})
+                if mname in bucket:
+                    continue
+                params = re.sub(r"\s+", " ", m.group(3)).strip()
+                ln = swift.count("\n", 0, m.start())
+                bucket[mname] = {"name": mname, "signature": f"{mname}({params})", "doc": doc_above(lines, ln)}
+                all_modifiers.add(mname)
+            for name, off in structs:
                 ln = swift.count("\n", 0, off)
-                all_modifiers.update(mods.keys())
                 items.append({
                     "name": name,
                     "doc": doc_above(lines, ln),
-                    "params": param_labels(swift, off) if is_primary else "",
-                    "modifiers": list(mods.values()) if is_primary else [],
+                    "params": param_labels(swift, off),
+                    "modifiers": list(mods_by_owner.get(name, {}).values()),
                 })
         out[label] = items
     return out, sorted(all_modifiers)
