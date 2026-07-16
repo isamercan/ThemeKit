@@ -85,7 +85,7 @@ Inside a field: `let effectiveSize = model.sizeExplicitlySet ? model.size : (fie
 ```swift
 RootView()
     .themeKit()
-    .componentDefaults(radius: .field, accent: .turquoise)
+    .componentDefaults(accent: .turquoise)
     .fieldDefaults(size: .large)
     .feedbackDefaults(toastPosition: .top, toastDuration: 3)
     .microAnimations(true)
