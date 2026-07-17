@@ -21,6 +21,16 @@ public enum TextInputSize {
     }
 }
 
+/// Where the field's label sits relative to the input box.
+/// - `.floating`: the label lives inside the field and animates up on focus/fill
+///   (the default — Material-style; unchanged behavior).
+/// - `.above`: a static ``InputLabel`` is stacked over the field and the
+///   placeholder shows inside at rest (HeroUI `labelPlacement="outside"`, the
+///   classic stacked form field). Pair it with `.placeholder(_:)` for an in-field hint.
+public enum TextInputLabelPlacement: String, CaseIterable, Sendable {
+    case floating, above
+}
+
 /// Platform-neutral keyboard hint. Maps to `UIKeyboardType` on iOS; ignored on macOS.
 public enum TextInputKeyboard {
     case `default`, asciiCapable, numberPad, decimalPad, phonePad
@@ -154,6 +164,10 @@ public struct TextInput: View {
     /// indistinguishable from the `false` default, so it yields to
     /// `FieldDefaults`; use `.clearable(_:)` to pin it against the defaults.
     private var explicitClearable: Bool?
+    /// Set only by the `.labelPlacement(_:)` modifier. Detects "explicitly set"
+    /// so the subtree `FieldDefaults.labelPlacement` can fill the default without
+    /// overriding a per-field choice: `explicitLabelPlacement ?? fieldDefaults.labelPlacement ?? .floating`.
+    private var explicitLabelPlacement: TextInputLabelPlacement?
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
@@ -220,6 +234,10 @@ public struct TextInput: View {
     private var messagesAnimated: Bool { micro && (fieldDefaults.messagesAnimated ?? true) }
     /// Explicit `.clearable(_:)` → subtree `FieldDefaults.clearable` → the model's default (F5).
     private var effectiveClearable: Bool { explicitClearable ?? fieldDefaults.clearable ?? model.allowClear }
+    /// Explicit `.labelPlacement(_:)` → subtree `FieldDefaults.labelPlacement` → `.floating`.
+    private var effectiveLabelPlacement: TextInputLabelPlacement {
+        explicitLabelPlacement ?? fieldDefaults.labelPlacement ?? .floating
+    }
     /// Explicit `on:` argument → subtree `FieldDefaults.validationTrigger` → `.editingEnd` (F5).
     private var effectiveValidationTrigger: ValidationTrigger {
         explicitValidationTrigger ?? fieldDefaults.validationTrigger ?? .editingEnd
@@ -283,6 +301,25 @@ public struct TextInput: View {
 
             if let leadingContent { leadingContent }
 
+            labelAndField
+
+            if let trailingContent { trailingContent }
+
+            trailingAccessory
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+    }
+
+    /// The label+input core of the field row. `.floating` keeps the label inside
+    /// (animating up on focus/fill); `.above` drops the inner label entirely — the
+    /// field is always shown with its placeholder, and the static label is rendered
+    /// over the box in `body` (see `labeledFieldBox`).
+    @ViewBuilder
+    private var labelAndField: some View {
+        if effectiveLabelPlacement == .above {
+            field
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
             ZStack(alignment: .leading) {
                 HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
                     Text(model.label)
@@ -304,12 +341,7 @@ public struct TextInput: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(Motion.fast.animation, value: floating)
-
-            if let trailingContent { trailingContent }
-
-            trailingAccessory
         }
-        .padding(.horizontal, Theme.SpacingKey.md.value)
     }
 
     @ViewBuilder
@@ -365,9 +397,27 @@ public struct TextInput: View {
         .onTapGesture { if isEnabled && !isReadOnly { isFocused = true } }
     }
 
+    /// `fieldBox` with its label placed per `effectiveLabelPlacement`: `.above`
+    /// stacks a static ``InputLabel`` over the box (gap = `.sm`, forwarding the
+    /// required asterisk), while `.floating` returns the box alone — its label
+    /// lives inside the field (see `labelAndField`).
+    @ViewBuilder
+    private var labeledFieldBox: some View {
+        if effectiveLabelPlacement == .above {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                InputLabel(model.label)
+                    .required(isRequired && showsRequiredIndicator)
+                    .hasError(hasError)   // recolor on validation error, like the floating label / DateField
+                fieldBox
+            }
+        } else {
+            fieldBox
+        }
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            fieldBox
+            labeledFieldBox
 
             if !messages.isEmpty || model.showCount {
                 HStack(alignment: .firstTextBaseline) {
@@ -515,6 +565,14 @@ public extension TextInput {
     /// Show a trailing clear button while the field has text. An explicit call
     /// wins over the subtree `FieldDefaults.clearable` default (F5).
     func clearable(_ on: Bool = true) -> Self { copy { $0.model.allowClear = on; $0.explicitClearable = on } }
+
+    /// Places the label `.floating` (inside, animating up — default) or `.above`
+    /// (a static ``InputLabel`` stacked over the field, HeroUI `labelPlacement`).
+    /// Pair `.above` with `.placeholder(_:)` for an in-field hint. An explicit
+    /// call wins over the subtree `FieldDefaults.labelPlacement` default.
+    func labelPlacement(_ placement: TextInputLabelPlacement) -> Self {
+        copy { $0.explicitLabelPlacement = placement }
+    }
 
     /// Caps input at `max` characters; a soft limit (`hardLimit: false`) allows overflow and flags the counter instead.
     func maxLength(_ max: Int?, hardLimit: Bool = true) -> Self {
@@ -711,6 +769,7 @@ private extension TextInputCapitalization {
     @Previewable @State var name = ""
     @Previewable @State var nickname = ""
     @Previewable @State var showError = true
+    @Previewable @State var aboveEmail = ""
     PreviewMatrix("TextInput") {
         // Email keyboard + autofill, no autocaps/autocorrect, "next" return key.
         PreviewCase("Email · icon + clearable + live rules") {
@@ -746,6 +805,16 @@ private extension TextInputCapitalization {
             TextInput("Full name", text: $name)
                 .required()
                 .fieldStyle(.muted)
+        }
+        // Label above (HeroUI `labelPlacement="outside"`): static label stacked
+        // over the field, placeholder shown inside — no floating label.
+        PreviewCase("Label above · required") {
+            TextInput("Email", text: $aboveEmail)
+                .placeholder("email@example.com")
+                .labelPlacement(.above)
+                .required()
+                .keyboard(.emailAddress, contentType: .emailAddress, capitalization: .never)
+                .fieldStyle(.muted)   // view-level — must come after TextInput modifiers
         }
         // Required + error, with an animated message toggle
         // (rows fade + slide via the MicroMotion-gated animation).

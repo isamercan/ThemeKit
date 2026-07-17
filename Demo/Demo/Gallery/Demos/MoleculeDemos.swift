@@ -202,6 +202,8 @@ struct TextInputDemo: View {
     @State private var loggedIn = false
     @State private var readOnly = false
     @State private var sizeIdx = 1   // 0 small, 1 medium, 2 large (TextInputSize ramp)
+    // Screenshot hook: launch with `-textInputLabelAbove YES`. Off by default.
+    @State private var labelAbove = UserDefaults.standard.bool(forKey: "textInputLabelAbove")
 
     private var model: TextInputModel {
         switch mode {
@@ -248,15 +250,17 @@ struct TextInputDemo: View {
     }
 
     var body: some View {
-        ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("value", "\"\(text)\""), ("readOnly", "\(readOnly)")]) {
+        ComponentStage("TextInput", inspector: [("mode", mode.rawValue), ("label", labelAbove ? "above" : "floating"), ("value", "\"\(text)\""), ("readOnly", "\(readOnly)")]) {
             TextInput(model, text: $text)
                 .size([.small, .medium, .large][sizeIdx])
+                .labelPlacement(labelAbove ? .above : .floating)
                 .a11yID(demoA11yID)
                 .readOnly(readOnly)
         } knobs: {
             Text("email = keyboard/autofill + validation. password = password-manager autofill. bio = soft limit (exceed 80 → red counter). card/phone/currency = format-as-you-type masks.").font(.caption).foregroundStyle(.secondary)
             Picker("Mode", selection: $mode) { ForEach(Mode.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) } }.pickerStyle(.segmented)
             Picker("Size", selection: $sizeIdx) { Text("S").tag(0); Text("M").tag(1); Text("L").tag(2) }.pickerStyle(.segmented)
+            Toggle("Label above (static, HeroUI outside)", isOn: $labelAbove)
             Toggle("Read-only (keeps chrome, blocks editing)", isOn: $readOnly)
             Button("Reset") { text = ""; loggedIn = false }
         }

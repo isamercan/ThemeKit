@@ -49,14 +49,22 @@ public struct FieldDefaults: Equatable {
     /// an explicit per-field `on:` argument still wins over this subtree
     /// default, and `nil` keeps the family's `.editingEnd` default.
     public var validationTrigger: ValidationTrigger?
+    /// Where the field's label sits — `.floating` (inside, animating up on
+    /// focus/fill) or `.above` (a static `InputLabel` stacked over the field,
+    /// HeroUI `labelPlacement="outside"`). Read by TextInput; a field's own
+    /// explicit `.labelPlacement(_:)` still wins, and `nil` keeps the family's
+    /// `.floating` default.
+    public var labelPlacement: TextInputLabelPlacement?
 
     public init(size: TextInputSize? = nil, messagesAnimated: Bool? = nil, requiredIndicator: Bool? = nil,
-                clearable: Bool? = nil, validationTrigger: ValidationTrigger? = nil) {
+                clearable: Bool? = nil, validationTrigger: ValidationTrigger? = nil,
+                labelPlacement: TextInputLabelPlacement? = nil) {
         self.size = size
         self.messagesAnimated = messagesAnimated
         self.requiredIndicator = requiredIndicator
         self.clearable = clearable
         self.validationTrigger = validationTrigger
+        self.labelPlacement = labelPlacement
     }
 }
 
@@ -79,13 +87,15 @@ public extension View {
                        messagesAnimated: Bool? = nil,
                        requiredIndicator: Bool? = nil,
                        clearable: Bool? = nil,
-                       validationTrigger: ValidationTrigger? = nil) -> some View {
+                       validationTrigger: ValidationTrigger? = nil,
+                       labelPlacement: TextInputLabelPlacement? = nil) -> some View {
         transformEnvironment(\.fieldDefaults) { d in
             if let size { d.size = size }
             if let messagesAnimated { d.messagesAnimated = messagesAnimated }
             if let requiredIndicator { d.requiredIndicator = requiredIndicator }
             if let clearable { d.clearable = clearable }
             if let validationTrigger { d.validationTrigger = validationTrigger }
+            if let labelPlacement { d.labelPlacement = labelPlacement }
         }
     }
 }

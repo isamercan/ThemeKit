@@ -2327,6 +2327,7 @@ init(_ label: String, text: Binding<String>)
 - `.required` — Marks the field as required: renders an error-token asterisk after the label (the `InputLabel` treatment) and appends ", required" to the field's accessibility label (HeroUI `isRequired`).
 - `.secure` — Masks input as a password field with a reveal toggle.
 - `.clearable` — Show a trailing clear button while the field has text.
+- `.labelPlacement` — Places the label `.floating` (inside, animating up — default) or `.above` (a static ``InputLabel`` stacked over the field, HeroUI `labelPlacement`).
 - `.maxLength` — Caps input at `max` characters; a soft limit (`hardLimit: false`) allows overflow and flags the counter instead.
 - `.showsCount` — Shows the character counter, reading `12/50` (`.count`) or `38 left` (`.remaining`).
 - `.size` — Control height preset (defaults to `.medium`, R4).
