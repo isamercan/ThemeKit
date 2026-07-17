@@ -45,6 +45,10 @@ struct ContentView: View {
             LoginModalView()
                 .tabItem { Label("Login", systemImage: "person.crop.circle") }
                 .tag(5)
+
+            CardFormView()
+                .tabItem { Label("Card Form", systemImage: "doc.text") }
+                .tag(12)
         }
         // A top "did fire" toast for every component callback (`flash("…")`).
         .modifier(ActionFlashOverlay())
