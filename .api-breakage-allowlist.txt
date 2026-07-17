@@ -146,3 +146,11 @@ API breakage: var ComponentDefaults.elevation has been removed
 API breakage: constructor ComponentDefaults.init(radius:elevation:accent:) has been removed
 API breakage: func View.componentDefaults(radius:elevation:accent:) has been renamed to func componentDefaults(accent:)
 API breakage: func View.componentDefaults(radius:elevation:accent:) has parameter 0 type change from ThemeKitCore.Theme.RadiusRole? to ThemeKitCore.SemanticColor?
+
+# --- TextInput labelPlacement axis (feat): FieldDefaults gains a `labelPlacement`
+#     subtree default. Source-COMPATIBLE additive change — the new param is
+#     defaulted (`nil`), so every existing `FieldDefaults(...)` / `.fieldDefaults(...)`
+#     call site still compiles unchanged. The digester flags the signature growth
+#     as a removal/rename; same additive-axis precedent as the #308 entries above. ---
+API breakage: constructor FieldDefaults.init(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been removed
+API breakage: func View.fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been renamed to func fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:labelPlacement:)
