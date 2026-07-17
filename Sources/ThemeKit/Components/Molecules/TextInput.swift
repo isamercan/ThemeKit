@@ -407,6 +407,7 @@ public struct TextInput: View {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
                 InputLabel(model.label)
                     .required(isRequired && showsRequiredIndicator)
+                    .hasError(hasError)   // recolor on validation error, like the floating label / DateField
                 fieldBox
             }
         } else {
