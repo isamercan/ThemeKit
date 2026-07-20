@@ -154,50 +154,60 @@ public extension BlogCard {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("BlogCard") {
-        PreviewCase("Regular") {
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("BlogCard") {
+                PreviewCase("Regular") {
+                    BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                        theme.background(.bgTertiary)
+                    }
+                    .excerpt("To some a miracle of nature, to others a fairyland…")
+                    .readMore(action: {})
+                }
+                PreviewCase("Compact") {
+                    BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                        theme.background(.bgTertiary)
+                    }
+                    .compact()
+                    .readMore(action: {})
+                }
+                // Shelled variant — any shell modifier opts into the CardStyle chrome.
+                PreviewCase("Shelled (surface + elevation)") {
+                    BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
+                        theme.background(.bgTertiary)
+                    }
+                    .excerpt("To some a miracle of nature, to others a fairyland…")
+                    .readMore(action: {})
+                    .surface(.bgWhite)
+                    .elevation(.soft)
+                }
+            }
+        }
+    }
+    return Demo()
+}
+
+#Preview("Outlined style + overlay slot") {
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
             BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
                 theme.background(.bgTertiary)
             }
-            .excerpt("To some a miracle of nature, to others a fairyland…")
-            .readMore(action: {})
-        }
-        PreviewCase("Compact") {
-            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
-                theme.background(.bgTertiary)
-            }
-            .compact()
-            .readMore(action: {})
-        }
-        // Shelled variant — any shell modifier opts into the CardStyle chrome.
-        PreviewCase("Shelled (surface + elevation)") {
-            BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
-                theme.background(.bgTertiary)
+            .overlay {
+                Text("Travel").textStyle(.labelSm700)
+                    .foregroundStyle(theme.text(.textSecondaryInverse))
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(MediaScrim.solid, in: Capsule())
+                    .padding(Theme.SpacingKey.sm.value)
             }
             .excerpt("To some a miracle of nature, to others a fairyland…")
             .readMore(action: {})
             .surface(.bgWhite)
-            .elevation(.soft)
+            .cardStyle(.outlined)
+            .padding()
         }
     }
-}
-
-#Preview("Outlined style + overlay slot") {
-    @Previewable @Environment(\.theme) var theme
-    BlogCard(title: "How About Exploring Cappadocia on Your Own?") {
-        theme.background(.bgTertiary)
-    }
-    .overlay {
-        Text("Travel").textStyle(.labelSm700)
-            .foregroundStyle(theme.text(.textSecondaryInverse))
-            .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(MediaScrim.solid, in: Capsule())
-            .padding(Theme.SpacingKey.sm.value)
-    }
-    .excerpt("To some a miracle of nature, to others a fairyland…")
-    .readMore(action: {})
-    .surface(.bgWhite)
-    .cardStyle(.outlined)
-    .padding()
+    return Demo()
 }

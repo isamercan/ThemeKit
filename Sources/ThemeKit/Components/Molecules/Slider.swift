@@ -248,30 +248,35 @@ public struct Slider: View {
 }
 
 #Preview {
-    @Previewable @State var v: Double = 4
-    @Previewable @State var price: Double = 240
-    // Tap-to-set: tapping anywhere on a track jumps the thumb there.
-    PreviewMatrix("Slider") {
-        PreviewCase("Drag tooltip") { Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip() }
-        PreviewCase("Marks") { Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"]) }
-        PreviewCase("Currency readout") {
-            Slider(value: $price, in: 0...1000, label: "Budget")
-                .step(10)
-                .valueLabel { "$\(Int($0))" }   // currency-style readout + tooltip
-                .showsValueTooltip()
-        }
-        PreviewCase("Accented") {
-            Slider(value: $v, in: 0...8, label: "Accented")
-                .accent(.success)
-                .valueLabel { "\(Int($0))" }
-        }
-        PreviewCase("Disabled") { Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true) }
-        PreviewCase("Vertical") {
-            Slider(value: $v, in: 0...8, label: "Vertical")
-                .axis(.vertical, height: 120)
-                .valueLabel { "\(Int($0))" }
+    struct Demo: View {
+        @State var v: Double = 4
+        @State var price: Double = 240
+        var body: some View {
+            // Tap-to-set: tapping anywhere on a track jumps the thumb there.
+            PreviewMatrix("Slider") {
+                PreviewCase("Drag tooltip") { Slider(value: $v, in: 0...8, label: "Volume \(Int(v))").showsValueTooltip() }
+                PreviewCase("Marks") { Slider(value: $v, in: 0...8).step(2).marks([0: "0", 4: "Mid", 8: "Max"]) }
+                PreviewCase("Currency readout") {
+                    Slider(value: $price, in: 0...1000, label: "Budget")
+                        .step(10)
+                        .valueLabel { "$\(Int($0))" }   // currency-style readout + tooltip
+                        .showsValueTooltip()
+                }
+                PreviewCase("Accented") {
+                    Slider(value: $v, in: 0...8, label: "Accented")
+                        .accent(.success)
+                        .valueLabel { "\(Int($0))" }
+                }
+                PreviewCase("Disabled") { Slider(value: .constant(3), in: 0...8, label: "Disabled").disabled(true) }
+                PreviewCase("Vertical") {
+                    Slider(value: $v, in: 0...8, label: "Vertical")
+                        .axis(.vertical, height: 120)
+                        .valueLabel { "\(Int($0))" }
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("RTL") {

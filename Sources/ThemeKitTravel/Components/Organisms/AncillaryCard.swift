@@ -216,11 +216,16 @@ public extension AncillaryCard {
 }
 
 #Preview("Outlined style") {
-    @Previewable @State var seat = true
-    VStack(spacing: 10) {
-        AncillaryCard("Seat selection").icon("carseat.left.fill").subtitle("Extra legroom").price(350).added($seat)
-        AncillaryCard("Priority boarding").icon("figure.walk").price(90).added(.constant(false))
+    struct Demo: View {
+        @State var seat = true
+        var body: some View {
+            VStack(spacing: 10) {
+                AncillaryCard("Seat selection").icon("carseat.left.fill").subtitle("Extra legroom").price(350).added($seat)
+                AncillaryCard("Priority boarding").icon("figure.walk").price(90).added(.constant(false))
+            }
+            .cardStyle(.outlined)
+            .padding()
+        }
     }
-    .cardStyle(.outlined)
-    .padding()
+    return Demo()
 }

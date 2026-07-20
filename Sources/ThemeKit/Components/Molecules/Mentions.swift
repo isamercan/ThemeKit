@@ -143,20 +143,25 @@ public extension Mentions {
 }
 
 #Preview {
-    // Interactive input — the matrix wraps representative static states
-    // (type an "@" in a cell to exercise the suggestion list).
-    @Previewable @State var text = "Great work "
-    let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
-                  MentionOption("grace", label: "Grace Hopper")]
-    PreviewMatrix("Mentions") {
-        PreviewCase("Default") { Mentions(text: $text, options: people).placeholder("Write a note…") }
-        // Larger suggestion rows via the family size ramp (C1).
-        PreviewCase("Medium rows") { Mentions(text: $text, options: people).size(.medium) }
-        // Read-only: normal chrome + text, editing/suggestions suppressed (E1).
-        PreviewCase("Read-only") {
-            Mentions(text: .constant("Thanks @ada for the review"), options: people)
-                .readOnly()
+    struct Demo: View {
+        @State var text = "Great work "
+        var body: some View {
+            // Interactive input — the matrix wraps representative static states
+            // (type an "@" in a cell to exercise the suggestion list).
+            let people = [MentionOption("ada", label: "Ada Lovelace"), MentionOption("alan", label: "Alan Turing"),
+                          MentionOption("grace", label: "Grace Hopper")]
+            PreviewMatrix("Mentions") {
+                PreviewCase("Default") { Mentions(text: $text, options: people).placeholder("Write a note…") }
+                // Larger suggestion rows via the family size ramp (C1).
+                PreviewCase("Medium rows") { Mentions(text: $text, options: people).size(.medium) }
+                // Read-only: normal chrome + text, editing/suggestions suppressed (E1).
+                PreviewCase("Read-only") {
+                    Mentions(text: .constant("Thanks @ada for the review"), options: people)
+                        .readOnly()
+                }
+            }
+            .environment(\.theme, Theme.shared)
         }
     }
-    .environment(\.theme, Theme.shared)
+    return Demo()
 }

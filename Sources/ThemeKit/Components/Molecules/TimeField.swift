@@ -356,41 +356,46 @@ public extension TimeField {
 }
 
 #Preview {
-    @Previewable @State var meeting: Date? = .now
-    @Previewable @State var alarm: Date?
-    PreviewMatrix("TimeField") {
-        // 15-minute steps, 24-hour, clearable.
-        PreviewCase("15-min · 24h · clearable") {
-            TimeField("Meeting time", time: $meeting)
-                .minuteInterval(15).hourCycle(.h24).clearable()
-        }
-        // 12-hour with a validation error while empty.
-        PreviewCase("12h + error while empty") {
-            TimeField("Alarm", time: $alarm)
-                .hourCycle(.h12).clearable()
-                .infoMessages(alarm == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
-        }
-        PreviewCase("Disabled") { TimeField("Locked", time: .constant(.now)).disabled(true) }
-        // Read-only: normal chrome + VoiceOver value, no picker/clear (E1).
-        PreviewCase("Read-only") { TimeField("Departure (read-only)", time: .constant(.now)).clearable().readOnly() }
-        // Required + declarative validation (asterisk, rules on dismiss).
-        PreviewCase("Required + validate") {
-            TimeField("Check-in", time: $alarm)
-                .required()
-                .validate([.required("Pick a check-in time")])
-        }
-        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-        PreviewCase("Size ramp") {
-            VStack(spacing: 12) {
-                TimeField("Small", time: $meeting).size(.small)
-                TimeField("Large", time: $meeting).size(.large)
+    struct Demo: View {
+        @State var meeting: Date? = .now
+        @State var alarm: Date?
+        var body: some View {
+            PreviewMatrix("TimeField") {
+                // 15-minute steps, 24-hour, clearable.
+                PreviewCase("15-min · 24h · clearable") {
+                    TimeField("Meeting time", time: $meeting)
+                        .minuteInterval(15).hourCycle(.h24).clearable()
+                }
+                // 12-hour with a validation error while empty.
+                PreviewCase("12h + error while empty") {
+                    TimeField("Alarm", time: $alarm)
+                        .hourCycle(.h12).clearable()
+                        .infoMessages(alarm == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
+                }
+                PreviewCase("Disabled") { TimeField("Locked", time: .constant(.now)).disabled(true) }
+                // Read-only: normal chrome + VoiceOver value, no picker/clear (E1).
+                PreviewCase("Read-only") { TimeField("Departure (read-only)", time: .constant(.now)).clearable().readOnly() }
+                // Required + declarative validation (asterisk, rules on dismiss).
+                PreviewCase("Required + validate") {
+                    TimeField("Check-in", time: $alarm)
+                        .required()
+                        .validate([.required("Pick a check-in time")])
+                }
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                PreviewCase("Size ramp") {
+                    VStack(spacing: 12) {
+                        TimeField("Small", time: $meeting).size(.small)
+                        TimeField("Large", time: $meeting).size(.large)
+                    }
+                }
+                // Underlined chrome via the shared FieldStyle hook.
+                PreviewCase("Underlined") {
+                    TimeField("Boarding", time: $meeting)
+                        .hourCycle(.h24)
+                        .fieldStyle(.underlined)
+                }
             }
         }
-        // Underlined chrome via the shared FieldStyle hook.
-        PreviewCase("Underlined") {
-            TimeField("Boarding", time: $meeting)
-                .hourCycle(.h24)
-                .fieldStyle(.underlined)
-        }
     }
+    return Demo()
 }

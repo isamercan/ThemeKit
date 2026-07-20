@@ -249,14 +249,18 @@ public extension View {
 }
 
 #Preview("Reveal toggle") {
-    @Previewable @State var isLoading = true
+    struct Demo: View {
+        @State var isLoading = true
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+                Toggle("Loading", isOn: $isLoading)
 
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-        Toggle("Loading", isOn: $isLoading)
-
-        Text("Cross-fades in when loading ends").skeleton(isLoading)
-        Text("Token radius + pulse placeholder").skeleton(isLoading, radius: .field, variant: .pulse)
-        Text("Tinted shimmer placeholder").skeleton(isLoading, highlight: .success)
+                Text("Cross-fades in when loading ends").skeleton(isLoading)
+                Text("Token radius + pulse placeholder").skeleton(isLoading, radius: .field, variant: .pulse)
+                Text("Tinted shimmer placeholder").skeleton(isLoading, highlight: .success)
+            }
+            .padding(Theme.SpacingKey.md.value)
+        }
     }
-    .padding(Theme.SpacingKey.md.value)
+    return Demo()
 }

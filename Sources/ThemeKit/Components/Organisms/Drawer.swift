@@ -419,56 +419,61 @@ public extension View {
 }
 
 #Preview("Declarative") {
-    // Presentation organism — each cell pins `isPresented: .constant(true)` so a
-    // single frame shows the slid-in panel (scrim + glass chrome) per color scheme.
-    @Previewable @Environment(\.theme) var theme
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // Presentation organism — each cell pins `isPresented: .constant(true)` so a
+            // single frame shows the slid-in panel (scrim + glass chrome) per color scheme.
 
-    func bodyText() -> some View {
-        Text("Lorem ipsum dolor sit amet consectetur. Duis purus viverra nulla feugiat orci. Convallis blandit a habitasse aenean pellentesque.")
-            .textStyle(.bodyBase400)
-            .foregroundStyle(theme.text(.textSecondary))
-    }
-    func actions() -> some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            ThemeButton("Cancel") {}.variant(.ghost).size(.small)
-            ThemeButton("Done") {}.size(.small)
-        }
-    }
+            func bodyText() -> some View {
+                Text("Lorem ipsum dolor sit amet consectetur. Duis purus viverra nulla feugiat orci. Convallis blandit a habitasse aenean pellentesque.")
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            func actions() -> some View {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    ThemeButton("Cancel") {}.variant(.ghost).size(.small)
+                    ThemeButton("Done") {}.size(.small)
+                }
+            }
 
-    return PreviewMatrix("Drawer") {
-        PreviewCase("Bottom sheet · handle (pinned open)") {
-            Color.clear.frame(height: 300)
-                .drawer(isPresented: .constant(true), edge: .bottom) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Bottom drawer") }
-                        .footer { actions() }
+            return PreviewMatrix("Drawer") {
+                PreviewCase("Bottom sheet · handle (pinned open)") {
+                    Color.clear.frame(height: 300)
+                        .drawer(isPresented: .constant(true), edge: .bottom) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Bottom drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Top sheet") {
-            Color.clear.frame(height: 300)
-                .drawer(isPresented: .constant(true), edge: .top) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Top drawer") }
-                        .footer { actions() }
+                PreviewCase("Top sheet") {
+                    Color.clear.frame(height: 300)
+                        .drawer(isPresented: .constant(true), edge: .top) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Top drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Trailing · full height") {
-            Color.clear.frame(height: 380)
-                .drawer(isPresented: .constant(true), edge: .trailing, width: 300) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Right drawer") }
-                        .footer { actions() }
+                PreviewCase("Trailing · full height") {
+                    Color.clear.frame(height: 380)
+                        .drawer(isPresented: .constant(true), edge: .trailing, width: 300) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Right drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Leading · full height") {
-            Color.clear.frame(height: 380)
-                .drawer(isPresented: .constant(true), edge: .leading, width: 300) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Left drawer") }
-                        .footer { actions() }
+                PreviewCase("Leading · full height") {
+                    Color.clear.frame(height: 380)
+                        .drawer(isPresented: .constant(true), edge: .leading, width: 300) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Left drawer") }
+                                .footer { actions() }
+                        }
                 }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Imperative host") {

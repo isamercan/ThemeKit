@@ -440,61 +440,66 @@ public extension Select {
 }
 
 #Preview {
-    @Previewable @State var city: String?
-    @Previewable @State var plan: String?
-    let planDetails = [
-        "Basic": "Essential features for personal use",
-        "Pro": "Advanced tools for power users",
-        "Team": "Collaboration for organizations",
-    ]
-    PreviewMatrix("Select") {
-        PreviewCase("Clearable") {
-            Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                .clearable()
-        }
-        PreviewCase("Searchable sections") {
-            Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
-                   selection: $city) { $0 }
-                .searchable()
-        }
-        // Native-menu subtitles via optionDescription.
-        PreviewCase("Menu subtitles") {
-            Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
-                .optionDescription { planDetails[$0] }
-        }
-        // Panel rows with descriptions + custom leading content,
-        // driven by a controlled isExpanded binding.
-        PreviewCase("Open panel + leading content") {
-            Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: .constant(true)) { $0 }
-                .searchable()
-                .optionDescription { planDetails[$0] }
-                .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
-        }
-        // Chrome via the shared FieldStyle axis.
-        PreviewCase("Underlined") {
-            Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                .fieldStyle(.underlined)
-        }
-        // Long list scrolls within a 180pt `listHeight` cap (Ant `listHeight`),
-        // sorted A→Z via `filterSort`.
-        PreviewCase("listHeight + filterSort") {
-            Select("Country", options: ["Turkey", "Germany", "France", "Spain", "Italy",
-                                        "Poland", "Sweden", "Norway", "Greece", "Portugal"],
-                   selection: $city, isExpanded: .constant(true)) { $0 }
-                .searchable()
-                .listHeight(180)
-                .filterSort(<)
-        }
-        // Required indicator (E2) — asterisk + ", required" for VoiceOver.
-        PreviewCase("Required (E2)") {
-            Select("Departure city", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
-                .required()
-        }
-        // Read-only (E1): normal chrome + value, menu / clear blocked.
-        PreviewCase("Read-only (E1)") {
-            Select("Cabin", options: ["Economy", "Business"], selection: .constant("Economy")) { $0 }
-                .clearable()
-                .readOnly()
+    struct Demo: View {
+        @State var city: String?
+        @State var plan: String?
+        var body: some View {
+            let planDetails = [
+                "Basic": "Essential features for personal use",
+                "Pro": "Advanced tools for power users",
+                "Team": "Collaboration for organizations",
+            ]
+            PreviewMatrix("Select") {
+                PreviewCase("Clearable") {
+                    Select("City", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                        .clearable()
+                }
+                PreviewCase("Searchable sections") {
+                    Select("Searchable", sections: [.init("Marmara", ["Istanbul", "Bursa"]), .init("Aegean", ["Izmir", "Aydin"])],
+                           selection: $city) { $0 }
+                        .searchable()
+                }
+                // Native-menu subtitles via optionDescription.
+                PreviewCase("Menu subtitles") {
+                    Select("Plan (menu)", options: ["Basic", "Pro", "Team"], selection: $plan) { $0 }
+                        .optionDescription { planDetails[$0] }
+                }
+                // Panel rows with descriptions + custom leading content,
+                // driven by a controlled isExpanded binding.
+                PreviewCase("Open panel + leading content") {
+                    Select("Plan (panel)", options: ["Basic", "Pro", "Team"], selection: $plan, isExpanded: .constant(true)) { $0 }
+                        .searchable()
+                        .optionDescription { planDetails[$0] }
+                        .optionLeading { StatusDot($0 == "Pro" ? .online : .neutral) }
+                }
+                // Chrome via the shared FieldStyle axis.
+                PreviewCase("Underlined") {
+                    Select("Underlined", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                        .fieldStyle(.underlined)
+                }
+                // Long list scrolls within a 180pt `listHeight` cap (Ant `listHeight`),
+                // sorted A→Z via `filterSort`.
+                PreviewCase("listHeight + filterSort") {
+                    Select("Country", options: ["Turkey", "Germany", "France", "Spain", "Italy",
+                                                "Poland", "Sweden", "Norway", "Greece", "Portugal"],
+                           selection: $city, isExpanded: .constant(true)) { $0 }
+                        .searchable()
+                        .listHeight(180)
+                        .filterSort(<)
+                }
+                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+                PreviewCase("Required (E2)") {
+                    Select("Departure city", options: ["Istanbul", "Ankara", "Izmir"], selection: $city) { $0 }
+                        .required()
+                }
+                // Read-only (E1): normal chrome + value, menu / clear blocked.
+                PreviewCase("Read-only (E1)") {
+                    Select("Cabin", options: ["Economy", "Business"], selection: .constant("Economy")) { $0 }
+                        .clearable()
+                        .readOnly()
+                }
+            }
         }
     }
+    return Demo()
 }

@@ -74,28 +74,33 @@ private struct WatermarkModifier: ViewModifier {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Watermark") {
-        PreviewCase("Default") {
-            VStack(spacing: 12) {
-                Text("Boarding pass").textStyle(.headingSm)
-                Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Watermark") {
+                PreviewCase("Default") {
+                    VStack(spacing: 12) {
+                        Text("Boarding pass").textStyle(.headingSm)
+                        Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(40)
+                    .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                    .watermark("SPECIMEN")
+                }
+                PreviewCase("Custom rotation · size") {
+                    VStack(spacing: 12) {
+                        Text("Boarding pass").textStyle(.headingSm)
+                        Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(40)
+                    .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                    .watermark("DRAFT", rotation: .degrees(-30), fontSize: 14)
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding(40)
-            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-            .watermark("SPECIMEN")
-        }
-        PreviewCase("Custom rotation · size") {
-            VStack(spacing: 12) {
-                Text("Boarding pass").textStyle(.headingSm)
-                Text("New York → London").textStyle(.bodyBase400).foregroundStyle(theme.text(.textSecondary))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(40)
-            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-            .watermark("DRAFT", rotation: .degrees(-30), fontSize: 14)
+            .environment(\.theme, Theme.shared)
         }
     }
-    .environment(\.theme, Theme.shared)
+    return Demo()
 }

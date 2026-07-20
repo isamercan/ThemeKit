@@ -258,23 +258,28 @@ public extension Transfer {
 }
 
 #Preview {
-    @Previewable @State var target: Set<String> = ["wifi"]
-    let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
-                 TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
-                 TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
-    PreviewMatrix("Transfer") {
-        PreviewCase("Default") {
-            Transfer(items, target: $target).titles("Available", "Included")
-        }
-        // Header select-all (Ant `showSelectAll`) + error status border.
-        PreviewCase("Select-all + error status") {
-            Transfer(items, target: $target)
-                .titles("Available", "Included")
-                .showsSelectAll()
-                .status(.error)
+    struct Demo: View {
+        @State var target: Set<String> = ["wifi"]
+        var body: some View {
+            let items = [TransferItem("wifi", title: "Wi-Fi"), TransferItem("bkfst", title: "Breakfast"),
+                         TransferItem("pool", title: "Pool"), TransferItem("gym", title: "Gym"),
+                         TransferItem("spa", title: "Spa"), TransferItem("park", title: "Parking")]
+            PreviewMatrix("Transfer") {
+                PreviewCase("Default") {
+                    Transfer(items, target: $target).titles("Available", "Included")
+                }
+                // Header select-all (Ant `showSelectAll`) + error status border.
+                PreviewCase("Select-all + error status") {
+                    Transfer(items, target: $target)
+                        .titles("Available", "Included")
+                        .showsSelectAll()
+                        .status(.error)
+                }
+            }
+            .environment(\.theme, Theme.shared)
         }
     }
-    .environment(\.theme, Theme.shared)
+    return Demo()
 }
 
 #Preview("RTL — boxes and arrows mirror") {

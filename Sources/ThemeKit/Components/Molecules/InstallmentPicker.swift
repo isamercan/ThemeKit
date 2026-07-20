@@ -105,20 +105,25 @@ public extension InstallmentPicker {
 }
 
 #Preview {
-    @Previewable @State var sel = 1
-    PreviewMatrix("InstallmentPicker") {
-        PreviewCase("Default") {
-            InstallmentPicker([
-                InstallmentOption(count: 1, total: 9_600),
-                InstallmentOption(count: 3, total: 9_900, monthly: 3_300),
-                InstallmentOption(count: 6, total: 10_200, monthly: 1_700),
-            ], selection: $sel)
-        }
-        PreviewCase("Accent + currency") {
-            InstallmentPicker([
-                InstallmentOption(count: 1, total: 9_600),
-                InstallmentOption(count: 3, total: 9_900, monthly: 3_300),
-            ], selection: $sel).accent(.success).currency("EUR")
+    struct Demo: View {
+        @State var sel = 1
+        var body: some View {
+            PreviewMatrix("InstallmentPicker") {
+                PreviewCase("Default") {
+                    InstallmentPicker([
+                        InstallmentOption(count: 1, total: 9_600),
+                        InstallmentOption(count: 3, total: 9_900, monthly: 3_300),
+                        InstallmentOption(count: 6, total: 10_200, monthly: 1_700),
+                    ], selection: $sel)
+                }
+                PreviewCase("Accent + currency") {
+                    InstallmentPicker([
+                        InstallmentOption(count: 1, total: 9_600),
+                        InstallmentOption(count: 3, total: 9_900, monthly: 3_300),
+                    ], selection: $sel).accent(.success).currency("EUR")
+                }
+            }
         }
     }
+    return Demo()
 }

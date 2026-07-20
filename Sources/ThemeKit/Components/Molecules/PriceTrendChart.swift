@@ -242,18 +242,23 @@ public extension PriceTrendChart {
 }
 
 #Preview {
-    @Previewable @State var sel = 6
-    let points: [PriceTrendPoint] = (12...40).map {
-        PriceTrendPoint("\($0)", sublabel: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][$0 % 7], price: Decimal(1400 + ($0 * 37) % 700))
-    }
-    PreviewMatrix("PriceTrendChart") {
-        PreviewCase("Scrollable + axis + values") {
-            PriceTrendChart(points, selection: $sel).title("July").currency("USD")
-                .scrollable().showsAxis().showsValues().onPage(prev: {}, next: {})
+    struct Demo: View {
+        @State var sel = 6
+        var body: some View {
+            let points: [PriceTrendPoint] = (12...40).map {
+                PriceTrendPoint("\($0)", sublabel: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][$0 % 7], price: Decimal(1400 + ($0 * 37) % 700))
+            }
+            PreviewMatrix("PriceTrendChart") {
+                PreviewCase("Scrollable + axis + values") {
+                    PriceTrendChart(points, selection: $sel).title("July").currency("USD")
+                        .scrollable().showsAxis().showsValues().onPage(prev: {}, next: {})
+                }
+                PreviewCase("Fitted week, flat accent") {
+                    PriceTrendChart(Array(points.prefix(7)), selection: $sel)
+                        .gradient(false).accent(.info)
+                }
+            }
         }
-        PreviewCase("Fitted week, flat accent") {
-            PriceTrendChart(Array(points.prefix(7)), selection: $sel)
-                .gradient(false).accent(.info)
-        }
     }
+    return Demo()
 }

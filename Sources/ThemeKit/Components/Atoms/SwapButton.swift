@@ -54,17 +54,22 @@ public extension SwapButton {
 }
 
 #Preview {
-    @Previewable @State var a = "IST"
-    @Previewable @State var b = "AYT"
-    PreviewMatrix("SwapButton") {
-        PreviewCase("In context (tap to swap)") {
-            HStack(spacing: 16) {
-                Text(a).textStyle(.headingSm)
-                SwapButton { swap(&a, &b) }
-                Text(b).textStyle(.headingSm)
+    struct Demo: View {
+        @State var a = "IST"
+        @State var b = "AYT"
+        var body: some View {
+            PreviewMatrix("SwapButton") {
+                PreviewCase("In context (tap to swap)") {
+                    HStack(spacing: 16) {
+                        Text(a).textStyle(.headingSm)
+                        SwapButton { swap(&a, &b) }
+                        Text(b).textStyle(.headingSm)
+                    }
+                }
+                PreviewCase("Borderless") { SwapButton(action: {}).bordered(false) }
+                PreviewCase("Large · custom glyph") { SwapButton("arrow.left.arrow.right", action: {}).size(44) }
             }
         }
-        PreviewCase("Borderless") { SwapButton(action: {}).bordered(false) }
-        PreviewCase("Large · custom glyph") { SwapButton("arrow.left.arrow.right", action: {}).size(44) }
     }
+    return Demo()
 }

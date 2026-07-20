@@ -50,36 +50,41 @@ public extension ValidationRule {
 }
 
 #Preview {
-    @Previewable @State var email = ""
-    @Previewable @State var username = ""
-    @Previewable @State var code = ""
-    @Previewable @State var emailValid = false
-    PreviewMatrix("Validation triggers") {
-        // Default trigger: validates on blur, clears live once shown.
-        PreviewCase("Blur (default) + onValidation") {
-            VStack(spacing: 8) {
-                TextInput("Email", text: $email)
-                    .icon(leading: "envelope").clearable()
-                    .keyboard(.emailAddress, contentType: .emailAddress, capitalization: .never)
-                    .validate([.required(), .email()])
-                    .onValidation { emailValid = $0 }
-                Button("Continue") {}
-                    .disabled(!emailValid)
+    struct Demo: View {
+        @State var email = ""
+        @State var username = ""
+        @State var code = ""
+        @State var emailValid = false
+        var body: some View {
+            PreviewMatrix("Validation triggers") {
+                // Default trigger: validates on blur, clears live once shown.
+                PreviewCase("Blur (default) + onValidation") {
+                    VStack(spacing: 8) {
+                        TextInput("Email", text: $email)
+                            .icon(leading: "envelope").clearable()
+                            .keyboard(.emailAddress, contentType: .emailAddress, capitalization: .never)
+                            .validate([.required(), .email()])
+                            .onValidation { emailValid = $0 }
+                        Button("Continue") {}
+                            .disabled(!emailValid)
+                    }
+                }
+                // Dynamic-message closure form, evaluated on every keystroke.
+                PreviewCase("Live · dynamic message") {
+                    TextInput("Username", text: $username)
+                        .validate(on: .live) { value in
+                            value.contains(" ") ? "No spaces allowed" : nil
+                        }
+                }
+                // Submit-only, with a `.custom` rule in the same array.
+                PreviewCase("Submit + .custom rule") {
+                    TextInput("Code", text: $code)
+                        .keyboard(.numberPad)
+                        .validate([.required(), .numeric(), .custom("Must be 6 digits") { $0.count == 6 }],
+                                  on: .submit)
+                }
             }
         }
-        // Dynamic-message closure form, evaluated on every keystroke.
-        PreviewCase("Live · dynamic message") {
-            TextInput("Username", text: $username)
-                .validate(on: .live) { value in
-                    value.contains(" ") ? "No spaces allowed" : nil
-                }
-        }
-        // Submit-only, with a `.custom` rule in the same array.
-        PreviewCase("Submit + .custom rule") {
-            TextInput("Code", text: $code)
-                .keyboard(.numberPad)
-                .validate([.required(), .numeric(), .custom("Must be 6 digits") { $0.count == 6 }],
-                          on: .submit)
-        }
     }
+    return Demo()
 }

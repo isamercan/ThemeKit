@@ -97,33 +97,43 @@ public extension Diff {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Diff") {
-        PreviewCase("Default 16:9 (drag divider in live preview)") {
-            Diff {
-                theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
-            } after: {
-                theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Diff") {
+                PreviewCase("Default 16:9 (drag divider in live preview)") {
+                    Diff {
+                        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+                    } after: {
+                        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+                    }
+                }
+                PreviewCase("Custom aspect · 21:9") {
+                    Diff {
+                        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+                    } after: {
+                        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+                    }
+                    .aspect(21.0 / 9.0)
+                }
             }
-        }
-        PreviewCase("Custom aspect · 21:9") {
-            Diff {
-                theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
-            } after: {
-                theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
-            }
-            .aspect(21.0 / 9.0)
         }
     }
+    return Demo()
 }
 
 #Preview("RTL — divider and drag mirror") {
-    @Previewable @Environment(\.theme) var theme
-    Diff {
-        theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
-    } after: {
-        theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            Diff {
+                theme.background(.bgHero).overlay(Text("BEFORE").foregroundStyle(.white).font(.headline))
+            } after: {
+                theme.background(.bgTertiary).overlay(Text("AFTER").foregroundStyle(.white).font(.headline))
+            }
+            .padding()
+            .environment(\.layoutDirection, .rightToLeft)
+        }
     }
-    .padding()
-    .environment(\.layoutDirection, .rightToLeft)
+    return Demo()
 }

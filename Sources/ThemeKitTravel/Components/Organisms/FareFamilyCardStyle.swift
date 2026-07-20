@@ -521,27 +521,32 @@ private struct PillFareFamilyCardStyle: FareFamilyCardStyle {
 }
 
 #Preview("FareFamilyCardStyle — presets × light/dark") {
-    @Previewable @State var picked = true
-    let features: [FareFeature] = [
-        FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
-        FareFeature("Carry-on", systemImage: "suitcase.rolling", detail: "55×40×23 cm"),
-        FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
-    ]
-    let radioCard = FareFamilyCard("Super Eco", price: 1_871.99)
-        .accent(.success).features(features).selection($picked)
-    let ctaCard = FareFamilyCard("Comfort Flex", price: 3_116.99)
-        .accent(.purple).features(features).onSelect { }
-    PreviewMatrix("FareFamilyCardStyle") {
-        PreviewCase("Stacked (default) · radio") { radioCard }
-        PreviewCase("Stacked · CTA") { ctaCard }
-        PreviewCase("Column · radio") { radioCard.fareFamilyCardStyle(.column).frame(width: 170) }
-        PreviewCase("Column · CTA") { ctaCard.fareFamilyCardStyle(.column).frame(width: 170) }
-        PreviewCase("Row · radio") { radioCard.fareFamilyCardStyle(.row) }
-        PreviewCase("Row · CTA") { ctaCard.fareFamilyCardStyle(.row) }
-        PreviewCase("Accordion · collapsed") { radioCard.fareFamilyCardStyle(.accordion) }
-        PreviewCase("Accordion · expanded") {
-            ctaCard.expanded(.constant(true)).fareFamilyCardStyle(.accordion)
+    struct Demo: View {
+        @State var picked = true
+        var body: some View {
+            let features: [FareFeature] = [
+                FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
+                FareFeature("Carry-on", systemImage: "suitcase.rolling", detail: "55×40×23 cm"),
+                FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
+            ]
+            let radioCard = FareFamilyCard("Super Eco", price: 1_871.99)
+                .accent(.success).features(features).selection($picked)
+            let ctaCard = FareFamilyCard("Comfort Flex", price: 3_116.99)
+                .accent(.purple).features(features).onSelect { }
+            PreviewMatrix("FareFamilyCardStyle") {
+                PreviewCase("Stacked (default) · radio") { radioCard }
+                PreviewCase("Stacked · CTA") { ctaCard }
+                PreviewCase("Column · radio") { radioCard.fareFamilyCardStyle(.column).frame(width: 170) }
+                PreviewCase("Column · CTA") { ctaCard.fareFamilyCardStyle(.column).frame(width: 170) }
+                PreviewCase("Row · radio") { radioCard.fareFamilyCardStyle(.row) }
+                PreviewCase("Row · CTA") { ctaCard.fareFamilyCardStyle(.row) }
+                PreviewCase("Accordion · collapsed") { radioCard.fareFamilyCardStyle(.accordion) }
+                PreviewCase("Accordion · expanded") {
+                    ctaCard.expanded(.constant(true)).fareFamilyCardStyle(.accordion)
+                }
+                PreviewCase("Custom (in-preview)") { ctaCard.fareFamilyCardStyle(PillFareFamilyCardStyle()) }
+            }
         }
-        PreviewCase("Custom (in-preview)") { ctaCard.fareFamilyCardStyle(PillFareFamilyCardStyle()) }
     }
+    return Demo()
 }

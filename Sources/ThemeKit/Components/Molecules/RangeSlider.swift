@@ -374,40 +374,45 @@ public struct RangeSlider: View {
 }
 
 #Preview {
-    @Previewable @State var lo: Double = 200
-    @Previewable @State var hi: Double = 800
-    @Previewable @State var vLo: Double = 2
-    @Previewable @State var vHi: Double = 6
-    // Tap-to-set: tapping anywhere on a track moves the nearest thumb.
-    PreviewMatrix("RangeSlider") {
-        PreviewCase("Marks + value labels") {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
-                .step(50)
-                .marks([0, 250, 500, 750, 1000])
-                .valueLabel { "\(Int($0)) $" }
-        }
-        PreviewCase("Success accent") {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
-                .step(50)
-                .accent(.success)
-                .valueLabel { "$\(Int($0))" }   // currency-style readout
-        }
-        PreviewCase("Linked inputs") {
-            RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
-                .step(50)
-                .inputs()
-        }
-        PreviewCase("Disabled") {
-            RangeSlider(lowerValue: .constant(200), upperValue: .constant(800), in: 0...1000)
-                .valueLabel { "\(Int($0))" }
-                .disabled(true)
-        }
-        PreviewCase("Vertical") {
-            RangeSlider(lowerValue: $vLo, upperValue: $vHi, in: 0...8)
-                .axis(.vertical, height: 140)
-                .valueLabel { "\(Int($0))" }
+    struct Demo: View {
+        @State var lo: Double = 200
+        @State var hi: Double = 800
+        @State var vLo: Double = 2
+        @State var vHi: Double = 6
+        var body: some View {
+            // Tap-to-set: tapping anywhere on a track moves the nearest thumb.
+            PreviewMatrix("RangeSlider") {
+                PreviewCase("Marks + value labels") {
+                    RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                        .step(50)
+                        .marks([0, 250, 500, 750, 1000])
+                        .valueLabel { "\(Int($0)) $" }
+                }
+                PreviewCase("Success accent") {
+                    RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                        .step(50)
+                        .accent(.success)
+                        .valueLabel { "$\(Int($0))" }   // currency-style readout
+                }
+                PreviewCase("Linked inputs") {
+                    RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                        .step(50)
+                        .inputs()
+                }
+                PreviewCase("Disabled") {
+                    RangeSlider(lowerValue: .constant(200), upperValue: .constant(800), in: 0...1000)
+                        .valueLabel { "\(Int($0))" }
+                        .disabled(true)
+                }
+                PreviewCase("Vertical") {
+                    RangeSlider(lowerValue: $vLo, upperValue: $vHi, in: 0...8)
+                        .axis(.vertical, height: 140)
+                        .valueLabel { "\(Int($0))" }
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("RTL") {

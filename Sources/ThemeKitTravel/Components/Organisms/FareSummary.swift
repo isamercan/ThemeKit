@@ -130,41 +130,46 @@ public extension FareSummary {
 }
 
 #Preview {
-    @Previewable @State var expanded = true
-    ScrollView {
-        VStack(spacing: 28) {
-            FareSummary([
-                .item("Base fare", 1_100),
-                .item("Taxes & fees", 199, info: "Airport tax + carrier surcharge"),
-                .discount("Member discount", 100),
-                .total("Total", 1_199),
-            ])
-            .onInfo { _ in }
-            // Header slot + EUR override + smaller, standard-emphasis total, no divider.
-            FareSummary([
-                .item("Base fare", 480),
-                .item("Seat selection", 24),
-                .total("Total", 504),
-            ])
-            .header { Text("Price details").textStyle(.labelBase700) }
-            .currency("EUR")
-            .totalSize(.medium).totalEmphasis(.standard)
-            .showsDivider(false)
-            // Uncontrolled expandable — starts collapsed on the total row.
-            FareSummary([
-                .item("Base fare", 1_100),
-                .item("Taxes & fees", 199),
-                .total("Total", 1_299),
-            ])
-            .expandable()
-            // Controlled expandable, initially open.
-            FareSummary([
-                .item("Base fare", 2_050),
-                .discount("Promo", 150),
-                .total("Total", 1_900),
-            ])
-            .expandable($expanded)
+    struct Demo: View {
+        @State var expanded = true
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 28) {
+                    FareSummary([
+                        .item("Base fare", 1_100),
+                        .item("Taxes & fees", 199, info: "Airport tax + carrier surcharge"),
+                        .discount("Member discount", 100),
+                        .total("Total", 1_199),
+                    ])
+                    .onInfo { _ in }
+                    // Header slot + EUR override + smaller, standard-emphasis total, no divider.
+                    FareSummary([
+                        .item("Base fare", 480),
+                        .item("Seat selection", 24),
+                        .total("Total", 504),
+                    ])
+                    .header { Text("Price details").textStyle(.labelBase700) }
+                    .currency("EUR")
+                    .totalSize(.medium).totalEmphasis(.standard)
+                    .showsDivider(false)
+                    // Uncontrolled expandable — starts collapsed on the total row.
+                    FareSummary([
+                        .item("Base fare", 1_100),
+                        .item("Taxes & fees", 199),
+                        .total("Total", 1_299),
+                    ])
+                    .expandable()
+                    // Controlled expandable, initially open.
+                    FareSummary([
+                        .item("Base fare", 2_050),
+                        .discount("Promo", 150),
+                        .total("Total", 1_900),
+                    ])
+                    .expandable($expanded)
+                }
+                .padding()
+            }
         }
-        .padding()
     }
+    return Demo()
 }

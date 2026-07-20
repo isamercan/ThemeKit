@@ -312,36 +312,41 @@ public extension View {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    @Previewable @State var top = true
-    @Previewable @State var trailing = true
-    @Previewable @State var leading = true
-    @Previewable @State var bottom = true
-    PreviewMatrix("Tooltip") {
-        PreviewCase("Top (default)") {
-            Icon(systemName: "info.circle").size(.md).colorOverride(theme.foreground(.fgHero))
-                .tooltip("Helpful hint", isPresented: $top)
-                .padding(.top, 56).padding(.bottom, 8)
-                .frame(maxWidth: .infinity)
-        }
-        PreviewCase("Trailing · info") {
-            Icon(systemName: "questionmark.circle").size(.md).colorOverride(theme.foreground(.fgHero))
-                .tooltip("On the trailing side", isPresented: $trailing, edge: .trailing, style: .info)
-                .padding(.vertical, 16)
-        }
-        PreviewCase("Leading · warning · wraps") {
-            Icon(systemName: "exclamationmark.triangle").size(.md).colorOverride(theme.foreground(.fgHero))
-                .tooltip("A longer hint that wraps onto several lines", isPresented: $leading, edge: .leading, style: .warning, maxWidth: 140)
-                .padding(.vertical, 24)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-        }
-        PreviewCase("Bottom · primary tint") {
-            Icon(systemName: "star.circle").size(.md).colorOverride(theme.foreground(.fgHero))
-                .tooltip("Primary-tinted tooltip", isPresented: $bottom, edge: .bottom, color: .primary)
-                .padding(.bottom, 56).padding(.top, 8)
-                .frame(maxWidth: .infinity)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        @State var top = true
+        @State var trailing = true
+        @State var leading = true
+        @State var bottom = true
+        var body: some View {
+            PreviewMatrix("Tooltip") {
+                PreviewCase("Top (default)") {
+                    Icon(systemName: "info.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("Helpful hint", isPresented: $top)
+                        .padding(.top, 56).padding(.bottom, 8)
+                        .frame(maxWidth: .infinity)
+                }
+                PreviewCase("Trailing · info") {
+                    Icon(systemName: "questionmark.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("On the trailing side", isPresented: $trailing, edge: .trailing, style: .info)
+                        .padding(.vertical, 16)
+                }
+                PreviewCase("Leading · warning · wraps") {
+                    Icon(systemName: "exclamationmark.triangle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("A longer hint that wraps onto several lines", isPresented: $leading, edge: .leading, style: .warning, maxWidth: 140)
+                        .padding(.vertical, 24)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                PreviewCase("Bottom · primary tint") {
+                    Icon(systemName: "star.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        .tooltip("Primary-tinted tooltip", isPresented: $bottom, edge: .bottom, color: .primary)
+                        .padding(.bottom, 56).padding(.top, 8)
+                        .frame(maxWidth: .infinity)
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Rich content slot") {

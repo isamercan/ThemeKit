@@ -159,73 +159,85 @@ public extension View {
 // MARK: - Previews
 
 #Preview("Group loading toggle") {
-    @Previewable @State var isLoading = true
-    @Previewable @Environment(\.theme) var theme
+    struct Demo: View {
+        @State var isLoading = true
+        @Environment(\.theme) var theme
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
+                Toggle("Loading", isOn: $isLoading)
 
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
-        Toggle("Loading", isOn: $isLoading)
-
-        SkeletonGroup {
-            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                Text("Weekend in Lisbon").textStyle(.headingSm)
-                    .foregroundStyle(theme.text(.textPrimary))
-                    .skeleton()
-                Text("Three days of tiles, trams and pastel facades by the river.")
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-                    .skeleton()
-                Text("Updated today").textStyle(.labelSm600)
-                    .foregroundStyle(theme.text(.textTertiary))
-                    .skeleton(shape: .capsule)
+                SkeletonGroup {
+                    VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                        Text("Weekend in Lisbon").textStyle(.headingSm)
+                            .foregroundStyle(theme.text(.textPrimary))
+                            .skeleton()
+                        Text("Three days of tiles, trams and pastel facades by the river.")
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                            .skeleton()
+                        Text("Updated today").textStyle(.labelSm600)
+                            .foregroundStyle(theme.text(.textTertiary))
+                            .skeleton(shape: .capsule)
+                    }
+                }
+                .loading(isLoading)
             }
+            .padding(Theme.SpacingKey.md.value)
         }
-        .loading(isLoading)
     }
-    .padding(Theme.SpacingKey.md.value)
+    return Demo()
 }
 
 #Preview("Skeleton-only card") {
-    @Previewable @State var isLoading = true
+    struct Demo: View {
+        @State var isLoading = true
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
+                Toggle("Loading", isOn: $isLoading)
 
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
-        Toggle("Loading", isOn: $isLoading)
-
-        // Pure placeholder: the HStack/VStack exist only for layout, so the
-        // whole group collapses to nothing once loading ends.
-        SkeletonGroup {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                Skeleton(.circle).size(width: 48, height: 48)
-                VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-                    Skeleton(.capsule).size(width: 160, height: 12)
-                    Skeleton(.capsule).size(width: 100, height: 12)
+                // Pure placeholder: the HStack/VStack exist only for layout, so the
+                // whole group collapses to nothing once loading ends.
+                SkeletonGroup {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        Skeleton(.circle).size(width: 48, height: 48)
+                        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                            Skeleton(.capsule).size(width: 160, height: 12)
+                            Skeleton(.capsule).size(width: 100, height: 12)
+                        }
+                    }
                 }
-            }
-        }
-        .skeletonOnly()
-        .loading(isLoading)
+                .skeletonOnly()
+                .loading(isLoading)
 
-        Text("Content below moves up when the placeholder collapses.")
-            .textStyle(.bodySm400)
+                Text("Content below moves up when the placeholder collapses.")
+                    .textStyle(.bodySm400)
+            }
+            .padding(Theme.SpacingKey.md.value)
+        }
     }
-    .padding(Theme.SpacingKey.md.value)
+    return Demo()
 }
 
 #Preview("Per-item explicit override") {
-    @Previewable @Environment(\.theme) var theme
-
-    // The group has finished loading, but one item pins itself with an
-    // explicit flag — explicit `isLoading` always beats the group.
-    SkeletonGroup {
-        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-            Text("Follows the group (loaded)").textStyle(.bodyBase400)
-                .foregroundStyle(theme.text(.textPrimary))
-                .skeleton()
-            Text("Explicit .skeleton(true) — still shimmering").textStyle(.bodyBase400)
-                .skeleton(true)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // The group has finished loading, but one item pins itself with an
+            // explicit flag — explicit `isLoading` always beats the group.
+            SkeletonGroup {
+                VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                    Text("Follows the group (loaded)").textStyle(.bodyBase400)
+                        .foregroundStyle(theme.text(.textPrimary))
+                        .skeleton()
+                    Text("Explicit .skeleton(true) — still shimmering").textStyle(.bodyBase400)
+                        .skeleton(true)
+                }
+            }
+            .loading(false)
+            .padding(Theme.SpacingKey.md.value)
         }
     }
-    .loading(false)
-    .padding(Theme.SpacingKey.md.value)
+    return Demo()
 }
 
 #Preview("Dark theme") {

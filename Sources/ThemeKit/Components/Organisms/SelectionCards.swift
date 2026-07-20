@@ -128,25 +128,30 @@ public extension CheckboxCard {
 }
 
 #Preview {
-    @Previewable @State var radio = "std"
-    @Previewable @State var bag = true
-    PreviewMatrix("SelectionCards") {
-        PreviewCase("RadioCard group · selected + unselected") {
-            VStack(spacing: 12) {
-                RadioCard("Standard", isSelected: radio == "std") { radio = "std" }
-                    .description("Free delivery in 3–5 days")
-                RadioCard("Express", isSelected: radio == "exp") { radio = "exp" }
-                    .description("Next-day delivery")
+    struct Demo: View {
+        @State var radio = "std"
+        @State var bag = true
+        var body: some View {
+            PreviewMatrix("SelectionCards") {
+                PreviewCase("RadioCard group · selected + unselected") {
+                    VStack(spacing: 12) {
+                        RadioCard("Standard", isSelected: radio == "std") { radio = "std" }
+                            .description("Free delivery in 3–5 days")
+                        RadioCard("Express", isSelected: radio == "exp") { radio = "exp" }
+                            .description("Next-day delivery")
+                    }
+                }
+                PreviewCase("CheckboxCard · checked") {
+                    CheckboxCard("Add checked bag", isChecked: bag) { bag.toggle() }
+                        .description("+$250")
+                }
+                PreviewCase("Title only (no description)") {
+                    RadioCard("Pay at the hotel", isSelected: false) { }
+                }
             }
         }
-        PreviewCase("CheckboxCard · checked") {
-            CheckboxCard("Add checked bag", isChecked: bag) { bag.toggle() }
-                .description("+$250")
-        }
-        PreviewCase("Title only (no description)") {
-            RadioCard("Pay at the hotel", isSelected: false) { }
-        }
     }
+    return Demo()
 }
 
 #Preview("Selected + outlined style") {

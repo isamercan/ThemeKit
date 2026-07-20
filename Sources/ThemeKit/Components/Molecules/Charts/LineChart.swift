@@ -137,13 +137,18 @@ public extension LineChart {
 }
 
 #Preview {
-    @Previewable @State var selected: String?
-    let series = [
-        ChartSeries("2025", [ChartPoint("Jan", 12), ChartPoint("Feb", 18), ChartPoint("Mar", 15), ChartPoint("Apr", 22), ChartPoint("May", 19)]),
-        ChartSeries("2026", [ChartPoint("Jan", 20), ChartPoint("Feb", 16), ChartPoint("Mar", 24), ChartPoint("Apr", 21), ChartPoint("May", 28)]),
-    ]
-    PreviewMatrix("LineChart") {
-        PreviewCase("Two series, curved + points") { LineChart(series, selection: $selected).curved().showsPoints() }
-        PreviewCase("Single, compact, no grid") { LineChart([series[0]]).height(.compact).showsGrid(false) }
+    struct Demo: View {
+        @State var selected: String?
+        var body: some View {
+            let series = [
+                ChartSeries("2025", [ChartPoint("Jan", 12), ChartPoint("Feb", 18), ChartPoint("Mar", 15), ChartPoint("Apr", 22), ChartPoint("May", 19)]),
+                ChartSeries("2026", [ChartPoint("Jan", 20), ChartPoint("Feb", 16), ChartPoint("Mar", 24), ChartPoint("Apr", 21), ChartPoint("May", 28)]),
+            ]
+            PreviewMatrix("LineChart") {
+                PreviewCase("Two series, curved + points") { LineChart(series, selection: $selected).curved().showsPoints() }
+                PreviewCase("Single, compact, no grid") { LineChart([series[0]]).height(.compact).showsGrid(false) }
+            }
+        }
     }
+    return Demo()
 }

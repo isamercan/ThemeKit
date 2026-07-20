@@ -214,50 +214,55 @@ public extension FilterBar {
 }
 
 #Preview {
-    @Previewable @State var sel: Set<String> = ["8"]
-    VStack(spacing: 20) {
-        FilterBar([
-            QuickFilter("8+ rating", id: "8"), QuickFilter("Ultra all-inclusive"), QuickFilter("All-inclusive"),
-            QuickFilter("Seafront"), QuickFilter("Aquapark"), QuickFilter("Free cancellation"),
-        ], selection: $sel)
-        .onFilter { }.onSort { }
-        FilterBar([QuickFilter("Cheapest"), QuickFilter("Fastest"), QuickFilter("Direct")], selection: $sel)
-            .size(.small).accent(.turquoise).onFilter { }
-        // Figma "Filter Section" look — outlined pills + circle buttons.
-        FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
-                   QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
-            .chipStyle(.outlined).leadingShape(.circle).size(.small)
-            .onFilter { }.onSort { }
-        // Outlined honors the accent — turquoise soft fill + turquoise border.
-        FilterBar([QuickFilter("Beachfront", id: "8"), QuickFilter("Pool"),
-                   QuickFilter("Spa")], selection: $sel)
-            .accent(.turquoise).chipStyle(.outlined).size(.small)
-        // Unselected chips on a tinted surface.
-        FilterBar([QuickFilter("Breakfast", id: "8"), QuickFilter("Pet friendly"),
-                   QuickFilter("Parking")], selection: $sel)
-            .chipSurface(.bgSecondaryLight).size(.small)
-        // Icons + counts, single-select, clear-all ghost chip, overflow fade.
-        FilterBar([
-            QuickFilter("Beach", id: "8", systemImage: "beach.umbrella", count: 24),
-            QuickFilter("Pool", systemImage: "figure.pool.swim", count: 9),
-            QuickFilter("Spa", systemImage: "sparkles", count: 3),
-            QuickFilter("Gym", systemImage: "dumbbell", count: 12),
-        ], selection: $sel)
-            .selectionMode(.single)
-            .onClearAll { }
-            .overflowFade()
-            .size(.small)
-        // Ghost chips + a trailing pinned slot.
-        FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
-                   QuickFilter("Direct")], selection: $sel)
-            .chipStyle(.ghost).size(.small)
-            .trailing {
-                Text("128 stays").textStyle(.labelSm600)
-                    .padding(.horizontal, Theme.SpacingKey.sm.value)
+    struct Demo: View {
+        @State var sel: Set<String> = ["8"]
+        var body: some View {
+            VStack(spacing: 20) {
+                FilterBar([
+                    QuickFilter("8+ rating", id: "8"), QuickFilter("Ultra all-inclusive"), QuickFilter("All-inclusive"),
+                    QuickFilter("Seafront"), QuickFilter("Aquapark"), QuickFilter("Free cancellation"),
+                ], selection: $sel)
+                .onFilter { }.onSort { }
+                FilterBar([QuickFilter("Cheapest"), QuickFilter("Fastest"), QuickFilter("Direct")], selection: $sel)
+                    .size(.small).accent(.turquoise).onFilter { }
+                // Figma "Filter Section" look — outlined pills + circle buttons.
+                FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
+                           QuickFilter("Fast & Cheap"), QuickFilter("Direct")], selection: $sel)
+                    .chipStyle(.outlined).leadingShape(.circle).size(.small)
+                    .onFilter { }.onSort { }
+                // Outlined honors the accent — turquoise soft fill + turquoise border.
+                FilterBar([QuickFilter("Beachfront", id: "8"), QuickFilter("Pool"),
+                           QuickFilter("Spa")], selection: $sel)
+                    .accent(.turquoise).chipStyle(.outlined).size(.small)
+                // Unselected chips on a tinted surface.
+                FilterBar([QuickFilter("Breakfast", id: "8"), QuickFilter("Pet friendly"),
+                           QuickFilter("Parking")], selection: $sel)
+                    .chipSurface(.bgSecondaryLight).size(.small)
+                // Icons + counts, single-select, clear-all ghost chip, overflow fade.
+                FilterBar([
+                    QuickFilter("Beach", id: "8", systemImage: "beach.umbrella", count: 24),
+                    QuickFilter("Pool", systemImage: "figure.pool.swim", count: 9),
+                    QuickFilter("Spa", systemImage: "sparkles", count: 3),
+                    QuickFilter("Gym", systemImage: "dumbbell", count: 12),
+                ], selection: $sel)
+                    .selectionMode(.single)
+                    .onClearAll { }
+                    .overflowFade()
+                    .size(.small)
+                // Ghost chips + a trailing pinned slot.
+                FilterBar([QuickFilter("Cheapest", id: "8"), QuickFilter("Fastest"),
+                           QuickFilter("Direct")], selection: $sel)
+                    .chipStyle(.ghost).size(.small)
+                    .trailing {
+                        Text("128 stays").textStyle(.labelSm600)
+                            .padding(.horizontal, Theme.SpacingKey.sm.value)
+                    }
+                // Token-fed spacing overload.
+                FilterBar([QuickFilter("Nonstop", id: "8"), QuickFilter("Refundable")], selection: $sel)
+                    .spacing(Theme.SpacingKey.md).size(.small).onFilter { }
             }
-        // Token-fed spacing overload.
-        FilterBar([QuickFilter("Nonstop", id: "8"), QuickFilter("Refundable")], selection: $sel)
-            .spacing(Theme.SpacingKey.md).size(.small).onFilter { }
+            .padding(.vertical)
+        }
     }
-    .padding(.vertical)
+    return Demo()
 }

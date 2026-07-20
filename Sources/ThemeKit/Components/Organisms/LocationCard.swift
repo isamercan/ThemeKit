@@ -261,20 +261,25 @@ public extension LocationCard {
 }
 
 #Preview("Outlined style + media slot") {
-    @Previewable @Environment(\.theme) var theme
-    LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428)
-        .media {
-            LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            LocationCard(title: "Marina Bay Hotel", latitude: 38.4237, longitude: 27.1428)
+                .media {
+                    LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                }
+                .overlay {
+                    Text("Map preview unavailable").textStyle(.labelSm700)
+                        .foregroundStyle(theme.text(.textSecondaryInverse))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(MediaScrim.solid, in: Capsule())
+                }
+                .subtitle("Kordon Cd. No:12, İzmir")
+                .distance("1.2 km to center")
+                .cardStyle(.outlined)
+                .padding()
         }
-        .overlay {
-            Text("Map preview unavailable").textStyle(.labelSm700)
-                .foregroundStyle(theme.text(.textSecondaryInverse))
-                .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(MediaScrim.solid, in: Capsule())
-        }
-        .subtitle("Kordon Cd. No:12, İzmir")
-        .distance("1.2 km to center")
-        .cardStyle(.outlined)
-        .padding()
+    }
+    return Demo()
 }

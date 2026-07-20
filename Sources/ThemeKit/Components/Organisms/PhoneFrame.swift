@@ -109,43 +109,48 @@ public extension PhoneFrame {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("PhoneFrame") {
-        PreviewCase("Dynamic island (default)") {
-            PhoneFrame {
-                VStack(spacing: 8) {
-                    Spacer()
-                    Text("Hello").textStyle(.headingSm)
-                    Text("Dynamic island")
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(theme.text(.textSecondary))
-                    Spacer()
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("PhoneFrame") {
+                PreviewCase("Dynamic island (default)") {
+                    PhoneFrame {
+                        VStack(spacing: 8) {
+                            Spacer()
+                            Text("Hello").textStyle(.headingSm)
+                            Text("Dynamic island")
+                                .textStyle(.bodySm400)
+                                .foregroundStyle(theme.text(.textSecondary))
+                            Spacer()
+                        }
+                    }
+                    .frame(height: 420)
+                }
+                PreviewCase("Notch · primary bezel") {
+                    PhoneFrame {
+                        VStack {
+                            Spacer()
+                            Text("Notch").textStyle(.labelMd600)
+                            Spacer()
+                        }
+                    }
+                    .notch(.notch)
+                    .bezel(.primary)
+                    .frame(height: 420)
+                }
+                PreviewCase("No cutout") {
+                    PhoneFrame {
+                        VStack {
+                            Spacer()
+                            Text("Clean screen").textStyle(.labelMd600)
+                            Spacer()
+                        }
+                    }
+                    .notch(.none)
+                    .frame(height: 420)
                 }
             }
-            .frame(height: 420)
-        }
-        PreviewCase("Notch · primary bezel") {
-            PhoneFrame {
-                VStack {
-                    Spacer()
-                    Text("Notch").textStyle(.labelMd600)
-                    Spacer()
-                }
-            }
-            .notch(.notch)
-            .bezel(.primary)
-            .frame(height: 420)
-        }
-        PreviewCase("No cutout") {
-            PhoneFrame {
-                VStack {
-                    Spacer()
-                    Text("Clean screen").textStyle(.labelMd600)
-                    Spacer()
-                }
-            }
-            .notch(.none)
-            .frame(height: 420)
         }
     }
+    return Demo()
 }

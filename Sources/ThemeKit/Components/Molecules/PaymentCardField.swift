@@ -282,30 +282,35 @@ public extension PaymentCardField {
 }
 
 #Preview {
-    // Interactive group — the matrix wraps representative static states (one frame per cell).
-    @Previewable @State var num = ""
-    @Previewable @State var exp = ""
-    @Previewable @State var cvv = ""
-    @Previewable @State var name = ""
-    PreviewMatrix("PaymentCardField") {
-        PreviewCase("With holder") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).holder($name) }
-        // Swapped chrome: every field row picks up the underlined style.
-        PreviewCase("Underlined") {
-            PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
-                .fieldStyle(.underlined)
-        }
-        // Declarative validation over the card number (E3).
-        PreviewCase("Validation") {
-            PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
-                .validate([.required(), .minLength(19, "Enter the full card number")])
-        }
-        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-        PreviewCase("Small") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).size(.small) }
-        // Read-only: values + normal chrome (brand detected), editing suppressed (E1).
-        PreviewCase("Read-only") {
-            PaymentCardField(number: .constant("4111 1111 1111 1111"),
-                             expiry: .constant("12/29"), cvv: .constant("123"))
-                .readOnly()
+    struct Demo: View {
+        @State var num = ""
+        @State var exp = ""
+        @State var cvv = ""
+        @State var name = ""
+        var body: some View {
+            // Interactive group — the matrix wraps representative static states (one frame per cell).
+            PreviewMatrix("PaymentCardField") {
+                PreviewCase("With holder") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).holder($name) }
+                // Swapped chrome: every field row picks up the underlined style.
+                PreviewCase("Underlined") {
+                    PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+                        .fieldStyle(.underlined)
+                }
+                // Declarative validation over the card number (E3).
+                PreviewCase("Validation") {
+                    PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+                        .validate([.required(), .minLength(19, "Enter the full card number")])
+                }
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                PreviewCase("Small") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).size(.small) }
+                // Read-only: values + normal chrome (brand detected), editing suppressed (E1).
+                PreviewCase("Read-only") {
+                    PaymentCardField(number: .constant("4111 1111 1111 1111"),
+                                     expiry: .constant("12/29"), cvv: .constant("123"))
+                        .readOnly()
+                }
+            }
         }
     }
+    return Demo()
 }

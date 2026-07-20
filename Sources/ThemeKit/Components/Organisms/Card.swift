@@ -365,206 +365,211 @@ public extension View {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Card") {
-        PreviewCase("Basic") {
-            Card {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Card title").textStyle(.headingSm)
-                    Text("Supporting body text inside a card surface.").textStyle(.bodyBase400)
-                        .foregroundStyle(theme.text(.textSecondary))
-                }
-            }
-        }
-        PreviewCase("Elevated") {
-            Card {
-                Text("Elevated card").textStyle(.labelMd600)
-            }
-            .elevation(.elevated)
-        }
-        // Footer slot: bottom-aligned actions below a divider.
-        PreviewCase("Footer slot") {
-            Card("Living room sofa") {
-                Text("Perfect for modern tropical spaces.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .subtitle("Collection 2026")
-            .footer {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    ThemeButton("Buy now") {}.size(.small)
-                    ThemeButton("Add to cart") {}.variant(.ghost).size(.small)
-                }
-            }
-        }
-        // Custom header slot: icon + badge replace the string header.
-        PreviewCase("Custom header slot") {
-            Card {
-                Text("Custom header replaces the title/subtitle row.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .header {
-                HStack(spacing: Theme.SpacingKey.sm.value) {
-                    Icon(systemName: "sparkles")
-                    Text("Featured").textStyle(.labelLg600)
-                        .foregroundStyle(theme.text(.textPrimary))
-                    Spacer(minLength: 0)
-                    Badge("New").badgeStyle(.success)
-                }
-            }
-        }
-        // Surface-fill variant (HeroUI `secondary`).
-        PreviewCase("Secondary surface") {
-            Card("Secondary surface") {
-                Text("Card filled with the secondary background token.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .surface(.bgSecondaryLight)
-        }
-        // Theme-driven padding: a CSS theme minting `--card-padding` /
-        // `--card-header-padding`, scoped to this subtree via `.theme(_:)`.
-        PreviewCase("CSS-padded theme") {
-            let cssTheme: Theme = {
-                let t = Theme()
-                t.setTheme(css: """
-                    :root {
-                      --accent: #056bfd;
-                      --card-padding: 24px;
-                      --card-header-padding: 8px;
-                    }
-                    """)
-                return t
-            }()
-            Card("CSS-padded") {
-                Text("24pt body from `--card-padding`; 8pt header from `--card-header-padding`.")
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .theme(cssTheme)
-        }
-        // Per-slot instance overrides: header/footer tokens beat the general padding.
-        PreviewCase("Slot padding overrides") {
-            Card("Slot overrides") {
-                Text("Header at `.base` (24), footer at `.sm` (8), body default.")
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .headerPadding(.base)
-            .footerPadding(.sm)
-            .footer {
-                Text("Tight footer").textStyle(.labelSm600)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-        }
-        // Token content padding (G5): the SpacingKey overload.
-        PreviewCase("Compact padding") {
-            Card("Compact padding") {
-                Text("Inner padding from the `.sm` spacing token.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .contentPadding(.sm)
-        }
-        PreviewCase("Loading skeleton") {
-            Card("Loading") {
-                Text("Replaced by the skeleton while loading.").textStyle(.bodyBase400)
-            }
-            .loading()
-        }
-        // Style-protocol case — the outlined `CardStyle` from the environment.
-        PreviewCase("Outlined style") {
-            Card("Outlined") {
-                Text("Chrome drawn by the outlined card style.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .cardStyle(.outlined)
-        }
-        // Flat variant (HeroUI `flat`) — surface fill, no border, no shadow.
-        PreviewCase("Flat style") {
-            Card("Flat") {
-                Text("Surface fill with no border or shadow.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .surface(.bgSecondaryLight)   // Card modifier — before the style env modifier
-            .cardStyle(.flat)
-        }
-        // Size axis — a tighter corner-radius role.
-        PreviewCase("Compact radius") {
-            Card("Field radius") {
-                Text("Corner from the `.field` radius role (8).").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .radius(.field)
-        }
-        // Selection state — hero border.
-        PreviewCase("Selected") {
-            Card("Selected") {
-                Text("Promoted to the hero border while selected.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .selected()
-        }
-        // Overline eyebrow above the title.
-        PreviewCase("Overline") {
-            Card("Home Robot") {
-                Text("An eyebrow label sits above the title.").textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .overline("New")
-            .subtitle("Available soon")
-        }
-        // With image (HeroUI): full-bleed cover on top + a meta footer, no body.
-        PreviewCase("With image (cover)") {
-            Card { EmptyView() }
-                .cover {
-                    LinearGradient(colors: [.pink.opacity(0.55), .orange.opacity(0.55)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
-                        .frame(height: 130)
-                        .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white))
-                }
-                .footer {
-                    HStack {
-                        Text("Fruits").textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
-                        Spacer(minLength: 0)
-                        Text("18 pictures").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
-                    }
-                }
-                .frame(width: 200)
-        }
-        // Cover overlay (HeroUI): media fills the card, header + footer float over it.
-        PreviewCase("Cover overlay") {
-            Card { EmptyView() }
-                .cover(.fill) {
-                    LinearGradient(colors: [.blue.opacity(0.65), .black.opacity(0.55)],
-                                   startPoint: .top, endPoint: .bottom)
-                        .frame(width: 220, height: 260)
-                }
-                .header {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("NEO").textStyle(.labelSm600).foregroundStyle(.white.opacity(0.85))
-                        Text("Home Robot").textStyle(.labelLg600).foregroundStyle(.white)
-                    }
-                }
-                .footer {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Available soon").textStyle(.labelMd600).foregroundStyle(.white)
-                            Text("Get notified").textStyle(.bodySm400).foregroundStyle(.white.opacity(0.85))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Card") {
+                PreviewCase("Basic") {
+                    Card {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Card title").textStyle(.headingSm)
+                            Text("Supporting body text inside a card surface.").textStyle(.bodyBase400)
+                                .foregroundStyle(theme.text(.textSecondary))
                         }
-                        Spacer(minLength: 0)
-                        ThemeButton("Notify me") {}.size(.small)
                     }
                 }
-        }
-        // Card as a form container (HeroUI "with form"): custom content = fields.
-        PreviewCase("With form") {
-            Card("Log in") {
-                VStack(spacing: Theme.SpacingKey.sm.value) {
-                    TextInput("Email", text: .constant(""))
-                    TextInput("Password", text: .constant(""))
-                    ThemeButton("Sign in") {}.fullWidth()
+                PreviewCase("Elevated") {
+                    Card {
+                        Text("Elevated card").textStyle(.labelMd600)
+                    }
+                    .elevation(.elevated)
+                }
+                // Footer slot: bottom-aligned actions below a divider.
+                PreviewCase("Footer slot") {
+                    Card("Living room sofa") {
+                        Text("Perfect for modern tropical spaces.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .subtitle("Collection 2026")
+                    .footer {
+                        HStack(spacing: Theme.SpacingKey.sm.value) {
+                            ThemeButton("Buy now") {}.size(.small)
+                            ThemeButton("Add to cart") {}.variant(.ghost).size(.small)
+                        }
+                    }
+                }
+                // Custom header slot: icon + badge replace the string header.
+                PreviewCase("Custom header slot") {
+                    Card {
+                        Text("Custom header replaces the title/subtitle row.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .header {
+                        HStack(spacing: Theme.SpacingKey.sm.value) {
+                            Icon(systemName: "sparkles")
+                            Text("Featured").textStyle(.labelLg600)
+                                .foregroundStyle(theme.text(.textPrimary))
+                            Spacer(minLength: 0)
+                            Badge("New").badgeStyle(.success)
+                        }
+                    }
+                }
+                // Surface-fill variant (HeroUI `secondary`).
+                PreviewCase("Secondary surface") {
+                    Card("Secondary surface") {
+                        Text("Card filled with the secondary background token.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .surface(.bgSecondaryLight)
+                }
+                // Theme-driven padding: a CSS theme minting `--card-padding` /
+                // `--card-header-padding`, scoped to this subtree via `.theme(_:)`.
+                PreviewCase("CSS-padded theme") {
+                    let cssTheme: Theme = {
+                        let t = Theme()
+                        t.setTheme(css: """
+                            :root {
+                              --accent: #056bfd;
+                              --card-padding: 24px;
+                              --card-header-padding: 8px;
+                            }
+                            """)
+                        return t
+                    }()
+                    Card("CSS-padded") {
+                        Text("24pt body from `--card-padding`; 8pt header from `--card-header-padding`.")
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .theme(cssTheme)
+                }
+                // Per-slot instance overrides: header/footer tokens beat the general padding.
+                PreviewCase("Slot padding overrides") {
+                    Card("Slot overrides") {
+                        Text("Header at `.base` (24), footer at `.sm` (8), body default.")
+                            .textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .headerPadding(.base)
+                    .footerPadding(.sm)
+                    .footer {
+                        Text("Tight footer").textStyle(.labelSm600)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                }
+                // Token content padding (G5): the SpacingKey overload.
+                PreviewCase("Compact padding") {
+                    Card("Compact padding") {
+                        Text("Inner padding from the `.sm` spacing token.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .contentPadding(.sm)
+                }
+                PreviewCase("Loading skeleton") {
+                    Card("Loading") {
+                        Text("Replaced by the skeleton while loading.").textStyle(.bodyBase400)
+                    }
+                    .loading()
+                }
+                // Style-protocol case — the outlined `CardStyle` from the environment.
+                PreviewCase("Outlined style") {
+                    Card("Outlined") {
+                        Text("Chrome drawn by the outlined card style.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .cardStyle(.outlined)
+                }
+                // Flat variant (HeroUI `flat`) — surface fill, no border, no shadow.
+                PreviewCase("Flat style") {
+                    Card("Flat") {
+                        Text("Surface fill with no border or shadow.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .surface(.bgSecondaryLight)   // Card modifier — before the style env modifier
+                    .cardStyle(.flat)
+                }
+                // Size axis — a tighter corner-radius role.
+                PreviewCase("Compact radius") {
+                    Card("Field radius") {
+                        Text("Corner from the `.field` radius role (8).").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .radius(.field)
+                }
+                // Selection state — hero border.
+                PreviewCase("Selected") {
+                    Card("Selected") {
+                        Text("Promoted to the hero border while selected.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .selected()
+                }
+                // Overline eyebrow above the title.
+                PreviewCase("Overline") {
+                    Card("Home Robot") {
+                        Text("An eyebrow label sits above the title.").textStyle(.bodyBase400)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .overline("New")
+                    .subtitle("Available soon")
+                }
+                // With image (HeroUI): full-bleed cover on top + a meta footer, no body.
+                PreviewCase("With image (cover)") {
+                    Card { EmptyView() }
+                        .cover {
+                            LinearGradient(colors: [.pink.opacity(0.55), .orange.opacity(0.55)],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                                .frame(height: 130)
+                                .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white))
+                        }
+                        .footer {
+                            HStack {
+                                Text("Fruits").textStyle(.labelMd600).foregroundStyle(theme.text(.textPrimary))
+                                Spacer(minLength: 0)
+                                Text("18 pictures").textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                            }
+                        }
+                        .frame(width: 200)
+                }
+                // Cover overlay (HeroUI): media fills the card, header + footer float over it.
+                PreviewCase("Cover overlay") {
+                    Card { EmptyView() }
+                        .cover(.fill) {
+                            LinearGradient(colors: [.blue.opacity(0.65), .black.opacity(0.55)],
+                                           startPoint: .top, endPoint: .bottom)
+                                .frame(width: 220, height: 260)
+                        }
+                        .header {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("NEO").textStyle(.labelSm600).foregroundStyle(.white.opacity(0.85))
+                                Text("Home Robot").textStyle(.labelLg600).foregroundStyle(.white)
+                            }
+                        }
+                        .footer {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Available soon").textStyle(.labelMd600).foregroundStyle(.white)
+                                    Text("Get notified").textStyle(.bodySm400).foregroundStyle(.white.opacity(0.85))
+                                }
+                                Spacer(minLength: 0)
+                                ThemeButton("Notify me") {}.size(.small)
+                            }
+                        }
+                }
+                // Card as a form container (HeroUI "with form"): custom content = fields.
+                PreviewCase("With form") {
+                    Card("Log in") {
+                        VStack(spacing: Theme.SpacingKey.sm.value) {
+                            TextInput("Email", text: .constant(""))
+                            TextInput("Password", text: .constant(""))
+                            ThemeButton("Sign in") {}.fullWidth()
+                        }
+                    }
+                    .subtitle("Welcome back")
+                    .frame(width: 260)
                 }
             }
-            .subtitle("Welcome back")
-            .frame(width: 260)
         }
     }
+    return Demo()
 }

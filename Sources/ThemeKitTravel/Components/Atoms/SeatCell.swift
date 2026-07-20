@@ -198,29 +198,34 @@ public struct SeatCell: View {
 }
 
 #Preview {
-    @Previewable @State var picked = false
-    PreviewMatrix("SeatCell") {
-        PreviewCase("Selectable (tap)") { SeatCell(Seat("1A"), isSelected: picked, action: { picked.toggle() }) }
-        PreviewCase("Selected") { SeatCell(Seat("1B"), isSelected: true) }
-        PreviewCase("Business") { SeatCell(Seat("1C", tier: .business)) }
-        PreviewCase("Exit row") { SeatCell(Seat("1D", tier: .exit)) }
-        PreviewCase("Occupied") { SeatCell(Seat("1E", occupied: true)) }
-        PreviewCase("Recommended") { SeatCell(Seat("1F"), isRecommended: true) }
-        PreviewCase("Number display") { SeatCell(Seat("1G"), display: .number) }
-        PreviewCase("Accent selected") { SeatCell(Seat("2A"), isSelected: true, palette: SeatPalette().selected(.accent)) }
-        PreviewCase("Accent occupied") { SeatCell(Seat("2B", occupied: true), palette: SeatPalette().occupied(.warning)) }
-        PreviewCase("Circle shape") { SeatCell(Seat("3A"), shape: .circle) }
-        PreviewCase("Seatback shape") { SeatCell(Seat("3B"), shape: .seatback) }
-        PreviewCase("Seatback selected") { SeatCell(Seat("3C"), isSelected: true, shape: .seatback) }
-        PreviewCase("Ramp sizes") {
-            HStack(spacing: Theme.SpacingKey.sm.value) {
-                SeatCell(Seat("4A"), size: .compact)
-                SeatCell(Seat("4B"), size: .regular)
-                SeatCell(Seat("4C"), size: .large)
-                SeatCell(Seat("4D"), size: .xl)
+    struct Demo: View {
+        @State var picked = false
+        var body: some View {
+            PreviewMatrix("SeatCell") {
+                PreviewCase("Selectable (tap)") { SeatCell(Seat("1A"), isSelected: picked, action: { picked.toggle() }) }
+                PreviewCase("Selected") { SeatCell(Seat("1B"), isSelected: true) }
+                PreviewCase("Business") { SeatCell(Seat("1C", tier: .business)) }
+                PreviewCase("Exit row") { SeatCell(Seat("1D", tier: .exit)) }
+                PreviewCase("Occupied") { SeatCell(Seat("1E", occupied: true)) }
+                PreviewCase("Recommended") { SeatCell(Seat("1F"), isRecommended: true) }
+                PreviewCase("Number display") { SeatCell(Seat("1G"), display: .number) }
+                PreviewCase("Accent selected") { SeatCell(Seat("2A"), isSelected: true, palette: SeatPalette().selected(.accent)) }
+                PreviewCase("Accent occupied") { SeatCell(Seat("2B", occupied: true), palette: SeatPalette().occupied(.warning)) }
+                PreviewCase("Circle shape") { SeatCell(Seat("3A"), shape: .circle) }
+                PreviewCase("Seatback shape") { SeatCell(Seat("3B"), shape: .seatback) }
+                PreviewCase("Seatback selected") { SeatCell(Seat("3C"), isSelected: true, shape: .seatback) }
+                PreviewCase("Ramp sizes") {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        SeatCell(Seat("4A"), size: .compact)
+                        SeatCell(Seat("4B"), size: .regular)
+                        SeatCell(Seat("4C"), size: .large)
+                        SeatCell(Seat("4D"), size: .xl)
+                    }
+                }
+                PreviewCase("Fill emphasis") { SeatCell(Seat("5A"), isSelected: true, selectionEmphasis: .fill) }
+                PreviewCase("Custom star") { SeatCell(Seat("5B"), isRecommended: true, recommendedSymbol: "sparkles") }
             }
         }
-        PreviewCase("Fill emphasis") { SeatCell(Seat("5A"), isSelected: true, selectionEmphasis: .fill) }
-        PreviewCase("Custom star") { SeatCell(Seat("5B"), isRecommended: true, recommendedSymbol: "sparkles") }
     }
+    return Demo()
 }

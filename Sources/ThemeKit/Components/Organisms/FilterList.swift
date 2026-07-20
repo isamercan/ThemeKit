@@ -130,26 +130,31 @@ public extension FilterList {
 }
 
 #Preview {
-    @Previewable @State var sel: Set<String> = ["Direct"]
-    let options = [
-        FilterOption("Direct", count: 128),
-        FilterOption("1 stop", count: 64),
-        FilterOption("2+ stops", count: 12),
-    ]
+    struct Demo: View {
+        @State var sel: Set<String> = ["Direct"]
+        var body: some View {
+            let options = [
+                FilterOption("Direct", count: 128),
+                FilterOption("1 stop", count: 64),
+                FilterOption("2+ stops", count: 12),
+            ]
 
-    PreviewMatrix("FilterList") {
-        PreviewCase("Bordered · select-all master") {
-            FilterList(options, selection: $sel)
-                .title("Stops").bordered().selectAll("All")
-        }
-        PreviewCase("Plain · no separators, icons") {
-            FilterList([
-                FilterOption("Breakfast", icon: "cup.and.saucer"),
-                FilterOption("Pool", icon: "figure.pool.swim"),
-                FilterOption("Pet friendly", icon: "pawprint"),
-            ], selection: $sel)
-            .title("Amenities")
-            .showsSeparators(false)
+            PreviewMatrix("FilterList") {
+                PreviewCase("Bordered · select-all master") {
+                    FilterList(options, selection: $sel)
+                        .title("Stops").bordered().selectAll("All")
+                }
+                PreviewCase("Plain · no separators, icons") {
+                    FilterList([
+                        FilterOption("Breakfast", icon: "cup.and.saucer"),
+                        FilterOption("Pool", icon: "figure.pool.swim"),
+                        FilterOption("Pet friendly", icon: "pawprint"),
+                    ], selection: $sel)
+                    .title("Amenities")
+                    .showsSeparators(false)
+                }
+            }
         }
     }
+    return Demo()
 }

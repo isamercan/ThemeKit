@@ -263,13 +263,18 @@ public extension Rating {
 }
 
 #Preview {
-    @Previewable @State var v = 3.5
-    PreviewMatrix("Rating") {
-        PreviewCase("Stars") { Rating(value: 4.3).countLabel("(128)") }                  // continuous fill
-        PreviewCase("Number rate") { Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {} }
-        PreviewCase("Rate + sentiment") { Rating(value: 8.4).layout(.rateNumberText).maxValue(10) }
-        PreviewCase("Interactive (half)") { Rating(value: v).allowHalf().onRate { v = $0 } }
-        PreviewCase("Clear on re-tap") { Rating(value: v).allowClear().onRate { v = $0 } }  // re-tap current value → 0
-        PreviewCase("Custom symbol") { Rating(value: 3).symbol("heart") }
+    struct Demo: View {
+        @State var v = 3.5
+        var body: some View {
+            PreviewMatrix("Rating") {
+                PreviewCase("Stars") { Rating(value: 4.3).countLabel("(128)") }                  // continuous fill
+                PreviewCase("Number rate") { Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {} }
+                PreviewCase("Rate + sentiment") { Rating(value: 8.4).layout(.rateNumberText).maxValue(10) }
+                PreviewCase("Interactive (half)") { Rating(value: v).allowHalf().onRate { v = $0 } }
+                PreviewCase("Clear on re-tap") { Rating(value: v).allowClear().onRate { v = $0 } }  // re-tap current value → 0
+                PreviewCase("Custom symbol") { Rating(value: 3).symbol("heart") }
+            }
+        }
     }
+    return Demo()
 }

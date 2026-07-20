@@ -179,33 +179,38 @@ public extension Sidebar {
 }
 
 #Preview {
-    @Previewable @State var tab: String? = "home"
-    let sections: [Sidebar.Section] = [
-        .init(items: [
-            .init(tag: "home", "Home", systemImage: "house"),
-            .init(tag: "search", "Search", systemImage: "magnifyingglass"),
-        ]),
-        .init("Library", items: [
-            .init(tag: "fav", "Favorites", systemImage: "heart", badge: 3),
-            .init(tag: "down", "Downloads", systemImage: "arrow.down.circle"),
-        ]),
-    ]
-    PreviewMatrix("Sidebar") {
-        PreviewCase("Sections · selection + badge") {
-            Sidebar(sections: sections, selection: $tab)
-                .width(260)
-                .frame(height: 360)
-        }
-        PreviewCase("Header + footer slots") {
-            Sidebar(sections: sections, selection: $tab)
-                .header {
-                    Text("ThemeKit").textStyle(.headingSm)
+    struct Demo: View {
+        @State var tab: String? = "home"
+        var body: some View {
+            let sections: [Sidebar.Section] = [
+                .init(items: [
+                    .init(tag: "home", "Home", systemImage: "house"),
+                    .init(tag: "search", "Search", systemImage: "magnifyingglass"),
+                ]),
+                .init("Library", items: [
+                    .init(tag: "fav", "Favorites", systemImage: "heart", badge: 3),
+                    .init(tag: "down", "Downloads", systemImage: "arrow.down.circle"),
+                ]),
+            ]
+            PreviewMatrix("Sidebar") {
+                PreviewCase("Sections · selection + badge") {
+                    Sidebar(sections: sections, selection: $tab)
+                        .width(260)
+                        .frame(height: 360)
                 }
-                .footer {
-                    Text("Settings").textStyle(.labelSm600)
+                PreviewCase("Header + footer slots") {
+                    Sidebar(sections: sections, selection: $tab)
+                        .header {
+                            Text("ThemeKit").textStyle(.headingSm)
+                        }
+                        .footer {
+                            Text("Settings").textStyle(.labelSm600)
+                        }
+                        .width(260)
+                        .frame(height: 360)
                 }
-                .width(260)
-                .frame(height: 360)
+            }
         }
     }
+    return Demo()
 }

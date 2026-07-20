@@ -120,62 +120,67 @@ private struct SurfaceChrome: ViewModifier {
 // MARK: - Previews
 
 #Preview("Levels + nesting") {
-    @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        VStack(spacing: Theme.SpacingKey.md.value) {
-            // Every level
-            ForEach(SurfaceLevel.allCases, id: \.self) { level in
-                SurfaceView {
-                    Text(String(describing: level))
-                        .textStyle(.labelMd600)
-                        .foregroundStyle(theme.text(.textPrimary))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .level(level)
-            }
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            ScrollView {
+                VStack(spacing: Theme.SpacingKey.md.value) {
+                    // Every level
+                    ForEach(SurfaceLevel.allCases, id: \.self) { level in
+                        SurfaceView {
+                            Text(String(describing: level))
+                                .textStyle(.labelMd600)
+                                .foregroundStyle(theme.text(.textPrimary))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .level(level)
+                    }
 
-            // Elevation + radius + padding knobs
-            SurfaceView {
-                Text("Elevated · field radius · sm padding")
-                    .textStyle(.labelSm600)
-                    .foregroundStyle(theme.text(.textSecondary))
-            }
-            .elevation(.elevated)
-            .radius(.field)
-            .contentPadding(.sm)
+                    // Elevation + radius + padding knobs
+                    SurfaceView {
+                        Text("Elevated · field radius · sm padding")
+                            .textStyle(.labelSm600)
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .elevation(.elevated)
+                    .radius(.field)
+                    .contentPadding(.sm)
 
-            // Nested hierarchy: primary > secondary > tertiary
-            SurfaceView {
-                VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                    Text("Primary").textStyle(.headingSm)
-                        .foregroundStyle(theme.text(.textPrimary))
+                    // Nested hierarchy: primary > secondary > tertiary
                     SurfaceView {
                         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
-                            Text("Secondary").textStyle(.labelMd600)
+                            Text("Primary").textStyle(.headingSm)
                                 .foregroundStyle(theme.text(.textPrimary))
                             SurfaceView {
-                                Text("Tertiary").textStyle(.labelSm600)
-                                    .foregroundStyle(theme.text(.textSecondary))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                                    Text("Secondary").textStyle(.labelMd600)
+                                        .foregroundStyle(theme.text(.textPrimary))
+                                    SurfaceView {
+                                        Text("Tertiary").textStyle(.labelSm600)
+                                            .foregroundStyle(theme.text(.textSecondary))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .level(.tertiary)
+                                }
                             }
-                            .level(.tertiary)
+                            .level(.secondary)
                         }
                     }
-                    .level(.secondary)
-                }
-            }
-            .elevation(.soft)
+                    .elevation(.soft)
 
-            // asChild companion: chrome on an arbitrary view
-            Text("surfaceChrome on a plain Text")
-                .textStyle(.bodyBase400)
-                .foregroundStyle(theme.text(.textSecondary))
-                .padding(Theme.SpacingKey.md.value)
-                .surfaceChrome(.secondary, radius: .field)
+                    // asChild companion: chrome on an arbitrary view
+                    Text("surfaceChrome on a plain Text")
+                        .textStyle(.bodyBase400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                        .padding(Theme.SpacingKey.md.value)
+                        .surfaceChrome(.secondary, radius: .field)
+                }
+                .padding()
+            }
+            .background(theme.background(.bgBase))
         }
-        .padding()
     }
-    .background(theme.background(.bgBase))
+    return Demo()
 }
 
 #Preview("Dark theme") {

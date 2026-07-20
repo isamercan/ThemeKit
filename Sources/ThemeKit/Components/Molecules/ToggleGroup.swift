@@ -92,40 +92,45 @@ public struct ToggleGroup<Option: Hashable>: View {
 }
 
 #Preview {
-    @Previewable @State var sel: Set<String> = ["push"]
-    @Previewable @State var horizontal: Set<String> = ["wifi"]
-    PreviewMatrix("ToggleGroup") {
-        PreviewCase("Descriptions") {
-            ToggleGroup(
-                title: "Notifications",
-                options: ["push", "email", "sms"],
-                selection: $sel,
-                label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 }
-            )
-            .optionDescription { _ in "Lorem ipsum supporting text." }
-        }
-        // E9 — accent + per-option enablement.
-        PreviewCase("Accent + per-option enable") {
-            ToggleGroup(
-                title: "Privacy",
-                options: ["analytics", "ads", "tracking"],
-                selection: $sel,
-                label: { $0.capitalized }
-            )
-            .accent(.success)
-            .optionEnabled { $0 != "tracking" }
-        }
-        // E9 — horizontal axis: each label + switch pair hugs.
-        PreviewCase("Horizontal") {
-            ToggleGroup(
-                title: "Amenities",
-                options: ["wifi", "pool"],
-                selection: $horizontal,
-                label: { $0.capitalized }
-            )
-            .axis(.horizontal)
+    struct Demo: View {
+        @State var sel: Set<String> = ["push"]
+        @State var horizontal: Set<String> = ["wifi"]
+        var body: some View {
+            PreviewMatrix("ToggleGroup") {
+                PreviewCase("Descriptions") {
+                    ToggleGroup(
+                        title: "Notifications",
+                        options: ["push", "email", "sms"],
+                        selection: $sel,
+                        label: { ["push": "Push", "email": "Email", "sms": "SMS"][$0] ?? $0 }
+                    )
+                    .optionDescription { _ in "Lorem ipsum supporting text." }
+                }
+                // E9 — accent + per-option enablement.
+                PreviewCase("Accent + per-option enable") {
+                    ToggleGroup(
+                        title: "Privacy",
+                        options: ["analytics", "ads", "tracking"],
+                        selection: $sel,
+                        label: { $0.capitalized }
+                    )
+                    .accent(.success)
+                    .optionEnabled { $0 != "tracking" }
+                }
+                // E9 — horizontal axis: each label + switch pair hugs.
+                PreviewCase("Horizontal") {
+                    ToggleGroup(
+                        title: "Amenities",
+                        options: ["wifi", "pool"],
+                        selection: $horizontal,
+                        label: { $0.capitalized }
+                    )
+                    .axis(.horizontal)
+                }
+            }
         }
     }
+    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

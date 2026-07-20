@@ -143,30 +143,35 @@ private struct Tilt3DModifier: ViewModifier {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    // Drag-driven tilt still works inside each cell; a matrix row shows the
-    // at-rest frame per form.
-    PreviewMatrix("TiltCard") {
-        PreviewCase("Modifier form · shine") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Premium Cabin").textStyle(.headingSm)
-                Text("Drag me around").textStyle(.bodySm400)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // Drag-driven tilt still works inside each cell; a matrix row shows the
+            // at-rest frame per form.
+            PreviewMatrix("TiltCard") {
+                PreviewCase("Modifier form · shine") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Premium Cabin").textStyle(.headingSm)
+                        Text("Drag me around").textStyle(.bodySm400)
+                    }
+                    .padding(32)
+                    .frame(width: 260)
+                    .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                    .themeShadow(.elevated)
+                    .tilt3D(shine: true)
+                }
+                PreviewCase("Wrapper form · custom angle") {
+                    TiltCard {
+                        Text("Wrapper form")
+                            .padding(40)
+                            .background(theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: 16))
+                    }
+                    .maxAngle(.degrees(14))
+                    .shine()
+                    .radius(.field)
+                }
             }
-            .padding(32)
-            .frame(width: 260)
-            .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-            .themeShadow(.elevated)
-            .tilt3D(shine: true)
-        }
-        PreviewCase("Wrapper form · custom angle") {
-            TiltCard {
-                Text("Wrapper form")
-                    .padding(40)
-                    .background(theme.background(.bgElevatorTertiary), in: RoundedRectangle(cornerRadius: 16))
-            }
-            .maxAngle(.degrees(14))
-            .shine()
-            .radius(.field)
         }
     }
+    return Demo()
 }

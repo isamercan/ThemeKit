@@ -99,49 +99,59 @@ struct MasonryLayout: Layout {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110]
-    PreviewMatrix("Masonry") {
-        PreviewCase("3 columns") {
-            Masonry {
-                ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(SemanticColor.primary.soft)
-                        .frame(height: h)
-                        .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110]
+            PreviewMatrix("Masonry") {
+                PreviewCase("3 columns") {
+                    Masonry {
+                        ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(SemanticColor.primary.soft)
+                                .frame(height: h)
+                                .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                        }
+                    }
+                    .columns(3)
+                }
+                PreviewCase("2 columns (default)") {
+                    Masonry {
+                        ForEach(Array(heights.prefix(5).enumerated()), id: \.offset) { i, h in
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(SemanticColor.primary.soft)
+                                .frame(height: h)
+                                .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                        }
+                    }
                 }
             }
-            .columns(3)
-        }
-        PreviewCase("2 columns (default)") {
-            Masonry {
-                ForEach(Array(heights.prefix(5).enumerated()), id: \.offset) { i, h in
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(SemanticColor.primary.soft)
-                        .frame(height: h)
-                        .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
-                }
-            }
+            .environment(\.theme, Theme.shared)
         }
     }
-    .environment(\.theme, Theme.shared)
+    return Demo()
 }
 
 #Preview("RTL — columns fill from the trailing edge") {
-    @Previewable @Environment(\.theme) var theme
-    let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110]
-    ScrollView {
-        Masonry {
-            ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(SemanticColor.primary.soft)
-                    .frame(height: h)
-                    .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            let heights: [CGFloat] = [90, 140, 70, 120, 100, 160, 80, 110]
+            ScrollView {
+                Masonry {
+                    ForEach(Array(heights.enumerated()), id: \.offset) { i, h in
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(SemanticColor.primary.soft)
+                            .frame(height: h)
+                            .overlay(Text("\(i)").textStyle(.labelBase700).foregroundStyle(theme.text(.textHero)))
+                    }
+                }
+                .columns(3)
+                .padding()
             }
+            .environment(\.layoutDirection, .rightToLeft)
+            .environment(\.theme, Theme.shared)
         }
-        .columns(3)
-        .padding()
     }
-    .environment(\.layoutDirection, .rightToLeft)
-    .environment(\.theme, Theme.shared)
+    return Demo()
 }

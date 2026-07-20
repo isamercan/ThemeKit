@@ -137,28 +137,33 @@ private struct AuraModifier: ViewModifier {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Aura") {
-        PreviewCase("Halo (.aura())") {
-            Text("Featured")
-                .textStyle(.headingSm)
-                .padding(40)
-                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-                .aura()
-                .padding(24)
-        }
-        PreviewCase("Tinted halo (purple)") {
-            Text("Limited offer")
-                .padding(.horizontal, 28).padding(.vertical, 14)
-                .background(theme.background(.bgWhite), in: Capsule())
-                .aura(.purple, radius: 32, intensity: 0.7)
-                .padding(24)
-        }
-        PreviewCase("Standalone blobs") {
-            HStack(spacing: 40) {
-                Aura().accent(.turquoise).size(90)
-                Aura().accent(.pink).intensity(0.9).size(90)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Aura") {
+                PreviewCase("Halo (.aura())") {
+                    Text("Featured")
+                        .textStyle(.headingSm)
+                        .padding(40)
+                        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                        .aura()
+                        .padding(24)
+                }
+                PreviewCase("Tinted halo (purple)") {
+                    Text("Limited offer")
+                        .padding(.horizontal, 28).padding(.vertical, 14)
+                        .background(theme.background(.bgWhite), in: Capsule())
+                        .aura(.purple, radius: 32, intensity: 0.7)
+                        .padding(24)
+                }
+                PreviewCase("Standalone blobs") {
+                    HStack(spacing: 40) {
+                        Aura().accent(.turquoise).size(90)
+                        Aura().accent(.pink).intensity(0.9).size(90)
+                    }
+                }
             }
         }
     }
+    return Demo()
 }

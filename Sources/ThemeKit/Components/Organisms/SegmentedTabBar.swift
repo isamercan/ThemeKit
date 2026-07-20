@@ -343,54 +343,59 @@ public struct SegmentedTabBar: View {
 }
 
 #Preview {
-    @Previewable @State var sel = 0
-    @Previewable @State var scrollSel = 6
-    @Previewable @State var paneSel = 0
-    PreviewMatrix("SegmentedTabBar") {
-        PreviewCase("Underline · icon + badge + disabled") {
-            SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
-                             TabItem("Reviews", badge: "12"),
-                             TabItem("Archived", isEnabled: false)], selection: $sel)
-        }
-        PreviewCase("Scrollable") {
-            SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
-        }
-        PreviewCase("Pill") {
-            SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
-        }
-        // Density axis (Ant `size`) — small / medium / large on the pill style.
-        PreviewCase("Sizes (small · medium · large)") {
-            VStack(spacing: Theme.SpacingKey.sm.value) {
-                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.small)
-                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.medium)
-                SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.large)
+    struct Demo: View {
+        @State var sel = 0
+        @State var scrollSel = 6
+        @State var paneSel = 0
+        var body: some View {
+            PreviewMatrix("SegmentedTabBar") {
+                PreviewCase("Underline · icon + badge + disabled") {
+                    SegmentedTabBar([TabItem("Overview", systemImage: "square.grid.2x2"),
+                                     TabItem("Reviews", badge: "12"),
+                                     TabItem("Archived", isEnabled: false)], selection: $sel)
+                }
+                PreviewCase("Scrollable") {
+                    SegmentedTabBar(["All", "Flights", "Hotels", "Cars", "Tours"], selection: $sel).scrollable()
+                }
+                PreviewCase("Pill") {
+                    SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $sel).tabStyle(.pill)
+                }
+                // Density axis (Ant `size`) — small / medium / large on the pill style.
+                PreviewCase("Sizes (small · medium · large)") {
+                    VStack(spacing: Theme.SpacingKey.sm.value) {
+                        SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.small)
+                        SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.medium)
+                        SegmentedTabBar(["Day", "Week", "Month"], selection: $sel).tabStyle(.pill).size(.large)
+                    }
+                }
+                PreviewCase("Card · closable + add") {
+                    SegmentedTabBar(["Search", "Results", "Booking"], selection: $sel,
+                                    onClose: { _ in }, onAdd: { }).tabStyle(.card)
+                }
+                // Inter-tab dividers — hairlines fade out next to the selection.
+                PreviewCase("Dividers") {
+                    SegmentedTabBar(["Day", "Week", "Month", "Year"], selection: $sel).dividers()
+                }
+                // Scrollable auto-scroll: the selected tab is kept centered.
+                PreviewCase("Scrollable · centered auto-scroll") {
+                    SegmentedTabBar((1...12).map { "Month \($0)" }, selection: $scrollSel)
+                        .scrollable()
+                        .scrollAlign(.center)
+                }
+                // Content panes — cross-fade below the bar on selection change.
+                PreviewCase("Content panes") {
+                    SegmentedTabBar(["Details", "Reviews", "FAQ"], selection: $paneSel)
+                        .tabStyle(.pill)
+                        .content { index in
+                            Text("Pane \(index + 1)")
+                                .textStyle(.bodyBase400)
+                                .frame(maxWidth: .infinity, minHeight: 80)
+                        }
+                }
             }
         }
-        PreviewCase("Card · closable + add") {
-            SegmentedTabBar(["Search", "Results", "Booking"], selection: $sel,
-                            onClose: { _ in }, onAdd: { }).tabStyle(.card)
-        }
-        // Inter-tab dividers — hairlines fade out next to the selection.
-        PreviewCase("Dividers") {
-            SegmentedTabBar(["Day", "Week", "Month", "Year"], selection: $sel).dividers()
-        }
-        // Scrollable auto-scroll: the selected tab is kept centered.
-        PreviewCase("Scrollable · centered auto-scroll") {
-            SegmentedTabBar((1...12).map { "Month \($0)" }, selection: $scrollSel)
-                .scrollable()
-                .scrollAlign(.center)
-        }
-        // Content panes — cross-fade below the bar on selection change.
-        PreviewCase("Content panes") {
-            SegmentedTabBar(["Details", "Reviews", "FAQ"], selection: $paneSel)
-                .tabStyle(.pill)
-                .content { index in
-                    Text("Pane \(index + 1)")
-                        .textStyle(.bodyBase400)
-                        .frame(maxWidth: .infinity, minHeight: 80)
-                }
-        }
     }
+    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

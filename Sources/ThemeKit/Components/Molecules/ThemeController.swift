@@ -80,18 +80,23 @@ public extension ThemeController {
 }
 
 #Preview {
-    @Previewable @State var themeName = "defaultTheme"
-    let options: [ThemeController.Option] = [
-        .init(name: "defaultTheme", label: "Default"),
-        .init(name: "oceanTheme", label: "Ocean"),
-        .init(name: "sunsetTheme", label: "Sunset"),
-    ]
-    PreviewMatrix("ThemeController") {
-        PreviewCase("Full width (default)") { ThemeController(options: options, selectedName: $themeName) }
-        PreviewCase("Accent + intrinsic width") {
-            ThemeController(options: options, selectedName: $themeName)
-                .accent(.success)
-                .fullWidth(false)
+    struct Demo: View {
+        @State var themeName = "defaultTheme"
+        var body: some View {
+            let options: [ThemeController.Option] = [
+                .init(name: "defaultTheme", label: "Default"),
+                .init(name: "oceanTheme", label: "Ocean"),
+                .init(name: "sunsetTheme", label: "Sunset"),
+            ]
+            PreviewMatrix("ThemeController") {
+                PreviewCase("Full width (default)") { ThemeController(options: options, selectedName: $themeName) }
+                PreviewCase("Accent + intrinsic width") {
+                    ThemeController(options: options, selectedName: $themeName)
+                        .accent(.success)
+                        .fullWidth(false)
+                }
+            }
         }
     }
+    return Demo()
 }

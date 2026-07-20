@@ -498,33 +498,38 @@ private struct AgendaDatePriceStripStyle: DatePriceStripStyle {
 }
 
 #Preview("DatePriceStripStyle — presets × light/dark") {
-    @Previewable @State var sel = 1
-    let items = [
-        DatePriceItem("17 Jul", price: 1_697.99, weekday: "Fri"),
-        DatePriceItem("18 Jul", price: 1_767.99, weekday: "Sat"),
-        DatePriceItem("19 Jul", price: 1_960.99, weekday: "Sun", unavailable: true),
-        DatePriceItem("20 Jul", price: 1_914.99, weekday: "Mon"),
-        DatePriceItem("21 Jul", price: 1_474.99, weekday: "Tue"),
-        DatePriceItem("22 Jul", price: 1_483.99, weekday: "Wed"),
-    ]
-    PreviewMatrix("DatePriceStripStyle") {
-        PreviewCase("Grid (default, 3 columns)") { DatePriceStrip(items, selection: $sel) }
-        PreviewCase("Grid · 2 columns") {
-            DatePriceStrip(items, selection: $sel).datePriceStripStyle(.grid(columns: 2))
-        }
-        PreviewCase("Grid · paged") {
-            DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {})
-        }
-        PreviewCase("Strip") { DatePriceStrip(items, selection: $sel).datePriceStripStyle(.strip) }
-        PreviewCase("Chart") { DatePriceStrip(items, selection: $sel).datePriceStripStyle(.chart) }
-        PreviewCase("Chart · accent + cheapest tone + paged") {
-            DatePriceStrip(items, selection: $sel)
-                .accent(.info).cheapestTone(.warning)
-                .onPage(prev: {}, next: {})
-                .datePriceStripStyle(.chart)
-        }
-        PreviewCase("Custom (in-preview)") {
-            DatePriceStrip(items, selection: $sel).datePriceStripStyle(AgendaDatePriceStripStyle())
+    struct Demo: View {
+        @State var sel = 1
+        var body: some View {
+            let items = [
+                DatePriceItem("17 Jul", price: 1_697.99, weekday: "Fri"),
+                DatePriceItem("18 Jul", price: 1_767.99, weekday: "Sat"),
+                DatePriceItem("19 Jul", price: 1_960.99, weekday: "Sun", unavailable: true),
+                DatePriceItem("20 Jul", price: 1_914.99, weekday: "Mon"),
+                DatePriceItem("21 Jul", price: 1_474.99, weekday: "Tue"),
+                DatePriceItem("22 Jul", price: 1_483.99, weekday: "Wed"),
+            ]
+            PreviewMatrix("DatePriceStripStyle") {
+                PreviewCase("Grid (default, 3 columns)") { DatePriceStrip(items, selection: $sel) }
+                PreviewCase("Grid · 2 columns") {
+                    DatePriceStrip(items, selection: $sel).datePriceStripStyle(.grid(columns: 2))
+                }
+                PreviewCase("Grid · paged") {
+                    DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {})
+                }
+                PreviewCase("Strip") { DatePriceStrip(items, selection: $sel).datePriceStripStyle(.strip) }
+                PreviewCase("Chart") { DatePriceStrip(items, selection: $sel).datePriceStripStyle(.chart) }
+                PreviewCase("Chart · accent + cheapest tone + paged") {
+                    DatePriceStrip(items, selection: $sel)
+                        .accent(.info).cheapestTone(.warning)
+                        .onPage(prev: {}, next: {})
+                        .datePriceStripStyle(.chart)
+                }
+                PreviewCase("Custom (in-preview)") {
+                    DatePriceStrip(items, selection: $sel).datePriceStripStyle(AgendaDatePriceStripStyle())
+                }
+            }
         }
     }
+    return Demo()
 }
