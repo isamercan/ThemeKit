@@ -57,7 +57,7 @@ public struct DialCode: Sendable, Equatable, Hashable, Identifiable, Codable {
     /// The default dial code for `locale` within `list`: the entry matching the
     /// locale's region, else the first entry.
     static func `default`(for locale: Locale, in list: [DialCode]) -> DialCode? {
-        let region = locale.region?.identifier.uppercased()
+        let region = locale.themeKitRegionCode?.uppercased()
         return list.first { $0.regionCode == region } ?? list.first
     }
 }

@@ -71,7 +71,7 @@ public struct PriceTrendChart: View {
     private var selectionFg: Color { selectionColorToken.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse) }
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
     private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
 

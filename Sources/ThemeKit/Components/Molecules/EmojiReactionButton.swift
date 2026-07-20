@@ -101,9 +101,14 @@ public struct EmojiReactionButton: View {
     private func toggle() {
         reacted.toggle()
         Haptics.tap()
-        // One-shot pop, animated back on completion; skipped under Reduce Motion.
+        // One-shot pop, animated back after the pop settles; skipped under
+        // Reduce Motion. (`withAnimation(_:completion:)` is iOS 17-only — the
+        // token-timed sleep is the single-path 15.6 form, same pattern as
+        // CodeBlock's copy badge. ADR-0007 §D2 rule 1.)
         if reacted, micro, !reduceMotion {
-            withAnimation(Motion.fast.animation) { pop = true } completion: {
+            withAnimation(Motion.fast.animation) { pop = true }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(Motion.fast.duration * 1_000_000_000))
                 withAnimation(Motion.fast.animation) { pop = false }
             }
         }

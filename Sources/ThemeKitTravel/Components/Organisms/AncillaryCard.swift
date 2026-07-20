@@ -72,7 +72,7 @@ public struct AncillaryCard: View {
     public init(_ title: String) { self.title = title }   // R1
 
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {

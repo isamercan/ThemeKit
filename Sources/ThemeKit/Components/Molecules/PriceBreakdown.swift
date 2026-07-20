@@ -48,7 +48,7 @@ public struct PriceBreakdown: View {
 
     /// Explicit `currencyCode:` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
     private func money(_ d: Decimal) -> String { d.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
     private var priceTag: PriceTag {
@@ -63,7 +63,7 @@ public struct PriceBreakdown: View {
             if discountText != nil || originalPrice != nil {
                 HStack(spacing: 6) {
                     if let discountText { Badge(discountText).badgeStyle(.success).variant(.soft).size(.small) }
-                    if let originalPrice { Text(money(originalPrice)).textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)).strikethrough() }
+                    if let originalPrice { Text(money(originalPrice)).strikethrough().textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary)) }
                 }
             }
             priceTag

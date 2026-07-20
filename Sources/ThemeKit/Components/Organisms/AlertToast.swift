@@ -94,9 +94,10 @@ public struct AlertToast: View {
     public var body: some View {
         presentation
             // VoiceOver gets no signal that a toast surfaced, so announce its
-            // content when it appears. Uses the cross-platform SwiftUI API
-            // (no UIKit `UIAccessibility.post`) so the macOS build stays green.
-            .onAppear { AccessibilityNotification.Announcement(announcementText).post() }
+            // content when it appears. Routed through AccessibilityAnnouncement
+            // (UIKit notification on iOS — the SwiftUI object form is iOS 17;
+            // macOS keeps the modern API. ADR-0007 §D2 rule 1.)
+            .onAppear { AccessibilityAnnouncement.post(announcementText) }
     }
 
     /// The composed shell. Chrome is delegated to the active `ToastStyle`. When
@@ -154,7 +155,7 @@ public struct AlertToast: View {
 
             if let action {
                 Button(action: action.handler) {
-                    Text(action.title).textStyle(.labelBase700).underline()
+                    Text(action.title).underline().textStyle(.labelBase700)
                 }
                 .buttonStyle(.plain)
             }

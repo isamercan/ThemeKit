@@ -85,9 +85,9 @@ public struct KeyValueTable: View {
                         .foregroundStyle(theme.text(.textSecondary))
                     Spacer(minLength: Theme.SpacingKey.md.value)
                     Text(row.value)
+                        .strikethrough(row.style == .strikethrough)   // Text-level: before .textStyle (View form is iOS 16+)
                         .textStyle(.labelBase600)
                         .foregroundStyle(row.style.color(theme))
-                        .strikethrough(row.style == .strikethrough)
                         .multilineTextAlignment(.trailing)
                 }
                 .padding(.vertical, Theme.SpacingKey.sm.value)

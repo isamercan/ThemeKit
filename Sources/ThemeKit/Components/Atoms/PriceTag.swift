@@ -104,7 +104,7 @@ public struct PriceTag: View {
     }
 
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -131,15 +131,15 @@ public struct PriceTag: View {
             VStack(alignment: .trailing, spacing: 0) {
                 amountText
                 Text(formatted(original))
+                    .strikethrough()   // Text-level: before .textStyle (View form is iOS 16+)
                     .textStyle(size.originalStyle)
-                    .strikethrough()
                     .foregroundStyle(theme.text(.textTertiary))
             }
         } else {
             if let original, original > amount {
                 Text(formatted(original))
+                    .strikethrough()   // Text-level: before .textStyle (View form is iOS 16+)
                     .textStyle(size.originalStyle)
-                    .strikethrough()
                     .foregroundStyle(theme.text(.textTertiary))
             }
             amountText

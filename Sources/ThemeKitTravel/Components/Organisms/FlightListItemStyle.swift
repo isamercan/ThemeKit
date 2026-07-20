@@ -677,13 +677,23 @@ private struct TicketNotchShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         let y = rect.height - stubHeight
-        var p = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).path(in: rect)
-        var cut = Path()
-        cut.addEllipse(in: CGRect(x: rect.minX - radius, y: y - radius, width: radius * 2, height: radius * 2))
-        cut.addEllipse(in: CGRect(x: rect.maxX - radius, y: y - radius, width: radius * 2, height: radius * 2))
-        p = p.subtracting(cut)
-        return p
+        let p = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).path(in: rect)
+        // `Path.subtracting` is iOS 17-only. Below, the named legacy unit keeps
+        // the plain rounded card (no perforation notches) — decorative chrome
+        // only, degraded per ADR-0007 §D2 rule 2. Phase 3e replaces both paths
+        // with arc-geometry so every OS gets the notches.
+        if #available(iOS 17.0, *) {
+            var cut = Path()
+            cut.addEllipse(in: CGRect(x: rect.minX - radius, y: y - radius, width: radius * 2, height: radius * 2))
+            cut.addEllipse(in: CGRect(x: rect.maxX - radius, y: y - radius, width: radius * 2, height: radius * 2))
+            return p.subtracting(cut)
+        } else {
+            return legacyNotchlessPath(p)
+        }
     }
+
+    /// Named legacy unit (ADR-0007 §D2 rule 3): the un-notched card outline.
+    func legacyNotchlessPath(_ base: Path) -> Path { base }
 }
 
 /// A horizontal 1pt line path (dash-friendly).

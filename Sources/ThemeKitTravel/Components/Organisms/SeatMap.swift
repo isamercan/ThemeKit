@@ -99,7 +99,7 @@ public struct SeatMap: View {
         return SeatPalette(overrides)
     }
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     // MARK: Init (all delegate to `sections:` so the index is built once)
@@ -641,6 +641,9 @@ private struct FuselageShape: Shape {
 }
 
 /// Pinch-to-zoom (1×–2.5×) for the seat grid, applied only when enabled.
+/// `MagnifyGesture` is iOS 17-only; below, the named ``LegacyPinchZoom`` unit
+/// drives the same 1×–2.5× band via `MagnificationGesture` — identical
+/// capability, so this is a split of vehicle, not behavior (ADR-0007 §D2).
 private struct PinchZoom: ViewModifier {
     let enabled: Bool
     @Binding var zoom: CGFloat
@@ -648,16 +651,38 @@ private struct PinchZoom: ViewModifier {
 
     func body(content: Content) -> some View {
         if enabled {
-            content
-                .scaleEffect(zoom * pinch)
-                .gesture(
-                    MagnifyGesture()
-                        .updating($pinch) { value, state, _ in state = value.magnification }
-                        .onEnded { value in zoom = min(2.5, max(1, zoom * value.magnification)) }
-                )
+            if #available(iOS 17.0, *) {
+                content
+                    .scaleEffect(zoom * pinch)
+                    .gesture(
+                        MagnifyGesture()
+                            .updating($pinch) { value, state, _ in state = value.magnification }
+                            .onEnded { value in zoom = min(2.5, max(1, zoom * value.magnification)) }
+                    )
+            } else {
+                content.modifier(LegacyPinchZoom(zoom: $zoom))
+            }
         } else {
             content
         }
+    }
+}
+
+/// Named legacy unit (ADR-0007 §D2 rule 3): the pre-17 pinch vehicle.
+/// (`MagnificationGesture` is deprecated *from* iOS 17 — this deliberate use
+/// compiles warning-free once the package floor is 15.6, Phase 4.)
+private struct LegacyPinchZoom: ViewModifier {
+    @Binding var zoom: CGFloat
+    @GestureState private var pinch: CGFloat = 1
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(zoom * pinch)
+            .gesture(
+                MagnificationGesture()
+                    .updating($pinch) { value, state, _ in state = value }
+                    .onEnded { value in zoom = min(2.5, max(1, zoom * value)) }
+            )
     }
 }
 

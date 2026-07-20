@@ -154,7 +154,7 @@ public struct SeatCell: View {
     }
 
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// The deprecated `shape:` init param's own preset, when it requested a

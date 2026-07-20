@@ -79,11 +79,28 @@ public extension View {
     }
 
     /// Same, with a token-styled preview card shown while the menu is open.
+    /// The preview form is iOS 16+; below, the menu opens without the preview
+    /// card (named ``ContextMenuPreviewCompat`` unit, ADR-0007 §D2 rules 2–3).
     func themeContextMenu<P: View>(_ actions: [MenuAction], @ViewBuilder preview: @escaping () -> P) -> some View {
-        contextMenu {
-            MenuActionList(actions: actions)
-        } preview: {
-            preview()
+        modifier(ContextMenuPreviewCompat(actions: actions, preview: preview))
+    }
+}
+
+/// Named degrade unit for `contextMenu(menuItems:preview:)` (iOS 16): the
+/// `else` branch is the same data-driven menu without the preview card.
+private struct ContextMenuPreviewCompat<P: View>: ViewModifier {
+    let actions: [MenuAction]
+    let preview: () -> P
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.contextMenu {
+                MenuActionList(actions: actions)
+            } preview: {
+                preview()
+            }
+        } else {
+            content.contextMenu { MenuActionList(actions: actions) }
         }
     }
 }

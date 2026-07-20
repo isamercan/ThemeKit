@@ -248,6 +248,60 @@ struct ScrollPositionCompat<ID: Hashable>: ViewModifier {
     }
 }
 
+// MARK: - View-level strikethrough (iOS 16)
+
+package extension View {
+    /// View-level `.strikethrough` (iOS 16) back-deployed for arbitrary slot
+    /// content: applies on 16+, no-op below (pure polish — the `Text`-label
+    /// path keeps its line-through on every OS via the Text-level modifier).
+    func strikethroughCompat(_ active: Bool) -> some View {
+        modifier(StrikethroughCompat(active: active))
+    }
+}
+
+/// Named degrade unit (ADR-0007 §D2 rule 3) for view-level strikethrough.
+struct StrikethroughCompat: ViewModifier {
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.strikethrough(active)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Locale (iOS 16 `Locale.currency` / `Locale.region`)
+
+package extension Locale {
+    /// `currency?.identifier` back-deployed (that object-form API is iOS 16):
+    /// the toll-free-bridged `NSLocale.currencyCode`, identical data on every
+    /// supported OS (ADR-0007 §D2 rule 1 — single-path; companion to Core's
+    /// `themeKitLanguageCode`).
+    var themeKitCurrencyCode: String? { (self as NSLocale).currencyCode }
+
+    /// `region?.identifier` back-deployed: the toll-free-bridged
+    /// `NSLocale.countryCode` ("US", "TR", …) — single-path.
+    var themeKitRegionCode: String? { (self as NSLocale).countryCode }
+}
+
+// MARK: - Accessibility announcements (iOS 17 `AccessibilityNotification`)
+
+/// `AccessibilityNotification.Announcement(_:).post()` back-deployed: the
+/// UIKit notification is the same capability on every supported iOS
+/// (ADR-0007 §D2 rule 1 — single-path); macOS (floor 14) keeps the modern API.
+package enum AccessibilityAnnouncement {
+    @MainActor
+    package static func post(_ message: String) {
+        #if os(iOS)
+        UIAccessibility.post(notification: .announcement, argument: message)
+        #else
+        AccessibilityNotification.Announcement(message).post()
+        #endif
+    }
+}
+
 // MARK: - TextEditor backdrop (iOS 16 `.scrollContentBackground(.hidden)`)
 
 package extension View {

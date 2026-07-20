@@ -95,7 +95,7 @@ public struct DatePriceCard: View {
 
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// Selected-state foreground — the accent's base shade, or the stock hero.
@@ -248,7 +248,7 @@ public struct DatePriceStrip: View {
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     /// Resolved here so every style renders the strip's one resolved code.
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// The preset the deprecated layout modifiers mapped to, or `nil` when none

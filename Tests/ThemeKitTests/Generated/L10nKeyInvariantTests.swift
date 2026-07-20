@@ -142,7 +142,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d): scheduled \(d), estimated \(d)",
             "%@: scheduled %@, estimated %@", 3,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:368")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:369")
         assertKey(
             "\(d)h \(d)m",
             "%@h %@m", 2,
@@ -265,7 +265,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Remove \(d)",
             "Remove %@", 1,
-            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:203")
+            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:205")
         assertKey(
             "Remove card ending \(d)",
             "Remove card ending %@", 1,

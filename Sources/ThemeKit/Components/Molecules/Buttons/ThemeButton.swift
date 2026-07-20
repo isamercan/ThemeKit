@@ -202,8 +202,8 @@ public struct ThemeButton: View {
                 }
                 if let title {
                     Text(title)
+                        .underline(variant == .link)   // Text-level: before .textStyle (View form is iOS 16+)
                         .textStyle(sizeTextStyle)
-                        .underline(variant == .link)
                         .lineLimit(1)              // a single-word label never wraps; a ButtonGroup flows instead
                 }
                 // Trailing: the suffix element slot wins over the SF-Symbol icon.

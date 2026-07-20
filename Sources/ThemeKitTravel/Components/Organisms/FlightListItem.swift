@@ -102,7 +102,7 @@ public struct FlightListItem: View {
     }
 
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -260,7 +260,7 @@ public extension FlightListItem {
     }
 }
 
-#Preview("FlightListItem styles", traits: .sizeThatFitsLayout) {
+#Preview("FlightListItem styles") {
     let dep = Date(timeIntervalSince1970: 1_781_000_000)
     let arr = dep.addingTimeInterval(3.5 * 3600)
     ScrollView {
@@ -345,7 +345,7 @@ public extension FlightListItem {
     .background(Theme.shared.background(.bgElevatorPrimary))
 }
 
-#Preview("FlightListItem dark + density", traits: .sizeThatFitsLayout) {
+#Preview("FlightListItem dark + density") {
     let dep = Date(timeIntervalSince1970: 1_781_000_000)
     let arr = dep.addingTimeInterval(3.5 * 3600)
     VStack(spacing: 16) {

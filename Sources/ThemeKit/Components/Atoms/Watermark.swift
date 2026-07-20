@@ -46,7 +46,10 @@ private struct WatermarkModifier: ViewModifier {
         content.overlay {
             Canvas { context, size in
                 let label = Text(text).font(.system(size: fontSize, weight: .semibold))
-                let resolved = context.resolve(label.foregroundStyle(ink))
+                // Tint via the resolved text's shading — `Text.foregroundStyle`
+                // is iOS 17-only (ADR-0007 Phase 2 compile-loop finding).
+                var resolved = context.resolve(label)
+                resolved.shading = .color(ink)
                 let tile = resolved.measure(in: CGSize(width: 1000, height: fontSize * 3))
                 let stepX = tile.width + gap.width
                 let stepY = tile.height + gap.height

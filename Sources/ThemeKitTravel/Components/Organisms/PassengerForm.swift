@@ -148,9 +148,10 @@ public struct PassengerForm: View {
     /// ISO 3166-1 region codes for the nationality selector, sorted by their
     /// localized display name in the environment locale.
     private var nationalityCodes: [String] {
+        // `NSLocale.isoCountryCodes` — same ICU data as the iOS-16-only
+        // `Locale.Region.isoRegions`, already country-level (ADR-0007 §D2 rule 1).
         let codes = explicitNationalities
-            ?? Locale.Region.isoRegions
-                .map(\.identifier)
+            ?? NSLocale.isoCountryCodes
                 .filter { $0.count == 2 }   // countries — continents/macroregions are numeric (e.g. "150")
         return codes.sorted { regionName($0) < regionName($1) }
     }

@@ -187,14 +187,16 @@ public struct Rating: View {
     @ViewBuilder
     private var review: some View {
         if let countLabel {
-            let text = Text(countLabel).textStyle(.bodySm400)
+            // Underline stays Text-level (the View overload is iOS 16+), so the
+            // type ramp is applied per branch after it.
+            let text = Text(countLabel)
             if let onReviewTap {
                 Button(action: onReviewTap) {
-                    text.underline().foregroundStyle(theme.text(.textHero))
+                    text.underline().textStyle(.bodySm400).foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
             } else {
-                text.foregroundStyle(theme.text(.textTertiary))
+                text.textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             }
         }
     }

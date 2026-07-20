@@ -272,13 +272,24 @@ private struct SeatbackShape: Shape {
     func path(in rect: CGRect) -> Path {
         let radius = min(rect.width, rect.height) * 0.28
         let body = RoundedRectangle(cornerRadius: radius, style: .continuous).path(in: rect)
-        let notchWidth = rect.width * 0.52
-        let notchHeight = rect.height * 0.24
-        var notch = Path()
-        notch.addEllipse(in: CGRect(x: rect.midX - notchWidth / 2, y: rect.minY - notchHeight / 2,
-                                    width: notchWidth, height: notchHeight))
-        return body.subtracting(notch)
+        // `Path.subtracting` is iOS 17-only. Below, the named legacy unit keeps
+        // the plain rounded seatback (no backrest notch) — a decorative
+        // degrade per ADR-0007 §D2 rule 2; Phase 3e restores it with real arc
+        // geometry.
+        if #available(iOS 17.0, *) {
+            let notchWidth = rect.width * 0.52
+            let notchHeight = rect.height * 0.24
+            var notch = Path()
+            notch.addEllipse(in: CGRect(x: rect.midX - notchWidth / 2, y: rect.minY - notchHeight / 2,
+                                        width: notchWidth, height: notchHeight))
+            return body.subtracting(notch)
+        } else {
+            return legacyNotchlessPath(body)
+        }
     }
+
+    /// Named legacy unit (ADR-0007 §D2 rule 3): the un-notched seatback outline.
+    func legacyNotchlessPath(_ base: Path) -> Path { base }
 }
 
 /// Token-stepped seat sizes — the ramp alternative to a raw point size, shared

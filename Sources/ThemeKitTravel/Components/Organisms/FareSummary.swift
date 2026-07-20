@@ -60,7 +60,7 @@ public struct FareSummary: View {
     }
 
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// Reduce-Motion-gated toggle animation, resolved here (never by a style) and
