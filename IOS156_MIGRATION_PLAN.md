@@ -50,6 +50,23 @@ Counts verified 2026-07-20 by grep + `swiftc -typecheck -target arm64-apple-ios1
 
 Not found (probed for, zero hits): `sensoryFeedback`, `PhaseAnimator`/`KeyframeAnimator`, `NavigationStack`, `ContentUnavailableView`, `fontDesign`, `lineLimit(reservesSpace:)`, toolbar-visibility forms, `PhotosPicker`, `LabeledContent`, native `Table` (`DataTable`/`KeyValueTable` are custom), `ImageRenderer`, parameter packs, `@Bindable`. `AttributedString`/`FormatStyle` uses look 15-safe — the compile loop is the oracle.
 
+## 2a. Phase 2 exit — verified remaining Bucket-C ledger (2026-07-20)
+
+**Canary caveat (correct the lane's interpretation):** the `xcodebuild` canary early-exits at the *emit-module* stage, so its raw ` error: ` count (169 → **1** after Phase 2) **underreports** — function-body/Bucket-C errors only appear once emit-module passes and the driver reaches the compile phase, and it early-exits on the first failing batch. The reliable burndown oracle is a **whole-module typecheck against the canary-built `ThemeKitCore.swiftmodule`** (`swiftc -typecheck -wmo -target arm64-apple-ios15.6-simulator`; recipe + logs in scratchpad `typecheck-*.log`). Use it for Phase 3 burndown; treat the xcodebuild number as advisory only.
+
+**Verified remaining after Phase 2 (deep typecheck) — 172 unique sites, 100% Bucket-C, zero Bucket-A left in either module:**
+- **ThemeKit (151):** `AnyShape` 41 · Charts 38 · Layout/AnyLayout 30 · detents 10 · `UnevenRoundedRectangle` 8 · KanbanBoard drag-drop 8 · **LocationCard Map 7 (new)** · Gauge 5 · ShareLink 2 · ViewThatFits 1 · Mask gradient 1.
+- **ThemeKitTravel (31):** `AnyShape` 13 · BoardingPass Grid 11 · ViewThatFits 3 · FlowLayout call sites 3 · `UnevenRoundedRectangle` 1.
+
+**High-leverage single-path polyfills (do these FIRST in Phase 3 — they clear ~86 of the 172 sites and are shared across sub-waves):** `AnyShape` (54 sites — a Core type-erasing `Shape` polyfill), `UnevenRoundedRectangle` (9 — Core `Shape` polyfill, already a 3e unit), `ProposedViewSize` (Layout support type), `ViewThatFits`→one `AdaptiveFit` helper (17→1 idiom).
+
+**New Bucket-C items folded into Phase 3 (compile-loop findings beyond the original inventory):**
+- **`LocationCard` iOS-17 Map content API** (`Marker`/`MapContentBuilder`/`MapCameraBounds`, 7 sites) → treatment decision needed; iOS-15 `Map(coordinateRegion:annotationItems:)` is the plausible single-path. → new **3f**.
+- New **AnyLayout** files beyond §2's list: `ButtonGroup`, `ColorSwatchPicker`, `Space` (ThemeKit), `CabinClassSelectorStyle` (Travel) → **3a**.
+- `KanbanBoard` also uses `accessibilityActions` (iOS 16) → **3e**.
+- `Path.subtracting` (iOS 17 — ticket notch + seatback shapes) currently gated to un-notched below 17 → **3e** must restore with real arc geometry.
+- `AreaChart`/`BarChart` hit "expression too complex" under the 15.6 typecheck (availability-recovery artifact) → moot after **3d**'s Canvas rewrite.
+
 ---
 
 ## Phase 0 — Guardrail + inventory lock (S, ~1–2 days)
