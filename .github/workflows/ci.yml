@@ -208,3 +208,41 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for brand / Turkish-language leaks
         run: scripts/check-neutrality.sh
+
+  # ---------------------------------------------------------------------------
+  # iOS 15.6 floor gate (ADR-0007 §D5). Compile-time availability checking is the
+  # airtight guardrail — no iOS 15.x simulator runtime can run under the tools-6.2
+  # toolchain, so the FLOOR is proven by the compiler and the legacy #available
+  # branches are proven by direct snapshot/unit coverage (ADR-0007 §D2 rule 3).
+  # ADVISORY (continue-on-error) while Package.swift still says .iOS(.v17): the
+  # error count is the migration burndown metric, surfaced in the step summary.
+  # In Phase 4, when the manifest floor flips to 15.6, drop continue-on-error +
+  # the IPHONEOS_DEPLOYMENT_TARGET override and this becomes the plain blocking
+  # build, gaining the oldest-installable-runtime test step. PR-only, iOS-lane
+  # cost policy. See IOS156_MIGRATION_PLAN.md §Phase 0.
+  # ---------------------------------------------------------------------------
+  ios-floor:
+    name: Build at iOS 15.6 floor (canary)
+    if: github.event_name == 'pull_request'
+    runs-on: macos-15
+    continue-on-error: true            # ← REMOVE in Phase 4 (manifest floor flips)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/swift-setup
+        with:
+          cache-key: ios-floor
+      # While the manifest still declares .iOS(.v17), force the floor for this
+      # build only via IPHONEOS_DEPLOYMENT_TARGET (verified to propagate to the
+      # SwiftPM package targets — Phase 0 spike; docs/CI.md). Never commit a
+      # lowered Package.swift until Phase 4.
+      - name: Build for iOS Simulator at the 15.6 floor
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -scheme ThemeKit-Package \
+            -destination 'generic/platform=iOS Simulator' \
+            IPHONEOS_DEPLOYMENT_TARGET=15.6 \
+            2>&1 | tee floor.log || true          # advisory phase — never fail the job
+          ERRORS=$(grep -c ' error: ' floor.log || true)
+          echo "### iOS 15.6 floor canary — ${ERRORS} availability errors remaining" >> "$GITHUB_STEP_SUMMARY"
+          echo "Burndown metric (ADR-0007 §D5). Target: 0 at end of Phase 3, then this job flips to blocking."  >> "$GITHUB_STEP_SUMMARY"
