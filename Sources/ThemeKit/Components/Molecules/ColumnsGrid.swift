@@ -73,5 +73,5 @@ public extension ColumnsGrid {
                 .adaptive(minWidth: 90)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

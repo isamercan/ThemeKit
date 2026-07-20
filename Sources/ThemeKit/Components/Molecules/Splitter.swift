@@ -155,7 +155,7 @@ public extension Splitter {
             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("RTL") {
@@ -169,6 +169,6 @@ public extension Splitter {
     .frame(height: 200)
     .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
     .padding()
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
     .environment(\.layoutDirection, .rightToLeft)
 }

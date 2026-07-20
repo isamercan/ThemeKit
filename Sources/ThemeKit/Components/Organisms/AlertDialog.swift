@@ -760,7 +760,7 @@ public extension View {
         .frame(maxWidth: .infinity)
     }
     .background(Color.gray.opacity(0.1))
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("Presented · async primary + custom body") {

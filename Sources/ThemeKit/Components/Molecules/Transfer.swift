@@ -274,7 +274,7 @@ public extension Transfer {
                 .status(.error)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("RTL — boxes and arrows mirror") {
@@ -288,7 +288,7 @@ public extension Transfer {
     }
     return Demo()
         .environment(\.layoutDirection, .rightToLeft)
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
 }
 
 #Preview("Searchable + disabled items") {
@@ -305,5 +305,5 @@ public extension Transfer {
                 .padding()
         }
     }
-    return Demo().environment(Theme.shared)
+    return Demo().environment(\.theme, Theme.shared)
 }

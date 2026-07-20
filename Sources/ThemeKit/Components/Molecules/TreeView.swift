@@ -139,5 +139,5 @@ public extension TreeView {
         PreviewCase("Checkable") { TreeView(nodes, selection: $checked).checkable() }
         PreviewCase("Plain (no checkboxes)") { TreeView(nodes, selection: .constant([])) }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

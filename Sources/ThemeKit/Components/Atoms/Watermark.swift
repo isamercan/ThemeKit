@@ -97,5 +97,5 @@ private struct WatermarkModifier: ViewModifier {
             .watermark("DRAFT", rotation: .degrees(-30), fontSize: 14)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

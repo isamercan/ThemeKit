@@ -9,6 +9,11 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 // SPI, not public: a legibility helper the component layer (e.g. Tooltip) reuses,
 // but not part of ThemeKit's supported consumer API. `@_exported` deliberately does
@@ -43,11 +48,23 @@ import SwiftUI
         return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
     }
 
-    /// sRGB 0…1 components of a `Color`. Uses SwiftUI's cross-platform resolver
-    /// (iOS 17 / macOS 14), so it works the same in the app and in `swift test`.
+    /// sRGB 0…1 components of a `Color`, via the platform color bridge
+    /// (`UIColor` on iOS, `NSColor` on macOS) — `Color.resolve(in:)` is iOS 17+
+    /// (ADR-0007 §D3, iOS 15.6 floor). The theme's token colors are plain sRGB
+    /// values (`Color(hex:)` / `Color(.sRGB, …)`), for which the bridge returns
+    /// the same components the old resolver did — pinned by
+    /// `ContentContrastTests` / `ColorModelsTests` on macOS `swift test`.
     static func components(of color: Color) -> (Double, Double, Double) {
-        let resolved = color.resolve(in: EnvironmentValues())
-        func clamp(_ v: Float) -> Double { min(max(Double(v), 0), 1) }
-        return (clamp(resolved.red), clamp(resolved.green), clamp(resolved.blue))
+        func clamp(_ v: CGFloat) -> Double { min(max(Double(v), 0), 1) }
+        #if canImport(UIKit)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (clamp(r), clamp(g), clamp(b))
+        #elseif canImport(AppKit)
+        guard let srgb = NSColor(color).usingColorSpace(.sRGB) else { return (0, 0, 0) }
+        return (clamp(srgb.redComponent), clamp(srgb.greenComponent), clamp(srgb.blueComponent))
+        #else
+        return (0, 0, 0)
+        #endif
     }
 }

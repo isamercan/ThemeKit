@@ -158,5 +158,5 @@ public extension Mentions {
                 .readOnly()
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

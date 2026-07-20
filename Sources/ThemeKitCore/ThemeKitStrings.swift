@@ -39,7 +39,6 @@
 //
 
 import Foundation
-import Observation
 import os
 import SwiftUI
 
@@ -88,10 +87,11 @@ public enum ThemeKitStrings {
 
     /// Bumped on every ``locale``/``register(bundle:table:)`` change; the
     /// `.themeKitLocalized()` root observes it (ADR-0003 §D4).
-    @Observable
+    /// `ObservableObject` + `@Published` (not the iOS-17 `@Observable` macro —
+    /// ADR-0007 §D3, iOS 15.6 floor); the roots hold it as `@ObservedObject`.
     @MainActor
-    public final class Revision {
-        public internal(set) var value = 0
+    public final class Revision: ObservableObject {
+        @Published public internal(set) var value = 0
         nonisolated init() {}
     }
 
@@ -106,8 +106,10 @@ public enum ThemeKitStrings {
                 // An explicit override round-trips exactly; the zero-config
                 // initial value is the bare device language code ("tr", not
                 // "tr_TR") so it matches `AppLanguage(code:)` entries.
+                // (`themeKitLanguageCode`, not `language.languageCode` — the
+                // object-form Locale.Language API is iOS 16+, ADR-0007.)
                 locale?.identifier
-                    ?? Locale.autoupdatingCurrent.language.languageCode?.identifier
+                    ?? Locale.autoupdatingCurrent.themeKitLanguageCode
                     ?? Locale.autoupdatingCurrent.identifier
             },
             set: { locale = Locale(identifier: $0) }
@@ -165,7 +167,23 @@ public enum ThemeKitStrings {
         var matchCache: [String: String] = [:]
     }
 
-    private static let state = OSAllocatedUnfairLock<State>(uncheckedState: State())
+    private static let state = LockedState<State>(uncheckedState: State())
+
+    /// iOS-15-safe stand-in for `OSAllocatedUnfairLock<State>` (which is iOS 16+
+    /// — ADR-0007 floor): an `NSLock`-guarded mutable state box exposing the same
+    /// `withLockUnchecked` shape. "Unchecked" as in the original: the protected
+    /// `State` (Bundle / caches) is not itself `Sendable`; the lock provides the
+    /// exclusion, hence `@unchecked Sendable`.
+    private final class LockedState<S>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var state: S
+        init(uncheckedState: S) { state = uncheckedState }
+        func withLockUnchecked<R>(_ body: (inout S) -> R) -> R {
+            lock.lock()
+            defer { lock.unlock() }
+            return body(&state)
+        }
+    }
 
     /// Sentinel distinguishing a lookup miss from a real value (spike #6).
     private static let sentinel = "\u{7F}ThemeKit.miss\u{7F}"

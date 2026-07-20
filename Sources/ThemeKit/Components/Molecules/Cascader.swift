@@ -448,5 +448,5 @@ public extension Cascader {
                 .clearable()
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

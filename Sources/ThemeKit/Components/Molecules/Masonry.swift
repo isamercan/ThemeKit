@@ -124,7 +124,7 @@ struct MasonryLayout: Layout {
             }
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("RTL — columns fill from the trailing edge") {
@@ -143,5 +143,5 @@ struct MasonryLayout: Layout {
         .padding()
     }
     .environment(\.layoutDirection, .rightToLeft)
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

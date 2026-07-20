@@ -143,5 +143,5 @@ private enum AffixMetrics {
             .frame(height: 260)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

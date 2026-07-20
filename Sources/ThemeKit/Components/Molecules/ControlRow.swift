@@ -234,7 +234,7 @@ public extension ControlRow {
             .padding()
         }
     }
-    return Demo().environment(Theme.shared)
+    return Demo().environment(\.theme, Theme.shared)
 }
 
 #Preview("Dark / themed") {

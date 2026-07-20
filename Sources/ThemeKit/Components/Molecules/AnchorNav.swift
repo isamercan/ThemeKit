@@ -117,5 +117,5 @@ public extension AnchorNav {
         PreviewCase("Nested link active") { AnchorNav(items, active: .constant("usage")) }
         PreviewCase("Horizontal") { AnchorNav(items, active: .constant("install")).direction(.horizontal) }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

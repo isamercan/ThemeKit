@@ -231,7 +231,7 @@ public extension PageHeader {
                 .actions([.init(systemImage: "magnifyingglass") {}])
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("Brand + On-image") {
@@ -249,5 +249,5 @@ public extension PageHeader {
                 .background(SemanticColor.primary.solid)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

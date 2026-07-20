@@ -167,7 +167,7 @@ struct FlexLayout: Layout {
             Flex { ForEach(0..<8) { Tag("Tag \($0)") } }.wrap().frame(width: 300)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("RTL — first child starts at the trailing edge") {
@@ -179,5 +179,5 @@ struct FlexLayout: Layout {
     }
     .padding()
     .environment(\.layoutDirection, .rightToLeft)
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

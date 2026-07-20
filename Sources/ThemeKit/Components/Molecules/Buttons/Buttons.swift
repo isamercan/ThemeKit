@@ -697,5 +697,5 @@ public extension DangerSoftButton {
         PreviewCase("Full-width CTA") { PrimaryButton("Full-width CTA") {}.fullWidth() }
         PreviewCase("Helper text") { PrimaryButton("Book now") {}.helperText("No charge yet") }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
