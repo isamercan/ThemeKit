@@ -47,13 +47,22 @@ public struct Splitter<First: View, Second: View>: View {
             let usable = max(1, total - handle)
             let firstMain = usable * fraction
             let secondMain = usable * (1 - fraction)
-            let stack = axis == .horizontal
-                ? AnyLayout(HStackLayout(spacing: 0))
-                : AnyLayout(VStackLayout(spacing: 0))
-            stack {
-                pane(first, main: firstMain, geo: geo.size)
-                divider(usable: usable)
-                pane(second, main: secondMain, geo: geo.size)
+            // iOS 15.6 floor: `AnyLayout(H/VStackLayout)` is iOS 16 — branch
+            // into explicit stacks instead. The axis is fixed at init, so the
+            // identity swap between branches never animates in practice
+            // (Reduce-Motion-safe either way).
+            if axis == .horizontal {
+                HStack(spacing: 0) {
+                    pane(first, main: firstMain, geo: geo.size)
+                    divider(usable: usable)
+                    pane(second, main: secondMain, geo: geo.size)
+                }
+            } else {
+                VStack(spacing: 0) {
+                    pane(first, main: firstMain, geo: geo.size)
+                    divider(usable: usable)
+                    pane(second, main: secondMain, geo: geo.size)
+                }
             }
         }
     }
