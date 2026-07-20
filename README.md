@@ -88,10 +88,10 @@ the repository URL, or add it to your `Package.swift`:
 ```swift
 dependencies: [
     // Core only — a plain install resolves ZERO third-party packages.
-    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "2.0.0"),
+    .package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.2.0"),
 
     // Opt into an add-on's dependency via package traits (Swift 6.1+):
-    // .package(url: "https://github.com/isamercan/ThemeKit.git", from: "2.0.0",
+    // .package(url: "https://github.com/isamercan/ThemeKit.git", from: "1.2.0",
     //          traits: ["Lottie", "Calendar"]),
 ],
 targets: [

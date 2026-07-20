@@ -7,7 +7,7 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-07-20
+## [1.2.0] - 2026-07-20
 
 ### Removed (BREAKING)
 - **`ComponentDefaults` is now accent-only — its dead `radius` and `elevation` fields were removed.** No component ever consumed `componentDefaults.radius` / `.elevation` (only `.accent` is live), so `.componentDefaults(radius:elevation:accent:)` is now `.componentDefaults(accent:)` and `ComponentDefaults.init` / the struct's stored properties drop `radius`/`elevation`. **Migration:** drop the `radius:` / `elevation:` arguments (they were no-ops); for a subtree radius use `.dialogCornerRadius(_:)` (dialogs) or the per-component `.radius(_:)` modifier (Card).
