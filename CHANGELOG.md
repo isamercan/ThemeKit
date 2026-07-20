@@ -7,6 +7,60 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### ⚠️ Migration required — observation pattern change (iOS 15.6 floor, ADR-0007)
+
+ThemeKit is migrating its deployment floor from iOS 17 to **iOS 15.6** (macOS stays 14).
+The iOS-17-only Observation framework does not back-deploy, so the observation spine moved
+from `@Observable` to `ObservableObject`/`@Published`. Two consumer-visible changes, both
+mechanical:
+
+1. **Compile-time (one line per site):** reading a presenter through the object-form
+   environment no longer compiles. Replace `@Environment(Type.self)` with
+   `@EnvironmentObject`:
+
+   | Before (compile error now) | After |
+   |---|---|
+   | `@Environment(SheetPresenter.self) var sheet: SheetPresenter` | `@EnvironmentObject var sheet: SheetPresenter` |
+   | `@Environment(DrawerPresenter.self) var drawer: DrawerPresenter` | `@EnvironmentObject var drawer: DrawerPresenter` |
+   | `@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter` | `@EnvironmentObject var feedback: FeedbackPresenter` |
+
+   The hosts (`.sheetHost()`, `.drawerHost()`, `.feedbackHost()`) now inject via
+   `.environmentObject(_:)` — no change needed there.
+
+2. **SILENT runtime change — check every owned instance:** a consumer holding one of
+   these objects in `@State` **still compiles but stops updating views**. Replace
+   `@State` with `@StateObject` wherever you own a `SheetPresenter`, `DrawerPresenter`,
+   `FeedbackPresenter`, `TourController`, `UploadController`, or `FormValidator`:
+
+   ```swift
+   // BEFORE — compiles after the update, but the tour/form UI silently stops reacting:
+   @State private var tour = TourController()
+   @State private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   // AFTER:
+   @StateObject private var tour = TourController()
+   @StateObject private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   ```
+
+   Grep your codebase for `@State` next to these six types — it is the sharpest edge of
+   this release because nothing flags it at compile time.
+
+   Unchanged: `@Environment(\.theme)` / `@ThemeContext`, `.themeKit()`,
+   `.theme(_:)` per-subtree overrides, `.themeKitLocalized()`, and every component API.
+   Injecting a theme object-form (`.environment(Theme.shared)`) must become keypath-form
+   (`.environment(\.theme, Theme.shared)` — or just use `.theme(_:)` / `.themeKit()`).
+
+### Changed
+- **Core observation spine → `ObservableObject`** (`Theme`, `ThemeKitStrings.Revision`,
+  the five presenters, `FormValidator`) per ADR-0007 §D3 — the `.id(revision)` rebuild
+  contract, per-subtree `.theme(_:)` first-paint, and the live language switch are
+  unchanged (covered by the existing theme-swap / two-brand / language-switch tests).
+- **`ColorContrast` sRGB components** now resolve through the platform bridge
+  (`UIColor`/`NSColor`) instead of iOS-17 `Color.resolve(in:)` — identical output for
+  token colors (pinned by `ContentContrastTests`).
+- **`ThemeKitStrings`** internal lock moved off `OSAllocatedUnfairLock` (iOS 16+) to an
+  `NSLock`-backed equivalent; locale language/direction parsing moved off the iOS-16
+  `Locale.Language` API — same behavior on all supported OS versions.
+
 ## [1.2.0] - 2026-07-20
 
 ### Removed (BREAKING)

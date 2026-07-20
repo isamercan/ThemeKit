@@ -154,3 +154,16 @@ API breakage: func View.componentDefaults(radius:elevation:accent:) has paramete
 #     as a removal/rename; same additive-axis precedent as the #308 entries above. ---
 API breakage: constructor FieldDefaults.init(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been removed
 API breakage: func View.fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been renamed to func fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:labelPlacement:)
+
+# --- iOS 15.6 floor (ADR-0007 §D3/§D4): @Observable → ObservableObject on the
+#     presenters + FormValidator. Consumer migration (one line per site):
+#       @Environment(SheetPresenter.self) → @EnvironmentObject var sheet: SheetPresenter
+#       @State var tour = TourController() → @StateObject var tour = TourController()
+#     The @State→@StateObject change is SILENT (compiles, stops observing) —
+#     see the CHANGELOG [Unreleased] migration block. ---
+API breakage: class SheetPresenter has removed conformance to Observable
+API breakage: class DrawerPresenter has removed conformance to Observable
+API breakage: class FeedbackPresenter has removed conformance to Observable
+API breakage: class TourController has removed conformance to Observable
+API breakage: class UploadController has removed conformance to Observable
+API breakage: class FormValidator has removed conformance to Observable
