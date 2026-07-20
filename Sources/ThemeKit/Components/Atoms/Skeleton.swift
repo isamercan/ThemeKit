@@ -29,11 +29,11 @@ public enum SkeletonShape: Equatable {
         .rounded(role.value)
     }
 
-    var anyShape: AnyShape {
+    var anyShape: ThemeAnyShape {
         switch self {
-        case .rounded(let r): return AnyShape(RoundedRectangle(cornerRadius: r, style: .continuous))
-        case .circle: return AnyShape(Circle())
-        case .capsule: return AnyShape(Capsule())
+        case .rounded(let r): return ThemeAnyShape(RoundedRectangle(cornerRadius: r, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .capsule: return ThemeAnyShape(Capsule())
         }
     }
 }

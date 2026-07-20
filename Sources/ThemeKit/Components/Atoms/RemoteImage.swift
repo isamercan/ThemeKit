@@ -59,8 +59,8 @@ public struct RemoteImage: View {
         self.aspectRatio = ratio.value
     }
 
-    private var clip: AnyShape {
-        circle ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    private var clip: ThemeAnyShape {
+        circle ? ThemeAnyShape(Circle()) : ThemeAnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 
     /// Animated formats are decoded frame-by-frame by `AnimatedImage` (ImageIO);

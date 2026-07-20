@@ -9,12 +9,12 @@ import SwiftUI
 public enum MaskShape: Sendable, CaseIterable {
     case circle, squircle, hexagon, star
 
-    var shape: AnyShape {
+    var shape: ThemeAnyShape {
         switch self {
-        case .circle:   return AnyShape(Circle())
-        case .squircle: return AnyShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        case .hexagon:  return AnyShape(PolygonShape(sides: 6, rotation: .pi / 6))
-        case .star:     return AnyShape(StarShape(points: 5))
+        case .circle:   return ThemeAnyShape(Circle())
+        case .squircle: return ThemeAnyShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        case .hexagon:  return ThemeAnyShape(PolygonShape(sides: 6, rotation: .pi / 6))
+        case .star:     return ThemeAnyShape(StarShape(points: 5))
         }
     }
 }

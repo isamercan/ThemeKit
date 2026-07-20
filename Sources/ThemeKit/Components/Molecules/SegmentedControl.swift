@@ -107,15 +107,15 @@ public struct SegmentedControl: View {
         self.init(items.map { SegmentItem($0) }, selection: selection)
     }
 
-    private var trackShape: AnyShape {
+    private var trackShape: ThemeAnyShape {
         shape == .round
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
     }
-    private var thumbShape: AnyShape {
+    private var thumbShape: ThemeAnyShape {
         shape == .round
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
     }
 
     /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.

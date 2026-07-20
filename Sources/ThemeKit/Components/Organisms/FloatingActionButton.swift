@@ -53,10 +53,10 @@ public struct FloatingActionButton: View {
         self.action = action
     }
 
-    private var mainShape: AnyShape {
+    private var mainShape: ThemeAnyShape {
         switch shape {
-        case .circle: return AnyShape(Circle())
-        case .square: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .square: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous))
         }
     }
 

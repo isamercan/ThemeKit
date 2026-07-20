@@ -90,10 +90,10 @@ public struct TripTypeToggleConfiguration {
 
     /// The ``shape`` resolved to a fillable/clippable shape — the pill track,
     /// the selected thumb and the menu trigger all draw with it.
-    public var trackShape: AnyShape {
+    public var trackShape: ThemeAnyShape {
         switch shape {
-        case .capsule: AnyShape(Capsule(style: .continuous))
-        case .rounded(let role): AnyShape(RoundedRectangle(cornerRadius: role.value, style: .continuous))
+        case .capsule: ThemeAnyShape(Capsule(style: .continuous))
+        case .rounded(let role): ThemeAnyShape(RoundedRectangle(cornerRadius: role.value, style: .continuous))
         }
     }
 }

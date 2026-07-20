@@ -255,11 +255,11 @@ public enum SeatShape: Sendable, Hashable, CaseIterable {
     /// The concrete shape, type-erased. `.rounded` takes the caller's corner
     /// radius (``SeatCell`` passes the selector role's value; ``SeatLegend``
     /// its smaller swatch radius); the other silhouettes ignore it.
-    func anyShape(cornerRadius: CGFloat) -> AnyShape {
+    func anyShape(cornerRadius: CGFloat) -> ThemeAnyShape {
         switch self {
-        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        case .circle: return AnyShape(Circle())
-        case .seatback: return AnyShape(SeatbackShape())
+        case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .seatback: return ThemeAnyShape(SeatbackShape())
         }
     }
 }

@@ -100,7 +100,7 @@ struct PHIconButton: View {
                 .background {
                     if circular { Circle().fill(theme.background(.bgWhite)).themeShadow(.soft) }
                 }
-                .contentShape(circular ? AnyShape(Circle()) : AnyShape(Rectangle()))
+                .contentShape(circular ? ThemeAnyShape(Circle()) : ThemeAnyShape(Rectangle()))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label ?? "")

@@ -246,11 +246,11 @@ public struct ThemeButton: View {
         }
     }
 
-    private var shapeStyle: AnyShape {
+    private var shapeStyle: ThemeAnyShape {
         switch shape {
-        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
-        case .square: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        case .pill, .circle: return AnyShape(Capsule())
+        case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
+        case .square: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        case .pill, .circle: return ThemeAnyShape(Capsule())
         }
     }
 
@@ -461,7 +461,7 @@ private struct SurfacePressBody: View {
 /// while pressed (Ant active), paints the optional outline stroke, and adds a
 /// subtle scale. This is what gives `ThemeButton` real interaction states.
 struct FillButtonStyle: ButtonStyle {
-    let shape: AnyShape
+    let shape: ThemeAnyShape
     let resting: Color
     let pressed: Color
     let stroke: Color?
@@ -473,7 +473,7 @@ struct FillButtonStyle: ButtonStyle {
 
 private struct FillButtonBody: View {
     let configuration: ButtonStyleConfiguration
-    let shape: AnyShape
+    let shape: ThemeAnyShape
     let resting: Color
     let pressed: Color
     let stroke: Color?

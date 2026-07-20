@@ -105,10 +105,10 @@ public struct ProgressIndicator: View {
         .frame(height: size.barHeight)
     }
 
-    private var shape: AnyShape {
+    private var shape: ThemeAnyShape {
         cornerRadius
-            ? AnyShape(Capsule())
-            : AnyShape(Rectangle())
+            ? ThemeAnyShape(Capsule())
+            : ThemeAnyShape(Rectangle())
     }
 
     private var stepLabel: String {

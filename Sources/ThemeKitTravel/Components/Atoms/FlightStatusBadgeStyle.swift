@@ -94,10 +94,10 @@ public struct FlightStatusBadgeConfiguration {
 
     /// The clip/stroke shape for pill-chrome styles: a continuous capsule, or
     /// a rounded rectangle at the selector radius role.
-    public var badgeShape: AnyShape {
+    public var badgeShape: ThemeAnyShape {
         shape == .capsule
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
     }
 
     /// Density-scaled spacing — use for chrome padding so `.componentDensity`

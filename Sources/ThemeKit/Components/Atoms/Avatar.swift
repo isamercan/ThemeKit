@@ -96,10 +96,10 @@ public struct Avatar: View {
     /// remote-loading skeleton so the two can never drift apart.
     private var squareCornerRadius: CGFloat { dim * 0.28 }
 
-    private var clip: AnyShape {
+    private var clip: ThemeAnyShape {
         switch shape {
-        case .circle: return AnyShape(Circle())
-        case .square: return AnyShape(RoundedRectangle(cornerRadius: squareCornerRadius, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .square: return ThemeAnyShape(RoundedRectangle(cornerRadius: squareCornerRadius, style: .continuous))
         }
     }
 
