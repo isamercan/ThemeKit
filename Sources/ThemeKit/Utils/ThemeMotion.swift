@@ -25,8 +25,46 @@ func zeroPad2(_ value: Int) -> String { (value >= 0 && value < 10) ? "0\(value)"
 
 public extension Animation {
     /// Returns the animation, or `nil` when Reduce Motion is on — so components can
-    /// write `withAnimation(.snappy.ifMotionAllowed(reduceMotion)) { … }`.
+    /// write `withAnimation(ThemeMotion.snappy.ifMotionAllowed(reduceMotion)) { … }`.
     func ifMotionAllowed(_ reduceMotion: Bool) -> Animation? {
         reduceMotion ? nil : self
+    }
+}
+
+/// Spring presets equivalent to the iOS 17-only `.snappy` / `.smooth` system
+/// curves, back-deployed to the iOS 15.6 floor as single-path replacements
+/// (ADR-0007 §D2 rule 1). Durations come from the `Motion` token ramp and the
+/// damping values live *here* — call sites never inline raw curve numbers
+/// (token-fed house rule), and Reduce Motion keeps composing through the same
+/// `.ifMotionAllowed` / `MicroMotion` gates as before.
+///
+/// When the deployment floor rises past 17, these fold back into the system
+/// presets (ADR-0007 §D6 deletion checklist).
+package enum ThemeMotion {
+    /// The `.snappy`-equivalent damping: a quick spring with a slight bounce
+    /// (system `.snappy` ≈ bounce 0.15 → dampingFraction 0.85).
+    private static let snappyDamping: Double = 0.85
+    /// The `.smooth`-equivalent damping: settles with no bounce.
+    private static let smoothDamping: Double = 1.0
+
+    /// Back-deployed `.snappy` at its system default duration (0.5 s).
+    package static var snappy: Animation {
+        .spring(response: 0.5, dampingFraction: snappyDamping)
+    }
+
+    /// Back-deployed `.snappy(duration:)` at a `Motion` token duration —
+    /// `.fast` (0.2 s) is the disclosure/tree/cascader tick.
+    package static func snappy(_ token: Motion) -> Animation {
+        .spring(response: token.duration, dampingFraction: snappyDamping)
+    }
+
+    /// Back-deployed `.smooth` at its system default duration (0.5 s).
+    package static var smooth: Animation {
+        .spring(response: 0.5, dampingFraction: smoothDamping)
+    }
+
+    /// Back-deployed `.smooth(duration:)` at a `Motion` token duration.
+    package static func smooth(_ token: Motion) -> Animation {
+        .spring(response: token.duration, dampingFraction: smoothDamping)
     }
 }
