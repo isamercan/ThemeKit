@@ -350,12 +350,18 @@ public extension View {
 /// Imperative drawer presenter. Install once with `.drawerHost()`, then from any
 /// descendant view:
 ///
-///     @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
+///     @EnvironmentObject var drawer: DrawerPresenter
 ///     drawer.present(edge: .bottom) { Drawer { MenuView() } }
 ///     drawer.dismiss()
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `DrawerPresenter` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > read it with `@EnvironmentObject` — `@Environment(DrawerPresenter.self)`
+/// > will not compile — and if you own an instance yourself, hold it as
+/// > `@StateObject` (NOT `@State`: with `@State` it still compiles but views
+/// > silently stop updating).
 @MainActor
-@Observable
-public final class DrawerPresenter {
+public final class DrawerPresenter: ObservableObject {
 
     struct Request: Identifiable {
         let id = UUID()
@@ -365,7 +371,7 @@ public final class DrawerPresenter {
         let content: AnyView
     }
 
-    var current: Request?
+    @Published var current: Request?
 
     public init() {}
 
@@ -385,14 +391,14 @@ public final class DrawerPresenter {
 }
 
 private struct DrawerHostModifier: ViewModifier {
-    @State private var presenter = DrawerPresenter()
+    @StateObject private var presenter = DrawerPresenter()
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content
-            .environment(presenter)
+            .environmentObject(presenter)
             .overlay {
                 if let request = presenter.current {
                     DrawerContainer(edge: request.edge, width: request.width,
@@ -467,7 +473,7 @@ public extension View {
 
 #Preview("Imperative host") {
     struct Demo: View {
-        @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
+        @EnvironmentObject var drawer: DrawerPresenter
         var body: some View {
             PrimaryButton("Present (bottom)") {
                 drawer.present(edge: .bottom) {

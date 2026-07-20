@@ -132,7 +132,7 @@ public extension View {
 
 #Preview("Feedback defaults: top edge + 2s duration") {
     struct Demo: View {
-        @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+        @EnvironmentObject private var feedback: FeedbackPresenter
         var body: some View {
             VStack(spacing: 12) {
                 ThemeButton("Toast (uses defaults)") {

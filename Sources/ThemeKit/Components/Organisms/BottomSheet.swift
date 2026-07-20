@@ -6,8 +6,8 @@
 //  Organism. Presents content in a bottom sheet with detents + drag indicator
 //  (native sheet under the hood). Two entry points:
 //    • `.bottomSheet(isPresented:detents:)` — declarative, binding-driven.
-//    • `.sheetHost()` + `@Environment(SheetPresenter.self)` — imperative; present
-//      a sheet from anywhere without owning a binding.
+//    • `.sheetHost()` + `@EnvironmentObject var sheet: SheetPresenter` —
+//      imperative; present a sheet from anywhere without owning a binding.
 //  Both paths support a `detached` floating-card presentation (HeroUI parity),
 //  a `surface` background-token override, and a `radius` corner-role override.
 //  Detent + corner-radius modifiers are iOS-only; the content still presents on macOS.
@@ -70,11 +70,17 @@ public extension View {
 /// Imperative bottom-sheet presenter. Install once with `.sheetHost()`, then from
 /// any descendant view:
 ///
-///     @Environment(SheetPresenter.self) var sheet: SheetPresenter
+///     @EnvironmentObject var sheet: SheetPresenter
 ///     sheet.present(detents: [.height(280), .large]) { FilterView() }
 ///     sheet.dismiss()
-@Observable
-public final class SheetPresenter {
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `SheetPresenter` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > read it with `@EnvironmentObject` — `@Environment(SheetPresenter.self)`
+/// > will not compile — and if you own an instance yourself, hold it as
+/// > `@StateObject` (NOT `@State`: with `@State` it still compiles but views
+/// > silently stop updating).
+public final class SheetPresenter: ObservableObject {
 
     struct Request: Identifiable {
         let id = UUID()
@@ -86,7 +92,7 @@ public final class SheetPresenter {
         let content: AnyView
     }
 
-    var current: Request?
+    @Published var current: Request?
 
     public init() {}
 
@@ -117,11 +123,11 @@ public final class SheetPresenter {
 }
 
 private struct SheetHostModifier: ViewModifier {
-    @State private var presenter = SheetPresenter()
+    @StateObject private var presenter = SheetPresenter()
 
     func body(content: Content) -> some View {
         content
-            .environment(presenter)
+            .environmentObject(presenter)
             .sheet(item: $presenter.current) { request in
                 request.content
                     .padding(Theme.SpacingKey.md.value)
@@ -220,7 +226,7 @@ private struct SheetChrome: ViewModifier {
 
 #Preview("Imperative host") {
     struct Demo: View {
-        @Environment(SheetPresenter.self) var sheet: SheetPresenter
+        @EnvironmentObject var sheet: SheetPresenter
         var body: some View {
             PrimaryButton("Present") {
                 sheet.present(detents: [.medium, .large]) {
@@ -252,7 +258,7 @@ private struct SheetChrome: ViewModifier {
 
 #Preview("Tinted surface + custom radius") {
     struct Demo: View {
-        @Environment(SheetPresenter.self) var sheet: SheetPresenter
+        @EnvironmentObject var sheet: SheetPresenter
         @State var showTinted = false
         var body: some View {
             VStack(spacing: 12) {

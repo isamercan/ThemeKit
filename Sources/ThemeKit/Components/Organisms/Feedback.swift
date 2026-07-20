@@ -9,7 +9,7 @@
 //  developer-placed in the view tree. See docs/feedback-patterns.md.
 //
 //  Install once at the app root with `.feedbackHost()`, then from anywhere:
-//      @Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter
+//      @EnvironmentObject var feedback: FeedbackPresenter
 //      feedback.toast("Saved", kind: .success)
 //      feedback.confirm(title: "Delete?", primaryTitle: "Delete", primaryKind: .error) { … }
 //
@@ -110,9 +110,17 @@ public enum ToastPosition: CaseIterable {
 }
 
 /// Imperative presenter for app-global feedback. A single shared instance is
-/// injected via `.feedbackHost()`; call it from any descendant view.
-@Observable
-public final class FeedbackPresenter {
+/// injected via `.feedbackHost()`; call it from any descendant view:
+///
+///     @EnvironmentObject var feedback: FeedbackPresenter
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `FeedbackPresenter` is
+/// > an `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > read it with `@EnvironmentObject` — `@Environment(FeedbackPresenter.self)`
+/// > will not compile — and if you own an instance yourself, hold it as
+/// > `@StateObject` (NOT `@State`: with `@State` it still compiles but views
+/// > silently stop updating).
+public final class FeedbackPresenter: ObservableObject {
 
     public struct ToastItem: Identifiable {
         public let id = UUID()
@@ -201,14 +209,17 @@ public final class FeedbackPresenter {
     }
 
     /// Stacked toasts (newest last), capped at `maxVisibleToasts`.
-    var toasts: [ToastItem] = []
-    var activeConfirm: ConfirmRequest?
-    var activeNotification: NotificationItem?
-    var activeLoading: String?
+    @Published var toasts: [ToastItem] = []
+    @Published var activeConfirm: ConfirmRequest?
+    @Published var activeNotification: NotificationItem?
+    @Published var activeLoading: String?
 
     /// Stack cap (oldest drops past it). Internal setter so the `.feedbackHost`
     /// overlay can sync it from `FeedbackDefaults.maxVisibleToasts` — callers
     /// still size it via `feedbackHost(maxVisibleToasts:)` / this class's init.
+    /// Deliberately NOT `@Published`: no view renders from it (it only caps
+    /// `enqueue`), and the host syncs it from an `.onChange` where a publish
+    /// could re-enter the view update.
     var maxVisibleToasts: Int
 
     public init(maxVisibleToasts: Int = 3) {
@@ -442,7 +453,7 @@ private struct FeedbackHostModifier: ViewModifier {
     /// they sit between a per-toast argument and the host's own parameters.
     @Environment(\.feedbackDefaults) private var feedbackDefaults
 
-    @State private var presenter: FeedbackPresenter
+    @StateObject private var presenter: FeedbackPresenter
     private let defaultPosition: ToastPosition
     private let defaultCap: Int
 
@@ -478,14 +489,14 @@ private struct FeedbackHostModifier: ViewModifier {
     private var depthOn: Bool { micro && !reduceMotion }
 
     init(maxVisibleToasts: Int, toastPosition: ToastPosition) {
-        _presenter = State(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
+        _presenter = StateObject(wrappedValue: FeedbackPresenter(maxVisibleToasts: maxVisibleToasts))
         defaultPosition = toastPosition
         defaultCap = maxVisibleToasts
     }
 
     func body(content: Content) -> some View {
         content
-            .environment(presenter)
+            .environmentObject(presenter)
             .overlay(alignment: effectiveNotificationPosition.overlayAlignment) { notificationLayer }
             .overlay(alignment: .top) { toastLayer(.top) }
             .overlay(alignment: .bottom) { toastLayer(.bottom) }
@@ -766,7 +777,7 @@ private struct Seeded: View {
     var body: some View { Trigger(seed: seed).feedbackHost(toastPosition: .bottom) }
 
     struct Trigger: View {
-        @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+        @EnvironmentObject private var feedback: FeedbackPresenter
         let seed: (FeedbackPresenter) -> Void
         var body: some View {
             Color.clear.frame(height: 240).onAppear { seed(feedback) }
@@ -805,7 +816,7 @@ private struct Seeded: View {
 
 #Preview("Custom content slots") {
     struct Demo: View {
-        @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+        @EnvironmentObject private var feedback: FeedbackPresenter
         @Environment(\.theme) private var theme
         var body: some View {
             VStack(spacing: 12) {
