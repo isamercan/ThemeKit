@@ -250,7 +250,7 @@ public struct SeatMap: View {
                         display: seatDisplay, palette: palette, customContent: customContent,
                         currencyCode: resolvedCurrency, shape: seatShape, action: {
             focusedSeat = seat.id
-            withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) {
+            withAnimation(ThemeMotion.snappy.ifMotionAllowed(reduceMotion)) {
                 if passengerMode { assignSeat(seat) } else { toggle(seat) }
             }
         })

@@ -276,7 +276,7 @@ private struct StripDatePriceStripChrome: View {
                 .padding(configuration.spacing(.sm))
             }
             .background(theme.background(configuration.surface(default: .bgElevatorPrimary)))
-            .onChange(of: configuration.selectedIndex) { _, new in
+            .onChangeCompat(of: configuration.selectedIndex) { _, new in
                 withAnimation(configuration.isMotionEnabled ? .default : nil) {
                     proxy.scrollTo(new, anchor: .center)
                 }

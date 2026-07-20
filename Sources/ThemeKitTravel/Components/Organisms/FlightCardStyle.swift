@@ -157,7 +157,7 @@ private struct FlightCardFavoriteHeart: View {
             Image(systemName: isFavorite ? "heart.fill" : "heart")
                 .font(.body)
                 .foregroundStyle(isFavorite ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                .symbolEffect(.bounce, value: configuration.isMotionEnabled ? isFavorite : false)
+                .symbolBounceCompat(value: configuration.isMotionEnabled ? isFavorite : false)
                 .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)

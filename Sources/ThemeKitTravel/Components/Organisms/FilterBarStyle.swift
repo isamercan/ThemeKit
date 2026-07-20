@@ -351,16 +351,16 @@ private struct ChipsFilterBarChrome: View {
                     }
                 }
                 .padding(.trailing, 4)
-                .scrollTargetLayout()
+                .scrollTargetLayoutCompat()
             }
-            .scrollPosition(id: $scrolledID, anchor: .leading)
+            .scrollPositionCompat(id: $scrolledID, anchor: .leading)
             .mask { overflowMask }
             if let trailing = configuration.trailing {
                 trailing.fixedSize()
             }
         }
         .frame(height: configuration.size.controlHeight)
-        .onChange(of: scrolledID) { _, newID in
+        .onChangeCompat(of: scrolledID) { _, newID in
             // Collapse once the first chip has scrolled past the leading edge. Driven by
             // the anchored item id (not a measured offset), so it's immune to the frame
             // change that collapsing the buttons causes.

@@ -547,10 +547,10 @@ private struct WalletSavedCardsListChrome: View {
                 }
             }
             .padding(.vertical, Theme.SpacingKey.xs.value)   // room for the lift shadow
-            .scrollTargetLayout()
+            .scrollTargetLayoutCompat()
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled()
+        .viewAlignedScrollCompat()
+        .scrollClipDisabledCompat()
     }
 }
 

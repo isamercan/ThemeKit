@@ -484,10 +484,10 @@ private struct CarouselPaymentMethodSelectorChrome: View {
                         .frame(width: Metrics.carouselTileWidth)
                 }
             }
-            .scrollTargetLayout()
+            .scrollTargetLayoutCompat()
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollClipDisabled()
+        .viewAlignedScrollCompat()
+        .scrollClipDisabledCompat()
         if let installmentsSlot = configuration.installmentsSlot { installmentsSlot }
     }
 }

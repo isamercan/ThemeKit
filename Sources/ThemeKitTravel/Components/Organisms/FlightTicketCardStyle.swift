@@ -252,7 +252,7 @@ private struct TicketFavoriteHeart: View {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(configuration.accentOnSolid(theme))
-                    .symbolEffect(.bounce, value: (micro && !reduceMotion) ? isFavorite : false)
+                    .symbolBounceCompat(value: (micro && !reduceMotion) ? isFavorite : false)
                     .frame(width: 30, height: 30)
                     .background(isFavorite ? configuration.accentBase(theme) : theme.text(.textTertiary), in: Circle())
             }

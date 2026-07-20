@@ -281,7 +281,7 @@ private struct FavoriteHeart: View {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .font(.body)
                     .foregroundStyle(isFavorite ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                    .symbolEffect(.bounce, value: (micro && !reduceMotion) ? isFavorite : false)
+                    .symbolBounceCompat(value: (micro && !reduceMotion) ? isFavorite : false)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
             }

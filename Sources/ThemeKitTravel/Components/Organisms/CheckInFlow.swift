@@ -256,7 +256,7 @@ public struct CheckInFlow<Page: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .clipped()   // slides stay inside the page area, not over header/dock
         .animation(motion, value: currentIndex)
-        .onChange(of: selection) { old, new in
+        .onChangeCompat(of: selection) { old, new in
             movesForward = new >= old
         }
     }

@@ -190,7 +190,7 @@ public struct PassengerForm: View {
             // header note): same gate as `.field(_:in:)` — only once the
             // form has validated the field (a failed submit or a prior
             // live pass).
-            .onChange(of: draft) { _, newDraft in
+            .onChangeCompat(of: draft) { _, newDraft in
                 guard let form else { return }
                 let values = newDraft.formValues
                 for field in Self.canonicalRevalidated
