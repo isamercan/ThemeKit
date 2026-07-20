@@ -4,10 +4,17 @@
 //
 //  Molecule. Ant Design's **Masonry** — a Pinterest-style grid where variable-
 //  height items flow into a fixed number of columns, each new item dropping into
-//  the currently shortest column (so columns stay balanced). Built on a custom
-//  `Layout`.
+//  the currently shortest column (so columns stay balanced).
 //
 //      Masonry { ForEach(photos) { PhotoCard($0) } }.columns(2).spacing(.sm)
+//
+//  iOS 15.6-floor compat (ADR-0007 §D2 rule 1 — single-path): the former
+//  custom `Layout` (iOS 16) is now a measured view — `_VariadicView` enumerates
+//  the children, the shared probes in `MeasuredLayoutSupport` read the proposed
+//  width and each child's height at column width, and the same
+//  shortest-column math the old `placeSubviews` used places the children with
+//  absolute offsets. Until the first measurement lands (one layout pass) the
+//  grid renders hidden, so there is no transient overlap flash.
 //
 
 import SwiftUI
@@ -46,55 +53,137 @@ public extension Masonry {
     }
 }
 
-// MARK: - Layout
+// MARK: - Layout (measured — see the header note)
 
-struct MasonryLayout: Layout {
+struct MasonryLayout<Content: View>: View {
     var columns: Int
     var spacing: CGFloat
     /// Absolute placement doesn't auto-mirror — under `.rightToLeft` each
-    /// column's x is mirrored within `bounds` so column 0 (the first fill
+    /// column's x is mirrored within the span so column 0 (the first fill
     /// target) starts at the trailing edge.
     var layoutDirection: LayoutDirection = .leftToRight
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? 320
-        let heights = columnHeights(subviews: subviews, columnWidth: columnWidth(width))
-        return CGSize(width: width, height: (heights.max() ?? spacing) - spacing)
+    private let content: Content
+
+    init(
+        columns: Int,
+        spacing: CGFloat,
+        layoutDirection: LayoutDirection = .leftToRight,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.columns = columns
+        self.spacing = spacing
+        self.layoutDirection = layoutDirection
+        self.content = content()
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let colW = columnWidth(bounds.width)
-        var heights = Array(repeating: CGFloat(0), count: columns)
-        for sub in subviews {
-            let h = sub.sizeThatFits(ProposedViewSize(width: colW, height: nil)).height
-            let col = shortest(heights)
-            var x = bounds.minX + CGFloat(col) * (colW + spacing)
-            if layoutDirection == .rightToLeft {
-                x = bounds.maxX - (x - bounds.minX) - colW
-            }
-            let y = bounds.minY + heights[col]
-            sub.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: colW, height: h))
-            heights[col] += h + spacing
-        }
+    var body: some View {
+        _VariadicView.Tree(
+            MasonryRoot(columns: columns, spacing: spacing, layoutDirection: layoutDirection)
+        ) { content }
     }
+}
+
+private struct MasonryRoot: _VariadicView.UnaryViewRoot {
+    let columns: Int
+    let spacing: CGFloat
+    let layoutDirection: LayoutDirection
+
+    func body(children: _VariadicView.Children) -> some View {
+        MasonryStack(
+            children: children,
+            columns: columns,
+            spacing: spacing,
+            layoutDirection: layoutDirection
+        )
+    }
+}
+
+private struct MasonryStack: View {
+    /// The placement ZStack runs forced-LTR so anchors and offsets are
+    /// absolute; the real environment direction is restored on every child,
+    /// and the packed positions mirror only via the `layoutDirection`
+    /// parameter (the old `Layout` semantics — see ``FlowLayout``).
+    @Environment(\.layoutDirection) private var envDirection
+
+    let children: _VariadicView.Children
+    let columns: Int
+    let spacing: CGFloat
+    let layoutDirection: LayoutDirection
+
+    @State private var availableWidth: CGFloat?
+    @State private var sizes: [Int: CGSize] = [:]
+
+    private var isMeasured: Bool {
+        availableWidth != nil && sizes.count == children.count
+    }
+
+    var body: some View {
+        // Same fallback the old `sizeThatFits` used for a `nil` width proposal.
+        let width = availableWidth ?? 320
+        let colW = columnWidth(width)
+        let placement = ltrPlacement(columnWidth: colW)
+        VStack(alignment: .leading, spacing: 0) {
+            MeasuredLayoutWidthProbe()
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(children.enumerated()), id: \.element.id) { index, child in
+                    child
+                        .environment(\.layoutDirection, envDirection)   // restore the real direction
+                        .frame(width: colW)   // the old per-column width proposal
+                        .measuredLayoutChild(index)
+                        .offset(offset(for: index, placement: placement, columnWidth: colW, containerWidth: width))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(height: isMeasured ? placement.height : nil, alignment: .top)
+            .opacity(isMeasured ? 1 : 0)
+            // Absolute placement, like the old `placeSubviews` — anchors and
+            // offsets must not re-mirror under an RTL environment.
+            .environment(\.layoutDirection, .leftToRight)
+        }
+        .onPreferenceChange(MeasuredLayoutWidthKey.self) { availableWidth = $0 }
+        .onPreferenceChange(MeasuredLayoutChildSizesKey.self) { sizes = $0 }
+        .consumesMeasuredLayoutPreferences()
+    }
+
+    // MARK: Packing (same math as the former `Layout` implementation)
 
     private func columnWidth(_ totalWidth: CGFloat) -> CGFloat {
         max(0, (totalWidth - spacing * CGFloat(columns - 1)) / CGFloat(columns))
     }
 
-    private func columnHeights(subviews: Subviews, columnWidth colW: CGFloat) -> [CGFloat] {
+    /// Left-to-right origins per child (shortest column wins) + total height.
+    private func ltrPlacement(columnWidth colW: CGFloat) -> (origins: [Int: CGPoint], height: CGFloat) {
         var heights = Array(repeating: CGFloat(0), count: columns)
-        for sub in subviews {
-            let h = sub.sizeThatFits(ProposedViewSize(width: colW, height: nil)).height
-            heights[shortest(heights)] += h + spacing
+        var origins: [Int: CGPoint] = [:]
+        for index in 0..<children.count {
+            let h = sizes[index]?.height ?? 0
+            let col = shortest(heights)
+            origins[index] = CGPoint(x: CGFloat(col) * (colW + spacing), y: heights[col])
+            heights[col] += h + spacing
         }
-        return heights
+        return (origins, (heights.max() ?? spacing) - spacing)
     }
 
     private func shortest(_ heights: [CGFloat]) -> Int {
         var idx = 0
         for i in heights.indices where heights[i] < heights[idx] { idx = i }
         return idx
+    }
+
+    private func offset(
+        for index: Int,
+        placement: (origins: [Int: CGPoint], height: CGFloat),
+        columnWidth colW: CGFloat,
+        containerWidth: CGFloat
+    ) -> CGSize {
+        guard isMeasured, let origin = placement.origins[index] else { return .zero }
+        // Forced-LTR anchor at x0 — the offset IS the position, mirrored
+        // within the span only via the `layoutDirection` parameter.
+        let x: CGFloat = layoutDirection == .rightToLeft
+            ? containerWidth - origin.x - colW
+            : origin.x
+        return CGSize(width: x, height: origin.y)
     }
 }
 
