@@ -109,13 +109,13 @@ public struct Carousel<Item: Identifiable, Content: View>: View {
                 StepIndicator(current: currentPage, total: count)
             }
         }
-        .onChange(of: selection) { _, newValue in
+        .onChangeCompat(of: selection) { _, newValue in
             externalIndex?.wrappedValue = realIndex(newValue)
             guard looping else { return }
             if newValue == 0 { jump(to: count) }
             else if newValue == count + 1 { jump(to: 1) }
         }
-        .onChange(of: externalIndex?.wrappedValue ?? -1) { _, real in
+        .onChangeCompat(of: externalIndex?.wrappedValue ?? -1) { _, real in
             guard real >= 0, real != realIndex(selection) else { return }
             selection = looping ? real + 1 : real
         }

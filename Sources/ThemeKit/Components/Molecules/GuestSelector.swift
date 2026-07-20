@@ -103,7 +103,7 @@ public struct GuestSelector: View {
                 .accessibilityLabel(row.title)
             }
         }
-        .onChange(of: selection) { _, new in onChangeHandler?(new) }
+        .onChangeCompat(of: selection) { _, new in onChangeHandler?(new) }
     }
 
     private func binding(for keyPath: WritableKeyPath<GuestSelection, Int>) -> Binding<Int> {

@@ -170,10 +170,10 @@ public struct Autocomplete: View {
         }
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
-        .onChange(of: text) { _, value in
+        .onChangeCompat(of: text) { _, value in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
         }
-        .onChange(of: isFocused) { _, now in
+        .onChangeCompat(of: isFocused) { _, now in
             if !now, effectiveValidationTrigger == .editingEnd { runValidation(text) }   // validate on blur
         }
     }

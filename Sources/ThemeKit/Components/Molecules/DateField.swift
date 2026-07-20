@@ -162,16 +162,16 @@ public struct DateField: View {
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
-        .onChange(of: date) { _, _ in
+        .onChangeCompat(of: date) { _, _ in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation() }
         }
         // External focus bridge (TextInput parity, popover-flavored): a `true`
         // write opens the picker; dismissing it resets the external binding.
-        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+        .onChangeCompat(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !showPicker && isEnabled { showPicker = true }
         }
         // Dismissing the picker is this field's blur *and* submit moment.
-        .onChange(of: showPicker) { _, now in
+        .onChangeCompat(of: showPicker) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
             if !now, effectiveValidationTrigger != .live { runValidation() }

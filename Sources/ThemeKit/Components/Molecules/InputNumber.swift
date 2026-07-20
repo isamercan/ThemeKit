@@ -148,12 +148,12 @@ public struct InputNumber: View {
             // seed predates the `.precision(_:)` modifier).
             if !isFocused { textValue = format(value) }
         }
-        .onChange(of: value) { _, newValue in
+        .onChangeCompat(of: value) { _, newValue in
             // Reflect stepper / external changes back into the editable text.
             let normalized = format(newValue)
             if textValue != normalized && !isFocused { textValue = normalized }
         }
-        .onChange(of: textValue) { _, newText in
+        .onChangeCompat(of: textValue) { _, newText in
             // Live-apply a valid in-range entry; full clamp happens on commit.
             defer {
                 // `.live` validates every change; other triggers re-validate once
@@ -164,7 +164,7 @@ public struct InputNumber: View {
             let clamped = Self.clamp(parsed, to: range)
             if clamped == parsed, clamped != value { value = clamped; onChange?(clamped) }
         }
-        .onChange(of: isFocused) { _, focused in
+        .onChangeCompat(of: isFocused) { _, focused in
             if !focused {
                 commit()
                 if effectiveValidationTrigger == .editingEnd { runValidation(textValue) }   // validate on blur

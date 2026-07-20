@@ -85,7 +85,7 @@ public struct AmenityGrid: View {
             }
             if hiddenCount > 0 {
                 Button {
-                    withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { expanded = true }
+                    withAnimation(ThemeMotion.snappy.ifMotionAllowed(reduceMotion)) { expanded = true }
                 } label: {
                     Text(String(themeKit: "+\(hiddenCount) more"))
                         .textStyle(.labelBase600)

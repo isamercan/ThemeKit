@@ -512,7 +512,7 @@ private struct FeedbackHostModifier: ViewModifier {
             .animation(Motion.fast.animation, value: presenter.activeLoading)
             // The presenter is constructed in `init`, where the environment isn't
             // readable — sync the stack cap from `FeedbackDefaults` here instead.
-            .onChange(of: feedbackDefaults.maxVisibleToasts, initial: true) { _, cap in
+            .onChangeCompat(of: feedbackDefaults.maxVisibleToasts, initial: true) { _, cap in
                 presenter.maxVisibleToasts = max(1, cap ?? defaultCap)
             }
     }

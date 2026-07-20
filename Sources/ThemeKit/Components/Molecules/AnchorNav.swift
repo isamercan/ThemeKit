@@ -51,7 +51,7 @@ public struct AnchorNav: View {
         layout {
             ForEach(items) { item in link(item) }
         }
-        .animation(.snappy(duration: 0.25), value: active)
+        .animation(ThemeMotion.snappy(.fast), value: active)
     }
 
     private func link(_ item: AnchorItem) -> some View {

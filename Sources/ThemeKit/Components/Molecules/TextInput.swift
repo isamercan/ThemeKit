@@ -437,7 +437,7 @@ public struct TextInput: View {
         // `InfoMessageList`); gated by `microAnimations` + Reduce Motion, and
         // by the subtree `FieldDefaults.messagesAnimated` default.
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
-        .onChange(of: text) { _, newValue in
+        .onChangeCompat(of: text) { _, newValue in
             var v = newValue
             if let formatter = model.formatter { v = formatter(v) }
             if model.hardLimit, let maxLength = model.maxLength, v.count > maxLength { v = String(v.prefix(maxLength)) }
@@ -446,10 +446,10 @@ public struct TextInput: View {
             // failure is visible so the error clears as the user fixes it.
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(v) }
         }
-        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+        .onChangeCompat(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
-        .onChange(of: isFocused) { _, now in
+        .onChangeCompat(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now, effectiveValidationTrigger == .editingEnd { runValidation(text) }   // validate on blur
             if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)

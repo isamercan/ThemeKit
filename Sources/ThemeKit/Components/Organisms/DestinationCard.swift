@@ -25,6 +25,8 @@ import SwiftUI
 /// ```
 public struct DestinationCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.formatDefaults) private var formatDefaults
@@ -131,7 +133,10 @@ public struct DestinationCard: View {
             Image(systemName: fav.wrappedValue ? "heart.fill" : "heart")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textSecondaryInverse))
-                .symbolEffect(.bounce, value: fav.wrappedValue)
+                // Bounce only when micro-animations are on and Reduce Motion is
+                // off (MicroMotion gate); below iOS 17 the heart stays static
+                // (SymbolBounceCompat, ADR-0007 §D2 rule 2).
+                .symbolBounceCompat(value: (micro && !reduceMotion) ? fav.wrappedValue : false)
                 .frame(width: 32, height: 32)
                 .background(MediaScrim.solid, in: Circle())
                 .padding(Theme.SpacingKey.sm.value)

@@ -36,7 +36,7 @@ public struct TreeView: View {
                 nodeRow(row.node, depth: row.depth)
             }
         }
-        .animation(.snappy(duration: 0.2), value: expanded)
+        .animation(ThemeMotion.snappy(.fast), value: expanded)
     }
 
     private func nodeRow(_ node: TreeNode, depth: Int) -> some View {

@@ -166,7 +166,7 @@ public struct OTPInput: View {
                     .opacity(0.001)
                     .frame(width: 1, height: 1)
                     .disabled(!isEnabled)
-                    .onChange(of: code) { _, newValue in
+                    .onChangeCompat(of: code) { _, newValue in
                         let sanitized = Self.sanitize(newValue, digitCount: digitCount, characters: characterSet)
                         if sanitized != code { code = sanitized }
                         if sanitized.count == digitCount {
@@ -355,7 +355,7 @@ private struct OTPDigitBox: View {
                     // Entry pop (HeroUI SlotValue): scale+fade in; edits to an
                     // already-filled cell roll via the numeric transition.
                     .transition(motionOn ? .scale(scale: 0.8).combined(with: .opacity) : .identity)
-                    .contentTransition(motionOn ? .numericText() : .identity)
+                    .numericTextTransitionCompat(motionOn)
             }
         }
         .animation(MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion), value: digit)

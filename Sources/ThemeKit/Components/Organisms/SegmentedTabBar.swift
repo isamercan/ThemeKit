@@ -123,7 +123,7 @@ public struct SegmentedTabBar: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) { bar }
                     .onAppear { scrollToSelection(proxy, animated: false) }
-                    .onChange(of: selection) { _, _ in scrollToSelection(proxy) }
+                    .onChangeCompat(of: selection) { _, _ in scrollToSelection(proxy) }
             }
         } else {
             bar

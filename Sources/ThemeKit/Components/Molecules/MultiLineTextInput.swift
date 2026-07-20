@@ -136,10 +136,10 @@ public struct MultiLineTextInput: View {
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         // External focus bridge (TextInput parity): a `true` write focuses the
         // editor; blurring resets the external binding so the owner stays in sync.
-        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+        .onChangeCompat(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
-        .onChange(of: isFocused) { _, now in
+        .onChangeCompat(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
@@ -173,7 +173,9 @@ public struct MultiLineTextInput: View {
                 .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                 // Caret / selection tint follows the validation state (HeroUI invalid caret).
                 .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
-                .scrollContentBackground(.hidden)
+                // iOS 16+ native; below, the named LegacyClearTextEditorBackground
+                // unit clears the UITextView backdrop (ADR-0007 §D2 rule 3).
+                .scrollContentBackgroundHiddenCompat()
                 .padding(Theme.SpacingKey.sm.value)   // 8pt == SpacingKey.sm
                 .disabled(!isEnabled)
                 // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value,

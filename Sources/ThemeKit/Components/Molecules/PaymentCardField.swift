@@ -128,11 +128,11 @@ public struct PaymentCardField: View {
         }
         // `.live` validates every number change; other triggers re-validate once
         // a failure is visible so the error clears as the user fixes it.
-        .onChange(of: number) { _, value in
+        .onChangeCompat(of: number) { _, value in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
         }
         // `.editingEnd` / `.submit` fire when the number row loses focus.
-        .onChange(of: focused) { old, now in
+        .onChangeCompat(of: focused) { old, now in
             if old == .number, now != .number, effectiveValidationTrigger != .live { runValidation(number) }
         }
     }
@@ -196,7 +196,7 @@ public struct PaymentCardField: View {
         // on every row (E1 — distinct from `.disabled`).
         .allowsHitTesting(!isReadOnly)
         .applyKeyboard(keyboard)
-        .onChange(of: binding.wrappedValue) { _, new in
+        .onChangeCompat(of: binding.wrappedValue) { _, new in
             let f = format(new)
             if f != new { binding.wrappedValue = f }
         }

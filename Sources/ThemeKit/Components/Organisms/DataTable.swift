@@ -199,8 +199,8 @@ public struct DataTable<Row: Identifiable>: View {
             }
             if let footerSlot { footerSlot }
         }
-        .onChange(of: rows.count) { _, _ in clampPage() }
-        .onChange(of: sortColumn) { _, _ in currentPage = 1 }
+        .onChangeCompat(of: rows.count) { _, _ in clampPage() }
+        .onChangeCompat(of: sortColumn) { _, _ in currentPage = 1 }
     }
 
     private var tableCard: some View {

@@ -144,11 +144,11 @@ public struct TimeField: View {
         }
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
-        .onChange(of: time) { _, _ in
+        .onChangeCompat(of: time) { _, _ in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation() }
         }
         // Dismissing the picker is this field's blur *and* submit moment.
-        .onChange(of: showPicker) { _, now in
+        .onChangeCompat(of: showPicker) { _, now in
             if !now, effectiveValidationTrigger != .live { runValidation() }
         }
     }

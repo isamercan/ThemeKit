@@ -88,7 +88,7 @@ public struct PointsBadge: View {
             Image(systemName: systemImage).font(size.textStyle.font)
             Text(label)
                 .textStyle(size.textStyle)
-                .contentTransition(animatesValue && !reduceMotion ? .numericText(value: Double(points)) : .identity)
+                .numericTextTransitionCompat(animatesValue && !reduceMotion, value: Double(points))
             if let trailingSlot { trailingSlot }
         }
         .foregroundStyle(style.foreground(theme))

@@ -126,8 +126,8 @@ public struct Cascader: View {
             if open { panel }
             if !infoMessages.isEmpty { InfoMessageList(infoMessages) }
         }
-        .animation(.snappy(duration: 0.2), value: open)
-        .animation(.snappy(duration: 0.2), value: browse)
+        .animation(ThemeMotion.snappy(.fast), value: open)
+        .animation(ThemeMotion.snappy(.fast), value: browse)
     }
 
     /// Field border follows the dominant message kind, then the open state —

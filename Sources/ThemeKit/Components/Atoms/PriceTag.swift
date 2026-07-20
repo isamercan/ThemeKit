@@ -158,9 +158,8 @@ public struct PriceTag: View {
         Text(formatted(amount))
             .textStyle(size.priceStyle)
             .foregroundStyle(emphasis.color(theme))
-            .contentTransition(animatesValue && !reduceMotion
-                ? .numericText(value: (amount as NSDecimalNumber).doubleValue)
-                : .identity)
+            .numericTextTransitionCompat(animatesValue && !reduceMotion,
+                                         value: (amount as NSDecimalNumber).doubleValue)
     }
 
     private func formatted(_ value: Decimal) -> String {

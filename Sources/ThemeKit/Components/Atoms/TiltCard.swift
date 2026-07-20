@@ -106,7 +106,7 @@ private struct Tilt3DModifier: ViewModifier {
                 GeometryReader { geo in
                     Color.clear
                         .onAppear { size = geo.size }
-                        .onChange(of: geo.size) { _, newSize in size = newSize }
+                        .onChangeCompat(of: geo.size) { _, newSize in size = newSize }
                 }
             )
             .simultaneousGesture(active ? drag : nil)

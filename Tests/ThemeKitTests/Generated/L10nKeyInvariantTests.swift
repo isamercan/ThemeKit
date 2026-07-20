@@ -123,7 +123,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% off",
             "%@%% off", 1,
-            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:188")
+            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:187")
     }
 
     func testInterpolatedKeyShapes2() {

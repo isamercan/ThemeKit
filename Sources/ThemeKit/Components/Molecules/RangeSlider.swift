@@ -103,9 +103,9 @@ public struct RangeSlider: View {
         .a11y(A11yElement.Control.slider, in: accessibilityID)
         .accessibilityElement(children: .contain)
         .onAppear { syncText() }
-        .onChange(of: lowerValue) { if focusedField != .lower { lowerText = intString(lowerValue) } }
-        .onChange(of: upperValue) { if focusedField != .upper { upperText = intString(upperValue) } }
-        .onChange(of: focusedField) { _, new in
+        .onChangeCompat(of: lowerValue) { if focusedField != .lower { lowerText = intString(lowerValue) } }
+        .onChangeCompat(of: upperValue) { if focusedField != .upper { upperText = intString(upperValue) } }
+        .onChangeCompat(of: focusedField) { _, new in
             // Validate-on-blur: commit whichever field just lost focus.
             if new != .lower { commitLower() }
             if new != .upper { commitUpper() }

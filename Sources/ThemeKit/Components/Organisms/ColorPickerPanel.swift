@@ -38,7 +38,7 @@ public struct ColorPickerPanel: View {
             }
             if !swatches.isEmpty {
                 ColorSwatchPicker(swatches, selection: $swatchSelection)
-                    .onChange(of: swatchSelection) {
+                    .onChangeCompat(of: swatchSelection) {
                         if let picked = swatchSelection { color = HSBAColor(picked.color) }
                     }
             }
@@ -47,7 +47,7 @@ public struct ColorPickerPanel: View {
             }
         }
         .onAppear { hexDraft = HexColor.string(color) }
-        .onChange(of: color) { hexDraft = HexColor.string(color) }
+        .onChangeCompat(of: color) { hexDraft = HexColor.string(color) }
     }
 
     private var hexRow: some View {

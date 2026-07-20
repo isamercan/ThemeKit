@@ -128,7 +128,7 @@ public struct SelectBox<Option: Hashable>: View {
         }
         // Selection = editing end: sync the external focus off and fire the
         // form-wiring hook (`.field(_:in:)`) with the chosen option's title.
-        .onChange(of: selection) { _, newValue in
+        .onChangeCompat(of: selection) { _, newValue in
             if externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             onEditingEnd?(newValue.map(optionTitle) ?? "")
         }

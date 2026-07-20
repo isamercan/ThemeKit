@@ -55,8 +55,7 @@ public struct AppLanguage: Identifiable, Sendable, Hashable {
     /// region subtag — maximized when the code carries none ("en" → en-Latn-US).
     var resolvedFlag: String? {
         if let flag { return flag }
-        let language = Locale.Language(identifier: code)
-        guard let region = (language.region ?? Locale.Language(identifier: language.maximalIdentifier).region)?.identifier,
+        guard let region = Self.regionSubtag(of: code),
               region.count == 2 else { return nil }
         let base: UInt32 = 127_397   // regional-indicator 🇦 minus ASCII 'A'
         var out = ""
@@ -64,6 +63,31 @@ public struct AppLanguage: Identifiable, Sendable, Hashable {
             if let v = UnicodeScalar(base + scalar.value) { out.unicodeScalars.append(v) }
         }
         return out.isEmpty ? nil : out
+    }
+
+    /// The region subtag driving the flag. `Locale.Language` (iOS 16+) resolves
+    /// the likely region for bare codes ("en" → en-Latn-US → US); below 16 the
+    /// named ``legacyRegionSubtag(of:)`` unit parses only an explicit subtag —
+    /// iOS 15 has no likely-subtags API, so a bare "en" simply renders without
+    /// a flag there (ADR-0007 §D2 rule 2).
+    static func regionSubtag(of code: String) -> String? {
+        if #available(iOS 16.0, *) {
+            let language = Locale.Language(identifier: code)
+            return (language.region ?? Locale.Language(identifier: language.maximalIdentifier).region)?.identifier
+        } else {
+            return legacyRegionSubtag(of: code)
+        }
+    }
+
+    /// Named legacy unit (ADR-0007 §D2 rule 3, unit-tested directly): BCP-47
+    /// subtag parse for the pre-16 path — "en-GB"/"en_GB" → "GB",
+    /// "zh-Hant-TW" → "TW", bare "en" → nil (no flag).
+    static func legacyRegionSubtag(of code: String) -> String? {
+        for tag in code.split(whereSeparator: { $0 == "-" || $0 == "_" }).dropFirst() {
+            if tag.count == 2, tag.allSatisfy(\.isLetter) { return tag.uppercased() }
+            if tag.count == 3, tag.allSatisfy(\.isNumber) { return String(tag) }   // UN M.49 code
+        }
+        return nil
     }
 }
 

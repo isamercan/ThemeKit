@@ -127,7 +127,7 @@ private struct InlineVideo: View {
                     if autoplay, isActive { start(from: .zero) }
                 }
                 .onDisappear { pause(storeTime: true); removeObservers() }
-                .onChange(of: isActive) { _, active in
+                .onChangeCompat(of: isActive) { _, active in
                     if active {
                         if let progress { addProgressObserver(progress) }
                         if autoplay { start(from: lastTime) }
@@ -135,7 +135,7 @@ private struct InlineVideo: View {
                         pause(storeTime: true)
                     }
                 }
-                .onChange(of: externalMuted?.wrappedValue ?? isMuted) { _, value in
+                .onChangeCompat(of: externalMuted?.wrappedValue ?? isMuted) { _, value in
                     isMuted = value; player.isMuted = value
                 }
 

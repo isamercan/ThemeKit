@@ -95,7 +95,7 @@ private struct DismissDragModifier: ViewModifier {
                 let size = isHorizontal ? geo.size.width : geo.size.height
                 Color.clear
                     .onAppear { axisSize = size }
-                    .onChange(of: size) { axisSize = $1 }
+                    .onChangeCompat(of: size) { axisSize = $1 }
             })
             .offset(x: isHorizontal ? offset * direction : 0,
                     y: isHorizontal ? 0 : offset * direction)

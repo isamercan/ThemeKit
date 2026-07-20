@@ -292,7 +292,7 @@ public struct Dropdown<Trigger: View>: View {
         }
         .zIndex(open ? 1 : 0)   // float over later siblings while open (Tooltip-style)
         .animation(motion, value: open)
-        .onChange(of: open) { _, isOpen in
+        .onChangeCompat(of: open) { _, isOpen in
             if !isOpen { expandedSubmenus = [] }   // fresh submenu state on reopen
         }
         .accessibilityAddTraits(.isButton)

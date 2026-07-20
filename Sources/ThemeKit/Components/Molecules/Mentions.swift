@@ -49,10 +49,7 @@ public struct Mentions: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            TextField(placeholder, text: $text, axis: .vertical)
-                .textFieldStyle(.plain)
-                .textStyle(.bodyBase400)
-                .lineLimit(3...6)
+            editor
                 // The placeholder doubles as the spoken label; a generic fallback
                 // keeps the field identifiable when no placeholder is set.
                 .accessibilityLabel(placeholder.isEmpty ? String(themeKit: "Mentions") : placeholder)
@@ -63,11 +60,25 @@ public struct Mentions: View {
                 .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value))
                 .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value)
                     .strokeBorder(theme.border(query == nil ? .borderPrimary : .borderHero), lineWidth: query == nil ? 1 : 2))
-                .onChange(of: text) { query = activeQuery() }
+                .onChangeCompat(of: text) { query = activeQuery() }
 
             if query != nil, !filtered.isEmpty, !isReadOnly {
                 suggestions
             }
+        }
+    }
+
+    /// The growing multi-line editor: `TextField(axis: .vertical)` +
+    /// `lineLimit(3...6)` on iOS 16+, and the named ``LegacyMentionsEditor``
+    /// unit below (ADR-0007 §D2 rules 2–3).
+    @ViewBuilder private var editor: some View {
+        if #available(iOS 16.0, *) {
+            TextField(placeholder, text: $text, axis: .vertical)
+                .textFieldStyle(.plain)
+                .textStyle(.bodyBase400)
+                .lineLimit(3...6)
+        } else {
+            LegacyMentionsEditor(text: $text, placeholder: placeholder)
         }
     }
 
@@ -120,6 +131,47 @@ public struct Mentions: View {
         guard let idx = text.lastIndex(of: prefix) else { return }
         text = String(text[..<idx]) + String(prefix) + option.value + " "
         query = nil
+    }
+}
+
+// MARK: - Legacy editor (iOS 15)
+
+/// Named legacy unit (ADR-0007 §D2 rule 3): the pre-iOS-16 stand-in for
+/// `TextField(axis: .vertical).lineLimit(3...6)` — a `TextEditor` capped to the
+/// same 3–6-line band, with the placeholder overlaid while empty. Directly
+/// instantiable by snapshot/unit tests; unreachable at runtime on
+/// iOS 16+/macOS 14.
+struct LegacyMentionsEditor: View {
+    @Environment(\.theme) private var theme
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        TextEditor(text: $text)
+            .textStyle(.bodyBase400)
+            .scrollContentBackgroundHiddenCompat()
+            .frame(minHeight: lineHeight * 3, maxHeight: lineHeight * 6)
+            .overlay(alignment: .topLeading) {
+                if text.isEmpty {
+                    Text(placeholder)
+                        .textStyle(.bodyBase400)
+                        .foregroundStyle(theme.text(.textTertiary))
+                        // TextEditor's fixed text-container insets (8pt top,
+                        // 5pt leading) — genuine platform dimensions, not knobs.
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                        .allowsHitTesting(false)
+                }
+            }
+    }
+
+    /// One body-ramp line — scales with Dynamic Type via the platform font.
+    private var lineHeight: CGFloat {
+        #if canImport(UIKit)
+        UIFont.preferredFont(forTextStyle: .body).lineHeight
+        #else
+        NSFont.preferredFont(forTextStyle: .body).boundingRectForFont.height
+        #endif
     }
 }
 
