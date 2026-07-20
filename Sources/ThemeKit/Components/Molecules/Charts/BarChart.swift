@@ -3,12 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Generic grouped or stacked bar chart over Swift Charts, token-styled. One
-//  baseline, never a dual axis; rounded bar caps; per-category scrub readout.
+//  Generic grouped or stacked bar chart, Canvas-drawn and token-styled (iOS
+//  15.6-floor reimplementation — ADR-0007; shared chrome in ChartSupport.swift).
+//  One baseline, never a dual axis; rounded bar caps; per-category scrub
+//  readout.
 //
 
 import SwiftUI
-import Charts
 
 public enum BarChartMode: Sendable { case grouped, stacked }
 
@@ -33,6 +34,11 @@ public struct BarChart: View {
     private var mode: BarChartMode = .grouped
     private var localeOverride: Locale?
 
+    // Fixed mark geometry (chart-internal, not exposed knobs).
+    private static let capRadius: CGFloat = 4        // rounded bar caps
+    private static let groupFillRatio: CGFloat = 0.7 // bars' share of a category band
+    private static let groupGap: CGFloat = 2         // gap between grouped bars
+
     @ControllableState private var selectedX: String?
 
     public init(_ series: [ChartSeries]) {   // R1 — content only
@@ -46,56 +52,100 @@ public struct BarChart: View {
     }
 
     private var locale: Locale { localeOverride ?? envLocale }
-    private var scale: ChartColorScale { ChartColorScale(series: series, theme: theme) }
     private var showsLegend: Bool { legendVisible ?? (series.count >= 2) }
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     public var body: some View {
-        Chart {
-            ForEach(Array(series.enumerated()), id: \.element.id) { _, s in
-                ForEach(s.points) { point in
-                    if mode == .grouped {
-                        BarMark(x: .value("Category", point.x), y: .value("Value", point.y))
-                            .foregroundStyle(by: .value("Series", s.label))
-                            .position(by: .value("Series", s.label))
-                            .cornerRadius(4)
-                            .accessibilityLabel("\(s.label), \(point.x)")
-                            .accessibilityValue(chartValueFormatted(point.y, locale: locale))
-                    } else {
-                        BarMark(x: .value("Category", point.x), y: .value("Value", point.y))
-                            .foregroundStyle(by: .value("Series", s.label))
-                            .cornerRadius(4)
-                            .accessibilityLabel("\(s.label), \(point.x)")
-                            .accessibilityValue(chartValueFormatted(point.y, locale: locale))
-                    }
+        let categories = chartCategories(series)
+        let scale = ChartColorScale(series: series, theme: theme)
+        let resolved = Array(zip(series, scale.range))
+        // Per-series value per category (nil = no mark), grouped mode.
+        let grouped = mode == .grouped
+        let values: [[Double?]] = grouped
+            ? series.map { s in categories.map { c in s.points.first(where: { $0.x == c })?.y } }
+            : []
+        let bands = grouped ? [] : ChartStacking.bands(series: series, categories: categories)
+        let dataMax = grouped
+            ? series.flatMap(\.points).map(\.y).max() ?? 0
+            : ChartStacking.maxTotal(series: series, categories: categories)
+        ChartXYChrome(
+            theme: theme,
+            categories: categories,
+            yDataMax: dataMax,
+            showsGrid: showsGrid,
+            legend: showsLegend ? scale.legendEntries : nil,
+            locale: locale,
+            selection: $selectedX,
+            scrubRows: LineChart.scrubRowsBuilder(resolved: resolved, locale: locale),
+            drawMarks: { context, geom in
+                if grouped {
+                    Self.drawGroupedBars(context, geom: geom, values: values, colors: resolved.map(\.1))
+                } else {
+                    Self.drawStackedBars(context, geom: geom, bands: bands, colors: resolved.map(\.1))
                 }
             }
-            if let selectedX {
-                RuleMark(x: .value("Category", selectedX))
-                    .foregroundStyle(theme.border(.borderPrimary))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                        annotationCard(for: selectedX)
-                    }
-            }
-        }
-        .chartForegroundStyleScale(domain: scale.domain, range: scale.range)
-        .chartLegend(showsLegend ? .visible : .hidden)
-        .chartXSelection(value: $selectedX)
-        .themedChartAxes(theme: theme, showsGrid: showsGrid)
+        )
         .frame(height: height.value)
         .animation(motion, value: selectedX)
         .accessibilityLabel(Text(String(themeKit: "Bar chart with series \(series.map(\.label).joined(separator: ", ")).")))
     }
 
-    private func annotationCard(for x: String) -> some View {
-        let rows: [ChartScrubRow] = series.enumerated().compactMap { index, s in
-            guard let point = s.points.first(where: { $0.x == x }) else { return nil }
-            return ChartScrubRow(label: s.label,
-                                 value: chartValueFormatted(point.y, locale: locale),
-                                 color: theme.resolve(ChartPalette.hue(explicit: s.color, at: index)).solid)
+    // MARK: Mark drawing (LTR plot coordinates; the chrome mirrors for RTL)
+
+    private static func drawGroupedBars(_ context: GraphicsContext,
+                                        geom: ChartPlotGeometry,
+                                        values: [[Double?]],
+                                        colors: [Color]) {
+        let seriesCount = values.count
+        guard seriesCount > 0 else { return }
+        let groupWidth = geom.bandWidth * groupFillRatio
+        let gapTotal = groupGap * CGFloat(seriesCount - 1)
+        let barWidth = max(1, (groupWidth - gapTotal) / CGFloat(seriesCount))
+        let baseline = geom.y(0)
+        for categoryIndex in geom.categories.indices {
+            let startX = geom.xCenter(categoryIndex) - groupWidth / 2
+            for seriesIndex in 0..<seriesCount {
+                guard let value = values[seriesIndex][categoryIndex], value > 0 else { continue }
+                let topY = geom.y(value)
+                let rect = CGRect(x: startX + CGFloat(seriesIndex) * (barWidth + groupGap),
+                                  y: topY,
+                                  width: barWidth,
+                                  height: max(0, baseline - topY))
+                context.fill(cappedBar(rect), with: .color(colors[seriesIndex]))
+            }
         }
-        return ChartScrubCard(theme: theme, title: x, rows: rows)
+    }
+
+    private static func drawStackedBars(_ context: GraphicsContext,
+                                        geom: ChartPlotGeometry,
+                                        bands: [[(bottom: Double, top: Double)]],
+                                        colors: [Color]) {
+        guard !bands.isEmpty else { return }
+        let barWidth = max(1, geom.bandWidth * groupFillRatio)
+        for categoryIndex in geom.categories.indices {
+            let x = geom.xCenter(categoryIndex) - barWidth / 2
+            // The topmost non-empty segment carries the rounded cap.
+            let capIndex = bands.lastIndex { $0[categoryIndex].top > $0[categoryIndex].bottom }
+            for seriesIndex in bands.indices {
+                let band = bands[seriesIndex][categoryIndex]
+                guard band.top > band.bottom else { continue }
+                let rect = CGRect(x: x,
+                                  y: geom.y(band.top),
+                                  width: barWidth,
+                                  height: max(0, geom.y(band.bottom) - geom.y(band.top)))
+                let path = seriesIndex == capIndex ? cappedBar(rect) : Path(rect)
+                context.fill(path, with: .color(colors[seriesIndex]))
+            }
+        }
+    }
+
+    /// A bar with rounded top caps (the family's signature bar shape).
+    private static func cappedBar(_ rect: CGRect) -> Path {
+        let radius = min(capRadius, rect.width / 2, rect.height)
+        return ThemeUnevenRoundedRect(topLeadingRadius: radius,
+                                      topTrailingRadius: radius,
+                                      style: .continuous)
+            .path(in: rect)
     }
 }
 

@@ -158,7 +158,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Area chart with series \(d).",
             "Area chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/AreaChart.swift:89")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/AreaChart.swift:106")
         assertKey(
             "At least \(d) characters",
             "At least %@ characters", 1,
@@ -174,7 +174,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Bar chart with series \(d).",
             "Bar chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/BarChart.swift:88")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/BarChart.swift:90")
         assertKey(
             "Barcode \(d)",
             "Barcode %@", 1,
@@ -210,7 +210,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Donut chart with slices \(d).",
             "Donut chart with slices %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/DonutChart.swift:76")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/DonutChart.swift:84")
         assertKey(
             "Download \(d)",
             "Download %@", 1,
@@ -226,7 +226,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Line chart with series \(d).",
             "Line chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/LineChart.swift:107")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/LineChart.swift:113")
     }
 
     func testInterpolatedKeyShapes3() {

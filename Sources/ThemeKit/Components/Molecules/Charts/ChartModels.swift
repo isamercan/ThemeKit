@@ -3,10 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Shared value model + the categorical color law for the generic Swift Charts
+//  Shared value model + the categorical color law for the generic chart
 //  family (LineChart / AreaChart / BarChart / DonutChart). Distinct from the
 //  domain-specific PriceTrendChart (hand-drawn fare bars); these are neutral,
-//  token-styled wrappers over `import Charts` (iOS 17 / macOS 14 baseline).
+//  token-styled Canvas/Path renderers (iOS 15.6 floor — ADR-0007; the former
+//  Swift Charts bodies live behind the same public API).
 //
 //  x-axis is categorical `String` by design: dates/numbers are formatted to
 //  labels at the call site. This keeps one robust, RTL-safe axis type across
