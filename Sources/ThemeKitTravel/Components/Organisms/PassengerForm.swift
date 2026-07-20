@@ -255,7 +255,7 @@ public struct PassengerForm: View {
     }
 
     /// The ordered fields; when pairing, the two name fields collapse into one
-    /// `ViewThatFits` row at the first name's position (narrow widths fall
+    /// `AdaptiveFit` row at the first name's position (narrow widths fall
     /// back to stacked automatically).
     @ViewBuilder
     private func fieldRun(_ fields: [PassengerFormField]) -> some View {
@@ -277,11 +277,12 @@ public struct PassengerForm: View {
 
     /// Given/family side-by-side when they fit; stacked otherwise.
     private var namePairRow: some View {
-        ViewThatFits(in: .horizontal) {
+        AdaptiveFit {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                 givenNameField
                 familyNameField
             }
+        } compact: {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
                 givenNameField
                 familyNameField
@@ -484,7 +485,7 @@ public extension PassengerForm {
         copy { $0.genderOptions = options.isEmpty ? Array(PassengerGender.allCases) : options }
     }
 
-    /// `2` renders given/family side-by-side (via `ViewThatFits`, so narrow
+    /// `2` renders given/family side-by-side (via `AdaptiveFit`, so narrow
     /// widths still stack); accessibility type sizes always fall back to
     /// stacked. Default `1`.
     func columns(_ n: Int) -> Self { copy { $0.columnsValue = min(2, max(1, n)) } }

@@ -15,7 +15,7 @@
 //                shell, large CTA.
 //    .compact    a collapsed summary row that expands into the editor on tap.
 //    .inlineBar  one horizontal run for wide/iPad headers; narrow widths fall
-//                back to the stacked editor via `ViewThatFits`.
+//                back to the stacked editor via the measured `AdaptiveFit` helper.
 //    .pill       a floating capsule showing the route summary that expands
 //                into the editor (Airbnb/Skyscanner home header).
 //
@@ -33,8 +33,8 @@
 //
 //  Unit granularity (ADR-0004 §9.2): the route unit ships *welded*
 //  (origin + swap + destination, accessibility-size fallback inside). Note for
-//  custom one-row styles: nesting the welded unit's own `ViewThatFits` inside
-//  another `ViewThatFits` row can settle on the stacked route arrangement
+//  custom one-row styles: nesting the welded unit's own `AdaptiveFit` inside
+//  another adaptive row can settle on the stacked route arrangement
 //  instead of rejecting the row — a graceful degradation, audited under
 //  ADR-0004 §9.4. Splitting the unit later is additive.
 //
@@ -354,7 +354,7 @@ public struct CompactTripSearchCardStyle: TripSearchCardStyle {
 
 /// One horizontal run of the core units — route, dates, passengers, CTA — for
 /// wide/iPad headers. When the row can't fit (narrow widths, accessibility
-/// type sizes) `ViewThatFits` falls back to the stacked editor — nothing is
+/// type sizes) `AdaptiveFit` falls back to the stacked editor — nothing is
 /// ever clipped. Trip type and cabin stay draft-driven (no room in one row).
 public struct InlineBarTripSearchCardStyle: TripSearchCardStyle {
     public init() {}
@@ -362,13 +362,14 @@ public struct InlineBarTripSearchCardStyle: TripSearchCardStyle {
         Card {
             VStack(alignment: .leading, spacing: configuration.stackSpacing) {
                 if let header = configuration.header { header }
-                ViewThatFits(in: .horizontal) {
+                AdaptiveFit {
                     HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                         configuration.routeFields
                         configuration.dateFields
                         configuration.passengersField
                         configuration.inlineCta
                     }
+                } compact: {
                     TripSearchEditorStack(configuration: configuration)
                 }
                 if let promo = configuration.promo { promo }

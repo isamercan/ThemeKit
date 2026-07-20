@@ -31,7 +31,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) adults",
             "%@ adults", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:359")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:360")
         assertKey(
             "\(d) card ending \(d)",
             "%@ card ending %@", 2,
@@ -39,7 +39,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) children",
             "%@ children", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:363")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:364")
         assertKey(
             "\(d) from \(d) to \(d)",
             "%@ from %@ to %@", 3,
@@ -47,7 +47,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) infants",
             "%@ infants", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:368")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:369")
         assertKey(
             "\(d) installments",
             "%@ installments", 1,

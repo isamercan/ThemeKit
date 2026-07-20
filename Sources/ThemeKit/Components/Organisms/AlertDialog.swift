@@ -21,7 +21,7 @@
 //  icon, Show title). `AlertFooter` mirrors its own (Type horizontal|vertical,
 //  Show Button One/Two, swap) AND fixes the reported overflow bug: in `.auto`
 //  (the default) two side-by-side buttons whose labels don't fit collapse to a
-//  vertical stack via `ViewThatFits`, so long CTAs never clip or overlap. Mobile
+//  vertical stack via the measured `AdaptiveFit` helper, so long CTAs never clip or overlap. Mobile
 //  (`.size(.mobile)`) stacks by default for reachability, matching the design.
 //
 //  Present it over a dimmed scrim — either building the card yourself with
@@ -222,14 +222,16 @@ public struct AlertFooter: View {
             verticalStack
         case .auto:
             // Try the compact horizontal row; when the buttons' natural width
-            // exceeds the card, fall back to the full-width vertical stack. The
-            // alignment frame lives OUTSIDE `ViewThatFits` so it can never mask
-            // the horizontal candidate's true (overflowing) width.
-            ViewThatFits(in: .horizontal) {
+            // exceeds the card, fall back to the full-width vertical stack.
+            // `AdaptiveFit` measures the row's true natural width in a hidden
+            // probe, so alignment can never mask an overflowing candidate; it
+            // already spans the card's full width, so `.trailing` here is the
+            // old outer alignment frame.
+            AdaptiveFit(alignment: .trailing) {
                 horizontalRow
+            } compact: {
                 verticalStack
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 
