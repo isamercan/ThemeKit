@@ -279,7 +279,7 @@ struct PHTabsBar: View {
                     .textStyle(isOn ? .bodyBase500 : .bodyBase400)
                     .foregroundStyle(isOn ? theme.text(.textPrimary) : theme.text(.textSecondary))
                     .fixedSize()
-                UnevenRoundedRectangle(topLeadingRadius: Theme.RadiusRole.field.value,
+                ThemeUnevenRoundedRect(topLeadingRadius: Theme.RadiusRole.field.value,
                                        topTrailingRadius: Theme.RadiusRole.field.value)
                     .fill(isOn ? theme.foreground(.fgHero) : Color.clear)
                     .frame(height: PHMetrics.tabBar)

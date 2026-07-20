@@ -74,7 +74,7 @@ public struct PhoneFrame<Content: View>: View {
                 .padding(.top, 8)
                 .accessibilityHidden(true)
         case .notch:
-            UnevenRoundedRectangle(bottomLeadingRadius: 14, bottomTrailingRadius: 14, style: .continuous)
+            ThemeUnevenRoundedRect(bottomLeadingRadius: 14, bottomTrailingRadius: 14, style: .continuous)
                 .fill(bezelColor)
                 .frame(width: 140, height: 24)
                 .accessibilityHidden(true)

@@ -90,19 +90,19 @@ private extension Edge {
 /// The panel's rounded shape: only the two corners on the *exposed* edge (opposite
 /// the entry edge) are rounded, so the drawer reads as flush against the screen
 /// edge it slid from. Corner terms are leading/trailing, so it mirrors under RTL.
-private func drawerShape(entry edge: Edge, radius r: CGFloat) -> UnevenRoundedRectangle {
+private func drawerShape(entry edge: Edge, radius r: CGFloat) -> ThemeUnevenRoundedRect {
     switch edge {
     case .bottom:
-        return UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: 0,
+        return ThemeUnevenRoundedRect(topLeadingRadius: r, bottomLeadingRadius: 0,
                                       bottomTrailingRadius: 0, topTrailingRadius: r, style: .continuous)
     case .top:
-        return UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: r,
+        return ThemeUnevenRoundedRect(topLeadingRadius: 0, bottomLeadingRadius: r,
                                       bottomTrailingRadius: r, topTrailingRadius: 0, style: .continuous)
     case .leading:
-        return UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0,
+        return ThemeUnevenRoundedRect(topLeadingRadius: 0, bottomLeadingRadius: 0,
                                       bottomTrailingRadius: r, topTrailingRadius: r, style: .continuous)
     case .trailing:
-        return UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: r,
+        return ThemeUnevenRoundedRect(topLeadingRadius: r, bottomLeadingRadius: r,
                                       bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous)
     }
 }

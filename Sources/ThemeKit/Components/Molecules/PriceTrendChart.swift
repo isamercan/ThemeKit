@@ -152,7 +152,7 @@ public struct PriceTrendChart: View {
                     .frame(height: 14)
             }
             Spacer(minLength: 0)
-            UnevenRoundedRectangle(topLeadingRadius: cornerRole.value, topTrailingRadius: cornerRole.value, style: .continuous)
+            ThemeUnevenRoundedRect(topLeadingRadius: cornerRole.value, topTrailingRadius: cornerRole.value, style: .continuous)
                 .fill(barFill)
                 .frame(height: max(6, barAreaHeight * fraction(point.price)))
             labelBlock(point, isSelected: isSelected)

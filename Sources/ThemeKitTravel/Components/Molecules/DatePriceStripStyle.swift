@@ -351,7 +351,7 @@ private struct ChartDatePriceStripChrome: View {
                     .textStyle(isSelected ? .overline500 : .overline400)
                     .foregroundStyle(priceColor(item, isSelected: isSelected, isCheapest: isCheapest))
                     .lineLimit(1)
-                UnevenRoundedRectangle(
+                ThemeUnevenRoundedRect(
                     topLeadingRadius: Theme.RadiusRole.selector.value,
                     topTrailingRadius: Theme.RadiusRole.selector.value,
                     style: .continuous)
