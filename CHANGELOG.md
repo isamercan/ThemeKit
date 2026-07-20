@@ -50,6 +50,17 @@ mechanical:
    (`.environment(\.theme, Theme.shared)` — or just use `.theme(_:)` / `.themeKit()`).
 
 ### Changed
+- **`FlowLayout` is a measured view, not a `Layout`** (ADR-0007 §D2/§D4, plan §3a —
+  the `Layout` protocol is iOS 16). Every documented call shape still compiles
+  unchanged: `FlowLayout(spacing:lineSpacing:alignment:) { … }` and the
+  `layoutDirection:` overload now take the trailing closure as a `@ViewBuilder` init
+  parameter instead of `Layout.callAsFunction`. **Breaking only if** you used
+  `FlowLayout` *as a `Layout` value* — e.g. `AnyLayout(FlowLayout())` or calling
+  `sizeThatFits`/`placeSubviews` directly — which was never a documented pattern;
+  wrap content directly instead. Behavior note: the flow now spans the proposed
+  width instead of hugging its rows (row `alignment` still positions rows within
+  that span), and `Masonry`/`Flex` (internal layouts) follow the same measured
+  technique. Recorded in `.api-breakage-allowlist.txt`.
 - **Core observation spine → `ObservableObject`** (`Theme`, `ThemeKitStrings.Revision`,
   the five presenters, `FormValidator`) per ADR-0007 §D3 — the `.id(revision)` rebuild
   contract, per-subtree `.theme(_:)` first-paint, and the live language switch are
