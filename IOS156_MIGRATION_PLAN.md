@@ -45,7 +45,8 @@ Counts verified 2026-07-20 by grep + `swiftc -typecheck -target arm64-apple-ios1
 | `UnevenRoundedRectangle` ⚠️ new | 16 | 9 | 5 | single-path: Core `Shape` polyfill | 3e |
 | `Regex<Output>` public API ⚠️ new | 16 | 1 | 1 (`Validation.swift:97`) | keep, annotate `@available(iOS 16, *)` | 3e |
 | `Color…gradient` (`AnyGradient`) ⚠️ new | 16 | 1 (preview-only, `Mask.swift:73`) | 1 | swap in preview | 3e |
-| `#Preview` (388 blocks / 266 files) | — | — | — | **verified clean at 15.6 — no work** ✅ | — |
+| `#Preview` macro itself (388 blocks / 266 files) | — | — | — | typechecks clean at 15.6 — no work ✅ | — |
+| `@Previewable` (inline preview `@State`) ⚠️ **new — Phase 1 compile-loop finding; the `swiftc -typecheck` probe missed the macro path, so this was NOT in ADR-0007's "#Preview clean" claim** | 17 | **147** | many | single-path: wrap inline `@Previewable @State` in a `Demo` wrapper `View` (the pattern most previews already use) — must land BEFORE the file-partitioned zones B/C to avoid preview-body merge conflicts | 2 |
 
 Not found (probed for, zero hits): `sensoryFeedback`, `PhaseAnimator`/`KeyframeAnimator`, `NavigationStack`, `ContentUnavailableView`, `fontDesign`, `lineLimit(reservesSpace:)`, toolbar-visibility forms, `PhotosPicker`, `LabeledContent`, native `Table` (`DataTable`/`KeyValueTable` are custom), `ImageRenderer`, parameter packs, `@Bindable`. `AttributedString`/`FormatStyle` uses look 15-safe — the compile loop is the oracle.
 
