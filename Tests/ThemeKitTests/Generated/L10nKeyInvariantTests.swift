@@ -79,7 +79,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) percent",
             "%@ percent", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Splitter.swift:98")
+            site: "Sources/ThemeKit/Components/Molecules/Splitter.swift:107")
         assertKey(
             "\(d) results",
             "%@ results", 1,
