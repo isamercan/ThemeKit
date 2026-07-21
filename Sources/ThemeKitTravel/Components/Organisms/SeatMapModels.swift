@@ -279,13 +279,18 @@ private struct SeatbackShape: Shape {
     func path(in rect: CGRect) -> Path {
         let corner = min(rect.width, rect.height) * 0.28
         // The notch half-ellipse dipping into the top edge: half-axes `a`/`b`
-        // around a center on the edge itself.
-        let a = rect.width * 0.52 / 2
+        // around a center on the edge itself. The boolean-subtraction version
+        // let the 0.52-width ellipse bite fractionally into the corner arcs;
+        // a single traced contour needs the notch to sit on the straight top
+        // segment, so `a` clamps to it — at the default seat proportions the
+        // dip is ~20% narrower between the shoulders (noted for the Phase-4
+        // snapshot re-record).
+        let a = min(rect.width * 0.52 / 2, (rect.width / 2 - corner) * 0.95)
         let b = rect.height * 0.24 / 2
         let cx = rect.midX
         let cy = rect.minY
-        // Degenerate frames (notch would overlap the corners): plain squircle.
-        guard cx - a > rect.minX + corner, cx + a < rect.maxX - corner else {
+        // Degenerate frames (no straight top segment left to notch): squircle.
+        guard a > 0, b > 0, cx - a > rect.minX + corner, cx + a < rect.maxX - corner else {
             return RoundedRectangle(cornerRadius: corner, style: .continuous).path(in: rect)
         }
         let k = Self.kappa
