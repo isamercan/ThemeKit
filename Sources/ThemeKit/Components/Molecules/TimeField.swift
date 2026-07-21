@@ -226,7 +226,7 @@ public struct TimeField: View {
         }
         .padding()
         .frame(minWidth: 300)
-        .presentationCompactAdaptation(.popover)
+        .popoverCompactAdaptationCompat()
     }
 
     /// The picker's locale: forced hour cycles override the locale's so the wheel

@@ -260,7 +260,7 @@ public struct DateField: View {
         }
         .padding()
         .frame(minWidth: 320)
-        .presentationCompactAdaptation(.popover)
+        .popoverCompactAdaptationCompat()
     }
 
     // MARK: - Colors

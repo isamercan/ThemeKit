@@ -248,6 +248,35 @@ struct ScrollPositionCompat<ID: Hashable>: ViewModifier {
     }
 }
 
+// MARK: - Popover compact adaptation (iOS 16.4)
+
+package extension View {
+    /// `.presentationCompactAdaptation(.popover)` back-deployed: on iOS 16.4+
+    /// a popover stays a popover in compact size classes; below it adapts to
+    /// the pre-16.4 system default (a sheet) — pure presentation polish
+    /// (ADR-0007 §D2 rule 2). macOS popovers never adapt, so the modifier is
+    /// iOS-only to begin with.
+    func popoverCompactAdaptationCompat() -> some View {
+        modifier(PopoverCompactAdaptationCompat())
+    }
+}
+
+/// Named degrade unit (ADR-0007 §D2 rule 3) for `presentationCompactAdaptation`:
+/// the `else` branch keeps the system's default compact adaptation (sheet).
+struct PopoverCompactAdaptationCompat: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if #available(iOS 16.4, *) {
+            content.presentationCompactAdaptation(.popover)
+        } else {
+            content
+        }
+        #else
+        content
+        #endif
+    }
+}
+
 // MARK: - View-level strikethrough (iOS 16)
 
 package extension View {

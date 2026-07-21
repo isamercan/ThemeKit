@@ -373,8 +373,15 @@ private extension View {
     @ViewBuilder
     func phoneFieldSheetSizing() -> some View {
         #if os(iOS)
-        self.presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+        // Detents are iOS 16-only; below, the picker sheet presents full-height
+        // through `BottomSheet`'s named `LegacySheetDetentChrome` unit
+        // (ADR-0007 §D2 rules 2–3, plan §3e).
+        if #available(iOS 16.0, *) {
+            self.presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        } else {
+            modifier(LegacySheetDetentChrome(showsDragIndicator: true))
+        }
         #else
         self
         #endif
