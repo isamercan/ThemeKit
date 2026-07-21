@@ -71,6 +71,26 @@ mechanical:
 - **`ThemeKitStrings`** internal lock moved off `OSAllocatedUnfairLock` (iOS 16+) to an
   `NSLock`-backed equivalent; locale language/direction parsing moved off the iOS-16
   `Locale.Language` API — same behavior on all supported OS versions.
+- **Minimum deployment target lowered: iOS 17 → iOS 15.6** (macOS stays 14). Additive for
+  existing 17+ consumers — the support matrix only widens. **Exception:** the optional
+  **`ThemeKitCalendar` add-on requires iOS 17+** (its `Almanac` / `HorizonCalendar` dependency
+  declares an iOS-17 floor, and SwiftPM cannot elevate one target's platform above the package
+  floor) — do not enable the `Calendar` trait if you deploy below iOS 17; the dependency-free
+  core and every other add-on/edition support 15.6.
+- **Charts (`BarChart` / `LineChart` / `AreaChart` / `DonutChart`) reimplemented on `Canvas` /
+  `Path`** (the `Charts` framework is iOS 16+). Public inits, modifiers and `ChartModels` types
+  are unchanged; **render-visible** — the four charts are re-drawn (new snapshot baselines
+  committed; review before release). Further single-path reimplementations behind unchanged
+  public APIs: `GaugeView` (native `Gauge` → token-fed ring/bar), `BoardingPass` detail (`Grid`
+  → paired rows), `ViewThatFits` → an `AdaptiveFit` helper, custom `Layout` (`FlowLayout` above,
+  `Masonry` / `Flex`) → measured layouts, `LocationCard` map, `KanbanBoard` drag-drop, and the
+  ticket-notch / seatback shapes → arc geometry. New Core `Shape` polyfills `ThemeAnyShape` /
+  `ThemeUnevenRoundedRect`. Pure-polish iOS-16/17 API gracefully degrades (each with a named,
+  directly-tested legacy branch): sheet `presentationDetents` / background / corner, `ShareLink`
+  (UIKit share-sheet fallback), `.symbolEffect`, scroll-target snapping, `.onKeyPress`.
+- **Incidental API-surface removal:** dropping `import Charts` removes Swift Charts' own `Array`
+  conformances (`ScaleDomain` / `ScaleRange` / `PositionScaleRange`) from ThemeKit's re-exported
+  surface — never ThemeKit-declared, no consumer-facing loss (allowlisted).
 
 ## [1.2.0] - 2026-07-20
 
