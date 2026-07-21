@@ -248,30 +248,36 @@ private struct BoardingPassDetailRow: View {
     }
 }
 
-/// A two-column grid of detail cells — pairs of cells per `GridRow`, so five
+/// A two-column grid of detail cells — cells pair up row by row, so five
 /// details wrap to three rows instead of clipping off the trailing edge.
 /// `.classic`'s `.grid` layout; `.wallet` always uses this arrangement.
+///
+/// iOS 15.6-floor migration (ADR-0007 §D2 rule 1, plan §3b): `Grid`/`GridRow`
+/// are iOS 16-only, so the arrangement is two content-hugging leading-aligned
+/// columns side by side — the same row-major pairing (0|1, 2|3, …) and the
+/// same content-sized column widths `Grid(alignment: .leading)` produced.
+/// Rows stay height-aligned as long as the label/value cells keep their
+/// uniform two-line shape (they do; under extreme Dynamic Type wrapping,
+/// row baselines may drift a few points — accepted, snapshot-pinned).
 private struct BoardingPassDetailGrid: View {
     let configuration: BoardingPassConfiguration
 
     var body: some View {
-        Grid(alignment: .leading,
-             horizontalSpacing: configuration.spacing(.md),
-             verticalSpacing: configuration.spacing(.sm)) {
-            ForEach(Array(stride(from: 0, to: configuration.details.count, by: 2)), id: \.self) { index in
-                GridRow {
-                    BoardingPassDetailCell(item: configuration.details[index])
-                        .gridColumnAlignment(.leading)
-                    if index + 1 < configuration.details.count {
-                        BoardingPassDetailCell(item: configuration.details[index + 1])
-                            .gridColumnAlignment(.leading)
-                    } else {
-                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                    }
-                }
-            }
+        HStack(alignment: .top, spacing: configuration.spacing(.md)) {
+            column(startingAt: 0)
+            column(startingAt: 1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// One vertical column of every second detail cell, starting at `offset` —
+    /// column 0 takes even indices, column 1 the odd ones.
+    private func column(startingAt offset: Int) -> some View {
+        VStack(alignment: .leading, spacing: configuration.spacing(.sm)) {
+            ForEach(Array(stride(from: offset, to: configuration.details.count, by: 2)), id: \.self) { index in
+                BoardingPassDetailCell(item: configuration.details[index])
+            }
+        }
     }
 }
 
