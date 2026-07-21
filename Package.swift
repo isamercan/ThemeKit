@@ -10,7 +10,7 @@ let package = Package(
     // user-facing string also remains overridable via API parameters.
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v17),
+        .iOS("15.6"),
         .macOS(.v14),
     ],
     products: [
