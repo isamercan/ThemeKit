@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-21
+
 ### ⚠️ Migration required — observation pattern change (iOS 15.6 floor, ADR-0007)
 
 ThemeKit is migrating its deployment floor from iOS 17 to **iOS 15.6** (macOS stays 14).
