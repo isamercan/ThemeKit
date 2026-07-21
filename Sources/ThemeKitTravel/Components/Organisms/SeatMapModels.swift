@@ -265,31 +265,58 @@ public enum SeatShape: Sendable, Hashable, CaseIterable {
 }
 
 /// A squircle with a shallow concave notch cut out of its top edge — the
-/// backrest between two "shoulders". Cut by path subtraction (like the ticket
-/// notches), so fill *and* stroke both follow the notch. Symmetric, so it needs
-/// no RTL handling.
+/// backrest between two "shoulders". The outline is traced as one contour
+/// with real arc geometry (`Path.subtracting` is iOS 17-only — ADR-0007 §D2
+/// rule 1, plan §3e), so fill *and* stroke both follow the notch on every
+/// supported OS. Corner arcs are circular (the boolean-subtraction version
+/// used `.continuous` squircle corners — a subtle fidelity delta noted for
+/// the Phase-4 snapshot re-record). Symmetric, so it needs no RTL handling.
 private struct SeatbackShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let radius = min(rect.width, rect.height) * 0.28
-        let body = RoundedRectangle(cornerRadius: radius, style: .continuous).path(in: rect)
-        // `Path.subtracting` is iOS 17-only. Below, the named legacy unit keeps
-        // the plain rounded seatback (no backrest notch) — a decorative
-        // degrade per ADR-0007 §D2 rule 2; Phase 3e restores it with real arc
-        // geometry.
-        if #available(iOS 17.0, *) {
-            let notchWidth = rect.width * 0.52
-            let notchHeight = rect.height * 0.24
-            var notch = Path()
-            notch.addEllipse(in: CGRect(x: rect.midX - notchWidth / 2, y: rect.minY - notchHeight / 2,
-                                        width: notchWidth, height: notchHeight))
-            return body.subtracting(notch)
-        } else {
-            return legacyNotchlessPath(body)
-        }
-    }
+    /// Cubic-Bézier circle/ellipse quarter-arc constant (the same
+    /// approximation CoreGraphics itself draws ellipses with).
+    private static let kappa: CGFloat = 0.5522847498
 
-    /// Named legacy unit (ADR-0007 §D2 rule 3): the un-notched seatback outline.
-    func legacyNotchlessPath(_ base: Path) -> Path { base }
+    func path(in rect: CGRect) -> Path {
+        let corner = min(rect.width, rect.height) * 0.28
+        // The notch half-ellipse dipping into the top edge: half-axes `a`/`b`
+        // around a center on the edge itself.
+        let a = rect.width * 0.52 / 2
+        let b = rect.height * 0.24 / 2
+        let cx = rect.midX
+        let cy = rect.minY
+        // Degenerate frames (notch would overlap the corners): plain squircle.
+        guard cx - a > rect.minX + corner, cx + a < rect.maxX - corner else {
+            return RoundedRectangle(cornerRadius: corner, style: .continuous).path(in: rect)
+        }
+        let k = Self.kappa
+        var p = Path()
+        // Screen coords, y down; traced screen-clockwise from the top-left
+        // corner (`clockwise: false` = increasing angle — `DonutWedgeShape`
+        // convention). The notch is two cubic quarter-ellipse arcs dipping to
+        // (cx, cy + b) inside the shape.
+        p.move(to: CGPoint(x: rect.minX + corner, y: rect.minY))
+        p.addLine(to: CGPoint(x: cx - a, y: cy))
+        p.addCurve(to: CGPoint(x: cx, y: cy + b),
+                   control1: CGPoint(x: cx - a, y: cy + k * b),
+                   control2: CGPoint(x: cx - k * a, y: cy + b))
+        p.addCurve(to: CGPoint(x: cx + a, y: cy),
+                   control1: CGPoint(x: cx + k * a, y: cy + b),
+                   control2: CGPoint(x: cx + a, y: cy + k * b))
+        p.addLine(to: CGPoint(x: rect.maxX - corner, y: rect.minY))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - corner))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX + corner, y: rect.maxY))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + corner))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        p.closeSubpath()
+        return p
+    }
 }
 
 /// Token-stepped seat sizes — the ramp alternative to a raw point size, shared

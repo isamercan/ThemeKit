@@ -671,29 +671,50 @@ private struct TicketChrome: View {
 
 /// A rounded-rect outline with two semicircular notches cut into the side
 /// edges `stubHeight` up from the bottom — the tearable-ticket silhouette.
+///
+/// iOS 15.6-floor migration (ADR-0007 §D2 rule 1, plan §3e): the outline is
+/// traced as one contour with real arc geometry — `Path.subtracting` is
+/// iOS 17-only — so fill *and* stroke follow the notches on every supported
+/// OS. Corner arcs are circular (the boolean-subtraction version rounded the
+/// body with `.continuous` squircle corners — a subtle fidelity delta noted
+/// for the Phase-4 snapshot re-record).
 private struct TicketNotchShape: Shape {
     let stubHeight: CGFloat
     let radius: CGFloat
 
     func path(in rect: CGRect) -> Path {
-        let y = rect.height - stubHeight
-        let p = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).path(in: rect)
-        // `Path.subtracting` is iOS 17-only. Below, the named legacy unit keeps
-        // the plain rounded card (no perforation notches) — decorative chrome
-        // only, degraded per ADR-0007 §D2 rule 2. Phase 3e replaces both paths
-        // with arc-geometry so every OS gets the notches.
-        if #available(iOS 17.0, *) {
-            var cut = Path()
-            cut.addEllipse(in: CGRect(x: rect.minX - radius, y: y - radius, width: radius * 2, height: radius * 2))
-            cut.addEllipse(in: CGRect(x: rect.maxX - radius, y: y - radius, width: radius * 2, height: radius * 2))
-            return p.subtracting(cut)
-        } else {
-            return legacyNotchlessPath(p)
+        let corner = min(Theme.RadiusRole.box.value, min(rect.width, rect.height) / 2)
+        let y = rect.maxY - stubHeight
+        // Degenerate frames (notch would overlap a corner): plain rounded rect.
+        guard y - radius > rect.minY + corner, y + radius < rect.maxY - corner else {
+            return RoundedRectangle(cornerRadius: corner, style: .continuous).path(in: rect)
         }
+        var p = Path()
+        // Screen coords, y down; `clockwise: false` = increasing angle =
+        // screen-clockwise (`DonutWedgeShape` convention). The two notch arcs
+        // sweep *into* the rect (decreasing angle → `clockwise: true`).
+        p.move(to: CGPoint(x: rect.minX + corner, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX - corner, y: rect.minY))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.maxX, y: y - radius))
+        p.addArc(center: CGPoint(x: rect.maxX, y: y), radius: radius,
+                 startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: true)
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - corner))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX + corner, y: rect.maxY))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX, y: y + radius))
+        p.addArc(center: CGPoint(x: rect.minX, y: y), radius: radius,
+                 startAngle: .degrees(90), endAngle: .degrees(-90), clockwise: true)
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + corner))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        p.closeSubpath()
+        return p
     }
-
-    /// Named legacy unit (ADR-0007 §D2 rule 3): the un-notched card outline.
-    func legacyNotchlessPath(_ base: Path) -> Path { base }
 }
 
 /// A horizontal 1pt line path (dash-friendly).
