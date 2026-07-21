@@ -51,9 +51,9 @@ struct ThemesView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Brand themes distilled from the exported Figma component-token files
-    /// (ETS / UB). Tapping one applies its full recipe — brand seeds + font +
-    /// card radius — via the generated-config path (so it persists across launch).
+    /// Two example brand themes (Aurora / Onyx). Tapping one applies its full recipe
+    /// — brand seeds + font + card radius — via the generated-config path (so it
+    /// persists across launch).
     private var brandThemes: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Text("Brand themes — from Figma component tokens")
