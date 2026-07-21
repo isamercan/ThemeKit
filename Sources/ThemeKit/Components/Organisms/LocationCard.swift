@@ -42,6 +42,15 @@ public struct LocationPin: Identifiable, Sendable {
     }
 }
 
+/// Internal annotation record feeding `Map(annotationItems:)` — the primary
+/// pin plus the caller's ``LocationPin`` POIs.
+private struct MapAnnotationPin: Identifiable {
+    let id: String
+    let title: String
+    let coordinate: CLLocationCoordinate2D
+    let isPrimary: Bool
+}
+
 public struct LocationCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.componentDensity) private var density
@@ -163,15 +172,28 @@ public struct LocationCard: View {
             .clipped()
             .task(id: snapshotKey) { await generateSnapshot() }
         } else {
-            Map(initialPosition: .region(region)) {
-                Marker(title, coordinate: coordinate)
-                ForEach(pois) { pin in
-                    Marker(pin.title, coordinate: pin.coordinate).tint(theme.text(.textSecondary))
-                }
+            // iOS 15.6-floor migration (ADR-0007 §D2 rule 1, plan §3f): the
+            // `MapContentBuilder` `Marker` API is iOS 17-only, so the preview
+            // renders through `Map(coordinateRegion:annotationItems:)` —
+            // deprecated from iOS 17 but back-deploys to the floor; single-path,
+            // one rendering on every supported OS. The region binding is
+            // constant: the preview is non-interactive (`allowsHitTesting`).
+            Map(coordinateRegion: .constant(region),
+                interactionModes: [],
+                annotationItems: annotationPins) { pin in
+                MapMarker(coordinate: pin.coordinate,
+                          tint: pin.isPrimary ? theme.foreground(.fgHero) : theme.text(.textSecondary))
             }
             .frame(height: mapHeight)
             .allowsHitTesting(false)
         }
+    }
+
+    /// The primary location + POIs flattened into one annotation list — keeps
+    /// the public `LocationPin` data shape unchanged.
+    private var annotationPins: [MapAnnotationPin] {
+        [MapAnnotationPin(id: "themekit.location.primary", title: title, coordinate: coordinate, isPrimary: true)]
+            + pois.map { MapAnnotationPin(id: "themekit.location.poi.\($0.id)", title: $0.title, coordinate: $0.coordinate, isPrimary: false) }
     }
 
     private var snapshotKey: String {
