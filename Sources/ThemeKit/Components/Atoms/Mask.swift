@@ -70,7 +70,9 @@ struct StarShape: Shape {
 #Preview {
     HStack(spacing: 16) {
         ForEach(MaskShape.allCases, id: \.self) { shape in
-            Rectangle().fill(.blue.gradient).frame(width: 56, height: 56).themeMask(shape)
+            // `.gradient` (`AnyGradient`) is iOS 16-only — plain fill on the
+            // 15.6 floor (ADR-0007, plan §3e; preview-only chrome).
+            Rectangle().fill(.blue).frame(width: 56, height: 56).themeMask(shape)
         }
     }
     .padding()
