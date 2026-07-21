@@ -264,7 +264,7 @@ struct TextInputDemo: View {
             Toggle("Read-only (keeps chrome, blocks editing)", isOn: $readOnly)
             Button("Reset") { text = ""; loggedIn = false }
         }
-        .onChange(of: mode) { _, _ in text = ""; loggedIn = false }
+        .onChange(of: mode) { _ in text = ""; loggedIn = false }
         .onAppear {
             // Screenshot hook: launch with `-textInputMask card|phone|currency`.
             if let raw = UserDefaults.standard.string(forKey: "textInputMask"),
@@ -506,7 +506,7 @@ struct InputNumberDemo: View {
             Toggle("Read-only (keeps chrome, blocks stepping)", isOn: $readOnly)
             Toggle("Error state", isOn: $showError)
         }
-        .onChange(of: priceMode) { _, price in value = price ? 500 : 2 }
+        .onChange(of: priceMode) { price in value = price ? 500 : 2 }
     }
 }
 

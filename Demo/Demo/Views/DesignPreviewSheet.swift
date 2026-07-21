@@ -13,7 +13,7 @@ import SwiftUI
 import ThemeKit
 
 struct DesignPreviewSheet: View {
-    @Environment(Theme.self) private var theme
+    @Environment(\.theme) private var theme
     let payload: PreviewPayload
     /// Called with `true` to commit, `false` to revert.
     let onFinish: (Bool) -> Void
@@ -21,7 +21,7 @@ struct DesignPreviewSheet: View {
     private var result: DesignParseResult { payload.result }
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
                     provenance
@@ -34,11 +34,11 @@ struct DesignPreviewSheet: View {
             .navigationTitle(payload.spec.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { onFinish(false) }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Apply") { onFinish(true) }.fontWeight(.semibold)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { onFinish(true) } label: { Text("Apply").fontWeight(.semibold) }
                 }
             }
             .interactiveDismissDisabled()   // force an explicit Apply / Cancel

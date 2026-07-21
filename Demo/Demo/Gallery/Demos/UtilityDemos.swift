@@ -77,7 +77,7 @@ struct InlineTextDemo: View {
         ComponentStage("InlineText", inspector: [("style", styles[styleIdx].0)]) {
             inline.frame(maxWidth: 340)
         } knobs: {
-            TextField("Text (keep the link words)", text: $text, axis: .vertical).textFieldStyle(.roundedBorder)
+            TextField("Text (keep the link words)", text: $text).textFieldStyle(.roundedBorder)
             Picker("Style", selection: $styleIdx) {
                 ForEach(styles.indices, id: \.self) { Text(styles[$0].0).tag($0) }
             }.pickerStyle(.segmented)
@@ -110,7 +110,7 @@ struct MaskDemo: View {
 
     var body: some View {
         ComponentStage("Mask", inspector: [("shape", "\(shape)"), ("size", "\(Int(size))pt")]) {
-            Rectangle().fill(.blue.gradient).frame(width: size, height: size).themeMask(shape)
+            Rectangle().fill(LinearGradient(colors: [.blue, .blue.opacity(0.55)], startPoint: .top, endPoint: .bottom)).frame(width: size, height: size).themeMask(shape)
         } knobs: {
             Picker("Shape", selection: $shape) {
                 ForEach(MaskShape.allCases, id: \.self) { Text("\($0)".capitalized).tag($0) }
@@ -136,7 +136,7 @@ struct TextRotateDemo: View {
                 TextRotate(words, interval: interval).id("\(interval)-\(wordsText)")   // restart cycle on edit
             }
         } knobs: {
-            TextField("Words (comma-separated)", text: $wordsText, axis: .vertical).textFieldStyle(.roundedBorder)
+            TextField("Words (comma-separated)", text: $wordsText).textFieldStyle(.roundedBorder)
             HStack { Text("Interval"); SwiftUI.Slider(value: $interval, in: 0.5...4, step: 0.5); Text(String(format: "%.1fs", interval)).font(.caption.monospacedDigit()) }
         }
     }

@@ -14,7 +14,9 @@ import ThemeKit
 struct CatalogView: View {
     @EnvironmentObject private var themeStore: DemoThemeStore
     @State private var query = ""
-    @State private var path: [String] = []
+    // The `-openDemo <name>` deep-link target, pushed via a hidden programmatic
+    // NavigationLink (iOS-15-compatible; ADR-0007 dropped NavigationStack(path:)).
+    @State private var deepLink: String?
 
     // The "Test list" (ComponentListBrowser) presented full-screen from here so
     // iPhone gets the same top-to-bottom, live-preview component browser the iPad
@@ -28,14 +30,16 @@ struct CatalogView: View {
     @State private var listDark = false
 
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationView {
             List {
                 ForEach(ComponentCategory.allCases) { category in
                     let entries = filtered(category)
                     if !entries.isEmpty {
                         Section("\(category.rawValue) · \(entries.count)") {
                             ForEach(entries) { entry in
-                                NavigationLink(value: entry.name) {
+                                NavigationLink {
+                                    demoPage(entry.name)
+                                } label: {
                                     HStack(spacing: 8) {
                                         Text(entry.name)
                                         if entry.isNew {
@@ -50,36 +54,58 @@ struct CatalogView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Components")
-            .navigationDestination(for: String.self) { name in
-                if let entry = ComponentRegistry.all.first(where: { $0.name == name }) {
-                    ResettableDemo(usage: entry.usage) { entry.make() }
-                }
-            }
+            // Hidden programmatic push for the screenshot deep-link — rows above
+            // push directly; this link exists solely so `-openDemo` works even
+            // when the target row isn't materialized by the lazy List.
+            .background(
+                NavigationLink(isActive: deepLinkActive) {
+                    if let name = deepLink { demoPage(name) }
+                } label: { EmptyView() }
+                .hidden()
+            )
             .searchable(text: $query, prompt: "Search components")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button { showTestList = true } label: {
                         Label("Test list", systemImage: "list.bullet.rectangle.portrait")
                     }
                     .accessibilityLabel("Test list")
                 }
-                ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() }
+                ToolbarItem(placement: .navigationBarTrailing) { ThemeSwitcherMenu() }
             }
             .onAppear {
                 // Deep-link for screenshots: launch with `-openDemo <name>`.
-                if path.isEmpty, let demo = UserDefaults.standard.string(forKey: "openDemo"), !demo.isEmpty {
-                    path = [demo]
+                if deepLink == nil, let demo = UserDefaults.standard.string(forKey: "openDemo"), !demo.isEmpty {
+                    deepLink = demo
                 }
             }
         }
+        .navigationViewStyle(.stack)
         .fullScreenCover(isPresented: $showTestList) {
-            ComponentListBrowser(theme: listTheme, preset: $listPreset, isDark: $listDark)
-                .theme(listTheme)
-                .environmentObject(themeStore)
-                .feedbackHost()
-                .sheetHost()
-                .drawerHost()
+            // The full-bleed component browser leans on iOS-17 API (see
+            // Gallery/Showcase); below 17 the button shows a short notice instead.
+            if #available(iOS 17.0, *) {
+                ComponentListBrowser(theme: listTheme, preset: $listPreset, isDark: $listDark)
+                    .theme(listTheme)
+                    .environmentObject(themeStore)
+                    .feedbackHost()
+                    .sheetHost()
+                    .drawerHost()
+            } else {
+                TestListUnavailableNote(dismiss: { showTestList = false })
+            }
         }
+    }
+
+    /// The pushed demo page for a registry entry.
+    @ViewBuilder private func demoPage(_ name: String) -> some View {
+        if let entry = ComponentRegistry.all.first(where: { $0.name == name }) {
+            ResettableDemo(usage: entry.usage) { entry.make() }
+        }
+    }
+
+    private var deepLinkActive: Binding<Bool> {
+        Binding(get: { deepLink != nil }, set: { if !$0 { deepLink = nil } })
     }
 
     private func filtered(_ category: ComponentCategory) -> [ComponentEntry] {
@@ -103,7 +129,7 @@ private struct ResettableDemo<Content: View>: View {
             .id(token)
             .environment(\.componentUsage, usage)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button { token += 1 } label: {
                         Image(systemName: "arrow.counterclockwise")
                     }
@@ -113,8 +139,26 @@ private struct ResettableDemo<Content: View>: View {
     }
 }
 
+/// Shown below iOS 17 in place of the full-bleed component browser.
+private struct TestListUnavailableNote: View {
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "list.bullet.rectangle.portrait")
+                .font(.largeTitle).foregroundStyle(.secondary)
+            Text("Test list needs iOS 17").font(.headline)
+            Text("The full-screen component browser uses iOS 17 APIs. Browse every component from the catalog list instead.")
+                .font(.caption).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Close", action: dismiss)
+        }
+        .padding()
+    }
+}
+
 #Preview {
     CatalogView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

@@ -1031,7 +1031,7 @@ struct PageHeaderDemo: View {
             .pickerStyle(.menu)
             if variant.hasShowTitle { Toggle("Show Title", isOn: $showTitle) }
             if variant.hasTitleField && (!variant.hasShowTitle || showTitle) {
-                LabeledContent("Title") { TextField("Title", text: $titleText).multilineTextAlignment(.trailing) }
+                HStack { Text("Title"); TextField("Title", text: $titleText).multilineTextAlignment(.trailing) }
             }
             if variant.hasBackNav { Toggle("Back Navigation Icon", isOn: $backNav) }
             if variant.hasActions {
@@ -1045,7 +1045,7 @@ struct PageHeaderDemo: View {
                 Text("Search summary").font(.caption.weight(.bold)).foregroundStyle(.secondary)
                 Toggle("Selected", isOn: $summarySelected)
                 Toggle("Bg", isOn: $summaryBg)
-                LabeledContent("Time") { TextField("Time", text: $timeText).multilineTextAlignment(.trailing) }
+                HStack { Text("Time"); TextField("Time", text: $timeText).multilineTextAlignment(.trailing) }
                 Stepper("Adult Number: \(adults)", value: $adults, in: 1...30)
                 Toggle("Show child", isOn: $showChild)
                 if showChild { Stepper("Child Number: \(childCount)", value: $childCount, in: 0...20) }
@@ -1188,7 +1188,7 @@ struct GalleryDemo: View {
 struct UploadDemo: View {
     private struct DemoUploadError: LocalizedError { var errorDescription: String? { "File too large" } }
 
-    @State private var uploads = UploadController()
+    @StateObject private var uploads = UploadController()
     @State private var counter = 0
     @State private var picked: [UploadFile] = []
 
@@ -1459,7 +1459,7 @@ struct ChatBubbleDemo: View {
 
 struct DrawerDemo: View {
     @Environment(\.theme) private var theme
-    @Environment(DrawerPresenter.self) private var drawer: DrawerPresenter
+    @EnvironmentObject private var drawer: DrawerPresenter
     @State private var open = false
     @State private var edge: Edge = .bottom
     @State private var showClose = true
@@ -2236,7 +2236,7 @@ struct DataTableDemo: View {
 }
 
 struct BottomSheetDemo: View {
-    @Environment(SheetPresenter.self) private var sheet: SheetPresenter
+    @EnvironmentObject private var sheet: SheetPresenter
     @State private var showDeclarative = false
     var body: some View {
         ComponentStage("BottomSheet") {
@@ -2448,7 +2448,7 @@ struct ColorLadderDemo: View {
 // MARK: - Feedback (unified presenter: toast + confirm)
 
 struct FeedbackDemo: View {
-    @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+    @EnvironmentObject private var feedback: FeedbackPresenter
     @State private var kind: FeedbackKind = .success
     @State private var last = "—"
 
@@ -2558,7 +2558,7 @@ private struct FeedbackDefaultsPlayground: View {
 
 private struct FeedbackDefaultsButtons: View {
     /// The *local* presenter injected by the playground's own `.feedbackHost()`.
-    @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+    @EnvironmentObject private var feedback: FeedbackPresenter
 
     var body: some View {
         VStack(spacing: 8) {
@@ -2752,7 +2752,7 @@ struct TreeSelectDemo: View {
 }
 
 struct TourDemo: View {
-    @State private var tour = TourController()
+    @StateObject private var tour = TourController()
     var body: some View {
         ComponentStage("Tour", inspector: [("active", "\(tour.isActive)"), ("step", "\(tour.index + 1)")]) {
             VStack(spacing: 20) {
@@ -2794,7 +2794,7 @@ struct TourDemo: View {
 struct FormDemo: View {
     private enum Field { case email, password, plan, terms }
 
-    @State private var form = FormValidator<Field>([
+    @StateObject private var form = FormValidator<Field>([
         .email: [.required("Email is required"), .email()],
         .password: [.required("Password is required"), .password(minLength: 8)],
         .plan: [.required("Select a plan")],
@@ -2846,7 +2846,7 @@ struct FormDemo: View {
             Text("Empty submit → email/password + RadioGroup + Checkbox all show errors; focus jumps to the first invalid text field.").font(.caption).foregroundStyle(.secondary)
             Button("Reset") { email = ""; password = ""; plan = nil; terms = false; submitted = false; done = false; form.reset() }
         }
-        .onChange(of: values.description) { _, _ in if submitted { _ = form.validateAll(values) } }
+        .onChange(of: values.description) { _ in if submitted { _ = form.validateAll(values) } }
         .onAppear {
             // Screenshot hook: launch with `-formSubmit YES` to validate empty form.
             if UserDefaults.standard.bool(forKey: "formSubmit") {

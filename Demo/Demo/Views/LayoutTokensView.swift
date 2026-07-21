@@ -14,14 +14,14 @@ import ThemeKit
 
 struct LayoutTokensView: View {
     // Re-render when the theme (hence the resolved token values) changes.
-    @Environment(Theme.self) private var theme: Theme
+    @Environment(\.theme) private var theme
 
     private let spacingKeys = Theme.SpacingKey.allCases
     private let radiusKeys = Theme.RadiusKey.allCases
     private let shadowStyles = ShadowStyle.allCases
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     intro
@@ -34,7 +34,7 @@ struct LayoutTokensView: View {
             }
             .navigationTitle("Layout")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() } }
+            .toolbar { ToolbarItem(placement: .navigationBarTrailing) { ThemeSwitcherMenu() } }
         }
     }
 
@@ -159,6 +159,6 @@ struct LayoutTokensView: View {
 
 #Preview {
     LayoutTokensView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

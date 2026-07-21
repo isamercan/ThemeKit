@@ -100,7 +100,7 @@ struct FeedbackDefaultsDemo: View {
 /// The area inside the local `.feedbackHost()` — reads the page presenter and
 /// the ambient defaults (to demo that an explicit per-call argument wins).
 private struct FeedbackDefaultsStage: View {
-    @Environment(FeedbackPresenter.self) private var feedback: FeedbackPresenter
+    @EnvironmentObject private var feedback: FeedbackPresenter
     @Environment(\.feedbackDefaults) private var defaults
     @Environment(\.theme) private var theme
     @State private var count = 0
@@ -144,7 +144,7 @@ private struct FeedbackDefaultsStage: View {
 struct FormWiringDemo: View {
     private enum Field { case email, password, promo }
 
-    @State private var form = FormValidator<Field>([
+    @StateObject private var form = FormValidator<Field>([
         .email: [.required(), .email()],
         .password: [.required(), .minLength(8)],
         .promo: [.required("Promo code is required")],

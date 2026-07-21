@@ -21,7 +21,15 @@ let package = Package(
         .library(name: "DemoCalendarSupport", targets: ["DemoCalendarSupport"]),
     ],
     dependencies: [
-        .package(name: "ThemeKit", path: "../..", traits: ["Calendar"]),
+        // iOS 15.6 floor (ADR-0007): the "Calendar" trait is temporarily OFF.
+        // Almanac's manifest requires iOS 17, and SwiftPM has no per-target
+        // platform elevation, so with the root package floor at 15.6 the
+        // ThemeKitCalendar ⇄ Almanac edge fails graph validation for EVERY
+        // consumer that enables the trait. Until the add-on regains an
+        // iOS-17-compatible wiring upstream, the Demo runs with the trait off —
+        // CalendarDemos.swift falls back to its `#else` "enable the trait" stubs.
+        // Restore with: traits: ["Calendar"].
+        .package(name: "ThemeKit", path: "../..", traits: []),
     ],
     targets: [
         .target(

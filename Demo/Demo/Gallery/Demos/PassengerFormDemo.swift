@@ -25,7 +25,7 @@ struct PassengerFormDemo: View {
 
     // FormValidator takes a KeyValuePairs literal, so the two field-list shapes
     // get one validator each and the knob switches between them.
-    @State private var fullForm = FormValidator<PassengerFormField>([
+    @StateObject private var fullForm = FormValidator<PassengerFormField>([
         .givenName: [.required()],
         .familyName: [.required()],
         .gender: [.required()],
@@ -33,7 +33,7 @@ struct PassengerFormDemo: View {
         .documentNumber: [.required(), .documentNumber],
         .documentExpiry: [.required(), .expiryInFuture()],
     ])
-    @State private var basicForm = FormValidator<PassengerFormField>([
+    @StateObject private var basicForm = FormValidator<PassengerFormField>([
         .givenName: [.required()],
         .familyName: [.required()],
         .dateOfBirth: [.required()],

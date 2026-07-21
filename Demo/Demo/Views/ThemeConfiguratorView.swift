@@ -34,7 +34,7 @@ struct ThemeConfiguratorView: View {
     private let fonts = ["Montserrat", "System", "SystemRounded", "SystemSerif", "SystemMono"]
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     preview
@@ -50,9 +50,9 @@ struct ThemeConfiguratorView: View {
             .navigationTitle("Theme Generator")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Apply") { commit() }.fontWeight(.semibold)
+                ToolbarItem(placement: .navigationBarLeading) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { commit() } label: { Text("Apply").fontWeight(.semibold) }
                 }
             }
             .onAppear {
@@ -61,7 +61,7 @@ struct ThemeConfiguratorView: View {
                 // opening the sheet doesn't regenerate a bundled theme.
                 DispatchQueue.main.async { live = true }
             }
-            .onChange(of: draft) { _, new in
+            .onChange(of: draft) { new in
                 if live { scheduleApply(new) }   // debounced live preview (no per-tick regen)
             }
             .onDisappear {
@@ -342,6 +342,6 @@ extension Color {
 
 #Preview {
     ThemeConfiguratorView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

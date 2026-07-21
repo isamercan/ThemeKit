@@ -178,5 +178,5 @@ struct FlightResultsView: View {
 }
 
 #Preview {
-    FlightResultsView().environment(Theme.shared)
+    FlightResultsView().environment(\.theme, Theme.shared)
 }

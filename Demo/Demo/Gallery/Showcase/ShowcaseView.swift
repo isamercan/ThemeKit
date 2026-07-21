@@ -21,6 +21,7 @@ import Combine
 import ThemeKit
 import ThemeKitTravel
 
+@available(iOS 17.0, *)
 struct ShowcaseView: View {
     @EnvironmentObject private var themeStore: DemoThemeStore
 
@@ -139,6 +140,7 @@ struct ShowcaseView: View {
 
 // MARK: - Page 0 · OVERVIEW (Ant-Design-homepage-style opening)
 
+@available(iOS 17.0, *)
 private struct OverviewPage: View {
     @State private var email = ""
     @State private var fruits: Set<String> = ["Apple", "Banana"]
@@ -297,6 +299,7 @@ private struct OverviewPage: View {
 
 // MARK: - Page 1 · TRAVEL (flight & booking component suite)
 
+@available(iOS 17.0, *)
 private struct TravelPage: View {
     @State private var flightFilters: Set<String> = ["cheapest"]
     @State private var viewMode = 0
@@ -430,6 +433,7 @@ private struct TravelPage: View {
 
 // MARK: - Page 2 · CONTENT (messaging, offers, feedback, reviews)
 
+@available(iOS 17.0, *)
 private struct ContentPage: View {
     @State private var dismissedTip = false
     @State private var saleDeadline = Date.now.addingTimeInterval(45 * 60)
@@ -587,6 +591,7 @@ private struct ContentPage: View {
 
 // MARK: - Page 3 · DASHBOARD (product screen)
 
+@available(iOS 17.0, *)
 private struct DashboardPage: View {
     @State private var page = 1
     @State private var histLow = 900.0
@@ -750,6 +755,7 @@ private struct DashboardPage: View {
 
 // MARK: - Page 4 · FORMS & LISTS (grouped inputs · multi-select · passenger rows)
 
+@available(iOS 17.0, *)
 private struct FormsPage: View {
     @State private var email = ""
     @State private var newsletter = true
@@ -889,6 +895,7 @@ private struct FormsPage: View {
 
 // MARK: - Page 5 · THEMEKITTRAVEL (the opt-in flight-booking edition)
 
+@available(iOS 17.0, *)
 private struct ThemeKitTravelPage: View {
     // A populated draft so the search CTA reads as ready (blue), not disabled (grey).
     @State private var trip: TripSearchDraft = {
@@ -1096,6 +1103,7 @@ private struct ThemeKitTravelPage: View {
 
 // MARK: - Shared page scaffold (title + centered, fit-to-screen body)
 
+@available(iOS 17.0, *)
 private struct PageScaffold<Content: View>: View {
     let title: String
     let subtitle: String
@@ -1120,6 +1128,7 @@ private struct PageScaffold<Content: View>: View {
 
 // MARK: - Titled collage container (Ant-style rounded card)
 
+@available(iOS 17.0, *)
 struct CollageCard<Content: View>: View {
     @Environment(\.theme) private var theme
     private let title: String?
@@ -1149,6 +1158,7 @@ struct CollageCard<Content: View>: View {
 
 // MARK: - Theme preset row (swatches + dark toggle + auto-cycle)
 
+@available(iOS 17.0, *)
 struct ThemePresetRow: View {
     let theme: Theme                 // the Showcase's own theme (for chrome tint)
     @Binding var preset: DemoTheme   // drives the local theme via the parent's onChange
@@ -1199,7 +1209,11 @@ struct ThemePresetRow: View {
 }
 
 #Preview {
-    ShowcaseView()
-        .environment(Theme.shared)
-        .environmentObject(DemoThemeStore())
+    if #available(iOS 17.0, *) {
+        ShowcaseView()
+            .environment(\.theme, Theme.shared)
+            .environmentObject(DemoThemeStore())
+    } else {
+        Text("Showcase needs iOS 17")
+    }
 }

@@ -15,6 +15,7 @@ import Combine
 import UIKit
 import ThemeKit
 
+@available(iOS 17.0, *)
 struct RichComponentsBrowser: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -195,6 +196,7 @@ struct RichComponentsBrowser: View {
 
 // MARK: - One big shelf card: clean live preview on top, info + code below
 
+@available(iOS 17.0, *)
 private struct ShelfCard: View {
     @Environment(\.theme) private var theme
     let entry: ComponentEntry
@@ -271,6 +273,7 @@ private struct ShelfCard: View {
 
 // MARK: - Slim in-row category marker
 
+@available(iOS 17.0, *)
 private struct CategoryMarker: View {
     @Environment(\.theme) private var theme
     let category: ComponentCategory

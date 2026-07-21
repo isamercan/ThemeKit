@@ -15,7 +15,7 @@ struct ThemeGalleryView: View {
     private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     controlBar
@@ -30,7 +30,7 @@ struct ThemeGalleryView: View {
             }
             .navigationTitle("Colors")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() } }
+            .toolbar { ToolbarItem(placement: .navigationBarTrailing) { ThemeSwitcherMenu() } }
             .sheet(isPresented: $showConfigurator) { ThemeConfiguratorView() }
             .onAppear {
                 // Deep-link for screenshots: launch with `-openConfigurator 1`.
@@ -134,6 +134,6 @@ struct ThemeGalleryView: View {
 
 #Preview {
     ThemeGalleryView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }
