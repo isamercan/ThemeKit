@@ -94,27 +94,32 @@ public extension BrowserFrame {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("BrowserFrame") {
-        PreviewCase("Default") {
-            BrowserFrame(url: "https://themekit.dev/components") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Hello from the web").textStyle(.headingSm)
-                    Text("Any SwiftUI content renders inside the browser chrome.")
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(theme.text(.textSecondary))
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("BrowserFrame") {
+                PreviewCase("Default") {
+                    BrowserFrame(url: "https://themekit.dev/components") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Hello from the web").textStyle(.headingSm)
+                            Text("Any SwiftUI content renders inside the browser chrome.")
+                                .textStyle(.bodySm400)
+                                .foregroundStyle(theme.text(.textSecondary))
+                        }
+                        .padding()
+                    }
                 }
-                .padding()
+                PreviewCase("Tinted + elevated") {
+                    BrowserFrame {
+                        Text("Default URL, tinted chrome")
+                            .textStyle(.bodySm400)
+                            .padding()
+                    }
+                    .accent(.primary)
+                    .elevation(.elevated)
+                }
             }
-        }
-        PreviewCase("Tinted + elevated") {
-            BrowserFrame {
-                Text("Default URL, tinted chrome")
-                    .textStyle(.bodySm400)
-                    .padding()
-            }
-            .accent(.primary)
-            .elevation(.elevated)
         }
     }
+    return Demo()
 }

@@ -103,7 +103,7 @@ public struct GuestSelector: View {
                 .accessibilityLabel(row.title)
             }
         }
-        .onChange(of: selection) { _, new in onChangeHandler?(new) }
+        .onChangeCompat(of: selection) { _, new in onChangeHandler?(new) }
     }
 
     private func binding(for keyPath: WritableKeyPath<GuestSelection, Int>) -> Binding<Int> {
@@ -154,17 +154,22 @@ public extension GuestSelector {
 }
 
 #Preview {
-    @Previewable @State var guests = GuestSelection(rooms: 1, adults: 2, children: 1)
-    @Previewable @State var passengers = GuestSelection(adults: 1)
-    PreviewMatrix("GuestSelector") {
-        PreviewCase("Rooms + guests · live summary") {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(guests.summary).textStyle(.bodyBase400)
-                GuestSelector(selection: $guests)
+    struct Demo: View {
+        @State var guests = GuestSelection(rooms: 1, adults: 2, children: 1)
+        @State var passengers = GuestSelection(adults: 1)
+        var body: some View {
+            PreviewMatrix("GuestSelector") {
+                PreviewCase("Rooms + guests · live summary") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(guests.summary).textStyle(.bodyBase400)
+                        GuestSelector(selection: $guests)
+                    }
+                }
+                PreviewCase("Passengers (no rooms · max 4 guests)") {
+                    GuestSelector(selection: $passengers).showsRooms(false).maxTotal(4)
+                }
             }
         }
-        PreviewCase("Passengers (no rooms · max 4 guests)") {
-            GuestSelector(selection: $passengers).showsRooms(false).maxTotal(4)
-        }
     }
+    return Demo()
 }

@@ -167,5 +167,5 @@ public extension SearchSummary {
         PreviewCase("prompt · boxed") { SearchSummary(time: nil, adults: 0).prompt().boxed() }
         PreviewCase("with title") { SearchSummary(time: "12 – 16 Jul", adults: 2).title("Antalya Hotels").children(1).rooms(1) }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

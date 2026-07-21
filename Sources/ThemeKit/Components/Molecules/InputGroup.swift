@@ -331,5 +331,5 @@ private struct OptionalSoftShadow: ViewModifier {
             .background(Theme.shared.background(.bgBase))
         }
     }
-    return Demo().environment(Theme.shared)
+    return Demo().environment(\.theme, Theme.shared)
 }

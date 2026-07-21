@@ -125,26 +125,31 @@ public extension PassengerRow {
 }
 
 #Preview {
-    @Previewable @State var selected = true
-    PreviewMatrix("PassengerRow") {
-        PreviewCase("Editable + seat") { PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345678").seat("14C").onEdit { } }
-        PreviewCase("Avatar + status + chevron") { PassengerRow("Ada Mercan").type("Child").avatar(.initials("AM")).status("Checked in").accessory(.chevron) }
-        PreviewCase("Bordered card + typed badge") {
-            PassengerRow("Mia Doe").type("Infant", style: .info).subtitle("No seat required")
-                .bordered().surface(.bgWhite)
-        }
-        PreviewCase("Selectable (row toggles)") {
-            PassengerRow("John Doe").type("Adult").subtitle("Frequent flyer")
-                .selectable($selected)
-                .bordered()
-        }
-        PreviewCase("Removable") {
-            PassengerRow("Sam Doe").type("Adult").onRemove { }
-        }
-        PreviewCase("Custom trailing slot") {
-            PassengerRow("Alex Doe").type("Adult").trailing {
-                Badge(String(themeKitTravel: "Visa required")).badgeStyle(.warning).variant(.soft).size(.small)
+    struct Demo: View {
+        @State var selected = true
+        var body: some View {
+            PreviewMatrix("PassengerRow") {
+                PreviewCase("Editable + seat") { PassengerRow("İsa Mercan").type("Adult").subtitle("Passport · TR12345678").seat("14C").onEdit { } }
+                PreviewCase("Avatar + status + chevron") { PassengerRow("Ada Mercan").type("Child").avatar(.initials("AM")).status("Checked in").accessory(.chevron) }
+                PreviewCase("Bordered card + typed badge") {
+                    PassengerRow("Mia Doe").type("Infant", style: .info).subtitle("No seat required")
+                        .bordered().surface(.bgWhite)
+                }
+                PreviewCase("Selectable (row toggles)") {
+                    PassengerRow("John Doe").type("Adult").subtitle("Frequent flyer")
+                        .selectable($selected)
+                        .bordered()
+                }
+                PreviewCase("Removable") {
+                    PassengerRow("Sam Doe").type("Adult").onRemove { }
+                }
+                PreviewCase("Custom trailing slot") {
+                    PassengerRow("Alex Doe").type("Adult").trailing {
+                        Badge(String(themeKitTravel: "Visa required")).badgeStyle(.warning).variant(.soft).size(.small)
+                    }
+                }
             }
         }
     }
+    return Demo()
 }

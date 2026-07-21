@@ -92,35 +92,45 @@ private struct IndicatorDot: View {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Indicator") {
-        PreviewCase("Notification dot") {
-            Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
-                .indicatorDot()
-        }
-        PreviewCase("Status dot") {
-            Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
-                .indicatorDot(.success)
-        }
-        PreviewCase("Badge") {
-            Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
-                .indicator { Badge("3").badgeStyle(.error).size(.small) }
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Indicator") {
+                PreviewCase("Notification dot") {
+                    Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
+                        .indicatorDot()
+                }
+                PreviewCase("Status dot") {
+                    Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
+                        .indicatorDot(.success)
+                }
+                PreviewCase("Badge") {
+                    Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
+                        .indicator { Badge("3").badgeStyle(.error).size(.small) }
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("RTL") {
-    @Previewable @Environment(\.theme) var theme
-    // `.topTrailing` resolves to the top-LEFT corner here; the outward nudge
-    // must push the badge past that corner, not back inward.
-    HStack(spacing: 32) {
-        Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicatorDot()
-        Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicatorDot(.success, position: .bottomLeading)
-        Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
-            .indicator { Badge("3").badgeStyle(.error).size(.small) }
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // `.topTrailing` resolves to the top-LEFT corner here; the outward nudge
+            // must push the badge past that corner, not back inward.
+            HStack(spacing: 32) {
+                Icon(systemName: "bell").size(.lg).colorOverride(theme.text(.textPrimary))
+                    .indicatorDot()
+                Icon(systemName: "wifi").size(.lg).colorOverride(theme.text(.textPrimary))
+                    .indicatorDot(.success, position: .bottomLeading)
+                Icon(systemName: "envelope").size(.lg).colorOverride(theme.text(.textPrimary))
+                    .indicator { Badge("3").badgeStyle(.error).size(.small) }
+            }
+            .padding()
+            .environment(\.layoutDirection, .rightToLeft)
+        }
     }
-    .padding()
-    .environment(\.layoutDirection, .rightToLeft)
+    return Demo()
 }

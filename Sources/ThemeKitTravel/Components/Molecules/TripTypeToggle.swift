@@ -159,43 +159,48 @@ public extension TripTypeToggle {
 }
 
 #Preview {
-    @Previewable @State var sel = 1
-    PreviewMatrix("TripTypeToggle") {
-        PreviewCase("Icons") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
-                .icons(["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"])
-        }
-        PreviewCase("Accent") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
-                .accent(.success)
-        }
-        PreviewCase("Intrinsic width") {
-            TripTypeToggle(["One way", "Round trip"], selection: .constant(0))
-                .fullWidth(false)
-        }
-        PreviewCase("Uncontrolled") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], initiallySelected: 2)
-        }
-        PreviewCase("Compact / large") {
-            VStack(spacing: 12) {
-                TripTypeToggle(["One way", "Round trip"], selection: $sel).size(.compact)
-                TripTypeToggle(["One way", "Round trip"], selection: $sel).size(.large)
+    struct Demo: View {
+        @State var sel = 1
+        var body: some View {
+            PreviewMatrix("TripTypeToggle") {
+                PreviewCase("Icons") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                        .icons(["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"])
+                }
+                PreviewCase("Accent") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                        .accent(.success)
+                }
+                PreviewCase("Intrinsic width") {
+                    TripTypeToggle(["One way", "Round trip"], selection: .constant(0))
+                        .fullWidth(false)
+                }
+                PreviewCase("Uncontrolled") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], initiallySelected: 2)
+                }
+                PreviewCase("Compact / large") {
+                    VStack(spacing: 12) {
+                        TripTypeToggle(["One way", "Round trip"], selection: $sel).size(.compact)
+                        TripTypeToggle(["One way", "Round trip"], selection: $sel).size(.large)
+                    }
+                }
+                PreviewCase("Rounded shape") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                        .shape(.rounded(.field))
+                }
+                PreviewCase("Underline tabs") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                        .accent(.info)
+                        .tripTypeToggleStyle(.underline)
+                }
+                PreviewCase("Menu (tap in live preview)") {
+                    TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
+                        .icons(["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"])
+                        .fullWidth(false)
+                        .tripTypeToggleStyle(.menu)
+                }
             }
         }
-        PreviewCase("Rounded shape") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
-                .shape(.rounded(.field))
-        }
-        PreviewCase("Underline tabs") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
-                .accent(.info)
-                .tripTypeToggleStyle(.underline)
-        }
-        PreviewCase("Menu (tap in live preview)") {
-            TripTypeToggle(["One way", "Round trip", "Multi-city"], selection: $sel)
-                .icons(["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"])
-                .fullWidth(false)
-                .tripTypeToggleStyle(.menu)
-        }
     }
+    return Demo()
 }

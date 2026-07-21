@@ -19,8 +19,12 @@ import SwiftUI
 /// `@unchecked Sendable` rather than `@MainActor`: actor-isolating it would force
 /// the whole nonisolated token layer (`SemanticColor`, `TextStyle`, `SpacingKey`,
 /// `ShapeStyle` conformances …) onto the main actor, which they don't need.
-@Observable
-public final class Theme: @unchecked Sendable {
+///
+/// Observation: `ObservableObject` (not the iOS-17 `@Observable` macro — ADR-0007
+/// §D3, iOS 15.6 floor). Only ``revision`` is `@Published`; the stored token
+/// dictionaries are not observed per-property — the `.id(revision)` full-subtree
+/// rebuild in `.themeKit()` is the reactivity contract.
+public final class Theme: ObservableObject, @unchecked Sendable {
 
     struct ThemeData: Codable {
         let colors: [AppColor]?
@@ -42,7 +46,9 @@ public final class Theme: @unchecked Sendable {
     /// to force a subtree to fully rebuild when the theme changes — needed for
     /// views whose leaf children read the theme statically (so SwiftUI's view
     /// diffing would otherwise skip re-rendering them on a live theme swap).
-    public private(set) var revision = 0
+    /// `@Published` so an `@ObservedObject` root (`ThemeKitModifier`) re-runs its
+    /// body on the bump and re-applies the `.id`.
+    @Published public private(set) var revision = 0
 
     private var foreground: [ForegroundColorKey: Color] = [:]
     private var background: [BackgroundColorKey: Color] = [:]
@@ -240,7 +246,7 @@ public final class Theme: @unchecked Sendable {
     public static let persistedConfigKey = "themeKitConfig"
 
     private func apply(_ decoded: ThemeData) {
-        // Bumping `revision` (an @Observable-tracked property read by the root's
+        // Bumping `revision` (a @Published property observed by the root's
         // `.id(theme.revision)`) drives the full-subtree refresh on theme change.
         revision += 1
         resetThemeState()

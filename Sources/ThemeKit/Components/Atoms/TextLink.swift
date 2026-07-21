@@ -25,8 +25,8 @@ public struct TextLink: View {
     public var body: some View {
         Button(action: action) {
             Text(title)
+                .underline(underline)   // Text-level: before .textStyle (View form is iOS 16+)
                 .textStyle(.linkBase)
-                .underline(underline)
                 .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textHero))
         }
         .buttonStyle(.plain)

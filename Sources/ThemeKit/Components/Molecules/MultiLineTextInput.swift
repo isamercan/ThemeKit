@@ -136,10 +136,10 @@ public struct MultiLineTextInput: View {
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         // External focus bridge (TextInput parity): a `true` write focuses the
         // editor; blurring resets the external binding so the owner stays in sync.
-        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+        .onChangeCompat(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !isFocused && !isReadOnly { isFocused = true }   // E1 — no programmatic focus either
         }
-        .onChange(of: isFocused) { _, now in
+        .onChangeCompat(of: isFocused) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(text) }   // form-wiring hook (`.field(_:in:)`)
         }
@@ -173,7 +173,9 @@ public struct MultiLineTextInput: View {
                 .foregroundStyle(isEnabled ? theme.text(.textPrimary) : theme.text(.textDisabled))
                 // Caret / selection tint follows the validation state (HeroUI invalid caret).
                 .tint(theme.foreground(hasError ? .systemcolorsFgError : .fgHero))
-                .scrollContentBackground(.hidden)
+                // iOS 16+ native; below, the named LegacyClearTextEditorBackground
+                // unit clears the UITextView backdrop (ADR-0007 §D2 rule 3).
+                .scrollContentBackgroundHiddenCompat()
                 .padding(Theme.SpacingKey.sm.value)   // 8pt == SpacingKey.sm
                 .disabled(!isEnabled)
                 // E1 — read-only: normal (non-dimmed) chrome + VoiceOver value,
@@ -322,46 +324,51 @@ public extension MultiLineTextInput {
 }
 
 #Preview {
-    // Interactive editor — the matrix wraps representative static states
-    // (the error case is pinned on instead of the old demo's toggle button).
-    @Previewable @State var text = ""
-    @Previewable @State var feedback = ""
-    PreviewMatrix("MultiLineTextInput") {
-        PreviewCase("Default") {
-            MultiLineTextInput("Notes", text: $text)
-                .placeholder("Write something…").characterLimit(200)
-        }
-        PreviewCase("XSmall + remaining count") {
-            MultiLineTextInput("Short note", text: $text)
-                .size(.xsmall).characterLimit(80).countStyle(.remaining)
-        }
-        // Swapped chrome: underlined editor, same behavior.
-        PreviewCase("Underlined") {
-            MultiLineTextInput("Underlined", text: $text)
-                .placeholder("No border, just a rule")
-                .fieldStyle(.underlined)
-        }
-        // Required header + muted on-surface chrome + error message.
-        PreviewCase("Required + error, muted") {
-            MultiLineTextInput("Feedback", text: $feedback)
-                .placeholder("Required, on-surface")
-                .required()
-                .errorText("This field is required.")
-                .fieldStyle(.muted)
-        }
-        // Read-only (E1): normal chrome + value, editing blocked.
-        PreviewCase("Read-only") {
-            MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
-                .size(.xsmall)
-                .readOnly()
-        }
-        // Autosize: grows from 2 rows, scrolls past 5 (Ant `autoSize`).
-        PreviewCase("Autosize 2…5 rows") {
-            MultiLineTextInput("Review", text: .constant(
-                "Long enough to spill onto several lines so the editor grows with the "
-                    + "content and then scrolls once it reaches the five-row ceiling."))
-                .placeholder("Tell us about your stay…")
-                .autosize(minRows: 2, maxRows: 5)
+    struct Demo: View {
+        @State var text = ""
+        @State var feedback = ""
+        var body: some View {
+            // Interactive editor — the matrix wraps representative static states
+            // (the error case is pinned on instead of the old demo's toggle button).
+            PreviewMatrix("MultiLineTextInput") {
+                PreviewCase("Default") {
+                    MultiLineTextInput("Notes", text: $text)
+                        .placeholder("Write something…").characterLimit(200)
+                }
+                PreviewCase("XSmall + remaining count") {
+                    MultiLineTextInput("Short note", text: $text)
+                        .size(.xsmall).characterLimit(80).countStyle(.remaining)
+                }
+                // Swapped chrome: underlined editor, same behavior.
+                PreviewCase("Underlined") {
+                    MultiLineTextInput("Underlined", text: $text)
+                        .placeholder("No border, just a rule")
+                        .fieldStyle(.underlined)
+                }
+                // Required header + muted on-surface chrome + error message.
+                PreviewCase("Required + error, muted") {
+                    MultiLineTextInput("Feedback", text: $feedback)
+                        .placeholder("Required, on-surface")
+                        .required()
+                        .errorText("This field is required.")
+                        .fieldStyle(.muted)
+                }
+                // Read-only (E1): normal chrome + value, editing blocked.
+                PreviewCase("Read-only") {
+                    MultiLineTextInput("Submitted review", text: .constant("Great stay, would book again."))
+                        .size(.xsmall)
+                        .readOnly()
+                }
+                // Autosize: grows from 2 rows, scrolls past 5 (Ant `autoSize`).
+                PreviewCase("Autosize 2…5 rows") {
+                    MultiLineTextInput("Review", text: .constant(
+                        "Long enough to spill onto several lines so the editor grows with the "
+                            + "content and then scrolls once it reaches the five-row ceiling."))
+                        .placeholder("Tell us about your stay…")
+                        .autosize(minRows: 2, maxRows: 5)
+                }
+            }
         }
     }
+    return Demo()
 }

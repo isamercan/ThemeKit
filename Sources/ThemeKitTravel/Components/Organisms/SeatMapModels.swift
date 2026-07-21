@@ -255,29 +255,72 @@ public enum SeatShape: Sendable, Hashable, CaseIterable {
     /// The concrete shape, type-erased. `.rounded` takes the caller's corner
     /// radius (``SeatCell`` passes the selector role's value; ``SeatLegend``
     /// its smaller swatch radius); the other silhouettes ignore it.
-    func anyShape(cornerRadius: CGFloat) -> AnyShape {
+    func anyShape(cornerRadius: CGFloat) -> ThemeAnyShape {
         switch self {
-        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        case .circle: return AnyShape(Circle())
-        case .seatback: return AnyShape(SeatbackShape())
+        case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .seatback: return ThemeAnyShape(SeatbackShape())
         }
     }
 }
 
 /// A squircle with a shallow concave notch cut out of its top edge — the
-/// backrest between two "shoulders". Cut by path subtraction (like the ticket
-/// notches), so fill *and* stroke both follow the notch. Symmetric, so it needs
-/// no RTL handling.
+/// backrest between two "shoulders". The outline is traced as one contour
+/// with real arc geometry (`Path.subtracting` is iOS 17-only — ADR-0007 §D2
+/// rule 1, plan §3e), so fill *and* stroke both follow the notch on every
+/// supported OS. Corner arcs are circular (the boolean-subtraction version
+/// used `.continuous` squircle corners — a subtle fidelity delta noted for
+/// the Phase-4 snapshot re-record). Symmetric, so it needs no RTL handling.
 private struct SeatbackShape: Shape {
+    /// Cubic-Bézier circle/ellipse quarter-arc constant (the same
+    /// approximation CoreGraphics itself draws ellipses with).
+    private static let kappa: CGFloat = 0.5522847498
+
     func path(in rect: CGRect) -> Path {
-        let radius = min(rect.width, rect.height) * 0.28
-        let body = RoundedRectangle(cornerRadius: radius, style: .continuous).path(in: rect)
-        let notchWidth = rect.width * 0.52
-        let notchHeight = rect.height * 0.24
-        var notch = Path()
-        notch.addEllipse(in: CGRect(x: rect.midX - notchWidth / 2, y: rect.minY - notchHeight / 2,
-                                    width: notchWidth, height: notchHeight))
-        return body.subtracting(notch)
+        let corner = min(rect.width, rect.height) * 0.28
+        // The notch half-ellipse dipping into the top edge: half-axes `a`/`b`
+        // around a center on the edge itself. The boolean-subtraction version
+        // let the 0.52-width ellipse bite fractionally into the corner arcs;
+        // a single traced contour needs the notch to sit on the straight top
+        // segment, so `a` clamps to it — at the default seat proportions the
+        // dip is ~20% narrower between the shoulders (noted for the Phase-4
+        // snapshot re-record).
+        let a = min(rect.width * 0.52 / 2, (rect.width / 2 - corner) * 0.95)
+        let b = rect.height * 0.24 / 2
+        let cx = rect.midX
+        let cy = rect.minY
+        // Degenerate frames (no straight top segment left to notch): squircle.
+        guard a > 0, b > 0, cx - a > rect.minX + corner, cx + a < rect.maxX - corner else {
+            return RoundedRectangle(cornerRadius: corner, style: .continuous).path(in: rect)
+        }
+        let k = Self.kappa
+        var p = Path()
+        // Screen coords, y down; traced screen-clockwise from the top-left
+        // corner (`clockwise: false` = increasing angle — `DonutWedgeShape`
+        // convention). The notch is two cubic quarter-ellipse arcs dipping to
+        // (cx, cy + b) inside the shape.
+        p.move(to: CGPoint(x: rect.minX + corner, y: rect.minY))
+        p.addLine(to: CGPoint(x: cx - a, y: cy))
+        p.addCurve(to: CGPoint(x: cx, y: cy + b),
+                   control1: CGPoint(x: cx - a, y: cy + k * b),
+                   control2: CGPoint(x: cx - k * a, y: cy + b))
+        p.addCurve(to: CGPoint(x: cx + a, y: cy),
+                   control1: CGPoint(x: cx + k * a, y: cy + b),
+                   control2: CGPoint(x: cx + a, y: cy + k * b))
+        p.addLine(to: CGPoint(x: rect.maxX - corner, y: rect.minY))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - corner))
+        p.addArc(center: CGPoint(x: rect.maxX - corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX + corner, y: rect.maxY))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.maxY - corner), radius: corner,
+                 startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + corner))
+        p.addArc(center: CGPoint(x: rect.minX + corner, y: rect.minY + corner), radius: corner,
+                 startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        p.closeSubpath()
+        return p
     }
 }
 

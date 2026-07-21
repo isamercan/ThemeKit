@@ -189,10 +189,10 @@ public struct Badge: View {
         }
     }
 
-    private var shapeStyle: AnyShape {
+    private var shapeStyle: ThemeAnyShape {
         switch shape {
-        case .pill: return AnyShape(Capsule())
-        case .rounded: return AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+        case .pill: return ThemeAnyShape(Capsule())
+        case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
         }
     }
 }

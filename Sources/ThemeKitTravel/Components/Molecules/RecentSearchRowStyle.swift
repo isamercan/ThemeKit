@@ -206,10 +206,10 @@ private struct RecentSearchRowListChrome: View {
     let configuration: RecentSearchRowConfiguration
     let chrome: Chrome
 
-    private var shape: AnyShape {
+    private var shape: ThemeAnyShape {
         chrome == .pill
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: configuration.radius(default: .field).value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: configuration.radius(default: .field).value, style: .continuous))
     }
     private var hasLeading: Bool { configuration.leading != nil || configuration.systemImage != nil }
 

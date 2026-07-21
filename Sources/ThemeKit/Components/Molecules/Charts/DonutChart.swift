@@ -3,13 +3,14 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Generic pie/donut over Swift Charts `SectorMark` (iOS 17). Angular gaps for
-//  separation, an always-on legend (a donut's identity is otherwise color
-//  alone), a center slot for a hero figure, and a ≤6-slice fold to "Other".
+//  Generic pie/donut, drawn with animatable wedge `Shape`s (iOS 15.6-floor
+//  reimplementation of the former Swift Charts `SectorMark` body — ADR-0007).
+//  Angular gaps for separation, an always-on legend (a donut's identity is
+//  otherwise color alone), a center slot for a hero figure, and a ≤6-slice
+//  fold to "Other".
 //
 
 import SwiftUI
-import Charts
 
 /// The hole size — `.pie` (full), `.ring` (default), `.thin`.
 public enum DonutRatio: Sendable {
@@ -52,28 +53,94 @@ public struct DonutChart: View {
         return head + [ChartSlice(String(themeKit: "Other"), tail, color: .neutral)]
     }
 
-    private var scale: ChartColorScale { ChartColorScale(slices: effectiveSlices, theme: theme) }
-
     public var body: some View {
-        Chart(effectiveSlices) { slice in
-            SectorMark(angle: .value("Value", slice.value),
-                       innerRadius: .ratio(ratio.value),
-                       angularInset: 2)
-                .foregroundStyle(by: .value("Slice", slice.label))
-                .cornerRadius(2)
-                .accessibilityLabel(slice.label)
-                .accessibilityValue(chartValueFormatted(slice.value, locale: locale))
-        }
-        .chartForegroundStyleScale(domain: scale.domain, range: scale.range)
-        .chartLegend(.visible)
-        .chartBackground { _ in
-            if let centerLabel, ratio != .pie {
-                centerLabel.frame(maxWidth: .infinity, maxHeight: .infinity)   // center in the plot area
+        let rendered = effectiveSlices
+        let scale = ChartColorScale(slices: rendered, theme: theme)
+        let fractions = Self.wedgeFractions(rendered)
+        VStack(spacing: Theme.SpacingKey.xs.value) {
+            ZStack {
+                ZStack {
+                    ForEach(Array(rendered.enumerated()), id: \.element.id) { index, slice in
+                        DonutWedgeShape(start: fractions[index].start,
+                                        end: fractions[index].end,
+                                        innerRatio: ratio.value)
+                            .fill(scale.range[index])
+                            .accessibilityLabel(slice.label)
+                            .accessibilityValue(chartValueFormatted(slice.value, locale: locale))
+                    }
+                }
+                // Sectors progress clockwise from 12 o'clock; mirror the ring
+                // (a text-free drawing) under RTL like the family's other paths.
+                .flipsForRightToLeftLayoutDirection(true)
+                if let centerLabel, ratio != .pie {
+                    centerLabel   // centered in the ring's hole
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ChartLegendRow(theme: theme, entries: scale.legendEntries)
         }
         .frame(height: height.value)
         .animation(motion, value: effectiveSlices)
-        .accessibilityLabel(Text(String(themeKit: "Donut chart with slices \(effectiveSlices.map(\.label).joined(separator: ", ")).")))
+        .accessibilityLabel(Text(String(themeKit: "Donut chart with slices \(rendered.map(\.label).joined(separator: ", ")).")))
+    }
+
+    /// Cumulative start/end fractions (0...1) per slice.
+    static func wedgeFractions(_ slices: [ChartSlice]) -> [(start: Double, end: Double)] {
+        let total = slices.reduce(0.0) { $0 + max(0, $1.value) }
+        guard total > 0 else { return slices.map { _ in (0, 0) } }
+        var cumulative = 0.0
+        return slices.map { slice in
+            let start = cumulative / total
+            cumulative += max(0, slice.value)
+            return (start, cumulative / total)
+        }
+    }
+}
+
+/// One donut sector: outer arc from `start` to `end` (fractions of a turn,
+/// clockwise from 12 o'clock), an inner hole at `innerRatio`, and a 2pt
+/// angular gap to its neighbors. Animatable, so slice-value changes tween.
+struct DonutWedgeShape: Shape {
+    var start: Double
+    var end: Double
+    var innerRatio: CGFloat
+
+    /// The angular gap between neighboring wedges, in points at the rim.
+    private static let angularInset: CGFloat = 2
+
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(start, end) }
+        set {
+            start = newValue.first
+            end = newValue.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let outerRadius = min(rect.width, rect.height) / 2
+        guard outerRadius > 0, end > start else { return Path() }
+        let innerRadius = outerRadius * min(max(innerRatio, 0), 0.95)
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        // Half the 2pt gap per edge, as an angle at the outer radius.
+        let inset = Double(Self.angularInset / 2 / outerRadius)
+        var from = -Double.pi / 2 + start * 2 * .pi + inset
+        var to = -Double.pi / 2 + end * 2 * .pi - inset
+        if to < from {   // sliver thinner than the gap — collapse to its midline
+            let mid = (from + to) / 2
+            from = mid
+            to = mid
+        }
+        var path = Path()
+        path.addArc(center: center, radius: outerRadius,
+                    startAngle: .radians(from), endAngle: .radians(to), clockwise: false)
+        if innerRadius > 0 {
+            path.addArc(center: center, radius: innerRadius,
+                        startAngle: .radians(to), endAngle: .radians(from), clockwise: true)
+        } else {
+            path.addLine(to: center)
+        }
+        path.closeSubpath()
+        return path
     }
 }
 

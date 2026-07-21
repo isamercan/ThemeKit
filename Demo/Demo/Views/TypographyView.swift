@@ -18,7 +18,7 @@ struct TypographyView: View {
     ]
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     ForEach(groups, id: \.0) { group in
@@ -42,7 +42,7 @@ struct TypographyView: View {
             }
             .navigationTitle("Typography")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { ThemeSwitcherMenu() } }
+            .toolbar { ToolbarItem(placement: .navigationBarTrailing) { ThemeSwitcherMenu() } }
         }
     }
 
@@ -54,6 +54,6 @@ struct TypographyView: View {
 
 #Preview {
     TypographyView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

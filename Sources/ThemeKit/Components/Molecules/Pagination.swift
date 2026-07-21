@@ -207,13 +207,18 @@ public extension Pagination {
 }
 
 #Preview {
-    // Interactive control — the matrix wraps representative static states (one frame per cell).
-    @Previewable @State var page = 4
-    PreviewMatrix("Pagination") {
-        PreviewCase("Default") { Pagination(current: $page, total: 10) }
-        PreviewCase("Wider window") { Pagination(current: $page, total: 20).window(sibling: 2) }
-        PreviewCase("Simple") { Pagination(current: $page, total: 10).simple() }
-        PreviewCase("Jumper + total") { Pagination(current: $page, total: 50).jumper().showTotal { _, t in "\(t) pages" } }
-        PreviewCase("Disabled") { Pagination(current: $page, total: 10).disabled(true) }
+    struct Demo: View {
+        @State var page = 4
+        var body: some View {
+            // Interactive control — the matrix wraps representative static states (one frame per cell).
+            PreviewMatrix("Pagination") {
+                PreviewCase("Default") { Pagination(current: $page, total: 10) }
+                PreviewCase("Wider window") { Pagination(current: $page, total: 20).window(sibling: 2) }
+                PreviewCase("Simple") { Pagination(current: $page, total: 10).simple() }
+                PreviewCase("Jumper + total") { Pagination(current: $page, total: 50).jumper().showTotal { _, t in "\(t) pages" } }
+                PreviewCase("Disabled") { Pagination(current: $page, total: 10).disabled(true) }
+            }
+        }
     }
+    return Demo()
 }

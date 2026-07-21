@@ -11,6 +11,16 @@
 //      Flex { Tag("A"); Tag("B"); Tag("C") }.justify(.spaceBetween)
 //      Flex { avatar; name; badge }.align(.center).gap(.medium)
 //
+//  iOS 15.6-floor compat (ADR-0007 §D2 rule 1 — single-path): the former
+//  custom `Layout` (iOS 16) is now a measured view — `_VariadicView` enumerates
+//  the children, the shared probes in `MeasuredLayoutSupport` read the proposed
+//  main-axis span and each child's ideal size, and the same justify/align math
+//  the old `placeSubviews` used places the children with absolute offsets.
+//  `.stretch` measures a hidden ideal-size copy of each child (the
+//  ``AdaptiveFit`` probe technique) so the visible one can be re-proposed the
+//  container's cross span. Until the first measurement lands (one layout pass)
+//  the row renders hidden, so there is no transient overlap flash.
+//
 
 import SwiftUI
 
@@ -70,85 +80,240 @@ public extension Flex {
     }
 }
 
-// MARK: - Layout
+// MARK: - Layout (measured — see the header note)
 
 /// A single-line flex layout with main-axis distribution + cross-axis alignment.
-struct FlexLayout: Layout {
+struct FlexLayout<Content: View>: View {
     var axis: Axis
     var gap: CGFloat
     var justify: FlexJustify
     var alignment: FlexAlign
     /// Absolute placement doesn't auto-mirror — under `.rightToLeft` every
-    /// subview's x is mirrored within `bounds` (main axis when horizontal,
+    /// subview's x is mirrored within the span (main axis when horizontal,
     /// cross axis when vertical).
     var layoutDirection: LayoutDirection = .leftToRight
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
-        let mainTotal = sizes.map(mainOf).reduce(0, +) + gap * CGFloat(max(0, subviews.count - 1))
-        let crossMax = sizes.map(crossOf).max() ?? 0
-        let proposedMain = axis == .horizontal ? proposal.width : proposal.height
-        // Fill the proposed main so justify can distribute; else hug the content.
-        return size(main: proposedMain.map { max($0, mainTotal) } ?? mainTotal, cross: crossMax)
+    private let content: Content
+
+    init(
+        axis: Axis,
+        gap: CGFloat,
+        justify: FlexJustify,
+        alignment: FlexAlign,
+        layoutDirection: LayoutDirection = .leftToRight,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.axis = axis
+        self.gap = gap
+        self.justify = justify
+        self.alignment = alignment
+        self.layoutDirection = layoutDirection
+        self.content = content()
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let n = subviews.count
-        guard n > 0 else { return }
-        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
-        let containerMain = axis == .horizontal ? bounds.width : bounds.height
-        let containerCross = axis == .horizontal ? bounds.height : bounds.width
-        let mainTotal = sizes.map(mainOf).reduce(0, +)
+    var body: some View {
+        _VariadicView.Tree(
+            FlexRoot(axis: axis, gap: gap, justify: justify, alignment: alignment, layoutDirection: layoutDirection)
+        ) { content }
+    }
+}
+
+private struct FlexRoot: _VariadicView.UnaryViewRoot {
+    let axis: Axis
+    let gap: CGFloat
+    let justify: FlexJustify
+    let alignment: FlexAlign
+    let layoutDirection: LayoutDirection
+
+    func body(children: _VariadicView.Children) -> some View {
+        FlexStack(
+            children: children,
+            axis: axis,
+            gap: gap,
+            justify: justify,
+            alignment: alignment,
+            layoutDirection: layoutDirection
+        )
+    }
+}
+
+private struct FlexStack: View {
+    /// The placement ZStack runs forced-LTR so anchors and offsets are
+    /// absolute; the real environment direction is restored on every child,
+    /// and the packed positions mirror only via the `layoutDirection`
+    /// parameter (the old `Layout` semantics — see ``FlowLayout``).
+    @Environment(\.layoutDirection) private var envDirection
+
+    let children: _VariadicView.Children
+    let axis: Axis
+    let gap: CGFloat
+    let justify: FlexJustify
+    let alignment: FlexAlign
+    let layoutDirection: LayoutDirection
+
+    /// Proposed main-axis span (width when horizontal, height when vertical).
+    @State private var availableMain: CGFloat?
+    @State private var sizes: [Int: CGSize] = [:]
+
+    private var isMeasured: Bool {
+        availableMain != nil && sizes.count == children.count
+    }
+
+    var body: some View {
+        // Ideal sizes in child order (missing → .zero until measured).
+        let ideals = (0..<children.count).map { sizes[$0] ?? .zero }
+        let mainTotal = ideals.map(mainOf).reduce(0, +)
+        // The old `sizeThatFits`: fill the proposed main so justify can
+        // distribute; the container never shrinks below the content.
+        let span = availableMain.map { max($0, mainTotal + gap * CGFloat(max(0, children.count - 1))) } ?? mainTotal
+        let crossMax = ideals.map(crossOf).max() ?? 0
+        let origins = ltrOrigins(ideals: ideals, span: span, crossMax: crossMax)
+        Group {
+            if axis == .horizontal {
+                VStack(alignment: .leading, spacing: 0) {
+                    MeasuredLayoutWidthProbe()
+                    placedChildren(origins: origins, crossMax: crossMax)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .frame(height: isMeasured ? crossMax : nil, alignment: .top)
+                        .opacity(isMeasured ? 1 : 0)
+                        // Absolute placement, like the old `placeSubviews` —
+                        // the hugged ZStack and its offsets must not re-mirror
+                        // under an RTL environment (the frames above included).
+                        .environment(\.layoutDirection, .leftToRight)
+                }
+            } else {
+                HStack(alignment: .top, spacing: 0) {
+                    MeasuredLayoutHeightProbe()
+                    placedChildren(origins: origins, crossMax: crossMax)
+                        .frame(maxHeight: .infinity, alignment: .topLeading)
+                        .frame(width: isMeasured ? crossMax : nil, alignment: .leading)
+                        .opacity(isMeasured ? 1 : 0)
+                        // Same forced-LTR scope as the horizontal branch.
+                        .environment(\.layoutDirection, .leftToRight)
+                }
+            }
+        }
+        .onPreferenceChange(MeasuredLayoutWidthKey.self) { width in
+            if axis == .horizontal { availableMain = width }
+        }
+        .onPreferenceChange(MeasuredLayoutHeightKey.self) { height in
+            if axis == .vertical { availableMain = height }
+        }
+        .onPreferenceChange(MeasuredLayoutChildSizesKey.self) { sizes = $0 }
+        .consumesMeasuredLayoutPreferences()
+    }
+
+    private func placedChildren(origins: [Int: CGPoint], crossMax: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(Array(children.enumerated()), id: \.element.id) { index, child in
+                placedChild(child, index: index)
+                    .offset(offset(for: index, origins: origins, crossMax: crossMax))
+            }
+        }
+    }
+
+    /// Non-stretch children measure themselves at their ideal size (the old
+    /// `sizeThatFits(.unspecified)`). `.stretch` needs the ideal size *and* a
+    /// cross-span proposal on the same child, which one instance can't provide
+    /// — so a hidden ideal-size copy measures (the ``AdaptiveFit`` probe
+    /// technique) while the visible child is proposed the measured cross span.
+    @ViewBuilder private func placedChild(_ child: _VariadicView.Children.Element, index: Int) -> some View {
+        if alignment == .stretch {
+            let crossSpan = isMeasured ? (0..<children.count).compactMap({ sizes[$0]?[keyPath: crossKeyPath] }).max() : nil
+            child
+                .environment(\.layoutDirection, envDirection)   // restore the real direction
+                .fixedSize(horizontal: axis == .horizontal, vertical: axis == .vertical)
+                .frame(
+                    width: axis == .vertical ? crossSpan : nil,
+                    height: axis == .horizontal ? crossSpan : nil
+                )
+                .background(
+                    child
+                        .environment(\.layoutDirection, envDirection)
+                        .fixedSize()
+                        .hidden()
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        .measuredLayoutChild(index)
+                )
+        } else {
+            child
+                .environment(\.layoutDirection, envDirection)   // restore the real direction
+                .fixedSize()
+                .measuredLayoutChild(index)
+        }
+    }
+
+    private var crossKeyPath: KeyPath<CGSize, CGFloat> {
+        axis == .horizontal ? \.height : \.width
+    }
+
+    // MARK: Packing (same math as the former `Layout` implementation)
+
+    /// Left-to-right/top-to-bottom origins per child; mirroring is applied in
+    /// ``offset(for:origins:crossMax:)``.
+    private func ltrOrigins(ideals: [CGSize], span: CGFloat, crossMax: CGFloat) -> [Int: CGPoint] {
+        let n = children.count
+        guard n > 0 else { return [:] }
+        let mainTotal = ideals.map(mainOf).reduce(0, +)
 
         var leading: CGFloat = 0
         var inter: CGFloat = gap
         switch justify {
         case .start, .center, .end:
-            let free = max(0, containerMain - (mainTotal + gap * CGFloat(n - 1)))
+            let free = max(0, span - (mainTotal + gap * CGFloat(n - 1)))
             leading = justify == .center ? free / 2 : (justify == .end ? free : 0)
         case .spaceBetween:
-            let free = max(0, containerMain - mainTotal)
+            let free = max(0, span - mainTotal)
             inter = n > 1 ? free / CGFloat(n - 1) : 0
             leading = n > 1 ? 0 : free / 2
         case .spaceAround:
-            let unit = max(0, containerMain - mainTotal) / CGFloat(n)
+            let unit = max(0, span - mainTotal) / CGFloat(n)
             inter = unit; leading = unit / 2
         case .spaceEvenly:
-            let unit = max(0, containerMain - mainTotal) / CGFloat(n + 1)
+            let unit = max(0, span - mainTotal) / CGFloat(n + 1)
             inter = unit; leading = unit
         }
 
-        var mainPos = (axis == .horizontal ? bounds.minX : bounds.minY) + leading
-        for (i, sub) in subviews.enumerated() {
-            let s = sizes[i]
+        var origins: [Int: CGPoint] = [:]
+        var mainPos = leading
+        for index in 0..<n {
+            let s = ideals[index]
             let crossPos: CGFloat
             switch alignment {
             case .start, .baseline, .stretch: crossPos = 0
-            case .center: crossPos = max(0, (containerCross - crossOf(s)) / 2)
-            case .end: crossPos = max(0, containerCross - crossOf(s))
+            case .center: crossPos = max(0, (crossMax - crossOf(s)) / 2)
+            case .end: crossPos = max(0, crossMax - crossOf(s))
             }
-            let crossOrigin = (axis == .horizontal ? bounds.minY : bounds.minX) + crossPos
-            let place: ProposedViewSize = alignment == .stretch
-                ? (axis == .horizontal ? ProposedViewSize(width: mainOf(s), height: containerCross)
-                                       : ProposedViewSize(width: containerCross, height: mainOf(s)))
-                : ProposedViewSize(width: s.width, height: s.height)
-            var origin = axis == .horizontal ? CGPoint(x: mainPos, y: crossOrigin) : CGPoint(x: crossOrigin, y: mainPos)
-            if layoutDirection == .rightToLeft {
-                let placedWidth = axis == .horizontal
-                    ? mainOf(s)
-                    : (alignment == .stretch ? containerCross : s.width)
-                origin.x = bounds.maxX - (origin.x - bounds.minX) - placedWidth
-            }
-            sub.place(at: origin, proposal: place)
+            origins[index] = axis == .horizontal
+                ? CGPoint(x: mainPos, y: crossPos)
+                : CGPoint(x: crossPos, y: mainPos)
             mainPos += mainOf(s) + inter
         }
+        return origins
+    }
+
+    private func offset(for index: Int, origins: [Int: CGPoint], crossMax: CGFloat) -> CGSize {
+        guard isMeasured, let origin = origins[index], let size = sizes[index] else { return .zero }
+        // The placed width on screen: ideal, or the cross span when stretched
+        // (vertical axis), or the main-axis ideal (horizontal).
+        let placedWidth: CGFloat = axis == .horizontal
+            ? size.width
+            : (alignment == .stretch ? crossMax : size.width)
+        // Width of the span the mirroring is relative to (the old `bounds`).
+        let containerWidth: CGFloat = axis == .horizontal
+            ? max(availableMain ?? 0, 0)
+            : crossMax
+        // Forced-LTR anchor at x0 — the offset IS the position, mirrored
+        // within the span only via the `layoutDirection` parameter.
+        let x: CGFloat = layoutDirection == .rightToLeft
+            ? containerWidth - origin.x - placedWidth
+            : origin.x
+        return CGSize(width: x, height: origin.y)
     }
 
     private func mainOf(_ s: CGSize) -> CGFloat { axis == .horizontal ? s.width : s.height }
     private func crossOf(_ s: CGSize) -> CGFloat { axis == .horizontal ? s.height : s.width }
-    private func size(main: CGFloat, cross: CGFloat) -> CGSize {
-        axis == .horizontal ? CGSize(width: main, height: cross) : CGSize(width: cross, height: main)
-    }
 }
 
 #Preview {
@@ -167,7 +332,7 @@ struct FlexLayout: Layout {
             Flex { ForEach(0..<8) { Tag("Tag \($0)") } }.wrap().frame(width: 300)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }
 
 #Preview("RTL — first child starts at the trailing edge") {
@@ -179,5 +344,5 @@ struct FlexLayout: Layout {
     }
     .padding()
     .environment(\.layoutDirection, .rightToLeft)
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

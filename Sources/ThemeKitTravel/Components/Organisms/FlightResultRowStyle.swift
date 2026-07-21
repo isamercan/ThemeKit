@@ -231,7 +231,7 @@ private struct ResultSaveToggles: View {
                     Button { configuration.toggleFavorite?() } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
                             .foregroundStyle(isFavorite ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
-                            .symbolEffect(.bounce, value: configuration.favoriteBounceValue)
+                            .symbolBounceCompat(value: configuration.favoriteBounceValue)
                             .frame(width: 40, height: 40).contentShape(Rectangle())
                     }.buttonStyle(.plain).disabled(configuration.isReadOnly)
                         .accessibilityLabel(isFavorite ? String(themeKit: "Remove from favourites") : String(themeKit: "Add to favourites"))

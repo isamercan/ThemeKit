@@ -33,7 +33,7 @@ public struct TextRotate: View {
         Text(current)
             .textStyle(style)
             .foregroundStyle(accent.map { theme.resolve($0).accent } ?? theme.text(.textHero))
-            .contentTransition(.opacity)
+            .opacityContentTransitionCompat()
             .animation(.easeInOut(duration: 0.4), value: index)
             .onReceive(Timer.publish(every: interval, on: .main, in: .common).autoconnect()) { _ in
                 guard micro, !reduceMotion, words.count > 1 else { return }

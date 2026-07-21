@@ -144,7 +144,7 @@ public struct FlightStatusBadge: View {
             .opacity(pulseActive && pulsePhase ? 0.55 : 1)
             .animation(pulseActive ? Motion.slower.animation.repeatForever(autoreverses: true) : nil, value: pulsePhase)
             .onAppear { pulsePhase = pulseActive }
-            .onChange(of: pulseActive) { _, active in pulsePhase = active }
+            .onChangeCompat(of: pulseActive) { _, active in pulsePhase = active }
             .accessibilityLabel([customLabel ?? status.label, time].compactMap { $0 }.joined(separator: " "))
     }
 }

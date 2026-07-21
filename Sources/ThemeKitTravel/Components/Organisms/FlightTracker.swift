@@ -148,11 +148,11 @@ public struct FlightTracker: View {
         resolvedStyle.makeBody(configuration: configuration)
             .animation(motion, value: clampedProgress)
             // Live-region pattern: announce the transition, gated to a real change.
-            .onChange(of: info.status) { oldValue, newValue in
+            .onChangeCompat(of: info.status) { oldValue, newValue in
                 guard oldValue != newValue else { return }
-                AccessibilityNotification.Announcement(
+                AccessibilityAnnouncement.post(
                     [newValue.label, configuration.estimateSummary()].compactMap { $0 }.joined(separator: ", ")
-                ).post()
+                )
             }
     }
 }

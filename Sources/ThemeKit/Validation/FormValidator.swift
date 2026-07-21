@@ -8,7 +8,7 @@
 //  first invalid field. Pairs with `TextInput(externalFocus:)`.
 //
 //      enum Field { case email, password }
-//      @State var form = FormValidator<Field>([
+//      @StateObject var form = FormValidator<Field>([
 //          .email: [.required(), .email()],
 //          .password: [.required(), .minLength(8)],
 //      ])
@@ -19,12 +19,16 @@
 
 import SwiftUI
 
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `FormValidator` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > own it as `@StateObject var form = FormValidator<Field>([…])` — NOT
+/// > `@State`, which still compiles but silently stops re-rendering messages
+/// > and focus after a submit.
 @MainActor
-@Observable
-public final class FormValidator<Field: Hashable> {
-    public private(set) var messages: [Field: [InfoMessage]] = [:]
+public final class FormValidator<Field: Hashable>: ObservableObject {
+    @Published public private(set) var messages: [Field: [InfoMessage]] = [:]
     /// The field that should currently hold focus (set to the first invalid on submit).
-    public var focusedField: Field?
+    @Published public var focusedField: Field?
 
     private let order: [Field]
     private let rulesByField: [Field: [ValidationRule]]

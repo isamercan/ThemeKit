@@ -67,7 +67,7 @@ public struct PriceHistogram: View {
             }
             .frame(height: barHeight, alignment: .bottom)
             .accessibilityHidden(true)   // decorative; the RangeSlider carries the interactive a11y
-            .animation(Animation.snappy.ifMotionAllowed(reduceMotion), value: bins)
+            .animation(ThemeMotion.snappy.ifMotionAllowed(reduceMotion), value: bins)
             .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: lowerValue)
             .animation(Animation.easeInOut.ifMotionAllowed(reduceMotion), value: upperValue)
             RangeSlider(lowerValue: $lowerValue, upperValue: $upperValue, in: bounds)
@@ -85,7 +85,7 @@ public struct PriceHistogram: View {
 
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     private func formatted(_ value: Double) -> String {
@@ -132,17 +132,22 @@ public extension PriceHistogram {
 }
 
 #Preview {
-    @Previewable @State var low = 800.0
-    @Previewable @State var high = 3_200.0
-    let bins = [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2]
-    PreviewMatrix("PriceHistogram") {
-        PreviewCase("Bounds + result count") {
-            PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
-                .showsBounds().resultCount(87)
-        }
-        PreviewCase("Minimal + accent") {
-            PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
-                .accent(.success)
+    struct Demo: View {
+        @State var low = 800.0
+        @State var high = 3_200.0
+        var body: some View {
+            let bins = [2, 5, 9, 14, 18, 22, 19, 12, 8, 5, 3, 2]
+            PreviewMatrix("PriceHistogram") {
+                PreviewCase("Bounds + result count") {
+                    PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
+                        .showsBounds().resultCount(87)
+                }
+                PreviewCase("Minimal + accent") {
+                    PriceHistogram(bins: bins, lowerValue: $low, upperValue: $high, in: 0...5_000)
+                        .accent(.success)
+                }
+            }
         }
     }
+    return Demo()
 }

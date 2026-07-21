@@ -45,13 +45,22 @@ public struct AnchorNav: View {
     }
 
     public var body: some View {
-        let layout = axis == .vertical
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
-            : AnyLayout(HStackLayout(spacing: Theme.SpacingKey.sm.value))
-        layout {
-            ForEach(items) { item in link(item) }
+        // iOS 15.6 floor: `AnyLayout(H/VStackLayout)` is iOS 16 — branch into
+        // explicit stacks instead. An axis change swaps the container identity,
+        // so it isn't animated as a single cross-fade (acceptable: the axis is
+        // a configuration, not runtime state; Reduce-Motion-safe either way).
+        Group {
+            if axis == .vertical {
+                VStack(alignment: .leading, spacing: 2) { links }
+            } else {
+                HStack(spacing: Theme.SpacingKey.sm.value) { links }
+            }
         }
-        .animation(.snappy(duration: 0.25), value: active)
+        .animation(ThemeMotion.snappy(.fast), value: active)
+    }
+
+    private var links: some View {
+        ForEach(items) { item in link(item) }
     }
 
     private func link(_ item: AnchorItem) -> some View {
@@ -117,5 +126,5 @@ public extension AnchorNav {
         PreviewCase("Nested link active") { AnchorNav(items, active: .constant("usage")) }
         PreviewCase("Horizontal") { AnchorNav(items, active: .constant("install")).direction(.horizontal) }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

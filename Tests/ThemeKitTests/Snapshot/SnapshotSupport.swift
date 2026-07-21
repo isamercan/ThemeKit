@@ -85,13 +85,6 @@ func assertComponentSnapshot(
         mutable.layoutDirection = layoutDirection == .rightToLeft ? .rightToLeft : .leftToRight
     }
 
-    let strategy = Snapshotting<AnyView, UIImage>.image(
-        precision: SnapshotConfig.precision,
-        perceptualPrecision: SnapshotConfig.perceptualPrecision,
-        layout: .sizeThatFits,
-        traits: traits
-    )
-
     // Constrain width, let height be intrinsic, and tint the backdrop so any
     // transparent padding is visible in the diff rather than blending away.
     let wrapped = AnyView(
@@ -102,10 +95,52 @@ func assertComponentSnapshot(
             .background(colorScheme == .dark ? Color.black : Color.white)
             .environment(\.colorScheme, colorScheme)
             .environment(\.layoutDirection, layoutDirection)
+            // No-op in the capture (its config has zero safe area); during the
+            // settle pass below it stops the hosting window's status-bar/home
+            // insets from inflating `sizeThatFits`.
+            .ignoresSafeArea()
+    )
+
+    // Settle-then-size (ADR-0007 §3c): measured-layout components (the
+    // `AdaptiveFit` ViewThatFits replacement) decide their arrangement from a
+    // width preference that lands one run-loop turn after the first layout
+    // pass. The stock SwiftUI strategy calls `sizeThatFits` exactly once,
+    // before that turn — freezing the pre-measurement height and cropping the
+    // settled arrangement out of the capture. Hosting the view in a window,
+    // pumping the run loop, and only then sizing gives every component its
+    // settled geometry; the capture itself still goes through the same
+    // `UIHostingController`-based image strategy (explicit `size:`), so
+    // settled-on-first-pass components render byte-identical references.
+    let controller = UIHostingController(rootView: wrapped)
+    controller.view.backgroundColor = .clear
+    // First-pass size, measured exactly like the stock strategy (`.zero`
+    // proposal, never attached) — this is what the settle pass may revise.
+    let firstPassSize = controller.sizeThatFits(in: .zero)
+    // Settle as a bare subview (never `rootViewController`, which bakes the
+    // window's status-bar/home safe-area insets into every later
+    // `sizeThatFits`), positioned away from the safe-area edges.
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 2000, height: 2000))
+    controller.view.frame = CGRect(x: 0, y: 200, width: firstPassSize.width, height: firstPassSize.height)
+    window.addSubview(controller.view)
+    window.isHidden = false
+    controller.view.setNeedsLayout()
+    controller.view.layoutIfNeeded()
+    RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+    controller.view.removeFromSuperview()
+    window.isHidden = true
+    // Post-settle size with the same `.zero` proposal — byte-identical to the
+    // stock strategy for components that settled on the first pass.
+    let settledSize = controller.sizeThatFits(in: .zero)
+
+    let strategy = Snapshotting<UIViewController, UIImage>.image(
+        precision: SnapshotConfig.precision,
+        perceptualPrecision: SnapshotConfig.perceptualPrecision,
+        size: settledSize,
+        traits: traits
     )
 
     assertSnapshot(
-        of: wrapped,
+        of: controller,
         as: strategy,
         named: name,
         record: SnapshotConfig.isRecording,

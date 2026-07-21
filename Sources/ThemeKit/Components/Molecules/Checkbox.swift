@@ -156,12 +156,16 @@ public struct Checkbox: View {
     /// recolors to the error token while invalid (Figma invalid state).
     @ViewBuilder private var titleView: some View {
         if let customLabel {
+            // View-level strikethrough is iOS 16-only: the custom-label slot
+            // keeps it on 16+ and simply loses the line-through below
+            // (StrikethroughCompat, ADR-0007 §D2 rule 2).
             customLabel
-                .strikethrough(lineThrough && isChecked)
+                .strikethroughCompat(lineThrough && isChecked)
         } else if let label {
+            // Text-level strikethrough (before .textStyle) works on every OS.
             Text(label)
-                .textStyle(.bodyBase400)
                 .strikethrough(lineThrough && isChecked)
+                .textStyle(.bodyBase400)
                 .foregroundStyle(titleColor)
         }
     }

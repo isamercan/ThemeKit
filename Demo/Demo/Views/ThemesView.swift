@@ -13,10 +13,10 @@ import ThemeKit
 
 struct ThemesView: View {
     @EnvironmentObject private var store: DemoThemeStore
-    @Environment(Theme.self) private var theme
+    @Environment(\.theme) private var theme
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
                     header
@@ -105,6 +105,6 @@ struct ThemesView: View {
 
 #Preview {
     ThemesView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

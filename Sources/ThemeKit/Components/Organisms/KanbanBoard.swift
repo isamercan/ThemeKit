@@ -11,6 +11,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Width tiers for a ``KanbanBoard`` column (Ant Pro Board / HeroUI Pro kanban
 /// column sizing) — an enum, not a raw `CGFloat`, per the token-signature rule.
@@ -56,6 +57,15 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
     @Binding private var columns: [KanbanColumn<Item>]
     private let card: (Item) -> CardContent
 
+    /// The card id captured at drag start. `onDrag`/`onDrop` (the iOS-15
+    /// single-path replacement for the 16-only `draggable`/`dropDestination` —
+    /// ADR-0007 §D2 rule 1) hand the payload over asynchronously via
+    /// `NSItemProvider`; within the one board the id is resolved synchronously
+    /// from this capture instead, so a drop mutates the binding immediately.
+    /// Cross-app drops (which only the provider could describe) are ignored,
+    /// matching the previous String-payload behavior in practice.
+    @State private var draggedCardID: String?
+
     // Appearance — mutated only through the modifiers below (R2).
     private var columnWidth: KanbanColumnWidth = .regular
     private var spacingKey: Theme.SpacingKey = .md
@@ -93,40 +103,55 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
             ForEach(column.items) { item in
                 card(item)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .draggable(cardID(item))
+                    .onDrag {
+                        draggedCardID = cardID(item)
+                        return NSItemProvider(object: cardID(item) as NSString)
+                    }
                     // Dropping onto a card inserts before it (within- or
                     // cross-column); dropping on column space appends (below).
-                    .dropDestination(for: String.self) { dropped, _ in
-                        for dropID in dropped { move(cardID: dropID, toColumn: column.id, before: cardID(item)) }
-                        return !dropped.isEmpty
+                    .onDrop(of: [.text], isTargeted: nil) { _ in
+                        dropDraggedCard(toColumn: column.id, before: cardID(item))
                     }
-                    .accessibilityActions { moveActions(for: item, in: column) }
+                    .modifier(AccessibilityNamedActions(actions: moveActionList(for: item, in: column)))
             }
         }
         .padding(Theme.SpacingKey.sm.value)
         .frame(width: columnWidth.value, alignment: .top)
         .background(theme.background(.bgSecondaryLight), in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
-        .dropDestination(for: String.self) { dropped, _ in
-            for idString in dropped { move(cardID: idString, toColumn: column.id, before: nil) }
-            return !dropped.isEmpty
+        .onDrop(of: [.text], isTargeted: nil) { _ in
+            dropDraggedCard(toColumn: column.id, before: nil)
         }
     }
 
+    /// Completes the active drag: moves the captured card into `columnID`
+    /// (before `targetID`, or appended) and clears the capture.
+    private func dropDraggedCard(toColumn columnID: String, before targetID: String?) -> Bool {
+        guard let id = draggedCardID else { return false }
+        draggedCardID = nil
+        move(cardID: id, toColumn: columnID, before: targetID)
+        return true
+    }
+
     /// VoiceOver equivalents of the drag — reorder within the column and move
-    /// across columns, so the board isn't gated behind a drag gesture.
-    @ViewBuilder private func moveActions(for item: Item, in column: KanbanColumn<Item>) -> some View {
+    /// across columns, so the board isn't gated behind a drag gesture. Applied
+    /// through ``AccessibilityNamedActions`` (`accessibilityAction(named:)` —
+    /// the iOS-15-safe single-path form of the 16-only `accessibilityActions {}`;
+    /// ADR-0007 §D2 rule 1).
+    private func moveActionList(for item: Item, in column: KanbanColumn<Item>) -> [AccessibilityNamedActions.Action] {
+        var actions: [AccessibilityNamedActions.Action] = []
         let index = column.items.firstIndex(of: item)
         if let index, index > 0 {
-            Button(String(themeKit: "Move up")) { reorder(item, in: column.id, to: index - 1) }
+            actions.append(.init(label: String(themeKit: "Move up")) { reorder(item, in: column.id, to: index - 1) })
         }
         if let index, index < column.items.count - 1 {
-            Button(String(themeKit: "Move down")) { reorder(item, in: column.id, to: index + 1) }
+            actions.append(.init(label: String(themeKit: "Move down")) { reorder(item, in: column.id, to: index + 1) })
         }
-        ForEach(columns.filter { $0.id != column.id }) { target in
-            Button(String(themeKit: "Move to \(target.title)")) {
+        for target in columns where target.id != column.id {
+            actions.append(.init(label: String(themeKit: "Move to \(target.title)")) {
                 move(cardID: cardID(item), toColumn: target.id, before: nil)
-            }
+            })
         }
+        return actions
     }
 
     private func countText(_ column: KanbanColumn<Item>) -> String {
@@ -164,6 +189,31 @@ public struct KanbanBoard<Item: Identifiable & Equatable, CardContent: View>: Vi
               let oldIndex = columns[ci].items.firstIndex(of: item) else { return }
         let moved = columns[ci].items.remove(at: oldIndex)
         columns[ci].items.insert(moved, at: min(max(newIndex, 0), columns[ci].items.count))
+    }
+}
+
+/// Applies a dynamic list of named VoiceOver actions via
+/// `accessibilityAction(named:)` — available since iOS 13, so this is the
+/// single-path replacement for the iOS-16-only `accessibilityActions {}`
+/// builder (ADR-0007 §D2 rule 1). Internal so the suite can drive the action
+/// list directly.
+struct AccessibilityNamedActions: ViewModifier {
+    struct Action {
+        let label: String
+        let perform: () -> Void
+
+        init(label: String, perform: @escaping () -> Void) {
+            self.label = label
+            self.perform = perform
+        }
+    }
+
+    let actions: [Action]
+
+    func body(content: Content) -> some View {
+        actions.reduce(AnyView(content)) { view, action in
+            AnyView(view.accessibilityAction(named: Text(action.label), action.perform))
+        }
     }
 }
 

@@ -49,7 +49,7 @@ public struct InstallmentSelector: View {
 
     /// Explicit `currencyCode:` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -65,7 +65,7 @@ public struct InstallmentSelector: View {
         let planTotal = effectiveTotal(count)
         let interestFree = count > 1 && count <= interestFreeUpTo && (surcharge[count] ?? 0) == 0
         return Button {
-            withAnimation(Animation.snappy.ifMotionAllowed(reduceMotion)) { selection = count }
+            withAnimation(ThemeMotion.snappy.ifMotionAllowed(reduceMotion)) { selection = count }
         } label: {
             HStack(spacing: density.scale(Theme.SpacingKey.md.value)) {
                 Image(systemName: selected ? "largecircle.fill.circle" : "circle")
@@ -139,16 +139,21 @@ public extension InstallmentSelector {
 }
 
 #Preview {
-    @Previewable @State var months = 3
-    PreviewMatrix("InstallmentSelector") {
-        PreviewCase("Interest-free") {
-            InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months)
-                .interestFreeUpTo(3)
-        }
-        PreviewCase("Recommended + surcharge") {
-            InstallmentSelector(total: 12_000, options: [1, 3, 6], selection: $months)
-                .recommended(3)
-                .surcharge([6: 600])
+    struct Demo: View {
+        @State var months = 3
+        var body: some View {
+            PreviewMatrix("InstallmentSelector") {
+                PreviewCase("Interest-free") {
+                    InstallmentSelector(total: 12_000, options: [1, 3, 6, 12], selection: $months)
+                        .interestFreeUpTo(3)
+                }
+                PreviewCase("Recommended + surcharge") {
+                    InstallmentSelector(total: 12_000, options: [1, 3, 6], selection: $months)
+                        .recommended(3)
+                        .surcharge([6: 600])
+                }
+            }
         }
     }
+    return Demo()
 }

@@ -128,26 +128,31 @@ private struct ConfettiPiece: Identifiable {
 // The burst is a one-shot, full-bleed animation — each matrix cell shows a
 // representative fixed-height scene rather than the ignores-safe-area overlay.
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Confetti") {
-        PreviewCase("Celebration burst") {
-            ZStack {
-                theme.background(.bgBase)
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(theme.foreground(.fgHero))
-                    Text("Thanks for your feedback!").textStyle(.headingSm)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Confetti") {
+                PreviewCase("Celebration burst") {
+                    ZStack {
+                        theme.background(.bgBase)
+                        VStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(theme.foreground(.fgHero))
+                            Text("Thanks for your feedback!").textStyle(.headingSm)
+                        }
+                        Confetti().pieceCount(60)
+                    }
+                    .frame(height: 220)
                 }
-                Confetti().pieceCount(60)
+                PreviewCase("Custom palette, slower") {
+                    ZStack {
+                        theme.background(.bgBase)
+                        Text("Booking confirmed").textStyle(.headingSm)
+                        Confetti().pieceCount(40).colors([.purple, .pink, .turquoise]).duration(4)
+                    }
+                    .frame(height: 180)
+                }
             }
-            .frame(height: 220)
-        }
-        PreviewCase("Custom palette, slower") {
-            ZStack {
-                theme.background(.bgBase)
-                Text("Booking confirmed").textStyle(.headingSm)
-                Confetti().pieceCount(40).colors([.purple, .pink, .turquoise]).duration(4)
-            }
-            .frame(height: 180)
         }
     }
+    return Demo()
 }

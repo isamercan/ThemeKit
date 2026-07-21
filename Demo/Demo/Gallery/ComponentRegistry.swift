@@ -164,7 +164,7 @@ enum ComponentRegistry {
         .knob("DateField", .molecules, demo: DateFieldDemo(), usage: ##"DateField("Check-in", date: $date).style(.custom("EEE, d MMM")).clearable()"##),
         .knob("TimeField", .molecules, demo: TimeFieldDemo(), usage: #"TimeField("Pickup", time: $time).hourCycle(.h24).minuteInterval(5).clearable()"#),
         .knob("Fieldset", .molecules, demo: FieldsetDemo(), usage: #"Fieldset("Contact") { inputs }.helper("…")"#),
-        .knob("Form", .molecules, demo: FormDemo(), usage: ##"@State var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
+        .knob("Form", .molecules, demo: FormDemo(), usage: ##"@StateObject var form = FormValidator<Field>([.email: [.required(), .email()]])\nform.validateAll([.email: email])  // → first invalid field, focuses it"##),
         .knob("FileInput", .molecules, demo: FileInputDemo(), usage: #"FileInput("Passport") { pick() }.fileName(name)"#),
         .knob("FilterGroup", .molecules, demo: FilterGroupDemo(), usage: #"FilterGroup(options: items, selection: $sel) { $0 }"#),
         .knob("Chips", .molecules, demo: ChipsDemo(), usage: #"CompactChip("Suit", price: "$899", isSelected: $on).rating(4.6)   // ChoseChip · ImageChip · FilterChip · ChipGroup"#),
@@ -262,7 +262,7 @@ enum ComponentRegistry {
         .knob("ControlRow", .molecules, demo: ControlRowDemo(), usage: #"ControlRow("I agree to the terms", isOn: $accepted).control(.checkbox).description("…").required().hasError(showErrors && !accepted).errorText("This field is required.")"#, isNew: true),
         .knob("ScrollShadow", .molecules, demo: ScrollShadowDemo(), usage: #"ScrollShadow { ScrollView(.horizontal) { chipRow } }.axis(.horizontal).length(.lg).fadeColor(.bgWhite)   // .visibility(.auto/.start/.end/.both/.none)"#, isNew: true),
         .knob("Field Defaults", .molecules, demo: FieldDefaultsDemo(), usage: #"VStack { fields }.fieldDefaults(size: .large, messagesAnimated: false, requiredIndicator: false)   // subtree house style for TextInput/SearchBar/DateField/…; a field's own .size() still wins"#, isNew: true),
-        .knob("Form Wiring", .molecules, demo: FormWiringDemo(), usage: #"@State var form = FormValidator<Field>([.email: [.required(), .email()], .password: [.required(), .minLength(8)]])\nTextInput("Email", text: $email).field(.email, in: form)   // messages + focus + live re-validate\nPrimaryButton("Submit") { form.submit(values) { logIn() } }   // focuses first invalid field"#, isNew: true),
+        .knob("Form Wiring", .molecules, demo: FormWiringDemo(), usage: #"@StateObject var form = FormValidator<Field>([.email: [.required(), .email()], .password: [.required(), .minLength(8)]])\nTextInput("Email", text: $email).field(.email, in: form)   // messages + focus + live re-validate\nPrimaryButton("Submit") { form.submit(values) { logIn() } }   // focuses first invalid field"#, isNew: true),
         .knob("Chrome", .molecules, demo: ChromeDemo(), usage: #"VStack { … }.cardChrome(elevation: .elevated)   // Card's shell, no Card anatomy\nMyRatingControl(value: $stars).fieldChrome(isFocused: focused, hasError: invalid)   // both ride .cardStyle()/.fieldStyle()"#, isNew: true),
 
         // MARK: Organisms
@@ -311,7 +311,7 @@ enum ComponentRegistry {
         .knob("AlertDialog", .organisms, demo: AlertDialogDemo(), usage: ##"// builder: view.alertDialog(isPresented: $show) { AlertDialog("Delete product", message: "…").icon("trash").tone(.error).primaryAction("Delete") { … }.secondaryAction("Cancel") { … }.footerLayout(.auto) }\n// async confirm (spinner + auto-dismiss): view.alertDialog(isPresented: $show, title: "Delete product", icon: "trash", tone: .error, primaryTitle: "Delete", onPrimary: { await delete() }, secondaryTitle: "Cancel", closable: true)\n// molecules: AlertHeader("Title").icon("trash").tone(.error).alignment(.center);  AlertFooter().tone(.error).primaryAction("Delete") { … }.secondaryAction("Cancel") { … }"##, isNew: true),
         .knob("SegmentedTabBar", .organisms, demo: SegmentedTabBarDemo(), usage: #"SegmentedTabBar([TabItem("Reviews", badge: "12"), TabItem("Off", isEnabled: false)], selection: $i).tabStyle(.pill)"#),
         .knob("SelectionCards", .organisms, demo: SelectionCardsDemo(), usage: #"RadioCard("Standard", isSelected: sel == id) { sel = id }.description("…")"#),
-        .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@State var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),
+        .knob("Upload", .organisms, demo: UploadDemo(), usage: #"@StateObject var uploads = UploadController()\nUploadList(controller: uploads) { /* pick */ }\nawait uploads.upload(name: file.name) { progress in /* report 0…1 */ }"#),
         .knob("Carousel", .organisms, demo: CarouselDemo(), usage: #"Carousel(items) { item in mediaView }.autoplay(2).arrows()"#),
         .knob("PagingCarousel", .organisms, demo: PagingCarouselDemo(), usage: #"PagingCarousel(items) { item in mediaView }.peek(36).autoplay(2)"#),
         .knob("VideoPlayer", .organisms, demo: VideoPlayerDemo(), usage: #"VideoPlayerView(url).loop().muted().muteToggle()"#),

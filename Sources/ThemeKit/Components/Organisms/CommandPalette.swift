@@ -96,7 +96,7 @@ private struct CommandPaletteView: View {
             searchFocused = true
             highlightedID = flatItems.first?.id
         }
-        .onChange(of: query) { highlightedID = flatItems.first?.id }
+        .onChangeCompat(of: query) { highlightedID = flatItems.first?.id }
     }
 
     private var card: some View {
@@ -112,10 +112,12 @@ private struct CommandPaletteView: View {
         .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous).stroke(theme.border(.borderPrimary), lineWidth: 1))
         .themeShadow(.elevated)
         // Hardware-keyboard navigation (macOS / iPad); taps work everywhere.
-        .onKeyPress(.downArrow) { moveHighlight(1); return .handled }
-        .onKeyPress(.upArrow) { moveHighlight(-1); return .handled }
-        .onKeyPress(.return) { executeHighlighted(); return .handled }
-        .onKeyPress(.escape) { close(); return .handled }
+        // `.onKeyPress` is iOS 17+/macOS 14 — below 17 the palette is
+        // touch-only, a pure-polish degrade (ADR-0007 §D2 rule 2) owned by
+        // the named `PaletteKeyBindings` unit (rule 3).
+        .modifier(PaletteKeyBindings(moveHighlight: moveHighlight,
+                                     execute: executeHighlighted,
+                                     close: close))
     }
 
     @ViewBuilder private var results: some View {
@@ -193,6 +195,27 @@ private struct CommandPaletteView: View {
     private func close() {
         isPresented = false
         query = ""
+    }
+}
+
+/// Named degrade unit (ADR-0007 §D2 rule 3) for the palette's hardware-keyboard
+/// bindings: native `.onKeyPress` arrows/return/escape on iOS 17+ and macOS,
+/// and the untouched (touch-only) card below iOS 17.
+private struct PaletteKeyBindings: ViewModifier {
+    let moveHighlight: @MainActor (Int) -> Void
+    let execute: @MainActor () -> Void
+    let close: @MainActor () -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content
+                .onKeyPress(.downArrow) { moveHighlight(1); return .handled }
+                .onKeyPress(.upArrow) { moveHighlight(-1); return .handled }
+                .onKeyPress(.return) { execute(); return .handled }
+                .onKeyPress(.escape) { close(); return .handled }
+        } else {
+            content
+        }
     }
 }
 

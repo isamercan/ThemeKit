@@ -154,3 +154,57 @@ API breakage: func View.componentDefaults(radius:elevation:accent:) has paramete
 #     as a removal/rename; same additive-axis precedent as the #308 entries above. ---
 API breakage: constructor FieldDefaults.init(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been removed
 API breakage: func View.fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:) has been renamed to func fieldDefaults(size:messagesAnimated:requiredIndicator:clearable:validationTrigger:labelPlacement:)
+
+# --- iOS 15.6 floor (ADR-0007 §D3/§D4): @Observable → ObservableObject on the
+#     presenters + FormValidator. Consumer migration (one line per site):
+#       @Environment(SheetPresenter.self) → @EnvironmentObject var sheet: SheetPresenter
+#       @State var tour = TourController() → @StateObject var tour = TourController()
+#     The @State→@StateObject change is SILENT (compiles, stops observing) —
+#     see the CHANGELOG [Unreleased] migration block. ---
+API breakage: class SheetPresenter has removed conformance to Observable
+API breakage: class DrawerPresenter has removed conformance to Observable
+API breakage: class FeedbackPresenter has removed conformance to Observable
+API breakage: class TourController has removed conformance to Observable
+API breakage: class UploadController has removed conformance to Observable
+API breakage: class FormValidator has removed conformance to Observable
+
+# --- iOS 15.6 floor (ADR-0007 §D2 rule 1 / §D4, plan §3a): FlowLayout drops its
+#     public `Layout` conformance (the protocol is iOS 16) and becomes a measured
+#     generic *view* over its content. Every call site keeps compiling unchanged
+#     (`FlowLayout(spacing:) { … }` — the trailing closure is now a @ViewBuilder
+#     init parameter instead of `Layout.callAsFunction`); only code that used
+#     FlowLayout AS a `Layout` value (e.g. inside `AnyLayout`) breaks, and no
+#     such consumer pattern was ever documented. See the CHANGELOG [Unreleased]
+#     migration block. ---
+API breakage: struct FlowLayout has removed conformance to Layout
+API breakage: struct FlowLayout has removed conformance to Animatable
+API breakage: struct FlowLayout has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: struct FlowLayout is now with @preconcurrency
+API breakage: constructor FlowLayout.init(spacing:lineSpacing:alignment:) has been removed
+API breakage: constructor FlowLayout.init(spacing:lineSpacing:alignment:layoutDirection:) has been removed
+API breakage: func FlowLayout.sizeThatFits(proposal:subviews:cache:) has been removed
+API breakage: func FlowLayout.placeSubviews(in:proposal:subviews:cache:) has been removed
+API breakage: typealias FlowLayout.AnimatableData has been removed
+API breakage: typealias FlowLayout.Cache has been removed
+API breakage: var FlowLayout.spacing is now with @preconcurrency
+API breakage: var FlowLayout.lineSpacing is now with @preconcurrency
+API breakage: var FlowLayout.alignment is now with @preconcurrency
+API breakage: var FlowLayout.layoutDirection is now with @preconcurrency
+API breakage: accessor FlowLayout.spacing.Get() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.spacing.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.lineSpacing.Get() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.lineSpacing.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.alignment.Get() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.alignment.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.layoutDirection.Get() has generic signature change from  to <Content where Content : SwiftUI.View>
+API breakage: accessor FlowLayout.layoutDirection.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
+
+# --- iOS 15.6 floor (ADR-0007 §D2 rule 1, plan §3d): Charts → Canvas rewrite drops
+#     `import Charts`, so the Swift Charts framework's own conformances on `Array`
+#     (ScaleDomain / ScaleRange / PositionScaleRange) no longer leak through
+#     ThemeKit's public surface. These were never ThemeKit-declared API — they were
+#     visible only as a side effect of importing Charts; a consumer relying on them
+#     would `import Charts` directly. No consumer-facing loss. See CHANGELOG. ---
+API breakage: extension Array has removed conformance to ScaleDomain
+API breakage: extension Array has removed conformance to ScaleRange
+API breakage: extension Array has removed conformance to PositionScaleRange

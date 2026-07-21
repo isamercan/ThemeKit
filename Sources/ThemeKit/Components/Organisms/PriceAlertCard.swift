@@ -53,7 +53,7 @@ public struct PriceAlertCard: View {
 
     /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
     private var trendColor: Color {
         switch trend { case .down: theme.foreground(.systemcolorsFgSuccess); case .up: theme.foreground(.systemcolorsFgError); default: theme.text(.textSecondary) }

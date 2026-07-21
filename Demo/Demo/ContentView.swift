@@ -78,6 +78,6 @@ struct ThemeSwitcherMenu: View {
 
 #Preview {
     ContentView()
-        .environment(Theme.shared)
+        .environment(\.theme, Theme.shared)
         .environmentObject(DemoThemeStore())
 }

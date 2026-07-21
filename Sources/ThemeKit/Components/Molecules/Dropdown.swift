@@ -292,7 +292,7 @@ public struct Dropdown<Trigger: View>: View {
         }
         .zIndex(open ? 1 : 0)   // float over later siblings while open (Tooltip-style)
         .animation(motion, value: open)
-        .onChange(of: open) { _, isOpen in
+        .onChangeCompat(of: open) { _, isOpen in
             if !isOpen { expandedSubmenus = [] }   // fresh submenu state on reopen
         }
         .accessibilityAddTraits(.isButton)
@@ -522,84 +522,88 @@ public extension Dropdown {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    @Previewable @State var sortBy = "Name"
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        @State var sortBy = "Name"
+        var body: some View {
+            // Overlay component — closed cells show the resting trigger; the "open"
+            // cells pin the panel with a constant `isPresented:` inside a taller frame
+            // so the floating panel stays within the matrix cell.
+            let items: [DropdownItem] = [
+                .init("Rename", systemImage: "pencil"),
+                .init("Duplicate", subtitle: "Copies into the same folder", systemImage: "plus.square.on.square"),
+                .init("Share", systemImage: "square.and.arrow.up", disabled: true),
+                .submenu("Export", systemImage: "arrow.up.doc", items: [
+                    .init("PDF", systemImage: "doc.richtext"),
+                    .init("PNG", systemImage: "photo"),
+                    .divider,
+                    .init("Plain text", systemImage: "doc.plaintext"),
+                ]),
+                .divider,
+                .init("Delete", systemImage: "trash", role: .destructive),
+            ]
 
-    // Overlay component — closed cells show the resting trigger; the "open"
-    // cells pin the panel with a constant `isPresented:` inside a taller frame
-    // so the floating panel stays within the matrix cell.
-    let items: [DropdownItem] = [
-        .init("Rename", systemImage: "pencil"),
-        .init("Duplicate", subtitle: "Copies into the same folder", systemImage: "plus.square.on.square"),
-        .init("Share", systemImage: "square.and.arrow.up", disabled: true),
-        .submenu("Export", systemImage: "arrow.up.doc", items: [
-            .init("PDF", systemImage: "doc.richtext"),
-            .init("PNG", systemImage: "photo"),
-            .divider,
-            .init("Plain text", systemImage: "doc.plaintext"),
-        ]),
-        .divider,
-        .init("Delete", systemImage: "trash", role: .destructive),
-    ]
+            let triggerLabel: (String) -> AnyView = { title in
+                AnyView(HStack(spacing: Theme.SpacingKey.xs.value) {
+                    Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
+                    Icon(systemName: "chevron.down").size(.xs).colorOverride(theme.text(.textTertiary))
+                }
+                .padding(.horizontal, Theme.SpacingKey.md.value)
+                .padding(.vertical, Theme.SpacingKey.sm.value)
+                .background(theme.background(.bgSecondaryLight),
+                            in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)))
+            }
 
-    let triggerLabel: (String) -> AnyView = { title in
-        AnyView(HStack(spacing: Theme.SpacingKey.xs.value) {
-            Text(title).textStyle(.labelSm600).foregroundStyle(theme.text(.textPrimary))
-            Icon(systemName: "chevron.down").size(.xs).colorOverride(theme.text(.textTertiary))
+            PreviewMatrix("Dropdown") {
+                PreviewCase("Triggers (closed — tap in live preview)") {
+                    HStack(spacing: Theme.SpacingKey.lg.value) {
+                        Dropdown(items: items) { triggerLabel("Options") }
+                        Dropdown(items: items) {
+                            Icon(systemName: "ellipsis.circle").size(.md).colorOverride(theme.foreground(.fgHero))
+                        }
+                        .edge(.bottomTrailing)
+                        .accent(.primary)
+                    }
+                }
+                PreviewCase("Open panel · subtitle + submenu + destructive") {
+                    VStack {
+                        Dropdown(items: items, isPresented: .constant(true)) { triggerLabel("Open") }
+                            .menuWidth(220)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(height: 360)
+                }
+                PreviewCase("Open selection · checkmark indicator, stays open") {
+                    VStack {
+                        Dropdown(sections: [
+                            DropdownSection("Sort by", items: ["Name", "Date", "Size"].map { option in
+                                DropdownItem(option, isSelected: sortBy == option) { sortBy = option }
+                            }),
+                        ], isPresented: .constant(true)) {
+                            triggerLabel(sortBy)
+                        }
+                        .shouldCloseOnSelect(false)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(height: 220)
+                }
+                PreviewCase("Open selection · dot indicator") {
+                    VStack {
+                        Dropdown(sections: [
+                            DropdownSection("Layout", items: ["List", "Grid"].map { option in
+                                DropdownItem(option, isSelected: option == "List")
+                            }),
+                        ], isPresented: .constant(true)) {
+                            triggerLabel("List")
+                        }
+                        .indicator(.dot)
+                        .shouldCloseOnSelect(false)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(height: 180)
+                }
+            }
         }
-        .padding(.horizontal, Theme.SpacingKey.md.value)
-        .padding(.vertical, Theme.SpacingKey.sm.value)
-        .background(theme.background(.bgSecondaryLight),
-                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)))
     }
-
-    PreviewMatrix("Dropdown") {
-        PreviewCase("Triggers (closed — tap in live preview)") {
-            HStack(spacing: Theme.SpacingKey.lg.value) {
-                Dropdown(items: items) { triggerLabel("Options") }
-                Dropdown(items: items) {
-                    Icon(systemName: "ellipsis.circle").size(.md).colorOverride(theme.foreground(.fgHero))
-                }
-                .edge(.bottomTrailing)
-                .accent(.primary)
-            }
-        }
-        PreviewCase("Open panel · subtitle + submenu + destructive") {
-            VStack {
-                Dropdown(items: items, isPresented: .constant(true)) { triggerLabel("Open") }
-                    .menuWidth(220)
-                Spacer(minLength: 0)
-            }
-            .frame(height: 360)
-        }
-        PreviewCase("Open selection · checkmark indicator, stays open") {
-            VStack {
-                Dropdown(sections: [
-                    DropdownSection("Sort by", items: ["Name", "Date", "Size"].map { option in
-                        DropdownItem(option, isSelected: sortBy == option) { sortBy = option }
-                    }),
-                ], isPresented: .constant(true)) {
-                    triggerLabel(sortBy)
-                }
-                .shouldCloseOnSelect(false)
-                Spacer(minLength: 0)
-            }
-            .frame(height: 220)
-        }
-        PreviewCase("Open selection · dot indicator") {
-            VStack {
-                Dropdown(sections: [
-                    DropdownSection("Layout", items: ["List", "Grid"].map { option in
-                        DropdownItem(option, isSelected: option == "List")
-                    }),
-                ], isPresented: .constant(true)) {
-                    triggerLabel("List")
-                }
-                .indicator(.dot)
-                .shouldCloseOnSelect(false)
-                Spacer(minLength: 0)
-            }
-            .frame(height: 180)
-        }
-    }
+    return Demo()
 }

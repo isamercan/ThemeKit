@@ -157,30 +157,35 @@ private struct BorderBeamModifier: ViewModifier {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("BorderBeam") {
-        PreviewCase("Card beam (theme accent)") {
-            Text("Featured")
-                .textStyle(.headingSm)
-                .padding(40)
-                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
-                .borderBeam(cornerRadius: 20, lineWidth: 2.5)
-                .padding(16)
-        }
-        PreviewCase("Capsule beam (custom colors)") {
-            Text("Pro")
-                .padding(.horizontal, 28).padding(.vertical, 14)
-                .background(theme.background(.bgElevatorTertiary), in: Capsule())
-                .borderBeam(cornerRadius: 100, lineWidth: 2, duration: 3,
-                            colors: [SemanticColor.purple.base, SemanticColor.pink.base])
-                .padding(16)
-        }
-        PreviewCase("No glow, reversed") {
-            Text("Quiet")
-                .padding(.horizontal, 28).padding(.vertical, 14)
-                .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
-                .borderBeam(cornerRadius: 12, lineWidth: 2, reverse: true, glow: false)
-                .padding(16)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("BorderBeam") {
+                PreviewCase("Card beam (theme accent)") {
+                    Text("Featured")
+                        .textStyle(.headingSm)
+                        .padding(40)
+                        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 20))
+                        .borderBeam(cornerRadius: 20, lineWidth: 2.5)
+                        .padding(16)
+                }
+                PreviewCase("Capsule beam (custom colors)") {
+                    Text("Pro")
+                        .padding(.horizontal, 28).padding(.vertical, 14)
+                        .background(theme.background(.bgElevatorTertiary), in: Capsule())
+                        .borderBeam(cornerRadius: 100, lineWidth: 2, duration: 3,
+                                    colors: [SemanticColor.purple.base, SemanticColor.pink.base])
+                        .padding(16)
+                }
+                PreviewCase("No glow, reversed") {
+                    Text("Quiet")
+                        .padding(.horizontal, 28).padding(.vertical, 14)
+                        .background(theme.background(.bgWhite), in: RoundedRectangle(cornerRadius: 12))
+                        .borderBeam(cornerRadius: 12, lineWidth: 2, reverse: true, glow: false)
+                        .padding(16)
+                }
+            }
         }
     }
+    return Demo()
 }

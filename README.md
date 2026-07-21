@@ -76,9 +76,9 @@ import ThemeKit
 
 | | |
 |---|---|
-| Platforms | iOS 17+ · macOS 14+ |
+| Platforms | iOS 15.6+ · macOS 14+ &nbsp;·&nbsp; *Calendar add-on: iOS 17+* |
 | Swift tools | 6.2 |
-| Dependencies | none (core) · `lottie-ios` 4.4.0+ (Lottie add-on) · `Almanac` 0.2.0+ (Calendar add-on, iOS-only) |
+| Dependencies | none (core) · `lottie-ios` 4.4.0+ (Lottie add-on) · `Almanac` 0.2.0+ (Calendar add-on, iOS 17+ only) |
 
 ## Installation
 

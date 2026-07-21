@@ -38,7 +38,7 @@ public struct ColorPickerPanel: View {
             }
             if !swatches.isEmpty {
                 ColorSwatchPicker(swatches, selection: $swatchSelection)
-                    .onChange(of: swatchSelection) {
+                    .onChangeCompat(of: swatchSelection) {
                         if let picked = swatchSelection { color = HSBAColor(picked.color) }
                     }
             }
@@ -47,7 +47,7 @@ public struct ColorPickerPanel: View {
             }
         }
         .onAppear { hexDraft = HexColor.string(color) }
-        .onChange(of: color) { hexDraft = HexColor.string(color) }
+        .onChangeCompat(of: color) { hexDraft = HexColor.string(color) }
     }
 
     private var hexRow: some View {
@@ -154,23 +154,28 @@ enum HexColor {
 }
 
 #Preview {
-    @Previewable @State var color = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
-    PreviewMatrix("ColorPickerPanel") {
-        PreviewCase("Full (swatches + hex)") {
-            VStack(spacing: 24) {
-                ColorPickerPanel(color: $color)
-                    .swatches([
-                        .init(.red, label: "Red"), .init(.orange, label: "Orange"),
-                        .init(.green, label: "Green"), .init(.blue, label: "Blue"),
-                        .init(.purple, label: "Purple"), .init(.black, label: "Ink"),
-                    ])
-                RoundedRectangle(cornerRadius: 12).fill(color.color).frame(height: 44)
+    struct Demo: View {
+        @State var color = HSBAColor(hue: 0.55, saturation: 0.8, brightness: 0.9)
+        var body: some View {
+            PreviewMatrix("ColorPickerPanel") {
+                PreviewCase("Full (swatches + hex)") {
+                    VStack(spacing: 24) {
+                        ColorPickerPanel(color: $color)
+                            .swatches([
+                                .init(.red, label: "Red"), .init(.orange, label: "Orange"),
+                                .init(.green, label: "Green"), .init(.blue, label: "Blue"),
+                                .init(.purple, label: "Purple"), .init(.black, label: "Ink"),
+                            ])
+                        RoundedRectangle(cornerRadius: 12).fill(color.color).frame(height: 44)
+                    }
+                }
+                PreviewCase("Minimal (no alpha, no hex)") {
+                    ColorPickerPanel(color: $color)
+                        .showsAlpha(false)
+                        .showsHexField(false)
+                }
             }
         }
-        PreviewCase("Minimal (no alpha, no hex)") {
-            ColorPickerPanel(color: $color)
-                .showsAlpha(false)
-                .showsHexField(false)
-        }
     }
+    return Demo()
 }

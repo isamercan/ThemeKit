@@ -111,22 +111,27 @@ public extension ColorSwatchPicker {
 }
 
 #Preview {
-    @Previewable @State var wrap: ColorSwatchItem?
-    @Previewable @State var grid: ColorSwatchItem?
-    let palette: [ColorSwatchItem] = [
-        .init(.red, label: "Red"), .init(.orange, label: "Orange"),
-        .init(.yellow, label: "Yellow"), .init(.green, label: "Green"),
-        .init(.blue, label: "Blue"), .init(.indigo, label: "Indigo"),
-        .init(.purple, label: "Purple"), .init(.pink, label: "Pink"),
-    ]
-    // Interactive picker — each cell shows one representative frame; tap swatches
-    // in the live preview to drive the selection ring.
-    PreviewMatrix("ColorSwatchPicker") {
-        PreviewCase("Wrapping · circle") {
-            ColorSwatchPicker(palette, selection: $wrap).swatchShape(.circle)
-        }
-        PreviewCase("4 columns · large") {
-            ColorSwatchPicker(palette, selection: $grid).columns(4).swatchSize(.large)
+    struct Demo: View {
+        @State var wrap: ColorSwatchItem?
+        @State var grid: ColorSwatchItem?
+        var body: some View {
+            let palette: [ColorSwatchItem] = [
+                .init(.red, label: "Red"), .init(.orange, label: "Orange"),
+                .init(.yellow, label: "Yellow"), .init(.green, label: "Green"),
+                .init(.blue, label: "Blue"), .init(.indigo, label: "Indigo"),
+                .init(.purple, label: "Purple"), .init(.pink, label: "Pink"),
+            ]
+            // Interactive picker — each cell shows one representative frame; tap swatches
+            // in the live preview to drive the selection ring.
+            PreviewMatrix("ColorSwatchPicker") {
+                PreviewCase("Wrapping · circle") {
+                    ColorSwatchPicker(palette, selection: $wrap).swatchShape(.circle)
+                }
+                PreviewCase("4 columns · large") {
+                    ColorSwatchPicker(palette, selection: $grid).columns(4).swatchSize(.large)
+                }
+            }
         }
     }
+    return Demo()
 }

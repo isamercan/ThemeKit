@@ -363,10 +363,10 @@ public struct FilterChip: View {
         self.onDismiss = onDismiss
     }
 
-    private var clipShape: AnyShape {
+    private var clipShape: ThemeAnyShape {
         shape == .pill
-            ? AnyShape(Capsule())
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+            ? ThemeAnyShape(Capsule())
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
     }
 
     public var body: some View {

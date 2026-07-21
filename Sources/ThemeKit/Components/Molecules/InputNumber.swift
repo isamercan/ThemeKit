@@ -148,12 +148,12 @@ public struct InputNumber: View {
             // seed predates the `.precision(_:)` modifier).
             if !isFocused { textValue = format(value) }
         }
-        .onChange(of: value) { _, newValue in
+        .onChangeCompat(of: value) { _, newValue in
             // Reflect stepper / external changes back into the editable text.
             let normalized = format(newValue)
             if textValue != normalized && !isFocused { textValue = normalized }
         }
-        .onChange(of: textValue) { _, newText in
+        .onChangeCompat(of: textValue) { _, newText in
             // Live-apply a valid in-range entry; full clamp happens on commit.
             defer {
                 // `.live` validates every change; other triggers re-validate once
@@ -164,7 +164,7 @@ public struct InputNumber: View {
             let clamped = Self.clamp(parsed, to: range)
             if clamped == parsed, clamped != value { value = clamped; onChange?(clamped) }
         }
-        .onChange(of: isFocused) { _, focused in
+        .onChangeCompat(of: isFocused) { _, focused in
             if !focused {
                 commit()
                 if effectiveValidationTrigger == .editingEnd { runValidation(textValue) }   // validate on blur
@@ -368,39 +368,44 @@ private extension View {
 }
 
 #Preview {
-    // Interactive field — the matrix wraps representative static states (one frame per cell).
-    @Previewable @State var a = 1
-    @Previewable @State var b = 1
-    @Previewable @State var price = 500
-    @Previewable @State var weight = 22.5
-    @Previewable @State var rate = 0.125
-    PreviewMatrix("InputNumber") {
-        PreviewCase("Unit + hint, large") { InputNumber("Adults", value: $a, range: 1...9).unit("guest").hint("Type or step.").size(.large) }
-        PreviewCase("Error") { InputNumber("Children", value: $b).errorText("Too many") }
-        PreviewCase("Step + unit") { InputNumber("Max price", value: $price, range: 0...10000).step(50).unit("$") }
-        // Family size ramp (C2) — aligns with a `.small` TextInput beside it.
-        PreviewCase("Small") { InputNumber("Rooms", value: $b, range: 1...5).size(.small) }
-        // Decimal binding + precision (E11).
-        PreviewCase("Decimal step") { InputNumber("Weight", value: $weight, range: 0...32).step(0.5).unit("kg") }
-        PreviewCase("Precision") { InputNumber("Rate", value: $rate, range: 0...1).step(0.005).precision(3) }
-        // Required indicator (E2) + declarative validation (E3).
-        PreviewCase("Required + validation") {
-            InputNumber("Guests", value: $a, range: 1...9)
-                .required()
-                .validate([.required(), .custom(String(themeKit: "Even numbers only")) { (Int($0) ?? 0).isMultiple(of: 2) }])
-        }
-        // Read-only (E1): normal chrome + value, steppers hidden, typing blocked.
-        PreviewCase("Read-only") {
-            InputNumber("Nights (submitted)", value: .constant(3), range: 1...30)
-                .unit("nights")
-                .readOnly()
-        }
-        // Underlined chrome via the shared FieldStyle hook.
-        PreviewCase("Underlined") {
-            InputNumber("Nights", value: $a, range: 1...30)
-                .fieldStyle(.underlined)
+    struct Demo: View {
+        @State var a = 1
+        @State var b = 1
+        @State var price = 500
+        @State var weight = 22.5
+        @State var rate = 0.125
+        var body: some View {
+            // Interactive field — the matrix wraps representative static states (one frame per cell).
+            PreviewMatrix("InputNumber") {
+                PreviewCase("Unit + hint, large") { InputNumber("Adults", value: $a, range: 1...9).unit("guest").hint("Type or step.").size(.large) }
+                PreviewCase("Error") { InputNumber("Children", value: $b).errorText("Too many") }
+                PreviewCase("Step + unit") { InputNumber("Max price", value: $price, range: 0...10000).step(50).unit("$") }
+                // Family size ramp (C2) — aligns with a `.small` TextInput beside it.
+                PreviewCase("Small") { InputNumber("Rooms", value: $b, range: 1...5).size(.small) }
+                // Decimal binding + precision (E11).
+                PreviewCase("Decimal step") { InputNumber("Weight", value: $weight, range: 0...32).step(0.5).unit("kg") }
+                PreviewCase("Precision") { InputNumber("Rate", value: $rate, range: 0...1).step(0.005).precision(3) }
+                // Required indicator (E2) + declarative validation (E3).
+                PreviewCase("Required + validation") {
+                    InputNumber("Guests", value: $a, range: 1...9)
+                        .required()
+                        .validate([.required(), .custom(String(themeKit: "Even numbers only")) { (Int($0) ?? 0).isMultiple(of: 2) }])
+                }
+                // Read-only (E1): normal chrome + value, steppers hidden, typing blocked.
+                PreviewCase("Read-only") {
+                    InputNumber("Nights (submitted)", value: .constant(3), range: 1...30)
+                        .unit("nights")
+                        .readOnly()
+                }
+                // Underlined chrome via the shared FieldStyle hook.
+                PreviewCase("Underlined") {
+                    InputNumber("Nights", value: $a, range: 1...30)
+                        .fieldStyle(.underlined)
+                }
+            }
         }
     }
+    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

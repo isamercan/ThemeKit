@@ -49,7 +49,7 @@ private struct ToastPresentationModifier<Toast: View>: ViewModifier {
                     .transition(.move(edge: edge).combined(with: .opacity))
                     .onAppear {
                         if let announcement, !announcement.isEmpty {
-                            AccessibilityNotification.Announcement(announcement).post()
+                            AccessibilityAnnouncement.post(announcement)
                         }
                     }
                     .task {

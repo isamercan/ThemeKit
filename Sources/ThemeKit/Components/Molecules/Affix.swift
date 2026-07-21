@@ -65,7 +65,7 @@ public struct Affix<Content: View>: View {
                     .background(GeometryReader { geo in
                         Color.clear
                             .onAppear { contentSize = geo.size }
-                            .onChange(of: geo.size) { contentSize = $1 }
+                            .onChangeCompat(of: geo.size) { contentSize = $1 }
                     })
                     .offset(y: pinOffset)
             }
@@ -143,5 +143,5 @@ private enum AffixMetrics {
             .frame(height: 260)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

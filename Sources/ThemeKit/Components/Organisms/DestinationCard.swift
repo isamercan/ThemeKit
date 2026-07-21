@@ -25,6 +25,8 @@ import SwiftUI
 /// ```
 public struct DestinationCard: View {
     @Environment(\.theme) private var theme
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.componentDensity) private var density
     @Environment(\.cardStyle) private var cardStyle
     @Environment(\.formatDefaults) private var formatDefaults
@@ -59,7 +61,7 @@ public struct DestinationCard: View {
 
     /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -131,7 +133,10 @@ public struct DestinationCard: View {
             Image(systemName: fav.wrappedValue ? "heart.fill" : "heart")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(fav.wrappedValue ? theme.foreground(.systemcolorsFgError) : theme.text(.textSecondaryInverse))
-                .symbolEffect(.bounce, value: fav.wrappedValue)
+                // Bounce only when micro-animations are on and Reduce Motion is
+                // off (MicroMotion gate); below iOS 17 the heart stays static
+                // (SymbolBounceCompat, ADR-0007 §D2 rule 2).
+                .symbolBounceCompat(value: (micro && !reduceMotion) ? fav.wrappedValue : false)
                 .frame(width: 32, height: 32)
                 .background(MediaScrim.solid, in: Circle())
                 .padding(Theme.SpacingKey.sm.value)
@@ -229,47 +234,57 @@ public extension DestinationCard {
 }
 
 #Preview {
-    @Previewable @State var fav = true
-    PreviewMatrix("DestinationCard") {
-        PreviewCase("Default · ribbon + price + rating + favourite") {
-            DestinationCard("Bali & Unforgettable 3-Days")
-                .subtitle("Indonesia").ribbon("Top #1")
-                .price(1_450).rating(4.8).favorite($fav)
-                .tags(["Beach", "Culture"])
-        }
-        PreviewCase("Inline badge") {
-            DestinationCard("Santorini Sunset Trail")
-                .subtitle("Greece")
-                .badge("New")
-                .price(2_300).rating(4.6)
-        }
-        PreviewCase("Overlay title (scrim over media)") {
-            DestinationCard("Lisbon City Break")
-                .subtitle("Portugal")
-                .overlayTitle()
-                .price(980).rating(4.4)
+    struct Demo: View {
+        @State var fav = true
+        var body: some View {
+            PreviewMatrix("DestinationCard") {
+                PreviewCase("Default · ribbon + price + rating + favourite") {
+                    DestinationCard("Bali & Unforgettable 3-Days")
+                        .subtitle("Indonesia").ribbon("Top #1")
+                        .price(1_450).rating(4.8).favorite($fav)
+                        .tags(["Beach", "Culture"])
+                }
+                PreviewCase("Inline badge") {
+                    DestinationCard("Santorini Sunset Trail")
+                        .subtitle("Greece")
+                        .badge("New")
+                        .price(2_300).rating(4.6)
+                }
+                PreviewCase("Overlay title (scrim over media)") {
+                    DestinationCard("Lisbon City Break")
+                        .subtitle("Portugal")
+                        .overlayTitle()
+                        .price(980).rating(4.4)
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Outlined style + overlay slot") {
-    @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        DestinationCard("Cappadocia Balloon Escape")
-            .media {
-                LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            ScrollView {
+                DestinationCard("Cappadocia Balloon Escape")
+                    .media {
+                        LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                            .aspectRatio(4.0 / 3.0, contentMode: .fit)
+                    }
+                    .overlay {
+                        Text("Members only").textStyle(.labelSm700)
+                            .foregroundStyle(theme.text(.textSecondaryInverse))
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(MediaScrim.solid, in: Capsule())
+                    }
+                    .subtitle("Turkey").rating(4.9).price(9_800)
+                    .tags(["Adventure"])
+                    .cardStyle(.outlined)
+                    .padding()
             }
-            .overlay {
-                Text("Members only").textStyle(.labelSm700)
-                    .foregroundStyle(theme.text(.textSecondaryInverse))
-                    .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(MediaScrim.solid, in: Capsule())
-            }
-            .subtitle("Turkey").rating(4.9).price(9_800)
-            .tags(["Adventure"])
-            .cardStyle(.outlined)
-            .padding()
+        }
     }
+    return Demo()
 }

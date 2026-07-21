@@ -95,7 +95,7 @@ public struct DatePriceCard: View {
 
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// Selected-state foreground — the accent's base shade, or the stock hero.
@@ -248,7 +248,7 @@ public struct DatePriceStrip: View {
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     /// Resolved here so every style renders the strip's one resolved code.
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     /// The preset the deprecated layout modifiers mapped to, or `nil` when none
@@ -349,56 +349,61 @@ public extension DatePriceStrip {
 }
 
 #Preview {
-    @Previewable @State var sel = 1
-    let items = [
-        DatePriceItem("17 Jul", price: 1_697.99), DatePriceItem("18 Jul", price: 1_767.99),
-        DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
-        DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
-    ]
-    PreviewMatrix("DatePriceStrip") {
-        PreviewCase("Timeline strip (pills)") {
-            DatePriceStrip(items, selection: $sel).datePriceStripStyle(.strip)
-        }
-        PreviewCase("Grid") { DatePriceStrip(items, selection: $sel) }
-        PreviewCase("Paged grid") { DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {}) }
-        PreviewCase("Custom surface") { DatePriceStrip(items, selection: $sel).surface(.bgSecondaryLight) }
-        PreviewCase("Accent + cheapest tone") {
-            DatePriceStrip(items, selection: $sel).accent(.info).cheapestTone(.warning)
-        }
-        PreviewCase("Strip · large pills · accent") {
-            DatePriceStrip(items, selection: $sel).pillSize(.large).accent(.success)
-                .datePriceStripStyle(.strip)
-        }
-        PreviewCase("Price chart") {
-            DatePriceStrip(items, selection: $sel).datePriceStripStyle(.chart)
-        }
-        PreviewCase("Weekdays + unavailable · 2 columns") {
-            DatePriceStrip(
-                [
-                    DatePriceItem("17 Jul", price: 1_697.99, weekday: "Fri"),
-                    DatePriceItem("18 Jul", price: 1_767.99, weekday: "Sat", unavailable: true),
-                    DatePriceItem("19 Jul", price: 1_474.99, weekday: "Sun"),
-                    DatePriceItem("20 Jul", price: 1_914.99, weekday: "Mon"),
-                ],
-                selection: $sel
-            )
-            .datePriceStripStyle(.grid(columns: 2))
-        }
-        PreviewCase("Custom cell slot") {
-            DatePriceStrip(items, selection: $sel)
-                .cell { item, isSelected in
-                    VStack(spacing: 2) {
-                        Text(item.date).textStyle(isSelected ? .labelSm700 : .bodySm400)
-                        Text(item.price.formatted(.currency(code: "USD").precision(.fractionLength(0))))
-                            .textStyle(.overline500)
-                    }
-                    .padding(Theme.SpacingKey.sm.value)
-                    .background(isSelected ? SemanticColor.accent.soft : .clear,
-                                in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
+    struct Demo: View {
+        @State var sel = 1
+        var body: some View {
+            let items = [
+                DatePriceItem("17 Jul", price: 1_697.99), DatePriceItem("18 Jul", price: 1_767.99),
+                DatePriceItem("19 Jul", price: 1_960.99), DatePriceItem("20 Jul", price: 1_914.99),
+                DatePriceItem("21 Jul", price: 1_474.99), DatePriceItem("22 Jul", price: 1_483.99),
+            ]
+            PreviewMatrix("DatePriceStrip") {
+                PreviewCase("Timeline strip (pills)") {
+                    DatePriceStrip(items, selection: $sel).datePriceStripStyle(.strip)
                 }
-                .datePriceStripStyle(.strip)
+                PreviewCase("Grid") { DatePriceStrip(items, selection: $sel) }
+                PreviewCase("Paged grid") { DatePriceStrip(items, selection: $sel).onPage(prev: {}, next: {}) }
+                PreviewCase("Custom surface") { DatePriceStrip(items, selection: $sel).surface(.bgSecondaryLight) }
+                PreviewCase("Accent + cheapest tone") {
+                    DatePriceStrip(items, selection: $sel).accent(.info).cheapestTone(.warning)
+                }
+                PreviewCase("Strip · large pills · accent") {
+                    DatePriceStrip(items, selection: $sel).pillSize(.large).accent(.success)
+                        .datePriceStripStyle(.strip)
+                }
+                PreviewCase("Price chart") {
+                    DatePriceStrip(items, selection: $sel).datePriceStripStyle(.chart)
+                }
+                PreviewCase("Weekdays + unavailable · 2 columns") {
+                    DatePriceStrip(
+                        [
+                            DatePriceItem("17 Jul", price: 1_697.99, weekday: "Fri"),
+                            DatePriceItem("18 Jul", price: 1_767.99, weekday: "Sat", unavailable: true),
+                            DatePriceItem("19 Jul", price: 1_474.99, weekday: "Sun"),
+                            DatePriceItem("20 Jul", price: 1_914.99, weekday: "Mon"),
+                        ],
+                        selection: $sel
+                    )
+                    .datePriceStripStyle(.grid(columns: 2))
+                }
+                PreviewCase("Custom cell slot") {
+                    DatePriceStrip(items, selection: $sel)
+                        .cell { item, isSelected in
+                            VStack(spacing: 2) {
+                                Text(item.date).textStyle(isSelected ? .labelSm700 : .bodySm400)
+                                Text(item.price.formatted(.currency(code: "USD").precision(.fractionLength(0))))
+                                    .textStyle(.overline500)
+                            }
+                            .padding(Theme.SpacingKey.sm.value)
+                            .background(isSelected ? SemanticColor.accent.soft : .clear,
+                                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
+                        }
+                        .datePriceStripStyle(.strip)
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Selected card + outlined style") {

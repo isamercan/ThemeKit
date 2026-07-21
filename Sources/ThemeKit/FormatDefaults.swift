@@ -8,7 +8,7 @@
 //  Open/Closed: a per-call argument still wins; this only fills the default.
 //
 //  Resolution chain (per §10): explicit argument > formatDefaults.currencyCode
-//  > locale.currency?.identifier > "USD".
+//  > locale.themeKitCurrencyCode > "USD".
 //
 //  ```swift
 //  BookingScreen()

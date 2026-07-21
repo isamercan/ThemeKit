@@ -69,22 +69,36 @@ public extension View {
 
 /// The root provider behind ``SwiftUICore/View/themeKitLocalized()``.
 private struct ThemeKitLocalizedRoot: ViewModifier {
+    // `@ObservedObject` registers this view for the revision (ADR-0007 §D3 —
+    // `ObservableObject`, not the iOS-17 Observation framework): every bump
+    // fires `objectWillChange`, re-runs this body, and the new value as the
+    // subtree identity forces the full re-render (see header).
+    @ObservedObject private var strings = ThemeKitStrings.observable
+
     func body(content: Content) -> some View {
-        // Reading `observable.value` during body registers this view with
-        // Observation, so every revision bump re-runs it; using the value as
-        // the subtree identity then forces the full re-render (see header).
         let locale = ThemeKitStrings.effectiveLocale
         return content
             .environment(\.locale, locale)
             .environment(\.layoutDirection, locale.themeKitLayoutDirection)
-            .id(ThemeKitStrings.observable.value)
+            .id(strings.value)
     }
 }
 
 extension Locale {
+    /// The bare language subtag ("tr" from "tr_TR" / "ar-SA" / "zh-Hant-TW") —
+    /// iOS-15-safe stand-in for `language.languageCode?.identifier`, which is
+    /// iOS 16+ (ADR-0007 §D2 single-path Locale parsing).
+    var themeKitLanguageCode: String? {
+        let subtag = identifier.components(separatedBy: CharacterSet(charactersIn: "_-")).first ?? ""
+        return subtag.isEmpty ? nil : subtag
+    }
+
     /// The layout direction this locale's language writes in —
     /// `.rightToLeft` for ar/he/fa/ur/…, else `.leftToRight`.
+    /// (`Locale.characterDirection(forLanguage:)` instead of the iOS-16-only
+    /// `language.characterDirection` — same ICU data, iOS-15-safe.)
     var themeKitLayoutDirection: LayoutDirection {
-        language.characterDirection == .rightToLeft ? .rightToLeft : .leftToRight
+        let direction = Locale.characterDirection(forLanguage: themeKitLanguageCode ?? identifier)
+        return direction == .rightToLeft ? .rightToLeft : .leftToRight
     }
 }

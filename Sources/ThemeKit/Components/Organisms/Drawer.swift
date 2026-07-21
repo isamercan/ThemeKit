@@ -90,19 +90,19 @@ private extension Edge {
 /// The panel's rounded shape: only the two corners on the *exposed* edge (opposite
 /// the entry edge) are rounded, so the drawer reads as flush against the screen
 /// edge it slid from. Corner terms are leading/trailing, so it mirrors under RTL.
-private func drawerShape(entry edge: Edge, radius r: CGFloat) -> UnevenRoundedRectangle {
+private func drawerShape(entry edge: Edge, radius r: CGFloat) -> ThemeUnevenRoundedRect {
     switch edge {
     case .bottom:
-        return UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: 0,
+        return ThemeUnevenRoundedRect(topLeadingRadius: r, bottomLeadingRadius: 0,
                                       bottomTrailingRadius: 0, topTrailingRadius: r, style: .continuous)
     case .top:
-        return UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: r,
+        return ThemeUnevenRoundedRect(topLeadingRadius: 0, bottomLeadingRadius: r,
                                       bottomTrailingRadius: r, topTrailingRadius: 0, style: .continuous)
     case .leading:
-        return UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0,
+        return ThemeUnevenRoundedRect(topLeadingRadius: 0, bottomLeadingRadius: 0,
                                       bottomTrailingRadius: r, topTrailingRadius: r, style: .continuous)
     case .trailing:
-        return UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: r,
+        return ThemeUnevenRoundedRect(topLeadingRadius: r, bottomLeadingRadius: r,
                                       bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous)
     }
 }
@@ -350,12 +350,18 @@ public extension View {
 /// Imperative drawer presenter. Install once with `.drawerHost()`, then from any
 /// descendant view:
 ///
-///     @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
+///     @EnvironmentObject var drawer: DrawerPresenter
 ///     drawer.present(edge: .bottom) { Drawer { MenuView() } }
 ///     drawer.dismiss()
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `DrawerPresenter` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > read it with `@EnvironmentObject` — `@Environment(DrawerPresenter.self)`
+/// > will not compile — and if you own an instance yourself, hold it as
+/// > `@StateObject` (NOT `@State`: with `@State` it still compiles but views
+/// > silently stop updating).
 @MainActor
-@Observable
-public final class DrawerPresenter {
+public final class DrawerPresenter: ObservableObject {
 
     struct Request: Identifiable {
         let id = UUID()
@@ -365,7 +371,7 @@ public final class DrawerPresenter {
         let content: AnyView
     }
 
-    var current: Request?
+    @Published var current: Request?
 
     public init() {}
 
@@ -385,14 +391,14 @@ public final class DrawerPresenter {
 }
 
 private struct DrawerHostModifier: ViewModifier {
-    @State private var presenter = DrawerPresenter()
+    @StateObject private var presenter = DrawerPresenter()
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content
-            .environment(presenter)
+            .environmentObject(presenter)
             .overlay {
                 if let request = presenter.current {
                     DrawerContainer(edge: request.edge, width: request.width,
@@ -413,61 +419,66 @@ public extension View {
 }
 
 #Preview("Declarative") {
-    // Presentation organism — each cell pins `isPresented: .constant(true)` so a
-    // single frame shows the slid-in panel (scrim + glass chrome) per color scheme.
-    @Previewable @Environment(\.theme) var theme
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // Presentation organism — each cell pins `isPresented: .constant(true)` so a
+            // single frame shows the slid-in panel (scrim + glass chrome) per color scheme.
 
-    func bodyText() -> some View {
-        Text("Lorem ipsum dolor sit amet consectetur. Duis purus viverra nulla feugiat orci. Convallis blandit a habitasse aenean pellentesque.")
-            .textStyle(.bodyBase400)
-            .foregroundStyle(theme.text(.textSecondary))
-    }
-    func actions() -> some View {
-        HStack(spacing: Theme.SpacingKey.sm.value) {
-            ThemeButton("Cancel") {}.variant(.ghost).size(.small)
-            ThemeButton("Done") {}.size(.small)
-        }
-    }
+            func bodyText() -> some View {
+                Text("Lorem ipsum dolor sit amet consectetur. Duis purus viverra nulla feugiat orci. Convallis blandit a habitasse aenean pellentesque.")
+                    .textStyle(.bodyBase400)
+                    .foregroundStyle(theme.text(.textSecondary))
+            }
+            func actions() -> some View {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    ThemeButton("Cancel") {}.variant(.ghost).size(.small)
+                    ThemeButton("Done") {}.size(.small)
+                }
+            }
 
-    return PreviewMatrix("Drawer") {
-        PreviewCase("Bottom sheet · handle (pinned open)") {
-            Color.clear.frame(height: 300)
-                .drawer(isPresented: .constant(true), edge: .bottom) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Bottom drawer") }
-                        .footer { actions() }
+            return PreviewMatrix("Drawer") {
+                PreviewCase("Bottom sheet · handle (pinned open)") {
+                    Color.clear.frame(height: 300)
+                        .drawer(isPresented: .constant(true), edge: .bottom) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Bottom drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Top sheet") {
-            Color.clear.frame(height: 300)
-                .drawer(isPresented: .constant(true), edge: .top) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Top drawer") }
-                        .footer { actions() }
+                PreviewCase("Top sheet") {
+                    Color.clear.frame(height: 300)
+                        .drawer(isPresented: .constant(true), edge: .top) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Top drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Trailing · full height") {
-            Color.clear.frame(height: 380)
-                .drawer(isPresented: .constant(true), edge: .trailing, width: 300) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Right drawer") }
-                        .footer { actions() }
+                PreviewCase("Trailing · full height") {
+                    Color.clear.frame(height: 380)
+                        .drawer(isPresented: .constant(true), edge: .trailing, width: 300) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Right drawer") }
+                                .footer { actions() }
+                        }
                 }
-        }
-        PreviewCase("Leading · full height") {
-            Color.clear.frame(height: 380)
-                .drawer(isPresented: .constant(true), edge: .leading, width: 300) {
-                    Drawer { bodyText() }
-                        .heading { Text(verbatim: "Left drawer") }
-                        .footer { actions() }
+                PreviewCase("Leading · full height") {
+                    Color.clear.frame(height: 380)
+                        .drawer(isPresented: .constant(true), edge: .leading, width: 300) {
+                            Drawer { bodyText() }
+                                .heading { Text(verbatim: "Left drawer") }
+                                .footer { actions() }
+                        }
                 }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Imperative host") {
     struct Demo: View {
-        @Environment(DrawerPresenter.self) var drawer: DrawerPresenter
+        @EnvironmentObject var drawer: DrawerPresenter
         var body: some View {
             PrimaryButton("Present (bottom)") {
                 drawer.present(edge: .bottom) {

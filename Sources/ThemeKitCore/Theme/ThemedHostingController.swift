@@ -22,7 +22,7 @@ import UIKit
 /// ```
 public final class ThemedHostingController<Content: View>: UIHostingController<AnyView> {
     public init(rootView: Content) {
-        super.init(rootView: AnyView(rootView.environment(Theme.shared)))
+        super.init(rootView: AnyView(rootView.environment(\.theme, Theme.shared)))
     }
 
     @MainActor @preconcurrency required dynamic init?(coder aDecoder: NSCoder) {

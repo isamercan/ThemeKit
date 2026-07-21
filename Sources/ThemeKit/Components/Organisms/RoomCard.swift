@@ -63,7 +63,7 @@ public struct RoomCard: View {
 
     /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -184,42 +184,52 @@ public extension RoomCard {
 }
 
 #Preview {
-    @Previewable @State var selected = true
-    PreviewMatrix("RoomCard") {
-        PreviewCase("Full · features + discount + badge + CTA") {
-            RoomCard(name: "Deluxe Room, Sea View")
-                .board("All-inclusive").occupancy("2 adults, 1 child")
-                .features([
-                    FareFeature("Free cancellation", systemImage: "checkmark.circle", status: .included),
-                    FareFeature("Breakfast included", systemImage: "cup.and.saucer", status: .included),
-                ])
-                .original(12_000).discountBadge("-20%").price(9_600).unit("/ night")
-                .badge("Last 2").onSelect { }
-        }
-        PreviewCase("Radio selection · selected") {
-            RoomCard(name: "Standard Room, Garden View")
-                .board("Bed & breakfast").occupancy("2 adults")
-                .price(6_400).unit("/ night")
-                .selection($selected)
-        }
-        PreviewCase("Minimal · name only") {
-            RoomCard(name: "Family Suite")
+    struct Demo: View {
+        @State var selected = true
+        var body: some View {
+            PreviewMatrix("RoomCard") {
+                PreviewCase("Full · features + discount + badge + CTA") {
+                    RoomCard(name: "Deluxe Room, Sea View")
+                        .board("All-inclusive").occupancy("2 adults, 1 child")
+                        .features([
+                            FareFeature("Free cancellation", systemImage: "checkmark.circle", status: .included),
+                            FareFeature("Breakfast included", systemImage: "cup.and.saucer", status: .included),
+                        ])
+                        .original(12_000).discountBadge("-20%").price(9_600).unit("/ night")
+                        .badge("Last 2").onSelect { }
+                }
+                PreviewCase("Radio selection · selected") {
+                    RoomCard(name: "Standard Room, Garden View")
+                        .board("Bed & breakfast").occupancy("2 adults")
+                        .price(6_400).unit("/ night")
+                        .selection($selected)
+                }
+                PreviewCase("Minimal · name only") {
+                    RoomCard(name: "Family Suite")
+                }
+            }
         }
     }
+    return Demo()
 }
 
 #Preview("Outlined style + selection") {
-    @Previewable @State var selected = true
-    VStack(spacing: 12) {
-        RoomCard(name: "Standard Room, Garden View")
-            .board("Bed & breakfast").occupancy("2 adults")
-            .price(6_400).unit("/ night")
-            .selection($selected)
-        RoomCard(name: "Family Suite")
-            .board("Half board").occupancy("2 adults, 2 children")
-            .price(14_200).unit("/ night")
-            .selection(.constant(false))
+    struct Demo: View {
+        @State var selected = true
+        var body: some View {
+            VStack(spacing: 12) {
+                RoomCard(name: "Standard Room, Garden View")
+                    .board("Bed & breakfast").occupancy("2 adults")
+                    .price(6_400).unit("/ night")
+                    .selection($selected)
+                RoomCard(name: "Family Suite")
+                    .board("Half board").occupancy("2 adults, 2 children")
+                    .price(14_200).unit("/ night")
+                    .selection(.constant(false))
+            }
+            .cardStyle(.outlined)
+            .padding()
+        }
     }
-    .cardStyle(.outlined)
-    .padding()
+    return Demo()
 }

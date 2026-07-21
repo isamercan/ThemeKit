@@ -222,19 +222,20 @@ public struct TripSearchCard: View {
             .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, selection blocked
     }
 
-    // MARK: Route (AirportPicker ×2 + SwapButton; ViewThatFits for a11y sizes)
+    // MARK: Route (AirportPicker ×2 + SwapButton; AdaptiveFit for a11y sizes)
 
     /// Horizontal at regular sizes; falls to a stacked layout with a floating
     /// swap at accessibility Dynamic Type sizes (§9.6). Both arrangements are
     /// `HStack`/`VStack`-composed, so they mirror under RTL for free. Handed
     /// to styles welded (ADR-0004 §9.2) — the fallback travels with the unit.
     private var routeFields: some View {
-        ViewThatFits(in: .horizontal) {
+        AdaptiveFit {
             HStack(spacing: Theme.SpacingKey.sm.value) {
                 originPicker
                 if showsSwapValue { swapControl("arrow.left.arrow.right") }
                 destinationPicker
             }
+        } compact: {
             VStack(spacing: Theme.SpacingKey.xs.value) {
                 originPicker
                 destinationPicker

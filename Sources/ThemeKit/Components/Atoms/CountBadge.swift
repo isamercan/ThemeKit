@@ -113,23 +113,28 @@ public extension Ribbon {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("CountBadge") {
-        PreviewCase("Count") {
-            Image(systemName: "bell.fill").font(.title).countBadge(5).padding(12)
-        }
-        PreviewCase("Overflow (99+)") {
-            Image(systemName: "envelope.fill").font(.title).countBadge(128).padding(12)
-        }
-        PreviewCase("Dot") {
-            Image(systemName: "cart.fill").font(.title).dotBadge(color: .success).padding(12)
-        }
-        PreviewCase("Ribbon") {
-            Ribbon("New") {
-                RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("CountBadge") {
+                PreviewCase("Count") {
+                    Image(systemName: "bell.fill").font(.title).countBadge(5).padding(12)
+                }
+                PreviewCase("Overflow (99+)") {
+                    Image(systemName: "envelope.fill").font(.title).countBadge(128).padding(12)
+                }
+                PreviewCase("Dot") {
+                    Image(systemName: "cart.fill").font(.title).dotBadge(color: .success).padding(12)
+                }
+                PreviewCase("Ribbon") {
+                    Ribbon("New") {
+                        RoundedRectangle(cornerRadius: 12).fill(theme.background(.bgElevatorTertiary)).frame(width: 100, height: 70)
+                    }
+                    .accent(.error)
+                    .padding(12)
+                }
             }
-            .accent(.error)
-            .padding(12)
         }
     }
+    return Demo()
 }

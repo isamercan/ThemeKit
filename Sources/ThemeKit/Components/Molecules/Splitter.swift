@@ -47,13 +47,22 @@ public struct Splitter<First: View, Second: View>: View {
             let usable = max(1, total - handle)
             let firstMain = usable * fraction
             let secondMain = usable * (1 - fraction)
-            let stack = axis == .horizontal
-                ? AnyLayout(HStackLayout(spacing: 0))
-                : AnyLayout(VStackLayout(spacing: 0))
-            stack {
-                pane(first, main: firstMain, geo: geo.size)
-                divider(usable: usable)
-                pane(second, main: secondMain, geo: geo.size)
+            // iOS 15.6 floor: `AnyLayout(H/VStackLayout)` is iOS 16 — branch
+            // into explicit stacks instead. The axis is fixed at init, so the
+            // identity swap between branches never animates in practice
+            // (Reduce-Motion-safe either way).
+            if axis == .horizontal {
+                HStack(spacing: 0) {
+                    pane(first, main: firstMain, geo: geo.size)
+                    divider(usable: usable)
+                    pane(second, main: secondMain, geo: geo.size)
+                }
+            } else {
+                VStack(spacing: 0) {
+                    pane(first, main: firstMain, geo: geo.size)
+                    divider(usable: usable)
+                    pane(second, main: secondMain, geo: geo.size)
+                }
             }
         }
     }
@@ -132,43 +141,53 @@ public extension Splitter {
 }
 
 #Preview {
-    @Previewable @Environment(\.theme) var theme
-    PreviewMatrix("Splitter") {
-        PreviewCase("Horizontal") {
-            Splitter(.horizontal) {
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            PreviewMatrix("Splitter") {
+                PreviewCase("Horizontal") {
+                    Splitter(.horizontal) {
+                        Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+                    } second: {
+                        Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+                    }
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
+                }
+                // The `.vertical()` modifier twin of `Splitter(.vertical) { … }`.
+                PreviewCase("Vertical") {
+                    Splitter {
+                        Text("Map").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
+                    } second: {
+                        Text("List").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
+                    }
+                    .vertical()
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
+                }
+            }
+            .environment(\.theme, Theme.shared)
+        }
+    }
+    return Demo()
+}
+
+#Preview("RTL") {
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            // Sidebar (first pane) sits on the RIGHT; dragging the divider left grows it.
+            Splitter(.horizontal, initialFraction: 0.35) {
                 Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
             } second: {
                 Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
             }
             .frame(height: 200)
             .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
-        }
-        // The `.vertical()` modifier twin of `Splitter(.vertical) { … }`.
-        PreviewCase("Vertical") {
-            Splitter {
-                Text("Map").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
-            } second: {
-                Text("List").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
-            }
-            .vertical()
-            .frame(height: 200)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
+            .padding()
+            .environment(\.theme, Theme.shared)
+            .environment(\.layoutDirection, .rightToLeft)
         }
     }
-    .environment(Theme.shared)
-}
-
-#Preview("RTL") {
-    @Previewable @Environment(\.theme) var theme
-    // Sidebar (first pane) sits on the RIGHT; dragging the divider left grows it.
-    Splitter(.horizontal, initialFraction: 0.35) {
-        Text("Sidebar").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgElevatorPrimary))
-    } second: {
-        Text("Detail").frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.background(.bgWhite))
-    }
-    .frame(height: 200)
-    .clipShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value))
-    .padding()
-    .environment(Theme.shared)
-    .environment(\.layoutDirection, .rightToLeft)
+    return Demo()
 }

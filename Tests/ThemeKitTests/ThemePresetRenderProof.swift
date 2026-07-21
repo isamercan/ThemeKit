@@ -13,7 +13,7 @@ final class ThemePresetRenderProof: XCTestCase {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["RENDER_PRESETS"] == "1", "set RENDER_PRESETS=1")
 
         let grid = ThemePicker(selection: .constant("dracula"), onSelect: { _ in })
-            .environment(Theme.shared)
+            .environment(\.theme, Theme.shared)
             .frame(width: 760)
             .padding(20)
             .background(Color(white: 0.96))

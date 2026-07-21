@@ -71,7 +71,7 @@ public struct PriceTrendChart: View {
     private var selectionFg: Color { selectionColorToken.map { theme.resolve($0).onSolid } ?? theme.text(.textSecondaryInverse) }
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
     private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
 
@@ -152,7 +152,7 @@ public struct PriceTrendChart: View {
                     .frame(height: 14)
             }
             Spacer(minLength: 0)
-            UnevenRoundedRectangle(topLeadingRadius: cornerRole.value, topTrailingRadius: cornerRole.value, style: .continuous)
+            ThemeUnevenRoundedRect(topLeadingRadius: cornerRole.value, topTrailingRadius: cornerRole.value, style: .continuous)
                 .fill(barFill)
                 .frame(height: max(6, barAreaHeight * fraction(point.price)))
             labelBlock(point, isSelected: isSelected)
@@ -242,18 +242,23 @@ public extension PriceTrendChart {
 }
 
 #Preview {
-    @Previewable @State var sel = 6
-    let points: [PriceTrendPoint] = (12...40).map {
-        PriceTrendPoint("\($0)", sublabel: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][$0 % 7], price: Decimal(1400 + ($0 * 37) % 700))
-    }
-    PreviewMatrix("PriceTrendChart") {
-        PreviewCase("Scrollable + axis + values") {
-            PriceTrendChart(points, selection: $sel).title("July").currency("USD")
-                .scrollable().showsAxis().showsValues().onPage(prev: {}, next: {})
+    struct Demo: View {
+        @State var sel = 6
+        var body: some View {
+            let points: [PriceTrendPoint] = (12...40).map {
+                PriceTrendPoint("\($0)", sublabel: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][$0 % 7], price: Decimal(1400 + ($0 * 37) % 700))
+            }
+            PreviewMatrix("PriceTrendChart") {
+                PreviewCase("Scrollable + axis + values") {
+                    PriceTrendChart(points, selection: $sel).title("July").currency("USD")
+                        .scrollable().showsAxis().showsValues().onPage(prev: {}, next: {})
+                }
+                PreviewCase("Fitted week, flat accent") {
+                    PriceTrendChart(Array(points.prefix(7)), selection: $sel)
+                        .gradient(false).accent(.info)
+                }
+            }
         }
-        PreviewCase("Fitted week, flat accent") {
-            PriceTrendChart(Array(points.prefix(7)), selection: $sel)
-                .gradient(false).accent(.info)
-        }
     }
+    return Demo()
 }

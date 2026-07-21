@@ -358,7 +358,8 @@ private struct TrackerEstimateRow: View {
             Spacer(minLength: configuration.spacing(.md))
             HStack(spacing: configuration.spacing(.xs)) {
                 Text(configuration.time(scheduled))
-                    .textStyle(.bodyBase400).strikethrough().foregroundStyle(theme.text(.textTertiary))
+                    .strikethrough()   // Text-level: before .textStyle (View form is iOS 16+)
+                    .textStyle(.bodyBase400).foregroundStyle(theme.text(.textTertiary))
                 Text(configuration.time(estimate))
                     .textStyle(.labelBase600).foregroundStyle(theme.resolve(configuration.tone()).base)
             }

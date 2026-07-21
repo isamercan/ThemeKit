@@ -34,7 +34,7 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **245** components (52 atoms · 109 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **246** components (52 atoms · 110 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
@@ -821,7 +821,7 @@ SeatCell(seat, size:, isSelected:, isSelectable:, isRecommended:, assignedInitia
 
 ---
 
-# Molecules (109)
+# Molecules (110)
 
 _Compositions of atoms — inputs, buttons, selectors, small layouts._
 
@@ -1520,6 +1520,12 @@ Flex(content:)
 - `.justify` — Main-axis distribution (Ant Flex `justify`).
 - `.align` — Cross-axis alignment (Ant Flex `align`).
 - `.wrap` — Wrap onto multiple lines when horizontal (Ant Flex `wrap`).
+
+## FlowLayout
+
+```swift
+FlowLayout(spacing:, lineSpacing:, alignment:, content:)
+```
 
 ## GuestSelector
 
@@ -4031,7 +4037,7 @@ PassengerForm(title, draft:)
 - `.sectionTitles` — Overrides the section titles.
 - `.layout` — Section chrome: `.stacked` (two `Fieldset`s, default), `.flat` (bare fields + plain titles, no fieldset chrome), or `.grouped` (everything in one `Fieldset`).
 - `.genders` — The gender selector's options (default: all ``PassengerGender`` cases) — e.g.
-- `.columns` — `2` renders given/family side-by-side (via `ViewThatFits`, so narrow widths still stack); accessibility type sizes always fall back to stacked.
+- `.columns` — `2` renders given/family side-by-side (via `AdaptiveFit`, so narrow widths still stack); accessibility type sizes always fall back to stacked.
 
 ## PaymentMethodSelector
 

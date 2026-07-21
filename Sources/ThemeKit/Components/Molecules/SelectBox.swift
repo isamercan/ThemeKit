@@ -128,7 +128,7 @@ public struct SelectBox<Option: Hashable>: View {
         }
         // Selection = editing end: sync the external focus off and fire the
         // form-wiring hook (`.field(_:in:)`) with the chosen option's title.
-        .onChange(of: selection) { _, newValue in
+        .onChangeCompat(of: selection) { _, newValue in
             if externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             onEditingEnd?(newValue.map(optionTitle) ?? "")
         }
@@ -226,35 +226,40 @@ public extension SelectBox {
 }
 
 #Preview {
-    @Previewable @State var country: String?
-    PreviewMatrix("SelectBox") {
-        PreviewCase("Hint") {
-            SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
-                .hint("Pick your country")
-        }
-        PreviewCase("Error") {
-            SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
-                .errorText("Required")
-        }
-        // Chrome via the shared FieldStyle axis.
-        PreviewCase("Underlined") {
-            SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
-                .fieldStyle(.underlined)
-        }
-        // Family size ramp (C1) — aligns with a `.small` TextInput beside it.
-        PreviewCase("Compact (C1)") {
-            SelectBox("Compact", options: ["Turkey", "Germany"], selection: $country) { $0 }
-                .size(.small)
-        }
-        // Required indicator (E2) — asterisk + ", required" for VoiceOver.
-        PreviewCase("Required (E2)") {
-            SelectBox("Region", options: ["EMEA", "APAC"], selection: $country) { $0 }
-                .required()
-        }
-        // Read-only (E1): normal chrome + value, menu blocked.
-        PreviewCase("Read-only (E1)") {
-            SelectBox("Country (submitted)", options: ["Turkey", "Germany"], selection: .constant("Turkey")) { $0 }
-                .readOnly()
+    struct Demo: View {
+        @State var country: String?
+        var body: some View {
+            PreviewMatrix("SelectBox") {
+                PreviewCase("Hint") {
+                    SelectBox("Country", options: ["Turkey", "Germany", "France"], selection: $country) { $0 }
+                        .hint("Pick your country")
+                }
+                PreviewCase("Error") {
+                    SelectBox("City", options: ["A", "B"], selection: .constant(nil)) { $0 }
+                        .errorText("Required")
+                }
+                // Chrome via the shared FieldStyle axis.
+                PreviewCase("Underlined") {
+                    SelectBox("Underlined", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                        .fieldStyle(.underlined)
+                }
+                // Family size ramp (C1) — aligns with a `.small` TextInput beside it.
+                PreviewCase("Compact (C1)") {
+                    SelectBox("Compact", options: ["Turkey", "Germany"], selection: $country) { $0 }
+                        .size(.small)
+                }
+                // Required indicator (E2) — asterisk + ", required" for VoiceOver.
+                PreviewCase("Required (E2)") {
+                    SelectBox("Region", options: ["EMEA", "APAC"], selection: $country) { $0 }
+                        .required()
+                }
+                // Read-only (E1): normal chrome + value, menu blocked.
+                PreviewCase("Read-only (E1)") {
+                    SelectBox("Country (submitted)", options: ["Turkey", "Germany"], selection: .constant("Turkey")) { $0 }
+                        .readOnly()
+                }
+            }
         }
     }
+    return Demo()
 }

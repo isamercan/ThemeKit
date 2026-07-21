@@ -74,17 +74,22 @@ public extension FilterRow {
 }
 
 #Preview {
-    @Previewable @State var a = true
-    @Previewable @State var b = false
-    PreviewMatrix("FilterRow") {
-        PreviewCase("Stacked · count + separator") {
-            VStack(spacing: 0) {
-                FilterRow("Direct", isOn: $a).count(128).showsSeparator()
-                FilterRow("1 stop", isOn: $b).count(64)
+    struct Demo: View {
+        @State var a = true
+        @State var b = false
+        var body: some View {
+            PreviewMatrix("FilterRow") {
+                PreviewCase("Stacked · count + separator") {
+                    VStack(spacing: 0) {
+                        FilterRow("Direct", isOn: $a).count(128).showsSeparator()
+                        FilterRow("1 stop", isOn: $b).count(64)
+                    }
+                }
+                PreviewCase("Leading icon") {
+                    FilterRow("Free Wi-Fi", isOn: $a).icon("wifi").count(42)
+                }
             }
         }
-        PreviewCase("Leading icon") {
-            FilterRow("Free Wi-Fi", isOn: $a).icon("wifi").count(42)
-        }
     }
+    return Demo()
 }

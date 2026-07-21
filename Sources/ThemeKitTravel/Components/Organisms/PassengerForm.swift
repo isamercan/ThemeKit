@@ -148,9 +148,10 @@ public struct PassengerForm: View {
     /// ISO 3166-1 region codes for the nationality selector, sorted by their
     /// localized display name in the environment locale.
     private var nationalityCodes: [String] {
+        // `NSLocale.isoCountryCodes` — same ICU data as the iOS-16-only
+        // `Locale.Region.isoRegions`, already country-level (ADR-0007 §D2 rule 1).
         let codes = explicitNationalities
-            ?? Locale.Region.isoRegions
-                .map(\.identifier)
+            ?? NSLocale.isoCountryCodes
                 .filter { $0.count == 2 }   // countries — continents/macroregions are numeric (e.g. "150")
         return codes.sorted { regionName($0) < regionName($1) }
     }
@@ -190,7 +191,7 @@ public struct PassengerForm: View {
             // header note): same gate as `.field(_:in:)` — only once the
             // form has validated the field (a failed submit or a prior
             // live pass).
-            .onChange(of: draft) { _, newDraft in
+            .onChangeCompat(of: draft) { _, newDraft in
                 guard let form else { return }
                 let values = newDraft.formValues
                 for field in Self.canonicalRevalidated
@@ -254,7 +255,7 @@ public struct PassengerForm: View {
     }
 
     /// The ordered fields; when pairing, the two name fields collapse into one
-    /// `ViewThatFits` row at the first name's position (narrow widths fall
+    /// `AdaptiveFit` row at the first name's position (narrow widths fall
     /// back to stacked automatically).
     @ViewBuilder
     private func fieldRun(_ fields: [PassengerFormField]) -> some View {
@@ -276,11 +277,12 @@ public struct PassengerForm: View {
 
     /// Given/family side-by-side when they fit; stacked otherwise.
     private var namePairRow: some View {
-        ViewThatFits(in: .horizontal) {
+        AdaptiveFit {
             HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
                 givenNameField
                 familyNameField
             }
+        } compact: {
             VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
                 givenNameField
                 familyNameField
@@ -483,7 +485,7 @@ public extension PassengerForm {
         copy { $0.genderOptions = options.isEmpty ? Array(PassengerGender.allCases) : options }
     }
 
-    /// `2` renders given/family side-by-side (via `ViewThatFits`, so narrow
+    /// `2` renders given/family side-by-side (via `AdaptiveFit`, so narrow
     /// widths still stack); accessibility type sizes always fall back to
     /// stacked. Default `1`.
     func columns(_ n: Int) -> Self { copy { $0.columnsValue = min(2, max(1, n)) } }

@@ -31,7 +31,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) adults",
             "%@ adults", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:359")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:360")
         assertKey(
             "\(d) card ending \(d)",
             "%@ card ending %@", 2,
@@ -39,7 +39,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) children",
             "%@ children", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:363")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:364")
         assertKey(
             "\(d) from \(d) to \(d)",
             "%@ from %@ to %@", 3,
@@ -47,7 +47,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) infants",
             "%@ infants", 1,
-            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:368")
+            site: "Sources/ThemeKitTravel/Components/Organisms/TripSearchCard.swift:369")
         assertKey(
             "\(d) installments",
             "%@ installments", 1,
@@ -79,7 +79,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) percent",
             "%@ percent", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Splitter.swift:98")
+            site: "Sources/ThemeKit/Components/Molecules/Splitter.swift:107")
         assertKey(
             "\(d) results",
             "%@ results", 1,
@@ -123,7 +123,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% off",
             "%@%% off", 1,
-            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:188")
+            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:187")
     }
 
     func testInterpolatedKeyShapes2() {
@@ -142,7 +142,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d): scheduled \(d), estimated \(d)",
             "%@: scheduled %@, estimated %@", 3,
-            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:368")
+            site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:369")
         assertKey(
             "\(d)h \(d)m",
             "%@h %@m", 2,
@@ -158,7 +158,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Area chart with series \(d).",
             "Area chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/AreaChart.swift:89")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/AreaChart.swift:106")
         assertKey(
             "At least \(d) characters",
             "At least %@ characters", 1,
@@ -174,7 +174,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Bar chart with series \(d).",
             "Bar chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/BarChart.swift:88")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/BarChart.swift:90")
         assertKey(
             "Barcode \(d)",
             "Barcode %@", 1,
@@ -206,11 +206,11 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Directions to \(d)",
             "Directions to %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/LocationCard.swift:123")
+            site: "Sources/ThemeKit/Components/Organisms/LocationCard.swift:132")
         assertKey(
             "Donut chart with slices \(d).",
             "Donut chart with slices %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/DonutChart.swift:76")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/DonutChart.swift:84")
         assertKey(
             "Download \(d)",
             "Download %@", 1,
@@ -226,7 +226,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Line chart with series \(d).",
             "Line chart with series %@.", 1,
-            site: "Sources/ThemeKit/Components/Molecules/Charts/LineChart.swift:107")
+            site: "Sources/ThemeKit/Components/Molecules/Charts/LineChart.swift:113")
     }
 
     func testInterpolatedKeyShapes3() {
@@ -265,7 +265,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Remove \(d)",
             "Remove %@", 1,
-            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:203")
+            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:205")
         assertKey(
             "Remove card ending \(d)",
             "Remove card ending %@", 1,

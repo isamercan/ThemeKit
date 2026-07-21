@@ -30,9 +30,12 @@ struct DemoApp: App {
     }
 
     /// The Showcase collage is a wide-canvas (iPad) experience; on iPhone the Demo
-    /// keeps its original tabbed catalog (``ContentView``).
+    /// keeps its original tabbed catalog (``ContentView``). The Showcase leans on
+    /// iOS-17 API (paged full-screen hero, `onChange(of:){old,new}`, overlay
+    /// hiding), so below 17 the iPad falls back to the tabbed catalog too
+    /// (ADR-0007 §D4 — migrating it wholesale is disproportionate).
     @ViewBuilder private var rootView: some View {
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if #available(iOS 17.0, *), UIDevice.current.userInterfaceIdiom == .pad {
             ShowcaseView()
         } else {
             ContentView()

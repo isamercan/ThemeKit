@@ -344,11 +344,15 @@ public typealias UploadOperation = (@escaping UploadProgress) async throws -> Vo
 /// in `.uploading(0)`, runs the async operation (reporting progress), then settles
 /// to `.done` or `.failed`. Mirrors the toast `toastTask` pattern. Bind it to the
 /// UI with `UploadList(controller:)`.
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `UploadController` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > own it as `@StateObject var uploads = UploadController()` — NOT `@State`,
+/// > which still compiles but silently stops updating the views that render it.
 @MainActor
-@Observable
-public final class UploadController {
+public final class UploadController: ObservableObject {
 
-    public private(set) var files: [UploadFile] = []
+    @Published public private(set) var files: [UploadFile] = []
     private var operations: [UUID: UploadOperation] = [:]
 
     public init() {}
@@ -396,7 +400,9 @@ public final class UploadController {
 
 /// `Upload` wired to an `UploadController` — renders its files with remove + retry.
 public struct UploadList: View {
-    private var controller: UploadController
+    // `@ObservedObject` (caller-owned controller) so `@Published files` changes
+    // re-render the list (ADR-0007 §D3).
+    @ObservedObject private var controller: UploadController
     private let onPick: () -> Void
 
     // Appearance/config — mutated only through the modifiers below (R2).
@@ -485,7 +491,7 @@ public extension UploadList {
 
 #Preview("Controller") {
     struct Demo: View {
-        @State private var uploads = UploadController()
+        @StateObject private var uploads = UploadController()
         var body: some View {
             UploadList(controller: uploads) {
                 Task {

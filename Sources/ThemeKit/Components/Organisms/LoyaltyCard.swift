@@ -79,7 +79,7 @@ public struct LoyaltyCard: View {
         .contentShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
         .onTapGesture {
             guard flippable, membership != nil else { return }
-            withAnimation(Animation.spring(.smooth).ifMotionAllowed(reduceMotion)) { flipped.toggle() }
+            withAnimation(ThemeMotion.smooth.ifMotionAllowed(reduceMotion)) { flipped.toggle() }
         }
         .accessibilityAddTraits(flippable && membership != nil ? .isButton : [])
         .accessibilityHint(flippable && membership != nil
@@ -105,7 +105,7 @@ public struct LoyaltyCard: View {
             HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
                 Text(points.formatted(.number.grouping(.automatic).locale(locale)))
                     .textStyle(.heading2xl).foregroundStyle(onCard)
-                    .contentTransition(animatesValue && !reduceMotion ? .numericText(value: Double(points)) : .identity)
+                    .numericTextTransitionCompat(animatesValue && !reduceMotion, value: Double(points))
                 Text(unit).textStyle(.bodyBase400).foregroundStyle(onCard.opacity(0.8))
             }
             if let progress { progressView(progress) }

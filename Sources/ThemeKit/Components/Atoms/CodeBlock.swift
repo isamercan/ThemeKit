@@ -117,7 +117,7 @@ public struct CodeBlock: View {
         #endif
         withAnimation(.easeOut(duration: 0.15)) { copied = true }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(nanoseconds: 1_500_000_000)   // 1.5 s (iOS-15-safe form, ADR-0007)
             withAnimation { copied = false }
         }
     }

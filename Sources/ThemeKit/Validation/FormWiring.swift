@@ -10,7 +10,7 @@
 //  `infoMessages + externalFocus + validate` dance:
 //
 //      enum Field { case email, password }
-//      @State var form = FormValidator<Field>([
+//      @StateObject var form = FormValidator<Field>([   // NOT @State — see FormValidator
 //          .email: [.required(), .email()],
 //          .password: [.required(), .minLength(8)],
 //      ])
@@ -134,7 +134,7 @@ public extension SelectBox {
         enum Field { case email, password, country, notes }
 
         @Environment(\.theme) private var theme
-        @State private var form = FormValidator<Field>([
+        @StateObject private var form = FormValidator<Field>([
             .email: [.required(), .email()],
             .password: [.required(), .minLength(8)],
             .country: [.required("Pick a country")],

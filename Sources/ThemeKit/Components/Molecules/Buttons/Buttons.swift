@@ -112,8 +112,8 @@ private struct ThemedButton: View {
                         .transition(.scale.combined(with: .opacity))
                 } else {
                     Text(title)
+                        .underline(kind == .link)   // Text-level: before .textStyle (View form is iOS 16+)
                         .textStyle(textStyle ?? resolvedSize.textStyle)
-                        .underline(kind == .link)
                         .lineLimit(1)              // a button label stays on one line (truncates, never wraps)
                         .transition(.opacity)
                 }
@@ -697,5 +697,5 @@ public extension DangerSoftButton {
         PreviewCase("Full-width CTA") { PrimaryButton("Full-width CTA") {}.fullWidth() }
         PreviewCase("Helper text") { PrimaryButton("Book now") {}.helperText("No charge yet") }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

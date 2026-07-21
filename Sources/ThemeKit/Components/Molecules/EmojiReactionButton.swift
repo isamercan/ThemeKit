@@ -101,9 +101,14 @@ public struct EmojiReactionButton: View {
     private func toggle() {
         reacted.toggle()
         Haptics.tap()
-        // One-shot pop, animated back on completion; skipped under Reduce Motion.
+        // One-shot pop, animated back after the pop settles; skipped under
+        // Reduce Motion. (`withAnimation(_:completion:)` is iOS 17-only — the
+        // token-timed sleep is the single-path 15.6 form, same pattern as
+        // CodeBlock's copy badge. ADR-0007 §D2 rule 1.)
         if reacted, micro, !reduceMotion {
-            withAnimation(Motion.fast.animation) { pop = true } completion: {
+            withAnimation(Motion.fast.animation) { pop = true }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(Motion.fast.duration * 1_000_000_000))
                 withAnimation(Motion.fast.animation) { pop = false }
             }
         }
@@ -129,22 +134,27 @@ public extension EmojiReactionButton {
 }
 
 #Preview {
-    @Previewable @State var liked = false
-    PreviewMatrix("EmojiReactionButton") {
-        PreviewCase("Controlled / reacted / zero") {
-            HStack(spacing: 10) {
-                EmojiReactionButton("👍", count: 12, isReacted: $liked)
-                EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
-                EmojiReactionButton("🔥", count: 0)
-            }
-        }
-        // D8 — size ramp + semantic accent for the reacted state.
-        PreviewCase("Size ramp + semantic accents") {
-            HStack(spacing: 10) {
-                EmojiReactionButton("👍", count: 3, initiallyReacted: true).size(.medium)
-                EmojiReactionButton("❤️", count: 9, initiallyReacted: true).size(.large).accent(.error)
-                EmojiReactionButton("✅", count: 2, initiallyReacted: true).accent(.success)
+    struct Demo: View {
+        @State var liked = false
+        var body: some View {
+            PreviewMatrix("EmojiReactionButton") {
+                PreviewCase("Controlled / reacted / zero") {
+                    HStack(spacing: 10) {
+                        EmojiReactionButton("👍", count: 12, isReacted: $liked)
+                        EmojiReactionButton("🎉", count: 4, initiallyReacted: true)
+                        EmojiReactionButton("🔥", count: 0)
+                    }
+                }
+                // D8 — size ramp + semantic accent for the reacted state.
+                PreviewCase("Size ramp + semantic accents") {
+                    HStack(spacing: 10) {
+                        EmojiReactionButton("👍", count: 3, initiallyReacted: true).size(.medium)
+                        EmojiReactionButton("❤️", count: 9, initiallyReacted: true).size(.large).accent(.error)
+                        EmojiReactionButton("✅", count: 2, initiallyReacted: true).accent(.success)
+                    }
+                }
             }
         }
     }
+    return Demo()
 }

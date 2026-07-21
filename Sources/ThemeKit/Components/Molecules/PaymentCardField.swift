@@ -128,11 +128,11 @@ public struct PaymentCardField: View {
         }
         // `.live` validates every number change; other triggers re-validate once
         // a failure is visible so the error clears as the user fixes it.
-        .onChange(of: number) { _, value in
+        .onChangeCompat(of: number) { _, value in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation(value) }
         }
         // `.editingEnd` / `.submit` fire when the number row loses focus.
-        .onChange(of: focused) { old, now in
+        .onChangeCompat(of: focused) { old, now in
             if old == .number, now != .number, effectiveValidationTrigger != .live { runValidation(number) }
         }
     }
@@ -196,7 +196,7 @@ public struct PaymentCardField: View {
         // on every row (E1 — distinct from `.disabled`).
         .allowsHitTesting(!isReadOnly)
         .applyKeyboard(keyboard)
-        .onChange(of: binding.wrappedValue) { _, new in
+        .onChangeCompat(of: binding.wrappedValue) { _, new in
             let f = format(new)
             if f != new { binding.wrappedValue = f }
         }
@@ -282,30 +282,35 @@ public extension PaymentCardField {
 }
 
 #Preview {
-    // Interactive group — the matrix wraps representative static states (one frame per cell).
-    @Previewable @State var num = ""
-    @Previewable @State var exp = ""
-    @Previewable @State var cvv = ""
-    @Previewable @State var name = ""
-    PreviewMatrix("PaymentCardField") {
-        PreviewCase("With holder") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).holder($name) }
-        // Swapped chrome: every field row picks up the underlined style.
-        PreviewCase("Underlined") {
-            PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
-                .fieldStyle(.underlined)
-        }
-        // Declarative validation over the card number (E3).
-        PreviewCase("Validation") {
-            PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
-                .validate([.required(), .minLength(19, "Enter the full card number")])
-        }
-        // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
-        PreviewCase("Small") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).size(.small) }
-        // Read-only: values + normal chrome (brand detected), editing suppressed (E1).
-        PreviewCase("Read-only") {
-            PaymentCardField(number: .constant("4111 1111 1111 1111"),
-                             expiry: .constant("12/29"), cvv: .constant("123"))
-                .readOnly()
+    struct Demo: View {
+        @State var num = ""
+        @State var exp = ""
+        @State var cvv = ""
+        @State var name = ""
+        var body: some View {
+            // Interactive group — the matrix wraps representative static states (one frame per cell).
+            PreviewMatrix("PaymentCardField") {
+                PreviewCase("With holder") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).holder($name) }
+                // Swapped chrome: every field row picks up the underlined style.
+                PreviewCase("Underlined") {
+                    PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+                        .fieldStyle(.underlined)
+                }
+                // Declarative validation over the card number (E3).
+                PreviewCase("Validation") {
+                    PaymentCardField(number: $num, expiry: $exp, cvv: $cvv)
+                        .validate([.required(), .minLength(19, "Enter the full card number")])
+                }
+                // Size ramp — explicit `.size(_:)` wins over `FieldDefaults.size`.
+                PreviewCase("Small") { PaymentCardField(number: $num, expiry: $exp, cvv: $cvv).size(.small) }
+                // Read-only: values + normal chrome (brand detected), editing suppressed (E1).
+                PreviewCase("Read-only") {
+                    PaymentCardField(number: .constant("4111 1111 1111 1111"),
+                                     expiry: .constant("12/29"), cvv: .constant("123"))
+                        .readOnly()
+                }
+            }
         }
     }
+    return Demo()
 }

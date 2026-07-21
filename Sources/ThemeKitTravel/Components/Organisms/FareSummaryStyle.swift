@@ -511,29 +511,34 @@ private struct OneLineFareSummaryStyle: FareSummaryStyle {
 }
 
 #Preview("FareSummaryStyle — presets × light/dark") {
-    @Previewable @State var collapsedOpen = true
-    let lines: [FareLine] = [
-        .item("Base fare", 1_100),
-        .item("Taxes & fees", 199, info: "Airport tax + carrier surcharge"),
-        .discount("Member discount", 100),
-        .total("Total", 1_199),
-    ]
-    return PreviewMatrix("FareSummaryStyle") {
-        PreviewCase("List (default)") { FareSummary(lines).onInfo { _ in } }
-        PreviewCase("List · expandable") { FareSummary(lines).onInfo { _ in }.expandable() }
-        PreviewCase("Receipt") { FareSummary(lines).onInfo { _ in }.fareSummaryStyle(.receipt) }
-        PreviewCase("Receipt · expandable") {
-            FareSummary(lines).onInfo { _ in }.expandable().fareSummaryStyle(.receipt)
-        }
-        // `.collapsed` reads isExpanded/toggleExpand directly; pair with `.expandable()`
-        // to start closed (its own uncontrolled default is otherwise `true` — the same
-        // idle value `.list`/`.receipt` carry when expansion was never requested).
-        PreviewCase("Collapsed") { FareSummary(lines).onInfo { _ in }.expandable().fareSummaryStyle(.collapsed) }
-        PreviewCase("Collapsed · open") {
-            FareSummary(lines).onInfo { _ in }.expandable($collapsedOpen).fareSummaryStyle(.collapsed)
-        }
-        PreviewCase("Custom (in-preview)") {
-            FareSummary(lines).expandable().fareSummaryStyle(OneLineFareSummaryStyle())
+    struct Demo: View {
+        @State var collapsedOpen = true
+        var body: some View {
+            let lines: [FareLine] = [
+                .item("Base fare", 1_100),
+                .item("Taxes & fees", 199, info: "Airport tax + carrier surcharge"),
+                .discount("Member discount", 100),
+                .total("Total", 1_199),
+            ]
+            return PreviewMatrix("FareSummaryStyle") {
+                PreviewCase("List (default)") { FareSummary(lines).onInfo { _ in } }
+                PreviewCase("List · expandable") { FareSummary(lines).onInfo { _ in }.expandable() }
+                PreviewCase("Receipt") { FareSummary(lines).onInfo { _ in }.fareSummaryStyle(.receipt) }
+                PreviewCase("Receipt · expandable") {
+                    FareSummary(lines).onInfo { _ in }.expandable().fareSummaryStyle(.receipt)
+                }
+                // `.collapsed` reads isExpanded/toggleExpand directly; pair with `.expandable()`
+                // to start closed (its own uncontrolled default is otherwise `true` — the same
+                // idle value `.list`/`.receipt` carry when expansion was never requested).
+                PreviewCase("Collapsed") { FareSummary(lines).onInfo { _ in }.expandable().fareSummaryStyle(.collapsed) }
+                PreviewCase("Collapsed · open") {
+                    FareSummary(lines).onInfo { _ in }.expandable($collapsedOpen).fareSummaryStyle(.collapsed)
+                }
+                PreviewCase("Custom (in-preview)") {
+                    FareSummary(lines).expandable().fareSummaryStyle(OneLineFareSummaryStyle())
+                }
+            }
         }
     }
+    return Demo()
 }

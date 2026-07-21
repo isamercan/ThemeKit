@@ -351,16 +351,16 @@ private struct ChipsFilterBarChrome: View {
                     }
                 }
                 .padding(.trailing, 4)
-                .scrollTargetLayout()
+                .scrollTargetLayoutCompat()
             }
-            .scrollPosition(id: $scrolledID, anchor: .leading)
+            .scrollPositionCompat(id: $scrolledID, anchor: .leading)
             .mask { overflowMask }
             if let trailing = configuration.trailing {
                 trailing.fixedSize()
             }
         }
         .frame(height: configuration.size.controlHeight)
-        .onChange(of: scrolledID) { _, newID in
+        .onChangeCompat(of: scrolledID) { _, newID in
             // Collapse once the first chip has scrolled past the leading edge. Driven by
             // the anchored item id (not a measured offset), so it's immune to the frame
             // change that collapsing the buttons causes.
@@ -609,34 +609,39 @@ private struct UnderlineFilterBarStyle: FilterBarStyle {
 }
 
 #Preview("FilterBarStyle — presets × light/dark") {
-    @Previewable @State var sel: Set<String> = ["8"]
-    let chips = [
-        QuickFilter("8+ rating", id: "8", systemImage: "star.fill", count: 24),
-        QuickFilter("Seafront", systemImage: "beach.umbrella", count: 9),
-        QuickFilter("All-inclusive", count: 3),
-        QuickFilter("Free cancellation"),
-    ]
-    PreviewMatrix("FilterBarStyle") {
-        PreviewCase("Chips (default)") {
-            FilterBar(chips, selection: $sel)
-                .onFilter { }.onSort { }.onClearAll { }
-                .filterBarStyle(.chips)
-        }
-        PreviewCase("Segmented") {
-            FilterBar(chips, selection: $sel)
-                .onFilter { }.accent(.turquoise)
-                .filterBarStyle(.segmented)
-        }
-        PreviewCase("Stacked") {
-            FilterBar(chips, selection: $sel)
-                .onFilter { }.onSort { }.onClearAll { }
-                .chipStyle(.outlined)
-                .frame(width: 260)
-                .filterBarStyle(.stacked)
-        }
-        PreviewCase("Custom (in-preview)") {
-            FilterBar(chips, selection: $sel)
-                .filterBarStyle(UnderlineFilterBarStyle())
+    struct Demo: View {
+        @State var sel: Set<String> = ["8"]
+        var body: some View {
+            let chips = [
+                QuickFilter("8+ rating", id: "8", systemImage: "star.fill", count: 24),
+                QuickFilter("Seafront", systemImage: "beach.umbrella", count: 9),
+                QuickFilter("All-inclusive", count: 3),
+                QuickFilter("Free cancellation"),
+            ]
+            PreviewMatrix("FilterBarStyle") {
+                PreviewCase("Chips (default)") {
+                    FilterBar(chips, selection: $sel)
+                        .onFilter { }.onSort { }.onClearAll { }
+                        .filterBarStyle(.chips)
+                }
+                PreviewCase("Segmented") {
+                    FilterBar(chips, selection: $sel)
+                        .onFilter { }.accent(.turquoise)
+                        .filterBarStyle(.segmented)
+                }
+                PreviewCase("Stacked") {
+                    FilterBar(chips, selection: $sel)
+                        .onFilter { }.onSort { }.onClearAll { }
+                        .chipStyle(.outlined)
+                        .frame(width: 260)
+                        .filterBarStyle(.stacked)
+                }
+                PreviewCase("Custom (in-preview)") {
+                    FilterBar(chips, selection: $sel)
+                        .filterBarStyle(UnderlineFilterBarStyle())
+                }
+            }
         }
     }
+    return Demo()
 }

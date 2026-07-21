@@ -64,3 +64,28 @@ Register your own Mac and macOS jobs run on it at no per-minute cost:
    `runs-on: [self-hosted, macOS]` in `.github/workflows/ci.yml`.
 
 Keep `lint` on `ubuntu-latest` (Linux minutes are cheap / often free).
+
+## `ios-floor` canary lane (ADR-0007 iOS 15.6 migration)
+
+The `ios-floor` job compile-checks the package at a forced iOS 15.6 deployment
+target while `Package.swift` still declares `.v17`. It is the burndown metric for
+the [iOS 15.6 migration](../IOS156_MIGRATION_PLAN.md) — advisory (`continue-on-error`)
+until the manifest floor flips in Phase 4, then it becomes the plain blocking build.
+
+**Phase 0 spike findings (2026-07-20, Xcode 26 / Swift 6.2):**
+- **Deployment-target override propagates.** `xcodebuild build … IPHONEOS_DEPLOYMENT_TARGET=15.6`
+  reaches the SwiftPM package targets — the swift-frontend invocation compiles at
+  `-target arm64-apple-ios15.6-simulator`. **No `sed` fallback needed**; the build-setting
+  override is authoritative. (The `apple-ios26.0` triple that also appears is the clang
+  *SDK* target, not the deployment floor — expected.)
+- **No installable iOS ≤15.x simulator runtime** exists on the toolchain (only iOS 26.0 is
+  present; ≤15.5 runtimes are legacy-format and uninstallable under Xcode 26). The oldest
+  *installable* runtime for the Phase 4 test lane must be fetched via
+  `xcodebuild -downloadPlatform iOS -buildVersion <ver>` (expected 16.4) — confirms the
+  ADR-0007 §D5 three-layer guardrail (compile-floor gate + oldest-runtime tests + directly
+  snapshot-tested legacy `#available` branches).
+- **Baseline burndown = 5** availability errors, all in `ThemeKitCore` (the gate module the
+  compiler stops at before reaching the 226 components): 4× `ColorContrast.swift`
+  (`resolve(in:)` / `Color.Resolved.red|green|blue`) + 1× `@Observable` on `Theme.swift`.
+  Downstream component errors are masked until Core clears — the inventory is iterative
+  (ADR-0007 §Context), so this is a floor, not the total.

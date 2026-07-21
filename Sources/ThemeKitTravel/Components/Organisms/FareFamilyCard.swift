@@ -90,7 +90,7 @@ public struct FareFamilyCard: View {
 
     /// Explicit `.currency(_:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     private var priceText: String {
@@ -193,31 +193,36 @@ public extension FareFamilyCard {
 }
 
 #Preview {
-    @Previewable @State var picked = true
-    return ScrollView {
-        VStack(spacing: 12) {
-            FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([
-                FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
-                FareFeature("Carry-on", systemImage: "suitcase.rolling", detail: "55×40×23 cm"),
-                FareFeature("Checked", systemImage: "suitcase.fill", detail: "1 × 15 kg"),
-                FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
-            ]).selection($picked)
-            FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple).features([
-                FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
-                FareFeature("Snack", systemImage: "takeoutbag.and.cup.and.straw.fill", status: .included),
-            ]).onSelect { }
-            // Soft chip variant + custom CTA title + soft elevation.
-            FareFamilyCard("Business", price: 6_420).accent(.info)
-                .badgeVariant(.soft).ctaTitle("Choose Business").elevation(.soft)
-                .features([FareFeature("Lounge access", systemImage: "sofa.fill", status: .included)])
-                .onSelect { }
-            // Outline chip + custom header slot.
-            FareFamilyCard("Promo", price: 999).accent(.orange)
-                .badgeVariant(.outline)
-                .header { HStack { Text("PROMO").textStyle(.labelSm700); Spacer(); Badge("−20%").badgeStyle(.error).size(.small) } }
-                .onSelect { }
-        }.padding()
+    struct Demo: View {
+        @State var picked = true
+        var body: some View {
+            return ScrollView {
+                VStack(spacing: 12) {
+                    FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([
+                        FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
+                        FareFeature("Carry-on", systemImage: "suitcase.rolling", detail: "55×40×23 cm"),
+                        FareFeature("Checked", systemImage: "suitcase.fill", detail: "1 × 15 kg"),
+                        FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
+                    ]).selection($picked)
+                    FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple).features([
+                        FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
+                        FareFeature("Snack", systemImage: "takeoutbag.and.cup.and.straw.fill", status: .included),
+                    ]).onSelect { }
+                    // Soft chip variant + custom CTA title + soft elevation.
+                    FareFamilyCard("Business", price: 6_420).accent(.info)
+                        .badgeVariant(.soft).ctaTitle("Choose Business").elevation(.soft)
+                        .features([FareFeature("Lounge access", systemImage: "sofa.fill", status: .included)])
+                        .onSelect { }
+                    // Outline chip + custom header slot.
+                    FareFamilyCard("Promo", price: 999).accent(.orange)
+                        .badgeVariant(.outline)
+                        .header { HStack { Text("PROMO").textStyle(.labelSm700); Spacer(); Badge("−20%").badgeStyle(.error).size(.small) } }
+                        .onSelect { }
+                }.padding()
+            }
+        }
     }
+    return Demo()
 }
 
 #Preview("Comparison columns") {
@@ -268,16 +273,21 @@ public extension FareFamilyCard {
 }
 
 #Preview("Selected + outlined style") {
-    @Previewable @State var picked = true
-    return VStack(spacing: 12) {
-        FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([
-            FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
-            FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
-        ]).selection($picked)
-        FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple).features([
-            FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
-        ]).selected()
+    struct Demo: View {
+        @State var picked = true
+        var body: some View {
+            return VStack(spacing: 12) {
+                FareFamilyCard("Super Eco", price: 1_871.99).accent(.success).features([
+                    FareFeature("Cabin bag", systemImage: "handbag", detail: "40×30×15 cm"),
+                    FareFeature("Non-refundable", systemImage: "nosign", status: .excluded),
+                ]).selection($picked)
+                FareFamilyCard("Comfort Flex", price: 3_116.99).accent(.purple).features([
+                    FareFeature("Partial refund", systemImage: "arrow.uturn.backward", status: .included),
+                ]).selected()
+            }
+            .cardStyle(.outlined)
+            .padding()
+        }
     }
-    .cardStyle(.outlined)
-    .padding()
+    return Demo()
 }

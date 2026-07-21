@@ -7,6 +7,91 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### ⚠️ Migration required — observation pattern change (iOS 15.6 floor, ADR-0007)
+
+ThemeKit is migrating its deployment floor from iOS 17 to **iOS 15.6** (macOS stays 14).
+The iOS-17-only Observation framework does not back-deploy, so the observation spine moved
+from `@Observable` to `ObservableObject`/`@Published`. Two consumer-visible changes, both
+mechanical:
+
+1. **Compile-time (one line per site):** reading a presenter through the object-form
+   environment no longer compiles. Replace `@Environment(Type.self)` with
+   `@EnvironmentObject`:
+
+   | Before (compile error now) | After |
+   |---|---|
+   | `@Environment(SheetPresenter.self) var sheet: SheetPresenter` | `@EnvironmentObject var sheet: SheetPresenter` |
+   | `@Environment(DrawerPresenter.self) var drawer: DrawerPresenter` | `@EnvironmentObject var drawer: DrawerPresenter` |
+   | `@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter` | `@EnvironmentObject var feedback: FeedbackPresenter` |
+
+   The hosts (`.sheetHost()`, `.drawerHost()`, `.feedbackHost()`) now inject via
+   `.environmentObject(_:)` — no change needed there.
+
+2. **SILENT runtime change — check every owned instance:** a consumer holding one of
+   these objects in `@State` **still compiles but stops updating views**. Replace
+   `@State` with `@StateObject` wherever you own a `SheetPresenter`, `DrawerPresenter`,
+   `FeedbackPresenter`, `TourController`, `UploadController`, or `FormValidator`:
+
+   ```swift
+   // BEFORE — compiles after the update, but the tour/form UI silently stops reacting:
+   @State private var tour = TourController()
+   @State private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   // AFTER:
+   @StateObject private var tour = TourController()
+   @StateObject private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   ```
+
+   Grep your codebase for `@State` next to these six types — it is the sharpest edge of
+   this release because nothing flags it at compile time.
+
+   Unchanged: `@Environment(\.theme)` / `@ThemeContext`, `.themeKit()`,
+   `.theme(_:)` per-subtree overrides, `.themeKitLocalized()`, and every component API.
+   Injecting a theme object-form (`.environment(Theme.shared)`) must become keypath-form
+   (`.environment(\.theme, Theme.shared)` — or just use `.theme(_:)` / `.themeKit()`).
+
+### Changed
+- **`FlowLayout` is a measured view, not a `Layout`** (ADR-0007 §D2/§D4, plan §3a —
+  the `Layout` protocol is iOS 16). Every documented call shape still compiles
+  unchanged: `FlowLayout(spacing:lineSpacing:alignment:) { … }` and the
+  `layoutDirection:` overload now take the trailing closure as a `@ViewBuilder` init
+  parameter instead of `Layout.callAsFunction`. **Breaking only if** you used
+  `FlowLayout` *as a `Layout` value* — e.g. `AnyLayout(FlowLayout())` or calling
+  `sizeThatFits`/`placeSubviews` directly — which was never a documented pattern;
+  wrap content directly instead. Behavior note: the flow now spans the proposed
+  width instead of hugging its rows (row `alignment` still positions rows within
+  that span), and `Masonry`/`Flex` (internal layouts) follow the same measured
+  technique. Recorded in `.api-breakage-allowlist.txt`.
+- **Core observation spine → `ObservableObject`** (`Theme`, `ThemeKitStrings.Revision`,
+  the five presenters, `FormValidator`) per ADR-0007 §D3 — the `.id(revision)` rebuild
+  contract, per-subtree `.theme(_:)` first-paint, and the live language switch are
+  unchanged (covered by the existing theme-swap / two-brand / language-switch tests).
+- **`ColorContrast` sRGB components** now resolve through the platform bridge
+  (`UIColor`/`NSColor`) instead of iOS-17 `Color.resolve(in:)` — identical output for
+  token colors (pinned by `ContentContrastTests`).
+- **`ThemeKitStrings`** internal lock moved off `OSAllocatedUnfairLock` (iOS 16+) to an
+  `NSLock`-backed equivalent; locale language/direction parsing moved off the iOS-16
+  `Locale.Language` API — same behavior on all supported OS versions.
+- **Minimum deployment target lowered: iOS 17 → iOS 15.6** (macOS stays 14). Additive for
+  existing 17+ consumers — the support matrix only widens. **Exception:** the optional
+  **`ThemeKitCalendar` add-on requires iOS 17+** (its `Almanac` / `HorizonCalendar` dependency
+  declares an iOS-17 floor, and SwiftPM cannot elevate one target's platform above the package
+  floor) — do not enable the `Calendar` trait if you deploy below iOS 17; the dependency-free
+  core and every other add-on/edition support 15.6.
+- **Charts (`BarChart` / `LineChart` / `AreaChart` / `DonutChart`) reimplemented on `Canvas` /
+  `Path`** (the `Charts` framework is iOS 16+). Public inits, modifiers and `ChartModels` types
+  are unchanged; **render-visible** — the four charts are re-drawn (new snapshot baselines
+  committed; review before release). Further single-path reimplementations behind unchanged
+  public APIs: `GaugeView` (native `Gauge` → token-fed ring/bar), `BoardingPass` detail (`Grid`
+  → paired rows), `ViewThatFits` → an `AdaptiveFit` helper, custom `Layout` (`FlowLayout` above,
+  `Masonry` / `Flex`) → measured layouts, `LocationCard` map, `KanbanBoard` drag-drop, and the
+  ticket-notch / seatback shapes → arc geometry. New Core `Shape` polyfills `ThemeAnyShape` /
+  `ThemeUnevenRoundedRect`. Pure-polish iOS-16/17 API gracefully degrades (each with a named,
+  directly-tested legacy branch): sheet `presentationDetents` / background / corner, `ShareLink`
+  (UIKit share-sheet fallback), `.symbolEffect`, scroll-target snapping, `.onKeyPress`.
+- **Incidental API-surface removal:** dropping `import Charts` removes Swift Charts' own `Array`
+  conformances (`ScaleDomain` / `ScaleRange` / `PositionScaleRange`) from ThemeKit's re-exported
+  surface — never ThemeKit-declared, no consumer-facing loss (allowlisted).
+
 ## [1.2.0] - 2026-07-20
 
 ### Removed (BREAKING)

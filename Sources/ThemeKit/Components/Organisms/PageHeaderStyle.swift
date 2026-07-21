@@ -100,7 +100,7 @@ struct PHIconButton: View {
                 .background {
                     if circular { Circle().fill(theme.background(.bgWhite)).themeShadow(.soft) }
                 }
-                .contentShape(circular ? AnyShape(Circle()) : AnyShape(Rectangle()))
+                .contentShape(circular ? ThemeAnyShape(Circle()) : ThemeAnyShape(Rectangle()))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label ?? "")
@@ -279,7 +279,7 @@ struct PHTabsBar: View {
                     .textStyle(isOn ? .bodyBase500 : .bodyBase400)
                     .foregroundStyle(isOn ? theme.text(.textPrimary) : theme.text(.textSecondary))
                     .fixedSize()
-                UnevenRoundedRectangle(topLeadingRadius: Theme.RadiusRole.field.value,
+                ThemeUnevenRoundedRect(topLeadingRadius: Theme.RadiusRole.field.value,
                                        topTrailingRadius: Theme.RadiusRole.field.value)
                     .fill(isOn ? theme.foreground(.fgHero) : Color.clear)
                     .frame(height: PHMetrics.tabBar)

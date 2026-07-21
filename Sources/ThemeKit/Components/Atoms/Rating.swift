@@ -187,14 +187,16 @@ public struct Rating: View {
     @ViewBuilder
     private var review: some View {
         if let countLabel {
-            let text = Text(countLabel).textStyle(.bodySm400)
+            // Underline stays Text-level (the View overload is iOS 16+), so the
+            // type ramp is applied per branch after it.
+            let text = Text(countLabel)
             if let onReviewTap {
                 Button(action: onReviewTap) {
-                    text.underline().foregroundStyle(theme.text(.textHero))
+                    text.underline().textStyle(.bodySm400).foregroundStyle(theme.text(.textHero))
                 }
                 .buttonStyle(.plain)
             } else {
-                text.foregroundStyle(theme.text(.textTertiary))
+                text.textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
             }
         }
     }
@@ -263,13 +265,18 @@ public extension Rating {
 }
 
 #Preview {
-    @Previewable @State var v = 3.5
-    PreviewMatrix("Rating") {
-        PreviewCase("Stars") { Rating(value: 4.3).countLabel("(128)") }                  // continuous fill
-        PreviewCase("Number rate") { Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {} }
-        PreviewCase("Rate + sentiment") { Rating(value: 8.4).layout(.rateNumberText).maxValue(10) }
-        PreviewCase("Interactive (half)") { Rating(value: v).allowHalf().onRate { v = $0 } }
-        PreviewCase("Clear on re-tap") { Rating(value: v).allowClear().onRate { v = $0 } }  // re-tap current value → 0
-        PreviewCase("Custom symbol") { Rating(value: 3).symbol("heart") }
+    struct Demo: View {
+        @State var v = 3.5
+        var body: some View {
+            PreviewMatrix("Rating") {
+                PreviewCase("Stars") { Rating(value: 4.3).countLabel("(128)") }                  // continuous fill
+                PreviewCase("Number rate") { Rating(value: 4.3).layout(.numberRate).countLabel("1,284 reviews").onReviewTap {} }
+                PreviewCase("Rate + sentiment") { Rating(value: 8.4).layout(.rateNumberText).maxValue(10) }
+                PreviewCase("Interactive (half)") { Rating(value: v).allowHalf().onRate { v = $0 } }
+                PreviewCase("Clear on re-tap") { Rating(value: v).allowClear().onRate { v = $0 } }  // re-tap current value → 0
+                PreviewCase("Custom symbol") { Rating(value: 3).symbol("heart") }
+            }
+        }
     }
+    return Demo()
 }

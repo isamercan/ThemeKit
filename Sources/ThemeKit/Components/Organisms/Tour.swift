@@ -7,7 +7,7 @@
 //  shows a step card with prev / next / skip. (Ant Tour.)
 //
 //  Usage:
-//      @State var tour = TourController()
+//      @StateObject var tour = TourController()   // NOT @State — see TourController
 //      someView.tourTarget("search")
 //      rootView.tourHost(tour, steps: [TourStep("search", title: "Search", message: "…")])
 //      tour.start()
@@ -37,10 +37,15 @@ public struct TourStep: Identifiable {
     }
 }
 
-@Observable
-public final class TourController {
-    public var isActive = false
-    public var index = 0
+/// Drives a tour hosted with `.tourHost(_:steps:)`.
+///
+/// > Important: iOS 15.6-floor migration (ADR-0007 §D4). `TourController` is an
+/// > `ObservableObject` (the iOS-17 `@Observable` pattern no longer applies):
+/// > own it as `@StateObject var tour = TourController()` — NOT `@State`, which
+/// > still compiles but silently stops updating the hosting view.
+public final class TourController: ObservableObject {
+    @Published public var isActive = false
+    @Published public var index = 0
 
     public init() {}
 
@@ -105,7 +110,9 @@ public extension View {
 private struct TourHostModifier: ViewModifier {
     @Environment(\.theme) private var theme
 
-    var controller: TourController
+    // `@ObservedObject` (caller-owned instance): start/next/prev/stop mutate
+    // `@Published` state, and this re-runs the overlay body (ADR-0007 §D3).
+    @ObservedObject var controller: TourController
     let steps: [TourStep]
     /// When set, replaces the built-in card interior (custom content slot).
     var stepCard: ((TourStepContext) -> AnyView)? = nil
@@ -240,7 +247,7 @@ private struct TourHostModifier: ViewModifier {
 #Preview("Custom step card") {
     struct Demo: View {
         @Environment(\.theme) private var theme
-        @State private var tour = TourController()
+        @StateObject private var tour = TourController()
         var body: some View {
             VStack(spacing: 32) {
                 PrimaryButton("Start tour") { tour.start() }

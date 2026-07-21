@@ -295,30 +295,35 @@ public extension TreeSelect {
 }
 
 #Preview {
-    @Previewable @State var picks: Set<String> = ["ist"]
-    let tree = [
-        TreeNode(id: "tr", "Turkey", systemImage: "flag", children: [
-            TreeNode(id: "ist", "Istanbul"),
-            TreeNode(id: "ank", "Ankara"),
-        ]),
-        TreeNode(id: "de", "Germany", systemImage: "flag", children: [
-            TreeNode(id: "ber", "Berlin"),
-            TreeNode(id: "mun", "Munich"),
-        ]),
-    ]
-    PreviewMatrix("TreeSelect") {
-        PreviewCase("Cascade + searchable") {
-            TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"])
-                .cascade().searchable()
-        }
-        // Chrome via the shared FieldStyle axis.
-        PreviewCase("Underlined") {
-            TreeSelect("Underlined", nodes: tree, selection: $picks)
-                .fieldStyle(.underlined)
-        }
-        PreviewCase("Loading") {
-            TreeSelect("Cities", nodes: tree, selection: $picks)
-                .loading()
+    struct Demo: View {
+        @State var picks: Set<String> = ["ist"]
+        var body: some View {
+            let tree = [
+                TreeNode(id: "tr", "Turkey", systemImage: "flag", children: [
+                    TreeNode(id: "ist", "Istanbul"),
+                    TreeNode(id: "ank", "Ankara"),
+                ]),
+                TreeNode(id: "de", "Germany", systemImage: "flag", children: [
+                    TreeNode(id: "ber", "Berlin"),
+                    TreeNode(id: "mun", "Munich"),
+                ]),
+            ]
+            PreviewMatrix("TreeSelect") {
+                PreviewCase("Cascade + searchable") {
+                    TreeSelect("Cities", nodes: tree, selection: $picks, initiallyExpanded: ["tr"])
+                        .cascade().searchable()
+                }
+                // Chrome via the shared FieldStyle axis.
+                PreviewCase("Underlined") {
+                    TreeSelect("Underlined", nodes: tree, selection: $picks)
+                        .fieldStyle(.underlined)
+                }
+                PreviewCase("Loading") {
+                    TreeSelect("Cities", nodes: tree, selection: $picks)
+                        .loading()
+                }
+            }
         }
     }
+    return Demo()
 }

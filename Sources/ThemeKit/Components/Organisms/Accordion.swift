@@ -204,55 +204,60 @@ public extension Accordion {
 }
 
 #Preview {
-    @Previewable @State var controlledOpen = false
-    PreviewMatrix("Accordion") {
-        PreviewCase("Expanded") {
-            Accordion("What is your refund policy?", initiallyExpanded: true) {
-                Text("You can request a refund within 14 days of purchase.")
-            }
-        }
-        PreviewCase("Collapsed + icon") {
-            Accordion("How do I contact support?") {
-                Text("Email us at support@example.com.")
-            }
-            .icon("questionmark.circle")
-        }
-        PreviewCase("Subtitle + number") {
-            Accordion("Baggage allowance") {
-                Text("One carry-on and one personal item.")
-            }
-            .subtitle("Applies to standard fares")
-            .number(2)
-        }
-        PreviewCase("Plus/minus indicator") {
-            Accordion("Custom indicator", initiallyExpanded: true) {
-                Text("Expands with a plus/minus glyph.")
-            }
-            .indicator(.plusMinus)
-        }
-        // Custom leading (prefix instance swap) + custom trailing view slots.
-        PreviewCase("Custom leading + trailing") {
-            Accordion("Priority support") {
-                Text("Included with every Pro plan.")
-            }
-            .leading {
-                Icon(systemName: "star.fill").size(.sm).colorOverride(Theme.shared.resolve(.warning).base)
-            }
-            .trailing { isOpen in
-                Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle")
-                    .size(.sm).colorOverride(Theme.shared.resolve(.primary).base)
-            }
-        }
-        // Controlled expansion — the binding drives (and observes) the row.
-        PreviewCase("Controlled") {
-            VStack(alignment: .leading, spacing: 8) {
-                Accordion("Controlled from outside", isExpanded: $controlledOpen) {
-                    Text("This row's expansion is owned by the parent view.")
+    struct Demo: View {
+        @State var controlledOpen = false
+        var body: some View {
+            PreviewMatrix("Accordion") {
+                PreviewCase("Expanded") {
+                    Accordion("What is your refund policy?", initiallyExpanded: true) {
+                        Text("You can request a refund within 14 days of purchase.")
+                    }
                 }
-                Button(controlledOpen ? "Collapse above" : "Expand above") {
-                    controlledOpen.toggle()
+                PreviewCase("Collapsed + icon") {
+                    Accordion("How do I contact support?") {
+                        Text("Email us at support@example.com.")
+                    }
+                    .icon("questionmark.circle")
+                }
+                PreviewCase("Subtitle + number") {
+                    Accordion("Baggage allowance") {
+                        Text("One carry-on and one personal item.")
+                    }
+                    .subtitle("Applies to standard fares")
+                    .number(2)
+                }
+                PreviewCase("Plus/minus indicator") {
+                    Accordion("Custom indicator", initiallyExpanded: true) {
+                        Text("Expands with a plus/minus glyph.")
+                    }
+                    .indicator(.plusMinus)
+                }
+                // Custom leading (prefix instance swap) + custom trailing view slots.
+                PreviewCase("Custom leading + trailing") {
+                    Accordion("Priority support") {
+                        Text("Included with every Pro plan.")
+                    }
+                    .leading {
+                        Icon(systemName: "star.fill").size(.sm).colorOverride(Theme.shared.resolve(.warning).base)
+                    }
+                    .trailing { isOpen in
+                        Icon(systemName: isOpen ? "chevron.up.circle.fill" : "chevron.down.circle")
+                            .size(.sm).colorOverride(Theme.shared.resolve(.primary).base)
+                    }
+                }
+                // Controlled expansion — the binding drives (and observes) the row.
+                PreviewCase("Controlled") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Accordion("Controlled from outside", isExpanded: $controlledOpen) {
+                            Text("This row's expansion is owned by the parent view.")
+                        }
+                        Button(controlledOpen ? "Collapse above" : "Expand above") {
+                            controlledOpen.toggle()
+                        }
+                    }
                 }
             }
         }
     }
+    return Demo()
 }

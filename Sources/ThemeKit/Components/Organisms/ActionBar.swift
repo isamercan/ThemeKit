@@ -72,7 +72,7 @@ public struct ActionBar: View {
         .themeShadow(.elevated)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(String(themeKit: "\(count) selected")))
-        .onAppear { AccessibilityNotification.Announcement(String(themeKit: "\(count) selected")).post() }
+        .onAppear { AccessibilityAnnouncement.post(String(themeKit: "\(count) selected")) }
     }
 
     private func actionButton(_ action: ActionBarAction) -> some View {

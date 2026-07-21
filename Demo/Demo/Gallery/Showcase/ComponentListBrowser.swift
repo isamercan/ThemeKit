@@ -17,6 +17,7 @@ import SwiftUI
 import Combine
 import ThemeKit
 
+@available(iOS 17.0, *)
 struct ComponentListBrowser: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -247,6 +248,7 @@ struct ComponentListBrowser: View {
 
 // MARK: - One component block: name → live preview → playground button
 
+@available(iOS 17.0, *)
 private struct ComponentRow: View {
     @Environment(\.theme) private var theme
     let entry: ComponentEntry

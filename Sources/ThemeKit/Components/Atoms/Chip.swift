@@ -184,8 +184,10 @@ public struct Chip: View {
                     }
                 }
             }
-            Text(title).textStyle(titleTextStyle)
-                .strikethrough(!isExist, color: theme.text(.textTertiary))
+            // Text-level strikethrough (before .textStyle) — the View-level
+            // overload is iOS 16-only (ADR-0007 Phase 2 compile-loop finding).
+            Text(title).strikethrough(!isExist, color: theme.text(.textTertiary))
+                .textStyle(titleTextStyle)
             if let trailingSlot {
                 trailingSlot
             }

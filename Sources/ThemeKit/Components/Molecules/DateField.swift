@@ -162,16 +162,16 @@ public struct DateField: View {
         .animation(MicroMotion.animation(.fast, enabled: messagesAnimated, reduceMotion: reduceMotion), value: messages)
         // `.live` validates every change; other triggers re-validate once a
         // failure is visible so the error clears as the user fixes it.
-        .onChange(of: date) { _, _ in
+        .onChangeCompat(of: date) { _, _ in
             if effectiveValidationTrigger == .live || !validationMessages.isEmpty { runValidation() }
         }
         // External focus bridge (TextInput parity, popover-flavored): a `true`
         // write opens the picker; dismissing it resets the external binding.
-        .onChange(of: externalFocus?.wrappedValue ?? false) { _, want in
+        .onChangeCompat(of: externalFocus?.wrappedValue ?? false) { _, want in
             if want && !showPicker && isEnabled { showPicker = true }
         }
         // Dismissing the picker is this field's blur *and* submit moment.
-        .onChange(of: showPicker) { _, now in
+        .onChangeCompat(of: showPicker) { _, now in
             if !now, externalFocus?.wrappedValue == true { externalFocus?.wrappedValue = false }
             if !now { onEditingEnd?(displayText ?? "") }   // form-wiring hook (`.field(_:in:)`)
             if !now, effectiveValidationTrigger != .live { runValidation() }
@@ -260,7 +260,7 @@ public struct DateField: View {
         }
         .padding()
         .frame(minWidth: 320)
-        .presentationCompactAdaptation(.popover)
+        .popoverCompactAdaptationCompat()
     }
 
     // MARK: - Colors
@@ -381,34 +381,39 @@ public extension DateField {
 }
 
 #Preview {
-    @Previewable @State var checkIn: Date? = .now
-    @Previewable @State var meeting: Date?
-    PreviewMatrix("DateField") {
-        // Weekday-style display + clear + leading icon.
-        PreviewCase("Custom pattern + clear + icon") {
-            DateField("Check-in", date: $checkIn)
-                .style(.custom("EEE, d MMM")).clearable().icon("calendar")
-        }
-        // Date + time, with a validation error.
-        PreviewCase("Date + time · error") {
-            DateField("Meeting", date: $meeting)
-                .style(.long).components(.dateAndTime).clearable()
-                .infoMessages(meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
-        }
-        PreviewCase("Disabled") {
-            DateField("Locked", date: .constant(.now)).disabled(true)
-        }
-        // Required + declarative validation (asterisk, rules on dismiss).
-        PreviewCase("Required + validation") {
-            DateField("Check-out", date: $meeting)
-                .required()
-                .validate([.required("Pick a check-out date")])
-        }
-        // Underlined chrome via the shared FieldStyle hook.
-        PreviewCase("Underlined field style") {
-            DateField("Departure", date: $checkIn)
-                .icon("calendar")
-                .fieldStyle(.underlined)
+    struct Demo: View {
+        @State var checkIn: Date? = .now
+        @State var meeting: Date?
+        var body: some View {
+            PreviewMatrix("DateField") {
+                // Weekday-style display + clear + leading icon.
+                PreviewCase("Custom pattern + clear + icon") {
+                    DateField("Check-in", date: $checkIn)
+                        .style(.custom("EEE, d MMM")).clearable().icon("calendar")
+                }
+                // Date + time, with a validation error.
+                PreviewCase("Date + time · error") {
+                    DateField("Meeting", date: $meeting)
+                        .style(.long).components(.dateAndTime).clearable()
+                        .infoMessages(meeting == nil ? [InfoMessage("Pick a time", kind: .error)] : [])
+                }
+                PreviewCase("Disabled") {
+                    DateField("Locked", date: .constant(.now)).disabled(true)
+                }
+                // Required + declarative validation (asterisk, rules on dismiss).
+                PreviewCase("Required + validation") {
+                    DateField("Check-out", date: $meeting)
+                        .required()
+                        .validate([.required("Pick a check-out date")])
+                }
+                // Underlined chrome via the shared FieldStyle hook.
+                PreviewCase("Underlined field style") {
+                    DateField("Departure", date: $checkIn)
+                        .icon("calendar")
+                        .fieldStyle(.underlined)
+                }
+            }
         }
     }
+    return Demo()
 }

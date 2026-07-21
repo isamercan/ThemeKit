@@ -104,5 +104,5 @@ public extension Space {
                 .vertical().align(.start)
         }
     }
-    .environment(Theme.shared)
+    .environment(\.theme, Theme.shared)
 }

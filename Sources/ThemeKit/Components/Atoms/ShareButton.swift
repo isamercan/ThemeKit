@@ -4,6 +4,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Atom. A share action wrapping SwiftUI `ShareLink` with kit chrome — opens the
 /// system share sheet for a URL or string. (An iOS-native kit staple.)
@@ -24,17 +27,64 @@ public struct ShareButton: View {
     }
 
     public var body: some View {
-        ShareLink(item: item) {
-            Label(title, systemImage: systemImage)
-                .textStyle(size?.textStyle ?? .labelBase600)
-                .padding(.horizontal, size?.horizontalPadding ?? Theme.SpacingKey.md.value)
-                .frame(height: size?.height ?? 44)
-                .foregroundStyle(accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary))
-                .background(accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero),
-                            in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        // `ShareLink` is iOS 16-only. macOS 14 ≥ its macOS 13 floor, so only
+        // iOS branches; below 16 the named ``LegacyActivityShareButton`` unit
+        // presents `UIActivityViewController` instead (ADR-0007 §D2 rule 2/3).
+        #if os(iOS)
+        if #available(iOS 16.0, *) {
+            ShareLink(item: item) { chrome }
+        } else {
+            LegacyActivityShareButton(item: item) { chrome }
         }
+        #else
+        ShareLink(item: item) { chrome }
+        #endif
+    }
+
+    /// The kit chrome shared by the native `ShareLink` and the legacy unit.
+    private var chrome: some View {
+        Label(title, systemImage: systemImage)
+            .textStyle(size?.textStyle ?? .labelBase600)
+            .padding(.horizontal, size?.horizontalPadding ?? Theme.SpacingKey.md.value)
+            .frame(height: size?.height ?? 44)
+            .foregroundStyle(accent.map { theme.resolve($0).onSolid } ?? theme.foreground(.fgSecondary))
+            .background(accent.map { theme.resolve($0).solid } ?? theme.foreground(.fgHero),
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
     }
 }
+
+#if os(iOS)
+/// Named legacy unit (ADR-0007 §D2 rule 3): below iOS 16 there is no
+/// `ShareLink`, so the share action is a plain button presenting the UIKit
+/// share sheet (`UIActivityViewController`) in a sheet — same capability,
+/// system chrome instead of the SwiftUI-managed presentation.
+struct LegacyActivityShareButton<LabelContent: View>: View {
+    let item: String
+    @ViewBuilder let label: () -> LabelContent
+
+    @State private var isPresenting = false
+
+    var body: some View {
+        Button { isPresenting = true } label: { label() }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $isPresenting) {
+                LegacyActivityShareSheet(item: item)
+                    .ignoresSafeArea()
+            }
+    }
+}
+
+/// The `UIActivityViewController` bridge behind ``LegacyActivityShareButton``.
+private struct LegacyActivityShareSheet: UIViewControllerRepresentable {
+    let item: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [item], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+#endif
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 

@@ -69,7 +69,7 @@ public struct HotelResultCard: View {
 
     /// Explicit `price(_:currencyCode:)` > `\.formatDefaults` > locale currency > "USD" (§10).
     private var resolvedCurrency: String {
-        currencyCode ?? formatDefaults.currencyCode ?? locale.currency?.identifier ?? "USD"
+        currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
 
     public var body: some View {
@@ -310,27 +310,32 @@ public extension HotelResultCard {
 }
 
 #Preview("Outlined style + media slot") {
-    @Previewable @Environment(\.theme) var theme
-    ScrollView {
-        HotelResultCard(name: "Fable Boutique Hotel")
-            .media {
-                LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
+    struct Demo: View {
+        @Environment(\.theme) var theme
+        var body: some View {
+            ScrollView {
+                HotelResultCard(name: "Fable Boutique Hotel")
+                    .media {
+                        LinearGradient(colors: [theme.background(.bgHero), theme.background(.bgTurquoise)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                    }
+                    .overlay {
+                        Text("Members only").textStyle(.labelSm700)
+                            .foregroundStyle(theme.text(.textSecondaryInverse))
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(MediaScrim.solid, in: Capsule())
+                            .padding(Theme.SpacingKey.sm.value)
+                    }
+                    .location("Göcek, Muğla")
+                    .score(9.4, label: "Exceptional", reviews: 212)
+                    .features(["Adults only", "Private beach"])
+                    .price(84_500)
+                    .badge("New")
+                    .favorite(.constant(false))
+                    .cardStyle(.outlined)
+                    .padding()
             }
-            .overlay {
-                Text("Members only").textStyle(.labelSm700)
-                    .foregroundStyle(theme.text(.textSecondaryInverse))
-                    .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(MediaScrim.solid, in: Capsule())
-                    .padding(Theme.SpacingKey.sm.value)
-            }
-            .location("Göcek, Muğla")
-            .score(9.4, label: "Exceptional", reviews: 212)
-            .features(["Adults only", "Private beach"])
-            .price(84_500)
-            .badge("New")
-            .favorite(.constant(false))
-            .cardStyle(.outlined)
-            .padding()
+        }
     }
+    return Demo()
 }

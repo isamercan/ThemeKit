@@ -368,44 +368,49 @@ public extension MultiSelect {
 }
 
 #Preview {
-    // Interactive picker — the matrix wraps representative static states; the
-    // channels case renders with its panel open via the isExpanded binding.
-    @Previewable @State var picks: Set<String> = ["Istanbul"]
-    @Previewable @State var channels: Set<String> = ["Email"]
-    @Previewable @State var channelsOpen = true
-    @Previewable @State var tags: Set<String> = ["Swift", "React"]
-    @Previewable @State var tagsOpen = true
-    let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
-    let channelDetails = [
-        "Email": "Daily digest to your inbox",
-        "Push": "Instant alerts on your device",
-        "SMS": "Text messages for urgent updates",
-    ]
-    PreviewMatrix("MultiSelect") {
-        PreviewCase("Default") { MultiSelect("Cities", options: cities, selection: $picks) { $0 } }
-        // Selection cap (E13): at 3 picks the remaining rows disable.
-        PreviewCase("Max selection") {
-            MultiSelect("Up to 3 cities", options: cities, selection: $picks) { $0 }
-                .maxSelection(3)
-        }
-        // Descriptions + custom leading content, driven by a
-        // controlled isExpanded binding (open here to show the panel).
-        PreviewCase("Open panel + descriptions") {
-            MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
-                .optionDescription { channelDetails[$0] }
-                .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
-        }
-        // Chrome via the shared FieldStyle axis.
-        PreviewCase("Underlined") {
-            MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
-                .fieldStyle(.underlined)
-        }
-        // Tags mode (Ant `mode="tags"`) — type + return to create free-text tags;
-        // "React" here is a custom tag not present in `options`.
-        PreviewCase("Tags (free-text)") {
-            MultiSelect("Skills", options: ["Swift", "Kotlin", "Rust", "Go"],
-                        selection: $tags, isExpanded: $tagsOpen) { $0 }
-                .allowsCustomTags()
+    struct Demo: View {
+        @State var picks: Set<String> = ["Istanbul"]
+        @State var channels: Set<String> = ["Email"]
+        @State var channelsOpen = true
+        @State var tags: Set<String> = ["Swift", "React"]
+        @State var tagsOpen = true
+        var body: some View {
+            // Interactive picker — the matrix wraps representative static states; the
+            // channels case renders with its panel open via the isExpanded binding.
+            let cities = ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"]
+            let channelDetails = [
+                "Email": "Daily digest to your inbox",
+                "Push": "Instant alerts on your device",
+                "SMS": "Text messages for urgent updates",
+            ]
+            PreviewMatrix("MultiSelect") {
+                PreviewCase("Default") { MultiSelect("Cities", options: cities, selection: $picks) { $0 } }
+                // Selection cap (E13): at 3 picks the remaining rows disable.
+                PreviewCase("Max selection") {
+                    MultiSelect("Up to 3 cities", options: cities, selection: $picks) { $0 }
+                        .maxSelection(3)
+                }
+                // Descriptions + custom leading content, driven by a
+                // controlled isExpanded binding (open here to show the panel).
+                PreviewCase("Open panel + descriptions") {
+                    MultiSelect("Channels", options: ["Email", "Push", "SMS"], selection: $channels, isExpanded: $channelsOpen) { $0 }
+                        .optionDescription { channelDetails[$0] }
+                        .optionLeading { StatusDot($0 == "SMS" ? .busy : .online) }
+                }
+                // Chrome via the shared FieldStyle axis.
+                PreviewCase("Underlined") {
+                    MultiSelect("Underlined", options: cities, selection: $picks) { $0 }
+                        .fieldStyle(.underlined)
+                }
+                // Tags mode (Ant `mode="tags"`) — type + return to create free-text tags;
+                // "React" here is a custom tag not present in `options`.
+                PreviewCase("Tags (free-text)") {
+                    MultiSelect("Skills", options: ["Swift", "Kotlin", "Rust", "Go"],
+                                selection: $tags, isExpanded: $tagsOpen) { $0 }
+                        .allowsCustomTags()
+                }
+            }
         }
     }
+    return Demo()
 }

@@ -16,7 +16,7 @@ import UniformTypeIdentifiers
 
 struct DesignModeView: View {
     @EnvironmentObject private var store: DemoThemeStore
-    @Environment(Theme.self) private var theme
+    @Environment(\.theme) private var theme
 
     @AppStorage("themekit.anthropicKey") private var anthropicKey = ""
 
@@ -34,7 +34,7 @@ struct DesignModeView: View {
     @State private var preview: PreviewPayload?
 
     var body: some View {
-        NavigationStack {
+        CompatNavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.SpacingKey.lg.value) {
                     header
@@ -71,7 +71,7 @@ struct DesignModeView: View {
                 preview = nil
             }
             .environmentObject(store)
-            .environment(theme)
+            .theme(theme)
         }
     }
 

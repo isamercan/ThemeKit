@@ -107,15 +107,15 @@ public struct SegmentedControl: View {
         self.init(items.map { SegmentItem($0) }, selection: selection)
     }
 
-    private var trackShape: AnyShape {
+    private var trackShape: ThemeAnyShape {
         shape == .round
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
     }
-    private var thumbShape: AnyShape {
+    private var thumbShape: ThemeAnyShape {
         shape == .round
-            ? AnyShape(Capsule(style: .continuous))
-            : AnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+            ? ThemeAnyShape(Capsule(style: .continuous))
+            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
     }
 
     /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.
@@ -265,32 +265,37 @@ public extension SegmentedControl {
 }
 
 #Preview {
-    @Previewable @State var a = 0
-    @Previewable @State var b = 1
-    @Previewable @State var c = 0
-    @Previewable @State var d = 2
-    PreviewMatrix("SegmentedControl") {
-        PreviewCase("Default") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a) }
-        PreviewCase("Round") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a).shape(.round) }
-        PreviewCase("Icons + disabled item") {
-            SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
-                              SegmentItem("Grid", systemImage: "square.grid.2x2"),
-                              SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $b)
-        }
-        PreviewCase("Icon-only") {
-            SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
-                              SegmentItem(icon: "map")], selection: $c).fullWidth(false)
-        }
-        PreviewCase("Vertical") { SegmentedControl(["A", "B", "C"], selection: $d).vertical().fullWidth(false) }
-        // F3 — provider cascade: no explicit accent → the subtree
-        // componentDefaults re-tints .tinted/.outline; explicit wins.
-        PreviewCase("Provider cascade (F3)") {
-            VStack(alignment: .leading, spacing: 8) {
-                SegmentedControl(["Chart", "Grid"], selection: $a).tinted().dividers().fullWidth(false)
-                SegmentedControl(["Day", "Week"], selection: $b).selectionStyle(.outline)
-                SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
+    struct Demo: View {
+        @State var a = 0
+        @State var b = 1
+        @State var c = 0
+        @State var d = 2
+        var body: some View {
+            PreviewMatrix("SegmentedControl") {
+                PreviewCase("Default") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a) }
+                PreviewCase("Round") { SegmentedControl(["Daily", "Weekly", "Monthly"], selection: $a).shape(.round) }
+                PreviewCase("Icons + disabled item") {
+                    SegmentedControl([SegmentItem("List", systemImage: "list.bullet"),
+                                      SegmentItem("Grid", systemImage: "square.grid.2x2"),
+                                      SegmentItem("Map", systemImage: "map", isEnabled: false)], selection: $b)
+                }
+                PreviewCase("Icon-only") {
+                    SegmentedControl([SegmentItem(icon: "list.bullet"), SegmentItem(icon: "square.grid.2x2"),
+                                      SegmentItem(icon: "map")], selection: $c).fullWidth(false)
+                }
+                PreviewCase("Vertical") { SegmentedControl(["A", "B", "C"], selection: $d).vertical().fullWidth(false) }
+                // F3 — provider cascade: no explicit accent → the subtree
+                // componentDefaults re-tints .tinted/.outline; explicit wins.
+                PreviewCase("Provider cascade (F3)") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SegmentedControl(["Chart", "Grid"], selection: $a).tinted().dividers().fullWidth(false)
+                        SegmentedControl(["Day", "Week"], selection: $b).selectionStyle(.outline)
+                        SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
+                    }
+                    .componentDefaults(accent: .turquoise)
+                }
             }
-            .componentDefaults(accent: .turquoise)
         }
     }
+    return Demo()
 }

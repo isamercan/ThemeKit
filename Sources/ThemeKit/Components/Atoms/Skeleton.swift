@@ -29,11 +29,11 @@ public enum SkeletonShape: Equatable {
         .rounded(role.value)
     }
 
-    var anyShape: AnyShape {
+    var anyShape: ThemeAnyShape {
         switch self {
-        case .rounded(let r): return AnyShape(RoundedRectangle(cornerRadius: r, style: .continuous))
-        case .circle: return AnyShape(Circle())
-        case .capsule: return AnyShape(Capsule())
+        case .rounded(let r): return ThemeAnyShape(RoundedRectangle(cornerRadius: r, style: .continuous))
+        case .circle: return ThemeAnyShape(Circle())
+        case .capsule: return ThemeAnyShape(Capsule())
         }
     }
 }
@@ -249,14 +249,18 @@ public extension View {
 }
 
 #Preview("Reveal toggle") {
-    @Previewable @State var isLoading = true
+    struct Demo: View {
+        @State var isLoading = true
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+                Toggle("Loading", isOn: $isLoading)
 
-    VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
-        Toggle("Loading", isOn: $isLoading)
-
-        Text("Cross-fades in when loading ends").skeleton(isLoading)
-        Text("Token radius + pulse placeholder").skeleton(isLoading, radius: .field, variant: .pulse)
-        Text("Tinted shimmer placeholder").skeleton(isLoading, highlight: .success)
+                Text("Cross-fades in when loading ends").skeleton(isLoading)
+                Text("Token radius + pulse placeholder").skeleton(isLoading, radius: .field, variant: .pulse)
+                Text("Tinted shimmer placeholder").skeleton(isLoading, highlight: .success)
+            }
+            .padding(Theme.SpacingKey.md.value)
+        }
     }
-    .padding(Theme.SpacingKey.md.value)
+    return Demo()
 }

@@ -3,14 +3,15 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Generic multi-series line chart over Swift Charts, token-styled. Categorical
-//  color law from `ChartPalette`; hairline grid/axes; a built-in scrub readout
-//  (the "chart tooltip") with a token card; controlled or uncontrolled
-//  selection via `ControllableState`.
+//  Generic multi-series line chart, Canvas-drawn and token-styled (iOS
+//  15.6-floor reimplementation of the former Swift Charts body — ADR-0007;
+//  shared chrome in ChartSupport.swift). Categorical color law from
+//  `ChartPalette`; hairline grid/axes; a built-in scrub readout (the "chart
+//  tooltip") with a token card; controlled or uncontrolled selection via
+//  `ControllableState`.
 //
 
 import SwiftUI
-import Charts
 
 /// Molecule. `LineChart(series)` draws one line per `ChartSeries`.
 ///
@@ -34,6 +35,10 @@ public struct LineChart: View {
     private var showsPoints = false
     private var localeOverride: Locale?
 
+    // Fixed mark geometry (chart-internal, not exposed knobs).
+    private static let lineWidth: CGFloat = 2
+    private static let pointDiameter: CGFloat = 8
+
     @ControllableState private var selectedX: String?
 
     public init(_ series: [ChartSeries]) {   // R1 — content only (uncontrolled scrub)
@@ -48,60 +53,61 @@ public struct LineChart: View {
     }
 
     private var locale: Locale { localeOverride ?? envLocale }
-    private var scale: ChartColorScale { ChartColorScale(series: series, theme: theme) }
     private var showsLegend: Bool { legendVisible ?? (series.count >= 2) }
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     public var body: some View {
-        Chart {
-            ForEach(Array(series.enumerated()), id: \.element.id) { _, s in
-                ForEach(s.points) { point in
-                    LineMark(x: .value("Category", point.x), y: .value("Value", point.y))
-                        .foregroundStyle(by: .value("Series", s.label))
-                        .interpolationMethod(curved ? .monotone : .linear)
-                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                        .accessibilityLabel("\(s.label), \(point.x)")
-                        .accessibilityValue(formatted(point.y))
-                }
-                if showsPoints {
-                    ForEach(s.points) { point in
-                        PointMark(x: .value("Category", point.x), y: .value("Value", point.y))
-                            .foregroundStyle(by: .value("Series", s.label))
-                            .symbolSize(60)
+        let scale = ChartColorScale(series: series, theme: theme)
+        let resolved = Array(zip(series, scale.range))
+        let curvedFlag = curved
+        let pointsFlag = showsPoints
+        ChartXYChrome(
+            theme: theme,
+            categories: chartCategories(series),
+            yDataMax: series.flatMap(\.points).map(\.y).max() ?? 0,
+            showsGrid: showsGrid,
+            legend: showsLegend ? scale.legendEntries : nil,
+            locale: locale,
+            selection: $selectedX,
+            scrubRows: Self.scrubRowsBuilder(resolved: resolved, locale: locale),
+            drawMarks: { context, geom in
+                for (s, color) in resolved {
+                    let points: [CGPoint] = s.points.compactMap { point in
+                        guard let index = geom.index(of: point.x) else { return nil }
+                        return CGPoint(x: geom.xCenter(index), y: geom.y(point.y))
+                    }
+                    if points.count > 1 {
+                        let path = curvedFlag ? ChartLinePath.monotone(points) : ChartLinePath.linear(points)
+                        context.stroke(path, with: .color(color),
+                                       style: StrokeStyle(lineWidth: Self.lineWidth, lineCap: .round, lineJoin: .round))
+                    }
+                    if pointsFlag {
+                        let d = Self.pointDiameter
+                        for point in points {
+                            let dot = CGRect(x: point.x - d / 2, y: point.y - d / 2, width: d, height: d)
+                            context.fill(Path(ellipseIn: dot), with: .color(color))
+                        }
                     }
                 }
             }
-            if let selectedX {
-                RuleMark(x: .value("Category", selectedX))
-                    .foregroundStyle(theme.border(.borderPrimary))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                        annotationCard(for: selectedX)
-                    }
-            }
-        }
-        .chartForegroundStyleScale(domain: scale.domain, range: scale.range)
-        .chartLegend(showsLegend ? .visible : .hidden)
-        .chartXSelection(value: $selectedX)
-        .themedChartAxes(theme: theme, showsGrid: showsGrid)
+        )
         .frame(height: height.value)
         .animation(motion, value: selectedX)
         .accessibilityLabel(Text(a11ySummary))
     }
 
-    /// The scrub readout: every series' value at the selected category, each
-    /// dotted in its own palette color, on the standard token card.
-    private func annotationCard(for x: String) -> some View {
-        let rows: [ChartScrubRow] = series.enumerated().compactMap { index, s in
-            guard let point = s.points.first(where: { $0.x == x }) else { return nil }
-            return ChartScrubRow(label: s.label,
-                                 value: chartValueFormatted(point.y, locale: locale),
-                                 color: theme.resolve(ChartPalette.hue(explicit: s.color, at: index)).solid)
+    /// The scrub readout rows: every series' value at the selected category,
+    /// each dotted in its own palette color.
+    static func scrubRowsBuilder(resolved: [(ChartSeries, Color)], locale: Locale) -> (String) -> [ChartScrubRow] {
+        { x in
+            resolved.compactMap { s, color in
+                guard let point = s.points.first(where: { $0.x == x }) else { return nil }
+                return ChartScrubRow(label: s.label,
+                                     value: chartValueFormatted(point.y, locale: locale),
+                                     color: color)
+            }
         }
-        return ChartScrubCard(theme: theme, title: x, rows: rows)
     }
-
-    private func formatted(_ value: Double) -> String { chartValueFormatted(value, locale: locale) }
 
     private var a11ySummary: String {
         String(themeKit: "Line chart with series \(series.map(\.label).joined(separator: ", ")).")
@@ -137,13 +143,18 @@ public extension LineChart {
 }
 
 #Preview {
-    @Previewable @State var selected: String?
-    let series = [
-        ChartSeries("2025", [ChartPoint("Jan", 12), ChartPoint("Feb", 18), ChartPoint("Mar", 15), ChartPoint("Apr", 22), ChartPoint("May", 19)]),
-        ChartSeries("2026", [ChartPoint("Jan", 20), ChartPoint("Feb", 16), ChartPoint("Mar", 24), ChartPoint("Apr", 21), ChartPoint("May", 28)]),
-    ]
-    PreviewMatrix("LineChart") {
-        PreviewCase("Two series, curved + points") { LineChart(series, selection: $selected).curved().showsPoints() }
-        PreviewCase("Single, compact, no grid") { LineChart([series[0]]).height(.compact).showsGrid(false) }
+    struct Demo: View {
+        @State var selected: String?
+        var body: some View {
+            let series = [
+                ChartSeries("2025", [ChartPoint("Jan", 12), ChartPoint("Feb", 18), ChartPoint("Mar", 15), ChartPoint("Apr", 22), ChartPoint("May", 19)]),
+                ChartSeries("2026", [ChartPoint("Jan", 20), ChartPoint("Feb", 16), ChartPoint("Mar", 24), ChartPoint("Apr", 21), ChartPoint("May", 28)]),
+            ]
+            PreviewMatrix("LineChart") {
+                PreviewCase("Two series, curved + points") { LineChart(series, selection: $selected).curved().showsPoints() }
+                PreviewCase("Single, compact, no grid") { LineChart([series[0]]).height(.compact).showsGrid(false) }
+            }
+        }
     }
+    return Demo()
 }

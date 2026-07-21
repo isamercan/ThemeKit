@@ -52,14 +52,19 @@ public struct Swap: View {
 }
 
 #Preview {
-    @Previewable @State var a = false
-    @Previewable @State var b = true
-    // Tappable in each cell — the swap animation shows one frame per state.
-    PreviewMatrix("Swap") {
-        PreviewCase("Menu / close (off)") { Swap(isOn: $a).symbols(on: "xmark", off: "line.3.horizontal") }
-        PreviewCase("Sun / moon (on)") { Swap(isOn: $b).symbols(on: "moon.fill", off: "sun.max.fill") }
-        PreviewCase("No rotation") { Swap(isOn: $a).rotate(false) }
+    struct Demo: View {
+        @State var a = false
+        @State var b = true
+        var body: some View {
+            // Tappable in each cell — the swap animation shows one frame per state.
+            PreviewMatrix("Swap") {
+                PreviewCase("Menu / close (off)") { Swap(isOn: $a).symbols(on: "xmark", off: "line.3.horizontal") }
+                PreviewCase("Sun / moon (on)") { Swap(isOn: $b).symbols(on: "moon.fill", off: "sun.max.fill") }
+                PreviewCase("No rotation") { Swap(isOn: $a).rotate(false) }
+            }
+        }
     }
+    return Demo()
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

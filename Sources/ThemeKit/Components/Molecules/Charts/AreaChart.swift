@@ -3,12 +3,13 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
-//  Generic area chart — LineChart's sibling. Overlaid translucent washes under
-//  2pt outlines by default; `.stacked()` sums the series into bands.
+//  Generic area chart — LineChart's sibling, Canvas-drawn (iOS 15.6-floor
+//  reimplementation — ADR-0007; shared chrome in ChartSupport.swift). Overlaid
+//  translucent washes under 2pt outlines by default; `.stacked()` sums the
+//  series into bands.
 //
 
 import SwiftUI
-import Charts
 
 /// Molecule. `AreaChart(series)` fills the region under each series.
 ///
@@ -30,6 +31,11 @@ public struct AreaChart: View {
     private var stacked = false
     private var localeOverride: Locale?
 
+    // Fixed mark geometry/opacity (chart-internal, not exposed knobs).
+    private static let lineWidth: CGFloat = 2
+    private static let overlaidOpacity = 0.18
+    private static let stackedOpacity = 0.85
+
     @ControllableState private var selectedX: String?
 
     public init(_ series: [ChartSeries]) {   // R1 — content only
@@ -43,60 +49,61 @@ public struct AreaChart: View {
     }
 
     private var locale: Locale { localeOverride ?? envLocale }
-    private var scale: ChartColorScale { ChartColorScale(series: series, theme: theme) }
     private var showsLegend: Bool { legendVisible ?? (series.count >= 2) }
     private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
 
     public var body: some View {
-        Chart {
-            ForEach(Array(series.enumerated()), id: \.element.id) { _, s in
-                ForEach(s.points) { point in
-                    AreaMark(x: .value("Category", point.x),
-                             y: .value("Value", point.y),
-                             stacking: stacked ? .standard : .unstacked)
-                        .foregroundStyle(by: .value("Series", s.label))
-                        .opacity(stacked ? 0.85 : 0.18)
-                        .interpolationMethod(curved ? .monotone : .linear)
-                        .accessibilityLabel("\(s.label), \(point.x)")
-                        .accessibilityValue(chartValueFormatted(point.y, locale: locale))
-                }
-                // Overlaid washes need a crisp edge to stay legible; stacked
-                // bands read fine on their own.
-                if !stacked {
-                    ForEach(s.points) { point in
-                        LineMark(x: .value("Category", point.x), y: .value("Value", point.y))
-                            .foregroundStyle(by: .value("Series", s.label))
-                            .interpolationMethod(curved ? .monotone : .linear)
-                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        let categories = chartCategories(series)
+        let scale = ChartColorScale(series: series, theme: theme)
+        let resolved = Array(zip(series, scale.range))
+        let curvedFlag = curved
+        // Stacked bands are cumulative sums over the full category domain.
+        let bands = stacked ? ChartStacking.bands(series: series, categories: categories) : []
+        let dataMax = stacked
+            ? ChartStacking.maxTotal(series: series, categories: categories)
+            : series.flatMap(\.points).map(\.y).max() ?? 0
+        ChartXYChrome(
+            theme: theme,
+            categories: categories,
+            yDataMax: dataMax,
+            showsGrid: showsGrid,
+            legend: showsLegend ? scale.legendEntries : nil,
+            locale: locale,
+            selection: $selectedX,
+            scrubRows: LineChart.scrubRowsBuilder(resolved: resolved, locale: locale),
+            drawMarks: { context, geom in
+                if bands.isEmpty {
+                    // Overlaid washes need a crisp edge to stay legible;
+                    // stacked bands read fine on their own.
+                    for (s, color) in resolved {
+                        let points: [CGPoint] = s.points.compactMap { point in
+                            guard let index = geom.index(of: point.x) else { return nil }
+                            return CGPoint(x: geom.xCenter(index), y: geom.y(point.y))
+                        }
+                        guard points.count > 1 else { continue }
+                        let wash = ChartLinePath.area(points, baseline: geom.y(0), curved: curvedFlag)
+                        context.fill(wash, with: .color(color.opacity(Self.overlaidOpacity)))
+                        let edge = curvedFlag ? ChartLinePath.monotone(points) : ChartLinePath.linear(points)
+                        context.stroke(edge, with: .color(color),
+                                       style: StrokeStyle(lineWidth: Self.lineWidth, lineCap: .round, lineJoin: .round))
+                    }
+                } else {
+                    for (index, (_, color)) in resolved.enumerated() {
+                        let top = geom.categories.indices.map {
+                            CGPoint(x: geom.xCenter($0), y: geom.y(bands[index][$0].top))
+                        }
+                        let bottom = geom.categories.indices.map {
+                            CGPoint(x: geom.xCenter($0), y: geom.y(bands[index][$0].bottom))
+                        }
+                        let band = ChartLinePath.band(top: top, bottom: bottom, curved: curvedFlag)
+                        context.fill(band, with: .color(color.opacity(Self.stackedOpacity)))
                     }
                 }
             }
-            if let selectedX {
-                RuleMark(x: .value("Category", selectedX))
-                    .foregroundStyle(theme.border(.borderPrimary))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                        annotationCard(for: selectedX)
-                    }
-            }
-        }
-        .chartForegroundStyleScale(domain: scale.domain, range: scale.range)
-        .chartLegend(showsLegend ? .visible : .hidden)
-        .chartXSelection(value: $selectedX)
-        .themedChartAxes(theme: theme, showsGrid: showsGrid)
+        )
         .frame(height: height.value)
         .animation(motion, value: selectedX)
         .accessibilityLabel(Text(String(themeKit: "Area chart with series \(series.map(\.label).joined(separator: ", ")).")))
-    }
-
-    private func annotationCard(for x: String) -> some View {
-        let rows: [ChartScrubRow] = series.enumerated().compactMap { index, s in
-            guard let point = s.points.first(where: { $0.x == x }) else { return nil }
-            return ChartScrubRow(label: s.label,
-                                 value: chartValueFormatted(point.y, locale: locale),
-                                 color: theme.resolve(ChartPalette.hue(explicit: s.color, at: index)).solid)
-        }
-        return ChartScrubCard(theme: theme, title: x, rows: rows)
     }
 }
 

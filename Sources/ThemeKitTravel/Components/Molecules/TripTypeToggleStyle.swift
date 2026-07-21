@@ -90,10 +90,10 @@ public struct TripTypeToggleConfiguration {
 
     /// The ``shape`` resolved to a fillable/clippable shape — the pill track,
     /// the selected thumb and the menu trigger all draw with it.
-    public var trackShape: AnyShape {
+    public var trackShape: ThemeAnyShape {
         switch shape {
-        case .capsule: AnyShape(Capsule(style: .continuous))
-        case .rounded(let role): AnyShape(RoundedRectangle(cornerRadius: role.value, style: .continuous))
+        case .capsule: ThemeAnyShape(Capsule(style: .continuous))
+        case .rounded(let role): ThemeAnyShape(RoundedRectangle(cornerRadius: role.value, style: .continuous))
         }
     }
 }
@@ -365,33 +365,38 @@ private struct RadioListTripTypeToggleStyle: TripTypeToggleStyle {
 }
 
 #Preview("TripTypeToggleStyle — presets × light/dark") {
-    @Previewable @State var sel = 1
-    let options = ["One way", "Round trip", "Multi-city"]
-    let icons = ["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"]
-    PreviewMatrix("TripTypeToggleStyle") {
-        PreviewCase("Pill (default)") {
-            TripTypeToggle(options, selection: $sel).icons(icons)
-        }
-        PreviewCase("Underline") {
-            TripTypeToggle(options, selection: $sel)
-                .icons(icons)
-                .accent(.info)
-                .tripTypeToggleStyle(.underline)
-        }
-        PreviewCase("Menu (tap in live preview)") {
-            TripTypeToggle(options, selection: $sel)
-                .icons(icons)
-                .tripTypeToggleStyle(.menu)
-        }
-        PreviewCase("Menu · intrinsic width · rounded") {
-            TripTypeToggle(options, selection: $sel)
-                .fullWidth(false)
-                .shape(.rounded(.field))
-                .tripTypeToggleStyle(.menu)
-        }
-        PreviewCase("Custom (in-preview radio list)") {
-            TripTypeToggle(options, selection: $sel)
-                .tripTypeToggleStyle(RadioListTripTypeToggleStyle())
+    struct Demo: View {
+        @State var sel = 1
+        var body: some View {
+            let options = ["One way", "Round trip", "Multi-city"]
+            let icons = ["arrow.right", "arrow.left.arrow.right", "point.3.connected.trianglepath.dotted"]
+            PreviewMatrix("TripTypeToggleStyle") {
+                PreviewCase("Pill (default)") {
+                    TripTypeToggle(options, selection: $sel).icons(icons)
+                }
+                PreviewCase("Underline") {
+                    TripTypeToggle(options, selection: $sel)
+                        .icons(icons)
+                        .accent(.info)
+                        .tripTypeToggleStyle(.underline)
+                }
+                PreviewCase("Menu (tap in live preview)") {
+                    TripTypeToggle(options, selection: $sel)
+                        .icons(icons)
+                        .tripTypeToggleStyle(.menu)
+                }
+                PreviewCase("Menu · intrinsic width · rounded") {
+                    TripTypeToggle(options, selection: $sel)
+                        .fullWidth(false)
+                        .shape(.rounded(.field))
+                        .tripTypeToggleStyle(.menu)
+                }
+                PreviewCase("Custom (in-preview radio list)") {
+                    TripTypeToggle(options, selection: $sel)
+                        .tripTypeToggleStyle(RadioListTripTypeToggleStyle())
+                }
+            }
         }
     }
+    return Demo()
 }

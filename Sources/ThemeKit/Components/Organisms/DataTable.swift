@@ -199,8 +199,8 @@ public struct DataTable<Row: Identifiable>: View {
             }
             if let footerSlot { footerSlot }
         }
-        .onChange(of: rows.count) { _, _ in clampPage() }
-        .onChange(of: sortColumn) { _, _ in currentPage = 1 }
+        .onChangeCompat(of: rows.count) { _, _ in clampPage() }
+        .onChangeCompat(of: sortColumn) { _, _ in currentPage = 1 }
     }
 
     private var tableCard: some View {
@@ -451,80 +451,85 @@ private struct DefaultTextCell: View {
 private struct Booking: Identifiable { let id = UUID(); let hotel: String; let nights: Int; let price: Double }
 
 #Preview {
-    @Previewable @State var selected: Set<UUID> = []
-    let rows = [
-        Booking(hotel: "Grand Hotel", nights: 3, price: 4250),
-        Booking(hotel: "Sea Resort", nights: 5, price: 7800),
-        Booking(hotel: "City Inn", nights: 2, price: 1900),
-    ]
+    struct Demo: View {
+        @State var selected: Set<UUID> = []
+        var body: some View {
+            let rows = [
+                Booking(hotel: "Grand Hotel", nights: 3, price: 4250),
+                Booking(hotel: "Sea Resort", nights: 5, price: 7800),
+                Booking(hotel: "City Inn", nights: 2, price: 1900),
+            ]
 
-    PreviewMatrix("DataTable") {
-        PreviewCase("Sortable · selection + header/footer slots") {
-            DataTable(columns: [
-                .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
-                .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
-                .init("Price", align: .trailing, sortKey: { .number($0.price) }) { row in
-                    Text("$\(Int(row.price))").textStyle(.labelSm700)
-                },
-            ], rows: rows, selection: $selected)
-            .header {
-                HStack {
-                    Text("Bookings").textStyle(.labelBase600)
-                    Spacer()
-                    Text("Q3").textStyle(.bodySm400).foregroundStyle(.secondary)
+            PreviewMatrix("DataTable") {
+                PreviewCase("Sortable · selection + header/footer slots") {
+                    DataTable(columns: [
+                        .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
+                        .init("Nights", align: .center, sortKey: { .number(Double($0.nights)) }) { "\($0.nights)" },
+                        .init("Price", align: .trailing, sortKey: { .number($0.price) }) { row in
+                            Text("$\(Int(row.price))").textStyle(.labelSm700)
+                        },
+                    ], rows: rows, selection: $selected)
+                    .header {
+                        HStack {
+                            Text("Bookings").textStyle(.labelBase600)
+                            Spacer()
+                            Text("Q3").textStyle(.bodySm400).foregroundStyle(.secondary)
+                        }
+                    }
+                    .footer {
+                        Text("3 bookings · updated just now")
+                            .textStyle(.bodySm400)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
-            }
-            .footer {
-                Text("3 bookings · updated just now")
-                    .textStyle(.bodySm400)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-        }
-        // Checkbox selection column + select-all header (Ant `rowSelection`).
-        PreviewCase("Checkbox selection column") {
-            DataTable(columns: [
-                .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
-                .init("Price", align: .trailing) { "$\(Int($0.price))" },
-            ], rows: rows, selection: $selected)
-            .selectionColumn()
-        }
-        // Fixed-width + ellipsis columns, compact density, header hidden.
-        PreviewCase("Fixed width · ellipsis · compact") {
-            DataTable(columns: [
-                .init("Hotel", ellipsis: true) { $0.hotel },
-                .init("Nights", align: .center, width: 64) { "\($0.nights)" },
-                .init("Price", align: .trailing, width: 88) { "$\(Int($0.price))" },
-            ], rows: rows)
-            .size(.small)
-            .showsHeader(false)
-        }
-        PreviewCase("Empty · custom slot") {
-            DataTable(columns: [
-                .init("Hotel") { $0.hotel },
-                .init("Price", align: .trailing) { "$\(Int($0.price))" },
-            ], rows: [Booking]())
-            .empty {
-                VStack(spacing: 8) {
-                    Image(systemName: "tray")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                    Text("No bookings yet")
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(.secondary)
+                // Checkbox selection column + select-all header (Ant `rowSelection`).
+                PreviewCase("Checkbox selection column") {
+                    DataTable(columns: [
+                        .init("Hotel", sortKey: { .string($0.hotel) }) { $0.hotel },
+                        .init("Price", align: .trailing) { "$\(Int($0.price))" },
+                    ], rows: rows, selection: $selected)
+                    .selectionColumn()
                 }
-                .padding(.vertical, Theme.SpacingKey.lg.value)
-            }
-        }
-        PreviewCase("Loading · custom slot") {
-            DataTable(columns: [
-                .init("Hotel") { $0.hotel },
-            ], rows: [Booking]())
-            .loading()
-            .loadingView {
-                ProgressView()
-                    .padding(.vertical, Theme.SpacingKey.lg.value)
+                // Fixed-width + ellipsis columns, compact density, header hidden.
+                PreviewCase("Fixed width · ellipsis · compact") {
+                    DataTable(columns: [
+                        .init("Hotel", ellipsis: true) { $0.hotel },
+                        .init("Nights", align: .center, width: 64) { "\($0.nights)" },
+                        .init("Price", align: .trailing, width: 88) { "$\(Int($0.price))" },
+                    ], rows: rows)
+                    .size(.small)
+                    .showsHeader(false)
+                }
+                PreviewCase("Empty · custom slot") {
+                    DataTable(columns: [
+                        .init("Hotel") { $0.hotel },
+                        .init("Price", align: .trailing) { "$\(Int($0.price))" },
+                    ], rows: [Booking]())
+                    .empty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "tray")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                            Text("No bookings yet")
+                                .textStyle(.bodySm400)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, Theme.SpacingKey.lg.value)
+                    }
+                }
+                PreviewCase("Loading · custom slot") {
+                    DataTable(columns: [
+                        .init("Hotel") { $0.hotel },
+                    ], rows: [Booking]())
+                    .loading()
+                    .loadingView {
+                        ProgressView()
+                            .padding(.vertical, Theme.SpacingKey.lg.value)
+                    }
+                }
             }
         }
     }
+    return Demo()
 }

@@ -36,7 +36,7 @@ public struct TreeView: View {
                 nodeRow(row.node, depth: row.depth)
             }
         }
-        .animation(.snappy(duration: 0.2), value: expanded)
+        .animation(ThemeMotion.snappy(.fast), value: expanded)
     }
 
     private func nodeRow(_ node: TreeNode, depth: Int) -> some View {
@@ -125,19 +125,24 @@ public extension TreeView {
 }
 
 #Preview {
-    @Previewable @State var checked: Set<String> = []
-    let nodes = [
-        TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
-            TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
-            TreeNode(id: "img", "Images", systemImage: "folder", children: [
-                TreeNode(id: "a", "beach.jpg", systemImage: "photo"),
-                TreeNode(id: "b", "city.jpg", systemImage: "photo")])]),
-        TreeNode(id: "music", "Music", systemImage: "folder", children: [
-            TreeNode(id: "s1", "song.mp3", systemImage: "music.note")]),
-    ]
-    PreviewMatrix("TreeView") {
-        PreviewCase("Checkable") { TreeView(nodes, selection: $checked).checkable() }
-        PreviewCase("Plain (no checkboxes)") { TreeView(nodes, selection: .constant([])) }
+    struct Demo: View {
+        @State var checked: Set<String> = []
+        var body: some View {
+            let nodes = [
+                TreeNode(id: "docs", "Documents", systemImage: "folder", children: [
+                    TreeNode(id: "cv", "Resume.pdf", systemImage: "doc"),
+                    TreeNode(id: "img", "Images", systemImage: "folder", children: [
+                        TreeNode(id: "a", "beach.jpg", systemImage: "photo"),
+                        TreeNode(id: "b", "city.jpg", systemImage: "photo")])]),
+                TreeNode(id: "music", "Music", systemImage: "folder", children: [
+                    TreeNode(id: "s1", "song.mp3", systemImage: "music.note")]),
+            ]
+            PreviewMatrix("TreeView") {
+                PreviewCase("Checkable") { TreeView(nodes, selection: $checked).checkable() }
+                PreviewCase("Plain (no checkboxes)") { TreeView(nodes, selection: .constant([])) }
+            }
+            .environment(\.theme, Theme.shared)
+        }
     }
-    .environment(Theme.shared)
+    return Demo()
 }
