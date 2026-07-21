@@ -198,3 +198,13 @@ API breakage: accessor FlowLayout.alignment.Get() has generic signature change f
 API breakage: accessor FlowLayout.alignment.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
 API breakage: accessor FlowLayout.layoutDirection.Get() has generic signature change from  to <Content where Content : SwiftUI.View>
 API breakage: accessor FlowLayout.layoutDirection.Set() has generic signature change from  to <Content where Content : SwiftUI.View>
+
+# --- iOS 15.6 floor (ADR-0007 §D2 rule 1, plan §3d): Charts → Canvas rewrite drops
+#     `import Charts`, so the Swift Charts framework's own conformances on `Array`
+#     (ScaleDomain / ScaleRange / PositionScaleRange) no longer leak through
+#     ThemeKit's public surface. These were never ThemeKit-declared API — they were
+#     visible only as a side effect of importing Charts; a consumer relying on them
+#     would `import Charts` directly. No consumer-facing loss. See CHANGELOG. ---
+API breakage: extension Array has removed conformance to ScaleDomain
+API breakage: extension Array has removed conformance to ScaleRange
+API breakage: extension Array has removed conformance to PositionScaleRange
