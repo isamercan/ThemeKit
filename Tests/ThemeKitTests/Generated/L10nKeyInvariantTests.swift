@@ -206,7 +206,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Directions to \(d)",
             "Directions to %@", 1,
-            site: "Sources/ThemeKit/Components/Organisms/LocationCard.swift:123")
+            site: "Sources/ThemeKit/Components/Organisms/LocationCard.swift:132")
         assertKey(
             "Donut chart with slices \(d).",
             "Donut chart with slices %@.", 1,
