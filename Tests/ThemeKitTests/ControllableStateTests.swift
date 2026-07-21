@@ -13,6 +13,7 @@ import SwiftUI
 import XCTest
 @testable import ThemeKit
 
+@available(iOS 16.0, macOS 13.0, *)   // ImageRenderer-based pixel helper (matches the sibling render suites)
 final class ControllableStateTests: XCTestCase {
 
     // MARK: Wrapper-level routing (no view graph needed — the controlled path
@@ -155,7 +156,7 @@ final class ControllableStateTests: XCTestCase {
             Color.clear
                 .frame(width: 8, height: 8)
                 .onAppear { expanded.toggle() }
-                .onChange(of: expanded) { _, newValue in onChange(newValue) }
+                .onChangeCompat(of: expanded) { _, newValue in onChange(newValue) }
         }
     }
 

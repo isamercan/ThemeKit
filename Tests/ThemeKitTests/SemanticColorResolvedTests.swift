@@ -21,10 +21,20 @@ import XCTest
 @MainActor
 final class SemanticColorResolvedTests: XCTestCase {
     /// sRGB components, so two `Color`s can be compared for equality reliably
-    /// (mirrors `ColorContrast.components(of:)`'s resolution approach).
+    /// (mirrors `ColorContrast.components(of:)`'s platform bridge —
+    /// `Color.resolve(in:)` is iOS 17+ and the test target builds at the
+    /// 15.6 floor, ADR-0007 §D3).
     private func rgba(_ c: Color) -> [Double] {
-        let r = c.resolve(in: EnvironmentValues())
-        return [Double(r.red), Double(r.green), Double(r.blue), Double(r.opacity)]
+        #if canImport(UIKit)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(c).getRed(&r, green: &g, blue: &b, alpha: &a)
+        return [r, g, b, a].map(Double.init)
+        #elseif canImport(AppKit)
+        guard let srgb = NSColor(c).usingColorSpace(.sRGB) else { return [0, 0, 0, 0] }
+        return [srgb.redComponent, srgb.greenComponent, srgb.blueComponent, srgb.alphaComponent].map(Double.init)
+        #else
+        return [0, 0, 0, 0]
+        #endif
     }
 
     private func makeTheme(primaryHex: String, accentHex: String) -> Theme {
