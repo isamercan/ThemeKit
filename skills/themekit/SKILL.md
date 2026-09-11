@@ -66,6 +66,11 @@ struct ContentView: View {
 - **Surfaces:** `theme.background(.bgWhite | .bgElevatorPrimary | .bgSecondary | .bgHero | …)`  — default component surface is `.bgWhite` (base-100)
 - **Borders:** `theme.border(.borderPrimary | .borderHero | …)`
 - **Foreground:** `theme.foreground(.fgHero | .fgSecondary | …)`
+- **Your own tokens:** `theme.custom.color(.fareBadge)` — names ThemeKit has no key
+  for, under the reserved `custom.` namespace. Register app-owned ones once with
+  `Theme.shared.registerCustomTokens(_:)` (survives theme changes; `darkColors` for
+  dark), or declare theme-owned ones as `"custom.<name>"` in a theme JSON /
+  `--custom-color-*` in CSS. Always `??` a built-in token as the fallback.
 - **Semantic colors** (`SemanticColor`): `.primary .secondary .accent .neutral .info
   .success .warning .error` + hues. Each gives `.solid .soft .accent .border`
   variants and a 50..900 ladder (`.base .hover .active .strong .bg …`). Use with
@@ -148,3 +153,7 @@ Card(title: "Sign up") {
 - ❌ `SomeControl(isEnabled: false)` → ✅ `SomeControl().disabled(true)`.
 - ❌ Re-implementing a Card/Sheet/Toast → ✅ use the existing component.
 - ❌ Hardcoded corner radius `cornerRadius: 12` → ✅ `Theme.RadiusRole.box.value`.
+- ❌ Forking ThemeKit, or asking for a token to be added to it, for one app's brand
+  value → ✅ the `custom.` namespace (`registerCustomTokens(_:)` / `theme.custom`).
+- ❌ `theme.custom.color("custom.fare-badge")` → ✅ the **bare** name; the lookup adds
+  the prefix (`theme.custom.color(.fareBadge)`).

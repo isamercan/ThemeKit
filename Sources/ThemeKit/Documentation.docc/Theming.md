@@ -68,6 +68,48 @@ open sheet alive while previewing a theme).
 WindowGroup { RootView().themeKit() }
 ```
 
+### Your own tokens
+
+A design system almost always carries tokens ThemeKit has no key for — a campaign
+badge fill, a bespoke card corner. They live under the reserved `custom.`
+namespace and read back through ``Theme/custom``.
+
+Tokens the **app** owns are registered once and survive every theme change:
+
+```swift
+extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+
+Theme.shared.registerCustomTokens(.init(
+    colors:     [.fareBadge: Color(hex: "ff5722")],
+    darkColors: [.fareBadge: Color(hex: "c63f14")]
+))
+
+theme.custom.color(.fareBadge) ?? theme.background(.bgHero)
+```
+
+Tokens the **theme** owns are declared in the theme file and change with it —
+in JSON:
+
+```json
+{ "name": "custom.fare-badge", "hex": "ff5722" }
+```
+
+or in CSS, as `--custom-color-*`, `--custom-radius-*`, `--custom-spacing-*`:
+
+```css
+:root { --custom-color-fare-badge: #ff5722; --custom-radius-card-hero: 1.25rem; }
+.dark { --custom-color-fare-badge: #c63f14; }
+```
+
+Where both name the same token the registered value wins — the app is the owner.
+An undefined token returns `nil`, so the caller picks its own fallback;
+``Theme/CustomTokens`` also enumerates what the active theme declares, so an app
+can assert its token set at launch instead of rendering a fallback for a typo.
+
+This is a token-read API, not a component-theming API: components take
+``SemanticColor``, so a custom color reaches one only where it accepts a raw
+`Color`. See ADR-0008.
+
 ## Topics
 
 ### Core
@@ -78,6 +120,9 @@ WindowGroup { RootView().themeKit() }
 
 ### Token namespaces
 
+- `Theme.CustomToken`
+- `Theme.CustomTokens`
+- `Theme.CustomTokenSet`
 - `TextStyle`
 - `SemanticColor`
 - `Theme.SpacingKey`

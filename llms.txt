@@ -34,6 +34,7 @@ This is the quick-reference index. Deeper files:
 - **Spacing** `Theme.SpacingKey.none|xs|sm|md|base|lg|xl|xl4` (`sp-xs`…`sp-4xl`).
 - **Typography** `.textStyle(_:)` — 34 `TextStyle`s (Montserrat): Display, Heading (2xl→3xs), Label, Body, Overline, Link.
 - **Shadows** `ShadowStyle.elevated|.tabBar|.soft`.
+- **Your own tokens** — names ThemeKit has no key for live under the reserved `custom.` namespace and read back through `theme.custom.color|radius|spacing|textStyle|shadow(_:)`, keyed by `Theme.CustomToken` (bare name, string-literal). Register app-owned ones with `Theme.shared.registerCustomTokens(_:)` (survives every theme change, `darkColors` for the dark variant); declare theme-owned ones as `"custom.<name>"` in a theme JSON or `--custom-color-*` / `--custom-radius-*` / `--custom-spacing-*` in CSS. Registered wins on a name clash; an undefined token is `nil`. Token-read API only — components take `SemanticColor`. See ADR-0008.
 
 ## Packages (SPM products)
 
