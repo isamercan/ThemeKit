@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-11
+
 ### Added
 
 - **Consumer-defined tokens (`custom.` namespace).** A host app's design system
@@ -1157,6 +1159,12 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.4.0
+[1.3.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.3.0
+[1.2.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.2.0
+[1.1.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.1.0
+[1.0.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.0.0
 [0.2.0]: https://github.com/isamercan/ThemeKit/releases/tag/v0.2.0
 [0.1.1]: https://github.com/isamercan/ThemeKit/releases/tag/v0.1.1
 [0.1.0]: https://github.com/isamercan/ThemeKit/releases/tag/v0.1.0
