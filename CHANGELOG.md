@@ -7,6 +7,30 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### Added
+
+- **Consumer-defined tokens (`custom.` namespace).** A host app's design system
+  almost always carries tokens ThemeKit has no key for — a campaign badge fill, a
+  bespoke card corner. Those can't join the generated key enums (which stay
+  brand-agnostic), so they now ride the same theme JSON / CSS under the reserved
+  `Theme.customTokenPrefix` namespace and read back through `customColor(_:)`,
+  `customRadius(_:)`, `customSpacing(_:)`, `customTextStyle(_:)` and
+  `customShadow(_:)`.
+
+  ```json
+  { "name": "custom.fare-badge", "hex": "ff5722" }
+  ```
+  ```swift
+  enum AppToken: String { case fareBadge = "fare-badge" }
+  theme.customColor(AppToken.fareBadge.rawValue) ?? theme.background(.bgHero)
+  ```
+
+  Each accessor prepends the prefix itself, so the lookup can only land in the
+  consumer's namespace — ThemeKit's own token names, including the `package`-level
+  component tokens behind `spacing(token:)`, stay sealed. Purely additive: existing
+  themes and the typed accessors are untouched, and an undefined token returns
+  `nil` so the caller picks its own fallback.
+
 ## [1.3.0] - 2026-07-21
 
 ### ⚠️ Migration required — observation pattern change (iOS 15.6 floor, ADR-0007)
