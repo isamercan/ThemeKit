@@ -634,6 +634,24 @@ Sources/ThemeKit/
 Colors / radius / spacing vary per theme (JSON). Typography & shadows are
 structural and constant across themes.
 
+**Your own tokens.** Names ThemeKit has no key for live under the reserved
+`custom.` namespace (`Theme.customTokenPrefix`) and read back through
+`theme.custom`. Register the ones your app owns so they survive a theme change;
+declare the ones a theme owns in its JSON or CSS:
+
+```swift
+extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+
+Theme.shared.registerCustomTokens(.init(
+    colors:     [.fareBadge: Color(hex: "ff5722")],
+    darkColors: [.fareBadge: Color(hex: "c63f14")]
+))
+
+theme.custom.color(.fareBadge) ?? theme.background(.bgHero)
+```
+
+See [ADR-0008](docs/ADR-0008-consumer-defined-tokens.md).
+
 ## Themes
 
 `default` (blue) · `ocean` (turquoise) · `sunset` (orange) — each with a Dark

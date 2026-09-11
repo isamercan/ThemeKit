@@ -11,6 +11,44 @@
 
 ---
 
+## Pattern: Your own design-system tokens
+
+Names ThemeKit has no key for (a campaign badge fill, a bespoke card corner) live
+under the reserved `custom.` namespace. Register the ones your **app** owns — they
+survive every theme change, unlike tokens declared in a theme file.
+
+```swift
+extension Theme.CustomToken {
+    static let fareBadge: Self = "fare-badge"      // bare name; the lookup adds "custom."
+    static let cardHero: Self  = "card-hero"
+}
+
+// once, at launch
+Theme.shared.registerCustomTokens(.init(
+    colors:     [.fareBadge: Color(hex: "ff5722")],
+    darkColors: [.fareBadge: Color(hex: "c63f14")],
+    radii:      [.cardHero: 20]
+))
+
+// at the call site — always fall back to a built-in token
+struct FareBadge: View {
+    @ThemeContext private var theme
+    var body: some View {
+        Text(price)
+            .textStyle(.labelSm600)
+            .padding(.horizontal, theme.spacing(.sm))
+            .background(theme.custom.color(.fareBadge) ?? theme.background(.bgHero),
+                        in: RoundedRectangle(cornerRadius: theme.custom.radius(.cardHero)
+                                                        ?? Theme.RadiusRole.box.value))
+    }
+}
+```
+
+Theme-owned instead of app-owned? Declare `"custom.fare-badge"` in the theme JSON, or
+`--custom-color-fare-badge` in CSS — then the token re-skins with the theme. Registered
+values win where both define the same name. Assert your set at launch with
+`theme.custom.colors` rather than shipping a typo as a silent fallback.
+
 ## Pattern: Custom theme creation
 
 Generate a whole palette from one accent, or specify a full config.

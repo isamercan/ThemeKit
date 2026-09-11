@@ -38,7 +38,13 @@ Both the `:root`/`.light` and `.dark` blocks are read:
 | `--surface*` / `--default` | elevated surfaces |
 | `--radius` / `--field-radius` | box / field radius roles |
 
-Anything the CSS doesn't define falls back to ThemeKit's defaults. The CSS is
+Your own tokens ride along too: `--custom-color-<name>`, `--custom-radius-<name>`
+and `--custom-spacing-<name>` become `custom.<name>`, read back with
+`theme.custom.color(.yourToken)`. A `.dark` block only has to restate the ones that
+differ. For tokens your **app** owns rather than the theme, register them instead —
+`Theme.shared.registerCustomTokens(_:)` survives every theme change. See ADR-0008.
+
+Anything else the CSS doesn't define falls back to ThemeKit's defaults. The CSS is
 treated as untrusted text — only `--var: value;` declarations are read, nothing is
 executed. Custom fonts (e.g. Inter) must be bundled and registered in your app to
 render; otherwise the type ramp uses the system font.

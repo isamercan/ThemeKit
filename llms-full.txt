@@ -129,6 +129,17 @@ theme.border(.borderPrimary)                     // Color
 | Spacing | 8 | `Theme.SpacingKey` | `.none .xs .sm .md .base .lg .xl .xl4` |
 | Typography | 34 | `TextStyle` (`.textStyle(_:)`) | Display / Heading / Label / Body / Overline / Link |
 | Shadow | 3 | `ShadowStyle` | `.elevated .tabBar .soft` |
+| Consumer | n/a | `theme.custom.color/radius/spacing/textStyle/shadow(_:)` | `custom.`-namespaced, keyed by `Theme.CustomToken` |
+
+**Consumer-defined tokens.** Names ThemeKit has no key for live under the reserved
+`custom.` namespace (`Theme.customTokenPrefix`). Two sources, one read API:
+
+- **App-owned** — `Theme.shared.registerCustomTokens(.init(colors: [.fareBadge: …], darkColors: […]))`. Re-seeded after every theme application, so it survives `apply(ThemeConfig)`, `ThemePreset.apply()`, `setTheme(css:)`, `loadTheme(named:)` and `setTheme(jsonData:)`.
+- **Theme-owned** — `{"name": "custom.fare-badge", "hex": "ff5722"}` in a theme JSON, or `--custom-color-*` / `--custom-radius-*` / `--custom-spacing-*` in CSS (the `.dark` block inherits from `:root` for anything it doesn't restate).
+
+Registered wins on a name clash. `Theme.CustomToken` holds the **bare** name and the
+lookup adds the prefix, so it can't reach ThemeKit's own tokens. An undefined token
+returns `nil`. Token-read API only — components take `SemanticColor`. See ADR-0008.
 
 **Colors — the four color-key enums**
 
