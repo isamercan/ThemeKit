@@ -41,22 +41,43 @@ breaking changes bump the **major**.
   Purely additive — existing themes and the typed accessors are untouched, and an
   undefined token returns `nil` so the caller picks its own fallback.
 
-  **Scope in this release — read before adopting.** Custom tokens currently reach
-  the theme through `setTheme(jsonData:)` only:
+- **Host-owned tokens that survive a theme change — `registerCustomTokens(_:)`.**
+  Declaring `custom.` tokens in a theme file binds them to that theme: every
+  `apply(_:)`, `ThemePreset.apply()` or CSS swap regenerates the token set and drops
+  them. A registered `Theme.CustomTokenSet` is re-applied after every theme
+  application instead, so the app's own tokens outlive the theme the user picks.
 
-  | Entry point | Custom tokens |
-  |---|---|
-  | `setTheme(jsonData:)` | ✅ |
-  | `loadTheme(named:)` | ❌ searches `Bundle.module` only, so a host can't ship its own JSON by name |
-  | `setTheme(css:)` / `loadTheme(cssNamed:)` | ❌ `CSSTheme.build` forwards only its mapped vars |
-  | `apply(ThemeConfig)` / `applyGenerated(…)` / `ThemePreset.apply()` | ❌ the token set is regenerated, and `resetThemeState()` clears the namespace |
+  ```swift
+  extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
 
-  Consequences worth stating plainly: applying a preset or a config **drops** any
-  custom tokens; `generatedTokenJSON(for:)` and `persistConfig()` don't carry
-  them; a dark variant must be duplicated in the `…Dark` JSON; and after
-  `setTheme(jsonData:)` a later `setColorScheme(dark:)` re-enters
-  `loadTheme(named:)` with a stale name. Widening this — a `ThemeConfig` field, a
-  CSS passthrough, and the state-tracking fix — is tracked as follow-up work.
+  Theme.shared.registerCustomTokens(.init(
+      colors:     [.fareBadge: Color(hex: "ff5722")],
+      darkColors: [.fareBadge: Color(hex: "c63f14")]
+  ))
+  ```
+
+  A theme file's tokens belong to the theme and change with it; a registered token
+  belongs to the app and doesn't — so where both name the same token, the registered
+  value wins. `darkColors` gives a registered color its dark variant, re-picked on
+  every scheme change. This makes the namespace reachable from every entry point:
+  `apply(ThemeConfig)`, `ThemePreset.apply()`, `setTheme(css:)`, `loadTheme(named:)`
+  and `setTheme(jsonData:)`. Tokens declared in a theme file still reach the theme
+  through `setTheme(jsonData:dark:)` only — `CSSTheme.build` forwards just its mapped
+  vars, and the config path regenerates from scalars.
+
+### Fixed
+
+- **`setColorScheme(dark:)` no longer discards a theme loaded from data.**
+  `setTheme(jsonData:)` never set `baseThemeName` or `isDark`, so a later scheme
+  switch fell through to `loadTheme(named:)` with a stale name — silently replacing
+  the consumer's theme with ThemeKit's bundled one, or tripping `assertionFailure`
+  when the name matched no bundled file. The JSON is now retained (`currentJSON`),
+  `baseThemeName` reports ``Theme/dataThemeName``, and a scheme switch re-applies it,
+  re-picking the dark side of any registered tokens. `setTheme(jsonData:dark:)` takes
+  the scheme when the payload is the dark variant.
+
+- `Theme.ResolvedTextStyle` and `Theme.ResolvedShadowLayer` are now `Equatable` and
+  `Sendable`.
 
 ## [1.3.0] - 2026-07-21
 

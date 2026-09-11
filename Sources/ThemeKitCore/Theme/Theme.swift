@@ -76,6 +76,10 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     private var customTypography: [String: ResolvedTextStyle] = [:]
     private var customShadows: [String: [ResolvedShadowLayer]] = [:]
 
+    /// Tokens the host app owns — re-seeded after every theme application. See
+    /// ``registerCustomTokens(_:)``.
+    private var registeredCustom = CustomTokenSet()
+
     /// The bare name of a token in the reserved namespace, or `nil` when the name
     /// isn't in it.
     private static func customName(_ name: String) -> String? {
@@ -126,28 +130,49 @@ public final class Theme: ObservableObject, @unchecked Sendable {
             assertionFailure("Theme '\(resource)' not found in bundle")
             return
         }
-        setTheme(jsonData: data)
+        currentJSON = nil
+        applyThemeData(data)
     }
 
-    /// Switches the active theme between its light and dark variants. Works for
-    /// both bundled named themes and a live `ThemeConfig`.
+    /// Switches the active theme between its light and dark variants. Works for a
+    /// bundled named theme, a live `ThemeConfig`, a CSS theme, and a theme loaded
+    /// from data.
+    ///
+    /// A `Data` theme carries a single scheme, so there is no second variant to load:
+    /// the flag is recorded and the theme re-applied, which re-picks the dark side of
+    /// any registered custom tokens (see ``registerCustomTokens(_:)``). Colors baked
+    /// into the JSON itself don't change — ship the other scheme's JSON for that.
     public func setColorScheme(dark: Bool) {
         if let css = currentCSS {
             setTheme(css: css, font: currentCSSFont, dark: dark)
         } else if var config = currentConfig {
             config.dark = dark
             apply(config)
+        } else if let json = currentJSON {
+            setTheme(jsonData: json, dark: dark)
         } else {
             loadTheme(named: baseThemeName, dark: dark)
         }
     }
 
-    public func setTheme(jsonData: Data) {
+    /// Applies a theme from raw JSON.
+    ///
+    /// Unlike ``loadTheme(named:dark:)`` this accepts any token set, including the
+    /// reserved `custom.` namespace — see ``customTokenPrefix``. The data is retained
+    /// so ``setColorScheme(dark:)`` re-applies it instead of falling back to a bundled
+    /// theme; pass `dark` when the payload is the dark variant.
+    public func setTheme(jsonData: Data, dark: Bool? = nil) {
+        currentConfig = nil
+        currentCSS = nil
+        currentJSON = jsonData
+        baseThemeName = Theme.dataThemeName
+        if let dark { isDark = dark }
+        applyThemeData(jsonData)
+    }
+
+    private func applyThemeData(_ data: Data) {
         do {
-            let decoded = try JSONDecoder().decode(ThemeData.self, from: jsonData)
-            currentConfig = nil
-            currentCSS = nil
-            apply(decoded)
+            apply(try JSONDecoder().decode(ThemeData.self, from: data))
         } catch {
             assertionFailure("Failed to decode theme JSON: \(error)")
         }
@@ -166,6 +191,7 @@ public final class Theme: ObservableObject, @unchecked Sendable {
         let parsed = CSSTheme.parse(css)
         let useDark = dark ?? isDark
         currentConfig = nil
+        currentJSON = nil
         currentCSS = css
         currentCSSFont = font
         baseThemeName = "css"
@@ -191,6 +217,14 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     /// or `nil` if a bundled named theme is active. Re-encode it to persist/share.
     public private(set) var currentConfig: ThemeConfig?
 
+    /// The raw JSON currently applied via ``setTheme(jsonData:dark:)``, or `nil` when
+    /// a named / config / CSS theme is active. Retained so `setColorScheme(dark:)`
+    /// re-applies it rather than falling through to a stale ``baseThemeName``.
+    public private(set) var currentJSON: Data?
+
+    /// ``baseThemeName`` while a `Data` theme is active — it names no bundled file.
+    public static let dataThemeName = "data"
+
     /// The raw CSS currently applied via `setTheme(css:)` / `loadTheme(cssNamed:)`,
     /// or `nil` when a JSON / config theme is active. Retained so `setColorScheme(dark:)`
     /// can re-derive the other scheme from the same source.
@@ -203,6 +237,7 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     public func apply(_ config: ThemeConfig) {
         currentConfig = config
         currentCSS = nil
+        currentJSON = nil
         baseThemeName = "custom"
         isDark = config.dark
         apply(ThemeGenerator.generate(
@@ -318,6 +353,21 @@ public final class Theme: ObservableObject, @unchecked Sendable {
             }
             if let bare = Theme.customName(s.name) { customShadows[bare] = layers } else { shadowList[s.name] = layers }
         }
+        seedRegisteredCustomTokens()
+    }
+
+    /// Re-applies the host's registered tokens over whatever the theme just set.
+    /// Last write wins, so a registered token is authoritative: the host owns it and
+    /// a theme switch must not silently repaint or drop it.
+    private func seedRegisteredCustomTokens() {
+        for (token, color) in registeredCustom.colors { customColors[token.rawValue] = color }
+        if isDark {
+            for (token, color) in registeredCustom.darkColors { customColors[token.rawValue] = color }
+        }
+        for (token, value) in registeredCustom.radii { customRadii[token.rawValue] = value }
+        for (token, value) in registeredCustom.spacings { customSpacings[token.rawValue] = value }
+        for (token, value) in registeredCustom.textStyles { customTypography[token.rawValue] = value }
+        for (token, value) in registeredCustom.shadows { customShadows[token.rawValue] = value }
     }
 
     private func resetThemeState() {
@@ -465,6 +515,72 @@ public final class Theme: ObservableObject, @unchecked Sendable {
             Set(names.map { CustomToken(rawValue: $0) })
         }
     }
+
+    /// Tokens the host app owns, declared once and re-applied after every theme
+    /// application — so a preset, a config, or a CSS swap never drops them.
+    ///
+    /// This is the counterpart to declaring `custom.` tokens in a theme file. A theme
+    /// file's tokens belong to the theme and change with it; a registered token
+    /// belongs to the app and doesn't. Where both define the same name the registered
+    /// value wins, because the app is the owner.
+    public struct CustomTokenSet: Equatable, Sendable {
+        /// Colors used in the light scheme, and in dark when ``darkColors`` omits the token.
+        public var colors: [CustomToken: Color]
+        /// Colors that replace ``colors`` while the dark scheme is active.
+        public var darkColors: [CustomToken: Color]
+        public var radii: [CustomToken: CGFloat]
+        public var spacings: [CustomToken: CGFloat]
+        public var textStyles: [CustomToken: ResolvedTextStyle]
+        public var shadows: [CustomToken: [ResolvedShadowLayer]]
+
+        public init(
+            colors: [CustomToken: Color] = [:],
+            darkColors: [CustomToken: Color] = [:],
+            radii: [CustomToken: CGFloat] = [:],
+            spacings: [CustomToken: CGFloat] = [:],
+            textStyles: [CustomToken: ResolvedTextStyle] = [:],
+            shadows: [CustomToken: [ResolvedShadowLayer]] = [:]
+        ) {
+            self.colors = colors
+            self.darkColors = darkColors
+            self.radii = radii
+            self.spacings = spacings
+            self.textStyles = textStyles
+            self.shadows = shadows
+        }
+
+        public var isEmpty: Bool {
+            colors.isEmpty && darkColors.isEmpty && radii.isEmpty
+                && spacings.isEmpty && textStyles.isEmpty && shadows.isEmpty
+        }
+    }
+
+    /// Registers the host app's own tokens and applies them immediately.
+    ///
+    /// Unlike `custom.` tokens declared in a theme file — which reach the theme through
+    /// ``setTheme(jsonData:dark:)`` only, and are replaced whenever a new theme is
+    /// applied — a registered set survives every entry point: `apply(_:)`,
+    /// `ThemePreset.apply()`, `setTheme(css:font:dark:)` and `loadTheme(named:dark:)`.
+    ///
+    /// ```swift
+    /// extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+    ///
+    /// Theme.shared.registerCustomTokens(.init(
+    ///     colors: [.fareBadge: Color(hex: "ff5722")],
+    ///     darkColors: [.fareBadge: Color(hex: "c63f14")]
+    /// ))
+    /// ```
+    ///
+    /// Pass an empty set to clear. Registering replaces the previous set rather than
+    /// merging, so the app has one declaration site to read.
+    public func registerCustomTokens(_ set: CustomTokenSet) {
+        registeredCustom = set
+        revision += 1
+        seedRegisteredCustomTokens()
+    }
+
+    /// The tokens registered via ``registerCustomTokens(_:)``.
+    public var registeredCustomTokens: CustomTokenSet { registeredCustom }
 
     /// The consumer-defined tokens of this theme: `theme.custom.color(.fareBadge)`.
     public var custom: CustomTokens { CustomTokens(theme: self) }

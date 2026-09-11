@@ -37,7 +37,7 @@ extension Theme {
     }
 
     /// A typography token resolved into a ready-to-use SwiftUI `Font`.
-    public struct ResolvedTextStyle {
+    public struct ResolvedTextStyle: Equatable, Sendable {
         public let font: Font
         public let lineSpacing: CGFloat
     }
@@ -55,7 +55,7 @@ extension Theme {
     }
 
     /// A shadow layer resolved into a ready-to-use SwiftUI drop shadow.
-    public struct ResolvedShadowLayer {
+    public struct ResolvedShadowLayer: Equatable, Sendable {
         public let color: Color
         public let radius: CGFloat
         public let x: CGFloat
