@@ -47,24 +47,43 @@ interface SymbolGraph {
   relationships: { kind: string; source: string; target: string }[];
 }
 
-/** Ensures the public symbol graph exists, returns its parsed JSON. */
+// The catalog spans two modules since ThemeKitCore was split out: components live in
+// ThemeKit, the token engine (Theme, SemanticColor, FillVariant, TextStyle, …) in
+// ThemeKitCore. Both graphs are merged, otherwise every symbol that moved to Core is
+// invisible to the MCP data — which is what happened to `FillVariant`.
+const GRAPH_MODULES = ["ThemeKit", "ThemeKitCore"];
+const GRAPH_ARCHES = ["arm64-apple-macosx", "x86_64-apple-macosx"];
+
+const graphPath = (repoRoot: string, module: string) =>
+  GRAPH_ARCHES
+    .map((arch) => join(repoRoot, `.build/${arch}/symbolgraph/${module}.symbols.json`))
+    .find(existsSync);
+
+/** Ensures the public symbol graphs exist, returns them merged. */
 export function loadSymbolGraph(repoRoot: string): SymbolGraph {
-  const candidates = [
-    join(repoRoot, ".build/arm64-apple-macosx/symbolgraph/ThemeKit.symbols.json"),
-    join(repoRoot, ".build/x86_64-apple-macosx/symbolgraph/ThemeKit.symbols.json"),
-  ];
-  let path = candidates.find(existsSync);
-  if (!path) {
+  if (!graphPath(repoRoot, GRAPH_MODULES[0])) {
     execFileSync(
       "swift",
       ["package", "dump-symbol-graph", "--minimum-access-level", "public",
        "--omit-extension-block-symbols", "--skip-synthesized-members"],
       { cwd: repoRoot, stdio: "inherit" }
     );
-    path = candidates.find(existsSync);
   }
-  if (!path) throw new Error("symbol graph not produced — is this the ThemeKit repo root?");
-  return JSON.parse(readFileSync(path, "utf8")) as SymbolGraph;
+
+  const merged: SymbolGraph = { symbols: [], relationships: [] };
+  for (const module of GRAPH_MODULES) {
+    const path = graphPath(repoRoot, module);
+    if (!path) {
+      if (module === GRAPH_MODULES[0]) {
+        throw new Error("symbol graph not produced — is this the ThemeKit repo root?");
+      }
+      continue;   // an optional module simply contributes nothing
+    }
+    const graph = JSON.parse(readFileSync(path, "utf8")) as SymbolGraph;
+    merged.symbols.push(...graph.symbols);
+    merged.relationships.push(...(graph.relationships ?? []));
+  }
+  return merged;
 }
 
 const frag = (s: RawSymbol) =>
