@@ -44,7 +44,7 @@ function categorize(): Map<string, string> {
 }
 
 function themePresets(): { id: string; name: string; primary: string; secondary: string; accent: string; base: string }[] {
-  const src = readFileSync(join(REPO, "Sources/ThemeKit/Theme/ThemePresets.swift"), "utf8");
+  const src = readFileSync(join(REPO, "Sources/ThemeKitCore/Theme/ThemePresets.swift"), "utf8");
   const re = /\.init\(\s*"(\w+)",\s*"([^"]+)",\s*primary:\s*"(\w+)",\s*secondary:\s*"(\w+)",\s*accent:\s*"(\w+)",\s*base:\s*"(\w+)"/g;
   return [...src.matchAll(re)].map((m) => ({ id: m[1], name: m[2], primary: m[3], secondary: m[4], accent: m[5], base: m[6] }));
 }

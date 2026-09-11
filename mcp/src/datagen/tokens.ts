@@ -22,7 +22,7 @@ interface ThemeJSON {
 }
 
 export function extractTokens(repoRoot: string): DesignToken[] {
-  const path = join(repoRoot, "Sources/ThemeKit/Resources/defaultTheme.json");
+  const path = join(repoRoot, "Sources/ThemeKitCore/Resources/defaultTheme.json");
   const t = JSON.parse(readFileSync(path, "utf8")) as ThemeJSON;
   const out: DesignToken[] = [];
 

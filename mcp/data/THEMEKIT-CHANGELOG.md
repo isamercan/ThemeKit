@@ -2,8 +2,709 @@
 
 All notable changes to **ThemeKit** are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: breaking changes
-bump the minor).
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html) — from **1.0.0** on,
+breaking changes bump the **major**.
+
+## [Unreleased]
+
+### Added
+
+- **Consumer-defined tokens (`custom.` namespace).** A host app's design system
+  almost always carries tokens ThemeKit has no key for — a campaign badge fill, a
+  bespoke card corner. Those can't join the generated key enums (which stay
+  brand-agnostic), so a theme JSON may now declare them under the reserved
+  `Theme.customTokenPrefix` namespace and read them back through `theme.custom`.
+
+  ```json
+  { "name": "custom.fare-badge", "hex": "ff5722" }
+  ```
+  ```swift
+  extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+  theme.custom.color(.fareBadge) ?? theme.background(.bgHero)
+  ```
+
+  `Theme.CustomToken` is a `RawRepresentable` / `ExpressibleByStringLiteral` name
+  holding the *bare* token, so call sites keep dot-syntax and autocomplete instead
+  of repeating string literals. `theme.custom` also enumerates what the active
+  theme declares (`custom.colors`, `.radii`, `.spacings`, `.textStyles`,
+  `.shadows`) — assert against it at launch or in CI rather than discovering a
+  typo as a silently rendered fallback. A consumer text style now anchors to the
+  Dynamic Type band its point size implies, so it scales like a built-in style of
+  the same size instead of defaulting to `.body`. In DEBUG, a theme token that
+  matches no key and isn't in the namespace is logged rather than silently dropped.
+
+  Each accessor prepends the prefix itself, so a *lookup* can only land in the
+  consumer's namespace — the generated keys and the `package`-level component
+  tokens behind `spacing(token:)` are unreachable through these accessors. (The
+  theme file itself remains an open *write* surface, as it always has been: a
+  theme may still name an internal token such as `card-padding` directly.)
+  Purely additive — existing themes and the typed accessors are untouched, and an
+  undefined token returns `nil` so the caller picks its own fallback.
+
+- **Host-owned tokens that survive a theme change — `registerCustomTokens(_:)`.**
+  Declaring `custom.` tokens in a theme file binds them to that theme: every
+  `apply(_:)`, `ThemePreset.apply()` or CSS swap regenerates the token set and drops
+  them. A registered `Theme.CustomTokenSet` is re-applied after every theme
+  application instead, so the app's own tokens outlive the theme the user picks.
+
+  ```swift
+  extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+
+  Theme.shared.registerCustomTokens(.init(
+      colors:     [.fareBadge: Color(hex: "ff5722")],
+      darkColors: [.fareBadge: Color(hex: "c63f14")]
+  ))
+  ```
+
+  A theme file's tokens belong to the theme and change with it; a registered token
+  belongs to the app and doesn't — so where both name the same token, the registered
+  value wins. `darkColors` gives a registered color its dark variant, re-picked on
+  every scheme change. This makes the namespace reachable from every entry point:
+  `apply(ThemeConfig)`, `ThemePreset.apply()`, `setTheme(css:)`, `loadTheme(named:)`
+  and `setTheme(jsonData:)`. Tokens declared in a theme file still reach the theme
+  through `setTheme(jsonData:dark:)` and CSS; the config path regenerates from scalars.
+
+- **Consumer tokens from CSS.** A CSS theme may declare them too, under
+  `--custom-color-*`, `--custom-radius-*` and `--custom-spacing-*`:
+
+  ```css
+  :root { --custom-color-fare-badge: #ff5722; --custom-radius-card-hero: 1.25rem; }
+  .dark { --custom-color-fare-badge: #c63f14; }
+  ```
+
+  The kind sits in the var name rather than being inferred from the value, so a
+  radius can't be mistaken for a spacing. A dark block restates only what differs —
+  the rest inherits from `:root`, like the radius roles and the component spacings.
+  `tools/import_css_theme.py` mirrors this and the golden parity tests cover the
+  namespace. ThemeKit's CSS surface carries no typography or shadows, so neither does
+  its consumer side; use a theme JSON or `registerCustomTokens(_:)` for those.
+
+- `ThemeGenerator` now **appends** override keys the generated set doesn't contain,
+  for colors and radius. Previously only spacing did, so a demand-minted color or
+  radius token was silently dropped while the equivalent spacing token worked.
+
+### Fixed
+
+- **`setColorScheme(dark:)` no longer discards a theme loaded from data.**
+  `setTheme(jsonData:)` never set `baseThemeName` or `isDark`, so a later scheme
+  switch fell through to `loadTheme(named:)` with a stale name — silently replacing
+  the consumer's theme with ThemeKit's bundled one, or tripping `assertionFailure`
+  when the name matched no bundled file. The JSON is now retained (`currentJSON`),
+  `baseThemeName` reports ``Theme/dataThemeName``, and a scheme switch re-applies it,
+  re-picking the dark side of any registered tokens. `setTheme(jsonData:dark:)` takes
+  the scheme when the payload is the dark variant.
+
+- `Theme.ResolvedTextStyle` and `Theme.ResolvedShadowLayer` are now `Equatable` and
+  `Sendable`.
+
+## [1.3.0] - 2026-07-21
+
+### ⚠️ Migration required — observation pattern change (iOS 15.6 floor, ADR-0007)
+
+ThemeKit is migrating its deployment floor from iOS 17 to **iOS 15.6** (macOS stays 14).
+The iOS-17-only Observation framework does not back-deploy, so the observation spine moved
+from `@Observable` to `ObservableObject`/`@Published`. Two consumer-visible changes, both
+mechanical:
+
+1. **Compile-time (one line per site):** reading a presenter through the object-form
+   environment no longer compiles. Replace `@Environment(Type.self)` with
+   `@EnvironmentObject`:
+
+   | Before (compile error now) | After |
+   |---|---|
+   | `@Environment(SheetPresenter.self) var sheet: SheetPresenter` | `@EnvironmentObject var sheet: SheetPresenter` |
+   | `@Environment(DrawerPresenter.self) var drawer: DrawerPresenter` | `@EnvironmentObject var drawer: DrawerPresenter` |
+   | `@Environment(FeedbackPresenter.self) var feedback: FeedbackPresenter` | `@EnvironmentObject var feedback: FeedbackPresenter` |
+
+   The hosts (`.sheetHost()`, `.drawerHost()`, `.feedbackHost()`) now inject via
+   `.environmentObject(_:)` — no change needed there.
+
+2. **SILENT runtime change — check every owned instance:** a consumer holding one of
+   these objects in `@State` **still compiles but stops updating views**. Replace
+   `@State` with `@StateObject` wherever you own a `SheetPresenter`, `DrawerPresenter`,
+   `FeedbackPresenter`, `TourController`, `UploadController`, or `FormValidator`:
+
+   ```swift
+   // BEFORE — compiles after the update, but the tour/form UI silently stops reacting:
+   @State private var tour = TourController()
+   @State private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   // AFTER:
+   @StateObject private var tour = TourController()
+   @StateObject private var form = FormValidator<Field>([.email: [.required(), .email()]])
+   ```
+
+   Grep your codebase for `@State` next to these six types — it is the sharpest edge of
+   this release because nothing flags it at compile time.
+
+   Unchanged: `@Environment(\.theme)` / `@ThemeContext`, `.themeKit()`,
+   `.theme(_:)` per-subtree overrides, `.themeKitLocalized()`, and every component API.
+   Injecting a theme object-form (`.environment(Theme.shared)`) must become keypath-form
+   (`.environment(\.theme, Theme.shared)` — or just use `.theme(_:)` / `.themeKit()`).
+
+### Changed
+- **`FlowLayout` is a measured view, not a `Layout`** (ADR-0007 §D2/§D4, plan §3a —
+  the `Layout` protocol is iOS 16). Every documented call shape still compiles
+  unchanged: `FlowLayout(spacing:lineSpacing:alignment:) { … }` and the
+  `layoutDirection:` overload now take the trailing closure as a `@ViewBuilder` init
+  parameter instead of `Layout.callAsFunction`. **Breaking only if** you used
+  `FlowLayout` *as a `Layout` value* — e.g. `AnyLayout(FlowLayout())` or calling
+  `sizeThatFits`/`placeSubviews` directly — which was never a documented pattern;
+  wrap content directly instead. Behavior note: the flow now spans the proposed
+  width instead of hugging its rows (row `alignment` still positions rows within
+  that span), and `Masonry`/`Flex` (internal layouts) follow the same measured
+  technique. Recorded in `.api-breakage-allowlist.txt`.
+- **Core observation spine → `ObservableObject`** (`Theme`, `ThemeKitStrings.Revision`,
+  the five presenters, `FormValidator`) per ADR-0007 §D3 — the `.id(revision)` rebuild
+  contract, per-subtree `.theme(_:)` first-paint, and the live language switch are
+  unchanged (covered by the existing theme-swap / two-brand / language-switch tests).
+- **`ColorContrast` sRGB components** now resolve through the platform bridge
+  (`UIColor`/`NSColor`) instead of iOS-17 `Color.resolve(in:)` — identical output for
+  token colors (pinned by `ContentContrastTests`).
+- **`ThemeKitStrings`** internal lock moved off `OSAllocatedUnfairLock` (iOS 16+) to an
+  `NSLock`-backed equivalent; locale language/direction parsing moved off the iOS-16
+  `Locale.Language` API — same behavior on all supported OS versions.
+- **Minimum deployment target lowered: iOS 17 → iOS 15.6** (macOS stays 14). Additive for
+  existing 17+ consumers — the support matrix only widens. **Exception:** the optional
+  **`ThemeKitCalendar` add-on requires iOS 17+** (its `Almanac` / `HorizonCalendar` dependency
+  declares an iOS-17 floor, and SwiftPM cannot elevate one target's platform above the package
+  floor) — do not enable the `Calendar` trait if you deploy below iOS 17; the dependency-free
+  core and every other add-on/edition support 15.6.
+- **Charts (`BarChart` / `LineChart` / `AreaChart` / `DonutChart`) reimplemented on `Canvas` /
+  `Path`** (the `Charts` framework is iOS 16+). Public inits, modifiers and `ChartModels` types
+  are unchanged; **render-visible** — the four charts are re-drawn (new snapshot baselines
+  committed; review before release). Further single-path reimplementations behind unchanged
+  public APIs: `GaugeView` (native `Gauge` → token-fed ring/bar), `BoardingPass` detail (`Grid`
+  → paired rows), `ViewThatFits` → an `AdaptiveFit` helper, custom `Layout` (`FlowLayout` above,
+  `Masonry` / `Flex`) → measured layouts, `LocationCard` map, `KanbanBoard` drag-drop, and the
+  ticket-notch / seatback shapes → arc geometry. New Core `Shape` polyfills `ThemeAnyShape` /
+  `ThemeUnevenRoundedRect`. Pure-polish iOS-16/17 API gracefully degrades (each with a named,
+  directly-tested legacy branch): sheet `presentationDetents` / background / corner, `ShareLink`
+  (UIKit share-sheet fallback), `.symbolEffect`, scroll-target snapping, `.onKeyPress`.
+- **Incidental API-surface removal:** dropping `import Charts` removes Swift Charts' own `Array`
+  conformances (`ScaleDomain` / `ScaleRange` / `PositionScaleRange`) from ThemeKit's re-exported
+  surface — never ThemeKit-declared, no consumer-facing loss (allowlisted).
+
+## [1.2.0] - 2026-07-20
+
+### Removed (BREAKING)
+- **`ComponentDefaults` is now accent-only — its dead `radius` and `elevation` fields were removed.** No component ever consumed `componentDefaults.radius` / `.elevation` (only `.accent` is live), so `.componentDefaults(radius:elevation:accent:)` is now `.componentDefaults(accent:)` and `ComponentDefaults.init` / the struct's stored properties drop `radius`/`elevation`. **Migration:** drop the `radius:` / `elevation:` arguments (they were no-ops); for a subtree radius use `.dialogCornerRadius(_:)` (dialogs) or the per-component `.radius(_:)` modifier (Card).
+- **The flight / booking component family moved out of the neutral `ThemeKit` catalog into the `ThemeKitTravel` edition** — ~21 components (`FlightCard`, `FlightListItem`(+`Style`), `FlightResultRow`, `FlightTicketCard`, `FareSummary`, `FareFamilyCard`, `SeatMap`(+`SeatMapModels`), `SeatCell`, `SeatLegend`, `BoardingPass`, `FlightRoute`, `LayoverRow`, `FlightStatusBadge`, `DatePriceStrip`, `TripTypeToggle`, `RecentSearchRow`, `PassengerRow`, `FilterBar`, `StickyBookingBar`, `AncillaryCard`) plus the `FlightLeg`/`FlightFare`/`FareLine`/`FlightStatus` models. **Migration:** add `import ThemeKitTravel` alongside `import ThemeKit` wherever you use these types — no code changes otherwise (same names, same APIs). *(`FareFeatureRow` and its `FareFeature`/`FareFeatureStatus` models stay **neutral** — they back both fare perks and non-flight amenity lists like `RoomCard`; `TicketStub` and `Steps` also stay neutral.)*
+
+### Changed (public style system)
+- **The card- and bar-style delegation machinery is now public** so edition (and consumer) components can re-skin through it: `AnyCardStyle`, `CardStyleConfiguration.init`, `\.cardStyle`; `AnyBarStyle`, `BarStyleConfiguration.init`, `BarChromeOverrides`, `\.barChromeOverrides`, `\.barStyle`; and the `SlotContent` slot wrapper. Additive — the previously-internal types simply became `public`.
+
+### Added
+- **`View.dialogCornerRadius(_: Theme.RadiusRole)` modifier** (+ the `\.dialogCornerRadius` environment value) — sets the corner-radius role for every `.dialog(…)` and `AlertDialog` card in a subtree; the modifier-based twin of `Card.radius(_:)`. Defaults to `.box`; pass `.field` / `.selector` for tighter chrome. Additive (`diagnose-api-breaking-changes` clean).
+- **`MediaScrim.onContent` / `.onContentSecondary`** on-media foreground contrast colors (the sanctioned no-raw-`Color` exemption), plus **token-bound `Checkbox.customInner(_: SemanticColor)` and `SeatMap.tierColors(_: [SeatTier: SemanticColor])` modifier overloads** (the raw-`Color` forms are `@available(*, deprecated…)` deprecated-forward). Clears body-level raw whites from ImageCollage / VideoPlayerView / ScrubGallery / on-image PageHeader / LoyaltyCard; specular highlights (TiltCard / BorderBeam / MeterStyle) moved to named in-view constants. Audit P0.3 · [ADR-0002](docs/ADR-0002-on-media-and-specular-color.md) · **API-safe** (`diagnose-api-breaking-changes` clean). Note: a shorthand `.tierColors([.x: .purple])` literal now resolves to `SemanticColor.purple` (theme token) rather than `Color.purple` (systemPurple) — source-compatible, slight pixel shift; pass a `Color` explicitly to keep the old hue.
+- **`FormatDefaults` environment + `.formatDefaults(currencyCode:)` modifier** (neutral `ThemeKit`) — sets a subtree-wide default ISO-4217 currency for every price-bearing component, so the currency is provided once at the root instead of per call site.
+- **`SemanticColor` now conforms to `Sendable`**, and **`CardBrand` now conforms to `Sendable, CaseIterable, Codable`** — additive conformances (no signature change) so `Sendable` value types (e.g. edition environment defaults) can carry a `SemanticColor`, and `CardBrand`-bearing models can be `Codable`.
+
+### Changed
+- **Dialog & AlertDialog cards now take their corner radius from the `radius-box` role (16) instead of a hardcoded 32 / 24.** Every `.dialog(…)` and `AlertDialog` card is now `.box`-rounded, resolved through the active theme — so themed dialogs converge on their own `radius-box` (e.g. Ocean's 48). **Source-compatible** but **render-visible**: corners tighten. To keep the old 32pt, set `radius-box: 32` in your theme; use `.dialogCornerRadius(.field/.selector)` for tighter per-subtree chrome.
+- **Price components now resolve their currency from the environment** instead of a hardcoded `"TRY"`/`"USD"` default. The resolution chain is: explicit `currencyCode:` argument › `.formatDefaults(currencyCode:)` › the environment `\.locale`'s currency › `"USD"` terminal fallback. **Source-compatible** (existing signatures unchanged; added omitted-argument overloads), but **render-visible**: a call site that omitted `currencyCode:` and relied on silently getting `TRY`/`USD` will now show the environment-resolved currency. Pin it explicitly with `.formatDefaults(currencyCode: "TRY")` at your root, or pass an explicit code per call. Affects ~23 components (PriceTag, FareSummary, FlightCard, RoomCard, DestinationCard, InstallmentPicker, …).
+- **`ThemeKitTravel`** library product — the opt-in flight/booking **domain edition** (composition over forking: it wraps the neutral `ThemeKit` catalog rather than re-implementing it). This first drop is the packaging foundation — the SPM target/product plus the edition's own String Catalog (`String(themeKitTravel:)`); the booking-flow components land in follow-ups. **No package trait and no re-export** (mirroring `ThemeKitCalendar`): add `ThemeKitTravel` to a target and write `import ThemeKitTravel` alongside `import ThemeKit` to opt in — a consumer who doesn't compiles nothing from it and downloads the same package. Part of the [#229](https://github.com/isamercan/ThemeKit/issues/229) modular direction (ADR: `THEMEKITTRAVEL_ARCHITECTURE.md`).
+
+### Fixed
+- **Audit polish (API-safe, 1.x)** — `FlowLayout` now mirrors under RTL (via an **additive** `layoutDirection` init overload — the original init is preserved, so no API break) and its 5 call sites pass the ambient direction, completing the RTL story; added `.axis(_:)` copy-on-write modifiers to `ButtonGroup`/`Join` (the `axis:` init arg is kept for compatibility); locale-formatted the remaining device-locale numerics (QuantityStepper value, SheetHeader progress percent, Chips/ListRow star ratings) and localized `DestinationCard`'s favourite toggle. No public signature removed or changed (`diagnose-api-breaking-changes` clean).
+- **Dark-mode preview coverage — Atoms + Molecules + Organisms** (audit P2, preview-only) — ~44 atom, ~86 molecule and ~63 organism `#Preview`s adopt the `PreviewMatrix` helper, so each now renders its states across **light + dark** columns (previously only a handful had any dark case). No component or API change. The three-layer sweep is complete (support files + native-.sheet BottomSheet excluded, with reasons).
+- **Right-to-left (RTL) layout correctness** (audit P1, API-safe) — components that use absolute geometry now mirror under `layoutDirection == .rightToLeft`: Slider / RangeSlider (thumb, fill, drag-math), Timeline / Steps (rail & connector offsets), PagingCarousel & Diff (paging/divider + drag), Masonry / Flex (`layoutDirection` threaded into the custom `Layout`), Tooltip (arrow `.flipsForRightToLeftLayoutDirection` + offset), Transfer (`chevron.forward/backward`), LoyaltyCard (`Canvas` fill), RollingNumber (digit row pinned LTR so numbers never reverse), Indicator (corner nudge). Adds VoiceOver `accessibilityAdjustableAction`s to Diff, PagingCarousel and Splitter, and an RTL `#Preview` to each changed component. (Known follow-up: the shared public `FlowLayout` still needs `layoutDirection` threaded through its API.)
+- **Accessibility, localization & locale formatting across ~50 components** (audit P1, API-safe) — icon-only controls now carry `accessibilityLabel`s (state-aware for togglers; decorative glyphs `accessibilityHidden`); interactive rows expose `.isButton`/`.isSelected`; user-facing + a11y strings are wrapped in `String(themeKit:)`; price/number/percent components format through the captured `@Environment(\.locale)`. Also fixes a real `LocalizedStringKey`→consumer-main-bundle mis-resolution in `GuestSelector`/`FlightRoute`/`FlightCard` (stop/summary text now resolves against the package catalog) and a Turkish brand leak in a `SheetHeader` preview. No signature changes.
+- **Brand-neutrality & i18n leaks in the neutral catalog** — removed the last hardcoded `"TRY"` currency defaults (now `"USD"`, with the `.formatDefaults` / `\.locale` env chain still resolving omitted call sites), plus the `"etstur"` brand name and Turkish-language strings (`"/ ay"`, `"Türkiye"`, `"Esenboğa Havalimanı"`, `"İstanbul"`, …) from public-API defaults, previews and doc comments. **Source-compatible** — no signature changes; `swift package diagnose-api-breaking-changes` reports clean. Rationale and full component audit in `THEMEKIT_COMPONENT_AUDIT.md`; design decisions in `docs/ADR-0001` / `docs/ADR-0002`.
+
+## [1.1.0] - 2026-07-10
+
+**New `ThemeKitCore` product — the token-only theme layer.** The theme engine,
+design tokens, and `@Environment(\.theme)` now ship as a standalone
+`ThemeKitCore` library you can adopt on its own, without the 204-component
+catalog. The full `ThemeKit` product depends on it and `@_exported import`s it,
+so **existing `import ThemeKit` code is unchanged** — `Theme`, `SemanticColor`,
+`Theme.SpacingKey` and friends still resolve exactly as before.
+
+First step of the modularization from the architecture review
+([#229](https://github.com/isamercan/ThemeKit/issues/229)): a narrow, value-based
+core for apps that only want theming, with the opinionated domain organisms to
+move into later editions.
+
+### Added
+- **`ThemeKitCore`** library product — `Theme`, tokens (`SemanticColor`, `Theme.SpacingKey`, `Theme.RadiusRole`, typography), `@Environment(\.theme)`, `.themeKit()`, presets, and the theme generator, with **zero components and zero third-party dependencies**. Adopt with `import ThemeKitCore`.
+
+### Changed
+- **`ThemeKit` now re-exports `ThemeKitCore`** (`@_exported import`), so a plain `import ThemeKit` surfaces every token and theme symbol unchanged — no source changes for existing consumers.
+- The theme engine, `Localizable.xcstrings`, and the theme JSON now live in the `ThemeKitCore` target's resource bundle.
+
+### Migration (only if affected)
+- Fully-qualified references to engine symbols — e.g. `ThemeKit.Theme`, `ThemeKit.SemanticColor` — must drop the qualifier or use `ThemeKitCore.Theme`. Unqualified use (`Theme(…)`, `SemanticColor.primary`, `.textStyle(…)`) is unaffected.
+
+## [1.0.0] - 2026-07-09
+
+**The 1.0 stability milestone.** ThemeKit reaches **204 components** (50 atoms ·
+81 molecules · 73 organisms) with a dependency-free core, a full accessibility
+pass, and a stable public API. This is the first release under strict
+[Semantic Versioning](https://semver.org/) — from here, breaking changes bump the
+**major**. Shipping a real `1.0.0` tag also fixes Xcode's "Up to Next Major"
+resolution, which previously could not settle on a pre-1.0 version
+([#223](https://github.com/isamercan/ThemeKit/issues/223)).
+
+### Added
+- **HeroUI Native parity — four waves of new and upgraded components:**
+  - **Wave 1 — form fields** ([#220](https://github.com/isamercan/ThemeKit/pull/220)): TextInput, SearchBar, OTPInput, InputLabel.
+  - **Wave 2 — selection & controls** ([#221](https://github.com/isamercan/ThemeKit/pull/221)): Dropdown, Select, Tag, sliders and related controls.
+  - **Wave 3 — overlay & feedback** ([#222](https://github.com/isamercan/ThemeKit/pull/222)): Dialog, BottomSheet, popovers, toasts.
+  - **Wave 4 — navigation & display** ([#225](https://github.com/isamercan/ThemeKit/pull/225)): Tabs, Accordion, Card, Avatar and more.
+  - Plus the initial **HeroUI Native audit** — 6 new components and a gap-analysis document ([#216](https://github.com/isamercan/ThemeKit/pull/216)).
+- **Component gallery** now flags freshly shipped components with a **"New"** badge and adds a dedicated Showcase pod ([#226](https://github.com/isamercan/ThemeKit/pull/226)).
+
+### Accessibility
+- Two audit rounds added accessibility labels to icon-only controls and corrected sort / disclosure / selected traits across the library ([#218](https://github.com/isamercan/ThemeKit/pull/218), [#219](https://github.com/isamercan/ThemeKit/pull/219)).
+
+### Changed
+- **The optional add-ons are now behind opt-in [SwiftPM package traits](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0450-swiftpm-package-traits.md)**, so the core is dependency-free at *resolution* time, not just link time. A plain `.package(url: "…ThemeKit.git")` now resolves **zero** third-party packages — Lottie, Almanac and HorizonCalendar are no longer fetched unless you ask for them ([#224](https://github.com/isamercan/ThemeKit/issues/224)).
+  - Enable an add-on's dependency with the matching trait: `traits: ["Lottie"]` and/or `traits: ["Calendar"]` on the package dependency (or the **Traits** checkboxes in Xcode).
+  - Add-on sources are `#if canImport(…)` guarded, so with a trait off the module compiles to an empty module rather than failing to build.
+
+### Breaking
+- **Consumers already using `ThemeKitLottie` or `ThemeKitCalendar` must enable the corresponding trait** (`Lottie` / `Calendar`) — otherwise the add-on module resolves empty and its symbols disappear. The core `ThemeKit` product is unaffected. Traits require **Swift 6.1+** tooling on the consuming side.
+
+## [0.19.0] - 2026-07-09
+
+The **Ant Design overview parity** release: swept ant.design/components against the
+library and built every genuine gap, plus a wave of Ant-parity upgrades to existing
+components. All additive and backward-compatible.
+
+### Added
+- **New Ant-parity components:**
+  - **Watermark** — a `.watermark(_:)` modifier tiling a faint, rotated label across a view (Canvas-drawn, theme-tinted).
+  - **Flex** — a flexbox container with main-axis `justify` (start / center / end / space-between / -around / -evenly) and cross-axis `align`, via a custom `Layout`. **Space** stays the simpler even-gap primitive.
+  - **AnchorNav** — a scroll-spy link rail with a moving hero indicator (Ant `Anchor`; renamed to avoid SwiftUI's `Anchor<Value>`).
+  - **Splitter** — two panes with a draggable, clamped divider.
+  - **Affix** — pins content to the top/bottom of a scroll container once it passes an offset (`.target(_:)` for a named container).
+  - **Cascader** — pick a value from a multi-level option tree, one column per level.
+  - **Transfer** — move items between a source and a target list via checkboxes + arrows.
+  - **Mentions** — a multi-line input where typing `@` opens a filterable suggestion list.
+  - **Masonry** — a Pinterest-style grid; items flow into the shortest column (custom `Layout`).
+  - **TreeView** — a standalone hierarchical tree with expand/collapse + optional cascade checkboxes (Ant `Tree`; reuses `TreeNode`).
+  - **ColumnsGrid** — an equal-column grid with a token gutter, fixed or responsive-adaptive (Ant `Grid`).
+  - **Space** — even spacing between inline/stacked children (direction / size / align / wrap).
+- **PageHeader** rewritten as a style-driven organism with 13 style variants, plus a reusable **SearchSummary** molecule.
+- **CheckableTag** — Ant's checkable tag (toggles a bound `Bool`).
+
+### Changed
+- **SegmentedControl** — `.selectionStyle(.tinted)` (soft joined toggle) + `.dividers()` + `.tinted(_ color:)` base color; fuller Ant Segmented parity.
+- **Tag** — `.color(_ SemanticColor)` for the broader palette, `.bordered()`, and the new `CheckableTag`.
+- **ResultView** — `.icon { }` / `.content { }` / `.extra { }` slots + `.subtitle(_)` (Ant Result parity).
+- **BorderBeam** — `outset` + `reverse` (Ant BorderBeam parity).
+- **FilterBar** — Ant "Filter Section" chip + leading styles; native icon+label collapse on scroll.
+- **DatePriceStrip** — `.strip()` horizontal timeline; **RecentSearchRow** — `.pill()` mini-search-bar variant.
+- Docs refreshed to **185 components**; README hero banner + GitHub Pages regenerated, with usage snippets for the new components.
+
+## [0.18.2] - 2026-07-08
+
+### Fixed
+- **FlightListItem `.tray`** container now matches the Figma spec: a tinted
+  card-surface behind the white card (was a near-white neutral that blended in)
+  and the correct concentric radii — 24pt outer tray, 20pt inner card.
+  - The tinted surface is **derived, not a new global token**: white blended
+    halfway with the theme's tinted page surface (`bgElevatorPrimary`) via the
+    new `Color.blended(with:by:)` helper, so it re-skins under ocean/sunset/dark.
+    An explicit `.surface(_:)` still overrides it.
+- **FlightListItem.surface(_:)** is now optional per style: `surfaceKey` defaults
+  to `nil` and each style resolves its own natural surface
+  (`configuration.surface(default:)`) — cards use base-100, `.tray` its tint.
+
+### Added
+- `Color.blended(with:by:)` — sRGB blend of two colors (0…1), for deriving
+  intermediate surfaces from existing theme tokens without adding new ones.
+
+## [0.18.1] - 2026-07-08
+
+### Fixed
+- **FlightListItem `.tray`** now matches the Figma spec pixel-for-pixel. Two
+  flexibility upgrades on the underlying atoms/molecules made it possible
+  without bespoke drawing:
+  - `FlightRoute.track(.inline)` — the design-system track: full-width
+    hairlines flanking the duration, stops label beneath in tertiary,
+    outer-aligned 16pt time columns (stock `.path` look unchanged; time
+    strings now honor the environment locale).
+  - `PriceTag.originalBelow()` — stacks the struck compare-at price below the
+    amount (the spec's vertical price block).
+
+## [0.18.0] - 2026-07-08
+
+### Added
+- **FlightListItem `.tray` style** — implemented from the design-system Figma
+  spec: a white flight card nested on a soft tray surface, with the actions on
+  the tray (details text-link · per-person price with compare-at strikethrough ·
+  circular go button). Composed entirely from library atoms/molecules
+  (`FlightRoute`, `PriceTag`, `TextLink`, `ThemeButton`, `DividerView`, `Icon`,
+  `Badge`). New supporting data on the component: `baggage(_:checked:)` and
+  `onDetails(_:perform:)` (available to every style via the configuration).
+
+## [0.17.0] - 2026-07-08
+
+### Added
+- **FlightListItem** (organism) — a style-driven flight search-result list item.
+  The component owns the typed data (legs, fares, price, deal signals, schedule);
+  the entire layout is delegated to a new **`FlightListItemStyle`** protocol —
+  the most data-rich style hook in the library. Eight built-in styles cover the
+  industry's list-item archetypes (researched across Skyscanner, Google Flights,
+  Kayak, Hopper, Delta/THY, Kiwi, Expedia):
+  `.compact`, `.timeline` (default), `.fareBoard`, `.deal`, `.ticket`,
+  `.journey` (expandable, `expanded(_:)`-drivable), `.slices`, `.timetable`.
+  Plus a **FlightFare** model for fare-family shopping and modifiers for
+  deal signals (`deal(_:tone:)`, `trend(_:)`), schedules (`departures(_:note:)`)
+  and slices (`sliceLabels(_:)`).
+
+## [0.16.0] - 2026-07-07
+
+### Changed — flexibility wave 6: naming sweep, raw-type cleanup, grade-1 floor lift
+
+Closes the flexibility programme (see `docs/flexibility-faz3-report.md`).
+
+- **`accent(_:)` is the one colour verb.** New `accent(SemanticColor?)` on Icon,
+  InlineText, RollingNumber, ProgressBar (fill), Avatar/AvatarGroup, CalendarView,
+  ScoreBadge, ShareButton, FareFeatureRow, TextRotate, SortTab, Counter,
+  Breadcrumbs, ThemeController, ListSectionHeader, FloatingActionButton,
+  SmartSuggestion, CalendarView. Raw-`Color` colour modifiers (`color`, `fillColor`,
+  `ringColor`, `badgeColor`, `colors`, `tint`, `selectionColor`) are deprecated —
+  still functional. Badge deliberately keeps `badgeStyle` as its semantic gate.
+- **Geometry tokens:** `cornerRadius(RadiusRole)` / `spacing(SpacingKey)` /
+  `peek(SpacingKey)` overloads on AnimatedImage, RemoteImage, ImageCollage,
+  FilterBar, PagingCarousel, PriceTrendChart; raw CGFloat knobs stay (documented).
+- **Aliases:** `Chip.expands` / `Coupon.block` deprecated-renamed to `fullWidth`.
+- **Grade-1 floor lift:** Breadcrumbs, FilterGroup, ScoreBadge, TextRotate,
+  FareFeatureRow, ShareButton, CalendarView, ThemeController, ThemePicker, SortTab,
+  Counter (new `CounterSize`), ListSectionHeader (+`trailing{}` slot) all gain
+  copy-on-write modifier layers. HeroSurface evaluated — Hero's `background{}`
+  builder already covers it.
+- **Housekeeping:** Carousel/VideoPlayerView modifiers normalised onto the standard
+  `copy(_:)` helper.
+
+## [0.15.0] - 2026-07-07
+
+### Added — flexibility wave 5: presenter content slots + container state slots
+
+- **`ToastStyle`** (new protocol; `.default` / `.capsule`): `AlertToast` bridges via
+  `isDefault` — `feedbackHost` toasts inherit the hook. `.toast(isPresented:
+  autoDismiss:content:)` presents fully custom toasts through the same
+  presentation modifier.
+- **Presenters:** `Dialog` gains a free-form card overload; `Feedback` gains
+  `toast{}` / `notify{}` builder overloads; `Tour` gains `tourHost(stepCard:)`
+  with a public `TourStepContext` (step/index/count + next/prev/skip).
+  `BottomSheet` / `Drawer` were already ViewBuilder-slotted. CardStyle adoption
+  deliberately skipped for floating presenter chrome (documented in-file).
+- **Containers:** `ListView` and `DataTable` gain `.empty{}` / `.loadingView{}`
+  (DataTable also `.header{}` / `.footer{}` outside the column strip); `Gallery`
+  gains `.empty{}`.
+- **`CardStack`** gets its modifier layer: `.maxVisible`, token-typed
+  `.peekOffset`, `.rotation` (fanned-deck scatter). No swipe axis — the deck has
+  no gesture behaviour to bind; empty-deck negative padding clamped.
+
+## [0.14.0] - 2026-07-07
+
+### Changed — flexibility wave 4: chip, bar and meter families bridge into their archetype styles
+
+- **Chips (`ChipStyle`):** `ImageChip` / `CompactChip` / `ChoseChip` / `FilterChip` /
+  `MapPriceMarker` keep their non-capsule chroma pixel-identical while the default
+  style is ambient (`AnyChipStyle.isDefault` bridge) and hand content to
+  `makeBody` when a custom `.chipStyle(_:)` is set. `ChipGroup` unchanged.
+- **Bars (`BarStyle`):** `Footer` delegates fully; `PageHeader`, `NavigationBar`
+  and `StickyBookingBar` bridge (legacy chrome — chrome-less / capsule + shadow /
+  overlay hairline — cannot be expressed by `DefaultBarStyle`, so it stays
+  byte-identical until a custom style is set). `NavigationBar` gains a per-item
+  `.item{}` builder; `BarChromeOverrides` gains a `showsShadow` channel.
+- **Meters (`MeterStyle`):** `RadialProgress` adopts via a new built-in
+  `RadialMeterStyle` (`.radial`; ring geometry extracted verbatim, dashboard/size/
+  lineWidth as style parameters) and hands over fully to custom `.meterStyle`.
+  `Steps` gains a per-step `.marker{}` builder (percent ring + a11y preserved).
+  `GaugeView` documented exception (native `Gauge`).
+- **Katman-2 exceptions (evaluated, untouched):** `FilterBar`, `SortSummaryBar`
+  (no bar chrome — bare rows), `Sidebar` (vertical rail), `SegmentedTabBar`,
+  `SegmentedControl`, `TripTypeToggle` (track+selection control chroma);
+  `Badge`/`Tag` family stays Katman-2 — their variant system is the style axis,
+  they carry no selection state.
+
+## [0.13.0] - 2026-07-07
+
+### Changed — flexibility wave 3: the form family routes its chrome through `FieldStyle`
+
+15 field components now delegate their box chrome (fill, border, corner) to the
+environment `FieldStyle`; `.fieldStyle(_:)` re-skins the whole form without forking:
+
+- **Select family:** `Select` folds into FieldStyle when no custom `SelectStyle` is
+  injected (legacy path byte-identical otherwise); `SelectStyle`, its built-ins and
+  `.selectStyle(_:)` are **deprecated** but functional. `SelectBox`, `MultiSelect`,
+  `TreeSelect` delegate their trigger chrome (open → `isFocused`).
+- **Date/number:** `DateField`, `TimeField` (open popover → `isFocused`),
+  `InputNumber`, `FieldButton` (field-look shell; fill normalises to `bgWhite`).
+- **Specialised:** `OTPInput` (per-digit cells; active cell = `isFocused`, warnings
+  now tint the border), `PaymentCardField` (real per-row focus — focused rows show
+  the hero border), `FileInput`, `ColorField`, `MultiLineTextInput`.
+- **Search:** `SearchBar` (fill normalises `bgElevatorPrimary` → `bgWhite`, gains a
+  focus border), `Autocomplete`; `SearchField` keeps its five legacy chrome modifiers
+  as a byte-identical override path and defers to FieldStyle only when none is set.
+- **Exceptions:** `GuestSelector` (no field box), `CurrencyPicker` (inherits via
+  `SearchBar`).
+
+**Behaviour notes:** disabled fields now uniformly use the muted `bgSecondaryLight`
+fill; error/warning beats the open/focus border and thickens to 1.5pt; corner radii
+move to the `.field` role token (same fallback size in bundled themes). Demo
+showcase gained a "Form family" section.
+
+## [0.12.0] - 2026-07-07
+
+### Changed — flexibility wave 2: the card family routes its shells through `CardStyle`
+
+16 card components now delegate their outer shell (surface fill, corner clipping,
+border, shadow) to the environment `CardStyle` — `surface()/cornerRadius()/elevation()`
+feed the `CardStyleConfiguration`, and `.cardStyle(_:)` can swap in a completely
+different shell without forking:
+
+- **Flight:** `FlightCard`, `FlightResultRow`.
+- **Media:** `RoomCard`, `DestinationCard` (+`.overlay{}`), `LocationCard`
+  (+`.media{}` replacing the map region, +`.overlay{}`), `AncillaryCard`.
+- **Content:** `ReviewCard`, `NotificationCard` (+`.leading{}`), `PriceAlertCard`,
+  `BlogCard` (opt-in shell via `surface/cornerRadius/elevation`, +`.overlay{}`).
+- **Selectable:** `FareFamilyCard`, `RadioCard`, `CheckboxCard`, `DatePriceCard`,
+  `RoomCard`/`AncillaryCard` — selection now flows through
+  `CardStyleConfiguration.isSelected` (selected borders normalise to the style's
+  1.5pt `borderHero` `strokeBorder`).
+- **Partial/exceptions (documented in-file):** `LoyaltyCard` (gradient front is the
+  component's identity; flat back face delegated), `MapCallout` (pointer triangle and
+  accent border stay component-drawn), `TicketStub`, `Coupon`, `FlightTicketCard`,
+  `BoardingPass` (notched/dashed ticket shells cannot be expressed as a flat surface),
+  `RatingSummary` (no shell), `KeyValueTable` (bordered shell delegated, +`surface(_:)`).
+
+**Behaviour notes:** hairline borders follow `Card` semantics (drawn at `.none`
+elevation; shadowed shells drop it), `stroke` → `strokeBorder` sub-pixel
+normalisation, and selected borders use the `borderHero` token instead of per-card
+accent strokes. Demo showcase gained a "Card family" section — one custom style
+reskinning several different cards.
+
+## [0.11.0] - 2026-07-07
+
+### Added — flexibility wave 1: archetype style protocols + 6 pilots
+
+First wave of the slot/config/style architecture (see `docs/flexibility-audit-faz1.md`).
+Four new archetype style protocols, each mirroring the `CardStyle` idiom
+(Configuration + `AnyX` erasure + environment key + `.xStyle(_:)` + `where Self ==`
+statics), with the default style extracted pixel-identical from the pilot component:
+
+- **`ListRowStyle`** (`.default` / `.inset`) — pilot `ListRow`, which also gains
+  `.leading{}` / `.trailing{}` ViewBuilder slots (the `ListRowTrailing` enum stays).
+- **`FieldStyle`** (`.default` / `.underlined`) — pilot `TextInput`, which gains
+  `.leading{}` / `.trailing{}` slots; all 21 existing modifiers unchanged.
+- **`ChipStyle`** (`.tonal` / `.solid`) — pilot `Chip`; the `ChipSelectionStyle`
+  enum shorthand now routes through the same `makeBody` gate as environment styles.
+  `Chip.interactive(_:)` deprecated in favour of `.disabled(_:)` (still works).
+- **`BarStyle`** (`.default` / `.floating`) — pilot `SheetHeader`, which gains
+  `.leading{}`; `surface()`/`showsDivider()` keep working via internal overrides.
+- **`MeterStyle`** (`.linear` / `.striped`) — pilot `ProgressBar`; data (fraction,
+  fill, track) stays in the component, geometry moves to the style; `steps` is now
+  a configuration field handled by the style.
+- **`CardStyleConfiguration`** additively gains `isSelected` / `isPressed` /
+  `surfaceKey` / `radius`; `DefaultCardStyle` reads surface+radius from it and draws
+  a hero border when selected. Pilot `HotelResultCard` routes its shell through
+  `.cardStyle` and gains `.media{}` / `.overlay{}` slots.
+
+**Behaviour notes:** defaults are pixel-identical except (1) `HotelResultCard` at
+`.soft`/`.elevated` now follows `Card`'s border semantics (shadow only; hairline at
+`.none`), and (2) an `exists(false)`+selected `Chip`'s border drops to the disabled
+palette (no callers).
+
+**Demo** — new "Flexibility Showcase" gallery page: every pilot shown three ways
+(default / slots filled / re-skinned via a custom style defined in the demo target —
+the fork-free proof).
+
+## [0.10.0] - 2026-07-07
+
+### Fixed — audit sprint 1: P0 cleanup (all additive, no call-site breaks)
+
+Closes the P0 findings of the non-daisyUI component audit (travel suite, media atoms,
+app-shell organisms, form extras).
+
+**Dead API wired**
+- `MapCallout.accent(_:)` now tints the border + CTA chevron; `RecentSearchRow.accent(_:)`
+  now brand-tints the leading icon tile. (Both stored the value but never read it.)
+
+**Token overloads for raw-`Color` APIs** (originals kept)
+- `PriceHistogram.accent(SemanticColor)`, `AmenityGrid.tint(SemanticColor)`,
+  `EmptyState.iconForeground(Theme.ForegroundColorKey)` / `.iconBackground(Theme.BackgroundColorKey)` —
+  demos no longer unwrap `Theme.shared` by hand.
+
+**Accessibility**
+- `NavigationBar` — items take an optional `label`, expose it (or the symbol's base name)
+  to VoiceOver, and report `.isSelected`.
+- `RollingNumber` — reads the value instead of the 0-9 digit skeleton.
+- `ProgressIndicator` — one element: label "Progress", value "N of M" (localized).
+- `Steps` — one element per step (title + description, state as value, button trait when
+  tappable, `.isSelected` on the active step).
+- Chips — `ImageChip`/`CompactChip`/`ChoseChip` now expose button + selected traits
+  (they were plain tap gestures); `Chip` reports `.isSelected`; `FilterChip`'s close
+  button is labelled "Remove".
+- `PriceAlertCard` — the container `.combine` no longer flattens the live Toggle; the
+  Toggle is the card's single, fully-labelled VoiceOver element.
+
+**Correctness**
+- `GaugeView` — value is clamped into `range`, and the readout is the position within
+  the range (no more "7 200%" on non-0…1 ranges).
+- `VideoPlayerView` — full macOS parity: the stateful inline player (autoplay, loop,
+  mute, progress, overlays, active-gating) now runs on both platforms; only the AVKit
+  host view is platform-conditional (`AVPlayerView` on macOS).
+- `Steps.small()` — no longer a no-op; compact titles on both axes (and the horizontal
+  default title style is now `labelBase600`, matching the vertical axis).
+
+**Localization** — 4 new step-state accessibility keys (en + tr).
+
+### Changed — base-100 component surfaces (daisyUI colour-model alignment)
+
+Card-like components now default to the page's blank surface token **`bgWhite`**
+(daisyUI `base-100`) instead of the elevation tint `bgElevatorPrimary`; the tint is
+reserved for secondary/nested surfaces (table header strips, zebra rows, selector
+fills, device chrome).
+
+- Default flipped on the 11 components that already had `.surface(_:)`:
+  `PaymentCardField`, `AgentPriceRow`, `AncillaryCard`, `BoardingPass`,
+  `FlightTicketCard`, `HotelResultCard`, `MapCallout`, `PriceAlertCard`, `RoomCard`,
+  `StickyBookingBar`, `TicketStub`.
+- 11 components with a hardcoded surface gained `.surface(_:)` (default `bgWhite`):
+  `ReviewCard`, `FlightCard`, `FlightResultRow`, `LoyaltyCard`, `LocationCard`,
+  `DestinationCard`, `FareFamilyCard`, `SheetHeader`, `Footer`, `FilterList`,
+  `RecentSearchRow` (bordered variant).
+- `Card` (via `DefaultCardStyle`) and `DataTable` rows were already base-100; DataTable's
+  header strip + zebra stripes keep the tint deliberately.
+- **Migration:** this is a visual default change — `.surface(.bgElevatorPrimary)`
+  restores the previous look per component. Snapshots need re-recording.
+
+## [0.9.0] - 2026-07-07
+
+### Added — daisyUI parity sweep (9 new components, 12 upgraded)
+
+Closes the audit against daisyUI's component catalog (61 components, 8 categories).
+
+**New components**
+- `Aura` (atom) — breathing glow halo; standalone blob or `.aura(_:radius:intensity:)` modifier.
+- `TiltCard` (atom) — touch-adapted hover-3D card; `.tilt3D(maxAngle:shine:radius:)` drag tilt with spring-back and optional specular shine.
+- `CodeBlock` (atom) — terminal-style code mockup; `CodeLine` prefixes, per-line semantic highlights, `.copyable()`.
+- `ScrubGallery` (molecule) — touch-adapted hover gallery; finger-scrub flips pages, RTL-aware, segment indicator.
+- `Dropdown` (molecule) — token-bound anchored action menu; `DropdownItem` roles (incl. `.destructive`), `.divider`, `.edge(_:)` placement, outside-tap dismiss.
+- `BrowserFrame` / `WindowFrame` / `PhoneFrame` (organisms) — daisyUI Mockup category: browser chrome, OS window chrome, phone bezel (`.notch(.island/.notch/.none)`) around any content.
+- Declarative validation for `TextInput` — `.validate([.required(), .email()], on: .live/.editingEnd/.submit)` + `.onValidation`; rides the existing `ValidationRule` engine and `infoMessages` styling ("reward early, punish late").
+
+**Upgraded (all additive, defaults unchanged)**
+- `Spinner` — `SpinnerStyle`: `.ring/.dots/.bars/.ball/.infinity` + `.accent(SemanticColor)` (daisyUI Loading parity).
+- `Kbd` — `KbdSize` `.xs/.sm/.md/.lg`.
+- `ChatBubble`, `RadialProgress`, `TextLink`, `Checkbox`, `RadioButton`, `ThemeToggle` — `.accent(SemanticColor)` with auto-contrasting foregrounds.
+- `Tooltip` — `color: SemanticColor?` tint on both overloads.
+- `MultiLineTextInput` — `.size(TextInputSize)` height presets + `.countStyle(_:)` counter parity with TextInput.
+- `SegmentedTabBar` — `.pill` style (daisyUI tabs-box): sliding filled pill via `matchedGeometryEffect`.
+
+**Demo** — 9 new gallery entries; 11 usage cards refreshed with the new axes.
+**Localization** — 5 new accessibility keys (en + tr).
+
+## [0.8.0] - 2026-07-04
+
+### Changed — travel component flexibility pass (14 components, no breaking changes)
+
+A UX-audited upgrade of the 0.7.0 travel suite (vs. HIG, Dynamic Type & SwiftUI-animation
+best practices). Everything is **additive** — existing initialisers and modifiers are
+unchanged, so no call site needs migrating.
+
+**Foundation**
+- `ComponentDensity` environment (`.componentDensity(.compact/.regular/.spacious)`) — one
+  axis tightens/relaxes a whole subtree's spacing.
+
+**Cross-cutting**
+- Fixed-height controls now use `scaledControlHeight` / Dynamic-Type clamps (never clip).
+- `SeatMap` seats are **44pt** (the HIG minimum touch target), up from 34.
+- Reduce-Motion-aware animation throughout (numeric-text prices, spring selections, timer pulse).
+- `.redacted(.placeholder)` skeleton loading honoured across the cards.
+
+**Per component**
+- `PriceTag` — value semantics (`.free`/`.soldOut`/`.from`), `.animatesValue`, trailing slot.
+- `PointsBadge` — scaled height + icon, `.animatesValue`, trailing slot.
+- `CountdownTimer` — formats (`.boxed`/`.inline`/`.text`), `.urgentBelow()` escalation + last-10s pulse, `.onExpired` slot.
+- `GuestSelector` — `.maxTotal` cabin-capacity cap, `.onChange`.
+- `AmenityGrid` — `.limit` progressive disclosure, `.highlighted`.
+- `PriceHistogram` — live range readout + `.resultCount`, bound labels, animated bars.
+- `InstallmentSelector` — `.recommended` badge, `.surcharge` (interest), spring selection.
+- `CurrencyPicker` — `.searchable`, derived country flags, `.recents` section.
+- `FlightCard` — custom `.footer` slot, `.favorite($)`, `.scarcity`, `.fareBrand`.
+- `FareSummary` — per-line `.info` + `.onInfo`, `.footer` slot, animated total.
+- `ReviewCard` — `.stars`, expandable text, tappable photos (`.onPhotoTap`), `.actions` slot.
+- `LoyaltyCard` — `.logo` slot, animated points balance.
+- `SeatMap` — column/row rulers (`.showsLabels`), new `SeatLegend` (`.legend`).
+- `LocationCard` — `.pois` extra pins, `.directions` (opens Apple Maps) / `.onDirections`.
+
+### Added — new atoms & completed deferrals
+
+New CoreImage atoms (still **zero dependencies**):
+- `QRCode` — scannable QR (`CIQRCodeGenerator`).
+- `Barcode` — Code 128 (`CICode128BarcodeGenerator`) with an optional caption.
+
+Previously-deferred features, now shipped (all additive):
+- `LoyaltyCard` — `.flippable()` to a back face with `.membership(.qr / .barcode)`.
+- `FlightCard` — `FlightLeg` + `FlightCard(legs:)` multi-leg itineraries (outbound + return,
+  per-leg airline & layover); the single-leg path is unchanged.
+- `SeatMap` — `.passengers([Passenger], assignment:)` seat-to-traveller assignment (initials +
+  active-passenger tabs, `selection` kept in sync) and `.zoomable()` pinch-zoom.
+- `LocationCard` — `.snapshot()` renders a static `MKMapSnapshotter` image (cheap in long lists).
+
+Still zero new dependencies; ThemeKit + Demo build clean.
+
+## [0.7.0] - 2026-07-03
+
+### Added — travel component suite (14 components)
+
+Domain components for flight / hotel / car booking, all **token-bound** and
+**modifier-based** per the R1–R7 contract (init carries content/bindings; every
+appearance axis is a chainable modifier). Registered in the Demo gallery; strings
+default to English.
+
+**Atoms**
+- `PriceTag` — currency + struck-through original + per-unit suffix + auto discount badge.
+- `PointsBadge` — loyalty points/miles pill (earn / redeem / balance).
+- `CountdownTimer` — live HH:MM:SS boxes (`TimelineView`), `.urgent` palette, `onFinish`.
+
+**Molecules**
+- `GuestSelector` — rooms & guests (adults/children/infants) from `QuantityStepper`, with a `GuestSelection` summary.
+- `AmenityGrid` — icon+label amenities, token-tinted, configurable columns.
+- `PriceHistogram` — price-distribution bars over a `RangeSlider` (in-range = accent).
+- `InstallmentSelector` — instalment plans (per-month + total), interest-free tag (TR taksit).
+- `CurrencyPicker` — symbol/code/name rows with a ticked selection; ships `Currency.common`.
+
+**Organisms**
+- `FlightCard` — airline · times + airport codes · flight-path line (duration/stops) · price + Select.
+- `FareSummary` — itemised fare lines (item/discount/total); total is a hero `PriceTag`.
+- `ReviewCard` — single review: `Avatar` + author + date + `ScoreBadge` + text + photo strip.
+- `LoyaltyCard` — tier · member · points on a brand gradient + progress to the next tier.
+- `SeatMap` — cabin seat grid with aisles, occupied/premium states, multi-select + `maxSelection`.
+- `LocationCard` — MapKit map preview + pin + address/distance (lat/lon convenience init).
+
+All reuse existing atoms where natural (PriceTag, Badge, ScoreBadge, Avatar, RangeSlider,
+QuantityStepper). MapKit is a system framework, so `LocationCard` stays in the zero-dependency core.
+
+## [0.6.0] - 2026-07-03
+
+### Added — `ThemeKitCalendar`: a token-bound date-range calendar (opt-in add-on)
+
+A new opt-in product wraps [Almanac](https://github.com/isamercan/Almanac) (a SwiftUI
+date-range calendar on HorizonCalendar) and drives its colours from ThemeKit tokens —
+so the calendar re-skins with the active preset and per-subtree `.theme(_:)` injection,
+like every other component.
+
+- **`DateRangePicker`** — a `View` wrapping Almanac's range picker with `.range` /
+  `.hotel` / `.rentACar` framing; reads `@Environment(\.theme)` and applies the
+  token-derived style automatically. Named to avoid `Foundation.Calendar` and echo
+  SwiftUI's `DatePicker`.
+- **The bridge** — `CalendarTheme(themeKit:)` / `CalendarStyle.themeKit(_:)` map Almanac's
+  ten semantic colour slots to ThemeKit tokens (`ink→text(.textPrimary)`,
+  `surface→background(.bgElevatorPrimary)`, `inBetweenFill→palette(.primary100)`, …).
+  `.themeKitCalendarStyle(_:)` applies it to any Almanac calendar view.
+- **Zero-dep core preserved** — Almanac is a **conditional, iOS-only** dependency of the
+  `ThemeKitCalendar` target (`.when(platforms: [.iOS])`); the sources are `#if os(iOS)`
+  guarded, so the core stays dependency-free and the package still builds on macOS.
+- Adds `Tests/ThemeKitCalendarTests` (iOS lane); `@_exported import Almanac` so one
+  `import ThemeKitCalendar` is enough.
 
 ## [0.5.0] - 2026-07-02
 
