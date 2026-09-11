@@ -62,8 +62,26 @@ breaking changes bump the **major**.
   every scheme change. This makes the namespace reachable from every entry point:
   `apply(ThemeConfig)`, `ThemePreset.apply()`, `setTheme(css:)`, `loadTheme(named:)`
   and `setTheme(jsonData:)`. Tokens declared in a theme file still reach the theme
-  through `setTheme(jsonData:dark:)` only — `CSSTheme.build` forwards just its mapped
-  vars, and the config path regenerates from scalars.
+  through `setTheme(jsonData:dark:)` and CSS; the config path regenerates from scalars.
+
+- **Consumer tokens from CSS.** A CSS theme may declare them too, under
+  `--custom-color-*`, `--custom-radius-*` and `--custom-spacing-*`:
+
+  ```css
+  :root { --custom-color-fare-badge: #ff5722; --custom-radius-card-hero: 1.25rem; }
+  .dark { --custom-color-fare-badge: #c63f14; }
+  ```
+
+  The kind sits in the var name rather than being inferred from the value, so a
+  radius can't be mistaken for a spacing. A dark block restates only what differs —
+  the rest inherits from `:root`, like the radius roles and the component spacings.
+  `tools/import_css_theme.py` mirrors this and the golden parity tests cover the
+  namespace. ThemeKit's CSS surface carries no typography or shadows, so neither does
+  its consumer side; use a theme JSON or `registerCustomTokens(_:)` for those.
+
+- `ThemeGenerator` now **appends** override keys the generated set doesn't contain,
+  for colors and radius. Previously only spacing did, so a demand-minted color or
+  radius token was silently dropped while the equivalent spacing token worked.
 
 ### Fixed
 

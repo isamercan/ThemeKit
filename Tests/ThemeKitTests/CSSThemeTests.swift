@@ -164,4 +164,81 @@ final class CSSThemeTests: XCTestCase {
         XCTAssertNotNil(t.currentCSS)
         XCTAssertEqual(t.background(.bgHero), Color(hex: "0485f7"))
     }
+
+    // MARK: - Consumer-defined tokens (`custom.` namespace)
+
+    private static let customCSS = """
+    :root {
+      --accent: #056bfd;
+      --custom-color-fare-badge: #ff5722;
+      --custom-color-promo: #00aa55;
+      --custom-radius-card-hero: 1.25rem;
+      --custom-spacing-gutter: 22px;
+    }
+    .dark {
+      --accent: #4d94ff;
+      --custom-color-fare-badge: #c63f14;
+    }
+    """
+
+    private func customTheme(dark: Bool) -> Theme.ThemeData {
+        CSSTheme.parse(Self.customCSS).themeData(dark: dark)
+    }
+
+    func testCustomVarsRideThroughAsNamespacedTokens() {
+        let light = customTheme(dark: false)
+
+        XCTAssertEqual(hex(light, "custom.fare-badge"), "ff5722")
+        XCTAssertEqual(radius(light, "custom.card-hero"), 20)
+        XCTAssertEqual(spacing(light, "custom.gutter"), 22)
+    }
+
+    /// A dark block restates only what differs; the rest inherits from `:root`,
+    /// exactly like the radius roles and the component spacings.
+    func testDarkBlockOverridesOnlyWhatItRestates() {
+        let dark = customTheme(dark: true)
+
+        XCTAssertEqual(hex(dark, "custom.fare-badge"), "c63f14", "restated in .dark")
+        XCTAssertEqual(hex(dark, "custom.promo"), "00aa55", "inherited from :root")
+        XCTAssertEqual(radius(dark, "custom.card-hero"), 20, "structural, inherited")
+    }
+
+    /// The namespace must not leak into, or displace, ThemeKit's own token space.
+    func testCustomVarsDoNotDisturbTheBuiltInTokens() {
+        let light = customTheme(dark: false)
+        let plain = CSSTheme.parse(":root { --accent: #056bfd; }").themeData(dark: false)
+
+        XCTAssertNil(hex(light, "custom.accent"), "an unprefixed var is not a consumer token")
+        XCTAssertEqual(radius(light, "rd-md"), radius(plain, "rd-md"))
+        XCTAssertEqual(spacing(light, "sp-md"), spacing(plain, "sp-md"))
+        XCTAssertNotEqual(spacing(light, "sp-md"), 22, "a consumer spacing never lands on a built-in key")
+        // The built-in color set is untouched apart from the appended namespace.
+        XCTAssertEqual((light.colors?.count ?? 0) - (plain.colors?.count ?? 0), 2)
+    }
+
+    /// A `--custom-*` var whose value doesn't parse as its kind is ignored rather
+    /// than emitted as a broken token.
+    func testUnparseableCustomVarsAreIgnored() {
+        let data = CSSTheme.parse("""
+        :root { --accent: #056bfd; --custom-color-bad: not-a-color; --custom-radius-bad: huge; }
+        """).themeData(dark: false)
+
+        XCTAssertNil(hex(data, "custom.bad"))
+        XCTAssertNil(radius(data, "custom.bad"))
+    }
+
+    /// Parity guard for the consumer namespace: `tools/import_css_theme.py` produced
+    /// exactly these tokens for `customCSS`, verified by running it. The two importers
+    /// must not drift here either — the same reason the golden tests above exist.
+    func testCustomTokensMatchImporterOutput() {
+        let light = customTheme(dark: false)
+        XCTAssertEqual(hex(light, "custom.fare-badge"), "ff5722")
+        XCTAssertEqual(hex(light, "custom.promo"), "00aa55")
+        XCTAssertEqual(radius(light, "custom.card-hero"), 20)
+        XCTAssertEqual(spacing(light, "custom.gutter"), 22)
+
+        let dark = customTheme(dark: true)
+        XCTAssertEqual(hex(dark, "custom.fare-badge"), "c63f14")
+        XCTAssertEqual(hex(dark, "custom.promo"), "00aa55")
+    }
 }
