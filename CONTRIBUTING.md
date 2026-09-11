@@ -8,7 +8,8 @@ Thanks for your interest in improving ThemeKit! This guide covers the basics.
 make ci            # format-lint + lint + build + test (the full gate)
 swift test         # the test suite
 make screenshots   # re-render component PNGs + rebuild the README gallery
-make skill         # regenerate the MCP data, the Agent skill, and llms.txt
+make skill         # regenerate the Agent skill refs + llms.txt/llms-components.txt
+make mcp-data      # rebuild the MCP data (mcp/data/themekit.json) — separate target
 ```
 
 `make ci` is what the pre-push hook and CI run — keep it green.

@@ -370,10 +370,19 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     // them is worse. Instead they ride the SAME theme file under the reserved
     // ``customTokenPrefix`` namespace and come back through the accessors below.
     //
-    // Each accessor takes the BARE name and prepends the prefix itself, so the
-    // lookup can only ever land in the consumer's namespace — ThemeKit's own token
-    // names (including the `package`-level component tokens `spacing(token:)`
-    // resolves) stay sealed, which is the whole reason a stringly API is safe here.
+    // Each accessor takes the BARE name and prepends the prefix itself, so a LOOKUP
+    // can only ever land in the consumer's namespace — the generated keys and the
+    // `package`-level component tokens `spacing(token:)` resolves are unreachable
+    // through these accessors, which is what keeps a stringly read API in line with
+    // the rationale on `spacing(token:)`.
+    //
+    // This seals reads, NOT writes: the theme file has always been an open write
+    // surface, and a theme may still name an internal token (`card-padding`, or any
+    // generated key) directly. The namespace is a read contract, not a sandbox.
+    //
+    // Reachable from `setTheme(jsonData:)` only. The CSS and `ThemeConfig` paths
+    // rebuild their token set from mapped/generated values, so they carry no custom
+    // tokens today — see the CHANGELOG scope table.
     //
     // `nil` means the active theme doesn't define the token; the caller picks its
     // own fallback, exactly like `textStyle(_:)` / `shadow(_:)` / `brandShade(_:_:)`.

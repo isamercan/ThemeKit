@@ -12,8 +12,8 @@ breaking changes bump the **major**.
 - **Consumer-defined tokens (`custom.` namespace).** A host app's design system
   almost always carries tokens ThemeKit has no key for — a campaign badge fill, a
   bespoke card corner. Those can't join the generated key enums (which stay
-  brand-agnostic), so they now ride the same theme JSON / CSS under the reserved
-  `Theme.customTokenPrefix` namespace and read back through `customColor(_:)`,
+  brand-agnostic), so a theme JSON may now declare them under the reserved
+  `Theme.customTokenPrefix` namespace and read them back through `customColor(_:)`,
   `customRadius(_:)`, `customSpacing(_:)`, `customTextStyle(_:)` and
   `customShadow(_:)`.
 
@@ -25,11 +25,30 @@ breaking changes bump the **major**.
   theme.customColor(AppToken.fareBadge.rawValue) ?? theme.background(.bgHero)
   ```
 
-  Each accessor prepends the prefix itself, so the lookup can only land in the
-  consumer's namespace — ThemeKit's own token names, including the `package`-level
-  component tokens behind `spacing(token:)`, stay sealed. Purely additive: existing
-  themes and the typed accessors are untouched, and an undefined token returns
-  `nil` so the caller picks its own fallback.
+  Each accessor prepends the prefix itself, so a *lookup* can only land in the
+  consumer's namespace — the generated keys and the `package`-level component
+  tokens behind `spacing(token:)` are unreachable through these accessors. (The
+  theme file itself remains an open *write* surface, as it always has been: a
+  theme may still name an internal token such as `card-padding` directly.)
+  Purely additive — existing themes and the typed accessors are untouched, and an
+  undefined token returns `nil` so the caller picks its own fallback.
+
+  **Scope in this release — read before adopting.** Custom tokens currently reach
+  the theme through `setTheme(jsonData:)` only:
+
+  | Entry point | Custom tokens |
+  |---|---|
+  | `setTheme(jsonData:)` | ✅ |
+  | `loadTheme(named:)` | ❌ searches `Bundle.module` only, so a host can't ship its own JSON by name |
+  | `setTheme(css:)` / `loadTheme(cssNamed:)` | ❌ `CSSTheme.build` forwards only its mapped vars |
+  | `apply(ThemeConfig)` / `applyGenerated(…)` / `ThemePreset.apply()` | ❌ the token set is regenerated, and `resetThemeState()` clears the namespace |
+
+  Consequences worth stating plainly: applying a preset or a config **drops** any
+  custom tokens; `generatedTokenJSON(for:)` and `persistConfig()` don't carry
+  them; a dark variant must be duplicated in the `…Dark` JSON; and after
+  `setTheme(jsonData:)` a later `setColorScheme(dark:)` re-enters
+  `loadTheme(named:)` with a stale name. Widening this — a `ThemeConfig` field, a
+  CSS passthrough, and the state-tracking fix — is tracked as follow-up work.
 
 ## [1.3.0] - 2026-07-21
 
