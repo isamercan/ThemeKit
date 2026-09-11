@@ -44,11 +44,11 @@ final class CustomTokenTests: XCTestCase {
     func testCustomTokensSurviveTheJSONRoundTrip() {
         Theme.shared.setTheme(jsonData: Data(json.utf8))
 
-        XCTAssertEqual(rgb(Theme.shared.customColor("fare-badge")!), "ff5722")
-        XCTAssertEqual(Theme.shared.customRadius("card-hero"), 20)
-        XCTAssertEqual(Theme.shared.customSpacing("gutter"), 22)
-        XCTAssertNotNil(Theme.shared.customTextStyle("price"))
-        XCTAssertEqual(Theme.shared.customShadow("lift")?.count, 1)
+        XCTAssertEqual(rgb(Theme.shared.custom.color(.fareBadge)!), "ff5722")
+        XCTAssertEqual(Theme.shared.custom.radius(.cardHero), 20)
+        XCTAssertEqual(Theme.shared.custom.spacing(.gutter), 22)
+        XCTAssertNotNil(Theme.shared.custom.textStyle(.price))
+        XCTAssertEqual(Theme.shared.custom.shadow(.lift)?.count, 1)
     }
 
     func testBuiltInTokensAreUnaffected() {
@@ -60,30 +60,80 @@ final class CustomTokenTests: XCTestCase {
         XCTAssertEqual(Theme.shared.spacing(.md), 16)
     }
 
-    /// The seal: an accessor prepends the prefix, so a consumer cannot reach a
-    /// built-in key or a `package`-level component token through the string API.
-    func testAccessorsCannotReachThemeKitsOwnTokens() {
+    /// The seal: a token holds the bare name and the lookup adds the prefix, so a
+    /// consumer cannot reach a generated key or a `package`-level component token.
+    func testLookupsCannotReachThemeKitsOwnTokens() {
         Theme.shared.setTheme(jsonData: Data(json.utf8))
 
-        XCTAssertNil(Theme.shared.customRadius("rd-sm"))
-        XCTAssertNil(Theme.shared.customSpacing("sp-md"))
-        XCTAssertNil(Theme.shared.customColor("background.bg-white"))
-        // Nor by smuggling the prefix in by hand.
-        XCTAssertNil(Theme.shared.customSpacing("../sp-md"))
+        XCTAssertNil(Theme.shared.custom.radius("rd-sm"))
+        XCTAssertNil(Theme.shared.custom.spacing("sp-md"))
+        XCTAssertNil(Theme.shared.custom.color("background.bg-white"))
+    }
+
+    /// Consumer tokens live in their own storage, so they never land in — or shadow —
+    /// the dictionaries ThemeKit's own tokens resolve from.
+    func testCustomMetricsDoNotEnterTheBuiltInStores() {
+        Theme.shared.setTheme(jsonData: Data(json.utf8))
+
+        // `custom.card-hero` must not be readable as a plain radius token name.
+        XCTAssertEqual(Theme.shared.radius(.md), 0, "a theme omitting rd-md leaves it unset, not filled by a custom token")
+        XCTAssertEqual(Theme.shared.custom.radius(.cardHero), 20)
+    }
+
+    /// The likeliest real mistake: pasting the qualified name out of the theme file.
+    /// It must not silently resolve `custom.custom.…`; `qualifiedName` is the way back.
+    func testQualifiedNameRoundTrip() {
+        Theme.shared.setTheme(jsonData: Data(json.utf8))
+
+        XCTAssertEqual(Theme.CustomToken.fareBadge.qualifiedName, "custom.fare-badge")
+        XCTAssertEqual(Theme.CustomToken(rawValue: "fare-badge"), .fareBadge)
+        // An empty name resolves the bare prefix and must not match anything.
+        XCTAssertNil(Theme.shared.custom.color(""))
+    }
+
+    func testEnumerationListsWhatTheThemeDeclares() {
+        Theme.shared.setTheme(jsonData: Data(json.utf8))
+
+        XCTAssertEqual(Theme.shared.custom.colors, [.fareBadge])
+        XCTAssertEqual(Theme.shared.custom.radii, [.cardHero])
+        XCTAssertEqual(Theme.shared.custom.spacings, [.gutter])
+        XCTAssertEqual(Theme.shared.custom.textStyles, [.price])
+        XCTAssertEqual(Theme.shared.custom.shadows, [.lift])
+    }
+
+    /// A consumer text style anchors to the Dynamic Type band its size implies —
+    /// not `.body` — so it scales like a built-in style of the same size.
+    func testCustomTextStyleAnchorsToItsSizeBand() {
+        // 27pt sits in the .title2 band. Before this, a name the ramp doesn't know
+        // anchored to .body regardless of size, so custom type scaled differently
+        // from built-in type at the same size.
+        XCTAssertEqual(TextStyle.relativeTextStyle(forSize: 27), .title2)
+        XCTAssertEqual(TextStyle.headingBase.relativeTextStyle, .title2)
     }
 
     func testMissingCustomTokenIsNilNotADefault() {
         Theme.shared.loadTheme(named: Theme.defaultThemeName)
 
-        XCTAssertNil(Theme.shared.customColor("fare-badge"))
-        XCTAssertNil(Theme.shared.customRadius("card-hero"))
+        XCTAssertNil(Theme.shared.custom.color(.fareBadge))
+        XCTAssertNil(Theme.shared.custom.radius(.cardHero))
     }
 
     func testSwitchingThemesClearsThePreviousCustomTokens() {
         Theme.shared.setTheme(jsonData: Data(json.utf8))
-        XCTAssertNotNil(Theme.shared.customColor("fare-badge"))
+        XCTAssertNotNil(Theme.shared.custom.color(.fareBadge))
 
+        // Documented scope: the config path regenerates the token set, so the
+        // consumer namespace does not survive it.
         Theme.shared.apply(ThemeConfig(primaryHex: "056bfd"))
-        XCTAssertNil(Theme.shared.customColor("fare-badge"))
+        XCTAssertNil(Theme.shared.custom.color(.fareBadge))
+        XCTAssertTrue(Theme.shared.custom.colors.isEmpty)
     }
+}
+
+private extension Theme.CustomToken {
+    static let fareBadge: Self = "fare-badge"
+    static let cardHero: Self = "card-hero"
+    static let gutter: Self = "gutter"
+    static let price: Self = "price"
+    static let lift: Self = "lift"
 }

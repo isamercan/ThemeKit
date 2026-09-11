@@ -74,8 +74,13 @@ public enum TextStyle: String, CaseIterable {
     /// The semantic `Font.TextStyle` this token scales against for Dynamic Type.
     /// Custom fonts built with `relativeTo:` grow/shrink with the user's preferred
     /// text size (anchored to this style), instead of staying a fixed point size.
-    public var relativeTextStyle: Font.TextStyle {
-        switch spec.size {
+    public var relativeTextStyle: Font.TextStyle { TextStyle.relativeTextStyle(forSize: spec.size) }
+
+    /// The semantic band a given point size scales against. Exposed so a token the
+    /// ramp doesn't name — a consumer's `custom.` text style — anchors to the same
+    /// band a built-in style of that size would, instead of defaulting to `.body`.
+    public static func relativeTextStyle(forSize size: CGFloat) -> Font.TextStyle {
+        switch size {
         case 34...:      return .largeTitle
         case 28..<34:    return .title
         case 23..<28:    return .title2

@@ -66,9 +66,22 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     /// part of the generated Figma `PaletteColorKey` set. Keyed `"<family>.<step>"`
     /// (e.g. `"accent.500"`). Empty unless a theme/config provides these hexes.
     private var brandPalette: [String: Color] = [:]
-    /// Consumer-defined colors declared under the reserved ``customTokenPrefix``
-    /// namespace. Keyed by the full token name (e.g. `"custom.fare-badge"`).
+    // Consumer-defined tokens — the reserved ``customTokenPrefix`` namespace. Each is
+    // keyed by the BARE name (`"fare-badge"`), mirroring `brandPalette`, and lives in
+    // its own dictionary so a consumer token can never collide with, or be mistaken
+    // for, one of ThemeKit's own.
     private var customColors: [String: Color] = [:]
+    private var customRadii: [String: CGFloat] = [:]
+    private var customSpacings: [String: CGFloat] = [:]
+    private var customTypography: [String: ResolvedTextStyle] = [:]
+    private var customShadows: [String: [ResolvedShadowLayer]] = [:]
+
+    /// The bare name of a token in the reserved namespace, or `nil` when the name
+    /// isn't in it.
+    private static func customName(_ name: String) -> String? {
+        guard name.hasPrefix(customTokenPrefix) else { return nil }
+        return String(name.dropFirst(customTokenPrefix.count))
+    }
     private var radiusList: [String: CGFloat] = [:]
     private var spacingList: [String: CGFloat] = [:]
     private var typographyList: [String: ResolvedTextStyle] = [:]
@@ -276,31 +289,41 @@ public final class Theme: ObservableObject, @unchecked Sendable {
             } else if color.name.hasPrefix("palette.secondary.") || color.name.hasPrefix("palette.accent.") {
                 // Additive brand ladders (not in the generated PaletteColorKey set).
                 brandPalette[String(color.name.dropFirst("palette.".count))] = value
-            } else if color.name.hasPrefix(Theme.customTokenPrefix) {
-                // Consumer-defined token — see `customColor(_:)`. Anything else is
-                // a name this ThemeKit version has no key for, and stays dropped.
-                customColors[color.name] = value
+            } else if let bare = Theme.customName(color.name) {
+                customColors[bare] = value
+            } else {
+                Theme.warnUnmappedToken(color.name)
             }
         }
-        for r in decoded.radius ?? [] { radiusList[r.name] = r.radius }
-        for s in decoded.spacing ?? [] { spacingList[s.name] = s.spacing }
+        for r in decoded.radius ?? [] {
+            if let bare = Theme.customName(r.name) { customRadii[bare] = r.radius } else { radiusList[r.name] = r.radius }
+        }
+        for s in decoded.spacing ?? [] {
+            if let bare = Theme.customName(s.name) { customSpacings[bare] = s.spacing } else { spacingList[s.name] = s.spacing }
+        }
         for t in decoded.typography ?? [] {
-            let relativeTo = TextStyle(rawValue: t.name)?.relativeTextStyle ?? .body
-            typographyList[t.name] = ResolvedTextStyle(
+            // An unnamed style anchors to the band its point size implies, so a
+            // consumer style scales with Dynamic Type like a built-in of that size.
+            let relativeTo = TextStyle(rawValue: t.name)?.relativeTextStyle
+                ?? TextStyle.relativeTextStyle(forSize: t.size)
+            let resolved = ResolvedTextStyle(
                 font: makeFont(family: t.font, size: t.size, weight: fontWeight(t.weight), relativeTo: relativeTo),
                 lineSpacing: max(0, t.lineHeight - t.size)
             )
+            if let bare = Theme.customName(t.name) { customTypography[bare] = resolved } else { typographyList[t.name] = resolved }
         }
         for s in decoded.shadows ?? [] {
-            shadowList[s.name] = s.layers.map {
+            let layers = s.layers.map {
                 ResolvedShadowLayer(color: Color(hex: $0.color), radius: $0.radius, x: $0.x, y: $0.y)
             }
+            if let bare = Theme.customName(s.name) { customShadows[bare] = layers } else { shadowList[s.name] = layers }
         }
     }
 
     private func resetThemeState() {
         foreground = [:]; background = [:]; border = [:]; text = [:]; palette = [:]; brandPalette = [:]
-        customColors = [:]
+        customColors = [:]; customRadii = [:]; customSpacings = [:]
+        customTypography = [:]; customShadows = [:]
         radiusList = [:]; spacingList = [:]; typographyList = [:]; shadowList = [:]
     }
 
@@ -367,55 +390,92 @@ public final class Theme: ObservableObject, @unchecked Sendable {
     // A host app's design system almost always carries tokens ThemeKit has no key
     // for — a campaign badge fill, a bespoke card corner. They can't join the
     // generated key enums (those stay brand-agnostic), and forking the library for
-    // them is worse. Instead they ride the SAME theme file under the reserved
-    // ``customTokenPrefix`` namespace and come back through the accessors below.
-    //
-    // Each accessor takes the BARE name and prepends the prefix itself, so a LOOKUP
-    // can only ever land in the consumer's namespace — the generated keys and the
-    // `package`-level component tokens `spacing(token:)` resolves are unreachable
-    // through these accessors, which is what keeps a stringly read API in line with
-    // the rationale on `spacing(token:)`.
-    //
-    // This seals reads, NOT writes: the theme file has always been an open write
-    // surface, and a theme may still name an internal token (`card-padding`, or any
-    // generated key) directly. The namespace is a read contract, not a sandbox.
-    //
-    // Reachable from `setTheme(jsonData:)` only. The CSS and `ThemeConfig` paths
-    // rebuild their token set from mapped/generated values, so they carry no custom
-    // tokens today — see the CHANGELOG scope table.
-    //
-    // `nil` means the active theme doesn't define the token; the caller picks its
-    // own fallback, exactly like `textStyle(_:)` / `shadow(_:)` / `brandShade(_:_:)`.
+    // them is worse. Instead they ride the theme file under the reserved
+    // ``customTokenPrefix`` namespace and come back through `theme.custom`.
     //
     // ```swift
     // // brand.json  →  { "name": "custom.fare-badge", "hex": "ff5722" }
-    // enum AppToken: String { case fareBadge = "fare-badge" }
-    // theme.customColor(AppToken.fareBadge.rawValue) ?? theme.background(.bgHero)
+    // extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+    // theme.custom.color(.fareBadge) ?? theme.background(.bgHero)
     // ```
+    //
+    // `CustomToken` holds the BARE name and the lookup adds the prefix, so a read can
+    // only ever land in the consumer's namespace — the generated keys and the
+    // `package`-level component tokens `spacing(token:)` resolves are unreachable
+    // through it. That is what keeps a stringly read API in line with the rationale
+    // on `spacing(token:)`. It seals reads, NOT writes: the theme file has always
+    // been an open write surface and may still name an internal token directly.
+    //
+    // Reachable from `setTheme(jsonData:)` only — the CSS and `ThemeConfig` paths
+    // rebuild their token set from mapped/generated values. See the CHANGELOG.
 
-    /// A consumer-defined color, declared as `custom.<name>` in the theme file.
-    public func customColor(_ name: String) -> Color? {
-        customColors[Theme.customTokenPrefix + name]
+    /// The name of a consumer-defined token, without the ``customTokenPrefix``.
+    ///
+    /// Declare one constant per token so call sites read like the typed token API:
+    /// ```swift
+    /// extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+    /// ```
+    public struct CustomToken: RawRepresentable, Hashable, Sendable, ExpressibleByStringLiteral {
+        /// The bare token name — never carries the prefix.
+        public let rawValue: String
+
+        public init(rawValue: String) {
+            assert(
+                !rawValue.hasPrefix(Theme.customTokenPrefix),
+                """
+                CustomToken takes the bare token name, and the lookup adds the \
+                '\(Theme.customTokenPrefix)' prefix. '\(rawValue)' already carries it, \
+                so it would resolve '\(Theme.customTokenPrefix)\(rawValue)'.
+                """
+            )
+            self.rawValue = rawValue
+        }
+
+        public init(stringLiteral value: String) { self.init(rawValue: value) }
+
+        /// The name as it appears in the theme file.
+        public var qualifiedName: String { Theme.customTokenPrefix + rawValue }
     }
 
-    /// A consumer-defined corner radius, declared as `custom.<name>` in the theme file.
-    public func customRadius(_ name: String) -> CGFloat? {
-        radiusList[Theme.customTokenPrefix + name]
+    /// The consumer-token namespace of a theme — see ``Theme/custom``.
+    public struct CustomTokens {
+        fileprivate let theme: Theme
+
+        /// A consumer-defined color, or `nil` when the active theme omits it.
+        public func color(_ token: CustomToken) -> Color? { theme.customColors[token.rawValue] }
+        /// A consumer-defined corner radius, or `nil` when the active theme omits it.
+        public func radius(_ token: CustomToken) -> CGFloat? { theme.customRadii[token.rawValue] }
+        /// A consumer-defined spacing value, or `nil` when the active theme omits it.
+        public func spacing(_ token: CustomToken) -> CGFloat? { theme.customSpacings[token.rawValue] }
+        /// A consumer-defined text style, or `nil` when the active theme omits it.
+        public func textStyle(_ token: CustomToken) -> ResolvedTextStyle? { theme.customTypography[token.rawValue] }
+        /// A consumer-defined shadow, or `nil` when the active theme omits it.
+        public func shadow(_ token: CustomToken) -> [ResolvedShadowLayer]? { theme.customShadows[token.rawValue] }
+
+        /// Every consumer token the active theme declares, by kind. Use it to assert
+        /// at launch (or in CI) that a theme carries the set your app expects, rather
+        /// than discovering a typo as a silently rendered fallback.
+        public var colors: Set<CustomToken> { Self.tokens(theme.customColors.keys) }
+        public var radii: Set<CustomToken> { Self.tokens(theme.customRadii.keys) }
+        public var spacings: Set<CustomToken> { Self.tokens(theme.customSpacings.keys) }
+        public var textStyles: Set<CustomToken> { Self.tokens(theme.customTypography.keys) }
+        public var shadows: Set<CustomToken> { Self.tokens(theme.customShadows.keys) }
+
+        private static func tokens(_ names: some Sequence<String>) -> Set<CustomToken> {
+            Set(names.map { CustomToken(rawValue: $0) })
+        }
     }
 
-    /// A consumer-defined spacing value, declared as `custom.<name>` in the theme file.
-    public func customSpacing(_ name: String) -> CGFloat? {
-        spacingList[Theme.customTokenPrefix + name]
-    }
+    /// The consumer-defined tokens of this theme: `theme.custom.color(.fareBadge)`.
+    public var custom: CustomTokens { CustomTokens(theme: self) }
 
-    /// A consumer-defined text style, declared as `custom.<name>` in the theme file.
-    public func customTextStyle(_ name: String) -> ResolvedTextStyle? {
-        typographyList[Theme.customTokenPrefix + name]
-    }
-
-    /// A consumer-defined shadow, declared as `custom.<name>` in the theme file.
-    public func customShadow(_ name: String) -> [ResolvedShadowLayer]? {
-        shadowList[Theme.customTokenPrefix + name]
+    /// Logs a theme token this ThemeKit version has no key for and that isn't in the
+    /// consumer namespace — the silent-drop case that motivated ``customTokenPrefix``.
+    /// Debug-only and non-fatal: an older theme may legitimately carry a retired name.
+    private static func warnUnmappedToken(_ name: String) {
+        #if DEBUG
+        print("[ThemeKit] theme token '\(name)' matches no key and isn't under '\(customTokenPrefix)' — dropped")
+        #endif
     }
 
     private func makeFont(family: String, size: CGFloat, weight: Font.Weight, relativeTo: Font.TextStyle = .body) -> Font {

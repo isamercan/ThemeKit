@@ -13,17 +13,25 @@ breaking changes bump the **major**.
   almost always carries tokens ThemeKit has no key for — a campaign badge fill, a
   bespoke card corner. Those can't join the generated key enums (which stay
   brand-agnostic), so a theme JSON may now declare them under the reserved
-  `Theme.customTokenPrefix` namespace and read them back through `customColor(_:)`,
-  `customRadius(_:)`, `customSpacing(_:)`, `customTextStyle(_:)` and
-  `customShadow(_:)`.
+  `Theme.customTokenPrefix` namespace and read them back through `theme.custom`.
 
   ```json
   { "name": "custom.fare-badge", "hex": "ff5722" }
   ```
   ```swift
-  enum AppToken: String { case fareBadge = "fare-badge" }
-  theme.customColor(AppToken.fareBadge.rawValue) ?? theme.background(.bgHero)
+  extension Theme.CustomToken { static let fareBadge: Self = "fare-badge" }
+  theme.custom.color(.fareBadge) ?? theme.background(.bgHero)
   ```
+
+  `Theme.CustomToken` is a `RawRepresentable` / `ExpressibleByStringLiteral` name
+  holding the *bare* token, so call sites keep dot-syntax and autocomplete instead
+  of repeating string literals. `theme.custom` also enumerates what the active
+  theme declares (`custom.colors`, `.radii`, `.spacings`, `.textStyles`,
+  `.shadows`) — assert against it at launch or in CI rather than discovering a
+  typo as a silently rendered fallback. A consumer text style now anchors to the
+  Dynamic Type band its point size implies, so it scales like a built-in style of
+  the same size instead of defaulting to `.body`. In DEBUG, a theme token that
+  matches no key and isn't in the namespace is logged rather than silently dropped.
 
   Each accessor prepends the prefix itself, so a *lookup* can only land in the
   consumer's namespace — the generated keys and the `package`-level component
