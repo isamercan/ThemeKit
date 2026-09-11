@@ -338,11 +338,24 @@ enum ThemeGenerator {
                 }
                 return color
             }
+            // Names the generated set doesn't contain — a consumer's `custom.` token,
+            // or one this version doesn't mint — are appended rather than dropped,
+            // mirroring the demand-minted spacing tokens below.
+            let knownColors = Set(colors.map(\.name))
+            colors += semanticOverrides
+                .filter { !knownColors.contains($0.key) }
+                .sorted { $0.key < $1.key }
+                .map { Theme.AppColor(name: $0.key, hex: $0.value) }
         }
 
-        let radius = radiusBase.map {
+        var radius = radiusBase.map {
             Theme.AppRadius(name: $0.0, radius: radiusOverrides[$0.0] ?? ($0.1 * radiusScale).rounded(.toNearestOrEven))
         }
+        let knownRadius = Set(radiusBase.map(\.0))
+        radius += radiusOverrides
+            .filter { !knownRadius.contains($0.key) }
+            .sorted { $0.key < $1.key }
+            .map { Theme.AppRadius(name: $0.key, radius: $0.value) }
         // Overrides are explicit theme values — applied verbatim, bypassing
         // `spacingScale` (exactly like `radiusOverrides` bypasses `radiusScale`).
         var spacing = spacingBase.map {

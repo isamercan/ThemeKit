@@ -154,6 +154,24 @@ public enum CSSTheme {
             if let declared, let px = remToPx(declared) { spacings[entry.token] = px }
         }
 
+        // 6) consumer-defined tokens — `--custom-color-*`, `--custom-radius-*` and
+        //    `--custom-spacing-*` ride through as `custom.<name>`, the reserved
+        //    namespace `Theme.customTokenPrefix` names. Read from the light block
+        //    first so a scheme that omits one inherits it, exactly like radius and
+        //    the component spacings above. ThemeKit's CSS surface carries no
+        //    typography or shadows, so neither does its consumer namespace.
+        for source in [rootFallback, vars] {
+            for (name, value) in source {
+                if let bare = name.strippingPrefix("custom-color-"), let c = parseColor(value) {
+                    overrides[Theme.customTokenPrefix + bare] = c.hex
+                } else if let bare = name.strippingPrefix("custom-radius-"), let px = remToPx(value) {
+                    radii[Theme.customTokenPrefix + bare] = px
+                } else if let bare = name.strippingPrefix("custom-spacing-"), let px = remToPx(value) {
+                    spacings[Theme.customTokenPrefix + bare] = px
+                }
+            }
+        }
+
         return ThemeGenerator.generate(
             primaryHex: accent, tint: 0, dark: dark,
             font: font, fontScale: 1, radiusScale: 1, spacingScale: 1, shadowScale: 1,
@@ -316,5 +334,12 @@ public enum CSSTheme {
         if value.hasSuffix("px"), let n = Double(value.dropLast(2)) { return CGFloat(n.rounded(.toNearestOrEven)) }
         if let n = Double(value) { return CGFloat(n.rounded(.toNearestOrEven)) }
         return nil
+    }
+}
+
+private extension String {
+    /// The remainder after `prefix`, or `nil` when the string doesn't start with it.
+    func strippingPrefix(_ prefix: String) -> String? {
+        hasPrefix(prefix) ? String(dropFirst(prefix.count)) : nil
     }
 }

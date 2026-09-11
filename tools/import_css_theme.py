@@ -163,6 +163,14 @@ STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
 # (`--card-padding` does not write header/body/footer entries). Precedence
 # between the tokens lives in the component (Card) at render time.
 # First name in the alias list wins within a scheme block.
+# Consumer-defined tokens live under a reserved namespace so they can never collide
+# with ThemeKit's own (mirrors `Theme.customTokenPrefix`).
+CUSTOM_TOKEN_PREFIX = "custom."
+CUSTOM_VAR_PREFIX = "custom-"
+CUSTOM_COLOR_PREFIX = "custom-color-"
+CUSTOM_RADIUS_PREFIX = "custom-radius-"
+CUSTOM_SPACING_PREFIX = "custom-spacing-"
+
 SPACING_VAR_MAP = [
     ("card-padding", ["card-padding", "card-p", "padding-card"]),
     ("card-header-padding", ["card-header-padding"]),
@@ -285,6 +293,30 @@ def build_theme(ns, vars_, dark, hue, font):
         px = _rem_px(raw) if raw is not None else None
         if px is not None and token not in have_spacing:
             data["spacing"].append({"name": token, "spacing": px})
+
+    # 7) consumer-defined tokens — `--custom-color-*`, `--custom-radius-*` and
+    #    `--custom-spacing-*` ride through as `custom.<name>`, the reserved namespace
+    #    Theme.customTokenPrefix names (mirrors CSSTheme.build step 6). ThemeKit's CSS
+    #    surface carries no typography or shadows, so neither does its consumer side.
+    have_colors = {c["name"] for c in data["colors"]}
+    have_radius = {r["name"] for r in data["radius"]}
+    have_spacing = {s["name"] for s in data["spacing"]}
+    for name, raw in sorted(vars_.items()):
+        if name.startswith(CUSTOM_COLOR_PREFIX):
+            c = parse_color(raw)
+            token = CUSTOM_TOKEN_PREFIX + name[len(CUSTOM_COLOR_PREFIX):]
+            if c is not None and token not in have_colors:
+                data["colors"].append({"name": token, "hex": c.hex})
+        elif name.startswith(CUSTOM_RADIUS_PREFIX):
+            px = _rem_px(raw)
+            token = CUSTOM_TOKEN_PREFIX + name[len(CUSTOM_RADIUS_PREFIX):]
+            if px is not None and token not in have_radius:
+                data["radius"].append({"name": token, "radius": px})
+        elif name.startswith(CUSTOM_SPACING_PREFIX):
+            px = _rem_px(raw)
+            token = CUSTOM_TOKEN_PREFIX + name[len(CUSTOM_SPACING_PREFIX):]
+            if px is not None and token not in have_spacing:
+                data["spacing"].append({"name": token, "spacing": px})
     return data
 
 
@@ -316,6 +348,11 @@ def main():
                 for n in names:
                     if n in light:
                         dark[n] = light[n]
+        # Consumer-defined tokens (`--custom-*`) inherit the same way, so a dark
+        # block only has to restate the ones that actually differ.
+        for k in light:
+            if k.startswith(CUSTOM_VAR_PREFIX):
+                dark.setdefault(k, light[k])
 
     hue_c = parse_color(light["accent"])
     hue = hue_c.H if hue_c and hue_c.H is not None else 253.83
