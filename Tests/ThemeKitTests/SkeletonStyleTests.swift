@@ -243,6 +243,9 @@ final class SkeletonStyleTests: XCTestCase {
                 .size(width: 40, height: 20)
                 .microAnimations(model.micro)
                 .skeletonStyle(RecordingSkeletonStyle(recorder: recorder))
+                // Pin Reduce Motion off: CI runners can have it on, which
+                // would keep every appearance static.
+                .environment(\._accessibilityReduceMotion, false)
         }
     }
 
