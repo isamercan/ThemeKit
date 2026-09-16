@@ -43,10 +43,17 @@ public enum RadioButtonPadding {
 ///
 ///     RadioButton("Remember me", isSelected: $on)
 ///         .type(.check).radioStyle(.inner).gap(.medium)
+///         .description("Stay signed in on this device")
 ///         .controlSize(.small)            // native size
 ///         .disabled(!editable)            // native — R3
+///
+/// The chrome (indicator, label, description) is drawn by the active
+/// ``RadioButtonChromeStyle`` when one is set with `.radioButtonChromeStyle(_:)`
+/// on the radio or an ancestor; the radio keeps its behaviour, accessibility
+/// and validation messages either way.
 public struct RadioButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.radioButtonChromeStyle) private var chromeStyle
 
     @Binding private var isSelected: Bool
     private let label: String?
@@ -64,6 +71,12 @@ public struct RadioButton: View {
     private var accessibilityID: String?
     private var controlPlacement: HorizontalEdge = .leading   // A3
     private var customLabel: SlotContent?                     // D1 — `.label { }` slot
+    private var descriptionText: String?                      // Checkbox parity
+    /// Identifier element on the style path; RadioGroup rows set `option.<n>`.
+    private var a11yElementName: String = A11yElement.Control.radio.rawValue
+    /// Whether the style path speaks "selected" / "not selected" as the value.
+    /// RadioGroup rows turn it off to match its built-in rows (trait only).
+    private var speaksSelectionValue = true
     @Environment(\.isReadOnly) private var isReadOnly         // E1
 
     @Environment(\.microAnimations) private var micro
@@ -88,6 +101,15 @@ public struct RadioButton: View {
     }
 
     public var body: some View {
+        if chromeStyle.isDefault {
+            builtInBody
+        } else {
+            styledBody
+        }
+    }
+
+    /// The built-in chrome — unchanged from before the style door existed.
+    private var builtInBody: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
@@ -110,12 +132,61 @@ public struct RadioButton: View {
             .a11y(A11yElement.Control.radio, in: accessibilityID)
             .accessibilityLabel(label ?? "")
             .accessibilityValue(isSelected ? String(themeKit: "selected") : String(themeKit: "not selected"))
+            .modifier(RadioDescriptionHint(text: descriptionText))   // description isn't in the label — surface it here
             .accessibilityAddTraits(isSelected ? .isSelected : [])
 
             if !infoMessages.isEmpty {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
+    }
+
+    /// A custom ``RadioButtonChromeStyle`` draws the chrome; the radio keeps
+    /// the tap rule, read-only, the disabled gate, accessibility and messages.
+    private var styledBody: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                if type == .check { isSelected.toggle() } else { isSelected = true }
+            } label: {
+                EmptyView()   // the bridge draws the style's chrome instead
+            }
+            .buttonStyle(RadioButtonChromeBridge(style: chromeStyle, template: chromeConfiguration))
+            .disabled(!isEnabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — the chrome stays, toggling blocked
+            .a11y(a11yElementName, in: accessibilityID)
+            .accessibilityLabel(label ?? "")
+            .modifier(SelectionValue(isSelected: isSelected, isSpoken: speaksSelectionValue))
+            .modifier(RadioDescriptionHint(text: descriptionText))
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+            if !infoMessages.isEmpty {
+                InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
+            }
+        }
+    }
+
+    /// Everything the style reads except the live press state.
+    private var chromeConfiguration: RadioButtonChromeStyleConfiguration {
+        RadioButtonChromeStyleConfiguration(
+            label: label,
+            customLabel: customLabel.map { AnyView($0) },
+            description: descriptionText,
+            isSelected: isSelected,
+            isEnabled: isEnabled,
+            isPressed: false,
+            isReadOnly: isReadOnly,
+            type: type,
+            radioStyle: style,
+            validation: dominant,
+            accent: accent,
+            controlSize: controlSize,
+            controlPlacement: controlPlacement,
+            alignment: verticalAlignment,
+            gap: gap,
+            animation: motion,
+            fillColorOverride: backgroundColor
+        )
     }
 
     /// The radio glyph itself (extracted so `controlPlacement` can branch order).
@@ -128,8 +199,20 @@ public struct RadioButton: View {
             .animation(motion, value: isSelected)
     }
 
-    /// Built-in string label, or the `.label { }` slot when set (D1/B8).
+    /// The title, with the description under it when one is set.
     @ViewBuilder private var labelView: some View {
+        if let descriptionText {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                titleView
+                HelperText(descriptionText)
+            }
+        } else {
+            titleView
+        }
+    }
+
+    /// Built-in string label, or the `.label { }` slot when set (D1/B8).
+    @ViewBuilder private var titleView: some View {
         if let customLabel {
             customLabel
         } else if let label {
@@ -227,6 +310,11 @@ public extension RadioButton {
         copy { $0.customLabel = SlotContent(content) }
     }
 
+    /// Supporting text under the label, drawn with ``HelperText`` and read by
+    /// VoiceOver as the control's hint. `nil` (the default) hides it.
+    /// (Checkbox `description(_:)` parity.)
+    func description(_ text: String?) -> Self { copy { $0.descriptionText = text } }
+
     /// Sets the accessibility-identifier namespace for this component (its
     /// sub-elements get `"<id>.<element>"`).
     func a11yID(_ id: String?) -> Self { copy { $0.accessibilityID = id } }
@@ -235,6 +323,103 @@ public extension RadioButton {
         var c = self
         mutate(&c)
         return c
+    }
+}
+
+extension RadioButton {
+    /// The identifier element under ``a11yID(_:)`` on the custom-style path
+    /// (default `radio`). RadioGroup names its styled rows `option.<n>`.
+    internal func a11yElement(_ element: String) -> Self {
+        var c = self
+        c.a11yElementName = element
+        return c
+    }
+
+    /// Whether the custom-style path speaks "selected" / "not selected" as the
+    /// accessibility value (default on). RadioGroup's styled rows turn it off:
+    /// its built-in rows carry only the selected trait.
+    internal func speaksSelectionValue(_ on: Bool) -> Self {
+        var c = self
+        c.speaksSelectionValue = on
+        return c
+    }
+}
+
+/// The description as the accessibility hint — only when there is one, so a
+/// radio without a description carries no hint at all.
+struct RadioDescriptionHint: ViewModifier {
+    let text: String?
+
+    /// The hint to apply: the description, or `nil` when it's absent or empty.
+    static func hint(for text: String?) -> String? {
+        guard let text, !text.isEmpty else { return nil }
+        return text
+    }
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let hint = Self.hint(for: text) {
+            content.accessibilityHint(hint)
+        } else {
+            content
+        }
+    }
+}
+
+/// "selected" / "not selected" as the accessibility value, unless the
+/// composing control reads the selection from the trait alone.
+private struct SelectionValue: ViewModifier {
+    let isSelected: Bool
+    let isSpoken: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isSpoken {
+            content.accessibilityValue(isSelected ? String(themeKit: "selected") : String(themeKit: "not selected"))
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Preview
+
+/// A preview-only chrome: a filled accent disc with a light center dot, a
+/// medium-weight label and a secondary description, fading when disabled.
+private struct PreviewDiscRadioChrome: RadioButtonChromeStyle {
+    func makeBody(configuration: RadioButtonChromeStyleConfiguration) -> some View {
+        PreviewDiscRadioChromeBody(configuration: configuration)
+    }
+}
+
+private struct PreviewDiscRadioChromeBody: View {
+    let configuration: RadioButtonChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let c = configuration
+        let paint = theme.resolve(c.accent ?? .primary)
+        let side: CGFloat = 18
+        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            Circle()
+                .fill(c.isSelected ? paint.solid : theme.background(.bgWhite))
+                .overlay { Circle().fill(paint.onSolid).padding(side * 0.3).opacity(c.isSelected ? 1 : 0) }
+                .overlay { Circle().strokeBorder(paint.border, lineWidth: c.isSelected ? 0 : 1) }
+                .frame(width: side, height: side)
+                .animation(c.animation, value: c.isSelected)
+            if c.label != nil || c.description != nil {
+                VStack(alignment: .leading, spacing: 2) {
+                    if let label = c.label {
+                        Text(label).textStyle(.bodyBase500).foregroundStyle(theme.text(.textPrimary))
+                    }
+                    if let description = c.description {
+                        Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                    }
+                }
+            }
+        }
+        .opacity(c.isEnabled ? (c.isPressed ? 0.8 : 1) : 0.4)
+        .contentShape(Rectangle())
     }
 }
 
@@ -263,5 +448,27 @@ public extension RadioButton {
                 }
         }
         PreviewCase("Read-only") { RadioButton("Read-only (tap does nothing)", isSelected: .constant(true)).readOnly() }   // E1
+        PreviewCase("Description") {
+            RadioButton("Pay later", isSelected: .constant(true))
+                .description("Pay at the property before check-in.")
+                .alignment(.top)
+        }
+        PreviewCase("Custom chrome style") {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.md.value) {
+                RadioButton("Selected", isSelected: .constant(true))
+                    .description("A chrome draws the indicator, label and description.")
+                RadioButton("Unselected", isSelected: .constant(false))
+                RadioButton("Disabled", isSelected: .constant(true)).disabled(true)
+                RadioButton("Success accent", isSelected: .constant(true)).accent(.success)
+                RadioButton(isSelected: .constant(true))   // indicator only
+            }
+            .radioButtonChromeStyle(PreviewDiscRadioChrome())
+        }
+        PreviewCase("Built-in vs .default") {
+            HStack {
+                RadioButton("Built-in", isSelected: .constant(true))
+                RadioButton("Default", isSelected: .constant(true)).radioButtonChromeStyle(.default)
+            }
+        }
     }
 }

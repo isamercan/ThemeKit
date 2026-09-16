@@ -49,6 +49,80 @@ Theme-owned instead of app-owned? Declare `"custom.fare-badge"` in the theme JSO
 values win where both define the same name. Assert your set at launch with
 `theme.custom.colors` rather than shipping a typo as a silent fallback.
 
+## Pattern: Paint a ThemeKit component with your design system (chrome styles)
+
+A host design system wraps a ThemeKit component and draws its chrome with its own
+tokens, text styles and icon font. ThemeKit keeps the behaviour, content, slots,
+accessibility, RTL and state; the style only paints. Chrome styles exist for
+`ThemeButton` (`ButtonChromeStyle`), `Badge` (`BadgeChromeStyle`), `CountBadge`,
+`IconTile`, `PriceTag`, `RadioButton` (`RadioButtonChromeStyle`), `Skeleton`,
+`DividerView`, `Callout` (`CalloutChromeStyle`), `InlineText` and `Chip` (ADR-0009).
+
+```swift
+extension Theme.CustomToken {                        // registered once with registerCustomTokens(_:)
+    static let badgeFill: Self = "badge-fill"
+    static let badgeInset: Self = "badge-inset"
+    static let badgeLabel: Self = "badge-label"
+}
+
+// The wrapper: its body IS the ThemeKit component. (HostGlyph = your icon-font view.)
+struct HostBadge: View {
+    let text: String
+    let tone: BadgeStyle
+    var body: some View {
+        Badge(text).badgeStyle(tone)
+            .leading { HostGlyph(.tag) }            // any view — an icon-font glyph
+    }
+}
+
+// The chrome: resolve colours from the environment theme inside a View.
+struct HostBadgeChrome: BadgeChromeStyle {
+    func makeBody(configuration: BadgeChromeStyleConfiguration) -> some View {
+        HostBadgeChromeBody(configuration: configuration)
+    }
+}
+
+private struct HostBadgeChromeBody: View {
+    let configuration: BadgeChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let tone = theme.resolve(configuration.tone.semantic)
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            configuration.leading
+            Text(configuration.text)
+                .font(theme.custom.textStyle(.badgeLabel)?.font ?? TextStyle.labelSm600.font)
+            configuration.trailing
+        }
+        .foregroundStyle(configuration.isEnabled ? tone.accent : theme.text(.textDisabled))
+        .padding(.horizontal, theme.custom.spacing(.badgeInset) ?? Theme.SpacingKey.sm.value)
+        .frame(height: 24)
+        .background(theme.custom.color(.badgeFill) ?? tone.soft,
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
+    }
+}
+
+// Once, at the root — it also reaches the badges ThemeKit composes (list rows, cards…).
+RootView().badgeChromeStyle(HostBadgeChrome())
+```
+
+- Register your type ramp with `Theme.ResolvedTextStyle(font:lineSpacing:)` under
+  `registerCustomTokens(.init(textStyles: [...]))`, then apply `.font` + `.lineSpacing`.
+- With no style set, the component draws its built-in look unchanged; `.default` draws
+  the same look through the style, so a custom chrome can hand some cases back to it.
+- Configurations carry raw text and un-fonted views, resolved state (`isEnabled`,
+  `isPressed`, …) and motion already resolved — never read `microAnimations` in a style
+  (`PriceTag`'s `animatesValue` still ignores it, as in 1.4.0).
+- The stock `Default…` styles are `Sendable`: keep one in a `static let` and reuse it.
+- New slots and inits make wrapping easier: `ThemeButton.label { }` /
+  `.loadingIndicator { }` / `.spacing(_:)` (`.indicator { }` on a button stays the corner
+  overlay; hand your own glyphs in through `.prefix { }` / `.suffix { }`),
+  `IconTile(glyph:)` / `.tileShape(_:)`, `PriceTag(verbatim:)` /
+  `.original(verbatim:)` / `.discountBadge(_: String?)`, `RadioButton.description(_:)`,
+  `Callout.statusLabel(_:)` / `.alignment(_:)` / `.fullWidth(_:)`.
+
+---
+
 ## Pattern: Custom theme creation
 
 Generate a whole palette from one accent, or specify a full config.

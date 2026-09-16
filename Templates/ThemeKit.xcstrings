@@ -1716,6 +1716,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "original price %@": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "pts": {
       "extractionState": "manual",
       "generatesSymbol": false

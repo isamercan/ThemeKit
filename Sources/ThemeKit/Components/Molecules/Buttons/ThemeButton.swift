@@ -26,11 +26,23 @@ public enum ButtonShape: String, CaseIterable {
     case rounded, pill, circle, square
 }
 
+/// A fully configurable button: semantic color × variant × size × shape, with
+/// content and action in `init` and every appearance axis a chainable modifier.
+///
+/// Chrome — padding, frame, fill, border, shape, foreground, focus ring — is
+/// drawn by the active ``ButtonChromeStyle`` when an ancestor sets one with
+/// `.buttonChromeStyle(_:)`; otherwise by the built-in chrome. Either way the
+/// button keeps its behaviour, content model and accessibility.
 public struct ThemeButton: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // R3 — set natively by `.disabled(_:)`
     @Environment(\.componentDefaults) private var componentDefaults
     @Environment(\.buttonGroupControlSize) private var groupSize   // set by an enclosing sized `ButtonGroup`
+    @Environment(\.buttonChromeStyle) private var chromeStyle
+    // Resolved here and handed to a custom chrome (ADR-0004 §4) — styles never
+    // read the motion environment themselves.
+    @Environment(\.microAnimations) private var microAnimations
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Appearance/state — mutated only through the modifiers below (R2).
     /// Explicit `.color(_:)`; `nil` defers to the subtree `componentDefaults`
@@ -58,6 +70,12 @@ public struct ThemeButton: View {
     /// wins over the SF-Symbol `icon(leading:trailing:)` on its side.
     private var prefixView: AnyView?
     private var suffixView: AnyView?
+    /// `.label { }` — replaces only `Text(title)` in the built-in row; `nil` = the title.
+    private var titleSlot: SlotContent?
+    /// `.loadingIndicator { }` — replaces the loading `ProgressView`; `nil` = the built-in spinner.
+    private var customIndicator: SlotContent?
+    /// `.spacing(_:)` — the gap between the row's items.
+    private var rowSpacing: Theme.SpacingKey = .xs
     /// Drives the visible focus ring (Figma focus state · accessibility).
     @FocusState private var isFocused: Bool
 
@@ -67,9 +85,12 @@ public struct ThemeButton: View {
     /// The resolved control size: explicit modifier ?? enclosing `ButtonGroup`
     /// size ?? `.medium`.
     private var size: ButtonSize { explicitSize ?? groupSize ?? .medium }
-    /// Bound once per body read — resolves `color` against the environment
-    /// theme (ADR-0006), honoring per-subtree `.theme(_:)`.
-    private var resolvedColor: SemanticColor.Resolved { theme.resolve(color) }
+    /// The built-in chrome's paint — resolves `color` against the environment
+    /// theme (ADR-0006), honoring per-subtree `.theme(_:)`. Shared with
+    /// ``DefaultButtonChromeStyle``.
+    private var paint: ButtonChromePaint {
+        ButtonChromePaint(theme: theme, color: color, variant: variant, shape: shape, isEnabled: isEnabled)
+    }
 
     private let title: String?
     private let action: () -> Void
@@ -100,6 +121,11 @@ public struct ThemeButton: View {
     ///     } label: {
     ///         HStack { Image(systemName: "cart"); Text("Checkout"); Badge("3") }
     ///     }
+    ///
+    /// This content replaces the *whole* row — `prefix`/`suffix`, `icon` and
+    /// the `.label { }` slot are ignored, and it speaks for itself to
+    /// VoiceOver. To swap only the title text and keep the rest, use
+    /// ``label(_:)`` instead.
     public init(action: @escaping () -> Void, @ViewBuilder label: () -> some View) {   // R1
         self.title = nil
         self.action = action
@@ -109,18 +135,33 @@ public struct ThemeButton: View {
     private var isIconOnly: Bool { iconOnlyOverride || shape == .circle || shape == .square }
 
     // Density-aware size resolution (regular touch ramp vs compact web ramp).
-    private var sizeHeight: CGFloat { density == .compact ? size.compactHeight : size.height }
-    private var sizePadding: CGFloat { density == .compact ? size.compactHorizontalPadding : size.horizontalPadding }
-    private var sizeTextStyle: TextStyle { density == .compact ? size.compactTextStyle : size.textStyle }
-    private var sizeFontSize: CGFloat { density == .compact ? size.compactFontSize : size.fontSize }
+    private var sizeHeight: CGFloat { size.height(for: density) }
+    private var sizePadding: CGFloat { size.horizontalPadding(for: density) }
+    private var sizeTextStyle: TextStyle { size.textStyle(for: density) }
+    private var sizeFontSize: CGFloat { size.fontSize(for: density) }
 
     public var body: some View {
-        let button = Button {
-            guard !isLoading else { return }
-            Haptics.tap()
-            action()
+        if chromeStyle.isDefault {
+            accessibilityLabelled(builtInChromeButton)
+        } else {
+            accessibilityLabelled(styledChromeButton)
+        }
+    }
+
+    /// The tap: ignored while loading, otherwise a haptic tick and the action.
+    private func performTap() {
+        guard !isLoading else { return }
+        Haptics.tap()
+        action()
+    }
+
+    /// No style set: the built-in chrome, unchanged since before
+    /// ``ButtonChromeStyle`` existed (the snapshot suite pins it).
+    private var builtInChromeButton: some View {
+        Button {
+            performTap()
         } label: {
-            content
+            arrangedLabel(isBuiltInChrome: true)
                 // minHeight (not a fixed height) so a label that wraps to two
                 // lines at large Dynamic Type sizes grows the button instead of
                 // being clipped. Icon-only buttons pin width == height (min==max)
@@ -139,17 +180,58 @@ public struct ThemeButton: View {
             shape: shapeStyle,
             resting: background,
             pressed: pressedBackground,
-            stroke: variant == .outline ? (isEnabled ? resolvedColor.border : theme.border(.borderPrimary)) : nil
+            stroke: paint.stroke
         ))
         .disabled(!isEnabled)
         .a11y(A11yElement.Action.button, in: accessibilityID)
         .accessibilityValue(isLoading ? String(themeKit: "Loading") : "")
         .focused($isFocused)
-        .overlay { focusRing }
+        .overlay { paint.focusRing(isVisible: isFocused) }
+    }
 
-        // A custom label speaks for itself — overriding it with the (nil) title
-        // would silence the slot's text for VoiceOver.
-        if customLabel == nil {
+    /// A style is set: the same behaviour, with the chrome handed to the style
+    /// through a real `ButtonStyle` (live `isPressed`). The size's text style
+    /// wraps the chrome so the label inherits it unless the chrome re-fonts it.
+    private var styledChromeButton: some View {
+        Button {
+            performTap()
+        } label: {
+            arrangedLabel(isBuiltInChrome: false)
+        }
+        .buttonStyle(ButtonChromeBridge(style: chromeStyle, template: chromeConfiguration))
+        .textStyle(sizeTextStyle)
+        .disabled(!isEnabled)
+        .a11y(A11yElement.Action.button, in: accessibilityID)
+        .accessibilityValue(isLoading ? String(themeKit: "Loading") : "")
+        .focused($isFocused)
+        // Only this button's own chrome may hand its indicator a tint — not
+        // the stock chrome of a button this one sits inside.
+        .environment(\.buttonChromeIndicatorTint, nil)
+    }
+
+    /// Everything a chrome keys off, bar the label and the live press state
+    /// (the bridge fills those in).
+    private var chromeConfiguration: ButtonChromeStyleConfiguration {
+        ButtonChromeStyleConfiguration(
+            label: AnyView(EmptyView()), title: title, isPressed: false, isEnabled: isEnabled,
+            isLoading: isLoading, isFocused: isFocused, isIconOnly: isIconOnly,
+            isFullWidth: isFullWidth, variant: variant, color: color, shape: shape,
+            size: size, density: density, isMotionEnabled: microAnimations && !reduceMotion
+        )
+    }
+
+    /// Whether the title (empty when `nil`) is the VoiceOver label. A custom
+    /// label — or a `.label { }` slot with no title behind it — speaks for
+    /// itself instead; overriding it with the (nil) title would silence the
+    /// slot's text. An icon-only button draws no slot, so it keeps the (empty)
+    /// title label, as before the slot existed.
+    var labelsWithTitle: Bool {
+        customLabel == nil && (titleSlot == nil || title != nil || isIconOnly)
+    }
+
+    @ViewBuilder
+    private func accessibilityLabelled(_ button: some View) -> some View {
+        if labelsWithTitle {
             button.accessibilityLabel(title ?? "")
         } else {
             button
@@ -161,25 +243,44 @@ public struct ThemeButton: View {
     /// always replace — there is no label to keep.
     private var spinnerInline: Bool { isLoading && spinnerEdge != nil && !isIconOnly }
 
-    /// The inline loading spinner, sized down to sit next to the label text.
-    private var inlineSpinner: some View {
-        ProgressView().tint(foreground).controlSize(.small)
+    /// The loading indicator that replaces the label — the `.loadingIndicator { }`
+    /// slot or the built-in spinner — with its tint (see `LoadingIndicatorTint`).
+    private func loadingIndicatorView(isBuiltInChrome: Bool) -> some View {
+        indicatorContent.modifier(LoadingIndicatorTint(builtIn: isBuiltInChrome ? foreground : nil))
+    }
+
+    /// The indicator beside the label on `edge` while `spinnerPlacement(edge)`
+    /// is loading — sized down to sit next to the label text.
+    @ViewBuilder
+    private func inlineIndicator(on edge: HorizontalEdge, isBuiltInChrome: Bool) -> some View {
+        if spinnerInline && spinnerEdge == edge {
+            loadingIndicatorView(isBuiltInChrome: isBuiltInChrome).controlSize(.small)
+        }
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var indicatorContent: some View {
+        if let customIndicator { customIndicator } else { ProgressView() }
+    }
+
+    /// The arranged label, shared by both chrome paths. Under the built-in
+    /// chrome the title and slots carry the size's text style directly;
+    /// under a custom chrome they inherit it from around the chrome (see
+    /// `styledChromeButton`), so the chrome can re-font them.
+    @ViewBuilder
+    private func arrangedLabel(isBuiltInChrome: Bool) -> some View {
+        let labelTextStyle = isBuiltInChrome ? sizeTextStyle : nil
         if isLoading && !spinnerInline {
-            ProgressView().tint(foreground)
+            loadingIndicatorView(isBuiltInChrome: isBuiltInChrome)
         } else if let customLabel {
             // Slot content gets the same environment the built-in label gets:
             // the size's type ramp (child Texts inherit the font) and — via the
-            // shared `.foregroundStyle(foreground)` applied in `body` — the
-            // variant's token foreground.
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                if spinnerInline && spinnerEdge == .leading { inlineSpinner }
+            // chrome's `.foregroundStyle` — the variant's token foreground.
+            HStack(spacing: rowSpacing.value) {
+                inlineIndicator(on: .leading, isBuiltInChrome: isBuiltInChrome)
                 customLabel
-                    .textStyle(sizeTextStyle)
-                if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
+                    .builtInTextStyle(labelTextStyle)
+                inlineIndicator(on: .trailing, isBuiltInChrome: isBuiltInChrome)
             }
         } else if isIconOnly {
             // Icon-only: a single glyph — prefix slot ▸ suffix slot ▸ the
@@ -192,18 +293,23 @@ public struct ThemeButton: View {
                 Image(systemName: glyph).font(.system(size: sizeFontSize, weight: .semibold))
             }
         } else {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                if spinnerInline && spinnerEdge == .leading { inlineSpinner }
+            HStack(spacing: rowSpacing.value) {
+                inlineIndicator(on: .leading, isBuiltInChrome: isBuiltInChrome)
                 // Leading: the prefix element slot wins over the SF-Symbol icon.
                 if let prefixView {
                     prefixView
                 } else if let leadingSystemImage {
                     Image(systemName: leadingSystemImage).font(.system(size: sizeFontSize, weight: .semibold))
                 }
-                if let title {
+                // The title slot wins over the built-in title text.
+                if let titleSlot {
+                    titleSlot
+                        .builtInTextStyle(labelTextStyle)
+                        .lineLimit(1)
+                } else if let title {
                     Text(title)
                         .underline(variant == .link)   // Text-level: before .textStyle (View form is iOS 16+)
-                        .textStyle(sizeTextStyle)
+                        .builtInTextStyle(labelTextStyle)
                         .lineLimit(1)              // a single-word label never wraps; a ButtonGroup flows instead
                 }
                 // Trailing: the suffix element slot wins over the SF-Symbol icon.
@@ -212,58 +318,37 @@ public struct ThemeButton: View {
                 } else if let trailingSystemImage {
                     Image(systemName: trailingSystemImage).font(.system(size: sizeFontSize, weight: .semibold))
                 }
-                if spinnerInline && spinnerEdge == .trailing { inlineSpinner }
+                inlineIndicator(on: .trailing, isBuiltInChrome: isBuiltInChrome)
             }
         }
     }
 
-    private var foreground: Color {
-        guard isEnabled else { return theme.text(.textDisabled) }
-        switch variant {
-        case .solid: return resolvedColor.onSolid
-        case .soft, .outline, .ghost, .link: return resolvedColor.accent
-        }
-    }
+    // The built-in chrome's paint (shared with `DefaultButtonChromeStyle`).
+    private var foreground: Color { paint.foreground }
+    private var background: Color { paint.background }
+    private var pressedBackground: Color { paint.pressedBackground }
+    private var shapeStyle: ThemeAnyShape { paint.shapeStyle }
+}
 
-    private var background: Color {
-        guard isEnabled else { return variant == .solid ? theme.background(.bgSecondary) : .clear }
-        switch variant {
-        case .solid: return resolvedColor.solid
-        case .soft: return resolvedColor.soft
-        case .outline, .ghost, .link: return .clear
-        }
-    }
-
-    /// Pressed-state fill — the iOS analog of Ant's hover/active, sourced from the
-    /// color's primitive ladder. Solid darkens (`active`), soft strengthens
-    /// (`bgHover`), bordered/ghost wash in a faint tint (`bg`).
-    private var pressedBackground: Color {
-        guard isEnabled else { return background }
-        switch variant {
-        case .solid: return color == .neutral ? background : resolvedColor.active
-        case .soft: return resolvedColor.bgHover
-        case .outline, .ghost, .link: return resolvedColor.bg
-        }
-    }
-
-    private var shapeStyle: ThemeAnyShape {
-        switch shape {
-        case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.base.value, style: .continuous))
-        case .square: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
-        case .pill, .circle: return ThemeAnyShape(Capsule())
-        }
-    }
-
-    /// Visible focus ring drawn just outside the button on keyboard / hardware
-    /// focus (Figma focus state · accessibility). Offset outward via negative
-    /// padding so it reads as a ring, tinted with the button's own accent.
+private extension View {
+    /// The size's text style on the built-in chrome path; nothing (inherit) otherwise.
     @ViewBuilder
-    private var focusRing: some View {
-        shapeStyle
-            .stroke(resolvedColor.accent, lineWidth: 2)
-            .padding(-3)
-            .opacity(isFocused && isEnabled ? 1 : 0)
-            .allowsHitTesting(false)
+    func builtInTextStyle(_ style: TextStyle?) -> some View {
+        if let style { textStyle(style) } else { self }
+    }
+}
+
+/// The loading indicator's tint — the only part of the label the stock chrome
+/// tints. The built-in chrome passes its foreground; under a style, the tint
+/// ``DefaultButtonChromeStyle`` hands down applies, and a custom chrome (which
+/// hands down none) tints the indicator with its own `.tint(_:)` on the label.
+private struct LoadingIndicatorTint: ViewModifier {
+    let builtIn: Color?
+    @Environment(\.buttonChromeIndicatorTint) private var chromeTint
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let color = builtIn ?? chromeTint { content.tint(color) } else { content }
     }
 }
 
@@ -325,6 +410,41 @@ public extension ThemeButton {
     /// trailing `icon(_:)` symbol (Figma "Suffix").
     func suffix<V: View>(@ViewBuilder _ content: () -> V) -> Self {
         copy { $0.suffixView = AnyView(content()) }
+    }
+
+    /// Title slot (the canonical `.label { }`): replaces only the built-in
+    /// title text. Prefix, suffix and the inline spinner keep their places,
+    /// and the title stays the VoiceOver label (with no title, the slot speaks
+    /// for itself). The slot inherits the size's text style, the chrome's
+    /// foreground and `lineLimit(1)`, so a plain `Text` needs no setup.
+    /// Icon-only buttons ignore it. ``init(action:label:)`` differs: its
+    /// content replaces the whole row and wins over this slot.
+    ///
+    ///     ThemeButton("Pay 42.00") { pay() }
+    ///         .label { Text("Pay \(Text("42.00").bold())") }
+    ///         .icon(trailing: "lock.fill")
+    func label<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.titleSlot = SlotContent(content) }
+    }
+
+    /// Gap between the row's items — prefix, title, suffix and inline
+    /// spinner — as a spacing token. Default `.xs`.
+    func spacing(_ key: Theme.SpacingKey) -> Self { copy { $0.rowSpacing = key } }
+
+    /// Loading indicator slot: replaces the built-in `ProgressView` while
+    /// ``loading(_:)`` is on — where it replaces the label and beside it
+    /// (``spinnerPlacement(_:)``, where it's proposed `.controlSize(.small)`).
+    /// Under the built-in chrome it gets the variant's foreground as its tint
+    /// and foreground style, like the built-in spinner.
+    ///
+    ///     ThemeButton("Saving") { save() }
+    ///         .loading(isSaving).spinnerPlacement(.leading)
+    ///         .loadingIndicator { Spinner().style(.dots) }
+    ///
+    /// (Not `.indicator { }`: on any view, that name is the corner overlay
+    /// `View.indicator(_:content:)`.)
+    func loadingIndicator<V: View>(@ViewBuilder _ content: () -> V) -> ThemeButton {
+        copy { $0.customIndicator = SlotContent(content) }
     }
 
     /// Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
@@ -572,6 +692,28 @@ private struct FillButtonBody: View {
             .variant(.soft)
             .color(.primary)
             .fullWidth()
+        }
+        // Title / indicator slots + row gap — prefix, suffix and the inline
+        // spinner keep their places around the slot.
+        PreviewCase("Label + indicator slots") {
+            VStack(spacing: 12) {
+                ThemeButton("Pay 42.00") {}
+                    .label { Text("Pay \(Text("42.00").bold())") }
+                    .icon(leading: "creditcard", trailing: "lock.fill")
+                    .spacing(.sm)
+                ThemeButton("Saving") {}
+                    .variant(.soft)
+                    .loading().spinnerPlacement(.leading)
+                    .loadingIndicator { Spinner().style(.dots).controlSize(.small) }
+            }
+        }
+        // ButtonChromeStyle — the stock chrome through the style door looks
+        // identical to the built-in one (custom chromes: ButtonChromeStyle.swift).
+        PreviewCase("ButtonChromeStyle .default") {
+            HStack {
+                ThemeButton("Built-in") {}.variant(.outline)
+                ThemeButton("Door") {}.variant(.outline).buttonChromeStyle(.default)
+            }
         }
         // SurfacePressStyle — scale + highlight wash on a card-like row.
         PreviewCase("SurfacePressStyle") {

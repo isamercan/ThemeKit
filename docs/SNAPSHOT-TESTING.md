@@ -70,6 +70,8 @@ Coverage is organised by altitude, each suite subclassing `SnapshotTestCase`:
 - `FormControlSnapshotTests` — TextInput (incl. error state), Checkbox, RadioButton,
   SegmentedControl.
 - `DisplaySnapshotTests` — Avatar, Card, Callout, EmptyState, Rating, Progress, Stat.
+- `*ChromeStyleSnapshotTests` — the consumer chrome-style paths (ADR-0009): a custom
+  style per protocol, `.default` next to the built-in look, and the new slots.
 
 Extend any of them the same way — one method per state that matters:
 

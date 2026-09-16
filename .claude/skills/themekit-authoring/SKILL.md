@@ -96,9 +96,10 @@ immediately during the parent's body construction (the style-erasure inits need
 |---|---|---|
 | `.header { }` | replaces the built-in title header | `Card` |
 | `.footer { }` | bottom-aligned accessory area | `Card` |
-| `.leading { }` / `.trailing { }` | before/after the main content (RTL-safe by name) | `Chip` |
-| `.label { }` | replaces a control's built-in text label | planned `ThemeButton` |
+| `.leading { }` / `.trailing { }` | before/after the main content (RTL-safe by name) | `Chip`, `Badge`, `InlineText`; `PriceTag` (`.leading`) |
+| `.label { }` | replaces a control's built-in text label | `ThemeButton` (title only), `RadioButton` |
 | `.indicator { }` | replaces a state glyph (spinner, chevron, thumb) | `Spinner`; planned Accordion |
+| `.loadingIndicator { }` | replaces a control's loading spinner — where `.indicator` would re-resolve the corner overlay `View.indicator(_:content:)` | `ThemeButton` |
 | `.emptyContent { }` | shown when a collection component has no items | planned ChipGroup |
 
 Slot content must render correctly with **zero configuration** — it inherits
@@ -168,6 +169,55 @@ typed data + captured `locale`/flags/callbacks, a `…Style` protocol with
 `…Chrome` view), static accessors via `where Self ==`, and type-erasure + an
 `EnvironmentKey` + a `func …Style(_:)` view modifier so a list sets it once. Share
 cross-style building blocks as private sub-views. Full skeleton → `references/patterns.md §3`.
+
+### Chrome styles (consumer-owned paint, ADR-0009)
+
+A second reason for a style protocol: a **host design system must own the chrome**
+(its own tokens, text styles, icon font) while ThemeKit keeps behaviour, content,
+slots, accessibility, RTL and state. These ship with exactly one implementation,
+the stock look — no speculative presets (ADR-F5 still governs presets).
+
+Shipped: `ChipStyle`, `ButtonChromeStyle` (ThemeButton), `BadgeChromeStyle`,
+`CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `RadioButtonChromeStyle`,
+`SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`.
+
+The uniform shape — copy it from any of those files:
+
+- **Name:** `<Component>Style` when free, else `<Component>ChromeStyle` (a 1.x enum
+  already owns `ThemeButtonStyle`, `BadgeStyle`, `CalloutStyle`, `RadioButtonStyle`).
+- `public struct <Name>Configuration` — `public let` fields, **internal** memberwise
+  init. Raw strings (not styled `Text`), un-fonted/uncoloured `AnyView` content,
+  resolved state (`isEnabled`, `isPressed`, …), the modifier axes as set, and motion
+  already resolved (`isMotionEnabled` / `animation` / `isAnimated`; `PriceTag`'s
+  `animatesValue` still ignores `microAnimations`, as in 1.4.0) — a style never
+  reads `microAnimations` or Reduce Motion. Stock SF Symbol shorthands may arrive
+  pre-sized; say so on the field and offer the symbol name or a slot.
+- `public struct Default<Name>: <Name>, Sendable` (`public init()`) + `static var
+  default` via `where Self == Default<Name>`; it must draw the built-in body's exact
+  pixels (add a pixel-parity test with an in-loop control that must fail), including
+  what the built-in path's own `ButtonStyle` draws (press dim, disabled fade) and
+  tinting only what the built-in path tints.
+- Internal `Any<Name>` eraser with `let isDefault: Bool`; the `EnvironmentKey`'s
+  `defaultValue` is the **only** eraser built with `isDefault: true`, so an explicit
+  `.default` goes through `makeBody`. (Documented exception: `RadioButtonChromeStyle`
+  treats an explicit `.default` as the built-in path, whose `.plain` button supplies
+  the disabled fade and press feedback.)
+- Name the slots you add from the vocabulary above — but never ship a member slot
+  that re-resolves an existing 1.x call; rename instead. A member beats a generic
+  `View` modifier with defaulted parameters in overload resolution, and the API
+  digester can't see it: `ThemeButton.indicator { }` would have turned
+  `ThemeButton(…).indicator { Badge("3") }` (the corner overlay
+  `View.indicator(_:content:)`) into a loading slot, so the slot is
+  `.loadingIndicator { }`. Grep `public extension View` for the name first.
+- `func <lowerName><S: <Name>>(_ style: sending S) -> some View` on `View`.
+- Component body: `if style.isDefault { <unchanged body> } else { <behaviour wrapper
+  around style.makeBody(configuration:)> }` — existing snapshots stay identical.
+  Keep taps, haptics, focus and the accessibility label/value/traits in the wrapper;
+  for a live `isPressed`, hand the style to an internal `ButtonStyle` bridge.
+- Deprecated raw overrides (`Color`) travel as **internal** configuration fields for
+  the default style only.
+- Document on the protocol which ThemeKit compositions the environment style reaches,
+  and resolve colours in the style from `@Environment(\.theme)` (never `Theme.shared`).
 
 ## Accessibility
 

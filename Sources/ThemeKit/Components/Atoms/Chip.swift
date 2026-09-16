@@ -86,6 +86,8 @@ public enum ChipVariant: Sendable {
 public struct Chip: View {
     @Environment(\.theme) private var theme
     @Environment(\.chipStyle) private var environmentChipStyle
+    /// The font around the chip — what the title sees when the style sets none.
+    @Environment(\.font) private var outerFont
 
     @Binding private var isSelected: Bool
     private let title: String
@@ -142,9 +144,13 @@ public struct Chip: View {
     }
 
     /// The chroma-wrapped content, shared by both the selectable and status paths.
+    /// The title takes the chip's title text style unless the style sets a
+    /// font around the content (see `ChipTitleTextStyle`); slot content keeps
+    /// the font it would have without the chip's title style.
     private var styledContent: some View {
         resolvedStyle.makeBody(configuration: ChipStyleConfiguration(
             content: AnyView(labelContent),
+            title: title,
             isSelected: isSelected,
             isEnabled: isEnabled && isExist,
             size: size))
@@ -184,10 +190,10 @@ public struct Chip: View {
                     }
                 }
             }
-            // Text-level strikethrough (before .textStyle) — the View-level
+            // Text-level strikethrough (before the text style) — the View-level
             // overload is iOS 16-only (ADR-0007 Phase 2 compile-loop finding).
             Text(title).strikethrough(!isExist, color: theme.text(.textTertiary))
-                .textStyle(titleTextStyle)
+                .modifier(ChipTitleTextStyle(outerFont: outerFont, textStyle: titleTextStyle))
             if let trailingSlot {
                 trailingSlot
             }
@@ -239,6 +245,27 @@ public struct Chip: View {
         case .small: return 10
         case .medium: return 11
         case .large: return 12
+        }
+    }
+}
+
+/// The chip title's text style, unless the ``ChipStyle`` set a font around the
+/// content. The title compares the font it sees with the font around the chip:
+/// the same font means the style set none, so the title takes the chip's own
+/// text style (exactly as it always has); a different one is the style's, and
+/// the title keeps it. Edge case: a style that sets exactly the font already
+/// around the chip counts as setting none.
+private struct ChipTitleTextStyle: ViewModifier {
+    let outerFont: Font?
+    let textStyle: TextStyle
+    @Environment(\.font) private var font
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if font == outerFont {
+            content.textStyle(textStyle)
+        } else {
+            content
         }
     }
 }
@@ -296,6 +323,37 @@ public extension Chip {
     }
 }
 
+/// A preview-only ChipStyle: a rounded rectangle with an underline when
+/// selected, and its own medium-weight font (for the title and any slot
+/// without a font of its own).
+private struct PreviewUnderlineChipStyle: ChipStyle {
+    func makeBody(configuration: ChipStyleConfiguration) -> some View {
+        PreviewUnderlineChipChrome(configuration: configuration)
+    }
+}
+
+private struct PreviewUnderlineChipChrome: View {
+    let configuration: ChipStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+        configuration.content
+            .textStyle(.bodyBase500)   // overrides the chip's title style
+            .foregroundStyle(configuration.isSelected ? theme.text(.textHero) : theme.text(.textPrimary))
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.xs.value)
+            .background(theme.background(.bgWhite), in: shape)
+            .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(theme.border(.borderHero)).frame(height: 2)
+                    .padding(.horizontal, Theme.SpacingKey.md.value)
+                    .opacity(configuration.isSelected ? 1 : 0)
+            }
+            .opacity(configuration.isEnabled ? 1 : 0.5)
+    }
+}
+
 #Preview {
     PreviewMatrix("Chip") {
         PreviewCase("Selection styles") {
@@ -338,6 +396,17 @@ public extension Chip {
                 Chip("Sold out", isSelected: .constant(false)).exists(false)
                 Chip("a-very-long-filter-value-here", isSelected: .constant(false))
             }
+        }
+        // A custom ChipStyle sets its own title font: the chip's title style is
+        // only a default around the style's output.
+        PreviewCase("Custom style with its own font") {
+            HStack {
+                Chip("Idle", isSelected: .constant(false))
+                Chip("Picked", isSelected: .constant(true))
+                Chip("With slot", isSelected: .constant(true))
+                    .leading { Image(systemName: "airplane") }
+            }
+            .chipStyle(PreviewUnderlineChipStyle())
         }
         // HeroUI V3 status chips: static `Chip("…")`, no binding. The Type axis.
         PreviewCase("Types (primary)") {

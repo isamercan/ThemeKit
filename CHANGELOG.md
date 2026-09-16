@@ -7,6 +7,225 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-16
+
+### Added
+
+- **Consumer chrome styles — your design system's paint on ThemeKit components.**
+  A host design system that wraps a ThemeKit component (its own view's `body` *is*
+  the ThemeKit component) can now draw that component's chrome with its own
+  tokens, text styles and icon font. ThemeKit keeps the behaviour, content model,
+  slots, accessibility, RTL and state; a style protocol draws the rest. Ten
+  components gain one, all with the same shape as `ChipStyle`: a
+  `<Name>Configuration` with public read-only fields, a
+  `makeBody(configuration:)` requirement, a `Sendable` `Default<Name>` /
+  `.default` that draws the stock look, and a `View` modifier read from the
+  environment.
+
+  ```swift
+  struct HostBadge: View {                      // the host's component
+      let text: String
+      var body: some View { Badge(text).badgeStyle(.info).leading { HostGlyph(.tag) } }
+  }
+
+  struct HostBadgeChrome: BadgeChromeStyle {
+      func makeBody(configuration: BadgeChromeStyleConfiguration) -> some View {
+          HostBadgeChromeBody(configuration: configuration)
+      }
+  }
+
+  private struct HostBadgeChromeBody: View {
+      let configuration: BadgeChromeStyleConfiguration
+      @Environment(\.theme) private var theme
+      var body: some View {
+          HStack(spacing: Theme.SpacingKey.xs.value) {
+              configuration.leading
+              Text(configuration.text).textStyle(.labelSm700)
+          }
+          .foregroundStyle(theme.resolve(configuration.tone.semantic).onSolid)
+          .padding(.horizontal, Theme.SpacingKey.sm.value)
+          .background(theme.custom.color(.fareBadge) ?? theme.resolve(configuration.tone.semantic).solid,
+                      in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value))
+      }
+  }
+
+  RootView().badgeChromeStyle(HostBadgeChrome())   // every Badge below, ThemeKit's own included
+  ```
+
+  With no style set, every component renders exactly what it did in 1.4.0,
+  except for the fixes listed under **Fixed** — every existing snapshot
+  reference still passes. Setting `.default` explicitly draws the same look
+  through the style, so a custom style can hand some cases back to it. The style
+  also reaches the copies ThemeKit composes inside other components (dialog
+  buttons, the price tags in cards, list separators, loading states), so one line
+  at the root carries a host's brand everywhere. Configurations carry raw text
+  and unpainted content, resolved state and already-resolved motion; styles
+  resolve colours from `@Environment(\.theme)`, so per-subtree `.theme(_:)` and
+  `theme.custom` tokens both apply. Where a 1.x enum already owns the
+  `<Component>Style` name (`ThemeButtonStyle`, `BadgeStyle`, `CalloutStyle`,
+  `RadioButtonStyle`) the protocol is a `…ChromeStyle`. See
+  [ADR-0009](docs/ADR-0009-consumer-chrome-styles.md).
+
+- **`ButtonChromeStyle`** (`.buttonChromeStyle(_:)`) draws `ThemeButton`'s
+  padding, frame, fill, border, shape, foreground and focus ring around the
+  arranged label. The configuration carries the label, the raw `title`, the live
+  `isPressed`, `isEnabled`, `isLoading`, `isFocused`, `isIconOnly`,
+  `isFullWidth`, the variant, color, shape, size and density, and
+  `isMotionEnabled`. The button keeps the tap guard while loading, haptics, focus
+  and its VoiceOver label, value and identifier. The label carries no font of its
+  own on this path, so a `.textStyle(_:)` in the style re-fonts the title; the
+  `icon(leading:trailing:)` glyphs arrive pre-sized, so a host hands in its own
+  glyphs through `.prefix { }` / `.suffix { }` / `.label { }`. Preset buttons
+  (`PrimaryButton` and friends) don't use `ThemeButton` and keep their look.
+
+- **`ThemeButton` slots and spacing.** `.label { }` replaces only the title text —
+  prefix, suffix and the inline spinner keep their places, and the title stays the
+  VoiceOver label. `.loadingIndicator { }` replaces the loading spinner, both
+  where it replaces the label and beside it (`spinnerPlacement(_:)`). `.spacing(_:)`
+  sets the gap between the row's items as a `Theme.SpacingKey` (default `.xs`).
+  (`.indicator { }` on a button is still the corner overlay
+  `View.indicator(_:content:)`.)
+
+  ```swift
+  ThemeButton("Pay 42.00") { pay() }
+      .label { Text("Pay \(Text("42.00").bold())") }
+      .loadingIndicator { Spinner().style(.dots) }
+      .spacing(.sm)
+  ```
+
+- **`BadgeChromeStyle`** (`.badgeChromeStyle(_:)`) draws `Badge`'s type, icon
+  sizes, padding, height, fill, border, corner and lift. The configuration hands
+  over the raw text, the leading/trailing content (and the SF Symbol names behind
+  it), the tone, variant, size, shape, semantic gradient, highlight, and the
+  enabled and pressed state. The badge keeps its action button and press
+  feedback; without an action, the styled badge reads as one VoiceOver element.
+  `BadgeStyle.semantic` is now public, so a style paints with the tone's
+  `SemanticColor` ladder.
+
+- **`Badge.leading { }` / `.trailing { }`** — any view before or after the text (a
+  host glyph, a dot, a count). A slot replaces that side's `icon(_:)` /
+  `trailingIcon(_:)` shorthand and inherits the badge's foreground.
+
+- **`CountBadge` and `CountBadgeStyle`.** The count bubble is now a public view you
+  can place anywhere: `CountBadge(5)` (locale-formatted), `CountBadge("+1")`, or
+  `CountBadge { Image(systemName: "checkmark") }`, with `.accent(_:)`,
+  `.overflowCount(_:)`, `.showsZero(_:)` and `.halo(_:)`. `View.countBadge(_:)` is
+  now built on it, so `.countBadgeStyle(_:)` restyles those overlays too. The
+  configuration carries the content (`.text` or `.glyph`), the raw count, the
+  accent, the halo flag, the enabled state and the environment's control size.
+
+- **`IconTileStyle`** (`.iconTileStyle(_:)`) draws `IconTile`'s glyph size and
+  colour, tile size, fill and outline. `IconTile(glyph:)` puts any view in the tile
+  (an icon-font glyph, an asset image), and `.tileShape(_:)` picks `.rounded` or
+  `.circle` (`IconTileShape`). The configuration carries both the requested size and
+  the size the stock chrome draws — the 24 pt floor now applies only to the stock
+  chrome, so a style may honour smaller tiles.
+
+- **`PriceTagStyle`** (`.priceTagStyle(_:)`) lays out and paints `PriceTag`: the
+  price, state word, struck original, prefix, unit, discount badge and slots, each
+  as raw text with the component's rules already applied. The tag keeps the
+  content model, the discount maths and one VoiceOver element with its spoken
+  label. The configuration also carries the enabled state, and
+  `configuration.spacing(_:)` scales a style's gaps with the component density.
+  `animatesValue` arrives resolved against Reduce Motion only — as in 1.4.0, it
+  doesn't follow `microAnimations(_:)`; a later minor release will gate it on
+  that switch too.
+
+- **Host-formatted prices.** `PriceTag(verbatim:)` shows a price exactly as given
+  (no formatting, no discount maths); `.original(verbatim:)` and
+  `.discountBadge(_: String?)` take the struck price and the offer as host text.
+  The numeric and verbatim forms replace each other — the last call wins.
+  `.leading { }` adds a slot before the price, and `.prefix(_:)` accepts `nil` to
+  remove the prefix. VoiceOver reads a verbatim original as "original price …",
+  a new localization key (`original price %@`) for apps that override ThemeKit's
+  strings.
+
+  ```swift
+  PriceTag(verbatim: "EUR 1.299")
+      .original(verbatim: "EUR 1.899")
+      .discountBadge("-15%")
+  ```
+
+- **`RadioButtonChromeStyle`** (`.radioButtonChromeStyle(_:)`) draws
+  `RadioButton`'s indicator, label and description and how they sit together. The
+  configuration carries the plain label, the `.label { }` slot, the description,
+  selection, enabled, live pressed and read-only state, the type, radio style,
+  validation kind, accent, control size, placement, alignment, gap and the
+  resolved selection animation. The radio keeps select-vs-toggle, read-only, the
+  disabled gate, its accessibility and the validation messages. Under a custom
+  style, `RadioGroup` renders each option as a full `RadioButton` row the style
+  draws (read by VoiceOver like a built-in row: label and selected trait), and
+  the style draws the disabled look. Setting `.default` explicitly restores the
+  built-in path; a custom style that hands a radio to `.default` keeps the
+  built-in press dim and disabled fade.
+
+- **`RadioButton.description(_:)`** — supporting text under the label, drawn with
+  `HelperText` and read by VoiceOver as the control's hint (`Checkbox` parity).
+
+- **`SkeletonStyle`** (`.skeletonStyle(_:)`) paints loading placeholders —
+  `Skeleton`, `.skeleton(_:)`, `SkeletonGroup` and the loading states of `Card`,
+  `ListView`, `Stat`, `Avatar`, `RemoteImage` and `AnimatedImage`. The
+  configuration carries the shape, the variant, the highlight tint and
+  `isAnimated` (already `false` for `.none`, `microAnimations(false)` and Reduce
+  Motion). ThemeKit rebuilds the style's view when motion inputs change, so a style
+  can start its loop in `onAppear`. `SkeletonShape.anyShape` is now public — the
+  exact outline the stock fill uses.
+
+- **`DividerStyle`** (`.dividerStyle(_:)`) paints `DividerView` — line colour,
+  thickness, dash pattern and the title's type — and the separators ThemeKit
+  components draw with it. The configuration carries the raw title, the stock
+  title view, the axis, the dashed flag, the size tier and the title alignment. A
+  bare divider stays hidden from VoiceOver and a titled one reads its title once,
+  however the style draws it.
+
+- **`CalloutChromeStyle`** (`.calloutChromeStyle(_:)`) draws `Callout`'s row
+  layout, type, colour, icon, padding and surface. The configuration carries the
+  raw text and links, the unpainted content with links already routed (also as an
+  `AttributedString`, so a style can repaint the link runs), the leading
+  indicator (and its SF Symbol name), the trailing slot, the wired action and
+  dismiss buttons with their raw inputs, the tone, surface, alignment, width,
+  status label and enabled state. `.default` draws linked text through
+  `InlineText`, as the stock callout does, so an `InlineTextStyle` reaches it.
+
+- **`Callout.alignment(_:)`, `.fullWidth(_:)` and `.statusLabel(_:)`.** Align the
+  icon, text and accessories (`.firstTextBaseline` by default; `.center` for a
+  larger icon), stretch the callout to the offered width, and name the leading
+  indicator for VoiceOver — including a custom `leading { }` view.
+
+- **`InlineTextStyle`** (`.inlineTextStyle(_:)`) paints `InlineText` and the linked
+  text ThemeKit composes (helper text, labels, validation messages, banners,
+  callouts, toasts). The configuration carries the raw text and links, the
+  unpainted content, an `AttributedString` whose link runs still route taps, the
+  slots, the type style, base colour and link colour the stock look uses, and the
+  enabled state.
+  `InlineText.leading { }` / `.trailing { }` add a glyph or badge on the text's
+  first baseline.
+
+- `ChipStyleConfiguration.title` — a `Chip`'s title as plain text, for a style that
+  composes its own label.
+
+### Fixed
+
+- **`Skeleton` honours `microAnimations`.** The shimmer and pulse checked only
+  Reduce Motion, so `.microAnimations(false)` left placeholders moving. A loop that
+  started in `onAppear` also kept running (or never started) when the variant or
+  the motion settings changed later; the placeholder now restarts from its first
+  frame when they change.
+- **A `ChipStyle` can set the title's font.** `Chip` applied its title text style
+  to the title itself, so a style's `.font(_:)` / `.textStyle(_:)` never won. Now
+  a font the style sets around its content reaches the title (and any slot
+  without a font of its own); with none, the title keeps the chip's text style.
+  The built-in styles set no font, so plain chips — slots included — look
+  exactly as before. (A style that sets exactly the font already around the chip
+  counts as setting none.)
+- **`Theme.ResolvedTextStyle` has a public initializer**, so an app can build its
+  own text styles and register them with `registerCustomTokens(_:)`.
+- **A `Callout`'s linked text keeps the tone colour.** With `.links(_:)`, the
+  non-link text fell back to the secondary text colour instead of the variant's
+  accent. The neutral tone looks the same as before.
+- **`DividerView`'s dashed line mirrors under RTL**, so the dash pattern starts at
+  the leading edge. Solid lines are unchanged.
+
 ## [1.4.0] - 2026-09-11
 
 ### Added
@@ -1159,7 +1378,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.5.0
 [1.4.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.4.0
 [1.3.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.3.0
 [1.2.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.2.0

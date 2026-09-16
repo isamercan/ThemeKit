@@ -14,21 +14,47 @@
 //      SomeContainer { … }
 //          .chipStyle(.solid)           // a ChipStyle via the environment
 //
+//  A style may set its own title font: a `.font(_:)` / `.textStyle(_:)` the
+//  style puts on `configuration.content` reaches the title (and any slot
+//  without a font of its own). With no font from the style, the title keeps
+//  the chip's own text style and slots keep the font around the chip — the
+//  built-in styles set none. A style that composes its own text reads the raw
+//  `configuration.title`.
+//
 
 import SwiftUI
 
 /// The inputs a `ChipStyle` renders: the chip's already-composed content
-/// (leading icon/rating or slot + title + trailing slot) plus the state the
-/// chroma keys off (selection, enabled, size).
+/// (leading icon/rating or slot + title + trailing slot), its raw title, plus
+/// the state the chroma keys off (selection, enabled, size).
 public struct ChipStyleConfiguration {
     /// The chip's content, type-erased (mirrors `ButtonStyleConfiguration.label`).
+    /// In a `Chip`, a font the style applies here re-fonts the title (and any
+    /// slot content without a font of its own); with none, the title keeps the
+    /// chip's text style and slots keep the font around the chip. `Chip`
+    /// tells the two apart by comparing fonts, so a style that sets exactly the
+    /// font already around the chip counts as setting none. The chip-shaped
+    /// molecules keep the text styles they set themselves.
     public let content: AnyView
+    /// A `Chip`'s title as plain text, for a style that composes its own label
+    /// instead of using `content`. Empty when a chip-shaped molecule
+    /// (`ImageChip`, `CompactChip`, `ChoseChip`, `FilterChip`,
+    /// `MapPriceMarker`) draws through the style.
+    public let title: String
     /// Whether the chip is currently selected.
     public let isSelected: Bool
     /// Whether the chip is enabled; `false` draws the disabled chroma.
     public let isEnabled: Bool
     /// The chip's control size, for styles that key padding off it.
     public let size: ChipSize
+
+    init(content: AnyView, title: String = "", isSelected: Bool, isEnabled: Bool, size: ChipSize) {
+        self.content = content
+        self.title = title
+        self.isSelected = isSelected
+        self.isEnabled = isEnabled
+        self.size = size
+    }
 }
 
 /// Defines a chip's chroma. Implement `makeBody` to wrap the configuration's

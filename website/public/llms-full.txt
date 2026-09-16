@@ -129,6 +129,18 @@ theme.border(.borderPrimary)                     // Color
 | Spacing | 8 | `Theme.SpacingKey` | `.none .xs .sm .md .base .lg .xl .xl4` |
 | Typography | 34 | `TextStyle` (`.textStyle(_:)`) | Display / Heading / Label / Body / Overline / Link |
 | Shadow | 3 | `ShadowStyle` | `.elevated .tabBar .soft` |
+| Consumer | n/a | `theme.custom.color/radius/spacing/textStyle/shadow(_:)` | `custom.`-namespaced, keyed by `Theme.CustomToken` |
+
+**Consumer-defined tokens.** Names ThemeKit has no key for live under the reserved
+`custom.` namespace (`Theme.customTokenPrefix`). Two sources, one read API:
+
+- **App-owned** — `Theme.shared.registerCustomTokens(.init(colors: [.fareBadge: …], darkColors: […]))`. Re-seeded after every theme application, so it survives `apply(ThemeConfig)`, `ThemePreset.apply()`, `setTheme(css:)`, `loadTheme(named:)` and `setTheme(jsonData:)`.
+- **Theme-owned** — `{"name": "custom.fare-badge", "hex": "ff5722"}` in a theme JSON, or `--custom-color-*` / `--custom-radius-*` / `--custom-spacing-*` in CSS (the `.dark` block inherits from `:root` for anything it doesn't restate).
+
+Registered wins on a name clash. `Theme.CustomToken` holds the **bare** name and the
+lookup adds the prefix, so it can't reach ThemeKit's own tokens. An undefined token
+returns `nil`. Token-read API only — components take `SemanticColor`. See ADR-0008.
+To paint a component with these tokens, set its chrome style (below, ADR-0009).
 
 **Colors — the four color-key enums**
 
@@ -216,6 +228,37 @@ TextInput("Email", text: $email).fieldStyle(.underlined)
 ```
 
 See **llms-patterns.txt** for how to implement a custom `CardStyle`.
+
+### Chrome styles — consumer-owned component paint (ADR-0009)
+
+A host design system can draw a component's chrome with its own tokens, text styles and
+icon font while ThemeKit keeps the behaviour, content, slots, accessibility, RTL and state.
+Each protocol ships only `.default` (the built-in look), and with no style set the
+component renders exactly as before. Every protocol has the same shape: a
+`<Name>Configuration` (public lets), `makeBody(configuration:)`, `Default<Name>` /
+`.default`, and a `View.<name>(_:)` modifier read from the environment — so a style set at
+the root also reaches the copies ThemeKit composes inside other components. The stock
+`Default…` styles are `Sendable`.
+`ThemeButton` gains `.label { }` (title only), `.loadingIndicator { }` (the spinner) and
+`.spacing(_:)`; `.indicator { }` on a button stays the corner overlay.
+
+| Protocol | Apply with | Component | Configuration highlights |
+| --- | --- | --- | --- |
+| `ButtonChromeStyle` | `.buttonChromeStyle(_:)` | `ThemeButton` | `label`, `title`, `isPressed`, `isEnabled`, `isLoading`, `isFocused`, `isIconOnly`, `isFullWidth`, `variant`, `color`, `shape`, `size`, `density`, `isMotionEnabled` |
+| `BadgeChromeStyle` | `.badgeChromeStyle(_:)` | `Badge` | `text`, `leading`/`trailing`, `leadingSystemImage`/`trailingSystemImage`, `tone`, `variant`, `size`, `shape`, `gradient`, `isHighlighted`, `isEnabled`, `isPressed` |
+| `CountBadgeStyle` | `.countBadgeStyle(_:)` | `CountBadge`, `.countBadge(_:)` | `content` (`.text` / `.glyph`), `count`, `accent`, `showsHalo`, `isEnabled`, `controlSize` |
+| `IconTileStyle` | `.iconTileStyle(_:)` | `IconTile` | `glyph`, `systemImage`, `requestedSize`, `size`, `iconSize`, `cornerRadius`, `shape`, `accent`, `backgroundKey`, `iconColorKey`, `isEnabled` |
+| `PriceTagStyle` | `.priceTagStyle(_:)` | `PriceTag` | `price`, `amount`, `state`, `stateText`, `original`, `originalBelow`, `prefix`, `unit`, `discount`, `discountPercent`, `leading`/`trailing`, `size`, `emphasis`, `animatesValue` (Reduce Motion only, as in 1.4.0), `accessibilityLabel`, `density`, `locale`, `isEnabled`, `isVerbatim`, `spacing(_:)` |
+| `RadioButtonChromeStyle` | `.radioButtonChromeStyle(_:)` | `RadioButton`, `RadioGroup` rows | `label`, `customLabel`, `description`, `isSelected`, `isEnabled`, `isPressed`, `isReadOnly`, `type`, `radioStyle`, `validation`, `accent`, `controlSize`, `controlPlacement`, `alignment`, `gap`, `animation` |
+| `SkeletonStyle` | `.skeletonStyle(_:)` | `Skeleton`, `.skeleton(_:)`, loading states | `shape` (`shape.anyShape`), `variant`, `highlight`, `isAnimated` |
+| `DividerStyle` | `.dividerStyle(_:)` | `DividerView`, component separators | `title`, `label`, `axis`, `isDashed`, `size`, `titleAlignment` |
+| `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | `Callout` | `text`, `links`, `content`, `attributedText`, `leading`, `leadingSystemImage`, `trailing`, `actionButton`, `closeButton`, `actionTitle`, `onAction`, `onClose`, `tone`, `calloutStyle`, `showsIcon`, `statusLabel`, `alignment`, `isFullWidth`, `isEnabled` |
+| `InlineTextStyle` | `.inlineTextStyle(_:)` | `InlineText`, linked helper text | `text`, `links`, `content`, `attributedText`, `leading`/`trailing`, `textStyle`, `accent`, `baseColor`, `linkColor`, `isEnabled` |
+
+`ChipStyle` follows the same pattern (`ChipStyleConfiguration.title` added in 1.5.0; a chip
+style may set the title font). Resolve colours inside the style from
+`@Environment(\.theme)` so `theme.custom` and per-subtree `.theme(_:)` reach it. Recipe in
+**llms-patterns.txt** ("Paint a ThemeKit component with your design system").
 
 ---
 

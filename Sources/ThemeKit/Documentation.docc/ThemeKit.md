@@ -77,6 +77,9 @@ views; the core library stays dependency-free.
 - `Theme.SpacingKey` · `Theme.RadiusKey` — spacing & radius scales
 - `Motion` — motion tokens
 
+A component's chrome can be drawn by your own style — its protocol is listed
+next to the component below. See <doc:Theming> and ADR-0009.
+
 ### Buttons
 
 - ``ThemeButton``
@@ -87,6 +90,7 @@ views; the core library stays dependency-free.
 - ``LinkButton``
 - ``ButtonGroup``
 - ``FloatingActionButton``
+- ``ButtonChromeStyle``
 
 ### Inputs & Forms
 
@@ -101,6 +105,7 @@ views; the core library stays dependency-free.
 - ``CheckboxGroup``
 - ``RadioButton``
 - ``RadioGroup``
+- ``RadioButtonChromeStyle``
 - ``Slider``
 - ``RangeSlider``
 - ``QuantityStepper``
@@ -122,18 +127,28 @@ views; the core library stays dependency-free.
 ### Display & Feedback
 
 - ``Badge``
+- ``BadgeChromeStyle``
+- ``CountBadge``
+- ``CountBadgeStyle``
 - ``Chip``
+- ``ChipStyle``
 - ``Avatar``
 - ``AvatarGroup``
 - ``Rating``
 - ``RatingSummary``
 - ``StatusDot``
 - ``Skeleton``
+- ``SkeletonStyle``
 - ``Spinner``
 - ``ProgressBar``
 - ``RadialProgress``
 - ``AlertToast``
 - ``Callout``
+- ``CalloutChromeStyle``
+- ``InlineText``
+- ``InlineTextStyle``
+- ``PriceTag``
+- ``PriceTagStyle``
 - ``InfoBanner``
 - ``EmptyState``
 - ``ResultView``
@@ -160,6 +175,10 @@ views; the core library stays dependency-free.
 - ``AnimatedImage``
 - ``RemoteImage``
 - ``VideoPlayerView``
+- ``IconTile``
+- ``IconTileStyle``
+- ``DividerView``
+- ``DividerStyle``
 
 ### Analytics
 

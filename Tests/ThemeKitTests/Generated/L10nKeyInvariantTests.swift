@@ -123,7 +123,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d)% off",
             "%@%% off", 1,
-            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:187")
+            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:261")
     }
 
     func testInterpolatedKeyShapes2() {
@@ -265,7 +265,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Remove \(d)",
             "Remove %@", 1,
-            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:205")
+            site: "Sources/ThemeKit/Components/Atoms/Chip.swift:211")
         assertKey(
             "Remove card ending \(d)",
             "Remove card ending %@", 1,
@@ -327,12 +327,16 @@ final class L10nKeyInvariantTests: XCTestCase {
             "estimated departure %@", 1,
             site: "Sources/ThemeKitTravel/Components/Organisms/FlightTrackerStyle.swift:153")
         assertKey(
-            "seat \(d)",
-            "seat %@", 1,
-            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:113")
+            "original price \(d)",
+            "original price %@", 1,
+            site: "Sources/ThemeKit/Components/Atoms/PriceTag.swift:257")
     }
 
     func testInterpolatedKeyShapes4() {
+        assertKey(
+            "seat \(d)",
+            "seat %@", 1,
+            site: "Sources/ThemeKitTravel/Components/Molecules/PassengerRowStyle.swift:113")
         assertKey(
             "up \(d)",
             "up %@", 1,

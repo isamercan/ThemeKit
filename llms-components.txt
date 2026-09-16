@@ -30,16 +30,26 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 | `BarStyle` | `.barStyle(_:)` | bottom/booking bars | `.default`, `.floating` |
 | `MeterStyle` | `.meterStyle(_:)` | progress/meters (ProgressBar, RadialProgress, GaugeView) | `.linear`, `.striped`, `.radial` |
 | `ToastStyle` | `.toastStyle(_:)` | toasts (AlertToast) | `.default`, `.capsule` |
+| `ButtonChromeStyle` | `.buttonChromeStyle(_:)` | ThemeButton chrome | `.default` |
+| `BadgeChromeStyle` | `.badgeChromeStyle(_:)` | Badge chrome | `.default` |
+| `CountBadgeStyle` | `.countBadgeStyle(_:)` | CountBadge + `.countBadge(_:)` overlays | `.default` |
+| `IconTileStyle` | `.iconTileStyle(_:)` | IconTile | `.default` |
+| `PriceTagStyle` | `.priceTagStyle(_:)` | PriceTag (incl. the ones inside cards) | `.default` |
+| `RadioButtonChromeStyle` | `.radioButtonChromeStyle(_:)` | RadioButton + RadioGroup rows | `.default` |
+| `SkeletonStyle` | `.skeletonStyle(_:)` | Skeleton, `.skeleton(_:)`, component loading states | `.default` |
+| `DividerStyle` | `.dividerStyle(_:)` | DividerView + component separators | `.default` |
+| `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | Callout chrome | `.default` |
+| `InlineTextStyle` | `.inlineTextStyle(_:)` | InlineText + linked helper text | `.default` |
 
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **246** components (52 atoms · 110 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **247** components (53 atoms · 110 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
 
-# Atoms (52)
+# Atoms (53)
 
 _Smallest building blocks — a single visual/interactive primitive._
 
@@ -61,7 +71,9 @@ init(_ url: URL?)
 ## Aura
 
 ```swift
-Aura()
+init()
+
+// usage: Aura()
 ```
 
 **Modifiers**
@@ -135,7 +147,9 @@ init(_ text: String, action: (() -> Void)? = nil)
 A token-sized (but high-contrast) Code 128 barcode with an optional caption.
 
 ```swift
-Barcode(value)
+init(_ value: String)
+
+// usage: Barcode("value")
 ```
 
 **Modifiers**
@@ -148,9 +162,9 @@ Barcode(value)
 Improved, token-bound rewrite of the reference BasicChip — a single clear selection API (tonal / solid) instead of the reference's nested status × mode × fullSelect × isExist matrix.
 
 ```swift
-init(_ title: String, isSelected: Binding<Bool>)
+init(_ title: String)
 
-// usage: Chip("title", isSelected: $isSelected)
+// usage: Chip("title")
 ```
 
 **Modifiers**
@@ -172,7 +186,9 @@ init(_ title: String, isSelected: Binding<Bool>)
 A circular icon-only dismiss button.
 
 ```swift
-CloseButton(action:)
+init(action: @escaping () -> Void)
+
+// usage: CloseButton(action: { })
 ```
 
 **Modifiers**
@@ -185,7 +201,9 @@ CloseButton(action:)
 ## CodeBlock
 
 ```swift
-CodeBlock(lines)
+init(_ lines: [CodeLine])
+
+// usage: CodeBlock(<[CodeLine]>)
 ```
 
 **Modifiers**
@@ -195,7 +213,9 @@ CodeBlock(lines)
 ## ColorSwatch
 
 ```swift
-ColorSwatch(color, label:)
+init(_ color: Color, label: String)
+
+// usage: ColorSwatch(<Color>, label: "label")
 ```
 
 **Modifiers**
@@ -209,7 +229,9 @@ ColorSwatch(color, label:)
 A token-bound confetti burst.
 
 ```swift
-Confetti()
+init()
+
+// usage: Confetti()
 ```
 
 **Modifiers**
@@ -217,6 +239,21 @@ Confetti()
 - `.pieceCount` — Number of confetti pieces (default 40).
 - `.colors` — Override the brand palette.
 - `.duration` — Fall duration in seconds (default 2.4).
+
+## CountBadge
+
+A count bubble (Ant `Badge count`): a small solid capsule holding a number, a short host string such as `"+1"`, or a glyph.
+
+```swift
+CountBadge(count)
+```
+
+**Modifiers**
+
+- `.accent` — Semantic fill of the bubble; `nil` restores the default (`.error`).
+- `.overflowCount` — The largest count shown as a number; larger counts read as the cap plus `+` (default 99).
+- `.showsZero` — Whether a count of zero or below still renders the bubble (default `false`); a negative count then shows as formatted.
+- `.halo` — The ring in the page's surface colour that separates the bubble from what it overlaps (default on).
 
 ## Ribbon
 
@@ -238,7 +275,9 @@ init(_ text: String, @ViewBuilder content: () -> Content)
 A token-bound live countdown to `deadline`.
 
 ```swift
-CountdownTimer(until:)
+init(until deadline: Date)
+
+// usage: CountdownTimer(until: <Date>)
 ```
 
 **Modifiers**
@@ -253,7 +292,9 @@ CountdownTimer(until:)
 ## DescriptionModal
 
 ```swift
-DescriptionModal(text)
+init(_ text: String)
+
+// usage: DescriptionModal("text")
 ```
 
 **Modifiers**
@@ -281,7 +322,9 @@ init(_ title: String? = nil)
 ## FareFeatureRow
 
 ```swift
-FareFeatureRow(feature)
+init(_ feature: FareFeature)
+
+// usage: FareFeatureRow(<FareFeature>)
 ```
 
 **Modifiers**
@@ -305,7 +348,9 @@ init(value: Double, in range: ClosedRange<Double> = 0...1, label: String? = nil)
 ## HelperText
 
 ```swift
-HelperText(text)
+init(_ text: String)
+
+// usage: HelperText("text")
 ```
 
 **Modifiers**
@@ -334,17 +379,20 @@ init(systemName: String)
 ## IconTile
 
 ```swift
-IconTile(systemImage)
+init(_ systemImage: String)
+
+// usage: IconTile("systemImage")
 ```
 
 **Modifiers**
 
-- `.size`
+- `.size` — Tile edge length in points.
 - `.iconSize`
 - `.background` — Tile background (token key, default `.bgElevatorTertiary`).
 - `.iconColor` — Icon colour (text token key).
 - `.accent` — Brand-tint the tile (bg = accent.bg, icon = accent.base).
 - `.cornerRadius`
+- `.tileShape` — The tile's outline: `.rounded` (default, at the ``cornerRadius(_:)`` role) or `.circle`.
 
 ## InlineText
 
@@ -406,7 +454,9 @@ init(_ text: String)
 A token-bound loyalty-points pill.
 
 ```swift
-PointsBadge(points)
+init(_ points: Int)
+
+// usage: PointsBadge(1)
 ```
 
 **Modifiers**
@@ -423,7 +473,9 @@ PointsBadge(points)
 A token-bound price label.
 
 ```swift
-PriceTag(amount, currencyCode:)
+init(_ amount: Decimal)
+
+// usage: PriceTag(<Decimal>)
 ```
 
 **Modifiers**
@@ -479,7 +531,9 @@ init(current: Int, total: Int)
 A token-sized (but high-contrast) QR code.
 
 ```swift
-QRCode(value)
+init(_ value: String)
+
+// usage: QRCode("value")
 ```
 
 **Modifiers**
@@ -580,7 +634,9 @@ init(_ score: Double, large: Bool = false)
 ## SearchBadge
 
 ```swift
-SearchBadge(text)
+init(_ text: String)
+
+// usage: SearchBadge("text")
 ```
 
 **Modifiers**
@@ -591,7 +647,7 @@ SearchBadge(text)
 ## ShareButton
 
 ```swift
-init(_ title: String = "Share", item: String)
+init(_ title: String = String(themeKit: "Share"), item: String)
 
 // usage: ShareButton(item: "item")
 ```
@@ -623,7 +679,9 @@ init(_ shape: SkeletonShape = .rounded(8))
 Drives every group-bound skeleton in `content` from one loading flag.
 
 ```swift
-SkeletonGroup(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: SkeletonGroup(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -663,7 +721,9 @@ init(_ kind: StatusKind, label: String? = nil)
 ## SurfaceView
 
 ```swift
-SurfaceView(content:)
+init(@ViewBuilder content: @escaping () -> Content)
+
+// usage: SurfaceView(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**
@@ -691,7 +751,9 @@ init(isOn: Binding<Bool>)
 ## SwapButton
 
 ```swift
-SwapButton(systemImage, action:)
+init(_ systemImage: String = "arrow.up.arrow.down", action: @escaping () -> Void)
+
+// usage: SwapButton(action: { })
 ```
 
 **Modifiers**
@@ -722,7 +784,9 @@ init(_ text: String, onRemove: (() -> Void)? = nil)
 Ant's **CheckableTag** — a tag that toggles a bound boolean, like a lightweight selectable filter.
 
 ```swift
-CheckableTag(text, isChecked:)
+init(_ text: String, isChecked: Binding<Bool>)
+
+// usage: CheckableTag("text", isChecked: $isChecked)
 ```
 
 **Modifiers**
@@ -760,7 +824,9 @@ init(_ words: [String], interval: Double = 2)
 ## TiltCard
 
 ```swift
-TiltCard(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: TiltCard(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -786,7 +852,9 @@ init(_ text: String)
 ## TrendChip
 
 ```swift
-TrendChip(trend)
+init(_ trend: StatTrend)
+
+// usage: TrendChip(<StatTrend>)
 ```
 
 **Modifiers**
@@ -828,7 +896,9 @@ _Compositions of atoms — inputs, buttons, selectors, small layouts._
 ## Affix
 
 ```swift
-Affix(offsetTop:, content:)
+init(offsetTop: CGFloat = 0, @ViewBuilder content: () -> Content)
+
+// usage: Affix(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -841,7 +911,9 @@ Affix(offsetTop:, content:)
 A token-bound amenity grid.
 
 ```swift
-AmenityGrid(amenities)
+init(_ amenities: [Amenity])
+
+// usage: AmenityGrid(<[Amenity]>)
 ```
 
 **Modifiers**
@@ -855,7 +927,9 @@ AmenityGrid(amenities)
 ## AnchorNav
 
 ```swift
-AnchorNav(items, active:)
+init(_ items: [AnchorItem], active: Binding<String>)
+
+// usage: AnchorNav(<[AnchorItem]>, active: $active)
 ```
 
 **Modifiers**
@@ -1006,7 +1080,9 @@ init(_ title: String, action: @escaping () -> Void)
 Minimal-emphasis button (HeroUI `tertiary`) — a subtle tinted surface, typically paired alongside a primary or secondary action.
 
 ```swift
-TertiaryButton(title, action:)
+init(_ title: String, action: @escaping () -> Void)
+
+// usage: TertiaryButton("title", action: { })
 ```
 
 **Modifiers**
@@ -1024,7 +1100,9 @@ TertiaryButton(title, action:)
 Solid destructive button (HeroUI `danger`) — for irreversible actions (delete, remove).
 
 ```swift
-DangerButton(title, action:)
+init(_ title: String, action: @escaping () -> Void)
+
+// usage: DangerButton("title", action: { })
 ```
 
 **Modifiers**
@@ -1042,7 +1120,9 @@ DangerButton(title, action:)
 Lower-emphasis destructive button (HeroUI `dangerSoft`) — a soft red tint for cautionary actions where urgency is lower than a solid ``DangerButton``.
 
 ```swift
-DangerSoftButton(title, action:)
+init(_ title: String, action: @escaping () -> Void)
+
+// usage: DangerSoftButton("title", action: { })
 ```
 
 **Modifiers**
@@ -1057,10 +1137,12 @@ DangerSoftButton(title, action:)
 
 ## ThemeButton
 
-```swift
-init(_ title: String? = nil, action: @escaping () -> Void)
+A fully configurable button: semantic color × variant × size × shape, with content and action in `init` and every appearance axis a chainable modifier.
 
-// usage: ThemeButton(action: { })
+```swift
+init(action: @escaping () -> Void, @ViewBuilder label: () -> some View)
+
+// usage: ThemeButton(action: <@escaping () -> Void, @ViewBuilder label: () -> some View>)
 ```
 
 **Modifiers**
@@ -1075,6 +1157,7 @@ init(_ title: String? = nil, action: @escaping () -> Void)
 - `.icon` — Leading and/or trailing SF Symbol.
 - `.density` — Height/padding density: `.regular` (touch, default) or `.compact` (web/HeroUI — sm/md/lg == compact small/medium/large).
 - `.iconOnly` — Render as a square-footprint icon-only button at the current shape's corner — decoupled from `.circle`/`.square` (HeroUI `iconOnly`).
+- `.spacing` — Gap between the row's items — prefix, title, suffix and inline spinner — as a spacing token.
 - `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
 
 ## CalendarView
@@ -1096,7 +1179,9 @@ init(selection: Binding<Date?>)
 ## CalendarYearPicker
 
 ```swift
-CalendarYearPicker(selection:)
+init(selection: Binding<Int>)
+
+// usage: CalendarYearPicker(selection: $selection)
 ```
 
 **Modifiers**
@@ -1107,7 +1192,9 @@ CalendarYearPicker(selection:)
 ## Cascader
 
 ```swift
-Cascader(options, selection:)
+init(_ options: [CascaderOption], selection: Binding<[String]>)
+
+// usage: Cascader(<[CascaderOption]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -1123,7 +1210,9 @@ Cascader(options, selection:)
 ## AreaChart
 
 ```swift
-AreaChart(series)
+init(_ series: [ChartSeries])
+
+// usage: AreaChart(<[ChartSeries]>)
 ```
 
 **Modifiers**
@@ -1138,7 +1227,9 @@ AreaChart(series)
 ## BarChart
 
 ```swift
-BarChart(series)
+init(_ series: [ChartSeries])
+
+// usage: BarChart(<[ChartSeries]>)
 ```
 
 **Modifiers**
@@ -1152,7 +1243,9 @@ BarChart(series)
 ## DonutChart
 
 ```swift
-DonutChart(slices)
+init(_ slices: [ChartSlice])
+
+// usage: DonutChart(<[ChartSlice]>)
 ```
 
 **Modifiers**
@@ -1164,7 +1257,9 @@ DonutChart(slices)
 ## LineChart
 
 ```swift
-LineChart(series)
+init(_ series: [ChartSeries])
+
+// usage: LineChart(<[ChartSeries]>)
 ```
 
 **Modifiers**
@@ -1301,7 +1396,9 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 ## ColorArea
 
 ```swift
-ColorArea(color:)
+init(color: Binding<HSBAColor>)
+
+// usage: ColorArea(color: $color)
 ```
 
 **Modifiers**
@@ -1324,7 +1421,9 @@ init(_ label: String, selection: Binding<Color>)
 ## ColorSlider
 
 ```swift
-ColorSlider(channel, color:)
+init(_ channel: ColorChannel, color: Binding<HSBAColor>)
+
+// usage: ColorSlider(<ColorChannel>, color: $color)
 ```
 
 **Modifiers**
@@ -1334,7 +1433,9 @@ ColorSlider(channel, color:)
 ## ColorSwatchPicker
 
 ```swift
-ColorSwatchPicker(items, selection:)
+init(_ items: [ColorSwatchItem], selection: Binding<ColorSwatchItem?>)
+
+// usage: ColorSwatchPicker(<[ColorSwatchItem]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -1346,7 +1447,9 @@ ColorSwatchPicker(items, selection:)
 ## ColumnsGrid
 
 ```swift
-ColumnsGrid(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: ColumnsGrid(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -1358,7 +1461,9 @@ ColumnsGrid(content:)
 ## ControlRow
 
 ```swift
-ControlRow(title, isOn:)
+init(_ title: String, isOn: Binding<Bool>)
+
+// usage: ControlRow("title", isOn: $isOn)
 ```
 
 **Modifiers**
@@ -1377,7 +1482,9 @@ ControlRow(title, isOn:)
 A token-bound currency picker.
 
 ```swift
-CurrencyPicker(selection:, currencies:)
+init(selection: Binding<String>, currencies: [Currency] = Currency.common)
+
+// usage: CurrencyPicker(selection: $selection)
 ```
 
 **Modifiers**
@@ -1414,7 +1521,9 @@ init(_ label: String? = nil, date: Binding<Date?>)
 ## Dropdown
 
 ```swift
-Dropdown(items:, isPresented:, trigger:)
+init(items: [DropdownItem], isPresented: Binding<Bool>? = nil, @ViewBuilder trigger: () -> Trigger)
+
+// usage: Dropdown(items: <[DropdownItem]>, @ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -1428,7 +1537,9 @@ Dropdown(items:, isPresented:, trigger:)
 ## EmojiReactionButton
 
 ```swift
-EmojiReactionButton(emoji, count:, initiallyReacted:)
+init(_ emoji: String, count: Int, initiallyReacted: Bool = false)
+
+// usage: EmojiReactionButton("emoji", count: 1)
 ```
 
 **Modifiers**
@@ -1439,7 +1550,9 @@ EmojiReactionButton(emoji, count:, initiallyReacted:)
 ## FieldButton
 
 ```swift
-FieldButton(value, action:)
+init(_ value: String, action: @escaping () -> Void)
+
+// usage: FieldButton("value", action: { })
 ```
 
 **Modifiers**
@@ -1497,7 +1610,9 @@ init(title: String? = nil, options: [Option], selection: Binding<Option?>, label
 ## FilterRow
 
 ```swift
-FilterRow(title, isOn:)
+init(_ title: String, isOn: Binding<Bool>)
+
+// usage: FilterRow("title", isOn: $isOn)
 ```
 
 **Modifiers**
@@ -1509,7 +1624,9 @@ FilterRow(title, isOn:)
 ## Flex
 
 ```swift
-Flex(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: Flex(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -1524,7 +1641,9 @@ Flex(content:)
 ## FlowLayout
 
 ```swift
-FlowLayout(spacing:, lineSpacing:, alignment:, content:)
+init(spacing: CGFloat = 8, lineSpacing: CGFloat = 8, alignment: HorizontalAlignment = .leading, @ViewBuilder content: () -> Content)
+
+// usage: FlowLayout(@ViewBuilder: { })
 ```
 
 ## GuestSelector
@@ -1532,7 +1651,9 @@ FlowLayout(spacing:, lineSpacing:, alignment:, content:)
 A token-bound rooms & guests picker.
 
 ```swift
-GuestSelector(selection:)
+init(selection: Binding<GuestSelection>)
+
+// usage: GuestSelector(selection: $selection)
 ```
 
 **Modifiers**
@@ -1551,7 +1672,9 @@ GuestSelector(selection:)
 The leading / trailing content of an ``InputGroup`` (Figma "Input Affix").
 
 ```swift
-InputAffix(content, action:)
+init(_ content: String? = nil, action: (() -> Void)? = nil)
+
+// usage: InputAffix()
 ```
 
 **Modifiers**
@@ -1563,7 +1686,9 @@ InputAffix(content, action:)
 ## InputGroup
 
 ```swift
-InputGroup(placeholder, text:)
+init(_ placeholder: String = "", text: Binding<String>)
+
+// usage: InputGroup(text: $text)
 ```
 
 **Modifiers**
@@ -1600,7 +1725,9 @@ init(_ label: String? = nil, value: Binding<Int>, range: ClosedRange<Int> = 0...
 ## InstallmentPicker
 
 ```swift
-InstallmentPicker(options, selection:)
+init(_ options: [InstallmentOption], selection: Binding<Int>)
+
+// usage: InstallmentPicker(<[InstallmentOption]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -1613,7 +1740,9 @@ InstallmentPicker(options, selection:)
 A token-bound instalment plan picker.
 
 ```swift
-InstallmentSelector(total:, options:, selection:, currencyCode:)
+init(total: Decimal, options: [Int], selection: Binding<Int>)
+
+// usage: InstallmentSelector(total: <Decimal>, options: 1, selection: $selection)
 ```
 
 **Modifiers**
@@ -1627,7 +1756,9 @@ InstallmentSelector(total:, options:, selection:, currencyCode:)
 A token-bound app-language picker.
 
 ```swift
-LanguageSwitcher(languages, selection:)
+init(_ languages: [AppLanguage], selection: Binding<String>)
+
+// usage: LanguageSwitcher(<[AppLanguage]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -1642,7 +1773,9 @@ LanguageSwitcher(languages, selection:)
 Chroma: while the environment carries the default ``ChipStyle`` the pill draws its own accent fill + border (pixel-identical to the pre-ChipStyle look — the built-ins don't know the marker's accent tokens).
 
 ```swift
-MapPriceMarker(text)
+init(_ text: String)
+
+// usage: MapPriceMarker("text")
 ```
 
 **Modifiers**
@@ -1655,7 +1788,9 @@ MapPriceMarker(text)
 ## Masonry
 
 ```swift
-Masonry(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: Masonry(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -1666,7 +1801,9 @@ Masonry(content:)
 ## Mentions
 
 ```swift
-Mentions(text:, options:)
+init(text: Binding<String>, options: [MentionOption])
+
+// usage: Mentions(text: $text, options: <[MentionOption]>)
 ```
 
 **Modifiers**
@@ -1706,7 +1843,7 @@ init(_ label: String, text: Binding<String>)
 Multiple / tags select with optional search (Ant Select mode="multiple").
 
 ```swift
-init(_ label: String? = nil, options: [Option], selection: Binding<Set<Option>>, optionTitle: @escaping (Option) -> String)
+init(_ label: String? = nil, options: [Option], selection: Binding<Set<Option>>, isExpanded: Binding<Bool>? = nil, optionTitle: @escaping (Option) -> String)
 
 // usage: MultiSelect(options: <[Option]>, selection: $selection, optionTitle: "optionTitle")
 ```
@@ -1768,7 +1905,9 @@ init(current: Binding<Int>, total: Int)
 ## PaymentCardField
 
 ```swift
-PaymentCardField(number:, expiry:, cvv:)
+init(number: Binding<String>, expiry: Binding<String>, cvv: Binding<String>)
+
+// usage: PaymentCardField(number: $number, expiry: $expiry, cvv: $cvv)
 ```
 
 **Modifiers**
@@ -1785,7 +1924,9 @@ PaymentCardField(number:, expiry:, cvv:)
 ## PhoneField
 
 ```swift
-PhoneField(label, number:)
+init(_ label: String, number: Binding<String>)
+
+// usage: PhoneField("label", number: $number)
 ```
 
 **Modifiers**
@@ -1802,7 +1943,9 @@ PhoneField(label, number:)
 ## PriceBreakdown
 
 ```swift
-PriceBreakdown(amount, currencyCode:)
+init(_ amount: Decimal)
+
+// usage: PriceBreakdown(<Decimal>)
 ```
 
 **Modifiers**
@@ -1821,7 +1964,9 @@ PriceBreakdown(amount, currencyCode:)
 A token-bound price histogram + range filter.
 
 ```swift
-PriceHistogram(bins:, lowerValue:, upperValue:, in:)
+init(bins: [Int], lowerValue: Binding<Double>, upperValue: Binding<Double>, in bounds: ClosedRange<Double>)
+
+// usage: PriceHistogram(bins: 1, lowerValue: $lowerValue, upperValue: $upperValue, in: 1)
 ```
 
 **Modifiers**
@@ -1835,7 +1980,9 @@ PriceHistogram(bins:, lowerValue:, upperValue:, in:)
 ## PriceTrendChart
 
 ```swift
-PriceTrendChart(points, selection:)
+init(_ points: [PriceTrendPoint], selection: Binding<Int>)
+
+// usage: PriceTrendChart(<[PriceTrendPoint]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -1909,6 +2056,7 @@ init(_ label: String? = nil, isSelected: Binding<Bool>)
 - `.infoMessages` — Validation / info messages rendered under the control (drives the border state).
 - `.alignment` — Vertical alignment of the radio against a multi-line label.
 - `.controlPlacement` — Which side of the label the radio sits on: `.leading` (default) or `.trailing`.
+- `.description` — Supporting text under the label, drawn with ``HelperText`` and read by VoiceOver as the control's hint.
 - `.a11yID` — Sets the accessibility-identifier namespace for this component (its sub-elements get `"<id>.<element>"`).
 
 ## RadioGroup
@@ -1974,7 +2122,9 @@ init(lowerValue: Binding<Double>, upperValue: Binding<Double>, in bounds: Closed
 Fades the clipped edges of a wrapped scroll view with theme-fed gradient scrims — ThemeKit's port of HeroUI Native's `ScrollShadow`.
 
 ```swift
-ScrollShadow(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: ScrollShadow(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -1987,7 +2137,9 @@ ScrollShadow(content:)
 ## ScrubGallery
 
 ```swift
-ScrubGallery(count:, content:)
+init(_ images: [Image])
+
+// usage: ScrubGallery(<[Image]>)
 ```
 
 **Modifiers**
@@ -2030,7 +2182,9 @@ init(text: Binding<String>)
 ## SearchField
 
 ```swift
-SearchField(placeholder, action:)
+init(_ placeholder: String, action: @escaping () -> Void = {})
+
+// usage: SearchField("placeholder")
 ```
 
 **Modifiers**
@@ -2055,7 +2209,9 @@ SearchField(placeholder, action:)
 ## SearchSummary
 
 ```swift
-SearchSummary(time:, adults:)
+init(time: String?, adults: Int)
+
+// usage: SearchSummary(time: "time", adults: 1)
 ```
 
 **Modifiers**
@@ -2093,7 +2249,7 @@ init(_ items: [SegmentItem], selection: Binding<Int>)
 A single-select dropdown — a native `Menu` by default, or a searchable inline panel with section headers when `.searchable()` is on.
 
 ```swift
-init(_ label: String, options: [Option], selection: Binding<Option?>, optionTitle: @escaping (Option) -> String)
+init(_ label: String, options: [Option], selection: Binding<Option?>, isExpanded: Binding<Bool>? = nil, optionTitle: @escaping (Option) -> String)
 
 // usage: Select("label", options: <[Option]>, selection: $selection, optionTitle: "optionTitle")
 ```
@@ -2155,7 +2311,9 @@ init(value: Binding<Double>, in bounds: ClosedRange<Double>, label: String? = ni
 ## SmartSuggestion
 
 ```swift
-SmartSuggestion(message)
+init(_ message: String)
+
+// usage: SmartSuggestion("message")
 ```
 
 **Modifiers**
@@ -2173,7 +2331,9 @@ SmartSuggestion(message)
 One tab of a sort bar — an icon+title, a previewed value/subtitle and a selected underline.
 
 ```swift
-SortTab(option, isSelected:, action:)
+init(_ option: SortOption, isSelected: Bool, action: @escaping () -> Void)
+
+// usage: SortTab(<SortOption>, isSelected: true, action: { })
 ```
 
 **Modifiers**
@@ -2183,7 +2343,9 @@ SortTab(option, isSelected:, action:)
 ## SortSummaryBar
 
 ```swift
-SortSummaryBar(options, selection:)
+init(_ options: [SortOption], selection: Binding<Int>)
+
+// usage: SortSummaryBar(<[SortOption]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -2193,7 +2355,9 @@ SortSummaryBar(options, selection:)
 ## Space
 
 ```swift
-Space(content:)
+init(@ViewBuilder content: () -> Content)
+
+// usage: Space(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -2207,7 +2371,9 @@ Space(content:)
 ## Splitter
 
 ```swift
-Splitter(axis, initialFraction:, first:)
+init(_ axis: Axis = .horizontal, initialFraction: CGFloat = 0.5, @ViewBuilder first: () -> First, @ViewBuilder second: () -> Second)
+
+// usage: Splitter(@ViewBuilder: { })
 ```
 
 **Modifiers**
@@ -2235,7 +2401,9 @@ init(title: String, value: String)
 ## StepperRow
 
 ```swift
-StepperRow(label, value:)
+init(_ label: String, value: Binding<Int>)
+
+// usage: StepperRow("label", value: $value)
 ```
 
 **Modifiers**
@@ -2267,7 +2435,9 @@ init(_ steps: [Steps.Step], onSelect: ((Int) -> Void)? = nil)
 ## SuggestionRow
 
 ```swift
-SuggestionRow(title, action:)
+init(_ title: String, action: @escaping () -> Void = {})
+
+// usage: SuggestionRow("title")
 ```
 
 **Modifiers**
@@ -2288,7 +2458,9 @@ SuggestionRow(title, action:)
 A row-height boolean toggle.
 
 ```swift
-TableToggleCell(isOn:, label:)
+init(isOn: Binding<Bool>, label: String)
+
+// usage: TableToggleCell(isOn: $isOn, label: "label")
 ```
 
 ## TableSelectCell
@@ -2296,7 +2468,9 @@ TableToggleCell(isOn:, label:)
 A compact menu picker over string options.
 
 ```swift
-TableSelectCell(options, selection:, label:)
+init(_ options: [String], selection: Binding<String>, label: String)
+
+// usage: TableSelectCell("options", selection: $selection, label: "label")
 ```
 
 ## TableSliderCell
@@ -2304,7 +2478,9 @@ TableSelectCell(options, selection:, label:)
 A compact value slider, tinted with the hero token.
 
 ```swift
-TableSliderCell(value:, in:, label:)
+init(value: Binding<Double>, in bounds: ClosedRange<Double>, label: String)
+
+// usage: TableSliderCell(value: $value, in: 1, label: "label")
 ```
 
 ## TableColorCell
@@ -2312,7 +2488,9 @@ TableSliderCell(value:, in:, label:)
 A system color well for editing a `Color` in place.
 
 ```swift
-TableColorCell(selection:, label:)
+init(selection: Binding<Color>, label: String)
+
+// usage: TableColorCell(selection: $selection, label: "label")
 ```
 
 ## TextInput
@@ -2424,7 +2602,9 @@ init(title: String? = nil, options: [Option], selection: Binding<Set<Option>>, l
 ## Transfer
 
 ```swift
-Transfer(items, target:)
+init(_ items: [TransferItem], target: Binding<Set<String>>)
+
+// usage: Transfer(<[TransferItem]>, target: $target)
 ```
 
 **Modifiers**
@@ -2457,7 +2637,9 @@ init(_ label: String? = nil, nodes: [TreeNode], selection: Binding<Set<String>>,
 ## TreeView
 
 ```swift
-TreeView(nodes, selection:)
+init(_ nodes: [TreeNode], selection: Binding<Set<String>>)
+
+// usage: TreeView(<[TreeNode]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -2686,13 +2868,17 @@ init(_ items: [Item], initiallyExpanded: Set<Item.ID> = [], title: @escaping (It
 ## ActionBar
 
 ```swift
-ActionBar(count:, actions:, onClear:)
+init(count: Int, actions: [ActionBarAction], onClear: (() -> Void)? = nil)
+
+// usage: ActionBar(count: 1, actions: <[ActionBarAction]>)
 ```
 
 ## Agenda
 
 ```swift
-Agenda(events)
+init(_ events: [AgendaEvent])
+
+// usage: Agenda(<[AgendaEvent]>)
 ```
 
 **Modifiers**
@@ -2703,7 +2889,9 @@ Agenda(events)
 ## AgentPriceRow
 
 ```swift
-AgentPriceRow(provider, action:)
+init(_ provider: String, action: @escaping () -> Void = {})
+
+// usage: AgentPriceRow("provider")
 ```
 
 **Modifiers**
@@ -2727,7 +2915,9 @@ AgentPriceRow(provider, action:)
 The Figma `_AlertHeader`: an optional icon "avatar" bubble over an optional title, aligned leading or center.
 
 ```swift
-AlertHeader(title)
+init(_ title: String? = nil)
+
+// usage: AlertHeader()
 ```
 
 **Modifiers**
@@ -2741,7 +2931,9 @@ AlertHeader(title)
 The Figma `_AlertFooter`.
 
 ```swift
-AlertFooter()
+init()
+
+// usage: AlertFooter()
 ```
 
 **Modifiers**
@@ -2758,7 +2950,9 @@ AlertFooter()
 A modal alert dialog composed of an ``AlertHeader``, an optional body (a `message` string or a custom `.content { }` slot) and an ``AlertFooter``.
 
 ```swift
-AlertDialog(title, message:)
+init(_ title: String? = nil, message: String? = nil)
+
+// usage: AlertDialog()
 ```
 
 **Modifiers**
@@ -2812,7 +3006,9 @@ init(title: String, @ViewBuilder media: @escaping () -> Media)
 ## BrowserFrame
 
 ```swift
-BrowserFrame(url:, content:)
+init(url: String = "https://example.com", @ViewBuilder content: @escaping () -> Content)
+
+// usage: BrowserFrame(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**
@@ -2837,6 +3033,9 @@ init(_ text: String)
 - `.icon` — Override the leading status glyph (otherwise derived from the variant); `nil` restores the variant's default.
 - `.action` — Trailing inline action button (title + handler).
 - `.onClose` — Trailing dismiss (×) button handler.
+- `.alignment` — Vertical alignment of the icon, text and trailing accessories — `.firstTextBaseline` by default; `.center` centres a larger icon or a button against the text.
+- `.fullWidth` — Stretch the callout to the offered width, keeping its surface, with the content leading-aligned.
+- `.statusLabel` — What VoiceOver reads for the leading indicator, before the text.
 
 ## Card
 
@@ -2908,7 +3107,9 @@ init(_ text: String, author: String? = nil, time: String? = nil)
 ## ColorPickerPanel
 
 ```swift
-ColorPickerPanel(color:)
+init(color: Binding<HSBAColor>)
+
+// usage: ColorPickerPanel(color: $color)
 ```
 
 **Modifiers**
@@ -2934,7 +3135,7 @@ init(segments: [Counter.Segment])
 ## Coupon
 
 ```swift
-init(code: String, label: String = "Kupon Kodu:", onCopy: @escaping () -> Void = {})
+init(code: String, label: String? = nil, onCopy: @escaping () -> Void = {})
 
 // usage: Coupon(code: "code")
 ```
@@ -2972,7 +3173,9 @@ init(columns: [DataTable<Row>.Column], rows: [Row], selection: Binding<Set<Row.I
 A token-bound destination / favourite card.
 
 ```swift
-DestinationCard(title, image:)
+init(_ title: String, image url: URL? = nil)
+
+// usage: DestinationCard("title")
 ```
 
 **Modifiers**
@@ -3007,7 +3210,9 @@ init(@ViewBuilder before: @escaping () -> Before, @ViewBuilder after: @escaping 
 The drawer's content surface — a `heading` / body / `footer` slot stack with an optional close button and (on `.bottom` / `.top`) a grab handle.
 
 ```swift
-Drawer(content:)
+init(@ViewBuilder content: @escaping () -> Content)
+
+// usage: Drawer(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**
@@ -3041,7 +3246,9 @@ init(_ title: String? = nil)
 ## FilterList
 
 ```swift
-FilterList(options, selection:)
+init(_ options: [FilterOption], selection: Binding<Set<String>>)
+
+// usage: FilterList(<[FilterOption]>, selection: $selection)
 ```
 
 **Modifiers**
@@ -3119,7 +3326,9 @@ init()
 ## HotelResultCard
 
 ```swift
-HotelResultCard(name:)
+init(name: String)
+
+// usage: HotelResultCard(name: "name")
 ```
 
 **Modifiers**
@@ -3185,7 +3394,9 @@ init(_ message: String, title: String? = nil, links: [(substring: String, action
 ## KanbanBoard
 
 ```swift
-KanbanBoard(columns:, card:)
+init(columns: Binding<[KanbanColumn<Item>]>, @ViewBuilder card: @escaping (Item) -> CardContent)
+
+// usage: KanbanBoard(columns: $columns, @ViewBuilder: <@escaping (Item) -> CardContent>)
 ```
 
 **Modifiers**
@@ -3251,7 +3462,7 @@ init(_ title: String)
 
 ## ListView
 
-Ant-style List container: optional header/footer, bordered surface, row dividers (split), and a loading (skeleton) state.
+Ant-style List container: optional header/footer, surface variants, row dividers (split), and a loading (skeleton) state.
 
 ```swift
 init(_ items: [Item], @ViewBuilder row: @escaping (Item) -> Row)
@@ -3272,7 +3483,9 @@ init(_ items: [Item], @ViewBuilder row: @escaping (Item) -> Row)
 ## LocationCard
 
 ```swift
-LocationCard(title:, coordinate:)
+init(title: String, coordinate: CLLocationCoordinate2D)
+
+// usage: LocationCard(title: "title", coordinate: <CLLocationCoordinate2D>)
 ```
 
 **Modifiers**
@@ -3293,7 +3506,9 @@ LocationCard(title:, coordinate:)
 A token-bound loyalty membership card.
 
 ```swift
-LoyaltyCard(tier:, points:)
+init(tier: String, points: Int)
+
+// usage: LoyaltyCard(tier: "tier", points: 1)
 ```
 
 **Modifiers**
@@ -3311,7 +3526,9 @@ LoyaltyCard(tier:, points:)
 ## MapCallout
 
 ```swift
-MapCallout(title:)
+init(title: String)
+
+// usage: MapCallout(title: "title")
 ```
 
 **Modifiers**
@@ -3411,7 +3628,9 @@ init(_ items: [Item], @ViewBuilder content: @escaping (Item) -> Content)
 ## PhoneFrame
 
 ```swift
-PhoneFrame(content:)
+init(@ViewBuilder content: @escaping () -> Content)
+
+// usage: PhoneFrame(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**
@@ -3422,7 +3641,9 @@ PhoneFrame(content:)
 ## PriceAlertCard
 
 ```swift
-PriceAlertCard(title, isOn:)
+init(_ title: String, isOn: Binding<Bool>)
+
+// usage: PriceAlertCard("title", isOn: $isOn)
 ```
 
 **Modifiers**
@@ -3490,7 +3711,9 @@ init(_ status: ResultStatus, title: String)
 A token-bound single review card.
 
 ```swift
-ReviewCard(author:, score:, text:)
+init(author: String, score: Double, text: String)
+
+// usage: ReviewCard(author: "author", score: 1, text: "text")
 ```
 
 **Modifiers**
@@ -3509,7 +3732,9 @@ ReviewCard(author:, score:, text:)
 ## RoomCard
 
 ```swift
-RoomCard(name:)
+init(name: String)
+
+// usage: RoomCard(name: "name")
 ```
 
 **Modifiers**
@@ -3578,7 +3803,9 @@ init(_ title: String, isChecked: Bool, action: @escaping () -> Void)
 ## SheetHeader
 
 ```swift
-SheetHeader(title)
+init(_ title: String)
+
+// usage: SheetHeader("title")
 ```
 
 **Modifiers**
@@ -3626,7 +3853,9 @@ init(selection: Binding<String?>, themes: [ThemePreset] = ThemePreset.all, onSel
 A token-bound ticket / boarding-pass surface.
 
 ```swift
-TicketStub(content:)
+init(@ViewBuilder content: @escaping () -> Content)
+
+// usage: TicketStub(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**
@@ -3708,7 +3937,9 @@ init(_ url: URL?, progress: Binding<Double>? = nil, isMuted: Binding<Bool>? = ni
 ## WindowFrame
 
 ```swift
-WindowFrame(title, content:)
+init(_ title: String? = nil, @ViewBuilder content: @escaping () -> Content)
+
+// usage: WindowFrame(@ViewBuilder: <@escaping () -> Content>)
 ```
 
 **Modifiers**

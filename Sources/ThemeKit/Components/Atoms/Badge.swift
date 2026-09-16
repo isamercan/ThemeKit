@@ -49,7 +49,10 @@ public enum BadgeStyle: String, CaseIterable {
         }
     }
 
-    var semantic: SemanticColor {
+    /// The tone's semantic hue — resolve it through the environment theme
+    /// (`theme.resolve(tone.semantic)`) to paint a custom ``BadgeChromeStyle``
+    /// with the palette the built-in chrome uses.
+    public var semantic: SemanticColor {
         switch self {
         case .neutral: return .neutral
         case .info: return .info
@@ -105,9 +108,15 @@ public enum BadgeShape {
 
 /// Improved, token-bound rewrite of the reference BadgeView. Styling is driven
 /// by a semantic `BadgeStyle` (system + brand variants) instead of
-/// component-specific color lookups, and icons use SF Symbols.
+/// component-specific color lookups, and icons use SF Symbols or the
+/// `.leading { }` / `.trailing { }` slots.
+///
+/// The chrome is drawn by the active ``BadgeChromeStyle`` when one is set with
+/// `.badgeChromeStyle(_:)` on the badge or an ancestor; the badge keeps its
+/// content, axes, action and accessibility either way.
 public struct Badge: View {
     @Environment(\.theme) private var theme
+    @Environment(\.badgeChromeStyle) private var chromeStyle
 
     private let text: String
     private let action: (() -> Void)?
@@ -126,6 +135,8 @@ public struct Badge: View {
     private var semanticGradient: [SemanticColor]?
     private var rawGradient: [Color]?
     private var highlighted: Bool = false
+    private var leadingSlot: SlotContent?
+    private var trailingSlot: SlotContent?
 
     public init(_ text: String, action: (() -> Void)? = nil) {   // R1 — content + action
         self.text = text
@@ -133,20 +144,31 @@ public struct Badge: View {
     }
 
     public var body: some View {
-        if let action {
-            Button(action: action) { content }.buttonStyle(PressFeedbackStyle())
+        if chromeStyle.isDefault {
+            if let action {
+                Button(action: action) { content }.buttonStyle(PressFeedbackStyle())
+            } else {
+                content
+            }
+        } else if let action {
+            // The style draws; the badge keeps its button and press feedback.
+            Button(action: action) { styledChrome(tracksPress: true) }.buttonStyle(BadgeChromePressStyle())
         } else {
-            content
+            styledChrome(tracksPress: false).accessibilityElement(children: .combine)
         }
     }
 
     private var content: some View {
         HStack(spacing: Theme.SpacingKey.xs.value) {
-            if let leadingSystemImage {
+            if let leadingSlot {
+                leadingSlot
+            } else if let leadingSystemImage {
                 Image(systemName: leadingSystemImage).font(.system(size: size.iconSize))
             }
             Text(text).textStyle(size.textStyle)
-            if let trailingSystemImage {
+            if let trailingSlot {
+                trailingSlot
+            } else if let trailingSystemImage {
                 Image(systemName: trailingSystemImage).font(.system(size: size.iconSize))
             }
         }
@@ -158,39 +180,136 @@ public struct Badge: View {
         .modifier(BadgeHighlight(on: highlighted))
     }
 
-    private var foreground: Color {
-        if let textColor { return textColor }
-        switch variant {
-        case .soft: return style.foreground(theme)
-        case .solid: return theme.resolve(style.semantic).onSolid
-        case .outline, .ghost: return theme.resolve(style.semantic).accent
-        }
+    // Paint and outline resolve through the helpers `DefaultBadgeChromeStyle`
+    // shares, so `.badgeChromeStyle(.default)` can't drift from this path.
+    private var paint: BadgePaint {
+        BadgePaint(tone: style, variant: variant, gradient: semanticGradient,
+                   legacyForeground: textColor, legacyGradient: rawGradient)
     }
-    private var backgroundStyle: AnyShapeStyle {
-        if let semanticGradient {
-            let colors = semanticGradient.map { theme.resolve($0).solid }
-            return AnyShapeStyle(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
-        }
-        if let rawGradient {
-            return AnyShapeStyle(LinearGradient(colors: rawGradient, startPoint: .leading, endPoint: .trailing))
-        }
-        switch variant {
-        case .soft: return AnyShapeStyle(style.background(theme))
-        case .solid: return AnyShapeStyle(theme.resolve(style.semantic).solid)
-        case .outline, .ghost: return AnyShapeStyle(Color.clear)
-        }
+    private var foreground: Color { paint.foreground(theme) }
+    private var backgroundStyle: AnyShapeStyle { paint.background(theme) }
+    private var border: Color { paint.border(theme) }
+    private var shapeStyle: ThemeAnyShape { shape.chromeShape }
+
+    // MARK: Style path
+
+    private func styledChrome(tracksPress: Bool) -> some View {
+        BadgeChromeHost(style: chromeStyle, configuration: chromeConfiguration, tracksPress: tracksPress)
     }
-    private var border: Color {
+
+    /// The configuration before the state resolved inside the button
+    /// (`BadgeChromeHost` fills `isEnabled` / `isPressed`). A set slot replaces
+    /// that side's SF Symbol shorthand, as on the default path.
+    private var chromeConfiguration: BadgeChromeStyleConfiguration {
+        BadgeChromeStyleConfiguration(
+            text: text,
+            leading: leadingSlot.map { AnyView($0) } ?? leadingSystemImage.map { AnyView(symbol($0)) },
+            trailing: trailingSlot.map { AnyView($0) } ?? trailingSystemImage.map { AnyView(symbol($0)) },
+            leadingSystemImage: leadingSlot == nil ? leadingSystemImage : nil,
+            trailingSystemImage: trailingSlot == nil ? trailingSystemImage : nil,
+            tone: style,
+            variant: variant,
+            size: size,
+            shape: shape,
+            gradient: semanticGradient,
+            isHighlighted: highlighted,
+            isEnabled: true,
+            isPressed: false,
+            legacyForeground: textColor,
+            legacyGradient: rawGradient)
+    }
+
+    private func symbol(_ systemName: String) -> some View {
+        Image(systemName: systemName).font(.system(size: size.iconSize))
+    }
+}
+
+/// Renders the environment style inside the badge's button, where the
+/// pressed flag and the enabled state are readable. A badge without an action
+/// ignores the flag, so a plain badge inside a pressed badge's slot stays
+/// unpressed.
+private struct BadgeChromeHost: View {
+    let style: AnyBadgeChromeStyle
+    let configuration: BadgeChromeStyleConfiguration
+    let tracksPress: Bool
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.badgeChromeIsPressed) private var isPressed
+
+    var body: some View {
+        style.makeBody(configuration: configuration.resolving(
+            isEnabled: isEnabled,
+            isPressed: tracksPress && isPressed))
+    }
+}
+
+/// The badge's press feedback on the style path: the kit's
+/// ``PressFeedbackStyle`` (motion-gated), plus the pressed flag handed down to
+/// the style's configuration.
+private struct BadgeChromePressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PressFeedbackStyle().makeBody(configuration: configuration)
+            .environment(\.badgeChromeIsPressed, configuration.isPressed)
+    }
+}
+
+private struct BadgeChromePressedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+private extension EnvironmentValues {
+    var badgeChromeIsPressed: Bool {
+        get { self[BadgeChromePressedKey.self] }
+        set { self[BadgeChromePressedKey.self] = newValue }
+    }
+}
+
+/// The fill, foreground and border a badge paints for a tone × variant (or a
+/// gradient). Shared by `Badge`'s default path and ``DefaultBadgeChromeStyle``.
+struct BadgePaint {
+    let tone: BadgeStyle
+    let variant: FillVariant
+    let gradient: [SemanticColor]?
+    let legacyForeground: Color?
+    let legacyGradient: [Color]?
+
+    func foreground(_ theme: Theme) -> Color {
+        if let legacyForeground { return legacyForeground }
         switch variant {
-        case .soft: return style.border(theme)
-        case .solid: return .clear
-        case .outline: return theme.resolve(style.semantic).border
-        case .ghost: return .clear
+        case .soft: return tone.foreground(theme)
+        case .solid: return theme.resolve(tone.semantic).onSolid
+        case .outline, .ghost: return theme.resolve(tone.semantic).accent
         }
     }
 
-    private var shapeStyle: ThemeAnyShape {
-        switch shape {
+    func background(_ theme: Theme) -> AnyShapeStyle {
+        if let gradient {
+            let colors = gradient.map { theme.resolve($0).solid }
+            return AnyShapeStyle(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+        }
+        if let legacyGradient {
+            return AnyShapeStyle(LinearGradient(colors: legacyGradient, startPoint: .leading, endPoint: .trailing))
+        }
+        switch variant {
+        case .soft: return AnyShapeStyle(tone.background(theme))
+        case .solid: return AnyShapeStyle(theme.resolve(tone.semantic).solid)
+        case .outline, .ghost: return AnyShapeStyle(Color.clear)
+        }
+    }
+
+    func border(_ theme: Theme) -> Color {
+        switch variant {
+        case .soft: return tone.border(theme)
+        case .solid: return .clear
+        case .outline: return theme.resolve(tone.semantic).border
+        case .ghost: return .clear
+        }
+    }
+}
+
+extension BadgeShape {
+    /// The outline the stock chrome fills and strokes.
+    var chromeShape: ThemeAnyShape {
+        switch self {
         case .pill: return ThemeAnyShape(Capsule())
         case .rounded: return ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
         }
@@ -207,7 +326,8 @@ public extension Badge {
     func variant(_ v: FillVariant) -> Self { copy { $0.variant = v } }
     /// Size tier: small / medium / large / xlarge.
     func size(_ s: BadgeSize) -> Self { copy { $0.size = s } }
-    /// Leading SF Symbol before the text (the Figma "Prefix" slot).
+    /// Leading SF Symbol before the text (the Figma "Prefix" slot). A
+    /// ``leading(_:)`` slot, when set, replaces it.
     func icon(_ systemName: String?) -> Self { copy { $0.leadingSystemImage = systemName } }
     /// Leading and/or trailing SF Symbols in one call — the Figma "Prefix" and
     /// "Suffix" slots. Mirrors `ThemeButton.icon(leading:trailing:)`; pass `nil`
@@ -235,6 +355,17 @@ public extension Badge {
     func gradient(_ colors: [Color]?) -> Self { copy { $0.rawGradient = colors; $0.semanticGradient = nil } }
     /// Lifts the badge off the surface with a subtle drop shadow.
     func highlighted(_ on: Bool = true) -> Self { copy { $0.highlighted = on } }
+    /// A custom view before the text (a host glyph, a flag, a counter); when
+    /// set, it replaces the ``icon(_:)`` shorthand. It inherits the badge's
+    /// foreground.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingSlot = SlotContent(content) }
+    }
+    /// A custom view after the text; when set, it replaces the
+    /// ``trailingIcon(_:)`` shorthand. It inherits the badge's foreground.
+    func trailing<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.trailingSlot = SlotContent(content) }
+    }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
@@ -243,7 +374,7 @@ public extension Badge {
     }
 }
 
-private struct BadgeHighlight: ViewModifier {
+struct BadgeHighlight: ViewModifier {
     let on: Bool
     func body(content: Content) -> some View {
         if on {
@@ -255,7 +386,33 @@ private struct BadgeHighlight: ViewModifier {
 }
 
 #Preview {
-    PreviewMatrix("Badge") {
+    /// Proof of external implementability: a host-shaped chrome with its own
+    /// type style, padding and corner. The hue still comes from the badge's tone.
+    struct SquareBadgeChrome: BadgeChromeStyle {
+        func makeBody(configuration: BadgeChromeStyleConfiguration) -> some View {
+            SquareBadgeChromeBody(configuration: configuration)
+        }
+    }
+    struct SquareBadgeChromeBody: View {
+        let configuration: BadgeChromeStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        var body: some View {
+            let tone = theme.resolve(configuration.tone.semantic)
+            HStack(spacing: Theme.SpacingKey.xs.value) {
+                configuration.leading
+                Text(configuration.text).textStyle(.bodySm500).lineLimit(1)
+                configuration.trailing
+            }
+            .foregroundStyle(configuration.isEnabled ? tone.accent : theme.text(.textDisabled))
+            .padding(.horizontal, Theme.SpacingKey.sm.value)
+            .padding(.vertical, Theme.SpacingKey.xs.value)
+            .background(configuration.isPressed ? tone.bgHover : tone.soft,
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+        }
+    }
+
+    return PreviewMatrix("Badge") {
         for style in BadgeStyle.allCases {
             PreviewCase(style.rawValue.capitalized) {
                 Badge(style.rawValue.capitalized).badgeStyle(style).icon("star.fill")
@@ -294,6 +451,22 @@ private struct BadgeHighlight: ViewModifier {
         }
         PreviewCase("Long text") {
             Badge("a-rather-long-badge-label").badgeStyle(.warning)
+        }
+        // Slots replace that side's SF Symbol shorthand and inherit the foreground.
+        PreviewCase("Leading / trailing slots") {
+            HStack {
+                Badge("Live").badgeStyle(.success).leading { Circle().frame(width: 6, height: 6) }
+                Badge("Inbox").badgeStyle(.info).icon("tray.fill").trailing { Text("12").textStyle(.labelSm700) }
+            }
+        }
+        // A custom BadgeChromeStyle set once on the container.
+        PreviewCase("Custom chrome style") {
+            HStack {
+                Badge("Tag").badgeStyle(.info).icon("tag.fill")
+                Badge("Action", action: {}).badgeStyle(.success).trailing { Image(systemName: "chevron.right") }
+                Badge("Disabled").badgeStyle(.error).disabled(true)
+            }
+            .badgeChromeStyle(SquareBadgeChrome())
         }
     }
 }
