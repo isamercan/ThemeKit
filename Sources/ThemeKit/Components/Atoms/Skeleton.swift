@@ -9,8 +9,11 @@
 //  `.skeleton(_:shape:)` for a custom outline, or as a standalone `Skeleton`
 //  primitive of an arbitrary shape and size. Three variants (HeroUI Native
 //  parity): a traveling `shimmer` sweep (default), an opacity `pulse`, and
-//  `none` for a static fill. When loading ends the placeholder cross-fades
-//  into the revealed content, honoring `microAnimations` + Reduce Motion.
+//  `none` for a static fill. The loop honors `microAnimations` + Reduce Motion
+//  and restarts when either (or the variant) changes after appear. When
+//  loading ends the placeholder cross-fades into the revealed content, honoring
+//  the same switches. The paint is drawn by the active `SkeletonStyle`
+//  (SkeletonStyle.swift); the stock fill below is `DefaultSkeletonStyle`.
 //
 
 import SwiftUI
@@ -29,7 +32,11 @@ public enum SkeletonShape: Equatable {
         .rounded(role.value)
     }
 
-    var anyShape: ThemeAnyShape {
+    /// The outline as a fillable / clippable shape — the exact shape the stock
+    /// placeholder fills and clips to (rounded corners are `.continuous`). A
+    /// custom ``SkeletonStyle`` draws with it instead of switching over the
+    /// cases, so its outline always matches the built-in one.
+    public var anyShape: ThemeAnyShape {
         switch self {
         case .rounded(let r): return ThemeAnyShape(RoundedRectangle(cornerRadius: r, style: .continuous))
         case .circle: return ThemeAnyShape(Circle())
@@ -48,14 +55,73 @@ public enum SkeletonVariant: CaseIterable, Equatable {
     case none
 }
 
-/// The animated fill, reused by the modifier and the standalone view.
+/// The placeholder, reused by the modifier and the standalone view. Resolves
+/// motion (`variant != .none`, the `microAnimations` switch, Reduce Motion) and
+/// routes the paint through the environment ``SkeletonStyle``: the stock fill
+/// while nobody set one, the style's `makeBody` otherwise.
 struct SkeletonShimmer: View {
-    @Environment(\.theme) private var theme
+    @Environment(\.skeletonStyle) private var style
+    @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let shape: SkeletonShape
     var variant: SkeletonVariant = .shimmer
     var highlight: SemanticColor? = nil
+
+    private var isAnimated: Bool { variant != .none && micro && !reduceMotion }
+
+    private var configuration: SkeletonStyleConfiguration {
+        SkeletonStyleConfiguration(shape: shape, variant: variant, highlight: highlight, isAnimated: isAnimated)
+    }
+
+    var body: some View {
+        Group {
+            if style.isDefault {
+                DefaultSkeletonChrome(configuration: configuration)
+            } else {
+                // A placeholder carries no information; whatever a custom style
+                // draws stays out of the accessibility tree, like the stock fill.
+                style.makeBody(configuration: configuration)
+                    .accessibilityHidden(true)
+            }
+        }
+        .modifier(SkeletonMotionRestart(key: SkeletonMotionKey(variant: variant, isAnimated: isAnimated)))
+    }
+}
+
+/// The motion inputs a running loop depends on.
+private struct SkeletonMotionKey: Equatable {
+    let variant: SkeletonVariant
+    let isAnimated: Bool
+}
+
+/// Restarts (or stops) a placeholder's loop when its motion inputs change after
+/// appear. A `repeatForever` animation started in `onAppear` otherwise keeps
+/// running — or never starts — because `onAppear` doesn't fire again. Bumping
+/// the identity inside a transaction with animations disabled drops the old
+/// view (its running animation and `@State` with it) without a cross-fade; the
+/// fresh view starts from its first frame, and its `onAppear` starts the loop
+/// again if the new inputs animate.
+private struct SkeletonMotionRestart: ViewModifier {
+    let key: SkeletonMotionKey
+    @State private var cycle = 0
+
+    func body(content: Content) -> some View {
+        content
+            .id(cycle)
+            .onChangeCompat(of: key) {
+                var reset = Transaction()
+                reset.disablesAnimations = true
+                withTransaction(reset) { cycle &+= 1 }
+            }
+    }
+}
+
+/// The stock animated fill — ``DefaultSkeletonStyle``'s body.
+struct DefaultSkeletonChrome: View {
+    @Environment(\.theme) private var theme
+
+    let configuration: SkeletonStyleConfiguration
     @State private var animate = false
 
     // Fixed internal motion constants (HeroUI Native defaults) — genuine
@@ -65,15 +131,18 @@ struct SkeletonShimmer: View {
     private static let pulseMinOpacity: Double = 0.5
     private static let pulseMaxOpacity: Double = 1.0
 
+    private var shape: SkeletonShape { configuration.shape }
+    private var variant: SkeletonVariant { configuration.variant }
+
     /// The sweep's tint — a semantic color's soft shade when set, else the
     /// token default.
     private var highlightColor: Color {
-        highlight.map { theme.resolve($0).soft } ?? theme.background(.bgWhite).opacity(0.7)
+        configuration.highlight.map { theme.resolve($0).soft } ?? theme.background(.bgWhite).opacity(0.7)
     }
 
-    /// Pulse breathes the fill; shimmer / `none` / Reduce Motion keep it solid.
+    /// Pulse breathes the fill; shimmer / `none` / motion off keep it solid.
     private var fillOpacity: Double {
-        guard variant == .pulse, !reduceMotion else { return Self.pulseMaxOpacity }
+        guard variant == .pulse, configuration.isAnimated else { return Self.pulseMaxOpacity }
         return animate ? Self.pulseMinOpacity : Self.pulseMaxOpacity
     }
 
@@ -82,9 +151,9 @@ struct SkeletonShimmer: View {
             .fill(theme.background(.skeletonBgSkeletonBase))
             .opacity(fillOpacity)
             .overlay {
-                // Honor Reduce Motion (and `.none`): a static placeholder,
-                // no traveling sweep.
-                if variant == .shimmer && !reduceMotion {
+                // Motion off (`.none`, `microAnimations(false)`, Reduce Motion):
+                // a static placeholder, no traveling sweep.
+                if variant == .shimmer && configuration.isAnimated {
                     GeometryReader { geo in
                         LinearGradient(
                             colors: [.clear, highlightColor, .clear],
@@ -97,7 +166,7 @@ struct SkeletonShimmer: View {
             }
             .clipShape(shape.anyShape)
             .onAppear {
-                guard !reduceMotion else { return }
+                guard configuration.isAnimated else { return }
                 switch variant {
                 case .shimmer:
                     withAnimation(.linear(duration: Self.shimmerDuration).repeatForever(autoreverses: false)) {
@@ -108,7 +177,7 @@ struct SkeletonShimmer: View {
                         animate = true
                     }
                 case .none:
-                    break   // static fill — same no-motion path as Reduce Motion
+                    break   // static fill — same no-motion path as motion off
                 }
             }
     }
@@ -245,6 +314,61 @@ public extension View {
         PreviewCase("highlight tint — .info soft sweep") { Skeleton(.rounded(.field)).highlight(.info).size(width: 200, height: 32) }
         PreviewCase("token radius role — .box") { Skeleton(.rounded(.box)).size(width: 200, height: 64) }
         PreviewCase("Modifier-applied pulse") { Text("Modifier-applied pulse").skeleton(true, radius: .selector, variant: .pulse) }
+    }
+}
+
+#Preview("Custom SkeletonStyle") {
+    /// A flat placeholder in a semantic soft tint that dims instead of sweeping.
+    struct DimmingSkeletonStyle: SkeletonStyle {
+        func makeBody(configuration: SkeletonStyleConfiguration) -> some View {
+            DimmingSkeleton(configuration: configuration)
+        }
+    }
+    struct DimmingSkeleton: View {
+        @Environment(\.theme) private var theme
+        @State private var dimmed = false
+        let configuration: SkeletonStyleConfiguration
+
+        var body: some View {
+            configuration.shape.anyShape
+                .fill(theme.resolve(configuration.highlight ?? .neutral).soft)
+                .opacity(dimmed ? 0.6 : 1)
+                .onAppear {
+                    guard configuration.isAnimated else { return }
+                    withAnimation(.easeInOut(duration: Motion.slower.duration * 2).repeatForever()) { dimmed = true }
+                }
+        }
+    }
+
+    return PreviewMatrix("SkeletonStyle") {
+        PreviewCase("Custom style — standalone blocks") {
+            HStack {
+                Skeleton(.circle).size(width: 48, height: 48)
+                VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                    Skeleton(.capsule).size(width: 160, height: 12)
+                    Skeleton(.capsule).size(width: 100, height: 12)
+                }
+            }
+            .skeletonStyle(DimmingSkeletonStyle())
+        }
+        PreviewCase("Custom style — .skeleton(_:) with a highlight") {
+            Text("Modifier-applied placeholder")
+                .skeleton(true, radius: .field, highlight: .info)
+                .skeletonStyle(DimmingSkeletonStyle())
+        }
+        PreviewCase("Custom style — motion off (static)") {
+            Skeleton(.rounded(.box)).size(width: 200, height: 48)
+                .skeletonStyle(DimmingSkeletonStyle())
+                .microAnimations(false)
+        }
+        PreviewCase("Custom style — a Card loading state picks it up") {
+            Card("Loading card") { EmptyView() }
+                .loading()
+                .skeletonStyle(DimmingSkeletonStyle())
+        }
+        PreviewCase(".default — the stock placeholder") {
+            Skeleton(.capsule).size(width: 200, height: 12).skeletonStyle(.default)
+        }
     }
 }
 

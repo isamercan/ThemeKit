@@ -107,8 +107,49 @@ An undefined token returns `nil`, so the caller picks its own fallback;
 can assert its token set at launch instead of rendering a fallback for a typo.
 
 This is a token-read API, not a component-theming API: components take
-``SemanticColor``, so a custom color reaches one only where it accepts a raw
-`Color`. See ADR-0008.
+``SemanticColor``, so a custom token doesn't reach a component through a
+modifier. See ADR-0008.
+
+### Your own component paint
+
+To paint a component with your own tokens, text styles or icon font, set a
+chrome style. The component keeps its behaviour, content, slots and
+accessibility; the style draws the chrome and resolves its colors from the
+environment theme, so `theme.custom` and per-subtree `.theme(_:)` both reach it:
+
+```swift
+struct FareBadgeChrome: BadgeChromeStyle {
+    func makeBody(configuration: BadgeChromeStyleConfiguration) -> some View {
+        FareBadgeChromeBody(configuration: configuration)
+    }
+}
+
+private struct FareBadgeChromeBody: View {
+    let configuration: BadgeChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            configuration.leading
+            Text(configuration.text).textStyle(.labelSm600)
+        }
+        .foregroundStyle(theme.resolve(configuration.tone.semantic).onSolid)
+        .padding(.horizontal, Theme.SpacingKey.sm.value)
+        .background(theme.custom.color(.fareBadge) ?? theme.resolve(configuration.tone.semantic).solid,
+                    in: Capsule())
+    }
+}
+
+RootView().badgeChromeStyle(FareBadgeChrome())   // every Badge below, ThemeKit's own included
+```
+
+With no style set, every component draws its built-in look unchanged. The
+protocols: ``ButtonChromeStyle``, ``BadgeChromeStyle``, ``CountBadgeStyle``,
+``IconTileStyle``, ``PriceTagStyle``, ``RadioButtonChromeStyle``,
+``SkeletonStyle``, ``DividerStyle``, ``CalloutChromeStyle``,
+``InlineTextStyle`` and ``ChipStyle``. To use your own type ramp, register a
+`Theme.ResolvedTextStyle` under `custom.` and apply it in the style with
+`.font(_:)` and `.lineSpacing(_:)`. See ADR-0009.
 
 ## Topics
 

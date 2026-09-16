@@ -25,6 +25,7 @@ struct FlexibilityShowcaseDemo: View {
     @State private var when: Date? = nil
     @State private var otp = ""
     @State private var tab = 0
+    @State private var radioOn = true
 
     var body: some View {
         ScrollView {
@@ -87,6 +88,8 @@ struct FlexibilityShowcaseDemo: View {
                         .chipStyle(OutlineChipStyle())
                     }
                 }
+
+                chromeStylesSection
 
                 section("SheetHeader — BarStyle") {
                     labeled("Default") {
@@ -230,6 +233,117 @@ struct FlexibilityShowcaseDemo: View {
         .navigationTitle("Flexibility Showcase")
     }
 
+    /// Consumer chrome styles (ADR-0009): each component keeps its behaviour and
+    /// content; a demo-defined style draws the chrome. Built-in look on the left
+    /// (or first), the custom chrome next to it.
+    private var chromeStylesSection: some View {
+        section("Consumer chrome styles") {
+            labeled("ThemeButton — ButtonChromeStyle (+ .label / .loadingIndicator slots)") {
+                VStack(spacing: 12) {
+                    HStack {
+                        ThemeButton("Built-in") {}.variant(.soft)
+                        ThemeButton("Continue") {}.icon(trailing: "arrow.right")
+                            .buttonChromeStyle(DemoPillButtonChrome())
+                    }
+                    HStack {
+                        ThemeButton("Pay 42.00") {}
+                            .label { Text("Pay \(Text("42.00").bold())") }
+                            .spacing(.sm)
+                            .buttonChromeStyle(DemoPillButtonChrome())
+                        ThemeButton("Saving") {}
+                            .loading().spinnerPlacement(.leading)
+                            .loadingIndicator { Spinner().style(.dots).controlSize(.small) }
+                            .buttonChromeStyle(DemoPillButtonChrome())
+                    }
+                }
+            }
+            labeled("Badge — BadgeChromeStyle (+ .leading slot)") {
+                HStack {
+                    Badge("Built-in").badgeStyle(.info).icon("tag.fill")
+                    Badge("Custom").badgeStyle(.info)
+                        .leading { Circle().frame(width: 6, height: 6) }
+                        .badgeChromeStyle(DemoTagBadgeChrome())
+                    Badge("Tap", action: {}).badgeStyle(.success)
+                        .trailing { Image(systemName: "chevron.right") }
+                        .badgeChromeStyle(DemoTagBadgeChrome())
+                }
+            }
+            labeled("CountBadge — CountBadgeStyle") {
+                HStack(spacing: 16) {
+                    CountBadge(7)
+                    CountBadge("+1").accent(.primary)
+                    Group {
+                        CountBadge(128)
+                        CountBadge { Image(systemName: "checkmark") }.accent(.success)
+                        Image(systemName: "bell.fill").font(.title2).countBadge(3).padding(.trailing, 8)
+                    }
+                    .countBadgeStyle(DemoSquareCountBadgeStyle())
+                }
+            }
+            labeled("IconTile — IconTileStyle (+ glyph init, .tileShape)") {
+                HStack {
+                    IconTile("airplane")
+                    IconTile("heart.fill").accent(.pink).tileShape(.circle)
+                    IconTile { Text("A").textStyle(.labelBase700) }.accent(.info).tileShape(.circle)
+                    IconTile("bell.fill").accent(.success).size(32)
+                        .iconTileStyle(DemoRingIconTileStyle())
+                }
+            }
+            labeled("PriceTag — PriceTagStyle (+ verbatim text)") {
+                HStack(alignment: .top, spacing: 24) {
+                    PriceTag(verbatim: "EUR 1.299").original(verbatim: "EUR 1.899").discountBadge("-15%")
+                    PriceTag(verbatim: "EUR 1.299").prefix("Total").original(verbatim: "EUR 1.899").discountBadge("-15%")
+                        .priceTagStyle(DemoStackedPriceTagStyle())
+                }
+            }
+            labeled("RadioButton — RadioButtonChromeStyle (+ .description)") {
+                VStack(alignment: .leading, spacing: 8) {
+                    RadioButton("Built-in", isSelected: $radioOn).description("Pay at the property.")
+                    RadioButton("Card row", isSelected: $radioOn).description("Pay now, cancel for free.")
+                        .radioButtonChromeStyle(DemoCardRadioChrome())
+                    RadioButton("Unavailable", isSelected: .constant(false)).disabled(true)
+                        .radioButtonChromeStyle(DemoCardRadioChrome())
+                }
+            }
+            labeled("Skeleton — SkeletonStyle") {
+                HStack(spacing: 12) {
+                    Skeleton(.capsule).size(width: 90, height: 12)
+                    Skeleton(.capsule).size(width: 90, height: 12)
+                        .skeletonStyle(DemoTintSkeletonStyle())
+                    Skeleton(.circle).size(width: 28, height: 28)
+                        .skeletonStyle(DemoTintSkeletonStyle())
+                }
+            }
+            labeled("DividerView — DividerStyle") {
+                VStack(spacing: 12) {
+                    DividerView("OR")
+                    DividerView("OR").dividerStyle(DemoAccentDividerStyle())
+                    DividerView().dashed().dividerStyle(DemoAccentDividerStyle())
+                }
+            }
+            labeled("Callout — CalloutChromeStyle (+ .statusLabel / .fullWidth)") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Callout("Prices may change until you book.").variant(.warning).calloutStyle(.soft)
+                    Callout("Prices may change until you book.").variant(.warning)
+                        .action("Details") {}
+                        .statusLabel("Warning")
+                        .fullWidth()
+                        .calloutChromeStyle(DemoBorderedCalloutChrome())
+                }
+            }
+            labeled("InlineText — InlineTextStyle (+ .leading / .trailing)") {
+                VStack(alignment: .leading, spacing: 8) {
+                    InlineText("Read the guidelines before publishing.", links: [("guidelines", {})])
+                        .leading { Image(systemName: "book") }
+                    InlineText("Read the guidelines before publishing.", links: [("guidelines", {})])
+                        .leading { Image(systemName: "book") }
+                        .trailing { Badge("New").badgeStyle(.success).size(.small) }
+                        .inlineTextStyle(DemoBodyInlineTextStyle())
+                }
+            }
+        }
+    }
+
     private var intro: some View {
         Text("Every variant below is produced without forking a component — slots for structure, modifiers for configuration, and a Style protocol for full visual override. The custom styles are defined in the demo target, not the library.")
             .font(.footnote)
@@ -354,5 +468,326 @@ private struct PosterCardStyle: CardStyle {
                                startPoint: .topLeading, endPoint: .bottomTrailing),
                 lineWidth: 2))
             .shadow(color: SemanticColor.primary.base.opacity(0.25), radius: 18, y: 10)
+    }
+}
+
+// MARK: - Consumer chrome styles (ADR-0009 — defined in the DEMO)
+//
+// Each style draws only the chrome; the component keeps its behaviour, content
+// and accessibility. Colors resolve from the environment theme inside a View, so
+// per-subtree `.theme(_:)` and `theme.custom` tokens reach them too.
+
+/// A tall capsule button with a bold title and a pressed shade.
+private struct DemoPillButtonChrome: ButtonChromeStyle {
+    func makeBody(configuration: ButtonChromeStyleConfiguration) -> some View {
+        DemoPillButtonBody(configuration: configuration)
+    }
+}
+
+private struct DemoPillButtonBody: View {
+    let configuration: ButtonChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let fill = theme.resolve(configuration.color)
+        configuration.label
+            .textStyle(.labelLg600)
+            .foregroundStyle(configuration.isEnabled ? fill.onSolid : theme.text(.textDisabled))
+            .tint(fill.onSolid)
+            .padding(.horizontal, configuration.isIconOnly ? 0 : Theme.SpacingKey.lg.value)
+            .frame(minWidth: configuration.isIconOnly ? 48 : nil, minHeight: 48)
+            .frame(maxWidth: configuration.isFullWidth ? .infinity : nil)
+            .background(configuration.isPressed ? fill.active : fill.solid, in: Capsule())
+            .opacity(configuration.isEnabled ? 1 : 0.5)
+            .overlay {
+                Capsule().stroke(fill.accent, lineWidth: 2).padding(-3)
+                    .opacity(configuration.isFocused ? 1 : 0)
+            }
+    }
+}
+
+/// A squared tag with its own label type; the hue still comes from the badge's tone.
+private struct DemoTagBadgeChrome: BadgeChromeStyle {
+    func makeBody(configuration: BadgeChromeStyleConfiguration) -> some View {
+        DemoTagBadgeBody(configuration: configuration)
+    }
+}
+
+private struct DemoTagBadgeBody: View {
+    let configuration: BadgeChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let tone = theme.resolve(configuration.tone.semantic)
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            configuration.leading
+            Text(configuration.text).textStyle(.labelSm700).lineLimit(1)
+            configuration.trailing
+        }
+        .foregroundStyle(configuration.isEnabled ? tone.onSolid : theme.text(.textDisabled))
+        .padding(.horizontal, Theme.SpacingKey.sm.value)
+        .padding(.vertical, Theme.SpacingKey.xs.value)
+        .background(configuration.isPressed ? tone.active : tone.solid,
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
+    }
+}
+
+/// A rounded-square count tag instead of the stock capsule.
+private struct DemoSquareCountBadgeStyle: CountBadgeStyle {
+    func makeBody(configuration: CountBadgeStyleConfiguration) -> some View {
+        DemoSquareCountBadgeBody(configuration: configuration)
+    }
+}
+
+private struct DemoSquareCountBadgeBody: View {
+    let configuration: CountBadgeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let hue = theme.resolve(configuration.accent)
+        Group {
+            switch configuration.content {
+            case .text(let text): Text(text).textStyle(.labelSm700)
+            case .glyph(let glyph): glyph.font(.system(size: 10, weight: .bold))
+            }
+        }
+        .foregroundStyle(hue.onSolid)
+        .padding(.horizontal, Theme.SpacingKey.xs.value)
+        .frame(minWidth: 20, minHeight: 20)
+        .background(hue.solid, in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+    }
+}
+
+/// An outlined disc that honours the requested size.
+private struct DemoRingIconTileStyle: IconTileStyle {
+    func makeBody(configuration: IconTileStyleConfiguration) -> some View {
+        DemoRingIconTileBody(configuration: configuration)
+    }
+}
+
+private struct DemoRingIconTileBody: View {
+    let configuration: IconTileStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let hue = theme.resolve(configuration.accent ?? .primary)
+        configuration.glyph
+            .font(.system(size: configuration.requestedSize * 0.5))
+            .foregroundStyle(hue.base)
+            .frame(width: configuration.requestedSize, height: configuration.requestedSize)
+            .overlay(Circle().strokeBorder(hue.border, lineWidth: 1.5))
+    }
+}
+
+/// A trailing-aligned price block: caption, headline price, then original + offer.
+private struct DemoStackedPriceTagStyle: PriceTagStyle {
+    func makeBody(configuration: PriceTagStyleConfiguration) -> some View {
+        DemoStackedPriceTagBody(configuration: configuration)
+    }
+}
+
+private struct DemoStackedPriceTagBody: View {
+    let configuration: PriceTagStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: configuration.spacing(.xs)) {
+            if let prefix = configuration.prefix {
+                Text(prefix).textStyle(.overline400).foregroundStyle(theme.text(.textSecondary))
+            }
+            Text(configuration.stateText ?? configuration.price)
+                .textStyle(.headingSm)
+                .foregroundStyle(theme.foreground(.fgHero))
+            HStack(spacing: configuration.spacing(.xs)) {
+                if let original = configuration.original {
+                    Text(original).strikethrough().textStyle(.bodySm400).foregroundStyle(theme.text(.textTertiary))
+                }
+                if let discount = configuration.discount {
+                    Badge(discount).badgeStyle(.success).size(.small)
+                }
+            }
+        }
+    }
+}
+
+/// A full-width card row: label + description first, the indicator pinned trailing.
+private struct DemoCardRadioChrome: RadioButtonChromeStyle {
+    func makeBody(configuration: RadioButtonChromeStyleConfiguration) -> some View {
+        DemoCardRadioBody(configuration: configuration)
+    }
+}
+
+private struct DemoCardRadioBody: View {
+    let configuration: RadioButtonChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let c = configuration
+        let accent = theme.resolve(c.accent ?? .primary)
+        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            VStack(alignment: .leading, spacing: 2) {
+                if let label = c.label {
+                    Text(label).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+                }
+                if let description = c.description {
+                    Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            Spacer(minLength: 0)
+            Circle()
+                .strokeBorder(c.isSelected ? accent.solid : theme.border(.borderPrimary), lineWidth: c.isSelected ? 6 : 1)
+                .frame(width: 20, height: 20)
+                .animation(c.animation, value: c.isSelected)
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(c.isSelected ? accent.bg : theme.background(.bgWhite),
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+                .strokeBorder(c.isSelected ? accent.border : theme.border(.borderPrimary), lineWidth: 1)
+        )
+        .opacity(c.isEnabled ? (c.isPressed ? 0.8 : 1) : 0.4)
+        .contentShape(Rectangle())
+    }
+}
+
+/// A soft-tinted placeholder that dims instead of sweeping; static when motion is off.
+private struct DemoTintSkeletonStyle: SkeletonStyle {
+    func makeBody(configuration: SkeletonStyleConfiguration) -> some View {
+        DemoTintSkeletonBody(configuration: configuration)
+    }
+}
+
+private struct DemoTintSkeletonBody: View {
+    let configuration: SkeletonStyleConfiguration
+    @Environment(\.theme) private var theme
+    @State private var dimmed = false
+
+    var body: some View {
+        configuration.shape.anyShape
+            .fill(theme.resolve(configuration.highlight ?? .info).soft)
+            .opacity(dimmed ? 0.5 : 1)
+            .onAppear {
+                guard configuration.isAnimated else { return }
+                withAnimation(.easeInOut(duration: 0.9).repeatForever()) { dimmed = true }
+            }
+    }
+}
+
+/// A 2 pt hero-colored rule with a body-type title.
+private struct DemoAccentDividerStyle: DividerStyle {
+    func makeBody(configuration: DividerStyleConfiguration) -> some View {
+        DemoAccentDividerBody(configuration: configuration)
+    }
+}
+
+private struct DemoAccentDividerBody: View {
+    let configuration: DividerStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        switch configuration.axis {
+        case .horizontal:
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                rule
+                if let title = configuration.title {
+                    Text(title).textStyle(.bodySm500).foregroundStyle(theme.foreground(.fgHero)).fixedSize()
+                    rule
+                }
+            }
+        case .vertical:
+            rule.frame(width: 2).frame(maxHeight: .infinity)
+        }
+    }
+
+    private var rule: some View {
+        DemoRuleShape()
+            .stroke(theme.border(.borderHero),
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: configuration.isDashed ? [2, 6] : []))
+            .frame(height: 2)
+            .frame(maxWidth: .infinity)
+            .flipsForRightToLeftLayoutDirection(configuration.isDashed)
+    }
+}
+
+/// A horizontal line inset by one point so round caps stay inside the frame.
+private struct DemoRuleShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + 1, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX - 1, y: rect.midY))
+        return path
+    }
+}
+
+/// A bordered callout with primary body text and a centered row.
+private struct DemoBorderedCalloutChrome: CalloutChromeStyle {
+    func makeBody(configuration: CalloutChromeStyleConfiguration) -> some View {
+        DemoBorderedCalloutBody(configuration: configuration)
+    }
+}
+
+private struct DemoBorderedCalloutBody: View {
+    let configuration: CalloutChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let tone = theme.resolve(semantic)
+        let shape = RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+        HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+            if let symbol = configuration.leadingSystemImage {
+                Image(systemName: symbol)
+                    .font(.system(size: 18))
+                    .foregroundStyle(tone.accent)
+                    .accessibilityLabel(configuration.statusLabel ?? "")
+            } else {
+                configuration.leading
+            }
+            configuration.content
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+                .frame(maxWidth: configuration.isFullWidth ? .infinity : nil, alignment: .leading)
+            configuration.trailing
+            configuration.actionButton.foregroundStyle(tone.accent)
+            configuration.closeButton.foregroundStyle(theme.text(.textTertiary))
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .background(tone.bg, in: shape)
+        .overlay(shape.strokeBorder(tone.border, lineWidth: 1))
+    }
+
+    private var semantic: SemanticColor {
+        switch configuration.tone {
+        case .neutral: return .neutral
+        case .info: return .info
+        case .success: return .success
+        case .warning: return .warning
+        case .error: return .error
+        case .accent: return .primary
+        }
+    }
+}
+
+/// Primary body text on one centered row; slot glyphs in the secondary color.
+private struct DemoBodyInlineTextStyle: InlineTextStyle {
+    func makeBody(configuration: InlineTextStyleConfiguration) -> some View {
+        DemoBodyInlineTextBody(configuration: configuration)
+    }
+}
+
+private struct DemoBodyInlineTextBody: View {
+    let configuration: InlineTextStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+            configuration.leading
+            configuration.content
+                .textStyle(.bodyBase500)
+                .foregroundStyle(theme.text(.textPrimary))
+            configuration.trailing
+        }
+        .foregroundStyle(theme.text(.textSecondary))
     }
 }

@@ -8,8 +8,14 @@ import SwiftUI
 
 /// Molecule. A labelled, single-select group composed from the RadioButton atom.
 /// Selection state is owned by the caller (single optional binding).
+///
+/// With a custom ``RadioButtonChromeStyle`` in the environment, each option is
+/// a full ``RadioButton`` row (label, option description, accent, control
+/// placement) drawn by that style, and disabled options aren't faded — the
+/// style draws the disabled look. Without one, the group draws its built-in rows.
 public struct RadioGroup<Option: Hashable>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.radioButtonChromeStyle) private var radioChromeStyle
     @Environment(\.fieldDefaults) private var fieldDefaults   // F4 — requiredIndicator default
 
     private let title: String?
@@ -92,46 +98,79 @@ public struct RadioGroup<Option: Hashable>: View {
 
     private var optionRows: some View {
         ForEach(Array(options.enumerated()), id: \.element) { index, option in
-            let enabled = optionEnabled(option)
-            let description = description(option)
-            let radio = RadioButton(isSelected: .constant(selection == option)).accent(accent)
-            let labelBlock = VStack(alignment: .leading, spacing: 2) {
-                Text(label(option))
-                    .textStyle(.bodyBase400)
-                    .foregroundStyle(theme.text(.textPrimary))
-                if let description {
-                    // B7 — route through the HelperText atom so option
-                    // descriptions inherit inline links (B1) and the
-                    // disabled/error text tokens for free.
-                    HelperText(description)
-                }
+            if radioChromeStyle.isDefault {
+                builtInRow(index: index, option: option)
+            } else {
+                styledRow(index: index, option: option)
             }
-            Button {
-                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
-                selection = option
-            } label: {
-                // Top-align the radio against the label block when supporting text is present.
-                HStack(alignment: description == nil ? .center : .top, spacing: Theme.SpacingKey.sm.value) {
-                    if controlPlacement == .leading {   // A4 — group-level placement
-                        radio
-                        labelBlock
-                        if axis == .vertical { Spacer() }
-                    } else {
-                        labelBlock
-                        if axis == .vertical { Spacer() }
-                        radio
-                    }
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!enabled)
-            .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, selection blocked
-            .opacity(enabled ? 1 : 0.4)
-            .a11y("option.\(index)", in: accessibilityID)
-            .accessibilityLabel(label(option))
-            .accessibilityAddTraits(selection == option ? .isSelected : [])
         }
+    }
+
+    /// The built-in row — unchanged from before the style door existed.
+    @ViewBuilder private func builtInRow(index: Int, option: Option) -> some View {
+        let enabled = optionEnabled(option)
+        let description = description(option)
+        let radio = RadioButton(isSelected: .constant(selection == option)).accent(accent)
+        let labelBlock = VStack(alignment: .leading, spacing: 2) {
+            Text(label(option))
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+            if let description {
+                // B7 — route through the HelperText atom so option
+                // descriptions inherit inline links (B1) and the
+                // disabled/error text tokens for free.
+                HelperText(description)
+            }
+        }
+        Button {
+            guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+            selection = option
+        } label: {
+            // Top-align the radio against the label block when supporting text is present.
+            HStack(alignment: description == nil ? .center : .top, spacing: Theme.SpacingKey.sm.value) {
+                if controlPlacement == .leading {   // A4 — group-level placement
+                    radio
+                    labelBlock
+                    if axis == .vertical { Spacer() }
+                } else {
+                    labelBlock
+                    if axis == .vertical { Spacer() }
+                    radio
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .allowsHitTesting(!isReadOnly)   // E1 — normal chrome, selection blocked
+        .opacity(enabled ? 1 : 0.4)
+        .a11y("option.\(index)", in: accessibilityID)
+        .accessibilityLabel(label(option))
+        .accessibilityAddTraits(selection == option ? .isSelected : [])
+    }
+
+    /// A custom-style row: one labelled ``RadioButton`` the environment style
+    /// draws whole. Selecting sets the group's selection; read-only and the
+    /// per-option enablement still apply. Like a built-in row, it speaks the
+    /// selection through the selected trait only (no "selected" value).
+    /// Vertical rows are offered the full width, so a style that stretches can
+    /// pin a trailing indicator to the edge.
+    private func styledRow(index: Int, option: Option) -> some View {
+        let binding = $selection
+        let description = description(option)
+        return RadioButton(label(option), isSelected: Binding(
+            get: { binding.wrappedValue == option },
+            set: { isOn in if isOn { binding.wrappedValue = option } }
+        ))
+        .description(description)
+        .accent(accent)
+        .controlPlacement(controlPlacement)
+        .alignment(description == nil ? .center : .top)
+        .a11yID(accessibilityID)
+        .a11yElement("option.\(index)")
+        .speaksSelectionValue(false)
+        .disabled(!optionEnabled(option))
+        .frame(maxWidth: axis == .vertical ? .infinity : nil, alignment: .leading)
     }
 }
 
@@ -249,6 +288,12 @@ public struct RadioButtonGroup<Option: Hashable>: View {
                     RadioGroup(title: "Required group", options: ["Economy", "Business"], selection: $sel) { $0 }
                         .required()
                 }
+                PreviewCase("Custom radio chrome") {
+                    RadioGroup(title: "Styled rows", options: ["Economy", "Business", "First"], selection: $sel) { $0 }
+                        .optionDescription { $0 == "First" ? "Suites on long-haul routes." : nil }
+                        .optionEnabled { $0 != "Business" }
+                        .radioButtonChromeStyle(PreviewRowRadioChrome())
+                }
                 PreviewCase("Button group (solid)") {
                     RadioButtonGroup(options: ["Day", "Week", "Month"], selection: $seg) { $0 }
                 }
@@ -260,6 +305,44 @@ public struct RadioButtonGroup<Option: Hashable>: View {
         }
     }
     return Demo()
+}
+
+/// A preview-only chrome for group rows: label first, a bordered indicator
+/// pinned to the trailing edge, secondary description, faded when disabled.
+private struct PreviewRowRadioChrome: RadioButtonChromeStyle {
+    func makeBody(configuration: RadioButtonChromeStyleConfiguration) -> some View {
+        PreviewRowRadioChromeBody(configuration: configuration)
+    }
+}
+
+private struct PreviewRowRadioChromeBody: View {
+    let configuration: RadioButtonChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let c = configuration
+        let paint = theme.resolve(c.accent ?? .primary)
+        HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            VStack(alignment: .leading, spacing: 2) {
+                if let label = c.label {
+                    Text(label).textStyle(.labelBase600).foregroundStyle(theme.text(.textPrimary))
+                }
+                if let description = c.description {
+                    Text(description).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            Spacer(minLength: 0)
+            Circle()
+                .strokeBorder(c.isSelected ? paint.solid : theme.border(.borderPrimary), lineWidth: c.isSelected ? 6 : 1)
+                .frame(width: 20, height: 20)
+                .animation(c.animation, value: c.isSelected)
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .background(theme.background(c.isSelected ? .bgElevatorTertiary : .bgWhite),
+                    in: RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous))
+        .opacity(c.isEnabled ? 1 : 0.4)
+        .contentShape(Rectangle())
+    }
 }
 
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)

@@ -322,6 +322,14 @@ def render_llms(cats, modifiers, themes):
         "- **Typography** `.textStyle(_:)` — 34 `TextStyle`s (Montserrat): Display, Heading (2xl→3xs), "
         "Label, Body, Overline, Link.",
         "- **Shadows** `ShadowStyle.elevated|.tabBar|.soft`.",
+        "- **Your own tokens** — names ThemeKit has no key for live under the reserved `custom.` namespace "
+        "and read back through `theme.custom.color|radius|spacing|textStyle|shadow(_:)`, keyed by "
+        "`Theme.CustomToken` (bare name, string-literal). Register app-owned ones with "
+        "`Theme.shared.registerCustomTokens(_:)` (survives every theme change, `darkColors` for the dark "
+        "variant); declare theme-owned ones as `\"custom.<name>\"` in a theme JSON or `--custom-color-*` / "
+        "`--custom-radius-*` / `--custom-spacing-*` in CSS. Registered wins on a name clash; an undefined "
+        "token is `nil`. Token-read API only — components take `SemanticColor`. See ADR-0008. To paint a "
+        "component with them, set its chrome style (below, ADR-0009).",
         "",
         "## Packages (SPM products)",
         "",
@@ -350,6 +358,20 @@ def render_llms(cats, modifiers, themes):
         "- `BarStyle` → `.barStyle(_:)` — bottom/booking bars. Built-ins `.default`, `.floating`.",
         "- `MeterStyle` → `.meterStyle(_:)` — progress/meters. Built-ins `.linear`, `.striped`, `.radial`.",
         "- `ToastStyle` → `.toastStyle(_:)` — toasts. Built-ins `.default`, `.capsule`.",
+        "",
+        "Chrome styles (consumer-owned paint, ADR-0009) — the component keeps behaviour, slots and "
+        "accessibility; your style draws the chrome with your own tokens, text styles or icon font. "
+        "Each ships only `.default` (the built-in look); with no style set nothing changes:",
+        "- `ButtonChromeStyle` → `.buttonChromeStyle(_:)` — `ThemeButton`.",
+        "- `BadgeChromeStyle` → `.badgeChromeStyle(_:)` — `Badge`.",
+        "- `CountBadgeStyle` → `.countBadgeStyle(_:)` — `CountBadge` and `.countBadge(_:)` overlays.",
+        "- `IconTileStyle` → `.iconTileStyle(_:)` — `IconTile`.",
+        "- `PriceTagStyle` → `.priceTagStyle(_:)` — `PriceTag`.",
+        "- `RadioButtonChromeStyle` → `.radioButtonChromeStyle(_:)` — `RadioButton`, `RadioGroup` rows.",
+        "- `SkeletonStyle` → `.skeletonStyle(_:)` — `Skeleton`, `.skeleton(_:)` and component loading states.",
+        "- `DividerStyle` → `.dividerStyle(_:)` — `DividerView` and component separators.",
+        "- `CalloutChromeStyle` → `.calloutChromeStyle(_:)` — `Callout`.",
+        "- `InlineTextStyle` → `.inlineTextStyle(_:)` — `InlineText` and linked helper text.",
         "",
         "## Chainable modifiers",
         "",
@@ -423,6 +445,17 @@ def render_llms_components(cats, enrich):
         ("BarStyle", "`.barStyle(_:)`", "bottom/booking bars", "`.default`, `.floating`"),
         ("MeterStyle", "`.meterStyle(_:)`", "progress/meters (ProgressBar, RadialProgress, GaugeView)", "`.linear`, `.striped`, `.radial`"),
         ("ToastStyle", "`.toastStyle(_:)`", "toasts (AlertToast)", "`.default`, `.capsule`"),
+        # Chrome styles (ADR-0009): consumer-owned paint, one built-in (the stock look).
+        ("ButtonChromeStyle", "`.buttonChromeStyle(_:)`", "ThemeButton chrome", "`.default`"),
+        ("BadgeChromeStyle", "`.badgeChromeStyle(_:)`", "Badge chrome", "`.default`"),
+        ("CountBadgeStyle", "`.countBadgeStyle(_:)`", "CountBadge + `.countBadge(_:)` overlays", "`.default`"),
+        ("IconTileStyle", "`.iconTileStyle(_:)`", "IconTile", "`.default`"),
+        ("PriceTagStyle", "`.priceTagStyle(_:)`", "PriceTag (incl. the ones inside cards)", "`.default`"),
+        ("RadioButtonChromeStyle", "`.radioButtonChromeStyle(_:)`", "RadioButton + RadioGroup rows", "`.default`"),
+        ("SkeletonStyle", "`.skeletonStyle(_:)`", "Skeleton, `.skeleton(_:)`, component loading states", "`.default`"),
+        ("DividerStyle", "`.dividerStyle(_:)`", "DividerView + component separators", "`.default`"),
+        ("CalloutChromeStyle", "`.calloutChromeStyle(_:)`", "Callout chrome", "`.default`"),
+        ("InlineTextStyle", "`.inlineTextStyle(_:)`", "InlineText + linked helper text", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",

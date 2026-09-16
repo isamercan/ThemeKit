@@ -60,8 +60,15 @@ public enum CalloutStyle {
 /// Organism. Inline status text with a leading icon. More compact than
 /// InfoBanner — used to highlight a single line of information.
 /// Figma: success / error / info / warning / neutral; plain or soft style.
+///
+/// The chrome is drawn by the active ``CalloutChromeStyle`` when one is set
+/// with `.calloutChromeStyle(_:)` on the callout or an ancestor; the callout
+/// keeps its content, wired buttons, link routing and status label either way.
 public struct Callout: View {
     @Environment(\.theme) private var theme
+    @Environment(\.calloutChromeStyle) private var chromeStyle
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.openURL) private var surroundingOpenURL
 
     // Appearance/content/state — mutated only through the modifiers below (R2).
     private var type: CalloutType = .info
@@ -73,6 +80,9 @@ public struct Callout: View {
     private var actionTitle: String?
     private var onAction: (() -> Void)?
     private var onClose: (() -> Void)?
+    private var alignment: VerticalAlignment = .firstTextBaseline
+    private var isFullWidth = false
+    private var statusLabel: String?
 
     private let text: String
     private var links: [(substring: String, action: () -> Void)] = []
@@ -85,52 +95,126 @@ public struct Callout: View {
     private var hasTrailing: Bool { hasAction || onClose != nil || trailingView != nil }
 
     public var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
-            // Leading indicator: a custom view replaces the stock status icon
-            // entirely (the InfoBanner slot pair, D3); otherwise the glyph,
-            // optionally overridden per-instance via `icon(_:)`.
-            if let leadingView {
-                leadingView
-            } else if showIcon {
-                Image(systemName: iconOverride ?? type.systemImage)
-                    .font(.system(size: 14))
-                    .accessibilityLabel(type.accessibilityLabel)
-            }
-            Group {
-                if links.isEmpty {
-                    Text(text).textStyle(.bodySm400)
-                } else {
-                    InlineText(text, links: links).inlineStyle(.bodySm400)
+        if chromeStyle.isDefault {
+            HStack(alignment: alignment, spacing: Theme.SpacingKey.xs.value) {
+                // Leading indicator: a custom view replaces the stock status icon
+                // entirely (the InfoBanner slot pair, D3); otherwise the glyph,
+                // optionally overridden per-instance via `icon(_:)`.
+                if let leadingView {
+                    labelledLeading(leadingView)
+                } else if showIcon {
+                    stockIcon
                 }
-            }
-            if hasTrailing {
-                Spacer(minLength: Theme.SpacingKey.sm.value)
-                if let trailingView {
-                    trailingView
-                }
-                if let actionTitle, let onAction {
-                    Button(action: onAction) {
-                        Text(actionTitle).textStyle(.labelSm600)
+                Group {
+                    if links.isEmpty {
+                        Text(text).textStyle(.bodySm400)
+                    } else {
+                        // InlineText paints its own base colour; hand it the tone
+                        // so linked text matches plain text.
+                        InlineText(text, links: links).inlineStyle(.bodySm400).baseColorOverride(type.accent(theme))
                     }
-                    .buttonStyle(.plain)
                 }
-                if let onClose {
-                    Button(action: onClose) {
-                        Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
+                if hasTrailing {
+                    Spacer(minLength: Theme.SpacingKey.sm.value)
+                    if let trailingView {
+                        trailingView
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(themeKit: "Dismiss"))
+                    if hasAction {
+                        stockActionButton
+                    }
+                    if onClose != nil {
+                        stockCloseButton
+                    }
                 }
             }
-        }
-        .foregroundStyle(type.accent(theme))
-        .padding(.horizontal, style == .soft ? Theme.SpacingKey.sm.value : 0)
-        .padding(.vertical, style == .soft ? Theme.SpacingKey.xs.value : 0)
-        .background {
-            if style == .soft {
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous).fill(type.soft(theme))
+            .modifier(CalloutWidth(isFullWidth: isFullWidth))
+            .foregroundStyle(type.accent(theme))
+            .padding(.horizontal, style == .soft ? Theme.SpacingKey.sm.value : 0)
+            .padding(.vertical, style == .soft ? Theme.SpacingKey.xs.value : 0)
+            .background {
+                if style == .soft {
+                    RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous).fill(type.soft(theme))
+                }
             }
+        } else {
+            // The style draws; the callout keeps routing its link taps, and any
+            // other URL opened in the style's body goes to the surrounding action.
+            chromeStyle.makeBody(configuration: configuration)
+                .environment(\.openURL, InlineText.linkRouting(links, fallback: surroundingOpenURL))
         }
+    }
+
+    // MARK: Stock pieces (shared by the default chrome and the configuration)
+
+    private var stockIcon: some View {
+        Image(systemName: iconOverride ?? type.systemImage)
+            .font(.system(size: 14))
+            .accessibilityLabel(statusLabel ?? type.accessibilityLabel)
+    }
+
+    /// A custom leading view keeps its own accessibility unless a status label
+    /// was set, which then names it.
+    @ViewBuilder private func labelledLeading(_ leading: AnyView) -> some View {
+        if let statusLabel {
+            leading
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(statusLabel)
+        } else {
+            leading
+        }
+    }
+
+    @ViewBuilder private var stockActionButton: some View {
+        if let actionTitle, let onAction {
+            Button(action: onAction) {
+                Text(actionTitle).textStyle(.labelSm600)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder private var stockCloseButton: some View {
+        if let onClose {
+            Button(action: onClose) {
+                Image(systemName: "xmark").font(.system(size: 11, weight: .semibold))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(themeKit: "Dismiss"))
+        }
+    }
+
+    // MARK: Style path
+
+    private var configuration: CalloutChromeStyleConfiguration {
+        let usesStockIcon = leadingView == nil && showIcon
+        let unpainted = unpaintedText
+        return CalloutChromeStyleConfiguration(
+            text: text,
+            links: links,
+            // No font and no colour of its own; link runs marked (the style
+            // path's routing resolves their taps).
+            content: links.isEmpty ? AnyView(Text(text)) : AnyView(Text(unpainted)),
+            attributedText: unpainted,
+            leading: leadingView.map { AnyView(labelledLeading($0)) } ?? (usesStockIcon ? AnyView(stockIcon) : nil),
+            leadingSystemImage: usesStockIcon ? (iconOverride ?? type.systemImage) : nil,
+            trailing: trailingView,
+            actionButton: hasAction ? AnyView(stockActionButton) : nil,
+            closeButton: onClose == nil ? nil : AnyView(stockCloseButton),
+            actionTitle: hasAction ? actionTitle : nil,
+            onAction: hasAction ? onAction : nil,
+            onClose: onClose,
+            tone: type,
+            calloutStyle: style,
+            showsIcon: showIcon,
+            statusLabel: statusLabel ?? (usesStockIcon ? type.accessibilityLabel : nil),
+            alignment: alignment,
+            isFullWidth: isFullWidth,
+            isEnabled: isEnabled)
+    }
+
+    /// The text as unpainted runs, link runs marked — `InlineText`'s own shape.
+    private var unpaintedText: AttributedString {
+        InlineText.attributedString(text, links: links, font: nil, baseColor: nil, linkColor: theme.text(.textHero))
     }
 }
 
@@ -142,6 +226,7 @@ public extension Callout {
 
     /// Turn substrings of the body into inline tappable links (rendered via
     /// `InlineText`) — API symmetry with `InfoBanner`, which already supports it.
+    /// The text keeps the variant's accent colour; the links take the link colour.
     func links(_ links: [(substring: String, action: () -> Void)]) -> Self { copy { $0.links = links } }
 
     /// Surface treatment: plain (transparent) or soft (light tinted surface).
@@ -158,6 +243,7 @@ public extension Callout {
     /// `Spinner` for an in-progress note (mirrors `InfoBanner.leading`, D3).
     /// Wins over `icon(_:)` and `showsIcon(_:)`; inherits the variant's accent
     /// foreground, so plain glyphs tint correctly with zero configuration.
+    /// Pair it with `statusLabel(_:)` so VoiceOver still reads the status.
     func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
         copy { $0.leadingView = AnyView(content()) }
     }
@@ -177,6 +263,23 @@ public extension Callout {
     /// Trailing dismiss (×) button handler.
     func onClose(_ action: (() -> Void)?) -> Self { copy { $0.onClose = action } }
 
+    /// Vertical alignment of the icon, text and trailing accessories —
+    /// `.firstTextBaseline` by default; `.center` centres a larger icon or a
+    /// button against the text.
+    func alignment(_ a: VerticalAlignment) -> Self { copy { $0.alignment = a } }
+
+    /// Stretch the callout to the offered width, keeping its surface, with the
+    /// content leading-aligned. Off by default: the callout hugs its content
+    /// unless a trailing accessory pushes it wide.
+    func fullWidth(_ on: Bool = true) -> Self { copy { $0.isFullWidth = on } }
+
+    /// What VoiceOver reads for the leading indicator, before the text. By
+    /// default the stock icon reads the variant's status ("Warning") and a
+    /// custom `leading { }` view keeps its own label; set this to name either
+    /// (a custom view is then read as one element with this label). `nil`
+    /// restores the default. With no indicator shown there is nothing to name.
+    func statusLabel(_ label: String?) -> Self { copy { $0.statusLabel = label } }
+
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
         mutate(&c)
@@ -193,15 +296,77 @@ public extension Callout {
         PreviewCase("Neutral soft") { Callout("Lorem ipsum placeholder text.").variant(.neutral).calloutStyle(.soft) }
         PreviewCase("Accent soft") { Callout("Brand-primary emphasis.").variant(.accent).calloutStyle(.soft) }
         PreviewCase("Icon override") { Callout("Custom glyph via icon override.").variant(.info).icon("bell.badge") }
+        PreviewCase("Links keep the tone") {
+            Callout("Check the fare rules before booking.").variant(.warning).links([("fare rules", {})])
+        }
         // D3 — slot pair mirroring InfoBanner.
         PreviewCase("Leading slot") {
             Callout("Checking availability…").variant(.accent).calloutStyle(.soft)
                 .leading { Spinner().size(14).lineWidth(2).accent(.primary) }
+                .statusLabel("Loading")
         }
         PreviewCase("Trailing slot + close") {
             Callout("Fare updated a moment ago.").variant(.info).calloutStyle(.soft)
                 .trailing { Badge("New").badgeStyle(.info).size(.small) }
                 .onClose {}
         }
+        PreviewCase("Centred, full width") {
+            Callout("Seats are filling up.").variant(.warning).calloutStyle(.soft)
+                .leading { Image(systemName: "flame").font(.system(size: 20)) }
+                .statusLabel("Warning")
+                .alignment(.center)
+                .fullWidth()
+        }
+        PreviewCase("Custom chrome style") {
+            Callout("Prices may change until you book.").variant(.warning)
+                .action("Details") {}
+                .fullWidth()
+                .calloutChromeStyle(PreviewCalloutChrome())
+        }
+    }
+}
+
+/// A preview-only custom chrome: centred row, primary body text on the tone's
+/// light surface, a 1pt tone stroke, and the action in the tone colour.
+private struct PreviewCalloutChrome: CalloutChromeStyle {
+    func makeBody(configuration: CalloutChromeStyleConfiguration) -> some View {
+        PreviewCalloutChromeBody(configuration: configuration)
+    }
+}
+
+private struct PreviewCalloutChromeBody: View {
+    let configuration: CalloutChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+            if let symbol = configuration.leadingSystemImage {
+                Image(systemName: symbol)
+                    .font(.system(size: 18))
+                    .accessibilityLabel(configuration.statusLabel ?? "")
+            } else {
+                configuration.leading
+            }
+            configuration.content
+                .textStyle(.bodyBase400)
+                .foregroundStyle(theme.text(.textPrimary))
+                .frame(maxWidth: configuration.isFullWidth ? .infinity : nil, alignment: .leading)
+            configuration.trailing
+            if let title = configuration.actionTitle, let onAction = configuration.onAction {
+                Button(title, action: onAction)
+                    .buttonStyle(.plain)
+                    .font(TextStyle.linkSm.font)
+                    .frame(minHeight: 44)
+            }
+            configuration.closeButton
+        }
+        .foregroundStyle(configuration.tone.accent(theme))
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+        .background(configuration.tone.soft(theme), in: RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
+                .strokeBorder(configuration.tone.accent(theme), lineWidth: 1)
+        )
     }
 }

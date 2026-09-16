@@ -40,6 +40,27 @@ extension Theme {
     public struct ResolvedTextStyle: Equatable, Sendable {
         public let font: Font
         public let lineSpacing: CGFloat
+
+        /// A text style a host app builds itself — e.g. to register its own type
+        /// ramp with ``Theme/registerCustomTokens(_:)``:
+        ///
+        /// ```swift
+        /// extension Theme.CustomToken { static let priceLarge: Self = "price-large" }
+        ///
+        /// Theme.shared.registerCustomTokens(.init(textStyles: [
+        ///     .priceLarge: .init(font: .custom("Brand-Bold", size: 24, relativeTo: .title2), lineSpacing: 8),
+        /// ]))
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - font: The font, ideally built with `relativeTo:` so it follows
+        ///     Dynamic Type like ThemeKit's own styles.
+        ///   - lineSpacing: Extra spacing between lines — the design line height
+        ///     minus the font size, as ThemeKit derives it from a theme file.
+        public init(font: Font, lineSpacing: CGFloat) {
+            self.font = font
+            self.lineSpacing = lineSpacing
+        }
     }
 
     struct AppShadow: Codable {

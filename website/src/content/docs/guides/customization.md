@@ -41,6 +41,61 @@ FlightCard(airline: "Anadolu Air", from: "IST", to: "ESB", departure: dep, arriv
     .cardStyle(GlassCardStyle())   // re-skins the shell; FlightCard's content is untouched
 ```
 
+## Chrome styles (your design system's paint)
+
+A host design system often wraps a ThemeKit component and needs its own
+tokens, text styles and icon font to match its spec. Chrome styles let it draw
+the chrome while ThemeKit keeps the behaviour, content, slots, accessibility,
+RTL and state. Each ships only `.default` — the built-in look — and with no
+style set the component renders exactly as before.
+
+| Protocol | Modifier | Component |
+|---|---|---|
+| `ButtonChromeStyle` | `.buttonChromeStyle(_:)` | `ThemeButton` |
+| `BadgeChromeStyle` | `.badgeChromeStyle(_:)` | `Badge` |
+| `CountBadgeStyle` | `.countBadgeStyle(_:)` | `CountBadge`, `.countBadge(_:)` overlays |
+| `IconTileStyle` | `.iconTileStyle(_:)` | `IconTile` |
+| `PriceTagStyle` | `.priceTagStyle(_:)` | `PriceTag` |
+| `RadioButtonChromeStyle` | `.radioButtonChromeStyle(_:)` | `RadioButton`, `RadioGroup` rows |
+| `SkeletonStyle` | `.skeletonStyle(_:)` | `Skeleton`, `.skeleton(_:)`, loading states |
+| `DividerStyle` | `.dividerStyle(_:)` | `DividerView`, component separators |
+| `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | `Callout` |
+| `InlineTextStyle` | `.inlineTextStyle(_:)` | `InlineText`, linked helper text |
+
+```swift
+struct HostButtonChrome: ButtonChromeStyle {
+    func makeBody(configuration: ButtonChromeStyleConfiguration) -> some View {
+        HostButtonChromeBody(configuration: configuration)
+    }
+}
+
+private struct HostButtonChromeBody: View {
+    let configuration: ButtonChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let fill = theme.resolve(configuration.color)
+        configuration.label
+            .textStyle(.labelLg600)                              // re-fonts the title
+            .foregroundStyle(fill.onSolid)
+            .tint(fill.onSolid)                                  // the loading spinner
+            .padding(.horizontal, Theme.SpacingKey.base.value)
+            .frame(minHeight: 52)
+            .frame(maxWidth: configuration.isFullWidth ? .infinity : nil)
+            .background(configuration.isPressed ? fill.active : fill.solid, in: Capsule())
+            .opacity(configuration.isEnabled ? 1 : 0.4)
+    }
+}
+
+RootView().buttonChromeStyle(HostButtonChrome())   // every ThemeButton below
+```
+
+The style is read from the environment, so it also reaches the copies ThemeKit
+composes inside other components (dialog actions, price tags inside cards, list
+separators…). Resolve colors inside the style from `@Environment(\.theme)` so
+`theme.custom` tokens and per-subtree `.theme(_:)` both apply. Design rationale:
+[ADR-0009](https://github.com/isamercan/ThemeKit/blob/main/docs/ADR-0009-consumer-chrome-styles.md).
+
 ## Slots
 
 Presenter and container components expose `ViewBuilder` slots for injecting

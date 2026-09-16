@@ -71,6 +71,14 @@ struct ContentView: View {
   `Theme.shared.registerCustomTokens(_:)` (survives theme changes; `darkColors` for
   dark), or declare theme-owned ones as `"custom.<name>"` in a theme JSON /
   `--custom-color-*` in CSS. Always `??` a built-in token as the fallback.
+- **Your own component paint:** a chrome style draws a component with your tokens,
+  text styles or icon font while ThemeKit keeps its behaviour, slots and
+  accessibility — `.buttonChromeStyle(_:)`, `.badgeChromeStyle(_:)`,
+  `.countBadgeStyle(_:)`, `.iconTileStyle(_:)`, `.priceTagStyle(_:)`,
+  `.radioButtonChromeStyle(_:)`, `.skeletonStyle(_:)`, `.dividerStyle(_:)`,
+  `.calloutChromeStyle(_:)`, `.inlineTextStyle(_:)`, `.chipStyle(_:)`. Set once at the
+  root; it reaches the copies ThemeKit composes too. Resolve colours inside the style
+  from `@Environment(\.theme)`. No style set = the built-in look, unchanged (ADR-0009).
 - **Semantic colors** (`SemanticColor`): `.primary .secondary .accent .neutral .info
   .success .warning .error` + hues. Each gives `.solid .soft .accent .border`
   variants and a 50..900 ladder (`.base .hover .active .strong .bg …`). Use with
@@ -157,3 +165,5 @@ Card(title: "Sign up") {
   value → ✅ the `custom.` namespace (`registerCustomTokens(_:)` / `theme.custom`).
 - ❌ `theme.custom.color("custom.fare-badge")` → ✅ the **bare** name; the lookup adds
   the prefix (`theme.custom.color(.fareBadge)`).
+- ❌ Re-implementing a Badge / ThemeButton / PriceTag to match a brand spec → ✅ wrap
+  the ThemeKit component and set its chrome style (`.badgeChromeStyle(_:)`, …).
