@@ -40,6 +40,7 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 | `DividerStyle` | `.dividerStyle(_:)` | DividerView + component separators | `.default` |
 | `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | Callout chrome | `.default` |
 | `InlineTextStyle` | `.inlineTextStyle(_:)` | InlineText + linked helper text | `.default` |
+| `TooltipStyle` | `.tooltipStyle(_:)` | `.tooltip(…)` bubbles + InputLabel info tooltips | `.default` |
 
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.

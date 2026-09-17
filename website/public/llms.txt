@@ -78,6 +78,7 @@ Chrome styles (consumer-owned paint, ADR-0009) — the component keeps behaviour
 - `DividerStyle` → `.dividerStyle(_:)` — `DividerView` and component separators.
 - `CalloutChromeStyle` → `.calloutChromeStyle(_:)` — `Callout`.
 - `InlineTextStyle` → `.inlineTextStyle(_:)` — `InlineText` and linked helper text.
+- `TooltipStyle` → `.tooltipStyle(_:)` — `.tooltip(…)` bubbles (arrow: `TooltipArrowShape`).
 
 ## Chainable modifiers
 

@@ -9,7 +9,9 @@
 //  lets the text wrap onto multiple lines, and `align` slides the bubble along
 //  the anchored edge (HeroUI Popover `align`). Two entry points: a binding-driven
 //  modifier and a self-managed tap-to-toggle convenience that also dismisses on
-//  an outside tap. (Ant Tooltip / HeroUI Popover parity.)
+//  an outside tap. (Ant Tooltip / HeroUI Popover parity.) A `TooltipStyle`
+//  set with `.tooltipStyle(_:)` draws the bubble instead (TooltipStyle.swift);
+//  presentation, placement, motion, dismissal and accessibility stay here.
 //
 
 import SwiftUI
@@ -58,39 +60,6 @@ public enum TooltipEdge: Sendable {
 /// `.themePopover`.
 public enum PopoverAlign: Sendable {
     case start, center, end
-}
-
-/// A triangle whose apex points toward the anchor for the given edge.
-/// The path runs base-corner → apex → base-corner and is left *open* along the
-/// base: `fill` closes it implicitly (same triangle as before), while `stroke`
-/// draws a hairline on the two exposed sides only — exactly what a bordered
-/// card arrow needs (HeroUI Popover.Arrow's fill + open stroke path). Internal
-/// so `Popconfirm` can compose the same arrow onto its card.
-struct TooltipArrow: Shape {
-    let edge: TooltipEdge
-
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        switch edge {
-        case .top: // bubble above the anchor → point down
-            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        case .bottom: // bubble below → point up
-            p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-            p.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        case .leading: // bubble to the left → point right
-            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        case .trailing: // bubble to the right → point left
-            p.move(to: CGPoint(x: rect.maxX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
-            p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        }
-        return p
-    }
 }
 
 /// A transparent, effectively screen-covering hit target placed *behind* an
@@ -152,7 +121,7 @@ private struct TooltipBubble: View {
             .background(bubbleColor,
                         in: RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
 
-        let arrow = TooltipArrow(edge: edge)
+        let arrow = TooltipArrowShape(edge: edge)
             .fill(bubbleColor)
             .frame(width: edge.isVertical ? 12 : 6, height: edge.isVertical ? 6 : 12)
             // Path coordinates don't auto-mirror — flip so leading/trailing
@@ -180,17 +149,23 @@ private struct TooltipPlacement: ViewModifier {
     /// push-out under RTL so the bubble still moves away from the anchor.
     private var direction: CGFloat { layoutDirection == .rightToLeft ? -1 : 1 }
 
+    // Unconditional: a `switch` (or `if`) here is conditional content, and SwiftUI drops
+    // alignment guides set inside it — the bubble then sat on its anchor instead of beside it.
     func body(content: Content) -> some View {
-        switch edge {
-        case .top: content.offset(y: -gap).alignmentGuide(.top) { $0[.bottom] }
-        case .bottom: content.offset(y: gap).alignmentGuide(.bottom) { $0[.top] }
-        case .leading: content.offset(x: -gap * direction).alignmentGuide(.leading) { $0[.trailing] }
-        case .trailing: content.offset(x: gap * direction).alignmentGuide(.trailing) { $0[.leading] }
-        }
+        let edge = edge
+        return content
+            .offset(x: edge == .leading ? -gap * direction : edge == .trailing ? gap * direction : 0,
+                    y: edge == .top ? -gap : edge == .bottom ? gap : 0)
+            .alignmentGuide(.top) { edge == .top ? $0[.bottom] : $0[.top] }
+            .alignmentGuide(.bottom) { edge == .bottom ? $0[.top] : $0[.bottom] }
+            .alignmentGuide(.leading) { edge == .leading ? $0[.trailing] : $0[.leading] }
+            .alignmentGuide(.trailing) { edge == .trailing ? $0[.leading] : $0[.trailing] }
     }
 }
 
 /// Binding-driven tooltip presentation — gates its fade on `microAnimations`.
+/// Both render paths share it: the built-in bubble, or the environment
+/// `TooltipStyle`'s body, gets the same size, placement, fade and z-order.
 private struct BindingTooltip: ViewModifier {
     let text: String
     /// Rich slot content — replaces the plain text inside the bubble (D2).
@@ -203,20 +178,56 @@ private struct BindingTooltip: ViewModifier {
     let maxWidth: CGFloat?
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.tooltipStyle) private var tooltipStyle
+    @Environment(\.layoutDirection) private var layoutDirection
     private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: edge.alignment(align)) {
-                if isPresented {
-                    TooltipBubble(text: text, rich: rich, edge: edge, style: style, color: color, maxWidth: maxWidth)
-                        .fixedSize(horizontal: maxWidth == nil, vertical: true)
-                        .modifier(TooltipPlacement(edge: edge))
-                        .transition(.opacity)
-                        .zIndex(1)
+                // The placement sits on a stack, not on the `if`: guides set on conditional
+                // content are dropped, which put the bubble over its anchor.
+                ZStack {
+                    if isPresented {
+                        bubble
+                            .fixedSize(horizontal: maxWidth == nil, vertical: true)
+                            .transition(.opacity)
+                    }
                 }
+                .modifier(TooltipPlacement(edge: edge))
+                .zIndex(1)
             }
             .animation(motion, value: isPresented)
+    }
+
+    /// The built-in bubble while the environment carries the stock default
+    /// (ADR-0009 D3); otherwise whatever the set style draws.
+    @ViewBuilder private var bubble: some View {
+        if tooltipStyle.isDefault {
+            TooltipBubble(text: text, rich: rich, edge: edge, style: style, color: color, maxWidth: maxWidth)
+        } else {
+            tooltipStyle.makeBody(configuration: configuration)
+        }
+    }
+
+    private var configuration: TooltipStyleConfiguration {
+        let presented = $isPresented
+        return TooltipStyleConfiguration(
+            text: text,
+            // No font and no colour of its own, so the style's type and
+            // colour apply; the plain text wraps as the built-in bubble's does.
+            content: rich.map { AnyView($0) } ?? AnyView(Text(text).multilineTextAlignment(.leading)),
+            edge: edge,
+            align: align,
+            maxWidth: maxWidth,
+            style: style,
+            color: color,
+            arrowShape: TooltipArrowShape(edge: edge, layoutDirection: layoutDirection),
+            isMotionEnabled: motion != nil,
+            // The self-managed form presents through this modifier with its
+            // own state's binding, so this closes both forms.
+            dismiss: { presented.wrappedValue = false }
+        )
     }
 }
 
@@ -257,7 +268,8 @@ public extension View {
     /// `.center` keeps the historical placement); `style` recolors the bubble
     /// (nil keeps the dark default); `color` tints it with any semantic color
     /// and wins over `style` (daisyUI `tooltip-{color}`); `maxWidth` lets long
-    /// text wrap.
+    /// text wrap. A ``TooltipStyle`` set after this call (`.tooltipStyle(_:)`)
+    /// draws the bubble; the arguments reach it through its configuration.
     func tooltip(
         _ text: String,
         isPresented: Binding<Bool>,
@@ -275,7 +287,8 @@ public extension View {
     /// chrome (fill, arrow, placement, motion). Slot content inherits the
     /// bubble's auto-contrast foreground and `bodySm400` ramp, so plain
     /// `Text`/`Image(systemName:)` children render correctly with zero
-    /// configuration.
+    /// configuration. Under a ``TooltipStyle``, the slot arrives as the
+    /// configuration's `content` and takes the style's type and colour instead.
     ///
     ///     icon.tooltip(isPresented: $show, edge: .bottom) {
     ///         HStack { Image(systemName: "wifi"); Text("Free Wi-Fi") }
@@ -297,7 +310,8 @@ public extension View {
     /// No external state required — use for simple hint glyphs. While shown, a
     /// tap anywhere outside the bubble also dismisses it (HeroUI Popover
     /// `closeOnPress`); pass `dismissOnOutsideTap: false` to require tapping
-    /// the anchor again.
+    /// the anchor again. A ``TooltipStyle`` draws this bubble too, and its
+    /// configuration's `dismiss` closes it.
     func tooltip(
         _ text: String,
         edge: TooltipEdge = .top,
