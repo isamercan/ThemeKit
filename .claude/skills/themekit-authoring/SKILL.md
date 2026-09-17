@@ -179,7 +179,8 @@ the stock look — no speculative presets (ADR-F5 still governs presets).
 
 Shipped: `ChipStyle`, `ButtonChromeStyle` (ThemeButton), `BadgeChromeStyle`,
 `CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `RadioButtonChromeStyle`,
-`SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`.
+`SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`,
+`TooltipStyle` (`.tooltip(…)`; its arrow is the public `TooltipArrowShape`).
 
 The uniform shape — copy it from any of those files:
 

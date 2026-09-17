@@ -372,6 +372,7 @@ def render_llms(cats, modifiers, themes):
         "- `DividerStyle` → `.dividerStyle(_:)` — `DividerView` and component separators.",
         "- `CalloutChromeStyle` → `.calloutChromeStyle(_:)` — `Callout`.",
         "- `InlineTextStyle` → `.inlineTextStyle(_:)` — `InlineText` and linked helper text.",
+        "- `TooltipStyle` → `.tooltipStyle(_:)` — `.tooltip(…)` bubbles (arrow: `TooltipArrowShape`).",
         "",
         "## Chainable modifiers",
         "",
@@ -456,6 +457,7 @@ def render_llms_components(cats, enrich):
         ("DividerStyle", "`.dividerStyle(_:)`", "DividerView + component separators", "`.default`"),
         ("CalloutChromeStyle", "`.calloutChromeStyle(_:)`", "Callout chrome", "`.default`"),
         ("InlineTextStyle", "`.inlineTextStyle(_:)`", "InlineText + linked helper text", "`.default`"),
+        ("TooltipStyle", "`.tooltipStyle(_:)`", "`.tooltip(…)` bubbles + InputLabel info tooltips", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",

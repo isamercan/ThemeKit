@@ -61,9 +61,9 @@ struct AnchoredPopoverPresenter<Card: View>: ViewModifier {
     @ViewBuilder private var decoratedCard: some View {
         let sized = card.fixedSize()
         if showsArrow {
-            let arrow = TooltipArrow(edge: edge)
+            let arrow = TooltipArrowShape(edge: edge)
                 .fill(theme.background(.bgWhite))
-                .overlay(TooltipArrow(edge: edge).stroke(theme.border(.borderPrimary), lineWidth: 1))
+                .overlay(TooltipArrowShape(edge: edge).stroke(theme.border(.borderPrimary), lineWidth: 1))
                 // Path apex is drawn in absolute coordinates; mirror it with
                 // the layout so it keeps pointing at the trigger under RTL.
                 .flipsForRightToLeftLayoutDirection(true)

@@ -61,6 +61,7 @@ style set the component renders exactly as before.
 | `DividerStyle` | `.dividerStyle(_:)` | `DividerView`, component separators |
 | `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | `Callout` |
 | `InlineTextStyle` | `.inlineTextStyle(_:)` | `InlineText`, linked helper text |
+| `TooltipStyle` | `.tooltipStyle(_:)` | `.tooltip(…)` bubbles, `InputLabel` info tooltips |
 
 ```swift
 struct HostButtonChrome: ButtonChromeStyle {

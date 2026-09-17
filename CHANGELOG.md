@@ -7,6 +7,33 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-17
+
+### Added
+
+- **`TooltipStyle`** (`.tooltipStyle(_:)`) draws the bubble of all three
+  `.tooltip(…)` forms: the surface, the text's type and colour, padding, corner
+  and arrow. The configuration carries the raw `text` (empty for the rich form),
+  the unpainted `content` (the rich slot or the plain text), the `edge`, `align`,
+  `maxWidth`, `style` and `color` arguments (plus `tint`, the colour the stock
+  bubble fills with), `arrowShape` already turned for the layout direction,
+  `isMotionEnabled`, and a `dismiss` action for a close button the style draws.
+  ThemeKit keeps the presentation, placement, fade, outside-tap dismissal, the
+  self-managed form's VoiceOver hint and the arrow's RTL turn, and the style
+  also reaches `InputLabel.infoTooltip(_:)`. Set it after the `.tooltip(…)` call
+  or on an ancestor. The arrow is now public as `TooltipArrowShape(edge:)`, so a
+  style can fill or stroke ThemeKit's own path; it never mirrors on its own, on
+  any deployment target. With no style set, tooltips, popconfirms and popovers
+  draw the same bubble as in 1.5.0.
+
+### Fixed
+
+- **A tooltip sits beside its anchor again.** Its placement guide was set on
+  conditional content (`if isPresented` inside the overlay, a `switch` over the
+  edge), which SwiftUI drops, so the bubble lined up with the anchor's own edge
+  and covered it. The guides are now unconditional, on a stack that holds the
+  bubble. Popconfirm and popover use the same pattern and are unchanged here.
+
 ## [1.5.0] - 2026-09-16
 
 ### Added
@@ -1378,7 +1405,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.5.0
 [1.4.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.4.0
 [1.3.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.3.0

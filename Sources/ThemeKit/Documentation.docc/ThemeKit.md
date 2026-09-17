@@ -153,6 +153,8 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``EmptyState``
 - ``ResultView``
 - ``RollingNumber``
+- ``TooltipStyle``
+- ``TooltipArrowShape``
 
 ### Containers & Navigation
 

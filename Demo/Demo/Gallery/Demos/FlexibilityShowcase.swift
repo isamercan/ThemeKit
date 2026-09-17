@@ -26,6 +26,8 @@ struct FlexibilityShowcaseDemo: View {
     @State private var otp = ""
     @State private var tab = 0
     @State private var radioOn = true
+    @State private var plainTip = true
+    @State private var cardTip = true
 
     var body: some View {
         ScrollView {
@@ -340,6 +342,27 @@ struct FlexibilityShowcaseDemo: View {
                         .trailing { Badge("New").badgeStyle(.success).size(.small) }
                         .inlineTextStyle(DemoBodyInlineTextStyle())
                 }
+            }
+            labeled("Tooltip — TooltipStyle (+ TooltipArrowShape, dismiss)") {
+                HStack(alignment: .top) {
+                    Image(systemName: "info.circle").font(.title3)
+                        .foregroundStyle(theme.foreground(.fgHero))
+                        .tooltip("Built-in bubble", isPresented: $plainTip)
+                        .onTapGesture { plainTip.toggle() }
+                        .frame(maxWidth: .infinity)
+                    Image(systemName: "suitcase.rolling").font(.title3)
+                        .foregroundStyle(theme.foreground(.fgHero))
+                        .tooltip(isPresented: $cardTip, maxWidth: 200) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Baggage allowance").fontWeight(.semibold)
+                                Text("One cabin bag up to 8 kg is included.")
+                            }
+                        }
+                        .tooltipStyle(DemoCardTooltipStyle())
+                        .onTapGesture { cardTip.toggle() }
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.top, 112)
             }
         }
     }
@@ -789,5 +812,60 @@ private struct DemoBodyInlineTextBody: View {
             configuration.trailing
         }
         .foregroundStyle(theme.text(.textSecondary))
+    }
+}
+
+/// A white card with a close button; its arrow is ThemeKit's
+/// `TooltipArrowShape`, filled and hairline-stroked, already turned for RTL.
+private struct DemoCardTooltipStyle: TooltipStyle {
+    func makeBody(configuration: TooltipStyleConfiguration) -> some View {
+        DemoCardTooltipBody(configuration: configuration)
+    }
+}
+
+private struct DemoCardTooltipBody: View {
+    let configuration: TooltipStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let surface = theme.background(.bgWhite)
+        let stroke = configuration.tint.map { theme.resolve($0).border } ?? theme.border(.borderPrimary)
+        let shape = RoundedRectangle(cornerRadius: Theme.RadiusRole.box.value, style: .continuous)
+
+        let card = HStack(alignment: .top, spacing: Theme.SpacingKey.sm.value) {
+            configuration.content
+                .textStyle(.bodySm400)
+                .foregroundStyle(theme.text(.textPrimary))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+            if let dismiss = configuration.dismiss {
+                Button(action: dismiss) {
+                    Image(systemName: "xmark").font(.caption.weight(.semibold))
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle().inset(by: -12))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(theme.text(.textTertiary))
+                .accessibilityLabel("Close")
+            }
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(width: configuration.maxWidth ?? 240)
+        .background(surface, in: shape)
+        .overlay(shape.strokeBorder(stroke, lineWidth: 1))
+        .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+
+        let vertical = configuration.edge == .top || configuration.edge == .bottom
+        let arrow = configuration.arrowShape.fill(surface)
+            .overlay(configuration.arrowShape.stroke(stroke, lineWidth: 1))
+            .frame(width: vertical ? 16 : 8, height: vertical ? 8 : 16)
+            .zIndex(1)
+
+        switch configuration.edge {
+        case .top: VStack(spacing: -1) { card; arrow }
+        case .bottom: VStack(spacing: -1) { arrow; card }
+        case .leading: HStack(spacing: -1) { card; arrow }
+        case .trailing: HStack(spacing: -1) { arrow; card }
+        }
     }
 }
