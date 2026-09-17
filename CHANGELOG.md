@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-17
+
 ### Added
 
 - **`TooltipStyle`** (`.tooltipStyle(_:)`) draws the bubble of all three
@@ -1403,7 +1405,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.5.0
 [1.4.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.4.0
 [1.3.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.3.0
