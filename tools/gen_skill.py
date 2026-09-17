@@ -373,6 +373,8 @@ def render_llms(cats, modifiers, themes):
         "- `CalloutChromeStyle` → `.calloutChromeStyle(_:)` — `Callout`.",
         "- `InlineTextStyle` → `.inlineTextStyle(_:)` — `InlineText` and linked helper text.",
         "- `TooltipStyle` → `.tooltipStyle(_:)` — `.tooltip(…)` bubbles (arrow: `TooltipArrowShape`).",
+        "- `TitleStyle` → `.titleStyle(_:)` — `Title` section headers (eyebrow, title, subtitle, action).",
+        "- `SegmentedTabBarChromeStyle` → `.segmentedTabBarChromeStyle(_:)` — one `SegmentedTabBar` tab; the style draws the selection indicator.",
         "",
         "## Chainable modifiers",
         "",
@@ -458,6 +460,8 @@ def render_llms_components(cats, enrich):
         ("CalloutChromeStyle", "`.calloutChromeStyle(_:)`", "Callout chrome", "`.default`"),
         ("InlineTextStyle", "`.inlineTextStyle(_:)`", "InlineText + linked helper text", "`.default`"),
         ("TooltipStyle", "`.tooltipStyle(_:)`", "`.tooltip(…)` bubbles + InputLabel info tooltips", "`.default`"),
+        ("TitleStyle", "`.titleStyle(_:)`", "Title section headers", "`.default`"),
+        ("SegmentedTabBarChromeStyle", "`.segmentedTabBarChromeStyle(_:)`", "one SegmentedTabBar tab (style draws the indicator)", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",

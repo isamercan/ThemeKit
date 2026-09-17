@@ -153,6 +153,8 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``EmptyState``
 - ``ResultView``
 - ``RollingNumber``
+- ``Title``
+- ``TitleStyle``
 - ``TooltipStyle``
 - ``TooltipArrowShape``
 
@@ -168,6 +170,8 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``NavigationBar``
 - ``SegmentedControl``
 - ``SegmentedTabBar``
+- ``TabItem``
+- ``SegmentedTabBarChromeStyle``
 - ``Pagination``
 - ``TreeSelect``
 - ``DataTable``

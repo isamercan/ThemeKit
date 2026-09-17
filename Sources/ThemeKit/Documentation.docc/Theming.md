@@ -147,9 +147,10 @@ With no style set, every component draws its built-in look unchanged. The
 protocols: ``ButtonChromeStyle``, ``BadgeChromeStyle``, ``CountBadgeStyle``,
 ``IconTileStyle``, ``PriceTagStyle``, ``RadioButtonChromeStyle``,
 ``SkeletonStyle``, ``DividerStyle``, ``CalloutChromeStyle``,
-``InlineTextStyle``, ``TooltipStyle`` and ``ChipStyle``. To use your own type
-ramp, register a `Theme.ResolvedTextStyle` under `custom.` and apply it in the
-style with `.font(_:)` and `.lineSpacing(_:)`. See ADR-0009.
+``InlineTextStyle``, ``TooltipStyle``, ``TitleStyle``,
+``SegmentedTabBarChromeStyle`` and ``ChipStyle``. To use your own type ramp,
+register a `Theme.ResolvedTextStyle` under `custom.` and apply it in the style
+with `.font(_:)` and `.lineSpacing(_:)`. See ADR-0009.
 
 ## Topics
 

@@ -34,7 +34,8 @@ final class ChromeStyleBehaviourTests: XCTestCase {
         requireSendable(Shared.button); requireSendable(Shared.badge); requireSendable(Shared.countBadge)
         requireSendable(Shared.iconTile); requireSendable(Shared.priceTag); requireSendable(Shared.radio)
         requireSendable(Shared.skeleton); requireSendable(Shared.divider); requireSendable(Shared.callout)
-        requireSendable(Shared.inlineText)
+        requireSendable(Shared.inlineText); requireSendable(Shared.tooltip); requireSendable(Shared.title)
+        requireSendable(Shared.segmentedTab)
 
         let rendered = render(VStack {
             VStack {
@@ -171,6 +172,9 @@ private enum SharedStockStyles {
     static let divider = DefaultDividerStyle()
     static let callout = DefaultCalloutChromeStyle()
     static let inlineText = DefaultInlineTextStyle()
+    static let tooltip = DefaultTooltipStyle()
+    static let title = DefaultTitleStyle()
+    static let segmentedTab = DefaultSegmentedTabBarChromeStyle()
 }
 
 @MainActor

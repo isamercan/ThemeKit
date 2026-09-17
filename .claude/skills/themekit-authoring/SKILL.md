@@ -180,7 +180,9 @@ the stock look — no speculative presets (ADR-F5 still governs presets).
 Shipped: `ChipStyle`, `ButtonChromeStyle` (ThemeButton), `BadgeChromeStyle`,
 `CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `RadioButtonChromeStyle`,
 `SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`,
-`TooltipStyle` (`.tooltip(…)`; its arrow is the public `TooltipArrowShape`).
+`TooltipStyle` (`.tooltip(…)`; its arrow is the public `TooltipArrowShape`),
+`TitleStyle`, `SegmentedTabBarChromeStyle` (one tab; the style owns the
+selection indicator and gets the bar's `matchedGeometryEffect` namespace).
 
 The uniform shape — copy it from any of those files:
 
@@ -217,6 +219,11 @@ The uniform shape — copy it from any of those files:
   for a live `isPressed`, hand the style to an internal `ButtonStyle` bridge.
 - Deprecated raw overrides (`Color`) travel as **internal** configuration fields for
   the default style only.
+- A style that draws **one item of a collection** (`SegmentedTabBarChromeStyle`)
+  takes that item's content and state plus the container's axes, and the
+  container keeps the row around the items — and hands over the geometry
+  namespace + id its sliding indicator needs (`matchedGeometryEffect`), because
+  the style, not the component, draws the indicator on that path.
 - Document on the protocol which ThemeKit compositions the environment style reaches,
   and resolve colours in the style from `@Environment(\.theme)` (never `Theme.shared`).
 

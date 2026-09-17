@@ -7,6 +7,59 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-17
+
+### Added
+
+- **`TitleStyle`** (`.titleStyle(_:)`) draws a `Title`: the type style and colour
+  of the eyebrow, title and subtitle, the gaps between them, the action link's
+  type and where every part sits. The configuration carries the raw `text`,
+  `eyebrow` (as written — the stock style is the one that uppercases it) and
+  `subtitle`, the unpainted `content` (the title as a `Text`), the
+  `leading` slot, the `actionTitle`, a ready-wired `action` whose label carries
+  no font or colour of its own (your type on ThemeKit's button), the raw
+  `onAction`, and the environment `controlSize`. `Title` keeps the content
+  model, the wired button and the accessibility.
+- **`Title.leading { }`** — a view before the title's text (a host glyph, a
+  flag, an avatar). It inherits the surrounding font and foreground colour, and
+  is decorative for VoiceOver.
+- **`SegmentedTabBarChromeStyle`** (`.segmentedTabBarChromeStyle(_:)`) draws
+  **one tab** of a `SegmentedTabBar`: its label's type and colour, the glyph,
+  the caption and badge, padding, the selected fill and the selection
+  indicator. The configuration carries the raw `title`, `caption` and `badge`,
+  the `leading` slot (else the SF Symbol, pre-sized) with its `systemImage`
+  name, the `trailingSystemImage`, the resolved `isSelected` / `isEnabled` /
+  `isPressed`, the `tabStyle`, `size`, `controlSize`, `isScrollable` and
+  `fillsWidth` axes (plus `isStretched`), the closable card tab's wired
+  `closeButton` and its `onClose`, the resolved `animation`, and
+  `indicatorNamespace` / `indicatorID` — pass those two to
+  `matchedGeometryEffect(id:in:)` and your indicator slides from tab to tab.
+  On this path the bar draws neither its underline nor its pill fill: the
+  style owns the indicator. The bar keeps each tab's button and the selection
+  it writes, the selected trait, the tab's VoiceOver label, the bar's
+  identifier and value, scroll-to-selection, the content pane, and what sits
+  around the tabs — the `.pill` track, the `.card` add button, `.dividers()`
+  and `.baseline()`.
+- **`TabItem.leading { }`** — a view before a tab's title, in place of the
+  `systemImage` shorthand, in the tab's icon font.
+- **`SegmentedTabBar.fillsWidth(_:)`** — on (the default) the tabs share the
+  bar's width as they always have; off, they hug their content from the leading
+  edge with no space between them, so a chrome style's own padding sets the gap.
+- **`SegmentedTabBar.baseline(_:)`** — a hairline under the whole bar (Ant Tabs'
+  nav line; off by default). It lies along the bottom edge behind the tabs, so
+  the selected tab's indicator covers it, and it's a `DividerView`, so a
+  `DividerStyle` paints it.
+
+### Fixed
+
+- **A `Title` is a heading, and reads as one element.** It carried no
+  `.isHeader` trait, and VoiceOver read its eyebrow, title and subtitle as three
+  separate items (the eyebrow spelled out in the capitals it's drawn with). The
+  text column is now one heading element labelled with the eyebrow, the title
+  and the subtitle in reading order, spoken as they were written; the action
+  stays a button of its own. A custom `TitleStyle` reads the same way, whatever
+  it draws. No pixels move.
+
 ## [1.6.0] - 2026-09-17
 
 ### Added
@@ -1405,7 +1458,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.5.0
 [1.4.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.4.0

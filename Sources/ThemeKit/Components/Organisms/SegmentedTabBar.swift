@@ -13,10 +13,28 @@ public struct TabItem {
     let trailingSystemImage: String?
     let badge: String?
     let isEnabled: Bool
+    /// The ``leading(_:)`` slot; `nil` means "use the `systemImage` shorthand".
+    var leadingSlot: SlotContent?
+
     public init(_ title: String, caption: String? = nil, systemImage: String? = nil,
                 trailingSystemImage: String? = nil, badge: String? = nil, isEnabled: Bool = true) {
         self.title = title; self.caption = caption; self.systemImage = systemImage
         self.trailingSystemImage = trailingSystemImage; self.badge = badge; self.isEnabled = isEnabled
+    }
+}
+
+public extension TabItem {
+    /// A custom view before the title (a host glyph, a flag, an avatar); when
+    /// set, it replaces the `systemImage` shorthand. It inherits the tab's
+    /// foreground colour and the tab's icon font (the shorthand's point size at
+    /// the bar's density); a view that sets its own font keeps it.
+    ///
+    ///     TabItem("Flights").leading { HostGlyph(.plane) }
+    @MainActor
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> TabItem {
+        var copy = self
+        copy.leadingSlot = SlotContent(content)
+        return copy
     }
 }
 
@@ -49,8 +67,15 @@ public enum TabScrollAlignment {
 
 /// Tab bar with a selection binding and an animated underline. Tabs can carry an
 /// icon, a count badge and a disabled state. (Ant Tabs parity.)
+///
+/// Each tab's chrome is drawn by the active ``SegmentedTabBarChromeStyle`` when
+/// one is set with `.segmentedTabBarChromeStyle(_:)` on the bar or an ancestor;
+/// the bar keeps its buttons, selection, accessibility and the chrome around
+/// the tabs either way.
 public struct SegmentedTabBar: View {
     @Environment(\.theme) private var theme
+    @Environment(\.segmentedTabBarChromeStyle) private var chromeStyle
+    @Environment(\.controlSize) private var controlSize
 
     private let items: [TabItem]
     @Binding private var selection: Int
@@ -63,38 +88,25 @@ public struct SegmentedTabBar: View {
     private var size: SegmentedTabBarSize = .medium
     private var scrollAlignment: TabScrollAlignment = .center
     private var showsDividers: Bool = false
+    private var fillsWidth: Bool = true
+    private var showsBaseline: Bool = false
     private var accessibilityID: String? = nil
 
-    // MARK: Size metrics (Ant `size`) — `.medium` reproduces the original values.
-    private func titleStyle(_ active: Bool) -> TextStyle {
-        switch size {
-        case .small: return active ? .labelSm700 : .labelSm600
-        case .medium: return active ? .labelBase700 : .labelBase600
-        case .large: return active ? .labelMd700 : .labelMd600
-        }
-    }
+    // MARK: Size metrics (Ant `size`) — `.medium` reproduces the original
+    // values. They live on `SegmentedTabBarSize` (SegmentedTabBarChromeStyle.swift)
+    // so the built-in tabs and `DefaultSegmentedTabBarChromeStyle` can't drift.
+    private func titleStyle(_ active: Bool) -> TextStyle { size.titleStyle(isSelected: active) }
     /// Glyph point size for a tab icon at the current density.
-    private func iconPoints(base: CGFloat) -> CGFloat {
-        switch size {
-        case .small: return base - 2
-        case .medium: return base
-        case .large: return base + 2
-        }
-    }
-    private var tabHPadding: CGFloat {
-        switch size {
-        case .small: return Theme.SpacingKey.sm.value
-        case .medium: return Theme.SpacingKey.md.value
-        case .large: return Theme.SpacingKey.lg.value
-        }
-    }
-    private var tabVPadding: CGFloat {
-        switch size {
-        case .small: return Theme.SpacingKey.xs.value
-        case .medium: return Theme.SpacingKey.sm.value
-        case .large: return Theme.SpacingKey.md.value
-        }
-    }
+    private func iconPoints(base: CGFloat) -> CGFloat { size.iconPoints(base: base) }
+    private var tabHPadding: CGFloat { size.tabHorizontalPadding }
+    private var tabVPadding: CGFloat { size.tabVerticalPadding }
+
+    /// Whether the bar scrolls horizontally (a `.card` bar always does).
+    private var scrolls: Bool { scrollable || style == .card }
+    /// Whether the tabs hug their content with no space between them.
+    private var hugsTabs: Bool { !fillsWidth && style != .card }
+    /// Whether each tab takes an equal share of the bar's width.
+    private var stretchesTabs: Bool { fillsWidth && !scrolls }
 
     @Namespace private var underline
     @Environment(\.microAnimations) private var micro
@@ -119,7 +131,11 @@ public struct SegmentedTabBar: View {
     }
 
     public var body: some View {
-        if scrollable || style == .card {
+        laidOutBar.modifier(SegmentedTabBarBaseline(on: showsBaseline))
+    }
+
+    @ViewBuilder private var laidOutBar: some View {
+        if scrolls {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) { bar }
                     .onAppear { scrollToSelection(proxy, animated: false) }
@@ -145,15 +161,21 @@ public struct SegmentedTabBar: View {
         HStack(spacing: barSpacing) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 Group {
-                    switch style {
-                    case .card:
-                        cardTab(index: index, item: item)
-                    case .pill:
-                        pillTab(index: index, item: item)
-                            .frame(maxWidth: scrollable ? nil : .infinity)
-                    case .underline:
-                        tab(index: index, item: item)
-                            .frame(maxWidth: scrollable ? nil : .infinity)
+                    if chromeStyle.isDefault {
+                        switch style {
+                        case .card:
+                            cardTab(index: index, item: item)
+                        case .pill:
+                            pillTab(index: index, item: item)
+                                .frame(maxWidth: stretchesTabs ? .infinity : nil)
+                        case .underline:
+                            tab(index: index, item: item)
+                                .frame(maxWidth: stretchesTabs ? .infinity : nil)
+                        }
+                    } else {
+                        // The style draws the tab; the bar keeps the button.
+                        styledTab(index: index, item: item)
+                            .frame(maxWidth: stretchesTabs ? .infinity : nil)
                     }
                 }
                 .id(index)   // ScrollViewReader target for auto-scroll
@@ -183,12 +205,18 @@ public struct SegmentedTabBar: View {
         }
         // With dividers the hairline `Rectangle`s must span the row, not stretch
         // the bar to an unbounded proposal — size the row to its ideal height.
-        .fixedSize(horizontal: false, vertical: showsDividers)
+        // A content-hugging bar sizes itself horizontally too, so its tabs take
+        // their ideal width instead of sharing the offered one.
+        .fixedSize(horizontal: hugsTabs && !scrolls, vertical: showsDividers)
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(items.indices.contains(selection) ? items[selection].title : "")
+        // …and parks at the leading edge of whatever width it's offered.
+        .modifier(SegmentedTabBarLeadingRow(on: hugsTabs && !scrolls))
     }
 
     private var barSpacing: CGFloat {
+        // Content-hugging tabs carry their own padding, so the bar adds no gap.
+        guard !hugsTabs else { return 0 }
         switch style {
         case .card: return Theme.SpacingKey.sm.value
         case .pill: return Theme.SpacingKey.xs.value
@@ -203,14 +231,10 @@ public struct SegmentedTabBar: View {
             withAnimation(motion) { selection = index }
         } label: {
             HStack(spacing: Theme.SpacingKey.xs.value) {
-                if let icon = item.systemImage {
-                    Image(systemName: icon).font(.system(size: iconPoints(base: 13), weight: .semibold))
-                }
+                glyph(item, base: 13)
                 Text(item.title).textStyle(titleStyle(isActive))
                 if let badge = item.badge {
-                    Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(theme.background(.systemcolorsBgError), in: Capsule())
+                    SegmentedTabBadge(text: badge)
                 }
             }
             .foregroundStyle(item.isEnabled
@@ -218,7 +242,7 @@ public struct SegmentedTabBar: View {
                              : theme.text(.textDisabled))
             .padding(.horizontal, tabHPadding)
             .padding(.vertical, tabVPadding)
-            .frame(maxWidth: scrollable ? nil : .infinity)
+            .frame(maxWidth: stretchesTabs ? .infinity : nil)
             .background {
                 if isActive {
                     RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
@@ -240,14 +264,10 @@ public struct SegmentedTabBar: View {
                 withAnimation(motion) { selection = index }
             } label: {
                 HStack(spacing: Theme.SpacingKey.xs.value) {
-                    if let icon = item.systemImage {
-                        Image(systemName: icon).font(.system(size: iconPoints(base: 13), weight: .semibold))
-                    }
+                    glyph(item, base: 13)
                     Text(item.title).textStyle(titleStyle(isActive))
                     if let badge = item.badge {
-                        Text(badge).textStyle(.overline400).foregroundStyle(theme.foreground(.fgSecondary))
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(theme.background(.systemcolorsBgError), in: Capsule())
+                        SegmentedTabBadge(text: badge)
                     }
                 }
                 .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
@@ -255,13 +275,9 @@ public struct SegmentedTabBar: View {
             }
             .buttonStyle(.plain)
             .accessibilityAddTraits(isActive ? .isSelected : [])
-            if let onClose {
-                Button { onClose(index) } label: {
-                    Image(systemName: "xmark").font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(theme.text(.textTertiary))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(themeKit: "Close \(item.title)"))
+            if onClose != nil {
+                closeButton(index: index, item: item)
+                    .accessibilityLabel(String(themeKit: "Close \(item.title)"))
             }
         }
         .padding(.horizontal, tabHPadding)
@@ -285,19 +301,13 @@ public struct SegmentedTabBar: View {
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 VStack(spacing: 1) {
                     HStack(spacing: Theme.SpacingKey.xs.value) {
-                        if let icon = item.systemImage {
-                            Image(systemName: icon).font(.system(size: iconPoints(base: 14), weight: .semibold))
-                        }
+                        glyph(item, base: 14)
                         Text(item.title).textStyle(titleStyle(isActive))
                         if let trailing = item.trailingSystemImage {
                             Image(systemName: trailing).font(.system(size: 13, weight: .semibold))
                         }
                         if let badge = item.badge {
-                            Text(badge)
-                                .textStyle(.overline400)
-                                .foregroundStyle(theme.foreground(.fgSecondary))
-                                .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(theme.background(.systemcolorsBgError), in: Capsule())
+                            SegmentedTabBadge(text: badge)
                         }
                     }
                     if let caption = item.caption {
@@ -305,6 +315,9 @@ public struct SegmentedTabBar: View {
                     }
                 }
                 .foregroundStyle(foreground(isActive: isActive, enabled: item.isEnabled))
+                // A content-hugging bar has no spacing of its own; the tab's
+                // own padding sets the gap, and the rule spans it.
+                .padding(.horizontal, hugsTabs ? tabHPadding : 0)
 
                 ZStack {
                     Capsule().fill(Color.clear).frame(height: 2)
@@ -326,6 +339,84 @@ public struct SegmentedTabBar: View {
     private func foreground(isActive: Bool, enabled: Bool) -> Color {
         guard enabled else { return theme.text(.textDisabled) }
         return isActive ? theme.text(.textPrimary) : theme.text(.textSecondary)
+    }
+
+    /// A tab's leading content: the `.leading { }` slot when set, else the SF
+    /// Symbol shorthand — both in the density's icon font.
+    @ViewBuilder private func glyph(_ item: TabItem, base: CGFloat) -> some View {
+        if let slot = item.leadingSlot {
+            slot.font(.system(size: iconPoints(base: base), weight: .semibold))
+        } else if let icon = item.systemImage {
+            Image(systemName: icon).font(.system(size: iconPoints(base: base), weight: .semibold))
+        }
+    }
+
+    /// The stock close (×) of a closable card tab. Unlabeled here: the built-in
+    /// path labels it, and on the style path it sits inside the tab's button,
+    /// where the tab's "Close …" action speaks for it.
+    private func closeButton(index: Int, item: TabItem) -> some View {
+        Button { onClose?(index) } label: {
+            Image(systemName: "xmark").font(.system(size: 10, weight: .bold))
+                .foregroundStyle(theme.text(.textTertiary))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Style path
+
+    /// One tab drawn by the environment ``SegmentedTabBarChromeStyle``. The bar
+    /// keeps the button (and the selection it writes), the live press state,
+    /// the enabled state, the selected trait and the tab's VoiceOver label.
+    private func styledTab(index: Int, item: TabItem) -> some View {
+        let isActive = index == selection
+        let closes: (() -> Void)? = isClosable ? { onClose?(index) } : nil
+        return Button {
+            withAnimation(motion) { selection = index }
+        } label: {
+            SegmentedTabChromeHost(style: chromeStyle,
+                                   configuration: chromeConfiguration(index: index, item: item))
+        }
+        .buttonStyle(SegmentedTabChromePressBridge())
+        .disabled(!item.isEnabled)
+        .accessibilityLabel(SegmentedTabAccessibility.label(title: item.title,
+                                                           caption: item.caption,
+                                                           badge: item.badge))
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+        .modifier(SegmentedTabCloseAction(title: item.title, onClose: closes))
+    }
+
+    /// Whether the bar's tabs carry a close button (only `.card` draws one).
+    private var isClosable: Bool { style == .card && onClose != nil }
+
+    /// The configuration before the state resolved inside the tab's button
+    /// (`SegmentedTabChromeHost` fills `isEnabled` / `isPressed`). A set slot
+    /// replaces the SF Symbol shorthand, as on the built-in path.
+    private func chromeConfiguration(index: Int, item: TabItem) -> SegmentedTabBarChromeStyleConfiguration {
+        let points = iconPoints(base: style == .underline ? 14 : 13)
+        return SegmentedTabBarChromeStyleConfiguration(
+            title: item.title,
+            caption: item.caption,
+            badge: item.badge,
+            leading: item.leadingSlot.map { AnyView($0) }
+                ?? item.systemImage.map { AnyView(Image(systemName: $0).font(.system(size: points, weight: .semibold))) },
+            systemImage: item.leadingSlot == nil ? item.systemImage : nil,
+            trailingSystemImage: item.trailingSystemImage,
+            isSelected: index == selection,
+            isEnabled: item.isEnabled,
+            isPressed: false,
+            tabStyle: style,
+            size: size,
+            controlSize: controlSize,
+            isScrollable: scrolls,
+            fillsWidth: fillsWidth,
+            indicatorNamespace: underline,
+            indicatorID: SegmentedTabAccessibility.indicatorID,
+            animation: motion,
+            closeButton: isClosable
+                ? AnyView(closeButton(index: index, item: item).accessibilityHidden(true))
+                : nil,
+            onClose: isClosable ? { onClose?(index) } : nil,
+            isItemEnabled: item.isEnabled)
     }
 
     /// A hairline between adjacent tabs (HeroUI Tabs.Separator). Fades out when
@@ -398,6 +489,74 @@ public struct SegmentedTabBar: View {
     return Demo()
 }
 
+// MARK: - Shared decisions (testable without an accessibility tree)
+
+/// What a styled tab says and where its indicator lives — in one place, so the
+/// decisions can be tested without an accessibility tree (a unit-test host
+/// builds none).
+enum SegmentedTabAccessibility {
+    /// The geometry id every bar's selection indicator uses; the namespace
+    /// (one per bar) keeps two bars apart.
+    static let indicatorID = "indicator"
+
+    /// What VoiceOver reads for a tab drawn by a custom style: its title, its
+    /// caption and its badge. (The style's own glyphs are decorative, so the
+    /// bar names the tab itself instead of letting them be read out.)
+    static func label(title: String, caption: String?, badge: String?) -> String {
+        [title, caption, badge]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+}
+
+/// Gives a closable styled tab its "Close …" action: the close button sits
+/// inside the tab's button, so VoiceOver reaches it as an action on the tab.
+struct SegmentedTabCloseAction: ViewModifier {
+    let title: String
+    let onClose: (() -> Void)?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let onClose {
+            content.accessibilityAction(named: Text(String(themeKit: "Close \(title)")), onClose)
+        } else {
+            content
+        }
+    }
+}
+
+/// The hairline `.baseline()` draws along the bar's bottom edge, behind the
+/// tabs — so the selected tab's indicator (or a card's border) covers it, the
+/// way Ant's tab nav line does. It's a ``DividerView``, so a ``DividerStyle``
+/// set on an ancestor paints it.
+struct SegmentedTabBarBaseline: ViewModifier {
+    let on: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if on {
+            content.background(alignment: .bottom) { DividerView() }
+        } else {
+            content
+        }
+    }
+}
+
+/// Parks a content-hugging bar at the leading edge of the width it's offered.
+struct SegmentedTabBarLeadingRow: ViewModifier {
+    let on: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if on {
+            content.frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            content
+        }
+    }
+}
+
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension SegmentedTabBar {
@@ -419,6 +578,22 @@ public extension SegmentedTabBar {
     /// Draw a hairline in the border token between adjacent tabs (HeroUI
     /// Tabs.Separator). Dividers touching the selected tab fade out.
     func dividers(_ on: Bool = true) -> Self { copy { $0.showsDividers = on } }
+
+    /// Whether the tabs share the bar's width evenly (the default, and what
+    /// the bar has always done). Turn it off and the tabs hug their content
+    /// from the leading edge with no space between them — each tab's own
+    /// padding sets the gap, which is what a ``SegmentedTabBarChromeStyle``
+    /// with its own tab metrics wants. Has no effect on a bar that already
+    /// hugs: one that scrolls (`.scrollable()`, `.tabStyle(.card)`). A hugging
+    /// bar wider than the space it's offered overflows — pair it with
+    /// `.scrollable()`.
+    func fillsWidth(_ on: Bool = true) -> Self { copy { $0.fillsWidth = on } }
+
+    /// Draw a hairline under the whole bar (Ant Tabs' nav line; off by
+    /// default). It lies along the bottom edge behind the tabs, so the
+    /// selected tab's indicator — or a card tab's border — covers it. It's a
+    /// ``DividerView``, so a ``DividerStyle`` set on an ancestor paints it.
+    func baseline(_ on: Bool = true) -> Self { copy { $0.showsBaseline = on } }
 
     /// Pair the bar with switching content panes: `pane(selection)` renders below
     /// the bar and cross-fades on selection change (HeroUI Tabs.Content), honoring
