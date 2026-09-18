@@ -7,6 +7,18 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Toast text is readable on every brand's fill.** `AlertToast` painted its status
+  variants with a solid status fill but took the text from the named
+  `foreground.fg-secondary` token. That token is near-white in ThemeKit's own themes,
+  so the pairing looked right here — but a brand whose export spells `fg-secondary`
+  as a marketing color (an orange, say) got that color as text on a saturated blue or
+  green fill. Fill and text now come from the same `SemanticColor`: the variant's
+  `solid` and its auto-contrasting `onSolid`. Fills are unchanged; the text is
+  computed from the fill, so it stays legible whatever the theme says. `.warning`'s
+  hand-picked dark text and `.accent`'s existing auto-contrast behave as before.
+
 ## [1.8.0] - 2026-09-18
 
 ### Added

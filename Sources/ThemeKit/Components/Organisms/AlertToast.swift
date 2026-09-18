@@ -13,25 +13,29 @@ public enum AlertToastType {
     /// Brand-tinted toast fed by `SemanticColor.primary` (HeroUI's "accent").
     case accent
 
-    func background(_ theme: Theme) -> Color {
+    /// The semantic color a variant paints with. Fill and text come from the same
+    /// `SemanticColor`, so they stay in step whatever a brand's tokens say.
+    var semantic: SemanticColor {
         switch self {
-        case .success: return theme.background(.systemcolorsBgSuccess)
-        case .warning: return theme.background(.systemcolorsBgWarning)
-        case .danger: return theme.background(.systemcolorsBgError)
-        case .info: return theme.background(.systemcolorsBgInfo)
-        case .neutral: return theme.background(.bgTertiary)
-        case .accent: return theme.resolve(.primary).solid
+        case .success: return .success
+        case .warning: return .warning
+        case .danger: return .error
+        case .info: return .info
+        case .neutral: return .neutral
+        case .accent: return .primary
         }
     }
 
-    /// Warning uses dark text for contrast on the bright amber fill; accent
-    /// auto-contrasts against whatever the brand's solid primary resolves to.
+    func background(_ theme: Theme) -> Color {
+        theme.resolve(semantic).solid
+    }
+
+    /// Auto-contrasting against the fill: a bright amber gets dark text, a deep
+    /// blue gets white. Read from a named foreground token instead, a brand that
+    /// spells that token differently (a marketing orange, say) left the text
+    /// unreadable on the fill.
     func foreground(_ theme: Theme) -> Color {
-        switch self {
-        case .warning: return theme.text(.textPrimary)
-        case .success, .danger, .info, .neutral: return theme.foreground(.fgSecondary)
-        case .accent: return theme.resolve(.primary).onSolid
-        }
+        theme.resolve(semantic).onSolid
     }
 
     var systemImage: String {

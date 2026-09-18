@@ -35,6 +35,20 @@ final class ContentContrastTests: XCTestCase {
                        "a deep blue primary should keep white on-solid content")
     }
 
+    /// The bug this guards: the fill came from the variant's status token while the text
+    /// came from a NAMED foreground token. A brand whose export spells that token as a
+    /// marketing color painted, say, orange text on a saturated blue toast. Text is now
+    /// derived from the fill for every variant — no named token in between.
+    func testToastTextIsDerivedFromItsOwnFill() {
+        Theme.shared.loadTheme(named: "defaultTheme", dark: false)
+        let theme = Theme.shared
+        for variant in [AlertToastType.success, .warning, .danger, .info, .neutral, .accent] {
+            XCTAssertEqual(variant.foreground(theme),
+                           ColorContrast.content(on: variant.background(theme)),
+                           "\(variant) toast text must be the contrast color of its own fill")
+        }
+    }
+
     func testWarningStaysDark() {
         // The old hardcoded `.warning → dark` rule is now derived, not special-cased.
         Theme.shared.loadTheme(named: "defaultTheme", dark: false)
