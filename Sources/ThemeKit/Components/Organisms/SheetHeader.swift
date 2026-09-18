@@ -7,10 +7,15 @@
 //  trailing, and an optional bottom progress line for multi-step flows.
 //  Token-bound. (Distinct from the bottom tab ``NavigationBar``.)
 //
-//  Chrome (surface fill, hairline, slot layout) is drawn by the ambient
-//  ``BarStyle`` (`.barStyle(_:)`, default ``DefaultBarStyle`` — pixel-identical
-//  to the original header). The component composes the content and accessories
-//  and hands them to the style as a ``BarStyleConfiguration``.
+//  Two styling hooks, from the outside in:
+//    • ``SheetHeaderStyle`` (`.sheetHeaderStyle(_:)`) draws the whole header —
+//      where the title, the back and close buttons, the subtitle and the
+//      progress line sit, and what type and colour each takes. A host design
+//      system whose header is laid out differently owns it from here.
+//    • ``BarStyle`` (`.barStyle(_:)`, default ``DefaultBarStyle``) draws the
+//      surface, hairline and slot layout the *stock* header is built from. It
+//      is what the header (and ``DefaultSheetHeaderStyle``) route through while
+//      no `SheetHeaderStyle` is set.
 //
 //  ```swift
 //  SheetHeader("Passengers").onBack { pop() }.onClose { dismiss() }.progress(0.4)
@@ -21,9 +26,9 @@ import SwiftUI
 
 public struct SheetHeader: View {
     @Environment(\.theme) private var theme
-    @Environment(\.componentDensity) private var density
     @Environment(\.barStyle) private var barStyle
-    @Environment(\.locale) private var locale
+    @Environment(\.sheetHeaderStyle) private var chromeStyle
+    @Environment(\.controlSize) private var controlSize
 
     private let title: String
     // Content/appearance — mutated only through the modifiers below (R2).
@@ -40,23 +45,32 @@ public struct SheetHeader: View {
 
     public init(_ title: String) { self.title = title }   // R1
 
-    private var accentBase: Color { theme.resolve(accent ?? .primary).base }
-
     public var body: some View {
         // `surface(_:)` / `showsDivider(_:)` must beat whatever fill/hairline
         // the style draws, without being part of the configuration. They ride
         // an internal environment value (`\.barChromeOverrides`) that the
         // built-in styles read; a progress line suppresses the hairline just
-        // like the original divider rule.
-        barStyle.makeBody(configuration: configuration)
+        // like the original divider rule. It is set on both chrome paths, so a
+        // custom `SheetHeaderStyle` can read it too.
+        chrome
             .environment(\.barChromeOverrides,
                          BarChromeOverrides(surface: surfaceOverride,
                                             showsHairline: showsDivider && progress == nil))
     }
 
-    private var configuration: BarStyleConfiguration {
+    @ViewBuilder private var chrome: some View {
+        if chromeStyle.isDefault {
+            barStyle.makeBody(configuration: barConfiguration)
+        } else {
+            chromeStyle.makeBody(configuration: chromeConfiguration)
+        }
+    }
+
+    // MARK: Built-in path
+
+    private var barConfiguration: BarStyleConfiguration {
         BarStyleConfiguration(leading: leadingView,
-                              content: AnyView(contentStack),
+                              content: AnyView(stockContent),
                               trailing: trailingView,
                               edge: .top)
     }
@@ -79,42 +93,111 @@ public struct SheetHeader: View {
     /// full-width progress line. Reserves `BarMetrics.contentInset` on both
     /// sides so the text never underlaps the slots the style overlays —
     /// geometrically identical to the original spacer-based HStack.
-    private var contentStack: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 1) {
-                Text(title).textStyle(.labelLg700).foregroundStyle(theme.text(.textPrimary)).lineLimit(1)
-                if let subtitle { Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary)).lineLimit(1) }
-            }
-            .padding(.horizontal, BarMetrics.contentInset(density))
-            .frame(maxWidth: .infinity)
-            .frame(height: BarMetrics.rowHeight)
-
-            if let progress {
-                progressBar(progress)
-            }
-        }
+    /// ``DefaultSheetHeaderStyle`` composes the same view, so the two paths
+    /// can't drift apart.
+    private var stockContent: some View {
+        SheetHeaderContent(title: titleContent, subtitle: subtitle, progress: progress, accent: accent)
     }
 
     private func iconButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundStyle(theme.text(.textPrimary)).frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
+            Image(systemName: icon)
+                .font(.system(size: SheetHeaderMetrics.glyphPoints, weight: .semibold))
+                .foregroundStyle(theme.text(.textPrimary))
+                .frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(icon == "xmark" ? String(themeKit: "Close") : String(themeKit: "Back"))
+        .accessibilityLabel(SheetHeaderAccessibility.label(forGlyph: icon))
     }
 
-    private func progressBar(_ value: Double) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Rectangle().fill(theme.border(.borderPrimary))
-                Rectangle().fill(accentBase).frame(width: geo.size.width * max(0, min(1, value)))
-            }
-        }
-        .frame(height: 3)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(themeKit: "Progress"))
-        // Locale-formatted fraction (e.g. "75%") — VoiceOver speaks the percent sign.
-        .accessibilityValue(max(0, min(1, value)).formatted(.percent.precision(.fractionLength(0)).locale(locale)))
+    // MARK: Style path
+
+    /// The inputs handed to a custom ``SheetHeaderStyle``. The title and the
+    /// two icon buttons' labels arrive with no font and no colour, so the
+    /// style's own type and tokens take effect.
+    private var chromeConfiguration: SheetHeaderStyleConfiguration {
+        SheetHeaderStyleConfiguration(
+            title: title,
+            content: titleContent,
+            subtitle: subtitle,
+            backButton: wiredBackButton,
+            onBack: onBack,
+            closeButton: wiredCloseButton,
+            onClose: onClose,
+            progress: progress,
+            leading: leadingSlot,
+            trailing: trailingSlot,
+            accent: accent,
+            showsDivider: showsDivider,
+            controlSize: controlSize)
+    }
+
+    /// The title as an unpainted `Text` carrying the header's VoiceOver
+    /// heading. Built once and used on both paths, so the semantics and the
+    /// text's identity are the same whichever chrome draws it.
+    private var titleContent: AnyView {
+        AnyView(Text(title).modifier(SheetHeaderHeading()))
+    }
+
+    /// ThemeKit's plain back button with an unpainted label and the stock
+    /// chevron, already turned for RTL; `nil` when no handler is set.
+    private var wiredBackButton: AnyView? {
+        guard let onBack else { return nil }
+        return AnyView(wiredIconButton("chevron.left", onBack).mirrorsInRTL())
+    }
+
+    /// ThemeKit's plain close button with an unpainted label; `nil` when no
+    /// handler is set.
+    private var wiredCloseButton: AnyView? {
+        guard let onClose else { return nil }
+        return AnyView(wiredIconButton("xmark", onClose))
+    }
+
+    private func wiredIconButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) { Image(systemName: icon) }
+            .buttonStyle(.plain)
+            .accessibilityLabel(SheetHeaderAccessibility.label(forGlyph: icon))
+    }
+}
+
+// MARK: - Accessibility (shared by both chrome paths)
+
+/// The header's accessibility decisions, in one place so they can be tested
+/// without an accessibility tree (a unit-test host builds none).
+enum SheetHeaderAccessibility {
+    /// A sheet header's title is a heading, whichever chrome draws it. The
+    /// subtitle stays its own element, so a style that draws it is not read
+    /// twice.
+    static let traits: AccessibilityTraits = .isHeader
+
+    /// What VoiceOver calls the stock back button.
+    static var backLabel: String { String(themeKit: "Back") }
+    /// What VoiceOver calls the stock close button.
+    static var closeLabel: String { String(themeKit: "Close") }
+    /// What VoiceOver calls the progress line.
+    static var progressLabel: String { String(themeKit: "Progress") }
+
+    /// The label for one of the two stock glyphs — the close cross names the
+    /// close button, anything else the back button.
+    static func label(forGlyph systemImage: String) -> String {
+        systemImage == "xmark" ? closeLabel : backLabel
+    }
+
+    /// A progress value's meaning: a fraction of the flow, 0…1. Anything
+    /// outside clamps rather than overflowing the line.
+    static func clamped(_ value: Double) -> Double { max(0, min(1, value)) }
+
+    /// The progress line's spoken value — locale-formatted, so VoiceOver
+    /// speaks the percent sign of the reader's language (e.g. "75%").
+    static func progressValue(_ value: Double, locale: Locale) -> String {
+        clamped(value).formatted(.percent.precision(.fractionLength(0)).locale(locale))
+    }
+}
+
+/// Marks the header's title as its heading, on both chrome paths.
+struct SheetHeaderHeading: ViewModifier {
+    func body(content: Content) -> some View {
+        content.accessibilityAddTraits(SheetHeaderAccessibility.traits)
     }
 }
 
@@ -149,7 +232,51 @@ public extension SheetHeader {
 }
 
 #Preview {
-    PreviewMatrix("SheetHeader") {
+    /// Proof of external implementability: a host-shaped header — the close
+    /// button at the leading edge, the title centred between two 32 pt slots,
+    /// and the description under the row.
+    struct CenteredSheetHeaderStyle: SheetHeaderStyle {
+        func makeBody(configuration: SheetHeaderStyleConfiguration) -> some View {
+            CenteredSheetHeaderBody(configuration: configuration)
+        }
+    }
+    struct CenteredSheetHeaderBody: View {
+        let configuration: SheetHeaderStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                ZStack {
+                    configuration.content
+                        .textStyle(.labelLg700)
+                        .foregroundStyle(theme.text(.textPrimary))
+                    HStack {
+                        slot(configuration.closeButton)
+                        Spacer(minLength: Theme.SpacingKey.sm.value)
+                        slot(configuration.backButton)
+                    }
+                }
+                .frame(height: 32)
+                if let subtitle = configuration.subtitle {
+                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.vertical, Theme.SpacingKey.sm.value)
+        }
+
+        @ViewBuilder private func slot(_ button: AnyView?) -> some View {
+            if let button {
+                button
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.text(.textSecondary))
+                    .frame(width: 32, height: 32)
+                    .background(theme.background(.bgSecondaryLight), in: Circle())
+            }
+        }
+    }
+
+    return PreviewMatrix("SheetHeader") {
         PreviewCase("Back + close") {
             SheetHeader("Passengers").onBack { }.onClose { }
         }
@@ -162,6 +289,13 @@ public extension SheetHeader {
         PreviewCase("Floating bar style") {
             SheetHeader("Floating").subtitle("BarStyle demo").onBack { }.onClose { }
                 .barStyle(.floating)
+        }
+        PreviewCase("Custom SheetHeaderStyle") {
+            SheetHeader("Filters")
+                .subtitle("Narrow the results down")
+                .onBack { }
+                .onClose { }
+                .sheetHeaderStyle(CenteredSheetHeaderStyle())
         }
     }
 }

@@ -7,6 +7,52 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-18
+
+### Added
+
+- **`ButtonDockChromeStyle`** (`.buttonDockChromeStyle(_:)`) draws the bar of a
+  `.buttonDock { }`: the rule along its top edge, the surface, the corners, the
+  padding around the content and any elevation. The configuration carries the
+  dock's `content` unpainted (no stock padding, surface or divider around it),
+  the environment `controlSize`, and `safeAreaBottomInset` — the bottom inset
+  SwiftUI hands the bar, measured by ThemeKit so a style can pad for the home
+  indicator (`max(spec, inset)`) without reading the geometry itself. ThemeKit
+  keeps the pinning: the bottom `safeAreaInset` that holds the bar over the
+  screen's content and takes its height out of the content's safe area.
+- **`SheetHeaderStyle`** (`.sheetHeaderStyle(_:)`) draws a whole `SheetHeader`:
+  where the back and close buttons sit, whether the title is centred or
+  leading, the type and colour of the title and its description, and how the
+  progress line is drawn. The configuration carries the raw `title`, the
+  unpainted `content` (the title as a `Text`, carrying the heading semantics),
+  the `subtitle`, a wired `backButton` and `closeButton` whose labels carry no
+  font or colour of their own (your metrics on ThemeKit's buttons, with their
+  VoiceOver labels and the chevron's RTL turn), the raw `onBack` / `onClose`
+  for a style that draws its own, the `progress` fraction, the `leading` and
+  `trailing` slots, the `accent` and `showsDivider` axes, and the environment
+  `controlSize`. `SheetHeader` keeps the content model, the progress value's
+  meaning and the accessibility. It is the outer of the two hooks: `BarStyle`
+  still draws the surface, hairline and slot layout the *stock* header is built
+  from, and `DefaultSheetHeaderStyle` routes back through it, so
+  `.sheetHeaderStyle(.default)` under `.barStyle(.floating)` still floats. The
+  component's `surface(_:)` / `showsDivider(_:)` overrides ride the public
+  `\barChromeOverrides` environment value on both paths, so a custom style can
+  honour them too.
+- **`bottomSheet(…, contentPadding:)`** and **`SheetPresenter.present(…, contentPadding:)`**
+  — the inset around a sheet's content, for a sheet that brings its own padding
+  (a header that runs edge to edge, a spec whose side and top insets differ).
+  `nil` keeps the `md` on all four sides both entry points hardcoded before.
+  Each is a second overload beside the 1.7.0 signature rather than one more
+  defaulted parameter on it: inserting a parameter renames a function for the
+  API digester, and this release is additive.
+
+### Fixed
+
+- **A `SheetHeader`'s title is its heading.** It carried no `.isHeader` trait,
+  so VoiceOver read it as ordinary text and gave a sheet no heading to jump to.
+  The title now carries the trait on both chrome paths (the subtitle stays its
+  own element, so a style that draws it is not read twice). No pixels move.
+
 ## [1.7.0] - 2026-09-17
 
 ### Added
@@ -1458,7 +1504,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/isamercan/ThemeKit/releases/tag/v1.5.0
