@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-09-18
+
 ### Fixed
 
 - **Toast text is readable on every brand's fill.** `AlertToast` painted its status
@@ -1519,7 +1521,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
