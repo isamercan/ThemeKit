@@ -62,6 +62,8 @@ style set the component renders exactly as before.
 | `CalloutChromeStyle` | `.calloutChromeStyle(_:)` | `Callout` |
 | `InlineTextStyle` | `.inlineTextStyle(_:)` | `InlineText`, linked helper text |
 | `TooltipStyle` | `.tooltipStyle(_:)` | `.tooltip(…)` bubbles, `InputLabel` info tooltips |
+| `TitleStyle` | `.titleStyle(_:)` | `Title` section headers |
+| `SegmentedTabBarChromeStyle` | `.segmentedTabBarChromeStyle(_:)` | one `SegmentedTabBar` tab (the style owns the indicator) |
 
 ```swift
 struct HostButtonChrome: ButtonChromeStyle {

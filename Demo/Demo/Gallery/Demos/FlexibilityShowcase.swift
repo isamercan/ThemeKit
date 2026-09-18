@@ -28,6 +28,7 @@ struct FlexibilityShowcaseDemo: View {
     @State private var radioOn = true
     @State private var plainTip = true
     @State private var cardTip = true
+    @State private var styledTab = 1
 
     var body: some View {
         ScrollView {
@@ -363,6 +364,31 @@ struct FlexibilityShowcaseDemo: View {
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.top, 112)
+            }
+            labeled("Title — TitleStyle (+ .leading slot, heading semantics)") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Title("Popular destinations")
+                        .subtitle("Where travellers go next")
+                        .action("See all", action: {})
+                    Title("Popular destinations")
+                        .eyebrow("This week")
+                        .subtitle("Where travellers go next")
+                        .leading { Image(systemName: "sparkles") }
+                        .action("See all", action: {})
+                        .titleStyle(DemoBoxedTitleStyle())
+                }
+            }
+            labeled("SegmentedTabBar — SegmentedTabBarChromeStyle (+ TabItem.leading, fillsWidth, baseline)") {
+                VStack(alignment: .leading, spacing: 16) {
+                    SegmentedTabBar(["Flights", "Hotels", "Cars"], selection: $styledTab)
+                    SegmentedTabBar([TabItem("Flights").leading { Image(systemName: "airplane") },
+                                     TabItem("Hotels", badge: "12").leading { Image(systemName: "bed.double.fill") },
+                                     TabItem("Cars").leading { Image(systemName: "car.fill") }],
+                                    selection: $styledTab)
+                        .fillsWidth(false)
+                        .baseline()
+                        .segmentedTabBarChromeStyle(DemoSlidingBarTabChrome())
+                }
             }
         }
     }
@@ -812,6 +838,90 @@ private struct DemoBodyInlineTextBody: View {
             configuration.trailing
         }
         .foregroundStyle(theme.text(.textSecondary))
+    }
+}
+
+/// A section title with a boxed glyph, its own type ramp and a pill action —
+/// the wired action keeps ThemeKit's button and takes the demo's type.
+private struct DemoBoxedTitleStyle: TitleStyle {
+    func makeBody(configuration: TitleStyleConfiguration) -> some View {
+        DemoBoxedTitleBody(configuration: configuration)
+    }
+}
+
+private struct DemoBoxedTitleBody: View {
+    let configuration: TitleStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.SpacingKey.sm.value) {
+            if let leading = configuration.leading {
+                leading
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(theme.foreground(.fgHero))
+                    .frame(width: 36, height: 36)
+                    .background(theme.resolve(.primary).soft,
+                                in: RoundedRectangle(cornerRadius: Theme.RadiusRole.selector.value, style: .continuous))
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                if let eyebrow = configuration.eyebrow {
+                    Text(eyebrow.uppercased()).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
+                }
+                configuration.content.textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                if let subtitle = configuration.subtitle {
+                    Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                }
+            }
+            Spacer(minLength: Theme.SpacingKey.sm.value)
+            configuration.action?
+                .textStyle(.labelSm600)
+                .foregroundStyle(theme.text(.textHero))
+                .padding(.horizontal, Theme.SpacingKey.sm.value)
+                .padding(.vertical, Theme.SpacingKey.xs.value)
+                .background(theme.resolve(.primary).soft, in: Capsule())
+        }
+    }
+}
+
+/// One tab with its own padding and a 3pt selection bar that slides between
+/// tabs through the configuration's geometry namespace.
+private struct DemoSlidingBarTabChrome: SegmentedTabBarChromeStyle {
+    func makeBody(configuration: SegmentedTabBarChromeStyleConfiguration) -> some View {
+        DemoSlidingBarTabBody(configuration: configuration)
+    }
+}
+
+private struct DemoSlidingBarTabBody: View {
+    let configuration: SegmentedTabBarChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        HStack(spacing: Theme.SpacingKey.xs.value) {
+            configuration.leading
+            Text(configuration.title)
+                .textStyle(configuration.isSelected ? .labelBase700 : .labelBase600)
+                .lineLimit(1)
+            if let badge = configuration.badge {
+                Text(badge)
+                    .textStyle(.overline500)
+                    .foregroundStyle(theme.resolve(.primary).onSolid)
+                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(theme.resolve(.primary).solid, in: Capsule())
+            }
+        }
+        .foregroundStyle(configuration.isSelected ? theme.text(.textHero) : theme.text(.textSecondary))
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.sm.value)
+        // An overlay, so the indicator never stretches the tab.
+        .overlay(alignment: .bottom) {
+            if configuration.isSelected {
+                Capsule().fill(theme.resolve(.primary).solid).frame(height: 3)
+                    .matchedGeometryEffect(id: configuration.indicatorID, in: configuration.indicatorNamespace)
+            }
+        }
+        .frame(maxWidth: configuration.isStretched ? .infinity : nil)
+        .opacity(configuration.isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4)
+        .contentShape(Rectangle())
     }
 }
 
