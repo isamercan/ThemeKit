@@ -7,6 +7,20 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-09-18
+
+### Fixed
+
+- **Toast text is readable on every brand's fill.** `AlertToast` painted its status
+  variants with a solid status fill but took the text from the named
+  `foreground.fg-secondary` token. That token is near-white in ThemeKit's own themes,
+  so the pairing looked right here — but a brand whose export spells `fg-secondary`
+  as a marketing color (an orange, say) got that color as text on a saturated blue or
+  green fill. Fill and text now come from the same `SemanticColor`: the variant's
+  `solid` and its auto-contrasting `onSolid`. Fills are unchanged; the text is
+  computed from the fill, so it stays legible whatever the theme says. `.warning`'s
+  hand-picked dark text and `.accent`'s existing auto-contrast behave as before.
+
 ## [1.8.0] - 2026-09-18
 
 ### Added
@@ -1507,7 +1521,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/isamercan/ThemeKit/compare/v1.5.0...v1.6.0
