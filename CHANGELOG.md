@@ -28,15 +28,18 @@ breaking changes bump the **major**.
   the `subtitle`, a wired `backButton` and `closeButton` whose labels carry no
   font or colour of their own (your metrics on ThemeKit's buttons, with their
   VoiceOver labels and the chevron's RTL turn), the raw `onBack` / `onClose`
-  for a style that draws its own, the `progress` fraction, the `leading` and
-  `trailing` slots, the `accent` and `showsDivider` axes, and the environment
-  `controlSize`. `SheetHeader` keeps the content model, the progress value's
-  meaning and the accessibility. It is the outer of the two hooks: `BarStyle`
+  for a style that draws its own, the `progress` fraction (already clamped to
+  0…1), the `leading` and `trailing` slots, the `accent` and `showsDivider`
+  axes, ThemeKit's own `backLabel` / `closeLabel` / `progressLabel` for a style
+  that labels its own controls, and the environment `controlSize`.
+  `SheetHeader` keeps the content model and the accessibility decisions — the
+  heading rides `content` and the labels ride the wired buttons, so a style
+  drawing its own controls labels them from the configuration. It is the outer of the two hooks: `BarStyle`
   still draws the surface, hairline and slot layout the *stock* header is built
   from, and `DefaultSheetHeaderStyle` routes back through it, so
   `.sheetHeaderStyle(.default)` under `.barStyle(.floating)` still floats. The
   component's `surface(_:)` / `showsDivider(_:)` overrides ride the public
-  `\barChromeOverrides` environment value on both paths, so a custom style can
+  `\.barChromeOverrides` environment value on both paths, so a custom style can
   honour them too.
 - **`bottomSheet(…, contentPadding:)`** and **`SheetPresenter.present(…, contentPadding:)`**
   — the inset around a sheet's content, for a sheet that brings its own padding

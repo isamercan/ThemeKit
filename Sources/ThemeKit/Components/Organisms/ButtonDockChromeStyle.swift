@@ -54,7 +54,9 @@ public struct ButtonDockChromeStyleConfiguration {
     ///
     /// It is `0` until the first layout pass reports it (and in an
     /// `ImageRenderer` render, which runs no layout loop), so read it as a
-    /// padding amount, never as "is there a home indicator".
+    /// padding amount, never as "is there a home indicator". A bar shorter than
+    /// the strip reports only the part its own frame overlaps on that first
+    /// pass, which `max(spec, inset)` absorbs and `spec + inset` does not.
     public let safeAreaBottomInset: CGFloat
 }
 
@@ -161,9 +163,9 @@ public extension ButtonDockChromeStyle where Self == DefaultButtonDockChromeStyl
 /// Renders the environment style inside the dock's inset and keeps the bottom
 /// safe-area inset it sits over up to date.
 ///
-/// The probe is a zero-size background, so it changes neither the bar's size
-/// nor its pixels; it exists only on the custom-style path, which is why the
-/// built-in bar is byte-for-byte what it was.
+/// The probe is a layout-neutral background, so it changes neither the bar's
+/// size nor its pixels; it exists only on the custom-style path, which is why
+/// the built-in bar is byte-for-byte what it was.
 struct ButtonDockChromeHost: View {
     let style: AnyButtonDockChromeStyle
     let content: AnyView

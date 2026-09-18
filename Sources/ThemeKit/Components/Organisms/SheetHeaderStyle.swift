@@ -72,8 +72,9 @@ public struct SheetHeaderStyleConfiguration {
     /// The close handler, for a style that draws its own button; `nil` when unset.
     public let onClose: (() -> Void)?
     /// The multi-step flow's progress (``SheetHeader/progress(_:)``); `nil`
-    /// when unset. It is a fraction of the flow — a style clamps it to 0…1, as
-    /// the stock line does, and labels whatever it draws for it.
+    /// when unset. It is a fraction of the flow, already clamped to 0…1, so a
+    /// style draws it as it arrives and labels what it draws with
+    /// ``progressLabel``.
     public let progress: Double?
     /// The ``SheetHeader/leading(_:)`` slot, exactly as written; `nil` when
     /// unset. When it is set it *replaces* the back button, which is why
@@ -90,6 +91,15 @@ public struct SheetHeaderStyleConfiguration {
     /// is that a progress line replaces the divider, so the stock header draws
     /// the hairline only while this is `true` *and* ``progress`` is `nil`.
     public let showsDivider: Bool
+    /// What VoiceOver calls the stock back button, in ThemeKit's own
+    /// localization. A style that draws its own button labels it with this,
+    /// unless the host has a word of its own.
+    public let backLabel: String
+    /// What VoiceOver calls the stock close button; see ``backLabel``.
+    public let closeLabel: String
+    /// What VoiceOver calls the progress line. A style drawing its own line
+    /// labels it with this and gives it the value as a percentage.
+    public let progressLabel: String
     /// The environment's control size (`.controlSize(_:)`), for a style with a
     /// size ramp. The stock style ignores it — the header has one size.
     public let controlSize: ControlSize
@@ -174,30 +184,27 @@ public struct DefaultSheetHeaderStyle: SheetHeaderStyle, Sendable {
 /// compares the pixels, so the two can't drift apart unnoticed.
 private struct DefaultSheetHeaderChrome: View {
     let configuration: SheetHeaderStyleConfiguration
-    @Environment(\.theme) private var theme
     @Environment(\.barStyle) private var barStyle
 
     var body: some View {
         barStyle.makeBody(configuration: BarStyleConfiguration(
-            leading: configuration.leading ?? painted(configuration.backButton),
+            leading: configuration.leading ?? slot("chevron.left", configuration.onBack, mirrored: true),
             content: AnyView(SheetHeaderContent(title: configuration.content,
                                                 subtitle: configuration.subtitle,
                                                 progress: configuration.progress,
                                                 accent: configuration.accent)),
-            trailing: configuration.trailing ?? painted(configuration.closeButton),
+            trailing: configuration.trailing ?? slot("xmark", configuration.onClose, mirrored: false),
             edge: .top))
     }
 
-    /// The stock glyph metrics on a wired icon button: the header's icon font,
-    /// the primary text colour and the bar's square slot.
-    private func painted(_ button: AnyView?) -> AnyView? {
-        guard let button else { return nil }
-        return AnyView(
-            button
-                .font(.system(size: SheetHeaderMetrics.glyphPoints, weight: .semibold))
-                .foregroundStyle(theme.text(.textPrimary))
-                .frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
-        )
+    /// The stock icon button, built from the raw handler rather than painted
+    /// around the wired one: the slot then sits *inside* the button, so the
+    /// whole 44pt square takes the tap, as it does on the built-in path.
+    @ViewBuilder
+    private func slot(_ icon: String, _ action: (() -> Void)?, mirrored: Bool) -> AnyView? {
+        guard let action else { return nil }
+        let button = SheetHeaderIconButton(icon: icon, action: action)
+        return mirrored ? AnyView(button.mirrorsInRTL()) : AnyView(button)
     }
 }
 

@@ -179,9 +179,14 @@ final class SheetHeaderStyleTests: XCTestCase {
         let header = SheetHeader("Passengers").onBack {}.onClose {}
             .leading { Text("L") }
             .trailing { Text("T") }
+        XCTAssertTrue(drawsInk(staged(header)), "the slot fixture renders nothing")
         let delta = pixelDelta(staged(header), staged(header.sheetHeaderStyle(.default)))
         XCTAssertNotNil(delta, "renders differ in size or failed")
         XCTAssertLessThanOrEqual(delta ?? .max, pixelNoise, ".default drifted on the slot path")
+        // The control: a header without the slots must not match this one, so a
+        // pair of blank renders can't pass the comparison above.
+        XCTAssertTrue(differs(staged(header), staged(SheetHeader("Passengers").onBack {}.onClose {})),
+                      "the control sees no change")
     }
 
     /// The wired buttons arrive with no font and no colour of their own, so the

@@ -48,7 +48,7 @@ public struct SheetHeader: View {
     public var body: some View {
         // `surface(_:)` / `showsDivider(_:)` must beat whatever fill/hairline
         // the style draws, without being part of the configuration. They ride
-        // an internal environment value (`\.barChromeOverrides`) that the
+        // the public `\.barChromeOverrides` environment value that the
         // built-in styles read; a progress line suppresses the hairline just
         // like the original divider rule. It is set on both chrome paths, so a
         // custom `SheetHeaderStyle` can read it too.
@@ -100,14 +100,7 @@ public struct SheetHeader: View {
     }
 
     private func iconButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: SheetHeaderMetrics.glyphPoints, weight: .semibold))
-                .foregroundStyle(theme.text(.textPrimary))
-                .frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(SheetHeaderAccessibility.label(forGlyph: icon))
+        SheetHeaderIconButton(icon: icon, action: action)
     }
 
     // MARK: Style path
@@ -124,11 +117,14 @@ public struct SheetHeader: View {
             onBack: onBack,
             closeButton: wiredCloseButton,
             onClose: onClose,
-            progress: progress,
+            progress: progress.map(SheetHeaderAccessibility.clamped),
             leading: leadingSlot,
             trailing: trailingSlot,
             accent: accent,
             showsDivider: showsDivider,
+            backLabel: SheetHeaderAccessibility.backLabel,
+            closeLabel: SheetHeaderAccessibility.closeLabel,
+            progressLabel: SheetHeaderAccessibility.progressLabel,
             controlSize: controlSize)
     }
 
@@ -153,10 +149,38 @@ public struct SheetHeader: View {
         return AnyView(wiredIconButton("xmark", onClose))
     }
 
+    /// The wired button a style receives: ThemeKit's plain button around the
+    /// bare glyph, labelled for VoiceOver. Its label is intrinsically sized, so
+    /// a `.frame(width:height:)` a style puts *around* it is empty space that
+    /// does not take taps — a style that wants a larger target draws its own
+    /// button from `onBack` / `onClose` and labels it with the configuration's
+    /// ``SheetHeaderStyleConfiguration/backLabel`` or
+    /// ``SheetHeaderStyleConfiguration/closeLabel``.
     private func wiredIconButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) { Image(systemName: icon) }
             .buttonStyle(.plain)
             .accessibilityLabel(SheetHeaderAccessibility.label(forGlyph: icon))
+    }
+}
+
+/// The stock back / close button: the header's icon font and primary text
+/// colour on the bar's square slot, with the slot *inside* the button, so the
+/// whole 44pt square takes the tap. Built by `SheetHeader`'s own body and by
+/// ``DefaultSheetHeaderStyle``, so the two paths can't drift apart.
+struct SheetHeaderIconButton: View {
+    let icon: String
+    let action: () -> Void
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: SheetHeaderMetrics.glyphPoints, weight: .semibold))
+                .foregroundStyle(theme.text(.textPrimary))
+                .frame(width: BarMetrics.slotSize, height: BarMetrics.slotSize)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(SheetHeaderAccessibility.label(forGlyph: icon))
     }
 }
 
