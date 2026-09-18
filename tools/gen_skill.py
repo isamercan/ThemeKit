@@ -375,6 +375,8 @@ def render_llms(cats, modifiers, themes):
         "- `TooltipStyle` → `.tooltipStyle(_:)` — `.tooltip(…)` bubbles (arrow: `TooltipArrowShape`).",
         "- `TitleStyle` → `.titleStyle(_:)` — `Title` section headers (eyebrow, title, subtitle, action).",
         "- `SegmentedTabBarChromeStyle` → `.segmentedTabBarChromeStyle(_:)` — one `SegmentedTabBar` tab; the style draws the selection indicator.",
+        "- `ButtonDockChromeStyle` → `.buttonDockChromeStyle(_:)` — the bar of `.buttonDock { }`; ThemeKit keeps the bottom `safeAreaInset` pinning.",
+        "- `SheetHeaderStyle` → `.sheetHeaderStyle(_:)` — the whole `SheetHeader` layout; `.default` routes back through the ambient `BarStyle`.",
         "",
         "## Chainable modifiers",
         "",
@@ -462,6 +464,8 @@ def render_llms_components(cats, enrich):
         ("TooltipStyle", "`.tooltipStyle(_:)`", "`.tooltip(…)` bubbles + InputLabel info tooltips", "`.default`"),
         ("TitleStyle", "`.titleStyle(_:)`", "Title section headers", "`.default`"),
         ("SegmentedTabBarChromeStyle", "`.segmentedTabBarChromeStyle(_:)`", "one SegmentedTabBar tab (style draws the indicator)", "`.default`"),
+        ("ButtonDockChromeStyle", "`.buttonDockChromeStyle(_:)`", "the bar of `.buttonDock { }` (ThemeKit keeps the pinning)", "`.default`"),
+        ("SheetHeaderStyle", "`.sheetHeaderStyle(_:)`", "SheetHeader — the whole layout, outside BarStyle", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",

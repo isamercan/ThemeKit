@@ -390,7 +390,35 @@ struct FlexibilityShowcaseDemo: View {
                         .segmentedTabBarChromeStyle(DemoSlidingBarTabChrome())
                 }
             }
+            labeled("SheetHeader — SheetHeaderStyle (wired back/close, unpainted)") {
+                VStack(alignment: .leading, spacing: 12) {
+                    SheetHeader("Passengers").subtitle("Who is travelling?").onBack {}.onClose {}
+                    SheetHeader("Passengers").subtitle("Who is travelling?").onBack {}.onClose {}
+                        .sheetHeaderStyle(DemoCornerCloseSheetHeaderStyle())
+                }
+            }
+            labeled("buttonDock — ButtonDockChromeStyle (ThemeKit keeps the pinning)") {
+                VStack(alignment: .leading, spacing: 12) {
+                    dockCell
+                    dockCell.buttonDockChromeStyle(DemoLiftedButtonDockStyle())
+                }
+            }
         }
+    }
+
+    /// A fixed-height page with a docked bar, so the safe-area inset has
+    /// something to inset.
+    private var dockCell: some View {
+        theme.background(.bgSecondaryLight)
+            .buttonDock {
+                HStack {
+                    PriceTag(1249)
+                    Spacer(minLength: Theme.SpacingKey.md.value)
+                    PrimaryButton("Select") {}
+                }
+            }
+            .frame(height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var intro: some View {
@@ -976,6 +1004,80 @@ private struct DemoCardTooltipBody: View {
         case .bottom: VStack(spacing: -1) { arrow; card }
         case .leading: HStack(spacing: -1) { card; arrow }
         case .trailing: HStack(spacing: -1) { arrow; card }
+        }
+    }
+}
+
+// MARK: - Dock + sheet-header chrome (1.8.0)
+
+/// A docked bar with rounded top corners, a top rule and a lifted shadow. The
+/// bottom inset keeps a floor over whatever the home indicator claims —
+/// ThemeKit measures it and hands it over, so the style reads no geometry.
+private struct DemoLiftedButtonDockStyle: ButtonDockChromeStyle {
+    func makeBody(configuration: ButtonDockChromeStyleConfiguration) -> some View {
+        DemoLiftedButtonDockBody(configuration: configuration)
+    }
+}
+
+private struct DemoLiftedButtonDockBody: View {
+    let configuration: ButtonDockChromeStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    private var shape: ThemeUnevenRoundedRect {
+        ThemeUnevenRoundedRect(topLeadingRadius: Theme.RadiusRole.box.value,
+                               topTrailingRadius: Theme.RadiusRole.box.value)
+    }
+
+    var body: some View {
+        configuration.content
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, Theme.SpacingKey.md.value)
+            .padding(.top, Theme.SpacingKey.md.value)
+            .padding(.bottom, max(Theme.SpacingKey.xl.value, configuration.safeAreaBottomInset))
+            .background(theme.background(.bgWhite), in: shape)
+            .overlay(shape.stroke(theme.border(.borderPrimary), lineWidth: 1))
+            .themeShadow(.elevated)
+    }
+}
+
+/// A sheet header laid out the host's way: the title on the leading edge after
+/// the back arrow, the close button in the corner, the description underneath.
+/// Both buttons are ThemeKit's, wired and unpainted — the style sizes and tints
+/// their glyphs.
+private struct DemoCornerCloseSheetHeaderStyle: SheetHeaderStyle {
+    func makeBody(configuration: SheetHeaderStyleConfiguration) -> some View {
+        DemoCornerCloseSheetHeaderBody(configuration: configuration)
+    }
+}
+
+private struct DemoCornerCloseSheetHeaderBody: View {
+    let configuration: SheetHeaderStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.sm.value) {
+                if let leading = configuration.leading { leading } else {
+                    glyph(configuration.backButton, tint: theme.text(.textPrimary))
+                }
+                configuration.content.textStyle(.headingSm).foregroundStyle(theme.text(.textPrimary))
+                Spacer(minLength: Theme.SpacingKey.md.value)
+                if let trailing = configuration.trailing { trailing } else {
+                    glyph(configuration.closeButton, tint: theme.text(.textSecondary))
+                }
+            }
+            if let subtitle = configuration.subtitle {
+                Text(subtitle).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+            }
+        }
+        .padding(.horizontal, Theme.SpacingKey.md.value)
+        .padding(.vertical, Theme.SpacingKey.base.value)
+        .background(theme.background(.bgWhite))
+    }
+
+    @ViewBuilder private func glyph(_ button: AnyView?, tint: Color) -> some View {
+        if let button {
+            button.font(.system(size: 15, weight: .bold)).foregroundStyle(tint)
         }
     }
 }

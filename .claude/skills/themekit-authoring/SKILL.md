@@ -182,12 +182,19 @@ Shipped: `ChipStyle`, `ButtonChromeStyle` (ThemeButton), `BadgeChromeStyle`,
 `SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`,
 `TooltipStyle` (`.tooltip(…)`; its arrow is the public `TooltipArrowShape`),
 `TitleStyle`, `SegmentedTabBarChromeStyle` (one tab; the style owns the
-selection indicator and gets the bar's `matchedGeometryEffect` namespace).
+selection indicator and gets the bar's `matchedGeometryEffect` namespace),
+`ButtonDockChromeStyle` (`.buttonDock { }`; the modifier keeps the
+`safeAreaInset` pinning and hands over the measured bottom safe-area inset) and
+`SheetHeaderStyle` (`SheetHeader`'s whole layout, one hook outside `BarStyle`).
 
 The uniform shape — copy it from any of those files:
 
 - **Name:** `<Component>Style` when free, else `<Component>ChromeStyle` (a 1.x enum
-  already owns `ThemeButtonStyle`, `BadgeStyle`, `CalloutStyle`, `RadioButtonStyle`).
+  already owns `ThemeButtonStyle`, `BadgeStyle`, `CalloutStyle`, `RadioButtonStyle`;
+  `SegmentedTabBarStyle` too). Also take `…ChromeStyle` when the "component" is a
+  **`View` modifier, not a type** (`.buttonDock { }` → `ButtonDockChromeStyle`):
+  the short name would describe a type that doesn't exist and is what a future
+  preset enum for that modifier would want.
 - `public struct <Name>Configuration` — `public let` fields, **internal** memberwise
   init. Raw strings (not styled `Text`), un-fonted/uncoloured `AnyView` content,
   resolved state (`isEnabled`, `isPressed`, …), the modifier axes as set, and motion
@@ -224,6 +231,21 @@ The uniform shape — copy it from any of those files:
   container keeps the row around the items — and hands over the geometry
   namespace + id its sliding indicator needs (`matchedGeometryEffect`), because
   the style, not the component, draws the indicator on that path.
+- A style for a **`View` modifier** keeps whatever makes the modifier a modifier
+  (`buttonDock`'s bottom `safeAreaInset`) outside `makeBody`, and hands the style
+  anything the chrome needs that only ThemeKit can measure — the dock passes the
+  bottom safe-area inset (a zero-size `GeometryReader` probe on the *style path
+  only*, so the built-in body stays byte-identical) so a style can pad for the
+  home indicator without reading geometry. Never add a configuration field a
+  style cannot use.
+- A style that sits **outside an existing style hook** (`SheetHeaderStyle` over
+  `BarStyle`) says so on the protocol, and its `Default…` routes back through the
+  inner hook, so `.default` composes with it instead of overriding it.
+- **Adding an argument to an existing function is an overload, not a parameter.**
+  `swift package diagnose-api-breaking-changes` reports an inserted defaulted
+  parameter as `has been renamed` / `has parameter N type change`; ship a second
+  overload beside the untouched signature that forwards with `nil`
+  (`bottomSheet(…, contentPadding:)`, `SheetPresenter.present(…, contentPadding:)`).
 - Document on the protocol which ThemeKit compositions the environment style reaches,
   and resolve colours in the style from `@Environment(\.theme)` (never `Theme.shared`).
 

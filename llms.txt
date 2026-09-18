@@ -81,6 +81,8 @@ Chrome styles (consumer-owned paint, ADR-0009) — the component keeps behaviour
 - `TooltipStyle` → `.tooltipStyle(_:)` — `.tooltip(…)` bubbles (arrow: `TooltipArrowShape`).
 - `TitleStyle` → `.titleStyle(_:)` — `Title` section headers (eyebrow, title, subtitle, action).
 - `SegmentedTabBarChromeStyle` → `.segmentedTabBarChromeStyle(_:)` — one `SegmentedTabBar` tab; the style draws the selection indicator.
+- `ButtonDockChromeStyle` → `.buttonDockChromeStyle(_:)` — the bar of `.buttonDock { }`; ThemeKit keeps the bottom `safeAreaInset` pinning.
+- `SheetHeaderStyle` → `.sheetHeaderStyle(_:)` — the whole `SheetHeader` layout; `.default` routes back through the ambient `BarStyle`.
 
 ## Chainable modifiers
 

@@ -7,7 +7,7 @@
 - **Rollout:** Additive. With no style set, every component renders its 1.4.0 body unchanged apart from the five fixes listed under Consequences (the snapshot suite pins it), and `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
-- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0).
+- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0).
 
 ## Context
 
@@ -37,6 +37,8 @@ What already existed: `ChipStyle` worked the way this ADR needs. It's a `ButtonS
 | `InlineText` | the type style and base colour; glyphs before or after the text |
 | `Title` | the type and colour of the eyebrow, title and subtitle; a glyph before the title; the action link's type |
 | `SegmentedTabBar` | a tab's type, padding and fill; a non-SF-Symbol glyph; the selection indicator; tabs that hug their content; a rule under the bar |
+| `.buttonDock { }` | the top rule, the corners, the padding on any edge, the surface, a shadow; padding for the home indicator |
+| `SheetHeader` | where the title, the back and close buttons and the description sit; their type and colour; a non-SF-Symbol glyph; the progress line's shape |
 
 ## Decision
 
@@ -71,6 +73,21 @@ A component gets a style protocol when a host must own its chrome to reach its s
 |---|---|---|
 | `Title` | `TitleStyle` | `.titleStyle(_:)` |
 | `SegmentedTabBar` (one tab) | `SegmentedTabBarChromeStyle` | `.segmentedTabBarChromeStyle(_:)` |
+
+1.8.0 adds two more — the bar a host pins to the bottom of every flow screen, and the header on every sheet it opens:
+
+| Component | Protocol | Set with |
+|---|---|---|
+| `.buttonDock { }` | `ButtonDockChromeStyle` | `.buttonDockChromeStyle(_:)` |
+| `SheetHeader` | `SheetHeaderStyle` | `.sheetHeaderStyle(_:)` |
+
+`ButtonDockChromeStyle` is the first protocol for a **modifier** rather than a
+type, and `SheetHeaderStyle` the first that sits *outside* an existing style
+hook: `SheetHeader` already drew through the ambient `BarStyle`, which reskins
+the surface, hairline and slot layout of the stock arrangement.
+`SheetHeaderStyle` replaces the arrangement itself, and
+`DefaultSheetHeaderStyle` composes the stock centre block and hands it back to
+`BarStyle`, so the two hooks compose instead of competing.
 
 `SegmentedTabBarChromeStyle` is the first protocol whose `makeBody` draws **one item of a collection** rather than the whole component: the bar hands it each tab in turn and keeps the row around them. Its configuration therefore carries that tab's content and state, the bar's axes, and the geometry namespace a sliding indicator needs.
 
@@ -158,6 +175,8 @@ The component still owns everything that isn't paint, and it applies that around
 | `.tooltip(…)` | presentation (binding or self-managed toggle), placement at the edge and alignment, the fade and its motion gate, outside-tap dismissal, the self-managed anchor's VoiceOver hint, the arrow's RTL turn (`arrowShape` arrives turned; `TooltipArrowShape` is public) | surface, type, colour, padding, corner, the arrow, a close button (wired through `dismiss`) |
 | `Title` | text + eyebrow + subtitle + the `.leading { }` slot, the wired action button, and the heading semantics (one element carrying the eyebrow, title and subtitle; the action stays its own button) | the type and colour of every part, the gaps, the row layout |
 | `SegmentedTabBar` | each tab's button and the selection it writes (under the resolved animation), the selected trait, the tab's VoiceOver label, the bar's identifier and value, scroll-to-selection, the content pane, and the row around the tabs: the `.pill` track, the `.card` add button, `.dividers()` and `.baseline()` | one tab: type, glyph, caption, badge, padding, fill, and **the selection indicator** — on this path the bar draws neither its underline nor its pill fill |
+| `.buttonDock { }` | **the pinning** — the bottom `safeAreaInset` that holds the bar over the screen's content and takes its height out of that content's safe area — and the measurement of the bottom safe-area inset the bar sits over | the rule, the surface, the corners, the padding on every edge (including the one that covers the home indicator), the elevation |
+| `SheetHeader` | the content model (title, subtitle, back, close, progress, the two slots, accent, surface), the wired back and close buttons with their VoiceOver labels and the chevron's RTL turn, the progress value's meaning (a clamped 0…1 fraction), and the heading semantics (the title carries `.isHeader`; the subtitle stays its own element). The semantics ride the parts: the heading on `content`, the labels on the wired buttons — a style drawing its own controls labels them with the configuration's `backLabel` / `closeLabel` / `progressLabel` | the layout — where every part sits — the type and colour of the title and description, the buttons' glyph metrics, the progress line's shape, the surface and the hairline |
 
 - **Live press state.** Controls with a pressed look (`ThemeButton`, `RadioButton`) hand the style to a real SwiftUI `ButtonStyle` internally, so `isPressed` is live.
 - **Motion is resolved before the style sees it.** The configurations that carry motion carry it resolved: `isMotionEnabled` (`ButtonChromeStyle`, `TooltipStyle`), `animation` (`RadioButtonChromeStyle`), `isAnimated` (`SkeletonStyle`) and `animatesValue` (`PriceTagStyle`). Styles never read `microAnimations` or Reduce Motion themselves (ADR-0004 §4). `animatesValue` is resolved against Reduce Motion only: `PriceTag` never consulted `microAnimations` in 1.4.0, and 1.5.0 keeps that behaviour. A later minor release gates it on `microAnimations` too; a style that uses the flag picks that up with no change.
@@ -168,6 +187,16 @@ The component still owns everything that isn't paint, and it applies that around
 A protocol takes `<Component>Style` when that name is free: `CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `SkeletonStyle`, `DividerStyle`, `InlineTextStyle`, `TooltipStyle`, `TitleStyle`.
 
 A 1.x public enum already owns the `…Style` name for four of these components. `ThemeButtonStyle` picks a preset button, `BadgeStyle` a tone, `CalloutStyle` a plain or soft surface, `RadioButtonStyle` a check indicator. Renaming those in a minor is a source break, so their protocols take `…ChromeStyle`: `ButtonChromeStyle`, `BadgeChromeStyle`, `CalloutChromeStyle`, `RadioButtonChromeStyle`. 1.7.0 adds a fifth for the same reason: `SegmentedTabBarStyle` already names the bar's underline / card / pill enum, so its protocol is `SegmentedTabBarChromeStyle`. The button's protocol is named after the control rather than the `Theme` prefix: `ButtonChromeStyle`, set with `.buttonChromeStyle(_:)`.
+
+1.8.0 adds a sixth `…ChromeStyle`, for a new reason. `ButtonDockStyle` is free —
+no enum owns it — but there is no `ButtonDock` *type* either: the dock is the
+`View` modifier `.buttonDock { }`. `ButtonDockStyle` would name a style for a
+type that doesn't exist, and it is the name a dock *preset* enum would want if
+the modifier ever grew one (exactly the position `SegmentedTabBarStyle` is in
+today). `ButtonDockChromeStyle` says what the protocol is instead — the paint
+around the modifier's content, which is all the dock has — and keeps the
+shorter name free. `SheetHeader` is a type and `SheetHeaderStyle` was free, so
+it takes the plain name.
 
 **2.0 plan.** The removal epoch (`docs/2.0-removal-epoch.md`, "Planned enum renames") renames the four owning enums to names that describe what they pick (tone, surface, indicator, preset). Each keeps its old `…Style` spelling as a deprecated `typealias` for the epoch, so existing call sites still compile with a migration hint. The `…ChromeStyle` protocols keep their names through 2.0. Whether any protocol later takes a freed `…Style` name is a separate decision, made only after the aliases are gone.
 
@@ -183,6 +212,8 @@ A style is an environment value, so it reaches the component wherever it renders
 - **`RadioButtonChromeStyle`:** `RadioGroup` rows and the indicator-only radios in `ControlRow`, `RadioCard`, `ListRow`.
 - **`InlineTextStyle`:** helper text, validation messages, banners, callouts.
 - **`TitleStyle`** and **`SegmentedTabBarChromeStyle`:** both components are placed by the host today, so a style set at the root reaches every title and tab bar the host composes; one set on a single component scopes it there.
+- **`SheetHeaderStyle`:** the header of `CheckInFlow`'s pages and of any sheet a host opens — one style set at the root reskins every sheet's header at once.
+- **`ButtonDockChromeStyle`:** the dock of `CheckInFlow` (`CheckInFlowStyle` calls `buttonDock`), and every screen the host docks itself. The style is read where the dock is *applied*, so it goes on the `.buttonDock { }` call's result or an ancestor, not inside the dock's content — the same rule as `.tooltip(…)`.
 - **`TooltipStyle`:** the info tooltip of `InputLabel` (and the field labels built on it). A tooltip reads its style where `.tooltip(…)` is applied, so the style goes on that call's result or an ancestor, not on the anchor before the call.
 
 This is deliberate. A host sets its styles once at the root, and its brand reaches the components ThemeKit composes as well as the ones it places itself. Set a style on a single component to scope it.
@@ -206,6 +237,7 @@ Reading `Theme.shared` inside a style defeats per-subtree theming, the same way 
 - **The public surface grows**, by ten protocols, ten configurations, ten `Default…` styles, ten modifiers and the new slots and inits. Every configuration field is public API: fields can be added in a minor and never removed before 2.0.
 - **Each component now has two render paths.** `Default<Name>` must track the built-in body. Unit tests compare the two pixel for pixel, and the snapshot suite pins the built-in one.
 - **The style path differs in documented ways.** A custom-styled `ThemeButton` draws no focus ring unless the style does. `RadioButton` adds no press or disabled effect (the stock `DefaultRadioButtonChromeStyle` draws both, so a style that hands a radio back to it keeps them), and `RadioGroup` no longer fades disabled options; its styled rows read to VoiceOver like its built-in rows (label and selected trait). A `Badge` without an action reads as one combined VoiceOver element.
+- **A defaulted parameter is not an additive change to the API digester.** 1.8.0 needed `contentPadding:` on `bottomSheet(isPresented:…)` and `SheetPresenter.present(…)`; inserting it reported four breakages (`has parameter N type change`, `has been renamed`) against 1.7.0, because the digester compares whole signatures rather than call sites. Both entry points therefore ship a second overload beside the untouched 1.7.0 one, which forwards with `contentPadding: nil`. Swift's overload ranking prefers the candidate that fills fewer defaults, so an existing call still resolves to the 1.7.0 signature. The rule for later releases: **a new argument on an existing function is an overload, not a parameter.**
 - **No new member shadows a generic modifier.** The API digester can't see a member that re-resolves an existing call, because the change is in overload resolution rather than in a signature. So the rule is to rename instead: the button's loading slot is `.loadingIndicator { }`, and `ThemeButton(…).indicator { }` stays the corner overlay, as in 1.4.0. (`ControlRow.indicator { }` and `Spinner.indicator { }` predate 1.5.0.)
 - **A style can draw ThemeKit's own shapes.** `TooltipArrowShape`, the arrow the tooltip, popconfirm and popover cards draw, is public, and the tooltip configuration hands it over already turned for the layout direction. It pins `layoutDirectionBehavior` to `.fixed`, so SwiftUI never mirrors it on its own (the stock `.mirrors` default applies only when deploying to iOS 17 / macOS 14 or later) and the built-in `.flipsForRightToLeftLayoutDirection(true)` still turns it exactly once. The built-in tooltip and card arrows draw their 1.5.0 pixels.
 - **Type erasure costs only on the style path.** `AnyView` wraps the style's body and the pre-composed views in its configuration; the default paths render their concrete 1.4.0 bodies.
@@ -217,18 +249,20 @@ Reading `Theme.shared` inside a style defeats per-subtree theming, the same way 
   - A `Callout`'s linked text keeps the tone colour.
   - `DividerView`'s dashed line mirrors under RTL.
   - (1.7.0) A `Title` carries the `.isHeader` trait and reads as one element with its eyebrow and subtitle, on both chrome paths. No pixels moved.
+  - (1.8.0) A `SheetHeader`'s title carries the `.isHeader` trait, on both chrome paths, so a sheet has a heading to jump to. The subtitle stays its own element, so a style that draws it isn't read twice. No pixels moved.
 
 ## Testing strategy
 
-- **Unit tests, one class per protocol** (`ButtonChromeStyleTests`, `BadgeChromeStyleTests`, `CountBadgeStyleTests`, `IconTileStyleTests`, `PriceTagStyleTests`, `RadioButtonChromeStyleTests`, `SkeletonStyleTests`, `DividerStyleTests`, `CalloutChromeStyleTests`, `InlineTextStyleTests`; then `TooltipStyleTests` and `TooltipStyleConfigurationTests`; then `TitleStyleTests` and `SegmentedTabBarChromeStyleTests`), one per fix (`ChipStyleTitleTests`, `CustomTextStyleRegistrationTests`), and `ChromeStyleBehaviourTests` for what the protocols share. Each covers:
+- **Unit tests, one class per protocol** (`ButtonChromeStyleTests`, `BadgeChromeStyleTests`, `CountBadgeStyleTests`, `IconTileStyleTests`, `PriceTagStyleTests`, `RadioButtonChromeStyleTests`, `SkeletonStyleTests`, `DividerStyleTests`, `CalloutChromeStyleTests`, `InlineTextStyleTests`; then `TooltipStyleTests` and `TooltipStyleConfigurationTests`; then `TitleStyleTests` and `SegmentedTabBarChromeStyleTests`; then `ButtonDockChromeStyleTests` and `SheetHeaderStyleTests`), one per fix (`ChipStyleTitleTests`, `CustomTextStyleRegistrationTests`), and `ChromeStyleBehaviourTests` for what the protocols share. Each covers:
   - the default path is unchanged;
   - `.default` matches the built-in body pixel for pixel, and every such loop carries an in-loop control that must see a real change;
   - a custom style receives the configuration it should;
   - the component's behaviour survives on the style path where a unit test can observe it: link routing (the `openURL` action a style's body sees), the content model (slots, the loading indicator, validation messages) and the state the style is handed;
   - the style reaches ThemeKit's own compositions.
+- **What a hosted unit test does drive.** The dock's `safeAreaBottomInset` needs a real layout pass, so `ButtonDockChromeStyleTests` hosts the dock in a `UIWindow` and measures the inset as a *difference* between two `additionalSafeAreaInsets` — device-independent, and proof that SwiftUI hands the inset content the screen's own bottom inset (so a flat `.padding(.bottom, 32)` in a style would stack on top of it).
 - **What the unit tests don't drive.** Taps, the loading guard and the accessibility modifiers are the same code on both paths (one tap handler, one modifier chain around the style's output). A unit-test host builds no SwiftUI accessibility tree without an assistive client, so the accessibility decisions (which label a button speaks, whether a radio has a hint) are tested as decisions, and taps aren't simulated.
 - **Compile-time and resolution checks.** The stock styles are `Sendable` (a `static let` of each compiles in Swift 6 mode); `ChipStyleTitleTests`, `RadioButtonChromeStyleTests` and `CustomTextStyleRegistrationTests` compile against a plain `import ThemeKit`, as a host would; and `.indicator { }` on a `ThemeButton` still resolves to the corner overlay and draws while the button isn't loading, on both chrome paths.
-- **Snapshot tests** (iOS, opt-in, iPhone 17 / iOS 26): `ButtonChromeStyleSnapshotTests`, `BadgesChromeStyleSnapshotTests`, `ChipRadioChromeStyleSnapshotTests`, `PriceTagChromeStyleSnapshotTests`, `SkeletonDividerChromeStyleSnapshotTests`, `CalloutInlineTextChromeStyleSnapshotTests` (then `TooltipChromeStyleSnapshotTests`, then `TitleTabChromeStyleSnapshotTests`) record the custom-style paths. A component that sits in a `ScrollView` — a scrollable or `.card` tab bar — renders as nothing under `ImageRenderer`, so its pixels are pinned in the snapshot suite (which hosts the view) rather than in a unit-test comparison; the unit loops assert their fixtures draw ink, so a pair of empty renders can't pass. Every existing reference must pass unchanged.
+- **Snapshot tests** (iOS, opt-in, iPhone 17 / iOS 26): `ButtonChromeStyleSnapshotTests`, `BadgesChromeStyleSnapshotTests`, `ChipRadioChromeStyleSnapshotTests`, `PriceTagChromeStyleSnapshotTests`, `SkeletonDividerChromeStyleSnapshotTests`, `CalloutInlineTextChromeStyleSnapshotTests` (then `TooltipChromeStyleSnapshotTests`, then `TitleTabChromeStyleSnapshotTests`, then `DockSheetHeaderChromeStyleSnapshotTests`) record the custom-style paths. A component that sits in a `ScrollView` — a scrollable or `.card` tab bar, a bar docked over a scrolling page — renders as nothing under `ImageRenderer`, so its pixels are pinned in the snapshot suite (which hosts the view) rather than in a unit-test comparison; the unit loops assert their fixtures draw ink, so a pair of empty renders can't pass. Every existing reference must pass unchanged.
 - **API check.** `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 
 ## Alternatives considered

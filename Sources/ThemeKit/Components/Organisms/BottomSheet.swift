@@ -58,13 +58,65 @@ public extension View {
         radius: Theme.RadiusRole? = nil,
         @ViewBuilder content: @escaping () -> SheetContent
     ) -> some View {
+        bottomSheet(isPresented: isPresented,
+                    detents: detents,
+                    showsDragIndicator: showsDragIndicator,
+                    detached: detached,
+                    surface: surface,
+                    radius: radius,
+                    contentPadding: nil,
+                    content: content)
+    }
+
+    /// Declarative bottom sheet with the content inset spelled out.
+    ///
+    /// The same sheet as `bottomSheet(isPresented:detents:showsDragIndicator:detached:surface:radius:content:)`,
+    /// plus `contentPadding`. It is a separate overload rather than one more
+    /// defaulted parameter on that one so the 1.7.0 signature survives
+    /// untouched: inserting a parameter renames a function for the API
+    /// digester, and this release is additive.
+    ///
+    /// - Parameters:
+    ///   - detached: When `true`, presents as an inset floating card — the native
+    ///     sheet background goes clear and the content is wrapped in a
+    ///     token-rounded card padded from the screen edges (HeroUI "detached").
+    ///   - surface: Background token for the sheet surface (card fill when
+    ///     `detached`). `nil` keeps the platform default (or `.bgWhite` for the
+    ///     detached card).
+    ///   - radius: Corner role for the sheet (card corner when `detached`).
+    ///     `nil` keeps the platform default (or `.box` for the detached card).
+    ///   - contentPadding: The inset around the sheet's content. `nil` (the
+    ///     default) keeps the stock `md` on all four sides; pass your own
+    ///     `EdgeInsets` when the sheet brings its own padding — a header that
+    ///     must run edge to edge, or a spec whose side and top insets differ.
+    func bottomSheet<SheetContent: View>(
+        isPresented: Binding<Bool>,
+        detents: [BottomSheetDetent] = [.medium, .large],
+        showsDragIndicator: Bool = true,
+        detached: Bool = false,
+        surface: Theme.BackgroundColorKey? = nil,
+        radius: Theme.RadiusRole? = nil,
+        contentPadding: EdgeInsets? = nil,
+        @ViewBuilder content: @escaping () -> SheetContent
+    ) -> some View {
         sheet(isPresented: isPresented) {
             content()
-                .padding(Theme.SpacingKey.md.value)
+                .padding(BottomSheetMetrics.contentPadding(contentPadding))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .sheetDetents(detents, dragIndicator: showsDragIndicator, detached: detached)
                 .modifier(SheetChrome(detached: detached, surface: surface, radius: radius))
         }
+    }
+}
+
+/// The sheet's fixed chrome metrics, shared by both entry points.
+enum BottomSheetMetrics {
+    /// The inset around a sheet's content: the caller's `contentPadding` when
+    /// set, else the stock `md` on all four sides.
+    static func contentPadding(_ insets: EdgeInsets?) -> EdgeInsets {
+        if let insets { return insets }
+        let md = Theme.SpacingKey.md.value
+        return EdgeInsets(top: md, leading: md, bottom: md, trailing: md)
     }
 }
 
@@ -92,6 +144,7 @@ public final class SheetPresenter: ObservableObject {
         let detached: Bool
         let surface: Theme.BackgroundColorKey?
         let radius: Theme.RadiusRole?
+        let contentPadding: EdgeInsets?
         let content: AnyView
     }
 
@@ -110,12 +163,36 @@ public final class SheetPresenter: ObservableObject {
         radius: Theme.RadiusRole? = nil,
         @ViewBuilder _ content: () -> C
     ) {
+        present(detents: detents,
+                showsDragIndicator: showsDragIndicator,
+                detached: detached,
+                surface: surface,
+                radius: radius,
+                contentPadding: nil,
+                content)
+    }
+
+    /// Present a sheet with the content inset spelled out — the same sheet as
+    /// `present(detents:showsDragIndicator:detached:surface:radius:_:)`, plus
+    /// `contentPadding` (`nil` keeps the stock `md` on all four sides). It is a
+    /// separate overload for the same reason the declarative twin is: the
+    /// 1.7.0 signature stays untouched.
+    public func present<C: View>(
+        detents: [BottomSheetDetent] = [.medium, .large],
+        showsDragIndicator: Bool = true,
+        detached: Bool = false,
+        surface: Theme.BackgroundColorKey? = nil,
+        radius: Theme.RadiusRole? = nil,
+        contentPadding: EdgeInsets? = nil,
+        @ViewBuilder _ content: () -> C
+    ) {
         current = Request(
             detents: detents,
             showsDragIndicator: showsDragIndicator,
             detached: detached,
             surface: surface,
             radius: radius,
+            contentPadding: contentPadding,
             content: AnyView(content())
         )
     }
@@ -133,7 +210,7 @@ private struct SheetHostModifier: ViewModifier {
             .environmentObject(presenter)
             .sheet(item: $presenter.current) { request in
                 request.content
-                    .padding(Theme.SpacingKey.md.value)
+                    .padding(BottomSheetMetrics.contentPadding(request.contentPadding))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .sheetDetents(request.detents, dragIndicator: request.showsDragIndicator, detached: request.detached)
                     .modifier(SheetChrome(detached: request.detached, surface: request.surface, radius: request.radius))

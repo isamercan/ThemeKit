@@ -64,6 +64,8 @@ style set the component renders exactly as before.
 | `TooltipStyle` | `.tooltipStyle(_:)` | `.tooltip(…)` bubbles, `InputLabel` info tooltips |
 | `TitleStyle` | `.titleStyle(_:)` | `Title` section headers |
 | `SegmentedTabBarChromeStyle` | `.segmentedTabBarChromeStyle(_:)` | one `SegmentedTabBar` tab (the style owns the indicator) |
+| `ButtonDockChromeStyle` | `.buttonDockChromeStyle(_:)` | the bar of `.buttonDock { }` (ThemeKit keeps the pinning) |
+| `SheetHeaderStyle` | `.sheetHeaderStyle(_:)` | `SheetHeader` — the whole layout, outside `BarStyle` |
 
 ```swift
 struct HostButtonChrome: ButtonChromeStyle {

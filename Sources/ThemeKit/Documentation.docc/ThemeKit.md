@@ -172,6 +172,10 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``SegmentedTabBar``
 - ``TabItem``
 - ``SegmentedTabBarChromeStyle``
+- ``SheetHeader``
+- ``SheetHeaderStyle``
+- ``BarStyle``
+- ``ButtonDockChromeStyle``
 - ``Pagination``
 - ``TreeSelect``
 - ``DataTable``

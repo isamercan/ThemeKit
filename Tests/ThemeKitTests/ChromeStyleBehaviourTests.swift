@@ -35,7 +35,7 @@ final class ChromeStyleBehaviourTests: XCTestCase {
         requireSendable(Shared.iconTile); requireSendable(Shared.priceTag); requireSendable(Shared.radio)
         requireSendable(Shared.skeleton); requireSendable(Shared.divider); requireSendable(Shared.callout)
         requireSendable(Shared.inlineText); requireSendable(Shared.tooltip); requireSendable(Shared.title)
-        requireSendable(Shared.segmentedTab)
+        requireSendable(Shared.segmentedTab); requireSendable(Shared.buttonDock); requireSendable(Shared.sheetHeader)
 
         let rendered = render(VStack {
             VStack {
@@ -61,6 +61,12 @@ final class ChromeStyleBehaviourTests: XCTestCase {
                 Callout("Two").calloutChromeStyle(Shared.callout)
                 InlineText("One").inlineTextStyle(Shared.inlineText)
                 InlineText("Two").inlineTextStyle(Shared.inlineText)
+            }
+            VStack {
+                SheetHeader("One").onClose {}.sheetHeaderStyle(Shared.sheetHeader)
+                SheetHeader("Two").onBack {}.sheetHeaderStyle(Shared.sheetHeader)
+                Color.clear.buttonDock { Text("One") }.buttonDockChromeStyle(Shared.buttonDock)
+                Color.clear.buttonDock { Text("Two") }.buttonDockChromeStyle(Shared.buttonDock)
             }
         })
         XCTAssertNotNil(rendered)
@@ -175,6 +181,8 @@ private enum SharedStockStyles {
     static let tooltip = DefaultTooltipStyle()
     static let title = DefaultTitleStyle()
     static let segmentedTab = DefaultSegmentedTabBarChromeStyle()
+    static let buttonDock = DefaultButtonDockChromeStyle()
+    static let sheetHeader = DefaultSheetHeaderStyle()
 }
 
 @MainActor
