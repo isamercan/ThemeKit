@@ -403,6 +403,12 @@ struct FlexibilityShowcaseDemo: View {
                     dockCell.buttonDockChromeStyle(DemoLiftedButtonDockStyle())
                 }
             }
+            labeled("Dialog — DialogStyle (ThemeKit keeps the scrim, dismissal and async loading)") {
+                VStack(alignment: .leading, spacing: 12) {
+                    dialogCell(height: 420)
+                    dialogCell(height: 260).dialogStyle(DemoLeadingDialogStyle())
+                }
+            }
         }
     }
 
@@ -418,6 +424,20 @@ struct FlexibilityShowcaseDemo: View {
                 }
             }
             .frame(height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// A fixed-height page with a dialog presented over it. The primary's work
+    /// takes a second, so tapping it shows the loading state on either card.
+    private func dialogCell(height: CGFloat) -> some View {
+        theme.background(.bgSecondaryLight)
+            .frame(height: height)
+            .dialog(isPresented: .constant(true), title: "Payment failed",
+                    message: "Your card was declined. Try another method.",
+                    primaryTitle: "Retry",
+                    onPrimary: { try? await Task.sleep(nanoseconds: 1_000_000_000) },
+                    secondaryTitle: "Cancel", onSecondary: {},
+                    kind: .error, closable: true)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -1079,5 +1099,68 @@ private struct DemoCornerCloseSheetHeaderBody: View {
         if let button {
             button.font(.system(size: 15, weight: .bold)).foregroundStyle(tint)
         }
+    }
+}
+
+// MARK: - Dialog chrome (1.9.0)
+
+/// A dialog card drawn the host's way: leading-aligned, the kind glyph before
+/// the title, the close button in the title row, a trailing row of compact
+/// buttons on a flat bordered surface. The actions' `perform` carries
+/// ThemeKit's loading and dismissal; the card keeps the stock screen margin by
+/// padding with `stockMargin`.
+private struct DemoLeadingDialogStyle: DialogStyle {
+    func makeBody(configuration: DialogStyleConfiguration) -> some View {
+        DemoLeadingDialogBody(configuration: configuration)
+    }
+}
+
+private struct DemoLeadingDialogBody: View {
+    let configuration: DialogStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                if let kind = configuration.kind {
+                    Image(systemName: kind.systemImage)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(theme.resolve(kind.semanticColor).base)
+                }
+                Text(configuration.title).textStyle(.labelLg700).foregroundStyle(theme.text(.textPrimary))
+                Spacer(minLength: Theme.SpacingKey.sm.value)
+                if let onClose = configuration.onClose {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(theme.text(.textSecondary))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
+                }
+            }
+            if let message = configuration.message {
+                Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+            }
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                Spacer(minLength: 0)
+                if let secondary = configuration.secondaryAction {
+                    ThemeButton(secondary.title, action: secondary.perform)
+                        .variant(.ghost).color(.neutral).size(.small)
+                        .disabled(secondary.isDisabled)
+                }
+                ThemeButton(configuration.primaryAction.title, action: configuration.primaryAction.perform)
+                    .color(configuration.primaryAction.color ?? .primary).size(.small)
+                    .loading(configuration.primaryAction.isLoading)
+            }
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .frame(maxWidth: configuration.maxWidth, alignment: .leading)
+        .background(theme.background(.bgWhite), in: shape)
+        .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+        .padding(configuration.stockMargin)
     }
 }

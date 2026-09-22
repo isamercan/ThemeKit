@@ -66,6 +66,7 @@ style set the component renders exactly as before.
 | `SegmentedTabBarChromeStyle` | `.segmentedTabBarChromeStyle(_:)` | one `SegmentedTabBar` tab (the style owns the indicator) |
 | `ButtonDockChromeStyle` | `.buttonDockChromeStyle(_:)` | the bar of `.buttonDock { }` (ThemeKit keeps the pinning) |
 | `SheetHeaderStyle` | `.sheetHeaderStyle(_:)` | `SheetHeader` — the whole layout, outside `BarStyle` |
+| `DialogStyle` | `.dialogStyle(_:)` | the fixed-layout dialog card of `.dialog(isPresented:title:…)` and `confirm(…)` (ThemeKit keeps the scrim and dismissal) |
 
 ```swift
 struct HostButtonChrome: ButtonChromeStyle {
@@ -100,6 +101,15 @@ composes inside other components (dialog actions, price tags inside cards, list
 separators…). Resolve colors inside the style from `@Environment(\.theme)` so
 `theme.custom` tokens and per-subtree `.theme(_:)` both apply. Design rationale:
 [ADR-0009](https://github.com/isamercan/ThemeKit/blob/main/docs/ADR-0009-consumer-chrome-styles.md).
+
+`DialogStyle` draws the whole dialog card — its buttons, its width and its
+margin from the screen's edges too (ThemeKit adds none around a custom card;
+pad by `configuration.stockMargin` to keep the stock clearance). Call each
+action's `perform` and the configuration's `onClose`: they carry ThemeKit's
+loading and dismissal. Set it on the `.dialog(…)` call's result (or on
+`.feedbackHost()`'s, for `confirm(…)`) or an ancestor. The slotted forms —
+`.dialog(content:footer:)`, `.dialog(header:content:footer:)`,
+`.dialog(content:)` — and `AlertDialog` don't consult it.
 
 ## Slots
 

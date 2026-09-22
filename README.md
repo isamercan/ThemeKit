@@ -63,7 +63,7 @@ import ThemeKit
   `CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `RadioButtonChromeStyle`,
   `SkeletonStyle`, `DividerStyle`, `CalloutChromeStyle`, `InlineTextStyle`,
   `TooltipStyle`, `TitleStyle`, `SegmentedTabBarChromeStyle`,
-  `ButtonDockChromeStyle`, `SheetHeaderStyle` (plus `ChipStyle`).
+  `ButtonDockChromeStyle`, `SheetHeaderStyle`, `DialogStyle` (plus `ChipStyle`).
   No style set = the built-in look, unchanged
   ([ADR-0009](docs/ADR-0009-consumer-chrome-styles.md)).
 - **Runtime theming** — a Swift token generator + a live configurator turn any

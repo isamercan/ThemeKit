@@ -626,7 +626,8 @@ private struct FeedbackHostModifier: ViewModifier {
                     onSecondary: confirm.secondaryTitle == nil ? nil : { confirm.onSecondary?(); presenter.dismissConfirm() },
                     primaryColor: confirm.primaryKind.semanticColor
                 )
-                .padding(Theme.SpacingKey.lg.value)
+                // No margin here: `DialogCard` keeps the stock `lg` one itself,
+                // so a custom `DialogStyle` owns its own.
                 .accessibilityAddTraits(.isModal)   // VoiceOver ignores the dimmed content behind it
                 .accessibilityAction(.escape) { presenter.dismissConfirm() }   // two-finger scrub dismisses
             }

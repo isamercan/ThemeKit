@@ -184,8 +184,11 @@ Shipped: `ChipStyle`, `ButtonChromeStyle` (ThemeButton), `BadgeChromeStyle`,
 `TitleStyle`, `SegmentedTabBarChromeStyle` (one tab; the style owns the
 selection indicator and gets the bar's `matchedGeometryEffect` namespace),
 `ButtonDockChromeStyle` (`.buttonDock { }`; the modifier keeps the
-`safeAreaInset` pinning and hands over the measured bottom safe-area inset) and
-`SheetHeaderStyle` (`SheetHeader`'s whole layout, one hook outside `BarStyle`).
+`safeAreaInset` pinning and hands over the measured bottom safe-area inset),
+`SheetHeaderStyle` (`SheetHeader`'s whole layout, one hook outside `BarStyle`)
+and `DialogStyle` (the fixed-layout card of `.dialog(isPresented:title:…)` and
+`FeedbackPresenter.confirm(…)`; the style draws the whole card, margin included,
+and ThemeKit keeps the presentation).
 
 The uniform shape — copy it from any of those files:
 
@@ -241,6 +244,18 @@ The uniform shape — copy it from any of those files:
 - A style that sits **outside an existing style hook** (`SheetHeaderStyle` over
   `BarStyle`) says so on the protocol, and its `Default…` routes back through the
   inner hook, so `.default` composes with it instead of overriding it.
+- A style that draws a **presented card** (`DialogStyle`) owns the card's margin
+  from the screen's edges. Move any stock padding the presenters applied
+  *around* the card into the card's built-in path and its `Default…` (so no
+  stock pixel moves and a custom card gets no extra margin), and hand the stock
+  value over (`stockMargin`) for a style that wants the same clearance. The
+  presentation — scrim, placement, transitions, dismissal, the modal trait —
+  stays outside `makeBody`.
+- **Actions arrive as values with the behaviour wired in** (`DialogStyleAction`:
+  title, colour, `isLoading` / `isDisabled`, `perform`). `perform` is exactly
+  what the stock button calls — loading and dismissal included — and ignores a
+  call while its action is loading or disabled, the guard the stock buttons
+  apply, so a host button without one can't fire the work twice.
 - **Adding an argument to an existing function is an overload, not a parameter.**
   `swift package diagnose-api-breaking-changes` reports an inserted defaulted
   parameter as `has been renamed` / `has parameter N type change`; ship a second

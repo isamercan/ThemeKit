@@ -377,6 +377,7 @@ def render_llms(cats, modifiers, themes):
         "- `SegmentedTabBarChromeStyle` → `.segmentedTabBarChromeStyle(_:)` — one `SegmentedTabBar` tab; the style draws the selection indicator.",
         "- `ButtonDockChromeStyle` → `.buttonDockChromeStyle(_:)` — the bar of `.buttonDock { }`; ThemeKit keeps the bottom `safeAreaInset` pinning.",
         "- `SheetHeaderStyle` → `.sheetHeaderStyle(_:)` — the whole `SheetHeader` layout; `.default` routes back through the ambient `BarStyle`.",
+        "- `DialogStyle` → `.dialogStyle(_:)` — the fixed-layout dialog card of `.dialog(isPresented:title:…)` and `FeedbackPresenter.confirm(…)`; ThemeKit keeps the scrim, dismissal and async loading.",
         "",
         "## Chainable modifiers",
         "",
@@ -466,6 +467,7 @@ def render_llms_components(cats, enrich):
         ("SegmentedTabBarChromeStyle", "`.segmentedTabBarChromeStyle(_:)`", "one SegmentedTabBar tab (style draws the indicator)", "`.default`"),
         ("ButtonDockChromeStyle", "`.buttonDockChromeStyle(_:)`", "the bar of `.buttonDock { }` (ThemeKit keeps the pinning)", "`.default`"),
         ("SheetHeaderStyle", "`.sheetHeaderStyle(_:)`", "SheetHeader — the whole layout, outside BarStyle", "`.default`"),
+        ("DialogStyle", "`.dialogStyle(_:)`", "the fixed-layout dialog card (`.dialog(isPresented:title:…)`, `confirm(…)`)", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",
