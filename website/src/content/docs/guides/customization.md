@@ -67,6 +67,7 @@ style set the component renders exactly as before.
 | `ButtonDockChromeStyle` | `.buttonDockChromeStyle(_:)` | the bar of `.buttonDock { }` (ThemeKit keeps the pinning) |
 | `SheetHeaderStyle` | `.sheetHeaderStyle(_:)` | `SheetHeader` — the whole layout, outside `BarStyle` |
 | `DialogStyle` | `.dialogStyle(_:)` | the fixed-layout dialog card of `.dialog(isPresented:title:…)` and `confirm(…)` (ThemeKit keeps the scrim and dismissal) |
+| `EmptyStateStyle` | `.emptyStateStyle(_:)` | `EmptyState` — the whole block: media, title, message and actions |
 
 ```swift
 struct HostButtonChrome: ButtonChromeStyle {
@@ -110,6 +111,15 @@ loading and dismissal. Set it on the `.dialog(…)` call's result (or on
 `.feedbackHost()`'s, for `confirm(…)`) or an ancestor. The slotted forms —
 `.dialog(content:footer:)`, `.dialog(header:content:footer:)`,
 `.dialog(content:)` — and `AlertDialog` don't consult it.
+
+`EmptyStateStyle` draws the whole empty state. The media arrives twice — as a
+`mediaKind` to switch on (`.symbol` / `.image` / `.animated`) and as a ready-made
+`media` view to place as-is — and the message arrives as the raw string, its
+`messageLinks`, and a `messageContent` view that carries the link marking and
+routes a tapped link to its handler. ThemeKit wraps nothing around a custom
+body, so set your own `.frame(maxWidth: .infinity)` if the block should span its
+container. `ResultView`, which generalizes the same shape with its own slots,
+doesn't consult it.
 
 ## Slots
 

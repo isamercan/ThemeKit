@@ -7,6 +7,29 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-22
+
+### Added
+
+- **`EmptyStateStyle`** (`.emptyStateStyle(_:)`) draws an `EmptyState` — the
+  media / title / message / actions block a screen shows when it has nothing to
+  list. The style draws the whole block: the media's shape and tint, the type of
+  the title and message, the buttons and where they sit, the spacing between the
+  parts and the width the block fills. The configuration carries the raw `title`
+  and `message`, the `messageLinks` the caller attached and a `messageContent`
+  view that carries them ready to paint and routes a tapped link to its handler,
+  the `mediaKind` (`.symbol` / `.image` / `.animated`) to switch on beside a
+  ready-made `media` view to place as-is, a `primaryAction` and a
+  `secondaryAction` (each an `EmptyStateStyleAction`: its `title` and a `perform`
+  closure running the caller's handler), the `actions` slot when the caller set
+  one, and the icon axes the stock media keeps — `iconCircleSize`,
+  `imageMaxHeight` and the `iconForeground` / `iconBackground` already resolved
+  against the environment theme. `EmptyState` keeps the content model: the media
+  variant and the stock view built from it, the link routing, and the rule that
+  a custom `.actions { }` slot replaces the stock buttons.
+  `DefaultEmptyStateStyle` (`.default`) draws the stock block. `ResultView`,
+  which generalizes the same shape with its own slots, doesn't consult the style.
+
 ## [1.9.0] - 2026-09-22
 
 ### Added
@@ -1553,7 +1576,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/isamercan/ThemeKit/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...v1.8.0

@@ -149,7 +149,7 @@ protocols: ``ButtonChromeStyle``, ``BadgeChromeStyle``, ``CountBadgeStyle``,
 ``SkeletonStyle``, ``DividerStyle``, ``CalloutChromeStyle``,
 ``InlineTextStyle``, ``TooltipStyle``, ``TitleStyle``,
 ``SegmentedTabBarChromeStyle``, ``ButtonDockChromeStyle``, ``SheetHeaderStyle``,
-``DialogStyle`` and ``ChipStyle``. To use your own type ramp,
+``DialogStyle``, ``EmptyStateStyle`` and ``ChipStyle``. To use your own type ramp,
 register a `Theme.ResolvedTextStyle` under `custom.` and apply it in the style
 with `.font(_:)` and `.lineSpacing(_:)`. See ADR-0009.
 

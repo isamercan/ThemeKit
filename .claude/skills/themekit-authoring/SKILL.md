@@ -186,9 +186,11 @@ selection indicator and gets the bar's `matchedGeometryEffect` namespace),
 `ButtonDockChromeStyle` (`.buttonDock { }`; the modifier keeps the
 `safeAreaInset` pinning and hands over the measured bottom safe-area inset),
 `SheetHeaderStyle` (`SheetHeader`'s whole layout, one hook outside `BarStyle`)
-and `DialogStyle` (the fixed-layout card of `.dialog(isPresented:title:…)` and
+`DialogStyle` (the fixed-layout card of `.dialog(isPresented:title:…)` and
 `FeedbackPresenter.confirm(…)`; the style draws the whole card, margin included,
-and ThemeKit keeps the presentation).
+and ThemeKit keeps the presentation) and `EmptyStateStyle` (the whole
+`EmptyState` block; the component keeps the media variant, the message's link
+routing and the actions-slot rule).
 
 The uniform shape — copy it from any of those files:
 
@@ -251,11 +253,24 @@ The uniform shape — copy it from any of those files:
   value over (`stockMargin`) for a style that wants the same clearance. The
   presentation — scrim, placement, transitions, dismissal, the modal trait —
   stays outside `makeBody`.
-- **Actions arrive as values with the behaviour wired in** (`DialogStyleAction`:
-  title, colour, `isLoading` / `isDisabled`, `perform`). `perform` is exactly
-  what the stock button calls — loading and dismissal included — and ignores a
-  call while its action is loading or disabled, the guard the stock buttons
-  apply, so a host button without one can't fire the work twice.
+- **Actions arrive as values with the behaviour wired in** (`DialogStyleAction`,
+  `EmptyStateStyleAction`: title, and `perform` — plus colour and
+  `isLoading` / `isDisabled` where the component tracks them). `perform` is
+  exactly what the stock button calls — loading and dismissal included — and
+  ignores a call while its action is loading or disabled, the guard the stock
+  buttons apply, so a host button without one can't fire the work twice. An
+  action reaches the style only when the component could draw its button
+  (`EmptyState` needs both a title and a handler).
+- **Content with more than one shape arrives twice: as data and ready to draw**
+  (`EmptyStateStyleConfiguration`). A variant the caller picked at the
+  initializer becomes an enum to switch on (`mediaKind`) *beside* the stock view
+  to place as-is (`media`); text that may carry inline links becomes the raw
+  string plus its links *beside* an unpainted, already-routed view
+  (`messageContent`, the shape `InlineTextStyleConfiguration.content` uses), so
+  no style re-implements `InlineText`. Where a component takes both a
+  token-bound and a deprecated raw-`Color` spelling of the same axis, resolve it
+  and hand over the `Color` — a style shouldn't have to know which the caller
+  used.
 - **Adding an argument to an existing function is an overload, not a parameter.**
   `swift package diagnose-api-breaking-changes` reports an inserted defaulted
   parameter as `has been renamed` / `has parameter N type change`; ship a second

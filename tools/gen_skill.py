@@ -378,6 +378,7 @@ def render_llms(cats, modifiers, themes):
         "- `ButtonDockChromeStyle` → `.buttonDockChromeStyle(_:)` — the bar of `.buttonDock { }`; ThemeKit keeps the bottom `safeAreaInset` pinning.",
         "- `SheetHeaderStyle` → `.sheetHeaderStyle(_:)` — the whole `SheetHeader` layout; `.default` routes back through the ambient `BarStyle`.",
         "- `DialogStyle` → `.dialogStyle(_:)` — the fixed-layout dialog card of `.dialog(isPresented:title:…)` and `FeedbackPresenter.confirm(…)`; ThemeKit keeps the scrim, dismissal and async loading.",
+        "- `EmptyStateStyle` → `.emptyStateStyle(_:)` — the whole `EmptyState` block; `EmptyState` keeps the media variant, the message's link routing and the actions slot rule.",
         "",
         "## Chainable modifiers",
         "",
@@ -468,6 +469,7 @@ def render_llms_components(cats, enrich):
         ("ButtonDockChromeStyle", "`.buttonDockChromeStyle(_:)`", "the bar of `.buttonDock { }` (ThemeKit keeps the pinning)", "`.default`"),
         ("SheetHeaderStyle", "`.sheetHeaderStyle(_:)`", "SheetHeader — the whole layout, outside BarStyle", "`.default`"),
         ("DialogStyle", "`.dialogStyle(_:)`", "the fixed-layout dialog card (`.dialog(isPresented:title:…)`, `confirm(…)`)", "`.default`"),
+        ("EmptyStateStyle", "`.emptyStateStyle(_:)`", "EmptyState — the whole block (media, text, actions)", "`.default`"),
     ]
     lines = [
         "# ThemeKit — Component Reference",
