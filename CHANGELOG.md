@@ -7,6 +7,38 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-22
+
+### Added
+
+- **`DialogStyle`** (`.dialogStyle(_:)`) draws the fixed-layout dialog card — the
+  one `.dialog(isPresented:title:message:primaryTitle:…)` and
+  `FeedbackPresenter.confirm(…)` present. The style draws the whole card: its
+  surface, corner, padding, type, buttons, kind icon, close button, width, shadow
+  and its margin from the screen's edges. The configuration carries the raw
+  `title` and `message`, the `kind` whose icon the stock card shows, a
+  `primaryAction` and an optional `secondaryAction` (each a `DialogStyleAction`:
+  its `title`, the intent `color` the caller asked for, `isLoading` / `isDisabled`,
+  and a `perform` closure with ThemeKit's loading and dismissal built in), the
+  `onClose` handler when the dialog is closable, the `maxWidth` the caller sized
+  (`width:` → `size:` → 320) and the `stockMargin` the stock card keeps (`lg`),
+  for a style that wants the same clearance. ThemeKit keeps the presentation:
+  the scrim, placement, transitions, swipe / scrim / VoiceOver-escape dismissal,
+  the modal trait, the async primary's loading (the spinner flag, and the
+  dismissal once the work ends) and dismissal on every action. `perform` does
+  nothing while its action is loading or disabled, so a host button without a
+  loading guard can't start the work twice. `DefaultDialogStyle` (`.default`)
+  draws the stock card. The slotted forms — `.dialog(content:footer:)`,
+  `.dialog(header:content:footer:)`, `.dialog(content:)` — and `AlertDialog` don't
+  consult the style.
+
+### Changed
+
+- **The dialog card keeps its own margin.** `.dialog(isPresented:title:…)` and
+  `confirm(…)` padded the card by `lg` from outside; the card now applies that
+  margin itself, so a custom `DialogStyle` owns its margin and gets none from
+  ThemeKit. With no style set, no pixels move.
+
 ## [1.8.1] - 2026-09-18
 
 ### Fixed
@@ -1521,7 +1553,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/isamercan/ThemeKit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/isamercan/ThemeKit/compare/v1.6.0...v1.7.0

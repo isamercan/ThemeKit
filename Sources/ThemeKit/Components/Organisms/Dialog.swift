@@ -24,6 +24,11 @@
 //  overload also frosts its scroll edges (HeroUI `ScrollShadow`) and takes an
 //  optional custom `header:` slot in place of the plain title string.
 //
+//  The fixed-layout card (`.dialog(isPresented:title:…)`, and the one
+//  `FeedbackPresenter.confirm(…)` draws) is drawn by the active ``DialogStyle``
+//  when one is set with `.dialogStyle(_:)`; the presentation stays here either
+//  way. The slotted overloads don't consult it.
+//
 
 import SwiftUI
 
@@ -150,9 +155,15 @@ struct DialogPresentation<Card: View>: View {
     }
 }
 
+/// The fixed-layout card drawn by `.dialog(isPresented:title:…)` and
+/// `FeedbackPresenter.confirm(…)`. It owns its margin from the screen's edges
+/// (`lg`, which both callers used to apply around it), so a custom
+/// ``DialogStyle`` — which draws the whole card, margin included — gets no
+/// extra margin from ThemeKit.
 struct DialogCard: View {
     @Environment(\.theme) private var theme
     @Environment(\.dialogCornerRadius) private var cornerRadiusRole
+    @Environment(\.dialogStyle) private var style
 
     let title: String
     let message: String?
@@ -173,6 +184,48 @@ struct DialogCard: View {
     var isPrimaryLoading: Bool = false
 
     var body: some View {
+        if style.isDefault {
+            // No `.dialogStyle(_:)` up the tree: the 1.8.x card, unchanged,
+            // with the margin its callers applied now applied here.
+            builtInCard
+                .padding(Theme.SpacingKey.lg.value)
+        } else {
+            style.makeBody(configuration: configuration)
+        }
+    }
+
+    /// What the card hands a ``DialogStyle``: the raw content, each action
+    /// with ThemeKit's loading and dismissal already wired into `perform`, and
+    /// the width and margin the stock card keeps.
+    var configuration: DialogStyleConfiguration {
+        let isLoading = isPrimaryLoading
+        let primary = onPrimary
+        return DialogStyleConfiguration(
+            title: title,
+            message: message,
+            kind: kind,
+            primaryAction: DialogStyleAction(
+                title: primaryTitle, color: primaryColor,
+                isLoading: isLoading, isDisabled: false,
+                // The stock button ignores a tap while it spins; so does this.
+                perform: { if !isLoading { primary() } }),
+            secondaryAction: secondaryTitle.flatMap { secondaryTitle in
+                onSecondary.map { secondary in
+                    DialogStyleAction(
+                        title: secondaryTitle, color: nil,
+                        isLoading: false, isDisabled: isLoading,
+                        // The stock secondary is disabled while the primary spins.
+                        perform: { if !isLoading { secondary() } })
+                }
+            },
+            onClose: onClose,
+            maxWidth: width ?? 320,
+            stockMargin: Theme.SpacingKey.lg.value)
+    }
+
+    /// The stock card — the body `DialogCard` drew before ``DialogStyle``
+    /// existed, verbatim. ``DefaultDialogStyle`` mirrors it.
+    private var builtInCard: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
             if let kind {
                 Icon(systemName: kind.systemImage).size(.xl).color(theme.resolve(kind.semanticColor).accent)
@@ -273,7 +326,8 @@ private struct DialogModifier: ViewModifier {
                         width: dialogMaxWidth(width, size, default: 320),
                         isPrimaryLoading: primaryLoading
                     )
-                    .padding(Theme.SpacingKey.lg.value)
+                    // No margin here: `DialogCard` keeps the stock `lg` one
+                    // itself, so a custom `DialogStyle` owns its own.
                 }
             }
         }
@@ -683,6 +737,63 @@ public extension View {
                 } footer: {
                     PrimaryButton("Got it") {}
                 }
+        }
+    }
+}
+
+#Preview("Custom DialogStyle") {
+    /// Proof of external implementability: a leading-aligned card on a flat,
+    /// bordered surface with a trailing button row and its own `xl` margin.
+    struct LeadingDialogStyle: DialogStyle {
+        func makeBody(configuration: DialogStyleConfiguration) -> some View {
+            LeadingDialogCard(configuration: configuration)
+        }
+    }
+    struct LeadingDialogCard: View {
+        let configuration: DialogStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                Text(configuration.title).textStyle(.labelLg700).foregroundStyle(theme.text(.textPrimary))
+                if let message = configuration.message {
+                    Text(message).textStyle(.bodySm400).foregroundStyle(theme.text(.textSecondary))
+                }
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    Spacer(minLength: 0)
+                    if let secondary = configuration.secondaryAction {
+                        ThemeButton(secondary.title, action: secondary.perform)
+                            .variant(.ghost).size(.small).disabled(secondary.isDisabled)
+                    }
+                    ThemeButton(configuration.primaryAction.title, action: configuration.primaryAction.perform)
+                        .color(configuration.primaryAction.color ?? .primary).size(.small)
+                        .loading(configuration.primaryAction.isLoading)
+                }
+            }
+            .padding(Theme.SpacingKey.md.value)
+            .frame(maxWidth: configuration.maxWidth, alignment: .leading)
+            .background(theme.background(.bgWhite),
+                        in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+                .strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+            .padding(Theme.SpacingKey.xl.value)
+        }
+    }
+
+    return PreviewMatrix("DialogStyle") {
+        PreviewCase("Stock card through .default") {
+            Color.clear.frame(height: 320)
+                .dialog(isPresented: .constant(true), title: "Delete trip?",
+                        message: "This action cannot be undone.",
+                        primaryTitle: "Delete", secondaryTitle: "Cancel", onSecondary: {}, kind: .error)
+                .dialogStyle(.default)
+        }
+        PreviewCase("Custom DialogStyle") {
+            Color.clear.frame(height: 260)
+                .dialog(isPresented: .constant(true), title: "Delete trip?",
+                        message: "This action cannot be undone.",
+                        primaryTitle: "Delete", secondaryTitle: "Cancel", onSecondary: {}, kind: .error)
+                .dialogStyle(LeadingDialogStyle())
         }
     }
 }

@@ -143,6 +143,7 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``ProgressBar``
 - ``RadialProgress``
 - ``AlertToast``
+- ``DialogStyle``
 - ``Callout``
 - ``CalloutChromeStyle``
 - ``InlineText``
