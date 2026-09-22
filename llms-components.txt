@@ -46,6 +46,7 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 | `ButtonDockChromeStyle` | `.buttonDockChromeStyle(_:)` | the bar of `.buttonDock { }` (ThemeKit keeps the pinning) | `.default` |
 | `SheetHeaderStyle` | `.sheetHeaderStyle(_:)` | SheetHeader — the whole layout, outside BarStyle | `.default` |
 | `DialogStyle` | `.dialogStyle(_:)` | the fixed-layout dialog card (`.dialog(isPresented:title:…)`, `confirm(…)`) | `.default` |
+| `EmptyStateStyle` | `.emptyStateStyle(_:)` | EmptyState — the whole block (media, text, actions) | `.default` |
 
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.

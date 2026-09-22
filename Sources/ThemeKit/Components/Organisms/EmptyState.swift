@@ -3,6 +3,12 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
+//  The block is drawn by the active ``EmptyStateStyle`` when one is set with
+//  `.emptyStateStyle(_:)`; the content model — the media variant and the stock
+//  view built from it, the message's links and their routing, the actions and
+//  the rule that a custom `.actions { }` slot replaces the stock buttons —
+//  stays here either way.
+//
 
 import SwiftUI
 
@@ -20,6 +26,7 @@ import SwiftUI
 ///         .primaryAction("Clear filters") { reset() }
 public struct EmptyState: View {
     @Environment(\.theme) private var theme
+    @Environment(\.emptyStateStyle) private var style
 
     private enum Media { case symbol(String), image(Image), animated(URL?) }
 
@@ -62,27 +69,100 @@ public struct EmptyState: View {
     }
 
     public var body: some View {
-        VStack(spacing: Theme.SpacingKey.base.value) {
-            switch media {
-            case .animated(let url):
-                AnimatedImage(url)
-                    .contentMode(.fit)
-                    .frame(maxHeight: imageMaxHeight)
-            case .image(let image):
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: imageMaxHeight)
-            case .symbol(let systemImage):
-                ZStack {
-                    Circle()
-                        .fill(iconBackground ?? iconBackgroundKey.map { theme.background($0) } ?? theme.background(.bgElevatorTertiary))
-                        .frame(width: iconCircleSize, height: iconCircleSize)
-                    Image(systemName: systemImage)
-                        .font(.system(size: iconCircleSize * 0.36))
-                        .foregroundStyle(iconForeground ?? iconForegroundKey.map { theme.foreground($0) } ?? theme.foreground(.fgHero))
-                }
+        if style.isDefault {
+            // No `.emptyStateStyle(_:)` up the tree: the built-in block,
+            // unchanged.
+            builtInBody
+        } else {
+            style.makeBody(configuration: configuration)
+        }
+    }
+
+    /// What the block hands an ``EmptyStateStyle``: the raw content, the media
+    /// both as a variant and as the stock view, each action with the caller's
+    /// handler in `perform`, the custom actions slot, and the icon metrics and
+    /// tints the stock media keeps.
+    var configuration: EmptyStateStyleConfiguration {
+        EmptyStateStyleConfiguration(
+            title: title,
+            message: message,
+            messageLinks: messageLinks,
+            messageContent: messageContent,
+            mediaKind: mediaKind,
+            media: AnyView(mediaView),
+            primaryAction: buttonTitle.flatMap { title in
+                action.map { EmptyStateStyleAction(title: title, perform: $0) }
+            },
+            secondaryAction: secondaryTitle.flatMap { title in
+                onSecondary.map { EmptyStateStyleAction(title: title, perform: $0) }
+            },
+            actions: actionsSlot.map { AnyView($0) },
+            iconCircleSize: iconCircleSize,
+            iconForeground: resolvedIconForeground,
+            iconBackground: resolvedIconBackground,
+            imageMaxHeight: imageMaxHeight,
+            keepsStockActionStack: buttonTitle != nil || secondaryTitle != nil)
+    }
+
+    /// The media variant, without the private payload wrapper.
+    private var mediaKind: EmptyStateMedia {
+        switch media {
+        case .symbol(let systemImage): return .symbol(systemImage)
+        case .image(let image): return .image(image)
+        case .animated(let url): return .animated(url)
+        }
+    }
+
+    /// The message ready for a style to paint: `nil` when there is none, the
+    /// bare string when it carries no links, and otherwise the same marked-up
+    /// text `InlineText` draws — unpainted, with its taps already routed.
+    private var messageContent: AnyView? {
+        guard let message else { return nil }
+        guard !messageLinks.isEmpty else { return AnyView(Text(message)) }
+        let marked = InlineText.attributedString(message, links: messageLinks, font: nil, baseColor: nil,
+                                                 linkColor: theme.text(.textHero))
+        return AnyView(Text(marked).environment(\.openURL, InlineText.linkRouting(messageLinks)))
+    }
+
+    private var resolvedIconForeground: Color {
+        iconForeground ?? iconForegroundKey.map { theme.foreground($0) } ?? theme.foreground(.fgHero)
+    }
+
+    private var resolvedIconBackground: Color {
+        iconBackground ?? iconBackgroundKey.map { theme.background($0) } ?? theme.background(.bgElevatorTertiary)
+    }
+
+    /// The stock media — the SF Symbol badge, or the illustration fitted to
+    /// `imageMaxHeight`. Both chrome paths place this same view.
+    @ViewBuilder
+    private var mediaView: some View {
+        switch media {
+        case .animated(let url):
+            AnimatedImage(url)
+                .contentMode(.fit)
+                .frame(maxHeight: imageMaxHeight)
+        case .image(let image):
+            image
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: imageMaxHeight)
+        case .symbol(let systemImage):
+            ZStack {
+                Circle()
+                    .fill(resolvedIconBackground)
+                    .frame(width: iconCircleSize, height: iconCircleSize)
+                Image(systemName: systemImage)
+                    .font(.system(size: iconCircleSize * 0.36))
+                    .foregroundStyle(resolvedIconForeground)
             }
+        }
+    }
+
+    /// The stock block — the body `EmptyState` drew before ``EmptyStateStyle``
+    /// existed, verbatim. ``DefaultEmptyStateStyle`` mirrors it.
+    private var builtInBody: some View {
+        VStack(spacing: Theme.SpacingKey.base.value) {
+            mediaView
 
             VStack(spacing: Theme.SpacingKey.sm.value) {
                 if let title {
@@ -209,6 +289,95 @@ public extension EmptyState {
                         ThemeButton("Explore deals") {}.variant(.ghost).size(.small)
                     }
                 }
+        }
+    }
+}
+
+#Preview("Custom EmptyStateStyle") {
+    /// Proof of external implementability: a leading-aligned row — the media in
+    /// a small square beside the text, the actions in a trailing button row —
+    /// on a bordered card of its own.
+    struct RowEmptyStateStyle: EmptyStateStyle {
+        func makeBody(configuration: EmptyStateStyleConfiguration) -> some View {
+            RowEmptyStateBody(configuration: configuration)
+        }
+    }
+    struct RowEmptyStateBody: View {
+        let configuration: EmptyStateStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        private var shape: RoundedRectangle {
+            RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+        }
+
+        var body: some View {
+            HStack(alignment: .top, spacing: Theme.SpacingKey.base.value) {
+                glyph
+                VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                    if let title = configuration.title {
+                        Text(title).textStyle(.labelLg700).foregroundStyle(theme.text(.textPrimary))
+                    }
+                    configuration.messageContent?
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                    actions
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(Theme.SpacingKey.md.value)
+            .background(theme.background(.bgWhite), in: shape)
+            .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+        }
+
+        /// The media drawn the host's way when it's an SF Symbol — a rounded
+        /// square rather than a circle — and relayed as it comes otherwise.
+        @ViewBuilder
+        private var glyph: some View {
+            if case .symbol(let name) = configuration.mediaKind {
+                Image(systemName: name)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(configuration.iconForeground)
+                    .frame(width: 40, height: 40)
+                    .background(configuration.iconBackground,
+                                in: RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
+            } else {
+                configuration.media.frame(width: 40)
+            }
+        }
+
+        @ViewBuilder
+        private var actions: some View {
+            if let slot = configuration.actions {
+                slot.padding(.top, Theme.SpacingKey.xs.value)
+            } else if configuration.primaryAction != nil || configuration.secondaryAction != nil {
+                HStack(spacing: Theme.SpacingKey.sm.value) {
+                    if let primary = configuration.primaryAction {
+                        ThemeButton(primary.title, action: primary.perform).size(.small)
+                    }
+                    if let secondary = configuration.secondaryAction {
+                        ThemeButton(secondary.title, action: secondary.perform).variant(.ghost).size(.small)
+                    }
+                }
+                .padding(.top, Theme.SpacingKey.xs.value)
+            }
+        }
+    }
+
+    return PreviewMatrix("EmptyStateStyle") {
+        PreviewCase("Stock block through .default") {
+            EmptyState("No results found")
+                .icon("magnifyingglass")
+                .message("Try adjusting your search or filters.")
+                .primaryAction("Clear filters") {}
+                .emptyStateStyle(.default)
+        }
+        PreviewCase("Custom EmptyStateStyle") {
+            EmptyState("No results found")
+                .icon("magnifyingglass")
+                .message("Try adjusting your search or filters.")
+                .primaryAction("Clear filters") {}
+                .secondaryAction("Browse all") {}
+                .emptyStateStyle(RowEmptyStateStyle())
         }
     }
 }

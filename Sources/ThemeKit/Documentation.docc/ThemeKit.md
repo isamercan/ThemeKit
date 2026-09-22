@@ -152,6 +152,7 @@ next to the component below. See <doc:Theming> and ADR-0009.
 - ``PriceTagStyle``
 - ``InfoBanner``
 - ``EmptyState``
+- ``EmptyStateStyle``
 - ``ResultView``
 - ``RollingNumber``
 - ``Title``

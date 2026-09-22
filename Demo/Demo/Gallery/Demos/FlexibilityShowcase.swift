@@ -409,6 +409,12 @@ struct FlexibilityShowcaseDemo: View {
                     dialogCell(height: 260).dialogStyle(DemoLeadingDialogStyle())
                 }
             }
+            labeled("EmptyState — EmptyStateStyle (the component keeps the media, links and slot rule)") {
+                VStack(alignment: .leading, spacing: 12) {
+                    emptyStateCell
+                    emptyStateCell.emptyStateStyle(DemoRowEmptyStateStyle())
+                }
+            }
         }
     }
 
@@ -439,6 +445,16 @@ struct FlexibilityShowcaseDemo: View {
                     secondaryTitle: "Cancel", onSecondary: {},
                     kind: .error, closable: true)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// One empty state with everything a style draws: the media badge, the
+    /// title, a message and both actions.
+    private var emptyStateCell: some View {
+        EmptyState("No results found")
+            .icon("magnifyingglass")
+            .message("Try adjusting your search or filters.")
+            .primaryAction("Clear filters") {}
+            .secondaryAction("Browse all") {}
     }
 
     private var intro: some View {
@@ -1162,5 +1178,77 @@ private struct DemoLeadingDialogBody: View {
         .background(theme.background(.bgWhite), in: shape)
         .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
         .padding(configuration.stockMargin)
+    }
+}
+
+// MARK: - Empty state chrome (1.10.0)
+
+/// An empty state drawn the host's way: a rounded-square media badge beside a
+/// leading-aligned title and message, the actions in a trailing row of compact
+/// buttons on a flat bordered card. The SF Symbol is redrawn from `mediaKind`
+/// in the configuration's resolved tints; the illustration variants are relayed
+/// through `media`, and the message comes ready to paint from `messageContent`.
+private struct DemoRowEmptyStateStyle: EmptyStateStyle {
+    func makeBody(configuration: EmptyStateStyleConfiguration) -> some View {
+        DemoRowEmptyStateBody(configuration: configuration)
+    }
+}
+
+private struct DemoRowEmptyStateBody: View {
+    let configuration: EmptyStateStyleConfiguration
+    @Environment(\.theme) private var theme
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous)
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.SpacingKey.base.value) {
+            media
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+                if let title = configuration.title {
+                    Text(title).textStyle(.labelLg700).foregroundStyle(theme.text(.textPrimary))
+                }
+                configuration.messageContent?
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(theme.text(.textSecondary))
+                actions
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.SpacingKey.md.value)
+        .background(theme.background(.bgWhite), in: shape)
+        .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+    }
+
+    @ViewBuilder
+    private var media: some View {
+        if case .symbol(let name) = configuration.mediaKind {
+            Image(systemName: name)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(configuration.iconForeground)
+                .frame(width: 44, height: 44)
+                .background(configuration.iconBackground, in: shape)
+        } else {
+            configuration.media.frame(width: 44)
+        }
+    }
+
+    @ViewBuilder
+    private var actions: some View {
+        if let slot = configuration.actions {
+            slot.padding(.top, Theme.SpacingKey.xs.value)
+        } else if configuration.primaryAction != nil || configuration.secondaryAction != nil {
+            HStack(spacing: Theme.SpacingKey.sm.value) {
+                if let primary = configuration.primaryAction {
+                    ThemeButton(primary.title, action: primary.perform).size(.small)
+                }
+                if let secondary = configuration.secondaryAction {
+                    ThemeButton(secondary.title, action: secondary.perform)
+                        .variant(.ghost).color(.neutral).size(.small)
+                }
+            }
+            .padding(.top, Theme.SpacingKey.xs.value)
+        }
     }
 }
