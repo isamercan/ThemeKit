@@ -11,6 +11,8 @@ import SwiftUI
 /// (Ant Switch parity.) Colors + motion from theme tokens.
 public struct ThemeToggle: View {
     @Environment(\.theme) private var theme
+    /// The chrome (track + knob), swappable via `.toggleChromeStyle(_:)`.
+    @Environment(\.toggleChromeStyle) private var chromeStyle
 
     // Appearance/state — mutated only through the modifiers below (R2).
     private var isLoading = false
@@ -42,6 +44,15 @@ public struct ThemeToggle: View {
     private var interactive: Bool { isEnabled && !isLoading }
 
     public var body: some View {
+        if chromeStyle.isDefault {
+            builtInBody
+        } else {
+            styledBody
+        }
+    }
+
+    /// The built-in chrome — unchanged from before the style door existed.
+    private var builtInBody: some View {
         Button {
             guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
             withAnimation(motion) { isOn.toggle() }
@@ -63,6 +74,41 @@ public struct ThemeToggle: View {
         .a11y(A11yElement.Control.toggle, in: accessibilityID)
         .accessibilityValue(isOn ? String(themeKit: "on") : String(themeKit: "off"))
         .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    /// A custom ``ToggleChromeStyle`` draws the track and the knob; the switch
+    /// keeps the flip, read-only, the disabled and loading gates, and the
+    /// accessibility value and traits.
+    private var styledBody: some View {
+        Button {
+            guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+            withAnimation(motion) { isOn.toggle() }
+        } label: {
+            EmptyView()   // the bridge draws the style's chrome instead
+        }
+        .buttonStyle(ToggleChromeBridge(style: chromeStyle, template: chromeConfiguration))
+        .disabled(!interactive)
+        .allowsHitTesting(!isReadOnly)   // E1 — the chrome stays, toggling blocked
+        .a11y(A11yElement.Control.toggle, in: accessibilityID)
+        .accessibilityValue(isOn ? String(themeKit: "on") : String(themeKit: "off"))
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    /// Everything the style reads except the live press state.
+    private var chromeConfiguration: ToggleChromeStyleConfiguration {
+        ToggleChromeStyleConfiguration(
+            isOn: isOn,
+            isEnabled: isEnabled,
+            isPressed: false,
+            isReadOnly: isReadOnly,
+            isLoading: isLoading,
+            thumb: customThumb?(isOn),
+            knobSymbol: isOn ? onSystemImage : offSystemImage,
+            trackSymbol: isOn ? trackOnSymbol : trackOffSymbol,
+            accent: accent,
+            controlSize: controlSize,
+            animation: motion
+        )
     }
 
     /// Knob content precedence: loading spinner > custom `thumbContent` > `symbols` glyph.

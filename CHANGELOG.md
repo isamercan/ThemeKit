@@ -7,6 +7,27 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-23
+
+### Added
+
+- **`ToggleChromeStyle`** (`.toggleChromeStyle(_:)`) draws a `ThemeToggle`'s chrome — the track
+  and the knob — while the switch keeps the flip, the slide animation, the loading, read-only
+  and `.disabled(_:)` gates, and the accessibility value and traits. It follows ADR-0009 like
+  the rest: the protocol, a `ToggleChromeStyleConfiguration` carrying what the switch resolved
+  (`isOn`, `isEnabled`, `isPressed`, `isReadOnly`, `isLoading`, the `thumbContent(_:)` slot for
+  the current state, the knob and track glyphs, `accent`, `controlSize`, the animation, and the
+  `trackSize` / `knobSide` metrics), `DefaultToggleChromeStyle` drawing the stock look, and
+  `.toggleChromeStyle(.default)` to restore the built-in path for a subtree. With no style set
+  a switch renders its 1.11.0 body unchanged.
+
+  It exists because `accent(_:)` only ever reached the *on* track. The off track is
+  `bg-secondary` and the knob is `fg-secondary`; a brand whose tokens make those the wrong
+  colours for a switch had no way to repaint them without redrawing the control.
+
+  The style reaches every `ThemeToggle` in the subtree, including the switches inside
+  `ToggleGroup`, `ControlRow` (`.control(.toggle)`) and `ListRow` (`.toggle`).
+
 ## [1.11.0] - 2026-09-23
 
 ### Added
@@ -1622,7 +1643,9 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/isamercan/ThemeKit/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/isamercan/ThemeKit/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/isamercan/ThemeKit/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/isamercan/ThemeKit/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/isamercan/ThemeKit/compare/v1.8.0...v1.8.1
