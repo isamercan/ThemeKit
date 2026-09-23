@@ -7,7 +7,7 @@
 - **Rollout:** Additive. With no style set, every component renders its 1.4.0 body unchanged apart from the five fixes listed under Consequences (the snapshot suite pins it), and `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
-- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0).
+- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0).
 
 ## Context
 
@@ -137,6 +137,24 @@ It is the first component whose content has **three shapes of its own** — a
 media variant chosen by the initializer, a message that may carry inline links,
 and a slot that replaces the stock actions — so the configuration hands each
 over twice: once as data a style can act on, once ready to draw.
+
+1.11.0 adds four, the components a filter screen is built from — a host's filter
+sections are accordion cards of checkboxes, ranges and a two-option pill:
+
+| Component | Protocol | Set with |
+|---|---|---|
+| `Accordion` | `AccordionStyle` | `.accordionStyle(_:)` |
+| `Checkbox` | `CheckboxChromeStyle` | `.checkboxChromeStyle(_:)` |
+| `SegmentedControl` | `SegmentedControlStyle` | `.segmentedControlStyle(_:)` |
+| `RangeSlider` | `RangeSliderStyle` | `.rangeSliderStyle(_:)` |
+
+Three of them hand over a closure the style calls from its own control —
+`Accordion`'s `toggle`, `SegmentedControl`'s `select(_:)` — so a style can draw
+its own header or its own segments while the component keeps the state, the
+binding, the gates and the animation. `RangeSlider` goes furthest: the style
+draws the track, the span and the knobs from fractions the component computes,
+and the component keeps the gestures, the stepping and the adjustable
+accessibility around whatever the style drew.
 
 - **The media arrives as a variant and as a view.** `mediaKind` is the enum the
   caller chose (`.symbol(String)`, `.image(Image)`, `.animated(URL?)`), for a

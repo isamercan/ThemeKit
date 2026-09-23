@@ -12,6 +12,12 @@
 //  (a hero-tinted bordered pill) — the latter lets richer controls like
 //  ``DatePriceStrip`` wrap Segmented while keeping their own selected look.
 //
+//  The control is drawn by the active ``SegmentedControlStyle`` when one is set
+//  with `.segmentedControlStyle(_:)`; the behaviour — the selection binding,
+//  the disabled gate, the animation the selection changes under, the thumb's
+//  geometry namespace and the control's accessibility element — stays here
+//  either way.
+//
 
 import SwiftUI
 
@@ -69,6 +75,7 @@ public struct SegmentedControl: View {
     @Environment(\.theme) private var theme
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     @Environment(\.componentDefaults) private var componentDefaults
+    @Environment(\.segmentedControlStyle) private var style
 
     private let items: [SegmentItem]
     @Binding private var selection: Int
@@ -107,16 +114,8 @@ public struct SegmentedControl: View {
         self.init(items.map { SegmentItem($0) }, selection: selection)
     }
 
-    private var trackShape: ThemeAnyShape {
-        shape == .round
-            ? ThemeAnyShape(Capsule(style: .continuous))
-            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusRole.field.value, style: .continuous))
-    }
-    private var thumbShape: ThemeAnyShape {
-        shape == .round
-            ? ThemeAnyShape(Capsule(style: .continuous))
-            : ThemeAnyShape(RoundedRectangle(cornerRadius: Theme.RadiusKey.xs.value, style: .continuous))
-    }
+    private var trackShape: ThemeAnyShape { shape.trackShape }
+    private var thumbShape: ThemeAnyShape { shape.thumbShape }
 
     /// The track fill — the tint's soft wash for `.tinted`, else the neutral base.
     private var trackFill: Color {
@@ -124,19 +123,80 @@ public struct SegmentedControl: View {
     }
 
     public var body: some View {
+        if style.isDefault {
+            // No `.segmentedControlStyle(_:)` up the tree: the built-in pill, unchanged.
+            builtInBody
+        } else {
+            styledBody
+        }
+    }
+
+    /// The stock pill — the body `SegmentedControl` drew before
+    /// ``SegmentedControlStyle`` existed, verbatim. ``DefaultSegmentedControlStyle``
+    /// mirrors it.
+    private var builtInBody: some View {
         segments
-            .padding(selectionStyle == .tinted ? 0 : 4)
+            .padding(selectionStyle == .tinted ? 0 : SegmentedControlMetrics.trackPadding)
             .background(trackFill, in: trackShape)
             .opacity(isEnabled ? 1 : 0.5)
             .a11y(A11yElement.Control.toggle, in: accessibilityID)
             .accessibilityValue(items.indices.contains(selection) ? items[selection].accessibilityText : "")
     }
 
+    /// The control drawn by the environment ``SegmentedControlStyle``. ThemeKit
+    /// keeps the animation the selection changes under — value-based, so a
+    /// selection written from outside slides a style's thumb too — and the
+    /// control's own accessibility element.
+    private var styledBody: some View {
+        style.makeBody(configuration: configuration)
+            .animation(motion, value: selection)
+            .a11y(A11yElement.Control.toggle, in: accessibilityID)
+            .accessibilityValue(items.indices.contains(selection) ? items[selection].accessibilityText : "")
+    }
+
+    /// What the control hands a ``SegmentedControlStyle``: the options as the
+    /// caller wrote them, the selected index with the closure that moves it,
+    /// the axes as the modifiers set them, and the thumb's geometry namespace.
+    @MainActor
+    var configuration: SegmentedControlStyleConfiguration {
+        // Captured as values so the closure stays free of the view's storage:
+        // the projected binding writes through to the caller's `selection:`,
+        // exactly as the stock option's button does.
+        let binding = $selection
+        let animation = motion
+        let controlIsEnabled = isEnabled
+        let itemIsEnabled = items.map(\.isEnabled)
+        return SegmentedControlStyleConfiguration(
+            items: items.map {
+                SegmentedControlStyleItem(title: $0.title, systemImage: $0.systemImage,
+                                          content: $0.content, isEnabled: $0.isEnabled, tooltip: $0.tooltip)
+            },
+            selection: selection,
+            select: { index in
+                // The gate the stock pill applies by disabling the button.
+                guard controlIsEnabled, itemIsEnabled.indices.contains(index), itemIsEnabled[index] else { return }
+                withAnimation(animation) { binding.wrappedValue = index }
+            },
+            size: size,
+            shape: shape,
+            selectionStyle: selectionStyle,
+            fullWidth: isFullWidth,
+            showsDividers: showsDividers,
+            tint: resolvedTint,
+            isEnabled: isEnabled,
+            axis: isVertical ? .vertical : .horizontal,
+            selectionNamespace: pill,
+            selectionID: SegmentedControlMetrics.selectionID,
+            animation: motion,
+            usesStockTint: usesStockTint)
+    }
+
     @ViewBuilder private var segments: some View {
+        let spacing = showsDividers ? 0 : SegmentedControlMetrics.segmentSpacing
         if isVertical {
-            VStack(spacing: showsDividers ? 0 : 4) { segmentRows }
+            VStack(spacing: spacing) { segmentRows }
         } else {
-            HStack(spacing: showsDividers ? 0 : 4) { segmentRows }
+            HStack(spacing: spacing) { segmentRows }
         }
     }
 
@@ -172,6 +232,9 @@ public struct SegmentedControl: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled || !item.isEnabled)
+        // The chosen option reads as a selected button (SegmentedTabBar's
+        // convention); no pixels move.
+        .accessibilityAddTraits(isActive ? .isSelected : [])
         .onHover { hovering in hovered = hovering ? index : (hovered == index ? nil : hovered) }
         .help(item.tooltip ?? "")
     }
@@ -196,13 +259,13 @@ public struct SegmentedControl: View {
             switch selectionStyle {
             case .thumb:
                 thumbShape.fill(theme.background(.bgWhite)).themeShadow(.soft)
-                    .matchedGeometryEffect(id: "pill", in: pill)
+                    .matchedGeometryEffect(id: SegmentedControlMetrics.selectionID, in: pill)
             case .outline:
                 // Stock hue keeps the historical hero-border chroma exactly;
                 // an explicit/provider accent re-tints the pill + stroke.
                 thumbShape.fill(theme.resolve(resolvedTint).soft)
                     .overlay(thumbShape.stroke(usesStockTint ? theme.border(.borderHero) : theme.resolve(resolvedTint).border, lineWidth: 2))
-                    .matchedGeometryEffect(id: "pill", in: pill)
+                    .matchedGeometryEffect(id: SegmentedControlMetrics.selectionID, in: pill)
             case .tinted:
                 EmptyView()   // no thumb — the soft track + hero foreground carry selection
             }
@@ -293,6 +356,78 @@ public extension SegmentedControl {
                         SegmentedControl(["On", "Off"], selection: $c).tinted(.success).fullWidth(false)
                     }
                     .componentDefaults(accent: .turquoise)
+                }
+            }
+        }
+    }
+    return Demo()
+}
+
+#Preview("Custom SegmentedControlStyle") {
+    /// Proof of external implementability: the host's two-option pill — a
+    /// tinted track, a white thumb with a shadow that slides under the chosen
+    /// option, the selected title in one token colour and the rest in another,
+    /// and the host's own radius and padding.
+    struct HostPillStyle: SegmentedControlStyle {
+        func makeBody(configuration: SegmentedControlStyleConfiguration) -> some View {
+            HostPillBody(configuration: configuration)
+        }
+    }
+    struct HostPillBody: View {
+        let configuration: SegmentedControlStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        private var shape: RoundedRectangle {
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+        }
+
+        var body: some View {
+            HStack(spacing: 0) {
+                ForEach(Array(configuration.items.enumerated()), id: \.offset) { index, item in
+                    let isSelected = index == configuration.selection
+                    Button {
+                        configuration.select(index)
+                    } label: {
+                        Text(item.title ?? "")
+                            .textStyle(isSelected ? .labelBase700 : .labelBase600)
+                            .foregroundStyle(isSelected ? theme.text(.textPrimary) : theme.text(.textSecondary))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.SpacingKey.sm.value)
+                            .background {
+                                if isSelected {
+                                    shape.fill(theme.background(.bgWhite)).themeShadow(.soft)
+                                        .matchedGeometryEffect(id: configuration.selectionID,
+                                                               in: configuration.selectionNamespace)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!item.isEnabled)
+                    // The style's own buttons carry the per-option semantics;
+                    // the control keeps the element around them.
+                    .accessibilityLabel(item.accessibilityLabel)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+            .padding(Theme.SpacingKey.xs.value)
+            .background(theme.resolve(configuration.tint).soft, in: shape)
+            .opacity(configuration.isEnabled ? 1 : 0.5)
+        }
+    }
+
+    struct Demo: View {
+        @State var trip = 0
+        var body: some View {
+            PreviewMatrix("SegmentedControlStyle") {
+                PreviewCase("Stock pill through .default") {
+                    SegmentedControl(["Daily", "Weekly", "Monthly"], selection: .constant(0))
+                        .segmentedControlStyle(.default)
+                }
+                PreviewCase("A host two-option pill") {
+                    SegmentedControl(["One way", "Round trip"], selection: $trip)
+                        .accent(.turquoise)
+                        .segmentedControlStyle(HostPillStyle())
                 }
             }
         }

@@ -3,6 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
+//  The block is drawn by the active ``RangeSliderStyle`` when one is set with
+//  `.rangeSliderStyle(_:)`; the behaviour — the drag and the thumb it moves,
+//  the geometry, the step, the clamping and the ordered pair, the linked
+//  inputs, the RTL maths and the two adjustable thumbs — stays here either way.
+//
 
 import SwiftUI
 
@@ -17,6 +22,7 @@ import SwiftUI
 public struct RangeSlider: View {
     @Environment(\.theme) private var theme
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.rangeSliderStyle) private var style
 
     @Binding private var lowerValue: Double
     @Binding private var upperValue: Double
@@ -27,7 +33,7 @@ public struct RangeSlider: View {
     private var step: Double = 1
     private var marks: [Double] = []
     private var axis: Axis = .horizontal
-    private var verticalHeight: CGFloat = 160
+    private var verticalHeight: CGFloat = RangeSliderMetrics.verticalHeight
     private var accent: SemanticColor? = nil
     private var valueLabel: ((Double) -> String)? = nil
     private var onChangeEnd: ((Double, Double) -> Void)? = nil
@@ -42,12 +48,19 @@ public struct RangeSlider: View {
     /// start (nearest to the touch) and kept for the rest of the drag.
     @State private var activeThumb: Field? = nil
 
-    private let thumbSize: CGFloat = 24
-    private let trackHeight: CGFloat = 4
+    // The stock geometry lives in `RangeSliderMetrics`, so the built-in body
+    // and `DefaultRangeSliderStyle` can't drift apart.
+    private let thumbSize: CGFloat = RangeSliderMetrics.thumbSize
+    private let trackHeight: CGFloat = RangeSliderMetrics.trackHeight
     /// Extra tappable slop around the track so tap-to-set is easy to hit.
-    private let hitSlop: CGFloat = 8
+    private let hitSlop: CGFloat = RangeSliderMetrics.hitSlop
     /// HeroUI-style press feedback: the active thumb scales down while dragging.
-    private let pressScale: CGFloat = 0.9
+    private let pressScale: CGFloat = RangeSliderMetrics.pressScale
+
+    /// The styled block's measured size, read from a background probe (the
+    /// `DismissDrag` precedent). It is what the drag maps over on the style
+    /// path, where only the style knows how its block is laid out.
+    @State private var styledSize: CGSize = .zero
 
     // MARK: RTL (absolute coords; `.offset(x:)`/`.position(x:)` and gesture
     // locations don't auto-mirror, so the x math is flipped by hand — the
@@ -67,6 +80,34 @@ public struct RangeSlider: View {
     }
 
     public var body: some View {
+        if style.isDefault {
+            // No `.rangeSliderStyle(_:)` up the tree: the built-in block, unchanged.
+            shell(builtInBody)
+        } else {
+            shell(styledBody)
+        }
+    }
+
+    /// What both chrome paths carry: the identifier namespace, the container
+    /// element the two thumbs sit in, and the linked inputs' text wiring.
+    private func shell(_ content: some View) -> some View {
+        content
+            .a11y(A11yElement.Control.slider, in: accessibilityID)
+            .accessibilityElement(children: .contain)
+            .onAppear { syncText() }
+            .onChangeCompat(of: lowerValue) { if focusedField != .lower { lowerText = intString(lowerValue) } }
+            .onChangeCompat(of: upperValue) { if focusedField != .upper { upperText = intString(upperValue) } }
+            .onChangeCompat(of: focusedField) { _, new in
+                // Validate-on-blur: commit whichever field just lost focus.
+                if new != .lower { commitLower() }
+                if new != .upper { commitUpper() }
+            }
+    }
+
+    /// The stock block — the body `RangeSlider` drew before
+    /// ``RangeSliderStyle`` existed, verbatim. ``DefaultRangeSliderStyle``
+    /// mirrors it.
+    private var builtInBody: some View {
         VStack(spacing: Theme.SpacingKey.md.value) {
             if showInputs {
                 inputFields
@@ -97,19 +138,106 @@ public struct RangeSlider: View {
                     marksRow(usable: max(geo.size.width - thumbSize, 1),
                              span: bounds.upperBound - bounds.lowerBound)
                 }
-                .frame(height: 22)
+                .frame(height: RangeSliderMetrics.marksRowHeight)
             }
         }
-        .a11y(A11yElement.Control.slider, in: accessibilityID)
-        .accessibilityElement(children: .contain)
-        .onAppear { syncText() }
-        .onChangeCompat(of: lowerValue) { if focusedField != .lower { lowerText = intString(lowerValue) } }
-        .onChangeCompat(of: upperValue) { if focusedField != .upper { upperText = intString(upperValue) } }
-        .onChangeCompat(of: focusedField) { _, new in
-            // Validate-on-blur: commit whichever field just lost focus.
-            if new != .lower { commitLower() }
-            if new != .upper { commitUpper() }
+    }
+
+    // MARK: - Style path
+
+    /// The style's block, with ThemeKit's own behaviour around it: the probe
+    /// that measures the block, the drag that turns a touch inside it into a
+    /// value, and the two adjustable thumbs VoiceOver sees. None of the three
+    /// paints, and none of them changes the block's layout.
+    @ViewBuilder
+    private var styledBody: some View {
+        let span = bounds.upperBound - bounds.lowerBound
+        let isVertical = axis == .vertical
+        // The horizontal track is as wide as the block; the vertical one is as
+        // tall as the caller asked and sits at the block's bottom edge.
+        let usable = max((isVertical ? verticalHeight : styledSize.width) - thumbSize, 1)
+        let topInset = isVertical ? max(styledSize.height - verticalHeight, 0) : 0
+        let chrome = style.makeBody(configuration: configuration)
+            .background(GeometryReader { geo in
+                let size = geo.size
+                Color.clear
+                    .onAppear { styledSize = size }
+                    .onChangeCompat(of: size) { styledSize = $1 }
+            })
+            .overlay(adjustableThumbs(usable: usable))
+            // Tap-to-set over the whole block: the style knows where its track
+            // sits, ThemeKit doesn't. `.gesture` yields to the style's own
+            // controls (the wired inputs keep their taps).
+            .contentShape(Rectangle())
+
+        // Until the probe has reported, the block's own controls get the touch:
+        // a drag mapped over an unmeasured track would jump the thumb.
+        let policy: GestureMask = styledSize == .zero ? .subviews : .all
+        if isVertical {
+            chrome.gesture(verticalDrag(usable: usable, span: span, topInset: topInset), including: policy)
+        } else {
+            chrome.gesture(drag(usable: usable, span: span), including: policy)
         }
+    }
+
+    /// What the block hands a ``RangeSliderStyle``: the pair of values and
+    /// where they sit along the track, the formatted readouts and marks, the
+    /// axes as the modifiers set them, and the state the component is in.
+    @MainActor
+    var configuration: RangeSliderStyleConfiguration {
+        RangeSliderStyleConfiguration(
+            lowerValue: lowerValue,
+            upperValue: upperValue,
+            bounds: bounds,
+            lowerFraction: fraction(of: lowerValue),
+            upperFraction: fraction(of: upperValue),
+            lowerLabel: valueLabel.map { $0(lowerValue) },
+            upperLabel: valueLabel.map { $0(upperValue) },
+            marks: marks.map {
+                RangeSliderStyleMark(value: $0, fraction: fraction(of: $0), label: markLabel($0))
+            },
+            axis: axis,
+            accent: accent,
+            isEnabled: isEnabled,
+            step: step,
+            draggingThumb: activeThumb.map { $0 == .lower ? .lower : .upper },
+            inputs: showInputs ? AnyView(inputFields) : nil,
+            thumbSize: thumbSize,
+            trackLength: axis == .vertical ? verticalHeight : nil,
+            offsetDirection: axis == .vertical ? 1 : dir)
+    }
+
+    /// How far along the track a value sits, 0…1 from the track's leading edge
+    /// (its bottom on the vertical axis) — the same number the stock track
+    /// offsets its thumbs by.
+    private func fraction(of value: Double) -> Double {
+        let span = bounds.upperBound - bounds.lowerBound
+        guard span > 0 else { return 0 }
+        return (value - bounds.lowerBound) / span
+    }
+
+    /// The two thumbs as VoiceOver sees them, laid over a style's block at the
+    /// same places the values are drawn: invisible, out of the way of the drag,
+    /// and carrying exactly the label, value and adjustable action the stock
+    /// thumbs carry.
+    private func adjustableThumbs(usable: CGFloat) -> some View {
+        let isVertical = axis == .vertical
+        let lowerOffset = CGFloat(fraction(of: lowerValue)) * usable
+        let upperOffset = CGFloat(fraction(of: upperValue)) * usable
+        return ZStack(alignment: isVertical ? .bottom : .leading) {
+            Color.clear
+            adjustableThumb(value: lowerValue, title: inputTitles.min, isLower: true)
+                .offset(x: isVertical ? 0 : dir * lowerOffset, y: isVertical ? -lowerOffset : 0)
+            adjustableThumb(value: upperValue, title: inputTitles.max, isLower: false)
+                .offset(x: isVertical ? 0 : dir * upperOffset, y: isVertical ? -upperOffset : 0)
+        }
+        // Accessibility only: the touch belongs to the track's drag.
+        .allowsHitTesting(false)
+    }
+
+    private func adjustableThumb(value: Double, title: String, isLower: Bool) -> some View {
+        thumbAccessibility(Color.clear.frame(width: thumbSize, height: thumbSize),
+                           value: value, title: title, isLower: isLower)
     }
 
     // MARK: Track
@@ -142,7 +270,7 @@ public struct RangeSlider: View {
             .gesture(drag(usable: usable, span: span))
         }
         .frame(height: thumbSize)
-        .opacity(isEnabled ? 1 : 0.6)
+        .opacity(isEnabled ? 1 : RangeSliderMetrics.disabledOpacity)
     }
 
     /// Vertical layout — same approach as `Slider.axis(.vertical)`: a fixed-height
@@ -175,7 +303,7 @@ public struct RangeSlider: View {
             .gesture(verticalDrag(usable: usable, span: span))
         }
         .frame(width: thumbSize, height: verticalHeight)
-        .opacity(isEnabled ? 1 : 0.6)
+        .opacity(isEnabled ? 1 : RangeSliderMetrics.disabledOpacity)
     }
 
     // MARK: Colors
@@ -204,14 +332,15 @@ public struct RangeSlider: View {
                 let ltrX = thumbSize / 2 + CGFloat(ratio) * usable
                 // `.position(x:)` doesn't auto-mirror: flip within the row width.
                 let centerX = isRTL ? (usable + thumbSize) - ltrX : ltrX
-                VStack(spacing: 2) {
-                    Capsule().fill(theme.border(.borderPrimary)).frame(width: 1, height: 5)
+                VStack(spacing: RangeSliderMetrics.markLabelSpacing) {
+                    Capsule().fill(theme.border(.borderPrimary))
+                        .frame(width: 1, height: RangeSliderMetrics.markTickHeight)
                     Text(markLabel(mark))
                         .textStyle(.labelSm600)
                         .foregroundStyle(theme.text(.textTertiary))
                         .fixedSize()
                 }
-                .position(x: centerX, y: 11)
+                .position(x: centerX, y: RangeSliderMetrics.markCenterY)
             }
         }
     }
@@ -277,13 +406,23 @@ public struct RangeSlider: View {
     private func syncText() { lowerText = intString(lowerValue); upperText = intString(upperValue) }
 
     private func thumb(value: Double, title: String, isLower: Bool) -> some View {
-        Circle()
-            .fill(theme.background(.bgWhite))
-            .overlay(Circle().strokeBorder(thumbRingColor, lineWidth: 2))
-            .frame(width: thumbSize, height: thumbSize)
-            .themeShadow(.soft)
-            // Press feedback while dragging — gated on microAnimations + Reduce Motion.
-            .microPressScale(activeThumb == (isLower ? .lower : .upper), scale: pressScale)
+        thumbAccessibility(
+            Circle()
+                .fill(theme.background(.bgWhite))
+                .overlay(Circle().strokeBorder(thumbRingColor, lineWidth: 2))
+                .frame(width: thumbSize, height: thumbSize)
+                .themeShadow(.soft)
+                // Press feedback while dragging — gated on microAnimations + Reduce Motion.
+                .microPressScale(activeThumb == (isLower ? .lower : .upper), scale: pressScale),
+            value: value, title: title, isLower: isLower)
+    }
+
+    /// One VoiceOver-adjustable thumb: its label, the same formatted value the
+    /// readout shows, and the step adjustment. Both chrome paths apply it — the
+    /// stock one to the drawn knob, the style path to an invisible stand-in at
+    /// the same place — so a styled slider adjusts exactly like the stock one.
+    private func thumbAccessibility(_ knob: some View, value: Double, title: String, isLower: Bool) -> some View {
+        knob
             .accessibilityElement()
             .accessibilityLabel(title)
             .accessibilityValue(markLabel(value))
@@ -293,7 +432,10 @@ public struct RangeSlider: View {
             }
     }
 
-    private func adjust(isLower: Bool, increment: Bool) {
+    /// Moves one thumb by a step — what VoiceOver's adjustable action runs.
+    /// Internal so the tests can drive it (the accessibility action itself
+    /// needs an assistive client).
+    func adjust(isLower: Bool, increment: Bool) {
         let delta = increment ? step : -step
         if isLower {
             lowerValue = min(max(bounds.lowerBound, Self.snap(lowerValue + delta, step: step)), upperValue)
@@ -321,12 +463,15 @@ public struct RangeSlider: View {
             }
     }
 
-    /// Vertical variant of the track gesture (up = increase).
-    private func verticalDrag(usable: CGFloat, span: Double) -> some Gesture {
+    /// Vertical variant of the track gesture (up = increase). `topInset` is the
+    /// distance from the top of the gesture's own view to the top of the track
+    /// — 0 on the built-in path, where the gesture sits on the track itself,
+    /// and whatever a style drew above it on the style path.
+    private func verticalDrag(usable: CGFloat, span: Double, topInset: CGFloat = 0) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { gesture in
                 guard isEnabled else { return }
-                let fromBottom = usable + thumbSize / 2 - gesture.location.y
+                let fromBottom = usable + thumbSize / 2 - (gesture.location.y - topInset)
                 let ratio = Double(min(max(fromBottom, 0), usable) / usable)
                 move(toward: bounds.lowerBound + ratio * span)
             }
@@ -339,7 +484,9 @@ public struct RangeSlider: View {
 
     /// Moves the gesture's thumb — chosen once per gesture as the one nearest to
     /// the touched value — keeping the pair ordered (lower never crosses upper).
-    private func move(toward raw: Double) {
+    /// Internal so the tests can drive the drag's value-setting path, which no
+    /// unit-test host can touch for real.
+    func move(toward raw: Double) {
         let stepped = Self.snap(raw, step: step)
         let target = activeThumb ?? nearestThumb(to: stepped)
         activeThumb = target
@@ -434,6 +581,76 @@ public struct RangeSlider: View {
             }
             .padding()
             .environment(\.layoutDirection, .rightToLeft)
+        }
+    }
+    return Demo()
+}
+
+#Preview("Custom RangeSliderStyle") {
+    /// Proof of external implementability: a host's spec — a 2 pt rail, the
+    /// selected span in the hero token, two flat knobs in the same shade, and
+    /// the two readouts *under* the track instead of over it. The drag, the
+    /// step and the two adjustable thumbs are still `RangeSlider`'s.
+    struct HostRangeSliderStyle: RangeSliderStyle {
+        func makeBody(configuration: RangeSliderStyleConfiguration) -> some View {
+            HostRangeSliderBody(configuration: configuration)
+        }
+    }
+    struct HostRangeSliderBody: View {
+        let configuration: RangeSliderStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        var body: some View {
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                GeometryReader { geo in
+                    let usable = max(geo.size.width - configuration.thumbSize, 1)
+                    let lower = CGFloat(configuration.lowerFraction) * usable
+                    let upper = CGFloat(configuration.upperFraction) * usable
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(theme.border(.borderPrimary)).frame(height: 2)
+                        Capsule().fill(theme.background(.bgHero))
+                            .frame(width: max(upper - lower, 0), height: 2)
+                            .offset(x: configuration.offsetDirection * (lower + configuration.thumbSize / 2))
+                        knob.offset(x: configuration.offsetDirection * lower)
+                        knob.offset(x: configuration.offsetDirection * upper)
+                    }
+                    .frame(height: configuration.thumbSize)
+                }
+                .frame(height: configuration.thumbSize)
+
+                HStack {
+                    Text(configuration.lowerLabel ?? "")
+                    Spacer()
+                    Text(configuration.upperLabel ?? "")
+                }
+                .textStyle(.labelSm600)
+                .foregroundStyle(theme.text(.textSecondary))
+            }
+            .opacity(configuration.isEnabled ? 1 : 0.4)
+        }
+
+        private var knob: some View {
+            Circle()
+                .fill(theme.background(.bgHero))
+                .frame(width: configuration.thumbSize - 4, height: configuration.thumbSize - 4)
+                .padding(2)
+        }
+    }
+
+    struct Demo: View {
+        @State var lo: Double = 200
+        @State var hi: Double = 800
+        var body: some View {
+            VStack(spacing: 32) {
+                RangeSlider(lowerValue: $lo, upperValue: $hi, in: 0...1000)
+                    .step(50)
+                    .valueLabel { "\(Int($0)) $" }
+                RangeSlider(lowerValue: .constant(300), upperValue: .constant(600), in: 0...1000)
+                    .valueLabel { "\(Int($0)) $" }
+                    .disabled(true)
+            }
+            .padding()
+            .rangeSliderStyle(HostRangeSliderStyle())
         }
     }
     return Demo()
