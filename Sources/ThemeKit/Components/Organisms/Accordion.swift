@@ -3,6 +3,11 @@
 //  ThemeKit
 //  Created by İsa Mercan on 23.06.2026.
 //
+//  The row is drawn by the active ``AccordionStyle`` when one is set with
+//  `.accordionStyle(_:)`; the behaviour — the expansion state (seeded or
+//  bound), the animation it changes under, and the header's expanded/collapsed
+//  announcement — stays here either way.
+//
 
 import SwiftUI
 
@@ -40,6 +45,7 @@ public enum AccordionPaddingSize {
 /// expandable row with a @ViewBuilder body instead of type-erased AnyView models.
 public struct Accordion<Content: View>: View {
     @Environment(\.theme) private var theme
+    @Environment(\.accordionStyle) private var style
 
     private let title: String
     private let content: () -> Content
@@ -88,6 +94,55 @@ public struct Accordion<Content: View>: View {
     }
 
     public var body: some View {
+        if style.isDefault {
+            // No `.accordionStyle(_:)` up the tree: the built-in row, unchanged.
+            builtInBody
+        } else {
+            style.makeBody(configuration: configuration)
+                // Value-based so controlled (binding-driven) changes animate too.
+                .animation(motion, value: expanded)
+        }
+    }
+
+    /// What the row hands an ``AccordionStyle``: the raw content and slots, the
+    /// axes as the modifiers set them, the live expansion state with the
+    /// closure that flips it, and the section's content ready to place.
+    @MainActor
+    var configuration: AccordionStyleConfiguration {
+        // Captured as values so the closure stays free of the view's storage:
+        // the projected binding writes through to whichever state is live
+        // (seeded @State or the caller's `isExpanded:`), exactly as the stock
+        // header button does.
+        let expansion = $expanded
+        let animation = motion
+        return AccordionStyleConfiguration(
+            title: title,
+            subtitle: subtitle,
+            icon: leadingSystemImage,
+            number: number,
+            leading: leadingView,
+            trailing: trailingAccessory.map { $0(expanded) },
+            isExpanded: expanded,
+            toggle: { withAnimation(animation) { expansion.wrappedValue.toggle() } },
+            indicator: indicator,
+            titleSize: titleSize,
+            density: paddingSize,
+            truncatesSubtitle: truncateSubtitle,
+            showsDivider: showDivider,
+            content: AnyView(content()),
+            expansionValue: expansionValue)
+    }
+
+    /// What VoiceOver says about the header's state — the same word both chrome
+    /// paths announce.
+    @MainActor
+    private var expansionValue: String {
+        expanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed")
+    }
+
+    /// The stock row — the body `Accordion` drew before ``AccordionStyle``
+    /// existed, verbatim. ``DefaultAccordionStyle`` mirrors it.
+    private var builtInBody: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
             Button {
                 withAnimation(motion) { expanded.toggle() }
@@ -106,7 +161,7 @@ public struct Accordion<Content: View>: View {
                             Icon(systemName: leadingSystemImage).size(.sm).colorOverride(titleColor)
                         }
                     }
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: AccordionMetrics.titleSpacing) {
                         Text(title)
                             .textStyle(titleSize.textStyle)
                             .foregroundStyle(titleColor)
@@ -129,7 +184,7 @@ public struct Accordion<Content: View>: View {
             }
             .buttonStyle(.plain)
             // State-aware for VoiceOver (Dropdown's disclosure convention).
-            .accessibilityValue(expanded ? String(themeKit: "Expanded") : String(themeKit: "Collapsed"))
+            .accessibilityValue(expansionValue)
 
             if expanded {
                 content()
@@ -260,4 +315,86 @@ public extension Accordion {
         }
     }
     return Demo()
+}
+
+#Preview("Custom AccordionStyle") {
+    /// Proof of external implementability: each section on a rounded card of
+    /// its own — the host's surface, corner and padding, its own title type,
+    /// and the chevron in a token colour — with the content under it.
+    struct CardAccordionStyle: AccordionStyle {
+        func makeBody(configuration: AccordionStyleConfiguration) -> some View {
+            CardAccordionBody(configuration: configuration)
+        }
+    }
+    struct CardAccordionBody: View {
+        let configuration: AccordionStyleConfiguration
+        @Environment(\.theme) private var theme
+
+        private var shape: RoundedRectangle {
+            RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+        }
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: Theme.SpacingKey.sm.value) {
+                Button {
+                    configuration.toggle()
+                } label: {
+                    HStack(spacing: Theme.SpacingKey.sm.value) {
+                        configuration.leading
+                        VStack(alignment: .leading, spacing: AccordionMetrics.titleSpacing) {
+                            Text(configuration.title)
+                                .textStyle(.labelMd700)
+                                .foregroundStyle(theme.text(.textPrimary))
+                            if let subtitle = configuration.subtitle {
+                                Text(subtitle)
+                                    .textStyle(.bodySm400)
+                                    .foregroundStyle(theme.text(.textSecondary))
+                            }
+                        }
+                        Spacer(minLength: Theme.SpacingKey.sm.value)
+                        Icon(systemName: "chevron.down").size(.sm)
+                            .colorOverride(theme.text(.textHero))
+                            .rotationEffect(.degrees(configuration.isExpanded ? 180 : 0))
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                // The style's own header button carries the state ThemeKit
+                // resolved, so a styled section announces it like the stock one.
+                .accessibilityValue(configuration.expansionValue)
+
+                if configuration.isExpanded {
+                    configuration.content
+                        .textStyle(.bodySm400)
+                        .foregroundStyle(theme.text(.textSecondary))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .padding(Theme.SpacingKey.md.value)
+            .background(theme.background(.bgWhite), in: shape)
+            .overlay(shape.strokeBorder(theme.border(.borderPrimary), lineWidth: 1))
+        }
+    }
+
+    return PreviewMatrix("AccordionStyle") {
+        PreviewCase("Stock row through .default") {
+            Accordion("What is your refund policy?", initiallyExpanded: true) {
+                Text("You can request a refund within 14 days of purchase.")
+            }
+            .accordionStyle(.default)
+        }
+        PreviewCase("A card per section") {
+            VStack(spacing: Theme.SpacingKey.sm.value) {
+                Accordion("Baggage allowance", initiallyExpanded: true) {
+                    Text("One carry-on and one personal item.")
+                }
+                .subtitle("Applies to standard fares")
+                Accordion("How do I contact support?") {
+                    Text("Email us at support@example.com.")
+                }
+            }
+            .accordionStyle(CardAccordionStyle())
+        }
+    }
 }

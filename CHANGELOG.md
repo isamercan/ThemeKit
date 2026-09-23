@@ -7,6 +7,52 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-23
+
+### Added
+
+Four style protocols, for the components a filter screen is built from. Each follows
+ADR-0009: the protocol, a configuration carrying what the component resolved, a default style
+drawing the stock look, and a `.…Style(_:)` modifier read from the environment. With no style
+set every one of them renders its 1.10.0 body unchanged.
+
+- **`AccordionStyle`** (`.accordionStyle(_:)`) draws an `Accordion` — the header (title,
+  subtitle, icon, number, the `leading` and `trailing` slots) and the content under it. The
+  configuration carries those parts, `isExpanded`, a `toggle` closure that opens and closes the
+  row through the component's own binding, the axes (`indicator`, `titleSize`, `density`,
+  `truncatesSubtitle`, `showsDivider`), the content ready to place, and `expansionValue` — the
+  "Expanded" / "Collapsed" word for the style to announce on its header control. `Accordion`
+  keeps the state, the binding and the animation. `AccordionGroup` draws its own rows, so a
+  style reaches the `Accordion`s inside a group's content but not the group's rows.
+- **`CheckboxChromeStyle`** (`.checkboxChromeStyle(_:)`) draws a `Checkbox`, as
+  `RadioButtonChromeStyle` draws a radio: the box, the label and description (as plain text and
+  as the `label { }` slot), `isChecked`, `isIndeterminate`, `isEnabled`, `isPressed`,
+  `isReadOnly`, the `type`, `variant`, the token-bound `swatch`, `validation`, `accent`,
+  `controlSize`, `customSize` (with the resolved `side`), `controlPlacement`, `alignment`,
+  `lineThrough` and the animation. `Checkbox` keeps the toggle, the disabled and read-only
+  gates, the accessibility and the validation messages under the chrome.
+- **`SegmentedControlStyle`** (`.segmentedControlStyle(_:)`) draws the whole pill: the items
+  (title, glyph name, custom content, enabled, tooltip), the selection, a `select(_:)` closure
+  that keeps the component's gates, `size`, `shape`, `selectionStyle`, `fullWidth`,
+  `showsDividers`, the resolved `tint`, `isEnabled`, the axis, and the namespace and id for a
+  style's own sliding thumb. Not to be confused with `SegmentedTabBarChromeStyle`, which draws
+  the underlined tab bar.
+- **`RangeSliderStyle`** (`.rangeSliderStyle(_:)`) draws a `RangeSlider`'s track, the span
+  between its thumbs and the thumbs themselves. The configuration carries the two values and
+  the bounds, the `lowerFraction` / `upperFraction` the component measured (from the leading
+  edge, over the length a thumb can travel — so a knob drawn at a fraction is where a touch at
+  that value lands), the formatted end labels and marks, the `axis`, `accent`, `isEnabled`,
+  `step`, which thumb is being dragged, the linked min/max inputs already wired, the thumb's
+  size, and `offsetDirection` — the sign that carries the right-to-left mirroring, so a style
+  never reads the layout direction. `RangeSlider` keeps the gestures, the stepping, the
+  clamping, the ordered pair and the adjustable accessibility, wrapped around whatever the
+  style drew.
+
+### Changed
+
+- **A segment of `SegmentedControl` now carries the `.isSelected` trait**, on both chrome
+  paths: its segments were buttons but announced no selected state. No pixels move.
+
 ## [1.10.0] - 2026-09-22
 
 ### Added

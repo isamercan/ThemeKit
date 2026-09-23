@@ -51,8 +51,14 @@ public enum CheckboxVariant: Equatable {
 ///         .type(.inner).indeterminate(mixed).alignment(.top)
 ///         .controlSize(.small)            // native size
 ///         .disabled(!editable)            // native — R3
+///
+/// The chrome (box, label, description) is drawn by the active
+/// ``CheckboxChromeStyle`` when one is set with `.checkboxChromeStyle(_:)` on
+/// the checkbox or an ancestor; the checkbox keeps its behaviour, accessibility
+/// and validation messages either way.
 public struct Checkbox: View {
     @Environment(\.theme) private var theme
+    @Environment(\.checkboxChromeStyle) private var chromeStyle
 
     @Binding private var isChecked: Bool
     private let label: String?
@@ -108,6 +114,15 @@ public struct Checkbox: View {
     }
 
     public var body: some View {
+        if chromeStyle.isDefault {
+            builtInBody
+        } else {
+            styledBody
+        }
+    }
+
+    /// The built-in chrome — unchanged from before the style door existed.
+    private var builtInBody: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
@@ -137,6 +152,61 @@ public struct Checkbox: View {
                 InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
             }
         }
+    }
+
+    /// A custom ``CheckboxChromeStyle`` draws the chrome; the checkbox keeps the
+    /// toggle, read-only, the disabled gate, accessibility and messages.
+    private var styledBody: some View {
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            Button {
+                guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                isChecked.toggle()
+            } label: {
+                EmptyView()   // the bridge draws the style's chrome instead
+            }
+            .buttonStyle(CheckboxChromeBridge(style: chromeStyle, template: chromeConfiguration))
+            .disabled(!isEnabled)
+            .allowsHitTesting(!isReadOnly)   // E1 — the chrome stays, toggling blocked
+            .a11y(A11yElement.Control.checkbox, in: accessibilityID)
+            .accessibilityLabel(label ?? "")
+            .accessibilityValue(
+                isIndeterminate
+                    ? String(themeKit: "mixed")
+                    : (isChecked ? String(themeKit: "selected") : String(themeKit: "not selected"))
+            )
+            .accessibilityHint(descriptionText ?? "")   // description isn't in the label — surface it here
+            .accessibilityAddTraits(isChecked ? .isSelected : [])
+
+            if !infoMessages.isEmpty {
+                InfoMessageList(infoMessages).a11y(A11yElement.Field.message, in: accessibilityID)
+            }
+        }
+    }
+
+    /// Everything the style reads except the live press state.
+    private var chromeConfiguration: CheckboxChromeStyleConfiguration {
+        CheckboxChromeStyleConfiguration(
+            label: label,
+            customLabel: customLabel.map { AnyView($0) },
+            description: descriptionText,
+            descriptionLinks: descriptionLinks,
+            isChecked: isChecked,
+            isIndeterminate: isIndeterminate,
+            isEnabled: isEnabled,
+            isPressed: false,
+            isReadOnly: isReadOnly,
+            type: type,
+            variant: variant,
+            swatch: semanticSwatch,
+            validation: dominant,
+            accent: accent,
+            controlSize: controlSize,
+            customSize: customSize,
+            controlPlacement: controlPlacement,
+            alignment: alignment,
+            lineThrough: lineThrough,
+            animation: motion
+        )
     }
 
     /// The title + optional description column (Figma "Label" + "Description").
