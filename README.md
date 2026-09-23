@@ -65,7 +65,7 @@ import ThemeKit
   `TooltipStyle`, `TitleStyle`, `SegmentedTabBarChromeStyle`,
   `ButtonDockChromeStyle`, `SheetHeaderStyle`, `DialogStyle`, `EmptyStateStyle`,
   `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle`,
-  `RangeSliderStyle`, `ToggleChromeStyle` (plus `ChipStyle`).
+  `RangeSliderStyle`, `ToggleChromeStyle`, `PriceTrendChartStyle` (plus `ChipStyle`).
   No style set = the built-in look, unchanged
   ([ADR-0009](docs/ADR-0009-consumer-chrome-styles.md)).
 - **Runtime theming** — a Swift token generator + a live configurator turn any

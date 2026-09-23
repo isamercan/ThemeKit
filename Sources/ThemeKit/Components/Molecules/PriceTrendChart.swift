@@ -28,6 +28,8 @@ public struct PriceTrendChart: View {
     @Environment(\.componentDensity) private var density
     @Environment(\.formatDefaults) private var formatDefaults
     @Environment(\.locale) private var locale
+    /// The column's drawing, swappable via `.priceTrendChartStyle(_:)`.
+    @Environment(\.priceTrendChartStyle) private var columnStyle
 
     private let points: [PriceTrendPoint]
     @Binding private var selection: Int
@@ -146,7 +148,25 @@ public struct PriceTrendChart: View {
     private func bar(_ i: Int) -> some View {
         let point = visiblePoints[i]
         let isSelected = i == selection
-        return VStack(spacing: 4) {
+        return Group {
+            if columnStyle.isDefault {
+                builtInColumn(point, isSelected: isSelected)
+            } else {
+                columnStyle.makeBody(configuration: columnConfiguration(point, index: i, isSelected: isSelected))
+            }
+        }
+        .frame(width: scrollable ? barWidth : nil)
+        .frame(maxWidth: scrollable ? nil : .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture { selection = i }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(point.label)\(point.sublabel.map { " " + $0 } ?? ""), \(priceText(point.price))")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The built-in column — unchanged from before the style door existed.
+    private func builtInColumn(_ point: PriceTrendPoint, isSelected: Bool) -> some View {
+        VStack(spacing: 4) {
             if showsValues {
                 Group { if isSelected { Text(priceText(point.price)).textStyle(.overline500).foregroundStyle(theme.text(.textPrimary)).fixedSize() } }
                     .frame(height: 14)
@@ -157,13 +177,26 @@ public struct PriceTrendChart: View {
                 .frame(height: max(6, barAreaHeight * fraction(point.price)))
             labelBlock(point, isSelected: isSelected)
         }
-        .frame(width: scrollable ? barWidth : nil)
-        .frame(maxWidth: scrollable ? nil : .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture { selection = i }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(point.label)\(point.sublabel.map { " " + $0 } ?? ""), \(priceText(point.price))")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Everything a ``PriceTrendChartStyle`` reads for one column.
+    private func columnConfiguration(_ point: PriceTrendPoint, index: Int, isSelected: Bool)
+    -> PriceTrendChartStyleConfiguration {
+        PriceTrendChartStyleConfiguration(
+            point: point,
+            index: index,
+            isSelected: isSelected,
+            fraction: fraction(point.price),
+            barAreaHeight: barAreaHeight,
+            labelReserve: labelReserve,
+            valueReserve: valueReserve,
+            priceText: priceText(point.price),
+            showsValues: showsValues,
+            showsWeekday: showsWeekday,
+            accent: accentColor,
+            selectionAccent: selectionColorToken,
+            cornerRadius: cornerRole.value,
+            usesGradient: useGradient)
     }
 
     /// Fixed-height label area so every column's day/weekday captions share one baseline.
