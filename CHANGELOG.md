@@ -7,6 +7,27 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-09-23
+
+### Added
+
+- **`PriceTrendChartStyle`** (`.priceTrendChartStyle(_:)`) draws a `PriceTrendChart`'s columns — the
+  value over the bar, the bar, and the day under it — while the chart keeps the points, which one is
+  selected and the tap that changes it, the layout (the stack, its spacing, the bar width, the
+  scrolling), the header with its paging, the axis overlay and the accessibility. ADR-0009 again: the
+  protocol, a `PriceTrendChartStyleConfiguration` (the `point`, its `index`, `isSelected`, the
+  `fraction` and `barHeight` the chart measured, `barAreaHeight`, `labelReserve`, `valueReserve`, the
+  formatted `priceText`, `showsValues`, `showsWeekday`, the `accent` and `selectionAccent` tokens,
+  `cornerRadius` and `usesGradient`), `DefaultPriceTrendChartStyle` drawing the stock column, and
+  `.priceTrendChartStyle(.default)` to restore the built-in path for a subtree. With no style set a
+  chart renders its 1.12.0 columns unchanged.
+
+  It exists because a day is more than a bar. A fare calendar marks the day it is showing inside its
+  bar, greys a day it has no price for and puts a glyph there instead — drawing, not behaviour, and
+  none of it reachable from a modifier.
+
+  Unlike the other styles, the configuration is one *item*: the chart asks for a column at a time.
+
 ## [1.12.0] - 2026-09-23
 
 ### Added
@@ -1643,7 +1664,8 @@ parity across the catalog, and the supporting docs/CI/test layer. Also a rename.
 ## [0.1.0] - 2026-06-25
 - Initial tagged release.
 
-[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/isamercan/ThemeKit/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/isamercan/ThemeKit/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/isamercan/ThemeKit/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/isamercan/ThemeKit/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/isamercan/ThemeKit/compare/v1.9.0...v1.10.0

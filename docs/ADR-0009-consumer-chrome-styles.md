@@ -7,7 +7,7 @@
 - **Rollout:** Additive. With no style set, every component renders its 1.4.0 body unchanged apart from the five fixes listed under Consequences (the snapshot suite pins it), and `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
-- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0).
+- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0); `PriceTrendChartStyle` (1.13.0).
 
 ## Context
 
@@ -153,6 +153,19 @@ sections are accordion cards of checkboxes, ranges and a two-option pill:
 | Component | Protocol | Set with |
 |---|---|---|
 | `ThemeToggle` | `ToggleChromeStyle` | `.toggleChromeStyle(_:)` |
+
+1.13.0 adds the chart a fare calendar is drawn with:
+
+| Component | Protocol | Set with |
+|---|---|---|
+| `PriceTrendChart` | `PriceTrendChartStyle` | `.priceTrendChartStyle(_:)` |
+
+It is the first style whose configuration is one *item* rather than the whole
+component: the chart hands the style a column at a time, with the room it has
+measured out for it, and keeps the points, the selection and its tap, the
+layout, the header and the axis. A day is more than a bar — a fare calendar
+marks the day it is showing inside its bar and puts a glyph where it has no
+price — and none of that is reachable from a modifier.
 
 `accent(_:)` only ever reached a switch's *on* track; the off track is
 `bg-secondary`, which some brands paint in a colour a switch shouldn't wear, and
