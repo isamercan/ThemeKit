@@ -7,7 +7,7 @@
 - **Rollout:** Additive. With no style set, every component renders its 1.4.0 body unchanged apart from the five fixes listed under Consequences (the snapshot suite pins it), and `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
-- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0).
+- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0).
 
 ## Context
 
@@ -147,6 +147,17 @@ sections are accordion cards of checkboxes, ranges and a two-option pill:
 | `Checkbox` | `CheckboxChromeStyle` | `.checkboxChromeStyle(_:)` |
 | `SegmentedControl` | `SegmentedControlStyle` | `.segmentedControlStyle(_:)` |
 | `RangeSlider` | `RangeSliderStyle` | `.rangeSliderStyle(_:)` |
+
+1.12.0 adds one more, for the control a brand is most likely to disagree with:
+
+| Component | Protocol | Set with |
+|---|---|---|
+| `ThemeToggle` | `ToggleChromeStyle` | `.toggleChromeStyle(_:)` |
+
+`accent(_:)` only ever reached a switch's *on* track; the off track is
+`bg-secondary`, which some brands paint in a colour a switch shouldn't wear, and
+the knob is `fg-secondary`. There was no way to repaint either without redrawing
+the control, which is exactly what a consumer design system must not do.
 
 Three of them hand over a closure the style calls from its own control —
 `Accordion`'s `toggle`, `SegmentedControl`'s `select(_:)` — so a style can draw
