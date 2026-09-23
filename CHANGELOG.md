@@ -7,6 +7,26 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-09-23
+
+### Added
+
+- **`PriceTrendPoint.priceText`** — the price in the host's own words, for a chart whose prices are
+  already worded. A second initialiser takes it (`PriceTrendPoint("13", sublabel: "Çar", price: 43,
+  priceText: "4.300 TL")`); the old one is untouched and `nil` formats the number as before. When it
+  is there, the column's value, the axis rows and — the reason this exists — the column's
+  accessibility label all say it, so the drawing and the announcement agree. A style reads it as
+  `configuration.priceText`, as it already did.
+
+  It exists because the chart needs a *number* to measure a bar against the others, and a host may
+  have only words: a fare calendar is handed "4.300 TL" by its backend, or sizes a column by a share
+  rather than a sum. Such a host had to pass its measurement as the price — and the chart then
+  formatted *that* into the column's accessibility label, which no style could override, because the
+  label is applied to the whole column outside the style's body. VoiceOver announced a price that was
+  nowhere on screen. Found by a UI test reading a real accessibility tree, not by looking.
+
+  `price` still measures the bar; `priceText` only speaks.
+
 ## [1.13.0] - 2026-09-23
 
 ### Added

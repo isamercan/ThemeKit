@@ -16,10 +16,30 @@ public struct PriceTrendPoint: Identifiable, Sendable {
     public let label: String       // e.g. "18"
     public let sublabel: String?   // e.g. "Sat"
     public let price: Decimal
+    /// The price in the host's own words, when the host has already worded it — "4.300 TL".
+    ///
+    /// The chart needs a *number* to measure a bar against the others, and some hosts have only
+    /// words: a fare calendar is handed "4.300 TL" by its backend, or draws a day whose bar is a
+    /// share rather than a sum. Such a host passes the measurement as ``price`` and the words
+    /// here, and the chart shows and reads these instead of formatting the number — otherwise the
+    /// column would say one thing and VoiceOver another.
+    ///
+    /// `nil` (the default) formats ``price`` as currency, as the chart always has.
+    public let priceText: String?
     public init(_ label: String, sublabel: String? = nil, price: Decimal) {
+        self.init(label, sublabel: sublabel, price: price, priceText: nil)
+    }
+
+    /// A point the host has worded itself.
+    ///
+    /// - Parameters:
+    ///   - price: what the bar is measured against — a fare, or any number that sizes the column.
+    ///   - priceText: what the column says and a screen reader reads. `nil` formats `price`.
+    public init(_ label: String, sublabel: String? = nil, price: Decimal, priceText: String?) {
         self.label = label
         self.sublabel = sublabel
         self.price = price
+        self.priceText = priceText
     }
 }
 
@@ -76,6 +96,13 @@ public struct PriceTrendChart: View {
         currencyCode ?? formatDefaults.currencyCode ?? locale.themeKitCurrencyCode ?? "USD"
     }
     private func priceText(_ p: Decimal) -> String { p.formatted(.currency(code: resolvedCurrency).precision(.fractionLength(0)).locale(locale)) }
+    /// The dearest and cheapest columns, so the axis says what they say rather than re-formatting
+    /// their numbers — a host measuring in something other than money has words for these too.
+    private var highestPoint: PriceTrendPoint? { visiblePoints.max { $0.price < $1.price } }
+    private var lowestPoint: PriceTrendPoint? { visiblePoints.min { $0.price < $1.price } }
+
+    /// What a point's price says: the host's own words when it has them, else the formatted number.
+    private func priceText(_ point: PriceTrendPoint) -> String { point.priceText ?? priceText(point.price) }
 
     // MARK: Body
 
@@ -111,8 +138,8 @@ public struct PriceTrendChart: View {
             let area = geo.size.height - labelReserve - valueReserve
             let minY = max(0, valueReserve + area * (1 - minFraction))
             ZStack(alignment: .topLeading) {
-                axisRow(priceText(maxPrice)).offset(y: valueReserve)
-                axisRow(priceText(minPrice)).offset(y: minY)
+                axisRow(highestPoint.map { priceText($0) } ?? priceText(maxPrice)).offset(y: valueReserve)
+                axisRow(lowestPoint.map { priceText($0) } ?? priceText(minPrice)).offset(y: minY)
             }
         }
     }
@@ -160,7 +187,7 @@ public struct PriceTrendChart: View {
         .contentShape(Rectangle())
         .onTapGesture { selection = i }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(point.label)\(point.sublabel.map { " " + $0 } ?? ""), \(priceText(point.price))")
+        .accessibilityLabel("\(point.label)\(point.sublabel.map { " " + $0 } ?? ""), \(priceText(point))")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -168,7 +195,7 @@ public struct PriceTrendChart: View {
     private func builtInColumn(_ point: PriceTrendPoint, isSelected: Bool) -> some View {
         VStack(spacing: 4) {
             if showsValues {
-                Group { if isSelected { Text(priceText(point.price)).textStyle(.overline500).foregroundStyle(theme.text(.textPrimary)).fixedSize() } }
+                Group { if isSelected { Text(priceText(point)).textStyle(.overline500).foregroundStyle(theme.text(.textPrimary)).fixedSize() } }
                     .frame(height: 14)
             }
             Spacer(minLength: 0)
@@ -190,7 +217,7 @@ public struct PriceTrendChart: View {
             barAreaHeight: barAreaHeight,
             labelReserve: labelReserve,
             valueReserve: valueReserve,
-            priceText: priceText(point.price),
+            priceText: priceText(point),
             showsValues: showsValues,
             showsWeekday: showsWeekday,
             accent: accentColor,

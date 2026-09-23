@@ -8,6 +8,8 @@
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
 - **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0); `PriceTrendChartStyle` (1.13.0).
+- **Amended:** 1.14.0 — a component's own accessibility can outrank its style (see "What a style must
+  not have to fix" below).
 
 ## Context
 
@@ -410,3 +412,22 @@ Reading `Theme.shared` inside a style defeats per-subtree theming, the same way 
 | Route the default through `makeBody` too | Puts every existing screen and every snapshot reference on a new render path with a different view identity; see D3. |
 | More built-in presets (a "compact", a "square" badge…) | Guesses at the host's spec instead of letting the host own it. Every guess is permanent public API, and ADR-F5's anti-sprawl rule forbids speculative presets. |
 | One shared `ComponentChromeStyle` protocol for every component | The configurations have nothing in common beyond "a view", so a shared one would be a bag of optionals or `Any`, and a style couldn't tell which component it's drawing. |
+
+
+## What a style must not have to fix (1.14.0)
+
+A style draws; the component keeps the behaviour, the gates and the accessibility. That split has a
+consequence this ADR did not spell out: **whatever the component says about itself, a style cannot
+take back.** `PriceTrendChart` applies its column's `.accessibilityLabel` outside
+`style.makeBody(configuration:)`, so a consumer chrome drawing the right price on screen could not
+stop VoiceOver announcing the wrong one — the component was formatting a number the host had only
+passed to size the bar.
+
+The fix was not a new door. It was to let the host tell the component the truth
+(`PriceTrendPoint.priceText`), so the component announces what it draws.
+
+The rule this leaves behind: when a component derives spoken text from a value, that value must be
+the one the component also shows. If a host has to hand over a stand-in for one purpose (a
+measurement, a sort key, an index), the component takes the real words beside it. A style is the
+wrong place to repair it, and a style that has to is a sign the component is keeping a value it
+should have been given.
