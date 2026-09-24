@@ -209,6 +209,61 @@ final class PriceTrendChartStyleTests: XCTestCase {
         XCTAssertEqual(column.accent, .success)
         XCTAssertEqual(column.selectionAccent, .error)
     }
+
+    // MARK: - The host's own words (1.14.0)
+
+    /// A point worded by its host reaches the style as those words, not as the number the chart
+    /// measured its bar against. A fare calendar hands the chart "4.300 TL" and a height; before
+    /// this the chart formatted the height and both the column and VoiceOver said the wrong price.
+    func testTheHostsOwnWordsReachTheStyleInsteadOfTheNumber() throws {
+        let seen = Box()
+        let worded = [PriceTrendPoint("13", sublabel: "Çar", price: 43, priceText: "4.300 TL"),
+                      PriceTrendPoint("14", sublabel: "Per", price: 109, priceText: "10.900 TL")]
+        _ = bitmap(PriceTrendChart(worded, selection: .constant(0))
+                    .priceTrendChartStyle(RecordingColumnStyle(box: seen)))
+        let first = try XCTUnwrap(seen.configurations.first { $0.point.label == "13" })
+        XCTAssertEqual(first.priceText, "4.300 TL")
+        let second = try XCTUnwrap(seen.configurations.first { $0.point.label == "14" })
+        XCTAssertEqual(second.priceText, "10.900 TL")
+    }
+
+    /// The words say what the day costs; the number still says how tall its bar stands. A host
+    /// that has only words passes a measurement beside them, and the chart must keep using it.
+    func testTheWordsDoNotChangeHowTallABarStands() throws {
+        let seen = Box()
+        let worded = [PriceTrendPoint("13", price: 43, priceText: "4.300 TL"),
+                      PriceTrendPoint("14", price: 109, priceText: "10.900 TL")]
+        _ = bitmap(PriceTrendChart(worded, selection: .constant(0))
+                    .priceTrendChartStyle(RecordingColumnStyle(box: seen)))
+        let short = try XCTUnwrap(seen.configurations.first { $0.point.label == "13" })
+        let tall = try XCTUnwrap(seen.configurations.first { $0.point.label == "14" })
+        XCTAssertEqual(tall.fraction, 1, accuracy: 0.001)
+        XCTAssertEqual(short.fraction, 43.0 / 109.0, accuracy: 0.001)
+        XCTAssertGreaterThan(tall.barHeight, short.barHeight)
+    }
+
+    /// A point with no words of its own formats its number, exactly as every chart did before.
+    func testAPointWithoutWordsStillFormatsItsNumber() throws {
+        let seen = Box()
+        _ = bitmap(PriceTrendChart(points, selection: .constant(0))
+                    .currency("TRY")
+                    .priceTrendChartStyle(RecordingColumnStyle(box: seen)))
+        let column = try XCTUnwrap(seen.configurations.first)
+        XCTAssertNil(column.point.priceText, "nothing was worded")
+        XCTAssertTrue(column.priceText.contains("4"), "the number was formatted: \(column.priceText)")
+    }
+
+    /// The built-in column draws the words too — without a style set, the value over the selected
+    /// bar is the host's own text, so the drawing and the announcement agree.
+    func testTheBuiltInColumnDrawsTheWords() throws {
+        let worded = [PriceTrendPoint("13", price: 43, priceText: "SOLD OUT"),
+                      PriceTrendPoint("14", price: 109, priceText: "10.900 TL")]
+        let plain = [PriceTrendPoint("13", price: 43),
+                     PriceTrendPoint("14", price: 109)]
+        let withWords = try XCTUnwrap(bitmap(PriceTrendChart(worded, selection: .constant(0)).showsValues()))
+        let withNumbers = try XCTUnwrap(bitmap(PriceTrendChart(plain, selection: .constant(0)).showsValues()))
+        XCTAssertNotEqual(withWords, withNumbers, "the column drew the number instead of the words")
+    }
 }
 
 // MARK: - Test styles
