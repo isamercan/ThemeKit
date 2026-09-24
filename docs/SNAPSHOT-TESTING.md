@@ -38,7 +38,13 @@ record or verify, or the antialiasing will drift and produce false diffs.
 > `RUN_SNAPSHOTS=1 xcodebuild test …` does **not** reach the test process running
 > inside the Simulator, so the suite would just skip. Set the variables on the
 > **scheme's Test action** (where they're delivered into the test runtime), then
-> run from Xcode or the CLI:
+> run from Xcode or the CLI.
+>
+> **CLI without editing the scheme:** prefix the variable with `TEST_RUNNER_` and
+> `xcodebuild` forwards it into the test runtime —
+> `TEST_RUNNER_RUN_SNAPSHOTS=1 xcodebuild test …` (add `TEST_RUNNER_RECORD_SNAPSHOTS=1`
+> to record). Passing them as plain build settings (`xcodebuild … RUN_SNAPSHOTS=1`)
+> silently skips.
 
 1. **Configure once** — Xcode → Edit Scheme → `ThemeKit-Package` →
    Test → Arguments → Environment Variables: add `RUN_SNAPSHOTS = 1` (and

@@ -1307,7 +1307,7 @@ struct FilterListDemo: View {
             Toggle("Bordered card", isOn: $bordered)
             Toggle("Select-all master row", isOn: $selectAll)
             Toggle("Result counts (N)", isOn: $counts)
-            Text("Rows are the reusable FilterRow (Checkbox atom + title + count) — the etstur PopularFilters pattern, generic.").font(.caption).foregroundStyle(.secondary)
+            Text("Rows are the reusable FilterRow (Checkbox atom + title + count) — a generic PopularFilters pattern.").font(.caption).foregroundStyle(.secondary)
         }
     }
 }

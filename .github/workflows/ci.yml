@@ -210,39 +210,41 @@ jobs:
         run: scripts/check-neutrality.sh
 
   # ---------------------------------------------------------------------------
-  # iOS 15.6 floor gate (ADR-0007 §D5). Compile-time availability checking is the
-  # airtight guardrail — no iOS 15.x simulator runtime can run under the tools-6.2
-  # toolchain, so the FLOOR is proven by the compiler and the legacy #available
-  # branches are proven by direct snapshot/unit coverage (ADR-0007 §D2 rule 3).
-  # ADVISORY (continue-on-error) while Package.swift still says .iOS(.v17): the
-  # error count is the migration burndown metric, surfaced in the step summary.
-  # In Phase 4, when the manifest floor flips to 15.6, drop continue-on-error +
-  # the IPHONEOS_DEPLOYMENT_TARGET override and this becomes the plain blocking
-  # build, gaining the oldest-installable-runtime test step. PR-only, iOS-lane
-  # cost policy. See IOS156_MIGRATION_PLAN.md §Phase 0.
+  # iOS 15.6 floor — oldest-installable-runtime tests (ADR-0007 §D5 layer 2).
+  # The 15.6 COMPILE floor is now the manifest floor (`Package.swift` = .iOS("15.6"))
+  # and is gated BLOCKING by the `ios` lane above, which builds + tests the package
+  # at 15.6 — so a bare 16/17-only API is a hard build failure there. This lane adds
+  # the RUNTIME layer the modern-runtime `ios` lane cannot: it installs the oldest
+  # simulator runtime the toolchain can fetch (iOS 16.4 — no iOS 15.x runtime is
+  # installable under tools-6.2, §D5) and runs the suite there, so every
+  # `#available(iOS 17, *)` FALSE branch (legacy sheet chrome, `onChangeCompat`
+  # fallback, `ShareLink` UIKit path, …) actually executes. ADVISORY
+  # (continue-on-error): it hinges on a runtime *download* that can be infra-flaky,
+  # and the airtight guarantees are the compile floor + the directly snapshot/unit-
+  # tested legacy units (§D2 rule 3). PR-only, iOS-lane cost policy.
   # ---------------------------------------------------------------------------
-  ios-floor:
-    name: Build at iOS 15.6 floor (canary)
+  ios-oldest:
+    name: Tests on oldest runtime (iOS 16.4)
     if: github.event_name == 'pull_request'
     runs-on: macos-15
-    continue-on-error: true            # ← REMOVE in Phase 4 (manifest floor flips)
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/swift-setup
         with:
-          cache-key: ios-floor
-      # While the manifest still declares .iOS(.v17), force the floor for this
-      # build only via IPHONEOS_DEPLOYMENT_TARGET (verified to propagate to the
-      # SwiftPM package targets — Phase 0 spike; docs/CI.md). Never commit a
-      # lowered Package.swift until Phase 4.
-      - name: Build for iOS Simulator at the 15.6 floor
+          cache-key: ios-oldest
+      - name: Install the oldest reachable iOS runtime + test the legacy branches
         run: |
           set -o pipefail
-          xcodebuild build \
+          OLDEST=16.4
+          if ! xcodebuild -downloadPlatform iOS -buildVersion "$OLDEST"; then
+            echo "::warning::iOS $OLDEST runtime not installable on this image — oldest-runtime tests skipped. The 15.6 compile floor (blocking, via the ios lane) and the directly-tested legacy #available units still gate."
+            echo "### iOS $OLDEST runtime unavailable — skipped (compile floor still gates)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          xcodebuild test \
             -scheme ThemeKit-Package \
-            -destination 'generic/platform=iOS Simulator' \
-            IPHONEOS_DEPLOYMENT_TARGET=15.6 \
-            2>&1 | tee floor.log || true          # advisory phase — never fail the job
-          ERRORS=$(grep -c ' error: ' floor.log || true)
-          echo "### iOS 15.6 floor canary — ${ERRORS} availability errors remaining" >> "$GITHUB_STEP_SUMMARY"
-          echo "Burndown metric (ADR-0007 §D5). Target: 0 at end of Phase 3, then this job flips to blocking."  >> "$GITHUB_STEP_SUMMARY"
+            -destination "platform=iOS Simulator,name=iPhone 14,OS=$OLDEST" \
+            -quiet 2>&1 | tee oldest.log
+          PASSED=$(grep -oE 'Executed [0-9]+ tests' oldest.log | tail -1 || echo 'tests run')
+          echo "### ✅ iOS $OLDEST runtime — $PASSED (exercises the #available(iOS 17) false branches)" >> "$GITHUB_STEP_SUMMARY"
