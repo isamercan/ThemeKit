@@ -36,7 +36,7 @@ final class DateWheelPickerTests: XCTestCase {
     }
 
     func testDaysAndMonthsWrapYearsStop() {
-        XCTAssertEqual(DateWheelColumn.index(12, count: 12, cyclic: true), 0, "after Aralık comes Ocak")
+        XCTAssertEqual(DateWheelColumn.index(12, count: 12, cyclic: true), 0, "after December comes January")
         XCTAssertEqual(DateWheelColumn.index(-1, count: 12, cyclic: true), 11)
         XCTAssertEqual(DateWheelColumn.index(130, count: 121, cyclic: false), 120)
         XCTAssertNil(DateWheelColumn.resolved(-1, count: 121, cyclic: false), "nothing drawn before the first year")
@@ -50,14 +50,14 @@ final class DateWheelPickerTests: XCTestCase {
             func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
         }
         let view = DateWheelPicker(selection: .constant(day(1994, 12, 9)))
-            .columnTitles(day: "Gün", month: "Ay", year: "Yıl")
+            .columnTitles(day: "Day", month: "Month", year: "Year")
             .dateWheelPickerStyle(Plain())
         XCTAssertNotNil(view)
     }
 
     @MainActor
     func testTheFloatingLabelTakesTheStyleItIsGiven() {
-        let field = TextInput("Ad", text: .constant("Dilan")).floatingLabelTextStyle(.overline400)
+        let field = TextInput("First name", text: .constant("Ada")).floatingLabelTextStyle(.overline400)
         XCTAssertNotNil(field)
     }
 }
@@ -65,10 +65,10 @@ final class DateWheelPickerTests: XCTestCase {
 final class FieldButtonErrorTests: XCTestCase {
     @MainActor
     func testAnErrorAndALabelStyleCanBeSet() {
-        let field = FieldButton("Türkiye") {}
-            .label("Pasaport Vatandaşlık")
+        let field = FieldButton("Turkey") {}
+            .label("Passport nationality")
             .labelTextStyle(.overline400)
-            .errorText("Bu alan zorunludur.")
+            .errorText("This field is required.")
         XCTAssertNotNil(field)
     }
 }

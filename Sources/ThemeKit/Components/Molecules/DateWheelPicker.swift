@@ -16,7 +16,7 @@
 //      @State private var birth = Date()
 //      DateWheelPicker(selection: $birth)
 //          .range(minimum...Date.now)
-//          .columnTitles(day: "Gün", month: "Ay", year: "Yıl")
+//          .columnTitles(day: "Day", month: "Month", year: "Year")
 //
 
 import SwiftUI
@@ -129,7 +129,7 @@ public extension DateWheelPicker {
     /// The dates the picker can land on. A column moved past either end stops at it.
     func range(_ range: ClosedRange<Date>?) -> Self { copy { $0.range = range } }
 
-    /// Headers over the three columns — "Gün", "Ay", "Yıl". Unset shows none; VoiceOver
+    /// Headers over the three columns — "Day", "Month", "Year". Unset shows none; VoiceOver
     /// still names each column (ThemeKit's own "Day", "Month", "Year").
     func columnTitles(day: String, month: String, year: String) -> Self {
         copy { $0.titles = (day, month, year) }
@@ -149,7 +149,7 @@ public extension DateWheelPicker {
 
 /// What a ``DateWheelPickerStyle`` draws: one row of a column.
 public struct DateWheelPickerRowConfiguration {
-    /// The row's words — "9", "Aralık", "1994".
+    /// The row's words — "9", "December", "1994".
     public let label: String
     /// Whether this is the column's chosen value, in the middle row.
     public let isSelected: Bool
