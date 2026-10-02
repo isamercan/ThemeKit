@@ -23,6 +23,10 @@ breaking changes bump the **major**.
   `DateWheelPickerHeaderConfiguration`. The picker keeps the behaviour and the row metrics; a host design
   system paints the chosen row's surface and the fade around it. `DefaultDateWheelPickerStyle` draws the
   chosen row on the primary's soft surface in the hero's text.
+- **`FieldButton.errorText(_:)`** and **`FieldButton.labelTextStyle(_:)`** — a trigger field can be in error
+  now, as `SelectBox` can: the message sits under it (`.bodySm400`, error colour), the label turns the error
+  colour and the `FieldStyle` gets `hasError`; VoiceOver reads the message as the trigger's hint. The label's
+  type stays `.overline500` unless set. A form whose "choose a country" field is required needed both.
 - **`TextInput.floatingLabelTextStyle(_:)`** — the type a `.floating` label takes once it has floated
   (focused or filled); `.labelSm600` by default, so nothing changes unless it is set. For a design whose
   filled field names its value in a smaller overline above it.

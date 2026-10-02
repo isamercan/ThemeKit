@@ -61,3 +61,14 @@ final class DateWheelPickerTests: XCTestCase {
         XCTAssertNotNil(field)
     }
 }
+
+final class FieldButtonErrorTests: XCTestCase {
+    @MainActor
+    func testAnErrorAndALabelStyleCanBeSet() {
+        let field = FieldButton("Türkiye") {}
+            .label("Pasaport Vatandaşlık")
+            .labelTextStyle(.overline400)
+            .errorText("Bu alan zorunludur.")
+        XCTAssertNotNil(field)
+    }
+}

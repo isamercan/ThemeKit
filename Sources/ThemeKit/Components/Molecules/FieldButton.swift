@@ -29,6 +29,10 @@ public struct FieldButton: View {
     private var isPlaceholder = false
     /// Explicit `.size(_:)` preset — wins over the subtree `FieldDefaults.size`.
     private var explicitSize: TextInputSize?
+    /// The message under the field; set, it also marks the field as in error.
+    private var errorText: String?
+    /// The small label's type — ``labelTextStyle(_:)``.
+    private var labelStyle: TextStyle = .overline500
 
     public init(_ value: String, action: @escaping () -> Void) {   // R1
         self.value = value
@@ -39,16 +43,29 @@ public struct FieldButton: View {
     /// 56pt (labelled) / 48pt height.
     private var effectiveSize: TextInputSize? { explicitSize ?? fieldDefaults.size }
 
+    private var hasError: Bool { errorText != nil }
+
     public var body: some View {
-        // Read-only keeps the normal (non-dimmed) chrome and the VoiceOver
-        // label/value but never runs the action (E1 — distinct from `.disabled`).
-        Button { if !isReadOnly { action() } } label: {
-            fieldBox
+        VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
+            // Read-only keeps the normal (non-dimmed) chrome and the VoiceOver
+            // label/value but never runs the action (E1 — distinct from `.disabled`).
+            Button { if !isReadOnly { action() } } label: {
+                fieldBox
+            }
+            .buttonStyle(.plain)
+            .allowsHitTesting(!isReadOnly)
+            .accessibilityLabel("\(fieldLabel.map { $0 + ", " } ?? "")\(value)")
+            .accessibilityHint(errorText ?? "")
+            .accessibilityAddTraits(.isButton)
+
+            // Same treatment as `SelectBox`'s message line.
+            if let errorText {
+                Text(errorText)
+                    .textStyle(.bodySm400)
+                    .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                    .accessibilityHidden(true)   // read as the trigger's hint
+            }
         }
-        .buttonStyle(.plain)
-        .allowsHitTesting(!isReadOnly)
-        .accessibilityLabel("\(fieldLabel.map { $0 + ", " } ?? "")\(value)")
-        .accessibilityAddTraits(.isButton)
     }
 
     /// The composed trigger row (label + value + accessories), sized —
@@ -56,7 +73,8 @@ public struct FieldButton: View {
     private var fieldCore: some View {
         VStack(alignment: .leading, spacing: fieldLabel != nil ? 2 : 0) {
             if let fieldLabel {
-                Text(fieldLabel).textStyle(.overline500).foregroundStyle(theme.text(.textTertiary))
+                Text(fieldLabel).textStyle(labelStyle)
+                    .foregroundStyle(hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary))
             }
             HStack(spacing: 8) {
                 if let systemImage {
@@ -80,8 +98,8 @@ public struct FieldButton: View {
 
     /// The trigger row wrapped in the active ``FieldStyle`` chrome (fill + border).
     /// Configuration mapping: FieldButton has no focus / open-popover state and no
-    /// validation axis, so `isFocused` / `hasError` / `hasWarning` are always
-    /// false; `isEnabled` comes from the environment (`.disabled(_:)`). With no
+    /// validation rules, so `isFocused` / `hasWarning` are always false and
+    /// `hasError` follows ``errorText(_:)``; `isEnabled` comes from the environment (`.disabled(_:)`). With no
     /// explicit `.size(_:)` and no subtree `FieldDefaults.size` the height stays
     /// the classic 48/56pt (nominal `.medium`), carried by the content.
     private var fieldBox: some View {
@@ -89,7 +107,7 @@ public struct FieldButton: View {
             content: AnyView(fieldCore),
             isFocused: false,
             isEnabled: isEnabled,
-            hasError: false,
+            hasError: hasError,
             hasWarning: false,
             size: effectiveSize ?? .medium
         ))
@@ -110,6 +128,11 @@ public extension FieldButton {
     /// Control-height preset. An explicit size wins over the subtree
     /// `FieldDefaults.size` default (`explicit ?? fieldDefaults.size ?? 56/48pt`).
     func size(_ s: TextInputSize) -> Self { copy { $0.explicitSize = s } }
+    /// A message under the field that also puts it in error — the `FieldStyle` gets
+    /// `hasError`, the label turns the error colour. `nil` (the default) shows none.
+    func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+    /// The small label's type; `.overline500` by default.
+    func labelTextStyle(_ style: TextStyle) -> Self { copy { $0.labelStyle = style } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
