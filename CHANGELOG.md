@@ -7,6 +7,26 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-02
+
+### Added
+
+- **`DateWheelPicker`** — a day / month / year drum picker for a date the user knows by heart (a birth
+  date, a passport's expiry), where paging a month calendar back forty years is the wrong tool. Pure
+  SwiftUI, no `UIPickerView`: three columns of five rows, the middle one chosen; drag (with the fling's
+  momentum) or tap a row. Days and months run round past their ends, years stop at theirs. The day
+  column follows the month and the year — a day the new month lacks moves to its last day — and
+  `.range(_:)` keeps the date inside its bounds. Each column is one adjustable VoiceOver element.
+  `.columnTitles(day:month:year:)` puts headers over the columns.
+- **`DateWheelPickerStyle`** (`.dateWheelPickerStyle(_:)`) — draws a column's rows and header from
+  `DateWheelPickerRowConfiguration` (label, `isSelected`, `distance` from the middle, `isEnabled`) and
+  `DateWheelPickerHeaderConfiguration`. The picker keeps the behaviour and the row metrics; a host design
+  system paints the chosen row's surface and the fade around it. `DefaultDateWheelPickerStyle` draws the
+  chosen row on the primary's soft surface in the hero's text.
+- **`TextInput.floatingLabelTextStyle(_:)`** — the type a `.floating` label takes once it has floated
+  (focused or filled); `.labelSm600` by default, so nothing changes unless it is set. For a design whose
+  filled field names its value in a smaller overline above it.
+
 ## [1.14.0] - 2026-09-23
 
 ### Added

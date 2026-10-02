@@ -168,6 +168,8 @@ public struct TextInput: View {
     /// so the subtree `FieldDefaults.labelPlacement` can fill the default without
     /// overriding a per-field choice: `explicitLabelPlacement ?? fieldDefaults.labelPlacement ?? .floating`.
     private var explicitLabelPlacement: TextInputLabelPlacement?
+    /// The `.floating` label's type once floated — ``floatingLabelTextStyle(_:)``.
+    private var floatingLabelTextStyle: TextStyle = .labelSm600
     /// Optional external focus (e.g. driven by `FormValidator.focusBinding`).
     private var externalFocus: Binding<Bool>?
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
@@ -331,7 +333,7 @@ public struct TextInput: View {
                             .accessibilityHidden(true)   // spoken via the field's label suffix
                     }
                 }
-                .textStyle(floating ? .labelSm600 : .bodyBase400)
+                .textStyle(floating ? floatingLabelTextStyle : .bodyBase400)
                 .offset(y: floating ? -11 : 0)
                 .a11y(A11yElement.Field.label, in: accessibilityID)
 
@@ -527,6 +529,11 @@ public struct TextInput: View {
 // MARK: - Modifiers (R2 copy-on-write · R5 standard vocabulary)
 
 public extension TextInput {
+    /// The type the `.floating` label takes once it has floated (on focus or once filled);
+    /// `.labelSm600` by default. A design system whose filled field labels its value in a
+    /// smaller, lighter overline sets it here — the label still floats the same distance.
+    func floatingLabelTextStyle(_ style: TextStyle) -> Self { copy { $0.floatingLabelTextStyle = style } }
+
     /// Placeholder shown inside the field once the label floats.
     func placeholder(_ text: String) -> Self { copy { $0.model.placeholder = text } }
 
