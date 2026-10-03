@@ -43,6 +43,10 @@ public struct OTPInput: View {
     private var groupSizes: [Int]?
     private var placeholderText: String?
     private var isSecure = false
+    /// The digits' type — `.headingBase` unless set (`digitTextStyle(_:)`).
+    private var digitTextStyle: TextStyle = .headingBase
+    /// Rings the boxes in error without a message under them (`hasError(_:)`).
+    private var forcedError = false
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
     private var accessibilityID: String?
@@ -89,7 +93,7 @@ public struct OTPInput: View {
         onValidation?(!failures.contains { $0.kind == .error })
     }
 
-    private var hasError: Bool { messages.dominantKind == .error }
+    private var hasError: Bool { forcedError || messages.dominantKind == .error }
     private var hasWarning: Bool { messages.dominantKind == .warning }
 
     /// OTPInput has no `TextInputSize` modifier of its own; the subtree
@@ -142,10 +146,14 @@ public struct OTPInput: View {
                                 placeholder: placeholderChar(at: index),
                                 isActive: isFocused && code.count == index,
                                 hasError: hasError,
+                                // A forced error (`hasError(_:)`) rings the boxes only; an error
+                                // message also tints the digits, as before.
+                                tintsDigit: messages.dominantKind == .error,
                                 hasWarning: hasWarning,
                                 isEnabled: isEnabled,
                                 isSecure: isSecure,
-                                size: effectiveSize
+                                size: effectiveSize,
+                                textStyle: digitTextStyle
                             )
                         }
                     }
@@ -302,10 +310,12 @@ private struct OTPDigitBox: View {
     let placeholder: String
     let isActive: Bool
     let hasError: Bool
+    let tintsDigit: Bool
     let hasWarning: Bool
     let isEnabled: Bool
     let isSecure: Bool
     let size: TextInputSize
+    let textStyle: TextStyle
 
     @State private var caretOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -345,12 +355,12 @@ private struct OTPDigitBox: View {
                     // HeroUI SlotPlaceholder: shown only while the cell is
                     // empty and not the caret cell, in the muted text tone.
                     Text(placeholder)
-                        .textStyle(.headingBase)
+                        .textStyle(textStyle)
                         .foregroundStyle(theme.text(.textTertiary))
                 }
             } else {
                 Text(isSecure ? "●" : digit)
-                    .textStyle(.headingBase)
+                    .textStyle(textStyle)
                     .foregroundStyle(textColor)
                     // Entry pop (HeroUI SlotValue): scale+fade in; edits to an
                     // already-filled cell roll via the numeric transition.
@@ -367,7 +377,7 @@ private struct OTPDigitBox: View {
 
     private var textColor: Color {
         if !isEnabled { return theme.text(.textDisabled) }
-        if hasError { return theme.foreground(.systemcolorsFgError) }
+        if tintsDigit { return theme.foreground(.systemcolorsFgError) }
         return theme.text(.textPrimary)
     }
 }
@@ -429,6 +439,15 @@ public extension OTPInput {
 
     /// Mask the entered digits (password-style dots) instead of showing them.
     func secure(_ on: Bool = true) -> Self { copy { $0.isSecure = on } }
+
+    /// The digits' (and placeholders') type — `.headingBase` unless set; a design system whose
+    /// code boxes are larger sets a larger one.
+    func digitTextStyle(_ style: TextStyle) -> Self { copy { $0.digitTextStyle = style } }
+
+    /// Rings every box in the error colour with no message under them, the digits in their usual
+    /// colour — when the screen says what's wrong elsewhere (a callout). Off by default;
+    /// `errorText(_:)` still rings, tints the digits and writes.
+    func hasError(_ on: Bool = true) -> Self { copy { $0.forcedError = on } }
 
     /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
