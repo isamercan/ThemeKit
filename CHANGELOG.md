@@ -7,6 +7,14 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-03
+
+### Added
+
+- **`View.infoMessageIcons(_:)`** — shows or hides the severity glyph before the messages under fields
+  (`InfoMessageList`: `TextInput`, `SelectBox`, `PhoneField` and the rest). On by default; a design system
+  whose form errors are plain coloured text turns it off. The text, its colour and the error state stay.
+
 ## [1.16.0] - 2026-10-03
 
 ### Added

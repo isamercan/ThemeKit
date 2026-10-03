@@ -27,6 +27,7 @@ extension InfoMessage.Kind {
 /// Renders a list of `InfoMessage`s (icon + colored text) under a field.
 public struct InfoMessageList: View {
     @Environment(\.theme) private var theme
+    @Environment(\.infoMessageIcons) private var showsIcons
     private let messages: [InfoMessage]
     public init(_ messages: [InfoMessage]) { self.messages = messages }
 
@@ -38,7 +39,7 @@ public struct InfoMessageList: View {
             // the transition on lines that didn't change.
             ForEach(messages, id: \.diffIdentity) { message in
                 HStack(alignment: .firstTextBaseline, spacing: Theme.SpacingKey.xs.value) {
-                    if let icon = message.resolvedSystemImage {
+                    if showsIcons, let icon = message.resolvedSystemImage {
                         Image(systemName: icon).font(.system(size: 11)).foregroundStyle(message.kind.color(theme))
                     }
                     if message.links.isEmpty {
@@ -54,5 +55,30 @@ public struct InfoMessageList: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+    }
+}
+
+// MARK: - Severity icons
+
+private struct InfoMessageIconsKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    /// Whether `InfoMessageList` draws each message's severity glyph. On unless
+    /// `.infoMessageIcons(false)` turns it off up the tree.
+    var infoMessageIcons: Bool {
+        get { self[InfoMessageIconsKey.self] }
+        set { self[InfoMessageIconsKey.self] = newValue }
+    }
+}
+
+public extension View {
+    /// Shows or hides the severity glyph before the messages under the fields in this view —
+    /// an error's `exclamationmark.circle.fill`, a warning's triangle. On by default. A design
+    /// system whose form errors are plain coloured text turns it off; the text, its colour
+    /// and the field's error state are unchanged.
+    func infoMessageIcons(_ on: Bool) -> some View {
+        environment(\.infoMessageIcons, on)
     }
 }
