@@ -396,6 +396,10 @@
       "extractionState": "manual",
       "generatesSymbol": false
     },
+    "Day": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
     "Days": {
       "comment": "Counter: day/hour/minute convenience label.",
       "extractionState": "manual",
@@ -696,6 +700,10 @@
       "generatesSymbol": false
     },
     "Mixed airlines": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Month": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
@@ -1271,6 +1279,10 @@
       "generatesSymbol": false
     },
     "Window": {
+      "extractionState": "manual",
+      "generatesSymbol": false
+    },
+    "Year": {
       "extractionState": "manual",
       "generatesSymbol": false
     },
