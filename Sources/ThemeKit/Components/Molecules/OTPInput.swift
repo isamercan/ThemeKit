@@ -146,6 +146,9 @@ public struct OTPInput: View {
                                 placeholder: placeholderChar(at: index),
                                 isActive: isFocused && code.count == index,
                                 hasError: hasError,
+                                // A forced error (`hasError(_:)`) rings the boxes only; an error
+                                // message also tints the digits, as before.
+                                tintsDigit: messages.dominantKind == .error,
                                 hasWarning: hasWarning,
                                 isEnabled: isEnabled,
                                 isSecure: isSecure,
@@ -307,6 +310,7 @@ private struct OTPDigitBox: View {
     let placeholder: String
     let isActive: Bool
     let hasError: Bool
+    let tintsDigit: Bool
     let hasWarning: Bool
     let isEnabled: Bool
     let isSecure: Bool
@@ -373,7 +377,7 @@ private struct OTPDigitBox: View {
 
     private var textColor: Color {
         if !isEnabled { return theme.text(.textDisabled) }
-        if hasError { return theme.foreground(.systemcolorsFgError) }
+        if tintsDigit { return theme.foreground(.systemcolorsFgError) }
         return theme.text(.textPrimary)
     }
 }
@@ -440,8 +444,9 @@ public extension OTPInput {
     /// code boxes are larger sets a larger one.
     func digitTextStyle(_ style: TextStyle) -> Self { copy { $0.digitTextStyle = style } }
 
-    /// Rings every box in the error colour with no message under them — when the screen says
-    /// what's wrong elsewhere (a callout). Off by default; `errorText(_:)` still rings and writes.
+    /// Rings every box in the error colour with no message under them, the digits in their usual
+    /// colour — when the screen says what's wrong elsewhere (a callout). Off by default;
+    /// `errorText(_:)` still rings, tints the digits and writes.
     func hasError(_ on: Bool = true) -> Self { copy { $0.forcedError = on } }
 
     /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
