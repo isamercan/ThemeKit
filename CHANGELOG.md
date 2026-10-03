@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-10-03
+
 ### Added
 
 - **`AlertToast.leading(_:)`** — a custom leading view in place of the status glyph, as `Callout` and
