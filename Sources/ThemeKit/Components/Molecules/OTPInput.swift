@@ -442,7 +442,7 @@ public extension OTPInput {
 
     /// Rings every box in the error colour with no message under them — when the screen says
     /// what's wrong elsewhere (a callout). Off by default; `errorText(_:)` still rings and writes.
-    func hasError(_ on: Bool) -> Self { copy { $0.forcedError = on } }
+    func hasError(_ on: Bool = true) -> Self { copy { $0.forcedError = on } }
 
     /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
