@@ -45,6 +45,12 @@ public struct FieldButton: View {
 
     private var hasError: Bool { errorText != nil }
 
+    /// An empty field's hint takes the error colour with the label — it *is* the field's name then.
+    private var valueColor: Color {
+        guard isPlaceholder else { return theme.text(.textPrimary) }
+        return hasError ? theme.foreground(.systemcolorsFgError) : theme.text(.textTertiary)
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             // Read-only keeps the normal (non-dimmed) chrome and the VoiceOver
@@ -81,7 +87,7 @@ public struct FieldButton: View {
                     Image(systemName: systemImage).font(.system(size: 14)).foregroundStyle(theme.text(.textSecondary))
                 }
                 Text(value).textStyle(.bodyBase400)
-                    .foregroundStyle(isPlaceholder ? theme.text(.textTertiary) : theme.text(.textPrimary))
+                    .foregroundStyle(valueColor)
                     .lineLimit(1)
                 Spacer(minLength: 4)
                 if let trailingSystemImage {
