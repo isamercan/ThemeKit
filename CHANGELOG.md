@@ -7,6 +7,14 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### Added
+
+- **`AlertToast.leading(_:)`** — a custom leading view in place of the status glyph, as `Callout` and
+  `InfoBanner` have: a design system's own icon font instead of an SF Symbol. It wins over `icon(_:)`;
+  the loading spinner still wins over it. VoiceOver reads it as the variant's status.
+- **`AlertToast.titleTextStyle(_:)`** — the title's type, `.labelBase600` unless set. A toast on a light
+  surface (a custom `ToastStyle`) may want a lighter weight.
+
 ## [1.15.0] - 2026-10-02
 
 ### Added

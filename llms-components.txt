@@ -51,7 +51,7 @@ Never hardcode a color, radius, or spacing. Read the theme from the environment
 Each has a `Configuration` struct + a `makeBody(configuration:)` requirement — like SwiftUI's
 `ButtonStyle`. Full recipe in **llms-patterns.txt**.
 
-This reference documents all **247** components (53 atoms · 110 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
+This reference documents all **248** components (53 atoms · 111 molecules · 84 organisms). Where a component appears in the MCP dataset, its full init signature and a
 usage snippet are shown; otherwise the init's required/common parameter labels are listed.
 
 ---
@@ -896,7 +896,7 @@ SeatCell(seat, size:, isSelected:, isSelectable:, isRecommended:, assignedInitia
 
 ---
 
-# Molecules (110)
+# Molecules (111)
 
 _Compositions of atoms — inputs, buttons, selectors, small layouts._
 
@@ -1525,6 +1525,18 @@ init(_ label: String? = nil, date: Binding<Date?>)
 - `.icon` — Leading SF Symbol shown inside the field.
 - `.a11yID` — Stable accessibility identifier, forwarded to the kit's a11y infrastructure.
 
+## DateWheelPicker
+
+```swift
+DateWheelPicker(selection:)
+```
+
+**Modifiers**
+
+- `.range` — The dates the picker can land on.
+- `.columnTitles` — Headers over the three columns — "Day", "Month", "Year".
+- `.a11yID` — UI-test identifier, on the picker as `<id>.dateWheel`.
+
 ## Dropdown
 
 ```swift
@@ -1569,6 +1581,8 @@ init(_ value: String, action: @escaping () -> Void)
 - `.trailing` — The trailing accessory symbol (default `chevron.down`; pass `nil` to hide).
 - `.placeholder` — Renders the value in the muted placeholder colour (nothing chosen yet).
 - `.size` — Control-height preset.
+- `.errorText` — A message under the field that also puts it in error — the `FieldStyle` gets `hasError`, the label turns the error colour.
+- `.labelTextStyle` — The small label's type; `.overline500` by default.
 
 ## Fieldset
 
@@ -2512,6 +2526,7 @@ init(_ label: String, text: Binding<String>)
 
 **Modifiers**
 
+- `.floatingLabelTextStyle` — The type the `.floating` label takes once it has floated (on focus or once filled); `.labelSm600` by default.
 - `.placeholder` — Placeholder shown inside the field once the label floats.
 - `.icon` — Leading / trailing SF Symbols shown inside the field.
 - `.addons` — Static addon segments rendered before / after the field (e.g.
@@ -2990,6 +3005,7 @@ init(_ title: String)
 - `.message` — Secondary line under the title.
 - `.variant` — Status treatment: success / warning / danger / info / neutral / accent (drives fill + icon).
 - `.icon` — Override the leading status glyph (otherwise derived from the variant).
+- `.titleTextStyle` — The title's type — `.labelBase600` unless set; a toast on a light surface may read better in a lighter weight.
 - `.loading` — Swap the leading icon for an activity spinner while `on`.
 - `.action` — Inline tappable action (e.g.
 - `.onClose` — Trailing dismiss button; the handler is invoked on tap.
