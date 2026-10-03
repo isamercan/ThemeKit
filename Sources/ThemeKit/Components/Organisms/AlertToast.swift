@@ -87,6 +87,9 @@ public struct AlertToast: View {
     private var links: [(substring: String, action: () -> Void)] = []
     private var type: AlertToastType = .info
     private var systemImage: String?
+    /// A caller's leading view in place of the status glyph (see `leading(_:)`).
+    private var leadingView: AnyView?
+    private var titleTextStyle: TextStyle = .labelBase600
     private var isLoading: Bool = false
     private var action: ToastAction?
     private var onClose: (() -> Void)?
@@ -140,13 +143,18 @@ public struct AlertToast: View {
             // status icon (a caller override falls back to the type's default).
             if isLoading {
                 Spinner().size(IconSize.sm.value).lineWidth(2).color(type.foreground(theme))
+            } else if let leadingView {
+                // A custom glyph still reads as the toast's status.
+                leadingView
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(type.accessibilityLabel)
             } else {
                 Icon(systemName: systemImage ?? type.systemImage).size(.sm).color(type.foreground(theme))
                     .accessibilityLabel(type.accessibilityLabel)
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).textStyle(.labelBase600)
+                Text(title).textStyle(titleTextStyle)
                 if let message {
                     if links.isEmpty {
                         Text(message).textStyle(.bodySm400).opacity(0.9)
@@ -196,6 +204,18 @@ public extension AlertToast {
 
     /// Override the leading status glyph (otherwise derived from the variant).
     func icon(_ systemName: String?) -> Self { copy { $0.systemImage = systemName } }
+
+    /// Replace the status glyph with a custom leading view — a design system's own icon
+    /// font, an avatar. Wins over `icon(_:)`; `loading(_:)`'s spinner still wins over it.
+    /// VoiceOver reads it as the variant's status, as it does the stock glyph. The view
+    /// inherits the style's foreground, so tint it yourself for a colour of its own.
+    func leading<V: View>(@ViewBuilder _ content: () -> V) -> Self {
+        copy { $0.leadingView = AnyView(content()) }
+    }
+
+    /// The title's type — `.labelBase600` unless set; a toast on a light surface may read
+    /// better in a lighter weight.
+    func titleTextStyle(_ style: TextStyle) -> Self { copy { $0.titleTextStyle = style } }
 
     /// Swap the leading icon for an activity spinner while `on`.
     func loading(_ on: Bool = true) -> Self { copy { $0.isLoading = on } }
