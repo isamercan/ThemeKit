@@ -14,6 +14,8 @@ breaking changes bump the **major**.
 - **`OTPInput.digitTextStyle(_:)`** — the digits' and placeholders' type, `.headingBase` unless set. A design system
   whose code boxes are larger (a 64pt box with 28pt digits) sets its own; the boxes' chrome was already the
   `FieldStyle`'s.
+- **`OTPInput.hasError(_:)`** — rings the boxes in the error colour without a message under them, for a screen that
+  words the error elsewhere.
 
 ## [1.17.0] - 2026-10-03
 

@@ -22,4 +22,11 @@ final class OTPDigitStyleTests: XCTestCase {
         let style = Mirror(reflecting: OTPInput(code: .constant(""))).children.first { $0.label == "digitTextStyle" }?.value
         XCTAssertEqual(String(describing: style ?? ""), String(describing: TextStyle.headingBase))
     }
+
+    @MainActor
+    func testAnErrorCanRingTheBoxesWithoutAMessage() {
+        let otp = OTPInput(code: .constant("1111")).hasError(true)
+        let forced = Mirror(reflecting: otp).children.first { $0.label == "forcedError" }?.value as? Bool
+        XCTAssertEqual(forced, true)
+    }
 }

@@ -45,6 +45,8 @@ public struct OTPInput: View {
     private var isSecure = false
     /// The digits' type — `.headingBase` unless set (`digitTextStyle(_:)`).
     private var digitTextStyle: TextStyle = .headingBase
+    /// Rings the boxes in error without a message under them (`hasError(_:)`).
+    private var forcedError = false
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
     private var accessibilityID: String?
@@ -91,7 +93,7 @@ public struct OTPInput: View {
         onValidation?(!failures.contains { $0.kind == .error })
     }
 
-    private var hasError: Bool { messages.dominantKind == .error }
+    private var hasError: Bool { forcedError || messages.dominantKind == .error }
     private var hasWarning: Bool { messages.dominantKind == .warning }
 
     /// OTPInput has no `TextInputSize` modifier of its own; the subtree
@@ -437,6 +439,10 @@ public extension OTPInput {
     /// The digits' (and placeholders') type — `.headingBase` unless set; a design system whose
     /// code boxes are larger sets a larger one.
     func digitTextStyle(_ style: TextStyle) -> Self { copy { $0.digitTextStyle = style } }
+
+    /// Rings every box in the error colour with no message under them — when the screen says
+    /// what's wrong elsewhere (a callout). Off by default; `errorText(_:)` still rings and writes.
+    func hasError(_ on: Bool) -> Self { copy { $0.forcedError = on } }
 
     /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
