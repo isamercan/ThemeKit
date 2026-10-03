@@ -1902,7 +1902,7 @@ init(code: Binding<String>, onComplete: ((String) -> Void)? = nil)
 - `.size` — Control-height preset.
 - `.secure` — Mask the entered digits (password-style dots) instead of showing them.
 - `.digitTextStyle` — The digits' (and placeholders') type — `.headingBase` unless set; a design system whose code boxes are larger sets a larger one.
-- `.hasError` — Rings every box in the error colour with no message under them — when the screen says what's wrong elsewhere (a callout).
+- `.hasError` — Rings every box in the error colour with no message under them, the digits in their usual colour — when the screen says what's wrong elsewhere (a callout).
 - `.errorText` — Inline error line (appended to `infoMessages` as `.error`, driving the error state).
 - `.infoMessages` — Validation / hint messages displayed below the boxes.
 - `.validate` — Declarative validation (daisyUI Validator): `rules` run against the entered code at `trigger` — `.editingEnd`/`.submit` fire when the last box fills (the OTP's completion moment), `.live` on every keystroke.
@@ -2542,6 +2542,7 @@ init(_ label: String, text: Binding<String>)
 - `.formatter` — Live input formatter applied on every change (e.g.
 - `.helperText` — Convenience hint appended to the message list as an `.info` `InfoMessage`.
 - `.errorText` — Convenience error appended to the message list as an `.error` `InfoMessage`.
+- `.hasError` — Rings the field and its label in the error colour with no message under it — when the screen says what's wrong elsewhere (a callout).
 - `.warningText` — Convenience warning appended to the message list as a `.warning` `InfoMessage`.
 - `.infoMessages` — Validation / info messages rendered under the field (drives the border state).
 - `.validate` — Declarative validation (daisyUI Validator): evaluates `rules` at `trigger` and feeds the first failure into the message list / error styling automatically — no hand-managed `infoMessages`.

@@ -155,7 +155,7 @@
 - `TableSelectCell(options, selection:, label:)` — A compact menu picker over string options.
 - `TableSliderCell(value:, in:, label:)` — A compact value slider, tinted with the hero token.
 - `TableColorCell(selection:, label:)` — A system color well for editing a `Color` in place.
-- `TextInput(model, text:, externalFocus:)` — Single floating-label text field. · modifiers: `.floatingLabelTextStyle()`, `.placeholder()`, `.icon()`, `.addons()`, `.required()`, `.secure()`, `.clearable()`, `.labelPlacement()`, `.maxLength()`, `.showsCount()`, `.size()`, `.formatter()`, `.helperText()`, `.errorText()`, `.warningText()`, `.infoMessages()`, `.validate()`, `.onValidation()`, `.externalFocus()`, `.keyboard()`, `.autocorrectionDisabled()`, `.onCommit()`, `.a11yID()`
+- `TextInput(model, text:, externalFocus:)` — Single floating-label text field. · modifiers: `.floatingLabelTextStyle()`, `.placeholder()`, `.icon()`, `.addons()`, `.required()`, `.secure()`, `.clearable()`, `.labelPlacement()`, `.maxLength()`, `.showsCount()`, `.size()`, `.formatter()`, `.helperText()`, `.errorText()`, `.hasError()`, `.warningText()`, `.infoMessages()`, `.validate()`, `.onValidation()`, `.externalFocus()`, `.keyboard()`, `.autocorrectionDisabled()`, `.onCommit()`, `.a11yID()`
 - `ThemeController(name:, label:)` — Molecule. · modifiers: `.accent()`, `.fullWidth()`
 - `ThemeToggle(isOn:)` — Figma "Control Items" → Switch Toggles. · modifiers: `.loading()`, `.symbols()`, `.trackSymbols()`, `.accent()`, `.a11yID()`
 - `TimeField(label, time:)` — Molecule. · modifiers: `.placeholder()`, `.size()`, `.required()`, `.validate()`, `.onValidation()`, `.range()`, `.minuteInterval()`, `.hourCycle()`, `.locale()`, `.infoMessages()`, `.clearable()`, `.icon()`, `.a11yID()`

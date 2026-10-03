@@ -59,7 +59,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "\(d) left",
             "%@ left", 1,
-            site: "Sources/ThemeKit/Components/Molecules/TextInput.swift:271")
+            site: "Sources/ThemeKit/Components/Molecules/TextInput.swift:273")
         assertKey(
             "\(d) more",
             "%@ more", 1,
