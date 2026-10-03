@@ -192,6 +192,8 @@ public struct TextInput: View {
     // message list at render time (see `messages`), keeping modifiers order-free.
     private var helperText: String?
     private var errorText: String?
+    /// Rings the field in error without a message under it (`hasError(_:)`).
+    private var forcedError = false
     private var warningText: String?
 
     // Declarative validation (daisyUI Validator, see `ValidationRule.swift`):
@@ -253,7 +255,7 @@ public struct TextInput: View {
         return messages
     }
     private var dominant: InfoMessage.Kind? { messages.dominantKind }
-    private var hasError: Bool { dominant == .error }
+    private var hasError: Bool { forcedError || dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
     private var showsClear: Bool { effectiveClearable && !text.isEmpty && isEnabled && !isReadOnly && !model.isSecure }
 
@@ -603,6 +605,11 @@ public extension TextInput {
 
     /// Convenience error appended to the message list as an `.error` `InfoMessage`.
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
+
+    /// Rings the field and its label in the error colour with no message under it — when the
+    /// screen says what's wrong elsewhere (a callout). Off by default; `errorText(_:)` still rings
+    /// and writes.
+    func hasError(_ on: Bool = true) -> Self { copy { $0.forcedError = on } }
 
     /// Convenience warning appended to the message list as a `.warning` `InfoMessage`.
     func warningText(_ text: String?) -> Self { copy { $0.warningText = text } }

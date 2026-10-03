@@ -7,6 +7,13 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-10-03
+
+### Added
+
+- **`TextInput.hasError(_:)`** — rings the field and its label in the error colour without a message under it, for a
+  screen that words the error elsewhere (as `OTPInput.hasError(_:)`).
+
 ## [1.18.0] - 2026-10-03
 
 ### Added
