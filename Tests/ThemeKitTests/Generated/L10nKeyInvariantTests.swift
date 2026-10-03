@@ -273,7 +273,7 @@ final class L10nKeyInvariantTests: XCTestCase {
         assertKey(
             "Resend code in \(d)s",
             "Resend code in %@s", 1,
-            site: "Sources/ThemeKit/Components/Molecules/OTPInput.swift:217")
+            site: "Sources/ThemeKit/Components/Molecules/OTPInput.swift:225")
         assertKey(
             "Review photo \(d) of \(d)",
             "Review photo %@ of %@", 2,
