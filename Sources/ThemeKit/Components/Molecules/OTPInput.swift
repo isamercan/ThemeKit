@@ -43,6 +43,8 @@ public struct OTPInput: View {
     private var groupSizes: [Int]?
     private var placeholderText: String?
     private var isSecure = false
+    /// The digits' type — `.headingBase` unless set (`digitTextStyle(_:)`).
+    private var digitTextStyle: TextStyle = .headingBase
     private var errorText: String?
     private var infoMessages: [InfoMessage] = []
     private var accessibilityID: String?
@@ -145,7 +147,8 @@ public struct OTPInput: View {
                                 hasWarning: hasWarning,
                                 isEnabled: isEnabled,
                                 isSecure: isSecure,
-                                size: effectiveSize
+                                size: effectiveSize,
+                                textStyle: digitTextStyle
                             )
                         }
                     }
@@ -306,6 +309,7 @@ private struct OTPDigitBox: View {
     let isEnabled: Bool
     let isSecure: Bool
     let size: TextInputSize
+    let textStyle: TextStyle
 
     @State private var caretOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -345,12 +349,12 @@ private struct OTPDigitBox: View {
                     // HeroUI SlotPlaceholder: shown only while the cell is
                     // empty and not the caret cell, in the muted text tone.
                     Text(placeholder)
-                        .textStyle(.headingBase)
+                        .textStyle(textStyle)
                         .foregroundStyle(theme.text(.textTertiary))
                 }
             } else {
                 Text(isSecure ? "●" : digit)
-                    .textStyle(.headingBase)
+                    .textStyle(textStyle)
                     .foregroundStyle(textColor)
                     // Entry pop (HeroUI SlotValue): scale+fade in; edits to an
                     // already-filled cell roll via the numeric transition.
@@ -429,6 +433,10 @@ public extension OTPInput {
 
     /// Mask the entered digits (password-style dots) instead of showing them.
     func secure(_ on: Bool = true) -> Self { copy { $0.isSecure = on } }
+
+    /// The digits' (and placeholders') type — `.headingBase` unless set; a design system whose
+    /// code boxes are larger sets a larger one.
+    func digitTextStyle(_ style: TextStyle) -> Self { copy { $0.digitTextStyle = style } }
 
     /// Inline error line (appended to `infoMessages` as `.error`, driving the error state).
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }

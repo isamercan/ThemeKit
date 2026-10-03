@@ -1901,6 +1901,7 @@ init(code: Binding<String>, onComplete: ((String) -> Void)? = nil)
 - `.placeholder` — Per-slot placeholder: each empty, non-caret box shows the character at its position (e.g.
 - `.size` — Control-height preset.
 - `.secure` — Mask the entered digits (password-style dots) instead of showing them.
+- `.digitTextStyle` — The digits' (and placeholders') type — `.headingBase` unless set; a design system whose code boxes are larger sets a larger one.
 - `.errorText` — Inline error line (appended to `infoMessages` as `.error`, driving the error state).
 - `.infoMessages` — Validation / hint messages displayed below the boxes.
 - `.validate` — Declarative validation (daisyUI Validator): `rules` run against the entered code at `trigger` — `.editingEnd`/`.submit` fire when the last box fills (the OTP's completion moment), `.live` on every keystroke.

@@ -7,6 +7,14 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-10-03
+
+### Added
+
+- **`OTPInput.digitTextStyle(_:)`** — the digits' and placeholders' type, `.headingBase` unless set. A design system
+  whose code boxes are larger (a 64pt box with 28pt digits) sets its own; the boxes' chrome was already the
+  `FieldStyle`'s.
+
 ## [1.17.0] - 2026-10-03
 
 ### Added
