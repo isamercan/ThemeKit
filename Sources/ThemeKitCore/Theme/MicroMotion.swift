@@ -59,6 +59,15 @@ public enum MicroMotion {
     ) -> Animation? {
         (enabled && !reduceMotion) ? token.animation : nil
     }
+
+    /// The same gate for a physical spring (``MotionSpring``).
+    public static func animation(
+        _ spring: MotionSpring,
+        enabled: Bool,
+        reduceMotion: Bool
+    ) -> Animation? {
+        (enabled && !reduceMotion) ? spring.animation : nil
+    }
 }
 
 /// A subtle, gated press-scale for tappable surfaces that aren't already driven by

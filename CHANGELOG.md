@@ -7,6 +7,23 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-05
+
+### Added
+
+- **`MotionSpring`** — physical spring tokens named by what they move (`value`, `layout`, `sheet`, `effect`, `exit`,
+  `nudge`, `settle`), each a stiffness and a damping ratio as Jetpack Compose and Material 3 name them, so an iOS and
+  an Android app share one motion language. `response = 2π / √stiffness`; `animation` is an
+  `interpolatingSpring` (iOS 15.6 floor). Gated like the rest: `MicroMotion.animation(_: MotionSpring, …)`.
+- **`Motion.standard` / `.decelerate` / `.accelerate`** — Material's standard `(0.4, 0, 0.2, 1)`, entering and leaving
+  curves for each duration, beside the symmetric `animation`.
+- **`View.shake(trigger:amplitude:)`** — a four-beat side shake (each beat 60% of the last) with a selection tick per
+  beat, for something the user must fix. Reduce Motion or `microAnimations(false)` keep the view still; the ticks
+  still play. `ShakeBeats.offsets` exposes the beats.
+- **`View.selectionHaptics(_:)`** — an opt-in selection tick on `ThemeToggle`, `Checkbox` and `RadioButton` when their
+  value changes. Off by default, so no app's feel changes under it.
+- **`Haptics.selection()`** — the selection feedback generator.
+
 ## [1.19.0] - 2026-10-03
 
 ### Added
