@@ -71,7 +71,11 @@ public struct Accordion<Content: View>: View {
     @ControllableState private var expanded: Bool
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private var motion: Animation? { MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion) }
+    @Environment(\.accordionMotion) private var spring
+    private var motion: Animation? {
+        if let spring { return MicroMotion.animation(spring, enabled: micro, reduceMotion: reduceMotion) }
+        return MicroMotion.animation(.base, enabled: micro, reduceMotion: reduceMotion)
+    }
 
     public init(   // R1 — `initiallyExpanded` seeds @State, so it stays in the init
         _ title: String,

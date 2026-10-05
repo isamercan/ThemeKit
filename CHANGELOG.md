@@ -7,6 +7,15 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-10-05
+
+### Added
+
+- **`View.accordionMotion(_:)`** — the `MotionSpring` accordions in a subtree open and close on (`.layout` is
+  Compose's expand). `nil`, the default, keeps the eased `Motion.base`.
+- **`View.tooltipScalesIn(_:)`** — tooltips grow out of their arrow as they appear, on `MotionSpring.layout`, instead of
+  only fading. Off by default.
+
 ## [1.20.0] - 2026-10-05
 
 ### Added

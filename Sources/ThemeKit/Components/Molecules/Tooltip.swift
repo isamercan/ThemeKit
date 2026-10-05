@@ -180,7 +180,17 @@ private struct BindingTooltip: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tooltipStyle) private var tooltipStyle
     @Environment(\.layoutDirection) private var layoutDirection
-    private var motion: Animation? { MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion) }
+    @Environment(\.tooltipScalesIn) private var scalesIn
+    private var motion: Animation? {
+        scalesIn ? MicroMotion.animation(MotionSpring.layout, enabled: micro, reduceMotion: reduceMotion)
+            : MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
+    }
+
+    /// Fades; with `tooltipScalesIn`, also grows out of the arrow.
+    private var entrance: AnyTransition {
+        guard scalesIn else { return .opacity }
+        return .scale(scale: 0.01, anchor: edge.arrowAnchor(align, layoutDirection: layoutDirection)).combined(with: .opacity)
+    }
 
     func body(content: Content) -> some View {
         content
@@ -191,7 +201,7 @@ private struct BindingTooltip: ViewModifier {
                     if isPresented {
                         bubble
                             .fixedSize(horizontal: maxWidth == nil, vertical: true)
-                            .transition(.opacity)
+                            .transition(entrance)
                     }
                 }
                 .modifier(TooltipPlacement(edge: edge))
