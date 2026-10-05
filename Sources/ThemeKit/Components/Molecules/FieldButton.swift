@@ -142,7 +142,7 @@ public extension FieldButton {
     /// The small label's type; `.overline500` by default.
     func labelTextStyle(_ style: TextStyle) -> Self { copy { $0.labelStyle = style } }
     /// The value's type; `.bodyBase400` by default. A design that sets the chosen value
-    /// heavier than the label — a quick search's "ADB, İzmir" in `.bodyBase500` — says so here.
+    /// heavier than the label — a search form's "IST, Istanbul" in `.bodyBase500` — says so here.
     func valueTextStyle(_ style: TextStyle) -> Self { copy { $0.valueStyle = style } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point

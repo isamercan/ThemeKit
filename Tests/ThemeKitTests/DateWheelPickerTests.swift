@@ -74,8 +74,8 @@ final class FieldButtonErrorTests: XCTestCase {
 
     @MainActor
     func testTheValuesStyleCanBeSet() {
-        let field = FieldButton("ADB, İzmir, Türkiye") {}
-            .label("Nereden")
+        let field = FieldButton("IST, Istanbul") {}
+            .label("From")
             .valueTextStyle(.bodyBase500)
         XCTAssertNotNil(field)
     }
