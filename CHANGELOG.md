@@ -7,6 +7,13 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-10-05
+
+### Changed
+
+- **`MultiLineTextInput` with an empty label** draws no header line over the box, and VoiceOver names the editor by
+  its placeholder. The message row under the box shows only with a message or a character counter.
+
 ## [1.22.0] - 2026-10-05
 
 ### Added
