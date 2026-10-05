@@ -71,4 +71,12 @@ final class FieldButtonErrorTests: XCTestCase {
             .errorText("This field is required.")
         XCTAssertNotNil(field)
     }
+
+    @MainActor
+    func testTheValuesStyleCanBeSet() {
+        let field = FieldButton("IST, Istanbul") {}
+            .label("From")
+            .valueTextStyle(.bodyBase500)
+        XCTAssertNotNil(field)
+    }
 }

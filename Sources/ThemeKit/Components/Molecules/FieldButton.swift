@@ -33,6 +33,8 @@ public struct FieldButton: View {
     private var errorText: String?
     /// The small label's type — ``labelTextStyle(_:)``.
     private var labelStyle: TextStyle = .overline500
+    /// The value's type — ``valueTextStyle(_:)``.
+    private var valueStyle: TextStyle = .bodyBase400
 
     public init(_ value: String, action: @escaping () -> Void) {   // R1
         self.value = value
@@ -86,7 +88,7 @@ public struct FieldButton: View {
                 if let systemImage {
                     Image(systemName: systemImage).font(.system(size: 14)).foregroundStyle(theme.text(.textSecondary))
                 }
-                Text(value).textStyle(.bodyBase400)
+                Text(value).textStyle(valueStyle)
                     .foregroundStyle(valueColor)
                     .lineLimit(1)
                 Spacer(minLength: 4)
@@ -139,6 +141,9 @@ public extension FieldButton {
     func errorText(_ text: String?) -> Self { copy { $0.errorText = text } }
     /// The small label's type; `.overline500` by default.
     func labelTextStyle(_ style: TextStyle) -> Self { copy { $0.labelStyle = style } }
+    /// The value's type; `.bodyBase400` by default. A design that sets the chosen value
+    /// heavier than the label — a search form's "IST, Istanbul" in `.bodyBase500` — says so here.
+    func valueTextStyle(_ style: TextStyle) -> Self { copy { $0.valueStyle = style } }
 
     private func copy(_ mutate: (inout Self) -> Void) -> Self {   // R2 — single mutation point
         var c = self
