@@ -35,4 +35,21 @@ public enum Motion: String, CaseIterable {
     public var spring: Animation {
         .spring(response: duration, dampingFraction: 0.82)
     }
+
+    /// Material's standard curve, `(0.4, 0, 0.2, 1)` — quick to start, long to settle; Compose's
+    /// `FastOutSlowInEasing`. For a change that moves within the screen: a panel opening, a chevron
+    /// turning. Same platform motion on both apps when a design system pairs them.
+    public var standard: Animation {
+        .timingCurve(0.4, 0, 0.2, 1, duration: duration)
+    }
+
+    /// The entering curve, `(0, 0, 0.2, 1)` — Compose's `LinearOutSlowInEasing`.
+    public var decelerate: Animation {
+        .timingCurve(0, 0, 0.2, 1, duration: duration)
+    }
+
+    /// The leaving curve, `(0.4, 0, 1, 1)` — Compose's `FastOutLinearInEasing`.
+    public var accelerate: Animation {
+        .timingCurve(0.4, 0, 1, 1, duration: duration)
+    }
 }

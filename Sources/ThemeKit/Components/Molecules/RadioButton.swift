@@ -78,6 +78,7 @@ public struct RadioButton: View {
     /// RadioGroup rows turn it off to match its built-in rows (trait only).
     private var speaksSelectionValue = true
     @Environment(\.isReadOnly) private var isReadOnly         // E1
+    @Environment(\.selectionHaptics) private var selectionHaptics
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -113,6 +114,8 @@ public struct RadioButton: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                // A tick only when the value changes: a chosen radio tapped again stays as it was.
+                if selectionHaptics, type == .check || !isSelected { Haptics.selection() }
                 if type == .check { isSelected.toggle() } else { isSelected = true }
             } label: {
                 HStack(alignment: verticalAlignment, spacing: gap.value) {
@@ -147,6 +150,8 @@ public struct RadioButton: View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
+                // A tick only when the value changes: a chosen radio tapped again stays as it was.
+                if selectionHaptics, type == .check || !isSelected { Haptics.selection() }
                 if type == .check { isSelected.toggle() } else { isSelected = true }
             } label: {
                 EmptyView()   // the bridge draws the style's chrome instead

@@ -28,6 +28,7 @@ public struct ThemeToggle: View {
     @Environment(\.controlSize) private var controlSize
     @Environment(\.isEnabled) private var isEnabled   // set natively by `.disabled(_:)`
     @Environment(\.isReadOnly) private var isReadOnly // E1 — set by `.readOnly(_:)`
+    @Environment(\.selectionHaptics) private var selectionHaptics
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -56,6 +57,7 @@ public struct ThemeToggle: View {
         Button {
             guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
             withAnimation(motion) { isOn.toggle() }
+            if selectionHaptics { Haptics.selection() }
         } label: {
             Capsule()
                 .fill(track)
@@ -83,6 +85,7 @@ public struct ThemeToggle: View {
         Button {
             guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
             withAnimation(motion) { isOn.toggle() }
+            if selectionHaptics { Haptics.selection() }
         } label: {
             EmptyView()   // the bridge draws the style's chrome instead
         }

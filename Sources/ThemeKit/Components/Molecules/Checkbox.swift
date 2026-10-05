@@ -85,6 +85,7 @@ public struct Checkbox: View {
     private var descriptionLinks: [(substring: String, action: () -> Void)] = []
     private var lineThrough = false                           // E4
     @Environment(\.isReadOnly) private var isReadOnly         // E1
+    @Environment(\.selectionHaptics) private var selectionHaptics
 
     @Environment(\.microAnimations) private var micro
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -127,6 +128,7 @@ public struct Checkbox: View {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
                 isChecked.toggle()
+                if selectionHaptics { Haptics.selection() }
             } label: {
                 HStack(alignment: alignment, spacing: Theme.SpacingKey.sm.value) {
                     if controlPlacement == .leading {
@@ -161,6 +163,7 @@ public struct Checkbox: View {
             Button {
                 guard !isReadOnly else { return }   // E1 — VoiceOver activation is not hit-tested
                 isChecked.toggle()
+                if selectionHaptics { Haptics.selection() }
             } label: {
                 EmptyView()   // the bridge draws the style's chrome instead
             }
