@@ -82,6 +82,9 @@ public struct MultiLineTextInput: View {
     private var hasError: Bool { dominant == .error }
     private var hasWarning: Bool { dominant == .warning }
 
+    /// What VoiceOver calls the editor: its label, or its placeholder when the label is empty.
+    private var accessibleName: String { label.isEmpty ? placeholder : label }
+
     /// Explicit `.size(_:)` → subtree `FieldDefaults.size` → `.medium`.
     private var size: TextInputSize { explicitSize ?? fieldDefaults.size ?? .medium }
     /// Whether `.required()` renders its asterisk (`FieldDefaults.requiredIndicator`;
@@ -104,29 +107,36 @@ public struct MultiLineTextInput: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Theme.SpacingKey.xs.value) {
-            HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
-                Text(label)
-                    .foregroundStyle(labelColor)
-                if isRequired && showsRequiredIndicator {
-                    // Same treatment as `InputLabel.required()` — error-token asterisk.
-                    Text(verbatim: "*")
-                        .foregroundStyle(theme.foreground(.systemcolorsFgError))
-                        .accessibilityHidden(true)   // spoken via the editor's label suffix
+            // An empty label draws no header line: the box stands alone, named by its placeholder.
+            if !label.isEmpty {
+                HStack(spacing: 4) {   // matches the `InputLabel` atom's asterisk gap
+                    Text(label)
+                        .foregroundStyle(labelColor)
+                    if isRequired && showsRequiredIndicator {
+                        // Same treatment as `InputLabel.required()` — error-token asterisk.
+                        Text(verbatim: "*")
+                            .foregroundStyle(theme.foreground(.systemcolorsFgError))
+                            .accessibilityHidden(true)   // spoken via the editor's label suffix
+                    }
                 }
+                .textStyle(.labelSm600)
+                .a11y(A11yElement.Field.label, in: accessibilityID)
             }
-            .textStyle(.labelSm600)
-            .a11y(A11yElement.Field.label, in: accessibilityID)
 
             editorBox
 
-            HStack(alignment: .firstTextBaseline) {
-                InfoMessageList(messages)
-                    .a11y(A11yElement.Field.message, in: accessibilityID)
-                Spacer(minLength: Theme.SpacingKey.sm.value)
-                if let characterLimit {
-                    Text(TextInput.counterText(count: text.count, maxLength: characterLimit, style: countStyle))
-                        .textStyle(.bodySm400)
-                        .foregroundStyle(theme.text(.textTertiary))
+            // The message row only when there is something to say or count — an idle box with
+            // neither keeps no empty row under it.
+            if !messages.isEmpty || characterLimit != nil {
+                HStack(alignment: .firstTextBaseline) {
+                    InfoMessageList(messages)
+                        .a11y(A11yElement.Field.message, in: accessibilityID)
+                    Spacer(minLength: Theme.SpacingKey.sm.value)
+                    if let characterLimit {
+                        Text(TextInput.counterText(count: text.count, maxLength: characterLimit, style: countStyle))
+                            .textStyle(.bodySm400)
+                            .foregroundStyle(theme.text(.textTertiary))
+                    }
                 }
             }
         }
@@ -182,7 +192,7 @@ public struct MultiLineTextInput: View {
                 // but the editor can't be tapped into. NOT `.disabled` (dims).
                 .allowsHitTesting(!isReadOnly)
                 .a11y(A11yElement.Field.field, in: accessibilityID)
-                .accessibilityLabel(isRequired ? label + ", " + String(themeKit: "required") : label)
+                .accessibilityLabel(isRequired ? accessibleName + ", " + String(themeKit: "required") : accessibleName)
                 .accessibilityValue(text)
 
             if text.isEmpty {
