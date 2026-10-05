@@ -7,6 +7,13 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-10-05
+
+### Added
+
+- **`FieldButton.valueTextStyle(_:)`** — the value's type, `.bodyBase400` by default, the way `labelTextStyle(_:)` sets
+  the label's.
+
 ## [1.21.0] - 2026-10-05
 
 ### Added
