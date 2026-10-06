@@ -4,7 +4,8 @@
 //  Created by İsa Mercan on 23.06.2026.
 //
 //  CardStyle exception: the dashed-border coupon shell (and its filled/plain
-//  variants) is the component's identity, so it does not route through `CardStyle`.
+//  variants) is the component's identity, so it does not route through `CardStyle`;
+//  it has its own door instead — `CouponChromeStyle` (CouponChromeStyle.swift).
 //
 
 import SwiftUI
@@ -35,8 +36,14 @@ public enum CouponSize {
 /// Organism. Displays a promo code with a copy action. Styles: filled / outlined
 /// (dashed) / plain. Flexible: a leading icon, a discount chip, an expiry line, a
 /// size tier, a full-width block layout, and copied-state feedback.
+///
+/// The chrome is drawn by the active ``CouponChromeStyle`` when one is set with
+/// `.couponChromeStyle(_:)` on the coupon or an ancestor; the coupon keeps the
+/// copy action, its copied state and the accessibility words either way.
 public struct Coupon: View {
-    @Environment(\.theme) private var theme
+    @Environment(\.couponChromeStyle) private var chromeStyle
+    @Environment(\.microAnimations) private var micro
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var copied = false
 
     // Appearance/state — mutated only through the modifiers below (R2).
@@ -61,90 +68,34 @@ public struct Coupon: View {
     }
 
     public var body: some View {
-        Group { if isBlock { blockBody } else { inlineBody } }
-            .foregroundStyle(foreground)
-            .background(background, in: shape)
-            .overlay { if style == .outlined { dashedBorder } }
-    }
-
-    private var inlineBody: some View {
-        HStack(spacing: Theme.SpacingKey.xs.value) {
-            if let icon { Image(systemName: icon).font(.system(size: 13)).accessibilityHidden(true) }
-            Text(label).textStyle(.bodySm400)
-            Text(code).textStyle(size.codeStyle)
-            copyButton
-            if let discount { discountChip(discount) }
-        }
-        .padding(.horizontal, Theme.SpacingKey.sm.value)
-        .frame(height: size.height)
-    }
-
-    private var blockBody: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: Theme.SpacingKey.xs.value) {
-                if let icon { Image(systemName: icon).font(.system(size: 13)).accessibilityHidden(true) }
-                Text(label).textStyle(.bodySm400).foregroundStyle(labelColor)
-                Spacer(minLength: Theme.SpacingKey.sm.value)
-                if let discount { discountChip(discount) }
-            }
-            HStack {
-                Text(code).textStyle(.headingXs)
-                Spacer()
-                copyButton
-            }
-            if let expiry {
-                Text(expiry).textStyle(.bodySm400).foregroundStyle(labelColor)
-            }
-        }
-        .padding(Theme.SpacingKey.md.value)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var copyButton: some View {
-        Button {
-            copied = true
-            onCopy()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
-        } label: {
-            Image(systemName: copied ? "checkmark" : "doc.on.doc").font(.system(size: 13))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(copied ? String(themeKit: "Copied") : String(themeKit: "Copy code"))
-    }
-
-    private func discountChip(_ text: String) -> some View {
-        Text(text)
-            .textStyle(.overline500)
-            .foregroundStyle(theme.foreground(.systemcolorsFgSuccess))
-            .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(theme.background(.systemcolorsBgSuccessLight), in: Capsule())
-    }
-
-    private var labelColor: Color {
-        style == .filled ? theme.foreground(.fgSecondary).opacity(0.85) : theme.text(.textSecondary)
-    }
-
-    private var foreground: Color {
-        style == .filled ? theme.foreground(.fgSecondary) : theme.text(.textHero)
-    }
-
-    private var background: Color {
-        switch style {
-        case .filled: return theme.background(.bgHero)
-        case .plain: return theme.background(.bgElevatorTertiary)
-        case .outlined: return theme.background(.bgWhite)
+        if chromeStyle.isDefault {
+            DefaultCouponChrome(configuration: configuration)
+        } else {
+            chromeStyle.makeBody(configuration: configuration)
         }
     }
 
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Theme.RadiusKey.sm.value, style: .continuous)
-    }
-
-    private var dashedBorder: some View {
-        shape.strokeBorder(
-            theme.border(.borderHero),
-            style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+    private var configuration: CouponChromeStyleConfiguration {
+        CouponChromeStyleConfiguration(
+            code: code,
+            label: label,
+            icon: icon,
+            discount: discount,
+            expiry: expiry,
+            style: style,
+            size: size,
+            isFullWidth: isBlock,
+            isCopied: copied,
+            copy: copy,
+            copyAccessibilityLabel: copied ? String(themeKit: "Copied") : String(themeKit: "Copy code"),
+            animation: MicroMotion.animation(.fast, enabled: micro, reduceMotion: reduceMotion)
         )
+    }
+
+    private func copy() {
+        copied = true
+        onCopy()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
     }
 }
 

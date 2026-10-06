@@ -7,6 +7,16 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-10-06
+
+### Added
+
+- **`CouponChromeStyle`** (`.couponChromeStyle(_:)`) draws a `Coupon` — the shell, the label and code, the icon,
+  discount and expiry, and the copy control. The coupon keeps the copy action and its copied state (1.2s), the
+  caller's `onCopy`, the copy control's accessibility words and the motion; a `CouponChromeStyleConfiguration`
+  carries them with the content and the axes (`couponStyle`, `size`, `fullWidth`). `DefaultCouponChromeStyle`
+  (`.default`) draws the stock look. With no style set the coupon draws exactly as before.
+
 ## [1.23.0] - 2026-10-05
 
 ### Changed
