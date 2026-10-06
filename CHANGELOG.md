@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-10-06
+
 ### Added
 
 - **`CouponChromeStyle`** (`.couponChromeStyle(_:)`) draws a `Coupon` — the shell, the label and code, the icon,
