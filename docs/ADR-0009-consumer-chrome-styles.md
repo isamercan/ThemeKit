@@ -7,7 +7,7 @@
 - **Rollout:** Additive. With no style set, every component renders its 1.4.0 body unchanged apart from the five fixes listed under Consequences (the snapshot suite pins it), and `swift package diagnose-api-breaking-changes` against 1.4.0 reports no breakage.
 - **Precedent mirrored:** `ChipStyle` (the environment style whose stock value is marked `isDefault`) and SwiftUI's `ButtonStyle`.
 - **Builds on:** ADR-0008 (consumer-defined tokens), ADR-0006 (per-subtree theme resolution), ADR-0004 §4 (styles never read the motion environment).
-- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0); `PriceTrendChartStyle` (1.13.0).
+- **Shipped in:** 1.5.0. **Extended:** `TooltipStyle` (1.6.0); `TitleStyle` and `SegmentedTabBarChromeStyle` (1.7.0); `ButtonDockChromeStyle` and `SheetHeaderStyle` (1.8.0); `DialogStyle` (1.9.0); `EmptyStateStyle` (1.10.0); `AccordionStyle`, `CheckboxChromeStyle`, `SegmentedControlStyle` and `RangeSliderStyle` (1.11.0); `ToggleChromeStyle` (1.12.0); `PriceTrendChartStyle` (1.13.0); `CouponChromeStyle` (1.24.0).
 - **Amended:** 1.14.0 — a component's own accessibility can outrank its style (see "What a style must
   not have to fix" below).
 
@@ -169,6 +169,20 @@ layout, the header and the axis. A day is more than a bar — a fare calendar
 marks the day it is showing inside its bar and puts a glyph where it has no
 price — and none of that is reachable from a modifier.
 
+1.24.0 adds the promo code a host hands out after a booking:
+
+| Component | Protocol | Set with |
+|---|---|---|
+| `Coupon` | `CouponChromeStyle` | `.couponChromeStyle(_:)` |
+
+`Coupon` was the "CardStyle exception": its dashed shell is its identity, so it
+never went through `CardStyle` — and with SF Symbols for the copy glyph and fixed
+layouts, a host whose coupon is a labelled code beside a "Copy" button had no way
+to draw it. The coupon keeps the copy action and its copied state, `onCopy` and
+the accessibility words; the style gets them in the configuration and draws
+everything else. The name is `…ChromeStyle` because `CouponStyle` is the
+filled / outlined / plain enum (D5).
+
 `accent(_:)` only ever reached a switch's *on* track; the off track is
 `bg-secondary`, which some brands paint in a colour a switch shouldn't wear, and
 the knob is `fg-secondary`. There was no way to repaint either without redrawing
@@ -311,7 +325,7 @@ The component still owns everything that isn't paint, and it applies that around
 
 A protocol takes `<Component>Style` when that name is free: `CountBadgeStyle`, `IconTileStyle`, `PriceTagStyle`, `SkeletonStyle`, `DividerStyle`, `InlineTextStyle`, `TooltipStyle`, `TitleStyle`, `DialogStyle`, `EmptyStateStyle`.
 
-A 1.x public enum already owns the `…Style` name for four of these components. `ThemeButtonStyle` picks a preset button, `BadgeStyle` a tone, `CalloutStyle` a plain or soft surface, `RadioButtonStyle` a check indicator. Renaming those in a minor is a source break, so their protocols take `…ChromeStyle`: `ButtonChromeStyle`, `BadgeChromeStyle`, `CalloutChromeStyle`, `RadioButtonChromeStyle`. 1.7.0 adds a fifth for the same reason: `SegmentedTabBarStyle` already names the bar's underline / card / pill enum, so its protocol is `SegmentedTabBarChromeStyle`. The button's protocol is named after the control rather than the `Theme` prefix: `ButtonChromeStyle`, set with `.buttonChromeStyle(_:)`.
+A 1.x public enum already owns the `…Style` name for four of these components. `ThemeButtonStyle` picks a preset button, `BadgeStyle` a tone, `CalloutStyle` a plain or soft surface, `RadioButtonStyle` a check indicator. Renaming those in a minor is a source break, so their protocols take `…ChromeStyle`: `ButtonChromeStyle`, `BadgeChromeStyle`, `CalloutChromeStyle`, `RadioButtonChromeStyle`. 1.7.0 adds a fifth for the same reason: `SegmentedTabBarStyle` already names the bar's underline / card / pill enum, so its protocol is `SegmentedTabBarChromeStyle`. 1.24.0's `CouponChromeStyle` is the same case: `CouponStyle` is the coupon's filled / outlined / plain enum. The button's protocol is named after the control rather than the `Theme` prefix: `ButtonChromeStyle`, set with `.buttonChromeStyle(_:)`.
 
 1.8.0 adds a sixth `…ChromeStyle`, for a new reason. `ButtonDockStyle` is free —
 no enum owns it — but there is no `ButtonDock` *type* either: the dock is the
