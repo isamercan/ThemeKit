@@ -50,34 +50,41 @@ public struct DateWheelPicker: View {
         return c
     }
 
-    private var parts: (day: Int, month: Int, year: Int) {
-        let c = calendar.dateComponents([.day, .month, .year], from: selection)
+    private static func parts(of date: Date, in calendar: Calendar) -> (day: Int, month: Int, year: Int) {
+        let c = calendar.dateComponents([.day, .month, .year], from: date)
         return (c.day ?? 1, c.month ?? 1, c.year ?? 2000)
     }
 
     /// The years a column offers: the range's, else a century back and twenty years on.
-    private var years: [Int] {
-        let now = calendar.component(.year, from: Date())
-        let low = range.map { calendar.component(.year, from: $0.lowerBound) } ?? now - 100
-        let high = range.map { calendar.component(.year, from: $0.upperBound) } ?? now + 20
+    static func years(in range: ClosedRange<Date>?, calendar: Calendar, now: Date = Date()) -> [Int] {
+        let current = calendar.component(.year, from: now)
+        let low = range.map { calendar.component(.year, from: $0.lowerBound) } ?? current - 100
+        let high = range.map { calendar.component(.year, from: $0.upperBound) } ?? current + 20
         return Array(low...max(low, high))
     }
 
-    private var monthNames: [String] {
-        calendar.standaloneMonthSymbols
+    /// The date the columns show: the selection, or the nearer end of `range` when the
+    /// selection lies outside it — so a date the host seeds out of range never shows as
+    /// the column's first year.
+    static func shown(_ selection: Date, within range: ClosedRange<Date>?) -> Date {
+        guard let range else { return selection }
+        return min(max(selection, range.lowerBound), range.upperBound)
     }
 
-    private func dayCount(month: Int, year: Int) -> Int {
-        let date = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? selection
+    private static func dayCount(month: Int, year: Int, in calendar: Calendar) -> Int {
+        guard let date = calendar.date(from: DateComponents(year: year, month: month, day: 1)) else { return 31 }
         return calendar.range(of: .day, in: .month, for: date)?.count ?? 31
     }
 
     public var body: some View {
-        let current = parts
+        // One calendar and one list of years a render: the columns redraw on every turn.
+        let calendar = self.calendar
+        let current = Self.parts(of: Self.shown(selection, within: range), in: calendar)
+        let years = Self.years(in: range, calendar: calendar)
         HStack(spacing: Theme.SpacingKey.sm.value) {
             DateWheelColumn(title: titles?.day,
                             accessibilityTitle: titles?.day ?? String(themeKit: "Day"),
-                            labels: (1...dayCount(month: current.month, year: current.year)).map { "\($0)" },
+                            labels: (1...Self.dayCount(month: current.month, year: current.year, in: calendar)).map { "\($0)" },
                             selectedIndex: current.day - 1,
                             isCyclic: true,
                             style: style,
@@ -85,7 +92,7 @@ public struct DateWheelPicker: View {
             DateWheelSeparator()
             DateWheelColumn(title: titles?.month,
                             accessibilityTitle: titles?.month ?? String(themeKit: "Month"),
-                            labels: monthNames,
+                            labels: calendar.standaloneMonthSymbols,
                             selectedIndex: current.month - 1,
                             isCyclic: true,
                             style: style,
@@ -94,7 +101,7 @@ public struct DateWheelPicker: View {
             DateWheelColumn(title: titles?.year,
                             accessibilityTitle: titles?.year ?? String(themeKit: "Year"),
                             labels: years.map { "\($0)" },
-                            selectedIndex: years.firstIndex(of: current.year) ?? 0,
+                            selectedIndex: years.firstIndex(of: current.year) ?? (current.year < (years.first ?? 0) ? 0 : years.count - 1),
                             style: style,
                             isEnabled: isEnabled) { set(year: years[$0]) }
         }
@@ -104,7 +111,8 @@ public struct DateWheelPicker: View {
     // MARK: - Editing
 
     private func set(day: Int? = nil, month: Int? = nil, year: Int? = nil) {
-        let current = parts
+        let calendar = self.calendar
+        let current = Self.parts(of: Self.shown(selection, within: range), in: calendar)
         if let date = Self.date(day: day ?? current.day, month: month ?? current.month, year: year ?? current.year,
                                 in: calendar, within: range) {
             selection = date
@@ -270,10 +278,10 @@ public extension View {
 
 // MARK: - Column
 
-/// One drum: five rows showing, the middle one chosen. Dragged, it follows the finger and
-/// snaps to the nearest row (with the fling's momentum); tapped, a row becomes the choice.
-/// A cyclic column (days, months) runs on past its last value into its first, as a
-/// paper drum does; the years stop at their ends.
+/// One drum: five rows showing, the middle one chosen. Dragged, it follows the finger; let go,
+/// it spins on with the fling's momentum through the rows between and slows to a stop on one,
+/// as UIKit's picker does; tapped, it turns to that row. A cyclic column (days, months) runs on
+/// past its last value into its first, as a paper drum does; the years stop at their ends.
 struct DateWheelColumn: View {
     /// Rows shown at once; the middle one is the choice.
     static let visibleRows = 5
@@ -281,6 +289,11 @@ struct DateWheelColumn: View {
     static let rowSpacing: CGFloat = 4
     static var pitch: CGFloat { rowHeight + rowSpacing }
     static var height: CGFloat { CGFloat(visibleRows) * rowHeight + CGFloat(visibleRows - 1) * rowSpacing }
+    /// How much further than SwiftUI's own prediction a fling carries the drum: its prediction
+    /// stops short of a scroll view's, and a fast fling then turned only ten years.
+    static let momentum: Double = 2.5
+    /// How far past a non-cyclic column's end a finger can pull it, in rows.
+    static let overscroll: Double = 0.4
 
     let title: String?
     let accessibilityTitle: String
@@ -291,14 +304,20 @@ struct DateWheelColumn: View {
     let isEnabled: Bool
     let select: (Int) -> Void
 
-    @State private var drag: CGFloat = 0
+    /// Where the drum stands while a finger or a spin turns it, as a row index with its fraction;
+    /// `nil` at rest on the selection.
+    @State private var position: Double?
+    /// The position the finger took the drum at.
+    @State private var dragStart: Double?
+    /// Bumped by every turn, so a spin a newer turn interrupted doesn't commit its row.
+    @State private var turn = 0
 
     var body: some View {
         VStack(spacing: Theme.SpacingKey.sm.value) {
             if let title {
                 style.header(DateWheelPickerHeaderConfiguration(title: title))
             }
-            rows
+            drum
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
@@ -313,50 +332,79 @@ struct DateWheelColumn: View {
         }
     }
 
-    /// The rows around the middle line, drawn where the drag has carried them: a window of
-    /// seven (one beyond each edge, so a row slides in rather than appearing).
-    private var rows: some View {
-        // How far the drag has turned the drum, in rows; positive brings earlier rows down.
-        let turned = Double(drag / Self.pitch)
-        let centre = Double(selectedIndex) - turned
-        let nearest = Int(centre.rounded())
-        let fraction = centre - Double(nearest)
-        return ZStack {
-            ForEach(-3...3, id: \.self) { step in
-                let position = nearest + step
-                if let index = Self.resolved(position, count: labels.count, cyclic: isCyclic) {
-                    let place = Double(step) - fraction
-                    style.row(DateWheelPickerRowConfiguration(label: labels[index],
-                                                              isSelected: step == 0,
-                                                              distance: min(Int(abs(place).rounded()), 2),
-                                                              isEnabled: isEnabled))
-                        .frame(height: Self.rowHeight)
-                        .contentShape(Rectangle())
-                        .onTapGesture { choose(index) }
-                        .offset(y: CGFloat(place) * Self.pitch)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: Self.height)
-        .clipped()
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 4)
-                .onChanged { drag = $0.translation.height }
-                .onEnded { value in
-                    let moved = Int((-value.predictedEndTranslation.height / Self.pitch).rounded())
-                    choose(Self.index(selectedIndex + moved, count: labels.count, cyclic: isCyclic))
-                }
-        )
-        .allowsHitTesting(isEnabled)
+    private var drum: some View {
+        DateWheelDrum(position: position ?? Double(selectedIndex), labels: labels, isCyclic: isCyclic,
+                      style: style, isEnabled: isEnabled) { index in spin(to: Self.nearest(index, from: position ?? Double(selectedIndex), count: labels.count, cyclic: isCyclic)) }
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.height)
+            .clipped()
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 4)
+                    .onChanged { value in
+                        // A finger stops a spin where it is and takes the drum from there.
+                        turn += 1
+                        let start = dragStart ?? (position ?? Double(selectedIndex))
+                        if dragStart == nil { dragStart = start }
+                        position = bounded(start - Double(value.translation.height / Self.pitch))
+                    }
+                    .onEnded { value in
+                        let start = dragStart ?? (position ?? Double(selectedIndex))
+                        dragStart = nil
+                        let here = start - Double(value.translation.height / Self.pitch)
+                        let flung = -Double((value.predictedEndTranslation.height - value.translation.height) / Self.pitch)
+                        spin(to: Self.landing(here + flung * Self.momentum, count: labels.count, cyclic: isCyclic))
+                    }
+            )
+            .allowsHitTesting(isEnabled)
     }
 
-    private func choose(_ index: Int) {
-        withAnimation(Motion.fast.animation) {
-            drag = 0
-            select(index)
+    /// Turns the drum to the row at `target` — through the rows between, slowing as it goes —
+    /// and chooses it once the drum stops.
+    private func spin(to target: Double) {
+        let from = position ?? Double(selectedIndex)
+        let duration = Self.spinDuration(rows: abs(target - from))
+        turn += 1
+        let mine = turn
+        withAnimation(.timingCurve(0.15, 0.85, 0.3, 1, duration: duration)) { position = target }
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+            guard turn == mine else { return }
+            var rest = Transaction()
+            rest.disablesAnimations = true
+            withTransaction(rest) {
+                position = nil
+                select(Self.index(Int(target.rounded()), count: labels.count, cyclic: isCyclic))
+            }
         }
+    }
+
+    /// A finger can't pull a column that doesn't wrap more than a little past its ends.
+    private func bounded(_ position: Double) -> Double {
+        guard !isCyclic, !labels.isEmpty else { return position }
+        return min(max(position, -Self.overscroll), Double(labels.count - 1) + Self.overscroll)
+    }
+
+    /// How long a spin of `rows` takes: short for a row, longer for a long fling, as a scroll
+    /// view's deceleration is — never more than a second and a quarter.
+    static func spinDuration(rows: Double) -> Double {
+        min(1.25, 0.2 + 0.14 * rows.squareRoot())
+    }
+
+    /// The whole row a spin lands on: the nearest, held to the ends of a column that doesn't wrap.
+    /// A cyclic column keeps the drum's own count of turns, so it spins on rather than back.
+    static func landing(_ position: Double, count: Int, cyclic: Bool) -> Double {
+        let row = position.rounded()
+        guard !cyclic, count > 0 else { return row }
+        return min(max(row, 0), Double(count - 1))
+    }
+
+    /// The drum position of the value `index` nearest to where the drum stands — the short way
+    /// round a cyclic column.
+    static func nearest(_ index: Int, from position: Double, count: Int, cyclic: Bool) -> Double {
+        guard cyclic, count > 0 else { return Double(index) }
+        let base = (position / Double(count)).rounded(.down) * Double(count)
+        let candidates = [base - Double(count), base, base + Double(count)].map { $0 + Double(index) }
+        return candidates.min { abs($0 - position) < abs($1 - position) } ?? Double(index)
     }
 
     /// The value `position` lands on: wrapped round a cyclic column, stopped at the ends of
@@ -371,6 +419,43 @@ struct DateWheelColumn: View {
         guard count > 0 else { return nil }
         if cyclic { return index(position, count: count, cyclic: true) }
         return (0..<count).contains(position) ? position : nil
+    }
+}
+
+/// The drum's rows around the middle line, drawn where `position` has carried them: a window
+/// of seven (one beyond each edge, so a row slides in rather than appearing). Animatable, so a
+/// spin redraws it on every frame and the rows between pass through the middle.
+private struct DateWheelDrum: View, Animatable {
+    var position: Double
+    let labels: [String]
+    let isCyclic: Bool
+    let style: AnyDateWheelPickerStyle
+    let isEnabled: Bool
+    let tap: (Int) -> Void
+
+    var animatableData: Double {
+        get { position }
+        set { position = newValue }
+    }
+
+    var body: some View {
+        let nearest = Int(position.rounded())
+        let fraction = position - Double(nearest)
+        return ZStack {
+            ForEach(-3...3, id: \.self) { step in
+                if let index = DateWheelColumn.resolved(nearest + step, count: labels.count, cyclic: isCyclic) {
+                    let place = Double(step) - fraction
+                    style.row(DateWheelPickerRowConfiguration(label: labels[index],
+                                                              isSelected: step == 0,
+                                                              distance: min(Int(abs(place).rounded()), 2),
+                                                              isEnabled: isEnabled))
+                        .frame(height: DateWheelColumn.rowHeight)
+                        .contentShape(Rectangle())
+                        .onTapGesture { tap(index) }
+                        .offset(y: CGFloat(place) * DateWheelColumn.pitch)
+                }
+            }
+        }
     }
 }
 

@@ -43,6 +43,42 @@ final class DateWheelPickerTests: XCTestCase {
         XCTAssertEqual(DateWheelColumn.resolved(13, count: 12, cyclic: true), 1)
     }
 
+    func testASelectionOutsideTheRangeShowsAtItsNearerEnd() {
+        let range = day(1927, 10, 9)...day(2014, 10, 9)
+
+        XCTAssertEqual(DateWheelPicker.shown(day(2026, 10, 9), within: range), day(2014, 10, 9),
+                       "a date after the range shows at its end, not at the first year")
+        XCTAssertEqual(DateWheelPicker.shown(day(1900, 1, 1), within: range), day(1927, 10, 9))
+        XCTAssertEqual(DateWheelPicker.shown(day(1990, 5, 5), within: range), day(1990, 5, 5))
+        XCTAssertEqual(DateWheelPicker.shown(day(2026, 10, 9), within: nil), day(2026, 10, 9))
+    }
+
+    func testTheYearsAreTheRangesElseACenturyBackAndTwentyOn() {
+        XCTAssertEqual(DateWheelPicker.years(in: day(1927, 10, 9)...day(2014, 10, 9), calendar: calendar),
+                       Array(1927...2014))
+        XCTAssertEqual(DateWheelPicker.years(in: nil, calendar: calendar, now: day(2026, 10, 7)), Array(1926...2046))
+    }
+
+    func testAFlingLandsOnAWholeRowAndAYearColumnStopsAtItsEnds() {
+        XCTAssertEqual(DateWheelColumn.landing(12.4, count: 88, cyclic: false), 12)
+        XCTAssertEqual(DateWheelColumn.landing(130.7, count: 88, cyclic: false), 87)
+        XCTAssertEqual(DateWheelColumn.landing(-6, count: 88, cyclic: false), 0)
+        XCTAssertEqual(DateWheelColumn.landing(40.6, count: 12, cyclic: true), 41, "a cyclic drum keeps its turns")
+    }
+
+    func testATapTurnsACyclicDrumTheShortWayRound() {
+        XCTAssertEqual(DateWheelColumn.nearest(0, from: 11, count: 12, cyclic: true), 12, "December → January goes on")
+        XCTAssertEqual(DateWheelColumn.nearest(11, from: 0, count: 12, cyclic: true), -1, "January → December goes back")
+        XCTAssertEqual(DateWheelColumn.nearest(5, from: 26.2, count: 12, cyclic: true), 29)
+        XCTAssertEqual(DateWheelColumn.nearest(5, from: 30, count: 88, cyclic: false), 5)
+    }
+
+    func testALongerSpinTakesLongerButNoMoreThanASecondAndAQuarter() {
+        XCTAssertEqual(DateWheelColumn.spinDuration(rows: 0), 0.2, accuracy: 0.001)
+        XCTAssertLessThan(DateWheelColumn.spinDuration(rows: 1), DateWheelColumn.spinDuration(rows: 25))
+        XCTAssertEqual(DateWheelColumn.spinDuration(rows: 400), 1.25)
+    }
+
     @MainActor
     func testItBuildsWithAStyle() {
         struct Plain: DateWheelPickerStyle {
