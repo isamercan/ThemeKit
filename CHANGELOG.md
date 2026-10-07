@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-10-07
+
 ### Changed
 
 - **`DateWheelPicker` spins with momentum.** Let go after a drag, a column carries on with the fling — about two and
