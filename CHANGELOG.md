@@ -7,6 +7,17 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+### Changed
+
+- **`DateWheelPicker` spins with momentum.** Let go after a drag, a column carries on with the fling — about two and
+  a half times SwiftUI's own prediction, as far as a scroll view's would go — through the rows between, slowing to a
+  stop on one (0.2–1.25s by distance). A fast fling turned a year column ten years before; it now turns about
+  seventeen, and the rows are seen passing rather than jumping. A tap turns a day or month column the short way round.
+  A finger stops a spin where it is.
+- **`DateWheelPicker` shows a selection outside its `range` at the nearer end** of it. A year outside the column
+  used to show the column's first year.
+- **`DateWheelPicker` reads its calendar once a render**; it built a `Calendar` for every value it read.
+
 ## [1.24.0] - 2026-10-06
 
 ### Added
