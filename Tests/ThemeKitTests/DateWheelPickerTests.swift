@@ -91,23 +91,21 @@ final class DateWheelPickerTests: XCTestCase {
         XCTAssertNotNil(view)
     }
 
-    /// A style draws the choice's band itself; one that doesn't draws none, as before.
+    /// The band is set apart from the style; unset, ThemeKit's own style draws its band and a
+    /// custom one — which may paint its selected row itself — draws none.
     @MainActor
-    func testAStyleCanDrawTheSelectionBand() {
-        struct Banded: DateWheelPickerStyle {
+    func testTheSelectionBandIsSetApartFromTheStyle() {
+        struct Plain: DateWheelPickerStyle {
             func makeRow(configuration: DateWheelPickerRowConfiguration) -> some View { Text(configuration.label) }
             func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
-            func makeSelectionBand(configuration: DateWheelPickerSelectionConfiguration) -> some View {
+        }
+        XCTAssertTrue(AnyDateWheelPickerStyle(DefaultDateWheelPickerStyle()).isDefault)
+        XCTAssertFalse(AnyDateWheelPickerStyle(Plain()).isDefault)
+        let view = DateWheelPicker(selection: .constant(day(1994, 12, 9)))
+            .dateWheelPickerStyle(Plain())
+            .dateWheelPickerSelectionBand { configuration in
                 Capsule().fill(configuration.isEnabled ? Color.blue : Color.gray)
             }
-        }
-        struct Bandless: DateWheelPickerStyle {
-            func makeRow(configuration: DateWheelPickerRowConfiguration) -> some View { Text(configuration.label) }
-            func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
-        }
-        XCTAssertTrue(Bandless.SelectionBand.self == EmptyView.self, "no band unless a style draws one")
-        XCTAssertFalse(DefaultDateWheelPickerStyle.SelectionBand.self == EmptyView.self, "ThemeKit's style draws one")
-        let view = DateWheelPicker(selection: .constant(day(1994, 12, 9))).dateWheelPickerStyle(Banded())
         XCTAssertNotNil(view)
     }
 

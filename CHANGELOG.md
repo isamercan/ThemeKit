@@ -11,14 +11,14 @@ breaking changes bump the **major**.
 
 ### Added
 
-- **`DateWheelPickerStyle.makeSelectionBand(configuration:)`** draws the choice's band once behind a column's middle
-  row; it stays put while the drum spins past it. `DateWheelPickerSelectionConfiguration` carries `isEnabled`. A
-  style without it draws no band (`SelectionBand` defaults to `EmptyView`), so a style that paints its selected row
-  keeps working as before.
+- **`.dateWheelPickerSelectionBand(_:)`** draws the choice's band once behind the middle row of the `DateWheelPicker`s
+  in a view; it stays put while the drum spins past it. The closure gets a `DateWheelPickerSelectionConfiguration`
+  (`isEnabled`). Unset, ThemeKit's own style draws its band and a custom style none, so a style that paints its
+  selected row keeps working as before.
 
 ### Changed
 
-- **`DefaultDateWheelPickerStyle`** draws its soft primary surface as the selection band, no longer behind the
+- **`DefaultDateWheelPickerStyle`'s soft primary surface** is drawn as the selection band, no longer behind the
   selected row, so it no longer slides with the rows during a spin.
 
 ## [1.25.0] - 2026-10-07
