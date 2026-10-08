@@ -173,14 +173,32 @@ public struct DateWheelPickerHeaderConfiguration {
     public let title: String
 }
 
+/// What a ``DateWheelPickerStyle`` draws behind a column's middle row: the band that marks the
+/// choice. It stays put while the drum turns under it.
+public struct DateWheelPickerSelectionConfiguration {
+    /// `false` when the picker is disabled.
+    public let isEnabled: Bool
+}
+
 /// Draws the rows (and headers) of a ``DateWheelPicker``. The picker keeps the behaviour —
 /// the drag, the snap, the day arithmetic, the range, the accessibility — and the row
 /// height; a style paints. Set one with `.dateWheelPickerStyle(_:)`.
+///
+/// The choice's band belongs in ``makeSelectionBand(configuration:)``: it is drawn once behind
+/// the middle row and stays there while the rows turn past it. A band painted by
+/// ``makeRow(configuration:)`` for the selected row travels with that row instead.
 public protocol DateWheelPickerStyle {
     associatedtype Row: View
     associatedtype Header: View
+    associatedtype SelectionBand: View = EmptyView
     @ViewBuilder @MainActor func makeRow(configuration: DateWheelPickerRowConfiguration) -> Row
     @ViewBuilder @MainActor func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> Header
+    /// The band behind the middle row, one row high. Default: none.
+    @ViewBuilder @MainActor func makeSelectionBand(configuration: DateWheelPickerSelectionConfiguration) -> SelectionBand
+}
+
+public extension DateWheelPickerStyle where SelectionBand == EmptyView {
+    func makeSelectionBand(configuration: DateWheelPickerSelectionConfiguration) -> EmptyView { EmptyView() }
 }
 
 /// ThemeKit's rows: the chosen one on the primary's soft surface in the hero's text, the
@@ -195,6 +213,10 @@ public struct DefaultDateWheelPickerStyle: DateWheelPickerStyle, Sendable {
     public func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View {
         DefaultDateWheelHeader(configuration: configuration)
     }
+
+    public func makeSelectionBand(configuration: DateWheelPickerSelectionConfiguration) -> some View {
+        DefaultDateWheelBand()
+    }
 }
 
 private struct DefaultDateWheelRow: View {
@@ -208,10 +230,6 @@ private struct DefaultDateWheelRow: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
-                    .fill(configuration.isSelected ? theme.resolve(.primary).soft : .clear)
-            )
     }
 
     private var color: Color {
@@ -221,6 +239,16 @@ private struct DefaultDateWheelRow: View {
         case 1: return theme.text(.textSecondary)
         default: return theme.text(.textTertiary)
         }
+    }
+}
+
+/// The primary's soft surface behind the middle row.
+private struct DefaultDateWheelBand: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: Theme.RadiusKey.md.value, style: .continuous)
+            .fill(theme.resolve(.primary).soft)
     }
 }
 
@@ -240,6 +268,7 @@ struct AnyDateWheelPickerStyle {
     private enum Part {
         case row(DateWheelPickerRowConfiguration)
         case header(DateWheelPickerHeaderConfiguration)
+        case band(DateWheelPickerSelectionConfiguration)
     }
 
     // One closure, so the `sending` style is captured once.
@@ -250,12 +279,14 @@ struct AnyDateWheelPickerStyle {
             switch part {
             case .row(let configuration): return AnyView(style.makeRow(configuration: configuration))
             case .header(let configuration): return AnyView(style.makeHeader(configuration: configuration))
+            case .band(let configuration): return AnyView(style.makeSelectionBand(configuration: configuration))
             }
         }
     }
 
     @MainActor func row(_ configuration: DateWheelPickerRowConfiguration) -> AnyView { _make(.row(configuration)) }
     @MainActor func header(_ configuration: DateWheelPickerHeaderConfiguration) -> AnyView { _make(.header(configuration)) }
+    @MainActor func band(_ configuration: DateWheelPickerSelectionConfiguration) -> AnyView { _make(.band(configuration)) }
 }
 
 private struct DateWheelPickerStyleKey: EnvironmentKey {
@@ -337,6 +368,9 @@ struct DateWheelColumn: View {
                       style: style, isEnabled: isEnabled) { index in spin(to: Self.nearest(index, from: position ?? Double(selectedIndex), count: labels.count, cyclic: isCyclic)) }
             .frame(maxWidth: .infinity)
             .frame(height: Self.height)
+            // The choice's band, still behind the middle row while the rows turn past it.
+            .background(style.band(DateWheelPickerSelectionConfiguration(isEnabled: isEnabled))
+                            .frame(height: Self.rowHeight))
             .clipped()
             .contentShape(Rectangle())
             .gesture(

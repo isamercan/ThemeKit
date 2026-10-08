@@ -91,6 +91,26 @@ final class DateWheelPickerTests: XCTestCase {
         XCTAssertNotNil(view)
     }
 
+    /// A style draws the choice's band itself; one that doesn't draws none, as before.
+    @MainActor
+    func testAStyleCanDrawTheSelectionBand() {
+        struct Banded: DateWheelPickerStyle {
+            func makeRow(configuration: DateWheelPickerRowConfiguration) -> some View { Text(configuration.label) }
+            func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
+            func makeSelectionBand(configuration: DateWheelPickerSelectionConfiguration) -> some View {
+                Capsule().fill(configuration.isEnabled ? Color.blue : Color.gray)
+            }
+        }
+        struct Bandless: DateWheelPickerStyle {
+            func makeRow(configuration: DateWheelPickerRowConfiguration) -> some View { Text(configuration.label) }
+            func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
+        }
+        XCTAssertTrue(Bandless.SelectionBand.self == EmptyView.self, "no band unless a style draws one")
+        XCTAssertFalse(DefaultDateWheelPickerStyle.SelectionBand.self == EmptyView.self, "ThemeKit's style draws one")
+        let view = DateWheelPicker(selection: .constant(day(1994, 12, 9))).dateWheelPickerStyle(Banded())
+        XCTAssertNotNil(view)
+    }
+
     @MainActor
     func testTheFloatingLabelTakesTheStyleItIsGiven() {
         let field = TextInput("First name", text: .constant("Ada")).floatingLabelTextStyle(.overline400)
