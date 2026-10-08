@@ -7,6 +7,8 @@ breaking changes bump the **major**.
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-10-08
+
 ### Added
 
 - **`DateWheelPickerStyle.makeSelectionBand(configuration:)`** draws the choice's band once behind a column's middle
