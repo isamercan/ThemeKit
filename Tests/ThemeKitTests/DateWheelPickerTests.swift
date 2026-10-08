@@ -91,6 +91,24 @@ final class DateWheelPickerTests: XCTestCase {
         XCTAssertNotNil(view)
     }
 
+    /// The band is set apart from the style; unset, ThemeKit's own style draws its band and a
+    /// custom one — which may paint its selected row itself — draws none.
+    @MainActor
+    func testTheSelectionBandIsSetApartFromTheStyle() {
+        struct Plain: DateWheelPickerStyle {
+            func makeRow(configuration: DateWheelPickerRowConfiguration) -> some View { Text(configuration.label) }
+            func makeHeader(configuration: DateWheelPickerHeaderConfiguration) -> some View { Text(configuration.title) }
+        }
+        XCTAssertTrue(AnyDateWheelPickerStyle(DefaultDateWheelPickerStyle()).isDefault)
+        XCTAssertFalse(AnyDateWheelPickerStyle(Plain()).isDefault)
+        let view = DateWheelPicker(selection: .constant(day(1994, 12, 9)))
+            .dateWheelPickerStyle(Plain())
+            .dateWheelPickerSelectionBand { configuration in
+                Capsule().fill(configuration.isEnabled ? Color.blue : Color.gray)
+            }
+        XCTAssertNotNil(view)
+    }
+
     @MainActor
     func testTheFloatingLabelTakesTheStyleItIsGiven() {
         let field = TextInput("First name", text: .constant("Ada")).floatingLabelTextStyle(.overline400)
