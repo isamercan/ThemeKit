@@ -2,10 +2,10 @@
 //  BrandThemes.swift
 //  Demo
 //
-//  Brand themes distilled from the exported Figma *component token* files
-//  (💠 Component Tokens/ETS.tokens.json, UB.tokens.json). Each file's `modeName`
-//  becomes a theme whose brand seeds, font family and card radius drive ThemeKit's
-//  on-device `ThemeGenerator`.
+//  Two example brand themes, each a distinct color + font + card-radius identity
+//  that drives ThemeKit's on-device `ThemeGenerator`. They demonstrate multi-brand
+//  theming from a design-token export: a `ThemePreset` swatch for the picker plus a
+//  full `ThemeConfig` recipe applied on tap.
 //
 //  Why a full `ThemeConfig` (and not just a `ThemePreset`)? A `ThemePreset` only
 //  carries the four brand swatches — it can't express the token files' `Font`
@@ -35,11 +35,11 @@ struct BrandTheme: Identifiable {
 }
 
 extension BrandTheme {
-    /// ETS — from `ETS.tokens.json` (`modeName: "ETS"`).
-    /// Hero blue #056BFD on a white surface, Poppins, 16pt card radius (= box default).
-    static let ets = BrandTheme(
+    /// Aurora — an example brand: hero blue #056BFD on a white surface, Poppins,
+    /// 16pt card radius (= box default).
+    static let aurora = BrandTheme(
         preset: ThemePreset(
-            "ets", "Etstur (ETS)",
+            "aurora", "Aurora",
             primary: "056bfd",   // Button/Background/Primary-Default · bg-hero
             secondary: "3789fd", // Primary-Hover · bg-hero-hover
             accent: "0561e6",    // Primary-Pressed · bg-hero-pressing
@@ -53,17 +53,16 @@ extension BrandTheme {
             accentHex: "0561e6",
             tint: 0.06,
             dark: false,
-            font: "Poppins",     // Font/Family/Etstur Font
+            font: "Poppins",     // brand type family
             radiusScale: 1.0     // Card Radius 16 == box default (rd-md)
         )
     )
 
-    /// UB — from `UB.tokens.json` (`modeName: "UB"`).
-    /// Near-black brand #00121C with a #008CFF link accent on white, Outfit,
-    /// 24pt card radius (= 1.5× the 16pt box default).
-    static let ub = BrandTheme(
+    /// Onyx — an example brand: near-black #00121C with a #008CFF link accent on
+    /// white, Outfit, 24pt card radius (= 1.5× the 16pt box default).
+    static let onyx = BrandTheme(
         preset: ThemePreset(
-            "ub", "UB",
+            "onyx", "Onyx",
             primary: "00121c",   // Button/Background/Primary-Default
             secondary: "334d5c", // Primary-Hover · slate
             accent: "008cff",    // Button/Text/Tertiary-Default · link
@@ -77,13 +76,13 @@ extension BrandTheme {
             accentHex: "008cff",
             tint: 0.05,
             dark: false,
-            font: "Outfit",      // Font/Family/UB Font
+            font: "Outfit",      // brand type family
             radiusScale: 1.5     // Card Radius 24 / box default 16
         )
     )
 
     /// All brand themes, in the order they appear in the picker.
-    static let all: [BrandTheme] = [.ets, .ub]
+    static let all: [BrandTheme] = [.aurora, .onyx]
 
     /// The `ThemePreset` swatch cards for the picker grid.
     static var presets: [ThemePreset] { all.map(\.preset) }

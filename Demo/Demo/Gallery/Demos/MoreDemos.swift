@@ -1094,11 +1094,11 @@ struct PageHeaderDemo: View {
                 .searchField(text: $query, placeholder: "Search") { flash("Submit: \(query)") }
         case .brand:
             PageHeader("Brand")
-                .logo(Text("etstur").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
+                .logo(Text("aurora").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.onSolid))
                 .pageHeaderStyle(.brand)
         case .brandNoBg:
             PageHeader("Brand")
-                .logo(Text("etstur").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.accent))
+                .logo(Text("aurora").font(.system(size: 22, weight: .heavy)).foregroundStyle(SemanticColor.primary.accent))
                 .pageHeaderStyle(.brandNoBackground)
         case .onImage:
             PageHeader(titleText).showTitle(showTitle)
